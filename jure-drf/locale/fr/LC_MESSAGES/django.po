@@ -1,0 +1,268 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-07-08 11:13+0100\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+#: .\core\settings.py:273
+msgid "French"
+msgstr "Français"
+
+#: .\core\settings.py:274
+msgid "English"
+msgstr "Anglais"
+
+#: .\core\settings.py:275
+msgid "Arabic"
+msgstr "Arabe"
+
+#: .\templates\account\email\base_message.txt:1
+#, python-format
+msgid "Hello from %(site_name)s!"
+msgstr "Bonjour de %(site_name)s !"
+
+#: .\templates\account\email\base_message.txt:5
+#, python-format
+msgid ""
+"Thank you for using %(site_name)s!\n"
+"%(site_domain)s"
+msgstr ""
+"Merci d'utiliser %(site_name)s !\n"
+"%(site_domain)s"
+
+#: .\templates\account\email\email_confirmation_message.txt:5
+#, python-format
+msgid ""
+"You're receiving this email because user %(user_display)s has given your "
+"email address to register an account on %(site_domain)s."
+msgstr ""
+"Vous recevez cet e-mail car l'utilisateur %(user_display)s a fourni votre "
+"adresse e-mail pour créer un compte sur %(site_domain)s."
+
+#: .\templates\account\email\email_confirmation_message.txt:7
+msgid ""
+"Your email verification code is listed below. Please enter it in your open "
+"browser window."
+msgstr ""
+"Votre code de vérification e-mail est indiqué ci-dessous. Veuillez l'entrer "
+"dans votre fenêtre de navigateur ouverte."
+
+#: .\templates\account\email\email_confirmation_message.txt:9
+#, python-format
+msgid "To confirm this is correct, go to %(activate_url)s"
+msgstr "Pour confirmer que c'est correct, allez à %(activate_url)s"
+
+#: .\templates\account\email\password_reset_key_message.txt:4
+msgid ""
+"You're receiving this email because you or someone else has requested a "
+"password reset for your user account.\n"
+"It can be safely ignored if you did not request a password reset. Click the "
+"link below to reset your password."
+msgstr ""
+"Vous recevez cet e-mail car vous ou quelqu'un d'autre a demandé une "
+"réinitialisation de mot de passe pour votre compte utilisateur.\n"
+"Il peut être ignoré en toute sécurité si vous n'avez pas demandé de "
+"réinitialisation de mot de passe. Cliquez sur le lien ci-dessous pour "
+"réinitialiser votre mot de passe."
+
+#: .\templates\account\email\password_reset_key_message.txt:9
+#, python-format
+msgid "In case you forgot, your username is %(username)s."
+msgstr "Au cas où vous auriez oublié, votre nom d'utilisateur est %(username)s."
+
+#: .\users\models.py:21
+msgid "Birthday cannot be in the future."
+msgstr "La date de naissance ne peut pas être dans le futur."
+
+#: .\users\models.py:26
+msgid "User must be at least 18 years old."
+msgstr "L'utilisateur doit avoir au moins 18 ans."
+
+#: .\users\models.py:32 .\users\serializers.py:205
+msgid "IBAN must be exactly 24 characters long."
+msgstr "L'IBAN doit faire exactement 24 caractères."
+
+#: .\users\models.py:56
+msgid "email address"
+msgstr "adresse e-mail"
+
+#: .\users\models.py:57
+msgid "phone number"
+msgstr "numéro de téléphone"
+
+#: .\users\models.py:58
+msgid "phone verified"
+msgstr "téléphone vérifié"
+
+#: .\users\models.py:59
+msgid "national identity card front"
+msgstr "recto de la carte d'identité nationale"
+
+#: .\users\models.py:60
+msgid "national identity card back"
+msgstr "verso de la carte d'identité nationale"
+
+#: .\users\models.py:65
+msgid "affiliation code"
+msgstr "code d'affiliation"
+
+#: .\users\models.py:66
+msgid "affiliated by"
+msgstr "affilié par"
+
+#: .\users\models.py:70
+msgid "birthday"
+msgstr "date de naissance"
+
+#: .\users\models.py:72
+msgid "Is auto entrepreneur"
+msgstr "Est auto-entrepreneur"
+
+#: .\users\models.py:74
+msgid "Is company"
+msgstr "Est une entreprise"
+
+#: .\users\models.py:75
+msgid "Is artisan"
+msgstr "Est artisan"
+
+#: .\users\models.py:76
+msgid "Is provider"
+msgstr "Est fournisseur"
+
+#: .\users\models.py:78
+msgid "company name"
+msgstr "nom de l'entreprise"
+
+#: .\users\models.py:79
+msgid "trade register"
+msgstr "registre du commerce"
+
+#: .\users\models.py:80
+msgid "tax ID"
+msgstr "numéro fiscal"
+
+#: .\users\models.py:81
+msgid "ICE"
+msgstr "ICE"
+
+#: .\users\models.py:85
+msgid "other activity"
+msgstr "autre activité"
+
+#: .\users\models.py:89
+msgid "other function"
+msgstr "autre fonction"
+
+#: .\users\models.py:91
+msgid "International Bank Account Number"
+msgstr "Numéro de compte bancaire international"
+
+#: .\users\models.py:92
+msgid "Is permanence"
+msgstr "Est permanence"
+
+#: .\users\models.py:114
+msgid "Home"
+msgstr "Domicile"
+
+#: .\users\models.py:115
+msgid "Work"
+msgstr "Travail"
+
+#: .\users\models.py:116
+msgid "Company"
+msgstr "Entreprise"
+
+#: .\users\models.py:117
+msgid "Other"
+msgstr "Autre"
+
+#: .\users\models.py:120
+msgid "address"
+msgstr "adresse"
+
+#: .\users\models.py:121
+msgid "OSM ID"
+msgstr "ID OSM"
+
+#: .\users\models.py:122
+msgid "address type"
+msgstr "type d'adresse"
+
+#: .\users\models.py:124
+msgid "is default"
+msgstr "est par défaut"
+
+#: .\users\serializers.py:130
+msgid "Auto entrepreneur and company cannot be true at the same time."
+msgstr "Auto-entrepreneur et entreprise ne peuvent pas être vrais en même temps."
+
+#: .\users\serializers.py:134
+msgid "Other activity is required when no activity is selected."
+msgstr "Une autre activité est requise lorsqu'aucune activité n'est sélectionnée."
+
+#: .\users\serializers.py:138
+msgid "Other function is required when no function is selected."
+msgstr "Une autre fonction est requise lorsqu'aucune fonction n'est sélectionnée."
+
+#: .\users\serializers.py:143
+msgid "National identity card front is required for artisan accounts."
+msgstr "Le recto de la carte d'identité nationale est requis pour les comptes artisans."
+
+#: .\users\serializers.py:146
+msgid "National identity card back is required for artisan accounts."
+msgstr "Le verso de la carte d'identité nationale est requis pour les comptes artisans."
+
+#: .\users\serializers.py:150
+msgid "IBAN is required for artisan and provider accounts."
+msgstr "L'IBAN est requis pour les comptes artisans et fournisseurs."
+
+#: .\users\serializers.py:154 .\users\serializers.py:155
+msgid "Auto entrepreneur or company is required for provider accounts."
+msgstr "Auto-entrepreneur ou entreprise est requis pour les comptes fournisseurs."
+
+#: .\users\serializers.py:159
+msgid "Company name is required for company accounts."
+msgstr "Le nom de l'entreprise est requis pour les comptes entreprise."
+
+#: .\users\serializers.py:161
+msgid "Trade register is required for company accounts."
+msgstr "Le registre du commerce est requis pour les comptes entreprise."
+
+#: .\users\serializers.py:163
+msgid "Tax ID is required for company accounts."
+msgstr "Le numéro fiscal est requis pour les comptes entreprise."
+
+#: .\users\serializers.py:165
+msgid "ICE is required for company accounts."
+msgstr "L'ICE est requis pour les comptes entreprise."
+
+#: .\users\serializers.py:169
+msgid "ICE is required for auto entrepreneur accounts."
+msgstr "L'ICE est requis pour les comptes auto-entrepreneur."
+
+#: .\users\serializers.py:319
+msgid "Unable to log in with provided credentials."
+msgstr "Impossible de se connecter avec les identifiants fournis."
+
+#: .\users\serializers.py:344
+msgid "E-mail is not verified."
+msgstr "L'e-mail n'est pas vérifié."
+
+#: .\users\serializers.py:354
+msgid "Phone is not verified."
+msgstr "Le téléphone n'est pas vérifié."

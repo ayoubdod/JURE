@@ -1,0 +1,163 @@
+/* === JURE Calendar — Harmonized Minimal Theme with Dark Mode =============== */
+
+:root {
+  --brand: #8A5FDE;
+  --brand-hover: #7455CF;
+  --brand-pressed: #4B41AF;
+  --brand-disabled: #ECEBF2;
+
+  --accent-appointment: #10b981;
+
+  --priority-high: #dc2626;
+  --priority-medium: #f59e0b;
+  --priority-low: #6b7280;
+
+  --grid-bg: #FFFFFF;
+  --grid-hover: #F9FAFB;
+  --grid-border: #E5E7EB;
+
+  --text-900: #0f172a;
+  --text-700: #334155;
+  --text-light: #ffffff;
+}
+
+/* === Base Light Mode === */
+.fc {
+  font-family: system-ui, sans-serif;
+  background: var(--grid-bg);
+  border: 1px solid var(--grid-border);
+  border-radius: 12px;
+}
+
+/* Header */
+.fc-header-toolbar {
+  background: var(--grid-bg);
+  padding: .75rem 1rem;
+  border-bottom: 1px solid var(--grid-border);
+  border-radius: 12px 12px 0 0;
+}
+.fc-toolbar-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--brand);
+}
+
+/* Buttons */
+.fc-button {
+  background: var(--brand);
+  border: 1px solid var(--brand);
+  color: var(--text-light);
+  border-radius: 8px;
+  padding: .4rem .8rem;
+  font-size: .875rem;
+  font-weight: 600;
+  transition: background .2s ease;
+}
+.fc-button:hover { background: var(--brand-hover); }
+.fc-button:active,
+.fc-button.fc-button-active { background: var(--brand-pressed); }
+
+/* Grid */
+.fc-daygrid-day,
+.fc-timegrid-slot,
+.fc-timegrid-axis {
+  background: var(--grid-bg);
+  border-color: var(--grid-border);
+}
+.fc-daygrid-day:hover { background: var(--grid-hover); }
+.fc-daygrid-day-number {
+  color: var(--text-900);
+  font-weight: 600;
+  padding: .5rem;
+}
+
+/* Today */
+.fc-day-today {
+  background: var(--brand-disabled);
+}
+.fc-day-today .fc-daygrid-day-number {
+  background: var(--brand);
+  color: var(--text-light);
+  border-radius: 999px;
+  padding: .4rem .6rem;
+}
+
+/* Events */
+.fc-event {
+  border: none;
+  border-radius: 6px;
+  padding: .3rem .5rem;
+  font-size: .8rem;
+  font-weight: 600;
+  color: var(--text-light);
+}
+.fc-event .fc-event-time { color: rgba(255,255,255,.9); }
+
+/* Task Events */
+.fc-event.task-event { background: var(--brand); }
+.fc-event.task-event:hover { background: var(--brand-hover); }
+.fc-event.task-event.task-high { background: var(--priority-high); }
+.fc-event.task-event.task-medium { background: var(--priority-medium); }
+.fc-event.task-event.task-low { background: var(--priority-low); }
+
+/* Appointment Events */
+.fc-event.appointment-event { background: var(--accent-appointment); }
+.fc-event.appointment-event:hover { background: #059669; }
+
+/* Priority List Indicators */
+.task-priority-high { border-left: 4px solid var(--priority-high); background: #fef2f2; }
+.task-priority-medium { border-left: 4px solid var(--priority-medium); background: #fffbeb; }
+.task-priority-low { border-left: 4px solid var(--priority-low); background: #f9fafb; }
+.appointment-item { border-left: 4px solid var(--accent-appointment); background: #f0fdf4; }
+
+/* === Dark Mode ============================================================= */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --grid-bg: #1E1E2A;
+    --grid-hover: #2A2A3A;
+    --grid-border: #2F3145;
+
+    --text-900: #f1f5f9;
+    --text-700: #d1d5db;
+    --text-light: #ffffff;
+
+    --brand-disabled: #3A3151;
+  }
+
+  .fc {
+    background: var(--grid-bg);
+    color: var(--text-900);
+    border-color: var(--grid-border);
+  }
+
+  .fc-header-toolbar {
+    background: var(--grid-bg);
+    border-bottom: 1px solid var(--grid-border);
+  }
+
+  .fc-toolbar-title {
+    color: var(--brand);
+  }
+
+  .fc-daygrid-day,
+  .fc-timegrid-slot,
+  .fc-timegrid-axis {
+    background: var(--grid-bg);
+    border-color: var(--grid-border);
+  }
+  .fc-daygrid-day:hover { background: var(--grid-hover); }
+  .fc-daygrid-day-number { color: var(--text-900); }
+
+  .fc-day-today { background: var(--brand-disabled); }
+  .fc-day-today .fc-daygrid-day-number {
+    background: var(--brand);
+    color: var(--text-light);
+  }
+
+  /* Events pop more against dark */
+  .fc-event { color: var(--text-light); }
+  .task-priority-high { background: #3a1f1f; }
+  .task-priority-medium { background: #3a2e1f; }
+  .task-priority-low { background: #2f3135; }
+  .appointment-item { background: #1f3a2f; }
+}

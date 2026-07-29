@@ -1,0 +1,72 @@
+/* Calendar Event Color Styles for Jure SaaS */
+
+/* Task events - using jure color palette */
+.fc-event.task-event {
+  background-color: #3b82f6 !important; /* jure-600 equivalent */
+  border-color: #2563eb !important; /* jure-700 equivalent */
+}
+
+.fc-event.task-event.task-high {
+  background-color: #dc2626 !important; /* red-600 for high priority */
+  border-color: #b91c1c !important; /* red-700 */
+}
+
+.fc-event.task-event.task-medium {
+  background-color: #f59e0b !important; /* amber-500 for medium priority */
+  border-color: #d97706 !important; /* amber-600 */
+}
+
+.fc-event.task-event.task-low {
+  background-color: #6b7280 !important; /* gray-500 for low priority */
+  border-color: #4b5563 !important; /* gray-600 */
+}
+
+/* Appointment events - using green color palette */
+.fc-event.appointment-event {
+  background-color: #10b981 !important; /* emerald-500 */
+  border-color: #059669 !important; /* emerald-600 */
+}
+
+/* Hover effects */
+.fc-event.task-event:hover {
+  background-color: #2563eb !important; /* jure-700 */
+}
+
+.fc-event.appointment-event:hover {
+  background-color: #059669 !important; /* emerald-600 */
+}
+
+/* Event text color */
+.fc-event .fc-event-title {
+  color: white !important;
+  font-weight: 500;
+}
+
+.fc-event .fc-event-time {
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+/* Priority indicators in list view */
+.task-priority-high {
+  background-color: #fef2f2;
+  border-left: 4px solid #dc2626;
+}
+
+.task-priority-medium {
+  background-color: #fffbeb;
+  border-left: 4px solid #f59e0b;
+}
+
+.task-priority-low {
+  background-color: #f9fafb;
+  border-left: 4px solid #6b7280;
+}
+
+.appointment-item {
+  background-color: #f0fdf4;
+  border-left: 4px solid #10b981;
+}
+
+
+
+

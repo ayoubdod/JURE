@@ -1,0 +1,41 @@
+/* Cases page — stat card hover lift (complements Tailwind) */
+.cases-stat-card {
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.cases-stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 4px 14px rgba(15, 23, 42, 0.08),
+    0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+/* Critical deadline pulse — WCAG: motion-reduced users see static dot */
+@keyframes cases-critical-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.55;
+    transform: scale(0.92);
+  }
+}
+
+.cases-critical-dot {
+  animation: cases-critical-pulse 1.4s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cases-critical-dot {
+    animation: none;
+  }
+
+  .cases-stat-card:hover {
+    transform: none;
+  }
+}

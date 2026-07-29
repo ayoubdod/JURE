@@ -1,0 +1,267 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-07-08 11:13+0100\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=6; plural=n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 "
+"&& n%100<=10 ? 3 : n%100>=11 && n%100<=99 ? 4 : 5;\n"
+#: .\core\settings.py:273
+msgid "French"
+msgstr "الفرنسية"
+
+#: .\core\settings.py:274
+msgid "English"
+msgstr "الإنجليزية"
+
+#: .\core\settings.py:275
+msgid "Arabic"
+msgstr "العربية"
+
+#: .\templates\account\email\base_message.txt:1
+#, python-format
+msgid "Hello from %(site_name)s!"
+msgstr "مرحباً من %(site_name)s!"
+
+#: .\templates\account\email\base_message.txt:5
+#, python-format
+msgid ""
+"Thank you for using %(site_name)s!\n"
+"%(site_domain)s"
+msgstr ""
+"شكراً لاستخدامك %(site_name)s!\n"
+"%(site_domain)s"
+
+#: .\templates\account\email\email_confirmation_message.txt:5
+#, python-format
+msgid ""
+"You're receiving this email because user %(user_display)s has given your "
+"email address to register an account on %(site_domain)s."
+msgstr ""
+"أنت تتلقى هذا البريد الإلكتروني لأن المستخدم %(user_display)s قد قدم عنوان "
+"بريدك الإلكتروني لتسجيل حساب على %(site_domain)s."
+
+#: .\templates\account\email\email_confirmation_message.txt:7
+msgid ""
+"Your email verification code is listed below. Please enter it in your open "
+"browser window."
+msgstr ""
+"رمز التحقق من بريدك الإلكتروني مدرج أدناه. يرجى إدخاله في نافذة المتصفح المفتوحة."
+
+#: .\templates\account\email\email_confirmation_message.txt:9
+#, python-format
+msgid "To confirm this is correct, go to %(activate_url)s"
+msgstr "لتأكيد أن هذا صحيح، اذهب إلى %(activate_url)s"
+
+#: .\templates\account\email\password_reset_key_message.txt:4
+msgid ""
+"You're receiving this email because you or someone else has requested a "
+"password reset for your user account.\n"
+"It can be safely ignored if you did not request a password reset. Click the "
+"link below to reset your password."
+msgstr ""
+"أنت تتلقى هذا البريد الإلكتروني لأنك أو شخص آخر قد طلب إعادة تعيين كلمة المرور "
+"لحسابك.\n"
+"يمكن تجاهله بأمان إذا لم تطلب إعادة تعيين كلمة المرور. انقر على الرابط أدناه "
+"لإعادة تعيين كلمة المرور."
+
+#: .\templates\account\email\password_reset_key_message.txt:9
+#, python-format
+msgid "In case you forgot, your username is %(username)s."
+msgstr "في حالة نسيانك، اسم المستخدم الخاص بك هو %(username)s."
+
+#: .\users\models.py:21
+msgid "Birthday cannot be in the future."
+msgstr "لا يمكن أن يكون تاريخ الميلاد في المستقبل."
+
+#: .\users\models.py:26
+msgid "User must be at least 18 years old."
+msgstr "يجب أن يكون المستخدم عمره 18 عاماً على الأقل."
+
+#: .\users\models.py:32 .\users\serializers.py:205
+msgid "IBAN must be exactly 24 characters long."
+msgstr "يجب أن يكون IBAN بالضبط 24 حرفاً."
+
+#: .\users\models.py:56
+msgid "email address"
+msgstr "عنوان البريد الإلكتروني"
+
+#: .\users\models.py:57
+msgid "phone number"
+msgstr "رقم الهاتف"
+
+#: .\users\models.py:58
+msgid "phone verified"
+msgstr "الهاتف مُتحقق منه"
+
+#: .\users\models.py:59
+msgid "national identity card front"
+msgstr "الوجه الأمامي لبطاقة الهوية الوطنية"
+
+#: .\users\models.py:60
+msgid "national identity card back"
+msgstr "الوجه الخلفي لبطاقة الهوية الوطنية"
+
+#: .\users\models.py:65
+msgid "affiliation code"
+msgstr "رمز الانتماء"
+
+#: .\users\models.py:66
+msgid "affiliated by"
+msgstr "منتمي بواسطة"
+
+#: .\users\models.py:70
+msgid "birthday"
+msgstr "تاريخ الميلاد"
+
+#: .\users\models.py:72
+msgid "Is auto entrepreneur"
+msgstr "هل هو رجل أعمال مستقل"
+
+#: .\users\models.py:74
+msgid "Is company"
+msgstr "هل هي شركة"
+
+#: .\users\models.py:75
+msgid "Is artisan"
+msgstr "هل هو حرفي"
+
+#: .\users\models.py:76
+msgid "Is provider"
+msgstr "هل هو مزود"
+
+#: .\users\models.py:78
+msgid "company name"
+msgstr "اسم الشركة"
+
+#: .\users\models.py:79
+msgid "trade register"
+msgstr "السجل التجاري"
+
+#: .\users\models.py:80
+msgid "tax ID"
+msgstr "الرقم الضريبي"
+
+#: .\users\models.py:81
+msgid "ICE"
+msgstr "ICE"
+
+#: .\users\models.py:85
+msgid "other activity"
+msgstr "نشاط آخر"
+
+#: .\users\models.py:89
+msgid "other function"
+msgstr "وظيفة أخرى"
+
+#: .\users\models.py:91
+msgid "International Bank Account Number"
+msgstr "رقم الحساب البنكي الدولي"
+
+#: .\users\models.py:92
+msgid "Is permanence"
+msgstr "هل هو دائم"
+
+#: .\users\models.py:114
+msgid "Home"
+msgstr "المنزل"
+
+#: .\users\models.py:115
+msgid "Work"
+msgstr "العمل"
+
+#: .\users\models.py:116
+msgid "Company"
+msgstr "الشركة"
+
+#: .\users\models.py:117
+msgid "Other"
+msgstr "أخرى"
+
+#: .\users\models.py:120
+msgid "address"
+msgstr "العنوان"
+
+#: .\users\models.py:121
+msgid "OSM ID"
+msgstr "معرف OSM"
+
+#: .\users\models.py:122
+msgid "address type"
+msgstr "نوع العنوان"
+
+#: .\users\models.py:124
+msgid "is default"
+msgstr "هو افتراضي"
+
+#: .\users\serializers.py:130
+msgid "Auto entrepreneur and company cannot be true at the same time."
+msgstr "لا يمكن أن يكون رجل الأعمال المستقل والشركة صحيحين في نفس الوقت."
+
+#: .\users\serializers.py:134
+msgid "Other activity is required when no activity is selected."
+msgstr "النشاط الآخر مطلوب عندما لا يتم اختيار أي نشاط."
+
+#: .\users\serializers.py:138
+msgid "Other function is required when no function is selected."
+msgstr "الوظيفة الأخرى مطلوبة عندما لا يتم اختيار أي وظيفة."
+
+#: .\users\serializers.py:143
+msgid "National identity card front is required for artisan accounts."
+msgstr "الوجه الأمامي لبطاقة الهوية الوطنية مطلوب لحسابات الحرفيين."
+
+#: .\users\serializers.py:146
+msgid "National identity card back is required for artisan accounts."
+msgstr "الوجه الخلفي لبطاقة الهوية الوطنية مطلوب لحسابات الحرفيين."
+
+#: .\users\serializers.py:150
+msgid "IBAN is required for artisan and provider accounts."
+msgstr "IBAN مطلوب لحسابات الحرفيين والمزودين."
+
+#: .\users\serializers.py:154 .\users\serializers.py:155
+msgid "Auto entrepreneur or company is required for provider accounts."
+msgstr "رجل الأعمال المستقل أو الشركة مطلوبان لحسابات المزودين."
+
+#: .\users\serializers.py:159
+msgid "Company name is required for company accounts."
+msgstr "اسم الشركة مطلوب لحسابات الشركات."
+
+#: .\users\serializers.py:161
+msgid "Trade register is required for company accounts."
+msgstr "السجل التجاري مطلوب لحسابات الشركات."
+
+#: .\users\serializers.py:163
+msgid "Tax ID is required for company accounts."
+msgstr "الرقم الضريبي مطلوب لحسابات الشركات."
+
+#: .\users\serializers.py:165
+msgid "ICE is required for company accounts."
+msgstr "ICE مطلوب لحسابات الشركات."
+
+#: .\users\serializers.py:169
+msgid "ICE is required for auto entrepreneur accounts."
+msgstr "ICE مطلوب لحسابات رجال الأعمال المستقلين."
+
+#: .\users\serializers.py:319
+msgid "Unable to log in with provided credentials."
+msgstr "غير قادر على تسجيل الدخول بالبيانات المقدمة."
+
+#: .\users\serializers.py:344
+msgid "E-mail is not verified."
+msgstr "البريد الإلكتروني غير مُتحقق منه."
+
+#: .\users\serializers.py:354
+msgid "Phone is not verified."
+msgstr "الهاتف غير مُتحقق منه."

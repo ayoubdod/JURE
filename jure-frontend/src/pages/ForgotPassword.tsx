@@ -1,0 +1,146 @@
+import React, { useState, useEffect } from 'react';
+import { useForm } from 'react-hook-form';
+import { Link, useNavigate } from 'react-router';
+import { Home, Mail, ArrowRight, Sun, Moon, ArrowLeft } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { useToast } from '@/hooks/use-toast';
+import { apiResetPassword } from '@/services/auth/api';
+import clsx from 'clsx';
+
+interface ForgotPasswordFormData {
+  email: string;
+}
+
+const ForgotPassword = () => {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<ForgotPasswordFormData>();
+  const { toast } = useToast();
+  const navigate = useNavigate();
+  const [isDarkMode, setIsDarkMode] = useState(() =>
+    localStorage.getItem('theme') === 'dark'
+  );
+
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', isDarkMode);
+    localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
+  }, [isDarkMode]);
+
+  const onSubmit = async (data: ForgotPasswordFormData) => {
+    try {
+      await apiResetPassword(data);
+      
+      toast({ 
+        title: 'Email envoyé', 
+        description: "Si cet email existe, nous avons envoyé un lien de réinitialisation." 
+      });
+      
+      // Navigate back to signin after successful email send
+      navigate('/signin');
+    } catch (error) {
+      toast({
+        title: 'Erreur',
+        description: 'Impossible d\'envoyer l\'email de réinitialisation. Veuillez réessayer.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  return (
+    <div className={clsx('min-h-screen flex items-center justify-center p-4', isDarkMode ? 'bg-[#0f1117]' : 'bg-white')}>
+      <div className="absolute top-4 right-4">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => setIsDarkMode(!isDarkMode)}
+          aria-label="Toggle theme"
+        >
+          {isDarkMode ? <Sun className="h-5 w-5 text-white" /> : <Moon className="h-5 w-5 text-gray-800" />}
+        </Button>
+      </div>
+
+      <div className="w-full max-w-md">
+        {/* Logo */}
+        <div className="text-center mb-6">
+          <img
+            src="./public/images/Jure logo.png"
+            alt="Jure logo"
+            className="w-22 h-20 mx-auto object-contain"
+          />
+        </div>
+
+        <Card className={clsx('rounded-xl shadow-xl', isDarkMode ? 'bg-[#181b23] text-white' : 'bg-white text-black')}>
+          <CardHeader className="text-center space-y-2">
+            <CardTitle className="text-2xl">Mot de passe oublié</CardTitle>
+            <CardDescription className={clsx('text-sm', isDarkMode ? 'text-gray-400' : 'text-gray-600')}>
+              Entrez votre email pour recevoir un lien de réinitialisation
+            </CardDescription>
+          </CardHeader>
+
+          <CardContent className="space-y-5">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+              <div>
+                <Label>Email</Label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <Input
+                    type="email"
+                    placeholder="exemple@email.com"
+                    {...register('email', {
+                      required: 'L\'email est requis',
+                      pattern: {
+                        value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                        message: 'Adresse email invalide'
+                      }
+                    })}
+                    className="pl-10"
+                  />
+                </div>
+                {errors.email && (
+                  <p className="text-sm text-red-500 mt-1">{errors.email.message}</p>
+                )}
+              </div>
+
+              <Button
+                type="submit"
+                disabled={isSubmitting}
+                className="w-full h-12 flex items-center justify-center gap-2 bg-[#64499d] hover:bg-gradient-to-r hover:from-[#64499d] hover:to-[#8a6ccf] text-white font-semibold transition-colors duration-300"
+              >
+                {isSubmitting ? 'Envoi...' : 'Envoyer le lien'}
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+            </form>
+
+            <div className="text-sm text-center space-y-2">
+              <Link
+                to="/signin"
+                className={clsx('inline-flex items-center gap-2 hover:underline', isDarkMode ? 'text-purple-300' : 'text-purple-600')}
+              >
+                <ArrowLeft className="w-4 h-4" />
+                Retour à la connexion
+              </Link>
+            </div>
+
+            <div className="text-center pt-4">
+              <Link to="/" className={clsx('inline-flex items-center gap-1 text-sm hover:underline', isDarkMode ? 'text-gray-400' : 'text-gray-600')}>
+                <Home className="w-4 h-4" />
+                Retour à l'accueil
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+
+        <div className={clsx('text-center mt-6 text-xs', isDarkMode ? 'text-gray-500' : 'text-gray-400')}>
+          © 2025 Jure. Tous droits réservés.
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default ForgotPassword; 
