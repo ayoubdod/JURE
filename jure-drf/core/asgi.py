@@ -1,6 +1,10 @@
 # core/asgi.py
 import os
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "core.settings")
+
+os.environ.setdefault(
+    "DJANGO_SETTINGS_MODULE",
+    os.getenv("DJANGO_SETTINGS_MODULE", "core.settings.local"),
+)
 
 from django.core.asgi import get_asgi_application
 from channels.routing import ProtocolTypeRouter, URLRouter

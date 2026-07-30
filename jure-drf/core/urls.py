@@ -21,7 +21,6 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.views.static import serve as static_serve
 from django.views.decorators.cache import never_cache
-from debug_toolbar.toolbar import debug_toolbar_urls
 from users.views import setup_password_by_token
 
 from drf_spectacular.views import (
@@ -69,16 +68,23 @@ urlpatterns = [
     # Redoc (optional)
     path('api/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
     # path('api/v1/dj-rest-auth/password-reset-confirm/<uidb64>/<token>/', PasswordResetConfirmView.as_view(), name='password_reset_confirm'),
-] + debug_toolbar_urls() + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT) + [
-    # Media with no-cache so updated logos/images refresh immediately
+]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+    try:
+        import debug_toolbar
+    except ImportError:
+        debug_toolbar = None
+    if debug_toolbar and "debug_toolbar" in settings.INSTALLED_APPS:
+        urlpatterns += [
+            path("__debug__/", include(debug_toolbar.urls)),
+        ]
+
+urlpatterns += [
     re_path(
         r'^%s(?P<path>.*)$' % re.escape(settings.MEDIA_URL.lstrip('/')),
         never_cache(static_serve),
         {'document_root': settings.MEDIA_ROOT},
     ),
 ]
-if settings.DEBUG:
-    import debug_toolbar
-    urlpatterns += [
-        path("__debug__/", include(debug_toolbar.urls)),
-    ]
