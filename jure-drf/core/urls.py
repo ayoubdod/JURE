@@ -29,9 +29,10 @@ from drf_spectacular.views import (
     SpectacularSwaggerView,
 )
 
-from .views import health, deployment_settings_debug
+from .views import root, health, deployment_settings_debug
 
 urlpatterns = [
+    path('', root, name='root'),
     path('admin/', admin.site.urls),
     # path('accounts/', include('allauth.urls')),
     path('api/v1/dj-rest-auth/', include('dj_rest_auth.urls')),
@@ -58,7 +59,7 @@ urlpatterns = [
     path("api/v1/juria/", include("juria.urls")),
     path("api/search/", include("search.urls")),
     path("api/calls/", include("calls.urls")),
-    path("health/", health),
+    path("health/", health, name="health"),
     path("debug/settings", deployment_settings_debug),
     path("debug/settings/", deployment_settings_debug),
 

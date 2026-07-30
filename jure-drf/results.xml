@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+	<testsuite name="core.tests.HealthEndpointTests-20260730225308" tests="2" file="core/tests.py" time="0.120" timestamp="2026-07-30T22:53:08" failures="0" errors="0" skipped="0">
+		<testcase classname="core.tests.HealthEndpointTests" name="test_health_rejects_non_get" time="0.059" timestamp="2026-07-30T22:53:08" file="core\tests.py" line="34"/>
+		<testcase classname="core.tests.HealthEndpointTests" name="test_health_returns_healthy" time="0.061" timestamp="2026-07-30T22:53:08" file="core\tests.py" line="29"/>
+	</testsuite>
+	<testsuite name="core.tests.RootEndpointTests-20260730225308" tests="2" file="core/tests.py" time="0.097" timestamp="2026-07-30T22:53:09" failures="0" errors="0" skipped="0">
+		<testcase classname="core.tests.RootEndpointTests" name="test_root_rejects_non_get" time="0.054" timestamp="2026-07-30T22:53:08" file="core\tests.py" line="22"/>
+		<testcase classname="core.tests.RootEndpointTests" name="test_root_returns_service_discovery_payload" time="0.042" timestamp="2026-07-30T22:53:09" file="core\tests.py" line="6"/>
+	</testsuite>
+</testsuites>
