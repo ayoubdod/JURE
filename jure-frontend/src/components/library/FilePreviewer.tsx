@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Download, ZoomIn, ZoomOut, RotateCcw, Archive, FileText, Image, Video, Radio, File } from 'lucide-react';
 import { renderAsync } from 'docx-preview';
+import { API_ORIGIN } from '@/config/api';
 import { getFileType } from '@/utils/functions';
 import { cn } from '@/lib/utils';
 
@@ -86,9 +87,7 @@ export const FilePreviewer: React.FC<FilePreviewerProps> = ({
   className,
   resolveUrl = (url) => {
     if (!url || url.startsWith('http://') || url.startsWith('https://')) return url;
-    const base = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
-    const clean = base.replace(/\/api\/v1$/, '');
-    return url.startsWith('/') ? `${clean}${url}` : `${clean}/${url}`;
+    return url.startsWith('/') ? `${API_ORIGIN}${url}` : `${API_ORIGIN}/${url}`;
   },
 }) => {
   const resolvedUrl = resolveUrl(fileUrl);

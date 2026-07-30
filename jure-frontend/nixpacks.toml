@@ -1,0 +1,6 @@
+# Provide Node for `node server.mjs` at runtime (Bun installs deps via bun.lockb).
+[phases.setup]
+nixPkgs = ["nodejs_22", "bun"]
+
+[variables]
+NIXPACKS_NODE_VERSION = "22"

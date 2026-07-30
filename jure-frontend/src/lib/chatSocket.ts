@@ -1,3 +1,5 @@
+import { getChatWsUrl } from '@/config/api';
+
 export type ChatInbound =
   | { type: "conversation.joined"; conversation: number }
   | { type: "typing"; user: number; status: "start" | "stop" }
@@ -14,7 +16,7 @@ export class ChatSocket {
 
   connect() {
     if (this.ws?.readyState === WebSocket.OPEN) return;
-    this.ws = new WebSocket(`${import.meta.env.VITE_WS_BASE}/ws/chat/?token=${this.token}`);
+    this.ws = new WebSocket(getChatWsUrl(this.token));
     this.ws.onopen = () => {
       this.heartbeatId = window.setInterval(() => this.send({ type: "presence.heartbeat" }), 15000);
     };
