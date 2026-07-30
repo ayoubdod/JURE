@@ -2,7 +2,10 @@
 .gitignore
 .venv
 .venv-check
+venv
+env
 __pycache__
+**/__pycache__
 *.pyc
 *.pyo
 *.pyd
@@ -21,3 +24,10 @@ node_modules
 .github
 tests
 pytest.ini
+allure-results
+htmlcov
+.coverage
+.coverage.*
+poetry.lock
+start.ps1
+my_fixture.json

@@ -1,0 +1,13 @@
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "Dockerfile"
+
+# Do NOT set startCommand here — Dockerfile ENTRYPOINT already runs
+# docker-entrypoint.sh. A railway startCommand would be passed as args
+# to ENTRYPOINT and break boot.
+
+[deploy]
+healthcheckPath = "/health/"
+healthcheckTimeout = 120
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 5

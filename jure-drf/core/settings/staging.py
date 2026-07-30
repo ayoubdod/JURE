@@ -5,9 +5,18 @@ Staging settings — production-like behavior on Railway.
 import os
 from urllib.parse import urlparse
 
+from django.core.exceptions import ImproperlyConfigured
+
 from .base import *  # noqa: F403
 
 DEBUG = False
+
+_database_url = os.environ.get("DATABASE_URL", "").strip()
+if not _database_url:
+    raise ImproperlyConfigured(
+        "DATABASE_URL is required when using core.settings.staging. "
+        "Attach Railway PostgreSQL (or set DATABASE_URL explicitly)."
+    )
 
 DATABASES = {
     "default": env.db(),  # noqa: F405
@@ -28,6 +37,7 @@ if BACKEND_BASE_URL:  # noqa: F405
     _backend_host = urlparse(BACKEND_BASE_URL).hostname  # noqa: F405
     if _backend_host:
         _allowed_hosts.append(_backend_host)
+
 # Railway injects these automatically — keep DisallowedHost from breaking deploys
 # even when ALLOWED_HOSTS / BACKEND_BASE_URL are misconfigured.
 for _railway_host in (
@@ -36,9 +46,21 @@ for _railway_host in (
 ):
     if _railway_host:
         _allowed_hosts.append(_railway_host)
+
+# Leading-dot entries match the domain and all subdomains (Django ALLOWED_HOSTS).
+_allowed_hosts.extend(
+    [
+        ".up.railway.app",
+        ".railway.internal",
+        "healthcheck.railway.app",
+    ]
+)
+
 ALLOWED_HOSTS = list(dict.fromkeys(h for h in _allowed_hosts if h))
 
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+# Allow Railway HTTP healthchecks without a redirect loop.
+SECURE_REDIRECT_EXEMPT = [r"^health/", r"^debug/settings/?$"]
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
 SECURE_BROWSER_XSS_FILTER = True
@@ -53,7 +75,8 @@ CHANNEL_LAYERS = {
     }
 }
 
-MIDDLEWARE.insert(1, "whitenoise.middleware.WhiteNoiseMiddleware")  # noqa: F405
+# WhiteNoise is already registered in base.MIDDLEWARE (immediately after SecurityMiddleware).
+# Do not insert it again — duplicate middleware breaks static serving and wastes cycles.
 
 STORAGES = {
     "default": {
@@ -75,3 +98,6 @@ SECURE_SSL_REDIRECT = True
 SESSION_COOKIE_SAMESITE = "Lax"
 
 CSRF_COOKIE_SAMESITE = "Lax"
+
+# Temporary deployment diagnostics — see core.views.deployment_settings_debug
+ENABLE_DEPLOYMENT_DEBUG = env.bool("ENABLE_DEPLOYMENT_DEBUG", default=False)  # noqa: F405

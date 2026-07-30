@@ -6,10 +6,9 @@ import sys
 
 def main():
     """Run administrative tasks."""
-    os.environ.setdefault(
-        "DJANGO_SETTINGS_MODULE",
-        os.getenv("DJANGO_SETTINGS_MODULE", "core.settings.local"),
-    )
+    # Local default only. Docker/Railway set DJANGO_SETTINGS_MODULE explicitly
+    # (and docker-entrypoint.sh refuses core.settings.local).
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "core.settings.local")
     try:
         from django.core.management import execute_from_command_line
     except ImportError as exc:

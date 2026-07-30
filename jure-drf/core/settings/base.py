@@ -16,11 +16,20 @@ from django.utils.translation import gettext_lazy as _
 # --------------------------------------------------------------------------------------
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
-environ.Env.read_env(os.path.join(BASE_DIR, ".env"))
+# Never load a local .env file when running staging/production. Containers must
+# rely on process environment (Railway variables / Docker ENV) only.
+_settings_module = os.environ.get("DJANGO_SETTINGS_MODULE", "")
+_is_deployed_settings = any(
+    marker in _settings_module for marker in ("staging", "production")
+)
+if not _is_deployed_settings:
+    environ.Env.read_env(os.path.join(BASE_DIR, ".env"))
+
 env = environ.Env(
     DEBUG=(bool, False),
     USE_INMEMORY_CHANNEL_LAYER=(bool, True),
     JURIA_ENABLED=(bool, True),
+    ENABLE_DEPLOYMENT_DEBUG=(bool, False),
 )
 
 SECRET_KEY = env.str(
@@ -122,7 +131,7 @@ SITE_ID = 1
 # --------------------------------------------------------------------------------------
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
-     "whitenoise.middleware.WhiteNoiseMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",

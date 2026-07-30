@@ -38,3 +38,6 @@ MIDDLEWARE += [  # noqa: F405
 
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 DEFAULT_FROM_EMAIL = env.str("DEFAULT_FROM_EMAIL", default="webmaster@localhost")  # noqa: F405
+
+# Diagnostics endpoint is staging/production only.
+ENABLE_DEPLOYMENT_DEBUG = False

@@ -29,7 +29,8 @@ from drf_spectacular.views import (
     SpectacularSwaggerView,
 )
 
-from .views import health
+from .views import health, deployment_settings_debug
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     # path('accounts/', include('allauth.urls')),
@@ -58,6 +59,8 @@ urlpatterns = [
     path("api/search/", include("search.urls")),
     path("api/calls/", include("calls.urls")),
     path("health/", health),
+    path("debug/settings", deployment_settings_debug),
+    path("debug/settings/", deployment_settings_debug),
 
     
     # Schema JSON
