@@ -29,7 +29,7 @@ from drf_spectacular.views import (
     SpectacularSwaggerView,
 )
 
-
+from .views import health
 urlpatterns = [
     path('admin/', admin.site.urls),
     # path('accounts/', include('allauth.urls')),
@@ -57,6 +57,7 @@ urlpatterns = [
     path("api/v1/juria/", include("juria.urls")),
     path("api/search/", include("search.urls")),
     path("api/calls/", include("calls.urls")),
+    path("health/", health),
 
     
     # Schema JSON
