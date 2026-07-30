@@ -28,11 +28,13 @@ COPY . .
 
 # Re-assert after COPY so a stray .env (if ever present) cannot win via
 # build-time tooling, and so settings-module changes bust the final layers.
-ARG CACHEBUST=1
+# Bump when deploy must not reuse a stale final layer (Railway/BuildKit cache).
+ARG CACHEBUST=20260730-dburl
 RUN echo "cachebust=${CACHEBUST}" \
     && test ! -f .env \
     && test ! -d .venv \
-    && chmod +x docker-entrypoint.sh
+    && chmod +x docker-entrypoint.sh \
+    && head -n 1 docker-entrypoint.sh | grep -q '^#!'
 
 ENV DJANGO_SETTINGS_MODULE=core.settings.staging
 

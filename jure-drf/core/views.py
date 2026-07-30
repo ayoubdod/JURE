@@ -25,6 +25,11 @@ def deployment_settings_debug(request):
             "DEBUG": settings.DEBUG,
             "DATABASE_ENGINE": db.get("ENGINE"),
             "DATABASE_NAME": str(db.get("NAME", "")),
+            "DATABASE_HOST": str(db.get("HOST", "")),
+            "DATABASE_URL_SET": bool(os.environ.get("DATABASE_URL", "").strip()),
+            "DATABASE_PUBLIC_URL_SET": bool(
+                os.environ.get("DATABASE_PUBLIC_URL", "").strip()
+            ),
             "ALLOWED_HOSTS": list(settings.ALLOWED_HOSTS),
             "BACKEND_BASE_URL": getattr(settings, "BACKEND_BASE_URL", ""),
             "FRONTEND_BASE_URL": getattr(settings, "FRONTEND_BASE_URL", ""),

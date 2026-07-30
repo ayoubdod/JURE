@@ -11,16 +11,40 @@ from .base import *  # noqa: F403
 
 DEBUG = False
 
-_database_url = os.environ.get("DATABASE_URL", "").strip()
+# Railway Postgres lives on its own service. DATABASE_URL is NOT injected into
+# this web service unless you add a Variable Reference, e.g.:
+#   DATABASE_URL=${{Postgres.DATABASE_URL}}
+# Prefer the private DATABASE_URL over DATABASE_PUBLIC_URL (no public egress).
+_database_url = (
+    os.environ.get("DATABASE_URL", "").strip()
+    or os.environ.get("DATABASE_PUBLIC_URL", "").strip()
+)
 if not _database_url:
     raise ImproperlyConfigured(
         "DATABASE_URL is required when using core.settings.staging. "
-        "Attach Railway PostgreSQL (or set DATABASE_URL explicitly)."
+        "PostgreSQL existing in the Railway project is not enough — add a "
+        "Variable Reference on THIS service: "
+        "DATABASE_URL=${{Postgres.DATABASE_URL}} "
+        "(use your Postgres service name). Do not rely on a local .env."
     )
 
+# Keep django-environ / env.db() in sync when only DATABASE_PUBLIC_URL was set.
+os.environ["DATABASE_URL"] = _database_url
+
 DATABASES = {
-    "default": env.db(),  # noqa: F405
+    "default": env.db("DATABASE_URL"),  # noqa: F405
 }
+# Persist connections across requests inside a worker (Railway-friendly).
+DATABASES["default"]["CONN_MAX_AGE"] = env.int(  # noqa: F405
+    "CONN_MAX_AGE",
+    default=60,
+)
+# Public Railway proxies often need TLS; private *.railway.internal usually does not.
+_sslmode = env.str("DB_SSLMODE", default="").strip()  # noqa: F405
+if _sslmode:
+    DATABASES["default"].setdefault("OPTIONS", {})["sslmode"] = _sslmode
+elif "railway.internal" not in _database_url and "sslmode=" not in _database_url:
+    DATABASES["default"].setdefault("OPTIONS", {})["sslmode"] = "require"
 
 _extra_cors = env.list("CORS_ALLOWED_ORIGINS", default=[])  # noqa: F405
 if BACKEND_BASE_URL:  # noqa: F405
