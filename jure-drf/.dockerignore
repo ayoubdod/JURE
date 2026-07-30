@@ -1,6 +1,7 @@
 .git
 .gitignore
 .venv
+.venv-check
 __pycache__
 *.pyc
 *.pyo
@@ -13,3 +14,10 @@ staticfiles
 .vscode
 .idea
 node_modules
+.env
+.env.*
+!.env.example
+*.md
+.github
+tests
+pytest.ini

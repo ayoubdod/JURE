@@ -19,7 +19,7 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
-poetry.lock
+#poetry.lock
 
 # Django
 *.log
@@ -35,6 +35,7 @@ env/
 ENV/
 .env
 .venv
+.venv-check
 env.bak/
 venv.bak/
 

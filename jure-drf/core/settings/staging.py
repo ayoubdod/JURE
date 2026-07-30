@@ -2,6 +2,7 @@
 Staging settings — production-like behavior on Railway.
 """
 
+import os
 from urllib.parse import urlparse
 
 from .base import *  # noqa: F403
@@ -27,7 +28,15 @@ if BACKEND_BASE_URL:  # noqa: F405
     _backend_host = urlparse(BACKEND_BASE_URL).hostname  # noqa: F405
     if _backend_host:
         _allowed_hosts.append(_backend_host)
-ALLOWED_HOSTS = list(dict.fromkeys(_allowed_hosts))
+# Railway injects these automatically — keep DisallowedHost from breaking deploys
+# even when ALLOWED_HOSTS / BACKEND_BASE_URL are misconfigured.
+for _railway_host in (
+    os.environ.get("RAILWAY_PUBLIC_DOMAIN"),
+    os.environ.get("RAILWAY_PRIVATE_DOMAIN"),
+):
+    if _railway_host:
+        _allowed_hosts.append(_railway_host)
+ALLOWED_HOSTS = list(dict.fromkeys(h for h in _allowed_hosts if h))
 
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 SESSION_COOKIE_SECURE = True
