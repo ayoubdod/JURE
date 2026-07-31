@@ -1,9 +1,8 @@
 [build]
-builder = "NIXPACKS"
-buildCommand = "bun run build"
+builder = "DOCKERFILE"
+dockerfilePath = "Dockerfile"
 
 [deploy]
-startCommand = "bun run start"
 healthcheckPath = "/health"
 healthcheckTimeout = 60
 restartPolicyType = "ON_FAILURE"
