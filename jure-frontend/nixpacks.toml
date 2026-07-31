@@ -1,6 +1,0 @@
-# Bun installs deps (bun.lockb). Node kept as fallback runtime.
-[phases.setup]
-nixPkgs = ["bun", "nodejs_22"]
-
-[variables]
-NIXPACKS_NODE_VERSION = "22"
