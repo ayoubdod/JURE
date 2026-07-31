@@ -24,5 +24,9 @@ RUN bun add express@^5.1.0
 COPY server.mjs ./
 COPY --from=build /app/dist ./dist
 
-# Railway injects PORT; server.mjs binds 0.0.0.0:$PORT
+# Railway reads EXPOSE to pick the domain's target port. Keep it aligned with
+# the PORT default so the edge proxy and the listener never disagree.
+ENV PORT=3000
+EXPOSE 3000
+
 CMD ["bun", "server.mjs"]
