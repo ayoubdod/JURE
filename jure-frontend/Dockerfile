@@ -1,12 +1,14 @@
 FROM oven/bun:1.2-alpine AS build
 WORKDIR /app
 
-COPY package.json bun.lockb ./
-RUN bun install --frozen-lockfile
+# bun.lockb in this repo is stale (missing express/axios/zustand/...), so a
+# frozen install fails. Resolve from package.json instead.
+COPY package.json ./
+RUN bun install
 
 COPY . .
 
-# Vite bakes this at build time — set VITE_API_URL on the Railway service.
+# Vite inlines this at build time — Railway service variables arrive as build args.
 ARG VITE_API_URL=https://jure-production-a298.up.railway.app
 ENV VITE_API_URL=$VITE_API_URL
 
@@ -16,11 +18,11 @@ FROM oven/bun:1.2-alpine
 WORKDIR /app
 ENV NODE_ENV=production
 
-COPY package.json bun.lockb ./
-RUN bun install --frozen-lockfile --production
+# The SPA is fully bundled into dist/; express is the only runtime dependency.
+RUN bun add express@^5.1.0
 
 COPY server.mjs ./
 COPY --from=build /app/dist ./dist
 
-# Railway injects PORT; server.mjs reads process.env.PORT
+# Railway injects PORT; server.mjs binds 0.0.0.0:$PORT
 CMD ["bun", "server.mjs"]
