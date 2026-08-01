@@ -24,7 +24,9 @@ class ClientReadSerializer(serializers.ModelSerializer):
 
 # WRITE serializer
 class ClientWriteSerializer(serializers.ModelSerializer):
-    country = CountryField()
+    # Explicit field overrides Meta.extra_kwargs — must set required=False here.
+    # Frontend create form has no country; view defaults missing values to "US".
+    country = CountryField(required=False, allow_blank=True, allow_null=True)
     
     class Meta:
         model = User
@@ -36,7 +38,7 @@ class ClientWriteSerializer(serializers.ModelSerializer):
             'phone': {'required': True},
             'is_active': {'required': False, 'read_only': True},
             'address': {'required': False, 'allow_blank': True, 'allow_null': True},
-            'country': {'required': False, 'allow_null': True},
+            'country': {'required': False, 'allow_blank': True, 'allow_null': True},
         }
     
     def validate_email(self, value):
