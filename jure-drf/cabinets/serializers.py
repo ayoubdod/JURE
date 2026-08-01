@@ -89,7 +89,9 @@ class CabinetMemberCreateSerializer(ModelSerializer):
     """
     Used only for POST. Generates a temporary password and marks the user as a cabinet member.
     """
-    country = CountryField()
+    # Explicit field overrides Meta.extra_kwargs — must set required=False here.
+    # Frontend invite form has no country; view defaults missing values to "US".
+    country = CountryField(required=False, allow_blank=True, allow_null=True)
     role = serializers.ChoiceField(
         choices=User.Role.choices,
         required=False,
@@ -110,7 +112,7 @@ class CabinetMemberCreateSerializer(ModelSerializer):
             'email': {'required': True},
             'phone': {'required': True},
             'address': {'required': False, 'allow_blank': True, 'allow_null': True},
-            'country': {'required': False, 'allow_null': True},
+            'country': {'required': False, 'allow_blank': True, 'allow_null': True},
             'is_active': {'required': False, 'default': True},
             'role': {'required': False},
             'password': {'write_only': True, 'required': False, 'allow_blank': True},
