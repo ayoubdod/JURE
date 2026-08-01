@@ -274,35 +274,84 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # Email (SMTP when credentials are present)
 # Supports both SMTP_* and EMAIL_* env vars (SMTP_* take precedence).
 # --------------------------------------------------------------------------------------
-EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
-DEFAULT_FROM_EMAIL = env.str("DEFAULT_FROM_EMAIL", default="webmaster@localhost")
+# ------------------------------------------------------------------------------
+# Email configuration
+# Priority:
+# 1. Resend API
+# 2. SMTP
+# 3. Console backend (development)
+# ------------------------------------------------------------------------------
 
-_smtp_pass = (
-    env.str("SMTP_PASS", default="") or env.str("EMAIL_HOST_PASSWORD", default="")
-).replace(" ", "")
-if _smtp_pass:
-    EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-    _user = env.str("SMTP_USER", default="") or env.str("EMAIL_HOST_USER", default="")
-    _host = env.str("SMTP_HOST", default="") or env.str("EMAIL_HOST", default="")
-    if not _host and "@gmail.com" in (_user or ""):
-        _host = "smtp.gmail.com"
-    EMAIL_HOST = _host or "smtp.hostinger.com"
-    _port = env.str("SMTP_PORT", default="") or env.str("EMAIL_PORT", default="")
-    if not _port and _host == "smtp.gmail.com":
-        _port = "587"
-    EMAIL_PORT = int(_port) if _port else 465
-    if EMAIL_PORT == 587:
-        EMAIL_USE_TLS = True
-        EMAIL_USE_SSL = False
-    else:
-        EMAIL_USE_TLS = env.bool("EMAIL_USE_TLS", default=False)
-        EMAIL_USE_SSL = env.bool("EMAIL_USE_SSL", default=True)
-    EMAIL_HOST_USER = _user
-    EMAIL_HOST_PASSWORD = _smtp_pass
+EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+DEFAULT_FROM_EMAIL = env.str(
+    "DEFAULT_FROM_EMAIL",
+    default="webmaster@localhost",
+)
+
+RESEND_API_KEY = env.str("RESEND_API_KEY", default="")
+
+if RESEND_API_KEY:
+    INSTALLED_APPS += ["anymail"]
+
+    EMAIL_BACKEND = "anymail.backends.resend.EmailBackend"
+
+    ANYMAIL = {
+        "RESEND_API_KEY": RESEND_API_KEY,
+    }
+
     DEFAULT_FROM_EMAIL = env.str(
         "DEFAULT_FROM_EMAIL",
-        default=EMAIL_HOST_USER or "webmaster@localhost",
+        default="contact@jure.ma",
     )
+
+else:
+    _smtp_pass = (
+        env.str("SMTP_PASS", default="")
+        or env.str("EMAIL_HOST_PASSWORD", default="")
+    ).replace(" ", "")
+
+    if _smtp_pass:
+        EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+
+        _user = (
+            env.str("SMTP_USER", default="")
+            or env.str("EMAIL_HOST_USER", default="")
+        )
+
+        _host = (
+            env.str("SMTP_HOST", default="")
+            or env.str("EMAIL_HOST", default="")
+        )
+
+        if not _host and "@gmail.com" in (_user or ""):
+            _host = "smtp.gmail.com"
+
+        EMAIL_HOST = _host or "smtp.hostinger.com"
+
+        _port = (
+            env.str("SMTP_PORT", default="")
+            or env.str("EMAIL_PORT", default="")
+        )
+
+        if not _port and EMAIL_HOST == "smtp.gmail.com":
+            _port = "587"
+
+        EMAIL_PORT = int(_port) if _port else 465
+
+        if EMAIL_PORT == 587:
+            EMAIL_USE_TLS = True
+            EMAIL_USE_SSL = False
+        else:
+            EMAIL_USE_TLS = env.bool("EMAIL_USE_TLS", default=False)
+            EMAIL_USE_SSL = env.bool("EMAIL_USE_SSL", default=True)
+
+        EMAIL_HOST_USER = _user
+        EMAIL_HOST_PASSWORD = _smtp_pass
+
+        DEFAULT_FROM_EMAIL = env.str(
+            "DEFAULT_FROM_EMAIL",
+            default=EMAIL_HOST_USER or "webmaster@localhost",
+        )
 
 # --------------------------------------------------------------------------------------
 # Redis / Channels
