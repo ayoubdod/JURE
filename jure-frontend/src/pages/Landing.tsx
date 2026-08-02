@@ -1,5 +1,5 @@
 // src/pages/Landing.tsx
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router"; // keep your existing navigation logic
 import { Button } from "@/components/ui/button";
 import {
@@ -15,7 +15,6 @@ import {
   Zap,
   Users,
   BookOpen,
-  Check,
   MessageSquare,
   Heart,
   Award,
@@ -499,13 +498,6 @@ const Landing: React.FC = () => {
   const handleNav = (to: string) => navigate(to);
   const year = new Date().getFullYear();
 
-  // Price symbols per locale (customize as needed)
-  const prices = useMemo(() => {
-    if (lang === "en") return { starter: "$29", pro: "$79", ent: "$199", per: t.pricing.plans.starter.perMonth };
-    // keep EUR for fr/ar
-    return { starter: "29€", pro: "79€", ent: "199€", per: t.pricing.plans.starter.perMonth };
-  }, [lang, t.pricing.plans.starter.perMonth]);
-
   return (
     <div className="min-h-screen relative overflow-hidden text-slate-900 dark:text-slate-100 bg-gradient-to-br from-white via-white to-slate-50 dark:from-slate-950 dark:via-slate-950 dark:to-slate-900">
       {/* Decorative brand blobs */}
@@ -547,12 +539,6 @@ const Landing: React.FC = () => {
               className="hover:text-[#64499D] dark:hover:text-[#8B6FD1] transition-colors"
             >
               {t.nav.features}
-            </button>
-            <button
-              onClick={() => handleNav("/pricing")}
-              className="hover:text-[#64499D] dark:hover:text-[#8B6FD1] transition-colors"
-            >
-              {t.nav.pricing}
             </button>
             <button
               onClick={() => handleNav("/about")}
@@ -925,115 +911,6 @@ const Landing: React.FC = () => {
               {t.demo.cta}
               <ArrowRight className={`ml-2 h-5 w-5 ${t.dir === "rtl" ? "rotate-180" : ""}`} />
             </Button>
-          </div>
-        </section>
-
-        {/* Pricing */}
-        <section className="max-w-7xl mx-auto px-6 pb-16 md:pb-24">
-          <div className="text-center mb-10 md:mb-14">
-            <h2 className="text-3xl md:text-4xl font-bold">{t.pricing.title}</h2>
-            <p className="mt-3 text-slate-600 dark:text-slate-300 text-lg">{t.pricing.subtitle}</p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-6 md:gap-8 max-w-6xl mx-auto">
-            {/* Starter */}
-            <Card className="bg-white/90 dark:bg-slate-900/70 backdrop-blur border-slate-200 dark:border-slate-700">
-              <CardHeader className="text-center pb-6">
-                <CardTitle className="text-2xl font-bold">{t.pricing.plans.starter.name}</CardTitle>
-                <CardDescription className="dark:text-slate-400">
-                  {lang === "fr" && "Pour avocats indépendants"}
-                  {lang === "en" && "For solo lawyers"}
-                  {lang === "ar" && "للمحامين المستقلين"}
-                </CardDescription>
-                <div className="mt-4">
-                  <span className="text-4xl font-bold">{prices.starter}</span>
-                  <span className="text-slate-600 dark:text-slate-400">{t.pricing.plans.starter.perMonth}</span>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-3 mb-6 text-slate-700 dark:text-slate-300">
-                  {t.pricing.plans.starter.bullets.map((b: string, i: number) => (
-                    <li key={i} className="flex items-center">
-                      <Check className="w-5 h-5 text-green-600 mr-3" />
-                      {b}
-                    </li>
-                  ))}
-                </ul>
-                <Button className="w-full" variant="outline" onClick={() => handleNav("/signup?plan=starter")}>
-                  {t.pricing.plans.starter.btn}
-                </Button>
-              </CardContent>
-            </Card>
-
-            {/* Pro */}
-            <Card className="relative bg-gradient-to-br from-[#F4F1FF] to-white dark:from-slate-900 dark:to-slate-900 border-2 border-[#64499D]/40 dark:border-[#64499D]/50 md:scale-105">
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                <span className="bg-gradient-to-r from-[#64499D] to-[#4D3680] text-white px-4 py-1 rounded-full text-xs font-medium">
-                  {t.pricing.badgePopular}
-                </span>
-              </div>
-              <CardHeader className="text-center pb-6">
-                <CardTitle className="text-2xl font-bold">{t.pricing.plans.pro.name}</CardTitle>
-                <CardDescription className="dark:text-slate-400">
-                  {lang === "fr" && "Idéal pour cabinets moyens"}
-                  {lang === "en" && "Ideal for mid-size firms"}
-                  {lang === "ar" && "مثالي للمكاتب المتوسطة"}
-                </CardDescription>
-                <div className="mt-4">
-                  <span className="text-4xl font-bold">{prices.pro}</span>
-                  <span className="text-slate-600 dark:text-slate-400">{t.pricing.plans.pro.perMonth}</span>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-3 mb-6 text-slate-700 dark:text-slate-300">
-                  {t.pricing.plans.pro.bullets.map((b: string, i: number) => (
-                    <li key={i} className="flex items-center">
-                      <Check className="w-5 h-5 text-green-600 mr-3" />
-                      {b}
-                    </li>
-                  ))}
-                </ul>
-                <Button
-                  className="w-full bg-gradient-to-r from-[#64499D] to-[#4D3680] hover:from-[#4D3680] hover:to-[#3E2D71]"
-                  onClick={() => handleNav("/signup?plan=pro")}
-                >
-                  {t.pricing.plans.pro.btn}
-                </Button>
-              </CardContent>
-            </Card>
-
-            {/* Enterprise */}
-            <Card className="bg-white/90 dark:bg-slate-900/70 backdrop-blur border-slate-200 dark:border-slate-700">
-              <CardHeader className="text-center pb-6">
-                <CardTitle className="text-2xl font-bold">{t.pricing.plans.enterprise.name}</CardTitle>
-                <CardDescription className="dark:text-slate-400">
-                  {lang === "fr" && "Pour grands cabinets"}
-                  {lang === "en" && "For large firms"}
-                  {lang === "ar" && "للمكاتب الكبيرة"}
-                </CardDescription>
-                <div className="mt-4">
-                  <span className="text-4xl font-bold">{prices.ent}</span>
-                  <span className="text-slate-600 dark:text-slate-400">{t.pricing.plans.enterprise.perMonth}</span>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-3 mb-6 text-slate-700 dark:text-slate-300">
-                  {t.pricing.plans.enterprise.bullets.map((b: string, i: number) => (
-                    <li key={i} className="flex items-center">
-                      <Check className="w-5 h-5 text-green-600 mr-3" />
-                      {b}
-                    </li>
-                  ))}
-                </ul>
-                <Button
-                  className="w-full"
-                  variant="outline"
-                  onClick={() => handleNav("/contact-sales")}
-                >
-                  {t.pricing.plans.enterprise.btn}
-                </Button>
-              </CardContent>
-            </Card>
           </div>
         </section>
 
