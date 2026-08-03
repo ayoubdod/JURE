@@ -40,6 +40,7 @@ import useCallsWsStore from '@/stores/callsWsStore';
 import useUserStore from '@/stores/userStore';
 import { useWebRtcCall } from '@/hooks/useWebRtcCall';
 import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
 const ConversationsPage: React.FC = () => {
   const [conversations, setConversations] = useState<API.Conversation[]>([]);
   const [activeId, setActiveId] = useState<number | undefined>(undefined);
@@ -552,9 +553,12 @@ const ConversationsPage: React.FC = () => {
   );
 
   return (
-    <div className="h-full flex bg-slate-50 dark:bg-slate-950 min-h-0 text-[13px] font-sans">
-      {/* Chat Sidebar - 300px */}
+    <div className="h-full flex bg-slate-50 dark:bg-slate-950 min-h-0 text-[13px] font-sans overflow-hidden">
+      {/* Chat list — full width on mobile when no active chat */}
       <ConversationList
+        className={cn(
+          activeId != null ? 'hidden md:flex' : 'flex'
+        )}
         isLoading={isLoading}
         conversations={conversations}
         archivedConversations={archivedConversations}
@@ -576,11 +580,24 @@ const ConversationsPage: React.FC = () => {
         onSelectMember={handleSelectMember}
       />
 
-      {/* Main Chat Pane - Flexible */}
-      <div className="flex-1 flex flex-col min-w-0 border-r border-slate-200 dark:border-slate-800">
+      {/* Main Chat Pane — full screen on mobile when a chat is open */}
+      <div
+        className={cn(
+          'flex-1 flex flex-col min-w-0 border-r border-slate-200 dark:border-slate-800',
+          activeId == null ? 'hidden md:flex' : 'flex'
+        )}
+      >
         <ChatWindow
           ref={chatWindowRef}
           conversation={activeConversation}
+          onBack={() => {
+            setActiveId(undefined);
+            setSearchParams((prev) => {
+              const next = new URLSearchParams(prev);
+              next.delete('selected');
+              return next;
+            });
+          }}
           onCallVoice={handleStartVoiceCall}
           onCallVideo={handleStartVideoCall}
           callInProgress={callInProgress}
@@ -674,7 +691,8 @@ const ConversationsPage: React.FC = () => {
         )}
       </div>
 
-      {/* Context Panel - 250px, Collapsible */}
+      {/* Context Panel — desktop only */}
+      <div className="hidden lg:contents">
       <ContextPanel
         conversation={activeConversation}
         isOpen={contextPanelOpen}
@@ -691,6 +709,7 @@ const ConversationsPage: React.FC = () => {
         panelPinnedMessages={pinnedForContext}
         onPanelPinnedMessageClick={(id) => chatWindowRef.current?.scrollToMessage(id)}
       />
+      </div>
 
       {activeConversation?.type === 'group' && (
         <LinkCaseModal

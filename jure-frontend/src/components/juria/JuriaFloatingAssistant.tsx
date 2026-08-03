@@ -76,9 +76,9 @@ export function JuriaFloatingAssistant() {
 
   return (
     <div className="pointer-events-none fixed bottom-0 right-0 z-[45] p-0">
-      <div className="pointer-events-auto flex flex-col items-end gap-3 pr-6 pb-20">
+      <div className="pointer-events-auto flex flex-col items-end gap-3 pr-3 sm:pr-6 pb-[max(1rem,env(safe-area-inset-bottom))] sm:pb-6">
         {open && (
-          <div className="flex h-[480px] w-[360px] max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-[20px] border border-slate-200/90 bg-white shadow-[0_12px_40px_-12px_rgba(15,23,42,0.35)] dark:border-slate-800 dark:bg-slate-950">
+          <div className="flex h-[min(480px,70dvh)] w-[min(360px,calc(100vw-1.5rem))] flex-col overflow-hidden rounded-[20px] border border-slate-200/90 bg-white shadow-[0_12px_40px_-12px_rgba(15,23,42,0.35)] dark:border-slate-800 dark:bg-slate-950">
             <div className="flex shrink-0 items-start justify-between gap-2 border-b border-slate-100 px-4 py-3 dark:border-slate-800">
               <div>
                 <div className="flex items-center gap-2">

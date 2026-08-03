@@ -734,7 +734,7 @@ const Cases = () => {
             />
           </div>
 
-          <div className="relative flex-1 min-w-[160px] max-w-[280px]">
+          <div className="relative flex-1 min-w-0 w-full sm:min-w-[160px] max-w-none sm:max-w-[280px]">
             <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             <Input
               type="text"

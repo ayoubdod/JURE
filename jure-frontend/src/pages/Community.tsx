@@ -154,13 +154,13 @@ const Community: React.FC = () => {
       dir={t.dir}
       activeNav="none"
     >
-      <section className="max-w-7xl mx-auto px-6 pt-14 pb-12 md:pt-20 md:pb-16">
-        <Reveal className="text-center max-w-3xl mx-auto">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 pt-8 sm:pt-14 pb-10 sm:pb-12 md:pt-20 md:pb-16">
+        <Reveal className="text-center max-w-3xl mx-auto min-w-0">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full landing-glass text-xs font-medium text-[#64499D] dark:text-[#CFC2FF] mb-6">
             <Users className="w-3.5 h-3.5" />
             Community
           </div>
-          <h1 className="font-display text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight leading-tight">
+          <h1 className="font-display text-[2rem] leading-[1.15] sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight break-words">
             <span className="landing-hero-shimmer bg-gradient-to-r from-slate-900 via-[#64499D] to-slate-900 dark:from-white dark:via-[#8B6FD1] dark:to-white bg-clip-text text-transparent">
               {t.hero.titleA}
             </span>
@@ -169,17 +169,17 @@ const Community: React.FC = () => {
               {t.hero.titleB}
             </span>
           </h1>
-          <p className="mt-6 text-lg text-slate-600 dark:text-slate-300 leading-relaxed">
+          <p className="mt-6 text-base sm:text-lg text-slate-600 dark:text-slate-300 leading-relaxed break-words">
             {t.hero.subtitle}
           </p>
           <div
-            className={`mt-10 flex flex-col sm:flex-row gap-4 justify-center ${
+            className={`mt-8 sm:mt-10 flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center w-full sm:w-auto ${
               isRtl ? "sm:flex-row-reverse" : ""
             }`}
           >
             <Button
               size="lg"
-              className="px-7 py-6 text-lg bg-gradient-to-r from-[#64499D] to-[#4D3680] hover:from-[#4D3680] hover:to-[#3E2D71] text-white"
+              className="w-full sm:w-auto px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg bg-gradient-to-r from-[#64499D] to-[#4D3680] hover:from-[#4D3680] hover:to-[#3E2D71] text-white"
               onClick={() => navigate("/contact")}
             >
               {t.hero.cta}
@@ -188,7 +188,7 @@ const Community: React.FC = () => {
             <Button
               size="lg"
               variant="outline"
-              className="px-7 py-6 text-lg border-[#64499D]/25 dark:border-[#8B6FD1]/30"
+              className="w-full sm:w-auto px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg border-[#64499D]/25 dark:border-[#8B6FD1]/30"
               onClick={() => navigate("/demo")}
             >
               {t.hero.demo}
@@ -199,22 +199,22 @@ const Community: React.FC = () => {
 
       <div className="landing-divider mb-12" aria-hidden />
 
-      <section className="max-w-7xl mx-auto px-6 pb-16">
-        <div className="grid md:grid-cols-3 gap-6">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 pb-14 sm:pb-16">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 sm:gap-6">
           {t.pillars.map((p: { title: string; desc: string }, i: number) => {
             const Icon = ICONS[i] || Users;
             const accent = ["#64499D", "#4D3680", "#3E2D71"][i];
             return (
               <Reveal key={p.title} delay={i * 0.06}>
-                <div className="landing-glass landing-glass-glow rounded-2xl p-7 h-full">
+                <div className="landing-glass landing-glass-glow rounded-2xl p-5 sm:p-7 h-full min-w-0">
                   <div
                     className="w-12 h-12 rounded-xl flex items-center justify-center text-white mb-5"
                     style={{ background: accent }}
                   >
                     <Icon className="w-6 h-6" />
                   </div>
-                  <h3 className="font-display text-xl font-semibold mb-2">{p.title}</h3>
-                  <p className="text-slate-600 dark:text-slate-300 text-sm leading-relaxed">{p.desc}</p>
+                  <h3 className="font-display text-xl font-semibold mb-2 break-words">{p.title}</h3>
+                  <p className="text-slate-600 dark:text-slate-300 text-sm leading-relaxed break-words">{p.desc}</p>
                 </div>
               </Reveal>
             );
@@ -222,14 +222,14 @@ const Community: React.FC = () => {
         </div>
       </section>
 
-      <section className="max-w-7xl mx-auto px-6 pb-24">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 pb-16 sm:pb-24">
         <Reveal>
-          <div className="rounded-3xl p-10 md:p-12 text-white landing-panel-glow bg-gradient-to-br from-[#64499D] via-[#4D3680] to-[#3E2D71] text-center">
-            <h2 className="font-display text-3xl md:text-4xl font-bold mb-3">{t.cta.title}</h2>
-            <p className="text-purple-100 text-lg mb-8">{t.cta.subtitle}</p>
+          <div className="rounded-2xl sm:rounded-3xl p-6 sm:p-10 md:p-12 text-white landing-panel-glow bg-gradient-to-br from-[#64499D] via-[#4D3680] to-[#3E2D71] text-center min-w-0">
+            <h2 className="font-display text-2xl sm:text-3xl md:text-4xl font-bold mb-3 break-words">{t.cta.title}</h2>
+            <p className="text-purple-100 text-base sm:text-lg mb-8 break-words">{t.cta.subtitle}</p>
             <Button
               size="lg"
-              className="px-8 py-6 text-lg bg-white text-slate-900 hover:bg-slate-100"
+              className="w-full sm:w-auto px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg bg-white text-slate-900 hover:bg-slate-100"
               onClick={() => navigate("/contact")}
             >
               {t.cta.primary}

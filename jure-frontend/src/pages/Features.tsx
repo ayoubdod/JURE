@@ -340,14 +340,14 @@ const Features: React.FC = () => {
       activeNav="features"
     >
       {/* Hero */}
-      <section className="max-w-7xl mx-auto px-6 pt-14 pb-12 md:pt-24 md:pb-16">
-        <Reveal className="text-center max-w-4xl mx-auto">
-          <h1 className="font-display text-5xl md:text-6xl font-bold tracking-tight leading-tight">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 pt-8 sm:pt-14 pb-10 sm:pb-12 md:pt-24 md:pb-16">
+        <Reveal className="text-center max-w-4xl mx-auto min-w-0">
+          <h1 className="font-display text-[2rem] leading-[1.15] sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight break-words">
             <span className="landing-hero-shimmer bg-gradient-to-r from-slate-900 via-[#64499D] to-slate-900 dark:from-white dark:via-[#8B6FD1] dark:to-white bg-clip-text text-transparent">
               {t.hero.titleA}
             </span>
             <br />
-            <span className="relative inline-block mt-1">
+            <span className="relative inline-block mt-1 max-w-full">
               <span
                 aria-hidden
                 className="absolute inset-0 blur-2xl opacity-40 dark:opacity-50 bg-gradient-to-r from-[#64499D] to-[#8B6FD1]"
@@ -357,19 +357,19 @@ const Features: React.FC = () => {
               </span>
             </span>
           </h1>
-          <p className="mt-6 text-lg md:text-xl text-slate-600 dark:text-slate-300 leading-relaxed">
+          <p className="mt-6 text-base sm:text-lg md:text-xl text-slate-600 dark:text-slate-300 leading-relaxed break-words">
             {t.hero.subtitle}
           </p>
 
           <div
-            className={`mt-10 flex flex-col sm:flex-row gap-4 justify-center ${
+            className={`mt-8 sm:mt-10 flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center w-full sm:w-auto ${
               isRtl ? "sm:flex-row-reverse" : ""
             }`}
           >
             <Button
               onClick={() => go("/demo")}
               size="lg"
-              className="px-7 py-6 text-lg font-medium shadow-lg hover:shadow-[0_0_32px_-6px_rgba(100,73,157,0.55)] transition-shadow bg-gradient-to-r from-[#64499D] to-[#4D3680] hover:from-[#4D3680] hover:to-[#3E2D71] text-white"
+              className="w-full sm:w-auto px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg font-medium shadow-lg hover:shadow-[0_0_32px_-6px_rgba(100,73,157,0.55)] transition-shadow bg-gradient-to-r from-[#64499D] to-[#4D3680] hover:from-[#4D3680] hover:to-[#3E2D71] text-white"
             >
               {t.hero.ctaPrimary}
               <ArrowRight className={`ms-2 h-5 w-5 ${isRtl ? "rotate-180" : ""}`} />
@@ -378,7 +378,7 @@ const Features: React.FC = () => {
               onClick={() => go("/contact")}
               variant="outline"
               size="lg"
-              className="px-7 py-6 text-lg border-[#64499D]/25 dark:border-[#8B6FD1]/30 text-slate-800 dark:text-slate-100 hover:bg-[#F4F1FF]/80 dark:hover:bg-[#64499D]/15 backdrop-blur-sm"
+              className="w-full sm:w-auto px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg border-[#64499D]/25 dark:border-[#8B6FD1]/30 text-slate-800 dark:text-slate-100 hover:bg-[#F4F1FF]/80 dark:hover:bg-[#64499D]/15 backdrop-blur-sm"
             >
               {t.hero.ctaSecondary}
             </Button>
@@ -389,8 +389,8 @@ const Features: React.FC = () => {
       </section>
 
       {/* Highlights grid */}
-      <section className="max-w-7xl mx-auto px-6 pb-16 md:pb-20">
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-5 md:gap-6">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 pb-14 sm:pb-16 md:pb-20">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 md:gap-6">
           {t.highlights.items.map((it: { title: string; desc: string }, idx: number) => {
             const Icon = HIGHLIGHT_ICONS[idx] || Shield;
             return (
@@ -410,21 +410,21 @@ const Features: React.FC = () => {
       <div className="landing-divider mb-16 md:mb-20" aria-hidden />
 
       {/* Deep-dive cards */}
-      <section className="max-w-7xl mx-auto px-6 pb-16 md:pb-20">
-        <div className={`grid md:grid-cols-2 gap-5 md:gap-6 ${isRtl ? "md:[direction:rtl]" : ""}`}>
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 pb-14 sm:pb-16 md:pb-20">
+        <div className={`grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-6 ${isRtl ? "md:[direction:rtl]" : ""}`}>
           {deepCards.map((card, i) => {
             const Icon = card.icon;
             return (
               <Reveal key={card.key} delay={i * 0.06}>
-                <div className="landing-glass landing-glass-glow rounded-2xl p-7 h-full">
+                <div className="landing-glass landing-glass-glow rounded-2xl p-5 sm:p-7 h-full min-w-0">
                   <div
                     className="w-12 h-12 rounded-xl flex items-center justify-center mb-4 text-white"
                     style={{ background: card.accent }}
                   >
                     <Icon className="w-6 h-6" />
                   </div>
-                  <h3 className="font-display text-2xl font-bold tracking-tight mb-2">{card.data.title}</h3>
-                  <p className="text-slate-600 dark:text-slate-400 mb-5 leading-relaxed">{card.data.desc}</p>
+                  <h3 className="font-display text-xl sm:text-2xl font-bold tracking-tight mb-2 break-words">{card.data.title}</h3>
+                  <p className="text-slate-600 dark:text-slate-400 mb-5 leading-relaxed break-words">{card.data.desc}</p>
                   <ul className="space-y-2.5 text-slate-700 dark:text-slate-300">
                     {card.data.bullets.map((b: string, bi: number) => (
                       <li key={bi} className="flex items-start gap-2">
@@ -441,9 +441,9 @@ const Features: React.FC = () => {
       </section>
 
       {/* CTA */}
-      <section className="max-w-7xl mx-auto px-6 pb-24">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 pb-16 sm:pb-24">
         <Reveal>
-          <div className="relative rounded-3xl p-10 md:p-14 text-white overflow-hidden landing-panel-glow bg-gradient-to-br from-[#64499D] via-[#4D3680] to-[#3E2D71]">
+          <div className="relative rounded-2xl sm:rounded-3xl p-6 sm:p-10 md:p-14 text-white overflow-hidden landing-panel-glow bg-gradient-to-br from-[#64499D] via-[#4D3680] to-[#3E2D71]">
             <div
               aria-hidden
               className="pointer-events-none absolute inset-0 opacity-30"
@@ -454,20 +454,20 @@ const Features: React.FC = () => {
                 maskImage: "radial-gradient(ellipse 80% 70% at 50% 50%, black, transparent)",
               }}
             />
-            <div className="relative text-center max-w-3xl mx-auto">
-              <h3 className="font-display text-3xl md:text-4xl font-bold tracking-tight mb-3">
+            <div className="relative text-center max-w-3xl mx-auto min-w-0">
+              <h3 className="font-display text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight mb-3 break-words">
                 {t.cta.title}
               </h3>
-              <p className="text-purple-100 text-lg">{t.cta.subtitle}</p>
+              <p className="text-purple-100 text-base sm:text-lg break-words">{t.cta.subtitle}</p>
 
               <div
-                className={`mt-8 flex flex-col sm:flex-row gap-4 justify-center ${
+                className={`mt-8 flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center w-full sm:w-auto ${
                   isRtl ? "sm:flex-row-reverse" : ""
                 }`}
               >
                 <Button
                   size="lg"
-                  className="px-8 py-6 text-lg font-medium bg-white text-slate-900 hover:bg-slate-100 shadow-lg"
+                  className="w-full sm:w-auto px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg font-medium bg-white text-slate-900 hover:bg-slate-100 shadow-lg"
                   onClick={() => go("/demo")}
                 >
                   {t.cta.primary}
@@ -475,7 +475,7 @@ const Features: React.FC = () => {
                 <Button
                   size="lg"
                   variant="outline"
-                  className="px-8 py-6 text-lg font-medium border-white/70 text-white hover:bg-white/10"
+                  className="w-full sm:w-auto px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg font-medium border-white/70 text-white hover:bg-white/10"
                   onClick={() => go("/contact")}
                 >
                   {t.cta.secondary}

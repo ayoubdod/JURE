@@ -41,7 +41,7 @@ export function NotificationDropdown({ phase }: NotificationDropdownProps) {
     <>
       <div
         className={cn(
-          'absolute right-0 top-full z-[100] flex max-h-[520px] w-[420px] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_4px_6px_rgba(0,0,0,0.05),0_10px_40px_rgba(0,0,0,0.12),0_20px_60px_rgba(0,0,0,0.08)] dark:border-slate-700 dark:bg-slate-950',
+          'absolute right-0 top-full z-[100] flex max-h-[min(520px,80dvh)] w-[min(100vw-1rem,420px)] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_4px_6px_rgba(0,0,0,0.05),0_10px_40px_rgba(0,0,0,0.12),0_20px_60px_rgba(0,0,0,0.08)] dark:border-slate-700 dark:bg-slate-950',
           phase === 'in' && 'animate-notification-dropdown-in',
           phase === 'out' && 'animate-notification-dropdown-out'
         )}

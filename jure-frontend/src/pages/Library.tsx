@@ -17,6 +17,7 @@ import {
   HardDrive,
   ChevronUp,
   ChevronDown,
+  FolderTree,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -45,12 +46,14 @@ import LibraryFolderTree, {
 import DocumentDetailDrawer, {
   DocumentDetailDrawerRef,
 } from '@/components/library/DocumentDetailDrawer';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
 import { devError } from '@/utils/devLog';
 
 const Library = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const [folderSheetOpen, setFolderSheetOpen] = useState(false);
   const [libraryItems, setLibraryItems] = useState<API.Document[]>([]);
   const [loading, setLoading] = useState(true);
   const [sortBy, setSortBy] = useState<'date' | 'name' | 'size'>('date');
@@ -240,11 +243,11 @@ const Library = () => {
 
   return (
     <>
-      <div className="flex h-full min-h-0">
-        {/* Folder Tree Sidebar */}
+      <div className="flex h-full min-h-0 overflow-hidden">
+        {/* Folder Tree Sidebar — desktop */}
         <aside
           className={cn(
-            'w-56 shrink-0 flex flex-col border-r border-slate-200 dark:border-slate-800',
+            'hidden md:flex w-56 shrink-0 flex-col border-r border-slate-200 dark:border-slate-800',
             'bg-[#F8FAFC] dark:bg-[#0F172A]'
           )}
         >
@@ -262,21 +265,52 @@ const Library = () => {
           </div>
         </aside>
 
+        {/* Mobile folder sheet */}
+        <Sheet open={folderSheetOpen} onOpenChange={setFolderSheetOpen}>
+          <SheetContent side="left" className="w-[min(100vw,18rem)] p-0 sm:max-w-xs md:hidden">
+            <SheetHeader className="border-b border-slate-200 px-4 py-3 dark:border-slate-800">
+              <SheetTitle className="text-sm">Folders</SheetTitle>
+            </SheetHeader>
+            <div className="p-2 overflow-y-auto h-[calc(100%-3.5rem)]">
+              <LibraryFolderTree
+                selectedId={selectedCategory}
+                onSelect={(id) => {
+                  setSelectedCategory(id);
+                  setFolderSheetOpen(false);
+                }}
+                items={folderTreeItems}
+              />
+            </div>
+          </SheetContent>
+        </Sheet>
+
         {/* Main Content */}
         <div className="flex-1 flex flex-col min-w-0 min-h-0">
           {/* Header */}
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 p-4 border-b border-slate-200 dark:border-slate-800">
-            <div>
-              <h1 className="text-[13px] font-semibold text-[#0F172A] dark:text-[#F8FAFC]">
-                Document Library
-              </h1>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                {filteredItems.length} documents
-              </p>
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4 p-3 sm:p-4 border-b border-slate-200 dark:border-slate-800">
+            <div className="flex items-center gap-2 min-w-0">
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                className="md:hidden h-11 w-11 shrink-0"
+                onClick={() => setFolderSheetOpen(true)}
+                aria-label="Open folders"
+              >
+                <FolderTree className="h-4 w-4" />
+              </Button>
+              <div className="min-w-0">
+                <h1 className="text-[13px] font-semibold text-[#0F172A] dark:text-[#F8FAFC]">
+                  Document Library
+                </h1>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                  {filteredItems.length} documents
+                </p>
+              </div>
             </div>
             <Button
               onClick={handleAddNew}
-              className="h-8 text-[13px] bg-[#0F172A] dark:bg-[#F8FAFC] text-[#F8FAFC] dark:text-[#0F172A] hover:opacity-90 border-0"
+              className="h-11 sm:h-8 w-full sm:w-auto text-[13px] bg-[#0F172A] dark:bg-[#F8FAFC] text-[#F8FAFC] dark:text-[#0F172A] hover:opacity-90 border-0"
             >
               <Plus size={14} className="mr-2" />
               Add Document
@@ -347,7 +381,8 @@ const Library = () => {
                 </div>
               </div>
             ) : (
-              <Table>
+              <div className="overflow-x-auto min-w-0">
+              <Table className="min-w-[640px]">
                 <TableHeader>
                   <TableRow className="border-slate-200 dark:border-slate-800 hover:bg-transparent">
                     <TableHead className="h-9 px-4 text-[11px] font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
@@ -453,6 +488,7 @@ const Library = () => {
                   })}
                 </TableBody>
               </Table>
+              </div>
             )}
 
             {!loading && filteredItems.length === 0 && (

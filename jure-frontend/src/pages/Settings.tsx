@@ -1141,7 +1141,7 @@ const Settings: React.FC = () => {
         onValueChange={(value) => setActiveSection(value as typeof activeSection)}
         className="flex flex-col gap-6 lg:flex-row"
       >
-        <TabsList className="flex h-full w-full flex-row gap-2 overflow-x-auto rounded-3xl border border-border/60 bg-background/60 p-4 lg:w-[260px] lg:flex-col lg:overflow-visible">
+        <TabsList className="flex h-auto w-full flex-row gap-2 overflow-x-auto rounded-3xl border border-border/60 bg-background/60 p-3 sm:p-4 lg:w-[260px] lg:flex-col lg:overflow-visible scrollbar-thin">
           {settingSections.map((section) => {
             const Icon = section.icon;
             const active = activeSection === section.id;
@@ -1150,7 +1150,7 @@ const Settings: React.FC = () => {
                 key={section.id}
                 value={section.id}
                 className={cn(
-                  'h-auto w-full flex-1 flex-col items-start gap-1 rounded-2xl border px-4 py-3 text-left text-sm transition-all lg:flex-none',
+                  'h-auto min-w-[9.5rem] sm:min-w-0 w-auto sm:w-full flex-none flex-col items-start gap-1 rounded-2xl border px-4 py-3 text-left text-sm transition-all lg:flex-none',
                   active
                     ? 'border-jure-300 bg-jure-50 text-jure-700 shadow-sm ring-2 ring-jure-200 dark:bg-jure-600/15 dark:text-jure-100'
                     : 'border-transparent bg-transparent text-muted-foreground hover:border-jure-200 hover:bg-muted/40'

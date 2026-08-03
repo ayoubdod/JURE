@@ -101,38 +101,38 @@ const Docs: React.FC = () => {
       dir={t.dir}
       activeNav="none"
     >
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 pt-12 pb-20 md:pt-20">
-        <Reveal className="text-center max-w-3xl mx-auto">
-          <h1 className="font-display text-4xl md:text-5xl font-bold tracking-tight">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 pt-8 sm:pt-12 pb-16 sm:pb-20 md:pt-20">
+        <Reveal className="text-center max-w-3xl mx-auto min-w-0">
+          <h1 className="font-display text-[2rem] leading-[1.15] sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight break-words">
             <span className="landing-hero-shimmer bg-gradient-to-r from-slate-900 via-[#64499D] to-slate-900 dark:from-white dark:via-[#8B6FD1] dark:to-white bg-clip-text text-transparent">
               {t.hero.title}
             </span>
           </h1>
-          <p className="mt-3 text-slate-600 dark:text-slate-300">{t.hero.subtitle}</p>
-          <div className="mt-6 flex gap-3 justify-center flex-wrap">
-            <Button onClick={() => navigate("/status")} variant="outline" className="border-[#64499D]/30">
+          <p className="mt-3 text-slate-600 dark:text-slate-300 break-words">{t.hero.subtitle}</p>
+          <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-center w-full sm:w-auto">
+            <Button onClick={() => navigate("/status")} variant="outline" className="w-full sm:w-auto px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg border-[#64499D]/30">
               {t.cta.status}
             </Button>
-            <Button onClick={() => navigate("/contact")} className="bg-gradient-to-r from-[#64499D] to-[#4D3680]">
+            <Button onClick={() => navigate("/contact")} className="w-full sm:w-auto px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg bg-gradient-to-r from-[#64499D] to-[#4D3680]">
               {t.cta.contact} <ArrowRight className="w-4 h-4 ms-2" />
             </Button>
           </div>
         </Reveal>
 
-        <div className="landing-divider my-12 max-w-md mx-auto" />
+        <div className="landing-divider my-10 sm:my-12 max-w-md mx-auto" />
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6 md:gap-8">
           {tiles.map((tile, i) => (
             <Reveal key={i} delay={i * 0.06} subtle>
-              <div className="landing-glass landing-glass-glow rounded-2xl p-6 h-full flex flex-col">
+              <div className="landing-glass landing-glass-glow rounded-2xl p-5 sm:p-6 h-full flex flex-col min-w-0">
                 <div
                   className="w-12 h-12 rounded-xl grid place-items-center text-white"
                   style={{ background: "#64499D" }}
                 >
                   {tile.icon}
                 </div>
-                <h3 className="font-display text-xl font-semibold mt-4">{tile.title}</h3>
-                <p className="mt-2 text-sm text-slate-600 dark:text-slate-400 flex-1">{tile.desc}</p>
+                <h3 className="font-display text-xl font-semibold mt-4 break-words">{tile.title}</h3>
+                <p className="mt-2 text-sm text-slate-600 dark:text-slate-400 flex-1 break-words">{tile.desc}</p>
                 <Button
                   variant="outline"
                   onClick={() => navigate("/docs")}

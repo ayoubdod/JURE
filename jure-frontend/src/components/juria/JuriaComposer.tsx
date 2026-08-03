@@ -75,7 +75,8 @@ export function JuriaComposer({
     <div
       className={cn(
         'border-t border-slate-200 bg-white/95 backdrop-blur dark:border-slate-800 dark:bg-slate-950/95',
-        compact ? 'p-2' : 'p-4'
+        compact ? 'p-2' : 'p-3 sm:p-4',
+        !compact && 'pb-[max(0.75rem,env(safe-area-inset-bottom))]'
       )}
     >
       {file && (
@@ -91,7 +92,7 @@ export function JuriaComposer({
       <div className="flex gap-2">
         <button
           type="button"
-          className="mt-2 shrink-0 rounded-lg p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"
+          className="mt-2 shrink-0 rounded-lg p-2.5 min-h-11 min-w-11 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"
           onClick={pickFile}
           aria-label="Joindre un fichier"
         >

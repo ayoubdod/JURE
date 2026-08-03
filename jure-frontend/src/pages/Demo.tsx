@@ -918,37 +918,46 @@ const Demo: React.FC = () => {
   const highlightIcons = useMemo(() => HIGHLIGHT_ICONS, []);
 
   return (
-    <div className="landing-root min-h-screen relative overflow-hidden text-slate-900 dark:text-slate-100 bg-gradient-to-br from-white via-[#FBF9FF] to-slate-50 dark:from-slate-950 dark:via-[#0c0a14] dark:to-slate-900">
+    <div className="landing-root min-h-screen relative overflow-x-hidden text-slate-900 dark:text-slate-100 bg-gradient-to-br from-white via-[#FBF9FF] to-slate-50 dark:from-slate-950 dark:via-[#0c0a14] dark:to-slate-900">
       <MeshBackdrop />
 
-      <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+      <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 py-5 sm:py-8 overflow-x-hidden">
         {/* Header */}
-        <header className="landing-glass rounded-2xl px-4 sm:px-5 py-3 mb-8 flex flex-wrap items-center justify-between gap-3">
-          <Button
-            onClick={() => navigate("/")}
-            variant="outline"
-            className="border-[#64499D]/25 text-[#64499D] dark:text-[#CFC2FF] hover:bg-[#64499D]/10"
-          >
-            <ArrowLeft className={`w-4 h-4 me-2 ${isRtl ? "rotate-180" : ""}`} />
-            {t.back}
-          </Button>
+        <header className="landing-glass rounded-2xl px-3 sm:px-5 py-2.5 sm:py-3 mb-6 sm:mb-8 flex flex-col min-[480px]:flex-row flex-wrap items-stretch min-[480px]:items-center justify-between gap-2.5 sm:gap-3 min-w-0">
+          <div className="flex items-center justify-between gap-2 min-w-0">
+            <Button
+              onClick={() => navigate("/")}
+              variant="outline"
+              size="sm"
+              className="border-[#64499D]/25 text-[#64499D] dark:text-[#CFC2FF] hover:bg-[#64499D]/10 shrink-0 px-2.5 sm:px-3"
+            >
+              <ArrowLeft className={`w-4 h-4 me-1.5 sm:me-2 ${isRtl ? "rotate-180" : ""}`} />
+              <span className="truncate max-w-[8rem] sm:max-w-none">{t.back}</span>
+            </Button>
 
-          <div className="order-last sm:order-none w-full sm:w-auto text-center">
-            <h1 className="font-display text-xl sm:text-2xl md:text-3xl font-bold tracking-tight">
+            <div className="flex items-center gap-1.5 sm:gap-2 min-[480px]:hidden shrink-0">
+              <LangSwitcher lang={lang} onChange={setLang} />
+              <ThemeToggle label={t.themeToggle.label} title={t.themeToggle.title} />
+            </div>
+          </div>
+
+          <div className="w-full min-[480px]:w-auto min-[480px]:flex-1 text-center min-w-0 px-1">
+            <h1 className="font-display text-lg sm:text-2xl md:text-3xl font-bold tracking-tight break-words">
               <span className="landing-hero-shimmer bg-gradient-to-r from-[#64499D] via-[#8B6FD1] to-[#4D3680] bg-clip-text text-transparent">
                 {t.title}
               </span>
             </h1>
-            <p className="text-slate-600 dark:text-slate-300 text-xs sm:text-sm mt-1 max-w-md mx-auto">
+            <p className="text-slate-600 dark:text-slate-300 text-xs sm:text-sm mt-1 max-w-md mx-auto break-words">
               {t.subtitle}
             </p>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="hidden min-[480px]:flex items-center gap-1.5 sm:gap-2 shrink-0">
             <LangSwitcher lang={lang} onChange={setLang} />
             <ThemeToggle label={t.themeToggle.label} title={t.themeToggle.title} />
             <Button
               onClick={() => navigate("/signin")}
+              size="sm"
               className="bg-gradient-to-r from-[#64499D] to-[#4D3680] hover:from-[#4D3680] hover:to-[#3E2D71] text-white hidden sm:inline-flex"
             >
               {t.cta}
@@ -1071,15 +1080,15 @@ const Demo: React.FC = () => {
         </Card>
 
         {/* Highlights */}
-        <div className="grid md:grid-cols-3 gap-4 sm:gap-6 mt-10 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 mt-8 sm:mt-10 mb-8">
           {t.highlights.map((h: { title: string; desc: string }, i: number) => {
             const Icon = highlightIcons[i] || Shield;
             return (
               <Reveal key={h.title} delay={i * 0.06}>
-                <div className="landing-glass landing-glass-glow rounded-2xl p-6 text-center h-full">
+                <div className="landing-glass landing-glass-glow rounded-2xl p-5 sm:p-6 text-center h-full min-w-0">
                   <Icon className="w-10 h-10 text-[#64499D] dark:text-[#8B6FD1] mx-auto mb-3" />
-                  <h3 className="font-display font-semibold mb-2">{h.title}</h3>
-                  <p className="text-slate-600 dark:text-slate-300 text-sm leading-relaxed">{h.desc}</p>
+                  <h3 className="font-display font-semibold mb-2 break-words">{h.title}</h3>
+                  <p className="text-slate-600 dark:text-slate-300 text-sm leading-relaxed break-words">{h.desc}</p>
                 </div>
               </Reveal>
             );

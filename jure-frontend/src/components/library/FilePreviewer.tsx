@@ -146,25 +146,27 @@ export const FilePreviewer: React.FC<FilePreviewerProps> = ({
           className
         )}
       >
-        <div className="flex items-center justify-center min-h-[180px] p-4 overflow-auto bg-slate-100/50 dark:bg-slate-800/30">
+        <div className="flex items-center justify-center min-h-[180px] p-4 overflow-auto bg-slate-100/50 dark:bg-slate-800/30 touch-pan-x touch-pan-y overscroll-contain">
           <img
             src={resolvedUrl}
             alt={title || fileName}
-            className="max-w-full object-contain transition-transform duration-200"
+            className="max-w-full object-contain transition-transform duration-200 touch-manipulation"
             style={{
               transform: `scale(${imageZoom})`,
               transformOrigin: 'center center',
             }}
             onError={() => setImageError(true)}
+            draggable={false}
           />
         </div>
         <div className="flex items-center justify-center gap-2 py-2 px-3 border-t border-slate-200 dark:border-slate-800">
           <Button
             variant="ghost"
             size="sm"
-            className="h-7 w-7 p-0"
+            className="h-11 w-11 sm:h-7 sm:w-7 p-0"
             onClick={() => setImageZoom((z) => Math.max(0.5, z - 0.25))}
             disabled={imageZoom <= 0.5}
+            aria-label="Zoom out"
           >
             <ZoomOut size={14} />
           </Button>
@@ -174,17 +176,19 @@ export const FilePreviewer: React.FC<FilePreviewerProps> = ({
           <Button
             variant="ghost"
             size="sm"
-            className="h-7 w-7 p-0"
+            className="h-11 w-11 sm:h-7 sm:w-7 p-0"
             onClick={() => setImageZoom((z) => Math.min(3, z + 0.25))}
             disabled={imageZoom >= 3}
+            aria-label="Zoom in"
           >
             <ZoomIn size={14} />
           </Button>
           <Button
             variant="ghost"
             size="sm"
-            className="h-7 text-[11px]"
+            className="h-11 sm:h-7 text-[11px] px-3"
             onClick={() => setImageZoom(1)}
+            aria-label="Reset zoom"
           >
             <RotateCcw size={12} className="mr-1" />
             Reset
@@ -217,21 +221,22 @@ export const FilePreviewer: React.FC<FilePreviewerProps> = ({
         )}
       >
         <iframe
-          src={`${resolvedUrl}#toolbar=0&navpanes=0&scrollbar=1`}
-          className="w-full h-[400px] border-0"
+          src={`${resolvedUrl}#toolbar=1&navpanes=0&scrollbar=1`}
+          className="w-full h-[min(70dvh,560px)] sm:h-[400px] border-0 touch-pan-x touch-pan-y"
           title={title || 'PDF'}
           onError={() => setPdfError(true)}
+          style={{ WebkitOverflowScrolling: 'touch' }}
         />
-        <div className="flex justify-end gap-2 p-2 border-t border-slate-200 dark:border-slate-800">
+        <div className="flex flex-wrap justify-end gap-2 p-2 border-t border-slate-200 dark:border-slate-800">
           <Button
             variant="outline"
             size="sm"
-            className="h-8 text-[13px]"
+            className="h-11 sm:h-8 min-w-[44px] text-[13px]"
             onClick={() => window.open(resolvedUrl, '_blank')}
           >
             Open in new tab
           </Button>
-          <Button variant="outline" size="sm" className="h-8 text-[13px]" onClick={handleDownload}>
+          <Button variant="outline" size="sm" className="h-11 sm:h-8 min-w-[44px] text-[13px]" onClick={handleDownload}>
             <Download size={12} className="mr-1" />
             Download
           </Button>

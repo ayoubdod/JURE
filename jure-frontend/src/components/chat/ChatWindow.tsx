@@ -11,6 +11,7 @@ import {
   ChevronRight,
   ImageIcon,
   Link2,
+  ArrowLeft,
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -87,6 +88,8 @@ const ChatWindow = forwardRef<
   onPinnedMessagesChange?: (messages: API.Message[]) => void;
   onOpenLinkCaseModal?: () => void;
   onUnlinkConversationCase?: () => void | Promise<void>;
+  /** Mobile: back to conversation list */
+  onBack?: () => void;
 }
 >(({ 
   conversation,
@@ -107,6 +110,7 @@ const ChatWindow = forwardRef<
   onPinnedMessagesChange,
   onOpenLinkCaseModal,
   onUnlinkConversationCase,
+  onBack,
 }, ref) => {
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const messageRefsMap = useRef<Map<number, HTMLDivElement>>(new Map());
@@ -428,8 +432,18 @@ const ChatWindow = forwardRef<
   return (
     <div className="flex-1 flex flex-col min-h-0 min-w-0">
       {/* Header */}
-      <div className="shrink-0 flex items-center justify-between px-3 py-2 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60">
-        <div className="flex items-center gap-2.5 min-w-0">
+      <div className="shrink-0 flex items-center justify-between px-2 sm:px-3 py-2 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60">
+        <div className="flex items-center gap-1.5 sm:gap-2.5 min-w-0">
+          {onBack && (
+            <button
+              type="button"
+              onClick={onBack}
+              className="md:hidden flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
+              aria-label="Back to conversations"
+            >
+              <ArrowLeft size={20} />
+            </button>
+          )}
           {isDirect ? (
             <UserAvatar
               image={peerImage}

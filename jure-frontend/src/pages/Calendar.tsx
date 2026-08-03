@@ -713,9 +713,9 @@ const CalendarPage: React.FC = () => {
         </div>
       </div>
 
-      <div className="flex-1 min-h-0 flex overflow-hidden">
-        {/* Sidebar */}
-        <div className="w-full max-w-[100vw] sm:w-[320px] lg:w-[350px] shrink-0 flex flex-col border-r border-slate-200 dark:border-slate-800 overflow-hidden bg-slate-50/50 dark:bg-slate-950/50">
+      <div className="flex-1 min-h-0 flex flex-col lg:flex-row overflow-hidden">
+        {/* Sidebar — stacked above content on mobile, side rail on lg+ */}
+        <div className="hidden sm:flex w-full sm:w-[320px] lg:w-[350px] shrink-0 flex-col border-r border-slate-200 dark:border-slate-800 overflow-hidden bg-slate-50/50 dark:bg-slate-950/50 max-h-[40vh] lg:max-h-none">
           <div className="shrink-0 p-3">
             <div className="rounded-xl border border-slate-200/90 dark:border-slate-800 bg-white/90 dark:bg-slate-900/40 shadow-[0_1px_3px_rgba(0,0,0,0.04)] p-3">
               <p className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3">Task status</p>
@@ -972,13 +972,17 @@ const CalendarPage: React.FC = () => {
                   <FullCalendar
                     ref={calendarRef as any}
                     plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin, listPlugin]}
-                    initialView="dayGridMonth"
-                    headerToolbar={{
-                      start: 'prev,next today',
-                      center: 'title',
-                      end: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek',
-                    }}
-                    buttonText={{ today: 'Today', month: 'Month', week: 'Week', day: 'Day', list: 'List' }}
+                    initialView={typeof window !== 'undefined' && window.innerWidth < 768 ? 'listWeek' : 'dayGridMonth'}
+                    headerToolbar={
+                      typeof window !== 'undefined' && window.innerWidth < 768
+                        ? { start: 'prev,next', center: 'title', end: 'today listWeek dayGridMonth' }
+                        : {
+                            start: 'prev,next today',
+                            center: 'title',
+                            end: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek',
+                          }
+                    }
+                    buttonText={{ today: 'Today', month: 'Month', week: 'Week', day: 'Day', list: 'Agenda' }}
                     titleFormat={{ year: 'numeric', month: 'long' }}
                     height="100%"
                     events={fcEvents}
@@ -998,6 +1002,32 @@ const CalendarPage: React.FC = () => {
                     dayMaxEvents={3}
                     moreLinkClick="popover"
                     eventDisplay="block"
+                    windowResize={() => {
+                      const api = calendarRef.current?.getApi();
+                      if (!api) return;
+                      const mobile = window.innerWidth < 768;
+                      api.setOption(
+                        'headerToolbar',
+                        mobile
+                          ? { start: 'prev,next', center: 'title', end: 'today listWeek dayGridMonth' }
+                          : {
+                              start: 'prev,next today',
+                              center: 'title',
+                              end: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek',
+                            }
+                      );
+                      if (mobile) {
+                        if (api.view.type !== 'listWeek') api.changeView('listWeek');
+                      } else if (api.view.type === 'listWeek') {
+                        api.changeView('dayGridMonth');
+                      }
+                    }}
+                    viewDidMount={() => {
+                      const api = calendarRef.current?.getApi();
+                      if (api && window.innerWidth < 768 && api.view.type !== 'listWeek') {
+                        api.changeView('listWeek');
+                      }
+                    }}
                     dayHeaderContent={(arg) => <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">{arg.text}</span>}
                     dayCellClassNames={(arg) => {
                       const cls: string[] = [];

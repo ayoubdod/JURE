@@ -28,7 +28,8 @@ const ThemeToggle: React.FC<{ label?: string; title?: string }> = ({ label, titl
     <Button
       onClick={toggle}
       variant="outline"
-      className="border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800"
+      size="icon"
+      className="h-9 w-9 shrink-0 border-[#64499D]/20 dark:border-[#8B6FD1]/30 text-slate-700 dark:text-slate-200 hover:bg-[#F4F1FF]/80 dark:hover:bg-[#64499D]/20"
       aria-label={label || "Toggle theme"}
       title={title || "Toggle theme"}
     >

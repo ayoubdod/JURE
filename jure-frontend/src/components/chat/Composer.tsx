@@ -124,8 +124,8 @@ const Composer: React.FC<{
   };
 
   return (
-    <div className="shrink-0 px-3 py-2 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60">
-      <div className="flex items-center gap-2">
+    <div className="shrink-0 px-2 sm:px-3 py-2 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
+      <div className="flex items-center gap-1.5 sm:gap-2">
         <TooltipProvider>
           <DocumentLibraryPicker
             onSelect={onAttachFiles}
@@ -136,7 +136,7 @@ const Composer: React.FC<{
               type="button"
               variant="ghost"
               size="icon"
-              className="h-8 w-8 shrink-0 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+              className="h-11 w-11 sm:h-8 sm:w-8 shrink-0 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
               aria-label="Attach from Document Library"
             >
               <Paperclip className="h-4 w-4" />
@@ -150,7 +150,7 @@ const Composer: React.FC<{
                   onClick={startRecording}
                   variant="ghost"
                   size="icon"
-                  className="h-8 w-8 shrink-0 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+                  className="h-11 w-11 sm:h-8 sm:w-8 shrink-0 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
                   disabled={disabled}
                   aria-label="Record voice note"
                 >
@@ -167,7 +167,7 @@ const Composer: React.FC<{
                   onClick={stopRecording}
                   variant="destructive"
                   size="icon"
-                  className="h-8 w-8 shrink-0"
+                  className="h-11 w-11 sm:h-8 sm:w-8 shrink-0"
                   aria-label="Stop recording"
                 >
                   <Square className="h-4 w-4" />
@@ -182,7 +182,7 @@ const Composer: React.FC<{
           value={text}
           onChange={(e) => setText(e.target.value)}
           placeholder="Type a message…"
-          className="flex-1 h-8 text-[13px] rounded-md border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 focus-visible:ring-1"
+          className="flex-1 h-11 sm:h-8 text-[15px] sm:text-[13px] rounded-md border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 focus-visible:ring-1"
           onKeyDown={(e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
               e.preventDefault();
@@ -207,7 +207,7 @@ const Composer: React.FC<{
                 type="button"
                 variant="ghost"
                 size="icon"
-                className="h-8 w-8 shrink-0 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 disabled:opacity-40"
+                className="h-11 w-11 sm:h-8 sm:w-8 shrink-0 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 disabled:opacity-40"
                 disabled={disabled || shareSending}
                 aria-label="Share case, task or appointment"
               >
@@ -226,7 +226,7 @@ const Composer: React.FC<{
           }}
           disabled={disabled || !text.trim()}
           size="icon"
-          className="h-8 w-8 shrink-0"
+          className="h-11 w-11 sm:h-8 sm:w-8 shrink-0"
           aria-label="Send message"
         >
           <Send className="h-4 w-4" />

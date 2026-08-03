@@ -1,8 +1,8 @@
 import React, { useRef, useState, useEffect } from 'react';
 import {
-  ChevronDown, ChevronLeft, User, Settings, LogOut,
+  ChevronDown, User, Settings, LogOut,
   Mail, Calendar, Search, Briefcase, FileText, CheckSquare, X, Loader2,
-  Sun, Moon, Coins,
+  Sun, Moon, Coins, Menu, MoreHorizontal,
 } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -10,6 +10,13 @@ import { useNavigate, useLocation } from 'react-router';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import LogoutModal, { LogoutModalRef } from './layout/LogoutModal';
 import useUserStore from '@/stores/userStore';
 import useChatStore from '@/stores/chatStore';
@@ -27,6 +34,7 @@ import { devError } from '@/utils/devLog';
 import { cn } from '@/lib/utils';
 import { useFinanceAccess } from '@/hooks/useFinanceAccess';
 import { NotificationBell } from '@/components/notifications/NotificationBell';
+import { useMobileNav } from '@/context/MobileNavContext';
 
 const pickFirstNonEmpty = (...values: Array<string | null | undefined>) =>
   values.find((value) => typeof value === 'string' && value.trim().length > 0)?.trim();
@@ -58,6 +66,7 @@ const Header = () => {
   const chatStore = useChatStore();
   const { t } = useAppTranslation();
   const { themeChoice, setTheme } = useTheme();
+  const { toggle: toggleMobileNav } = useMobileNav();
   const lookupCabinet = useCabinetMemberDirectory();
   /** When opening messages popover, map conversation id → group icon + title for correct avatars. */
   const [conversationMetaById, setConversationMetaById] = useState<
@@ -382,30 +391,40 @@ const Header = () => {
   };
 
   return (
-    <header className="sticky top-0 z-40 w-full bg-background/95 backdrop-blur-sm border-b border-border px-4 sm:px-6 lg:px-8 py-3 transition-all duration-300">
-      <div className="flex items-center justify-between h-16">
-        {/* Left side - Title and Breadcrumbs */}
-        <div className="flex items-center space-x-4">
-          <div>
-            <div className="flex items-center gap-3">
+    <header className="sticky top-0 z-40 w-full bg-background/95 backdrop-blur-sm border-b border-border px-3 py-2 sm:px-6 sm:py-3 lg:px-8 pt-[max(0.5rem,env(safe-area-inset-top))] transition-all duration-300">
+      <div className="flex items-center justify-between gap-2 min-h-12 sm:h-16">
+        {/* Left side - Menu, Title and Breadcrumbs */}
+        <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1">
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="lg:hidden shrink-0 h-11 w-11 text-muted-foreground hover:text-foreground"
+            onClick={toggleMobileNav}
+            aria-label="Open navigation menu"
+          >
+            <Menu size={22} />
+          </Button>
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 sm:gap-3 min-w-0">
               {organizationName && user?.logo && (
                 <img 
                   key={user.logo_version || user.logo}
                   src={user.logo_version ? `${user.logo}${user.logo.includes('?') ? '&' : '?'}t=${user.logo_version}` : user.logo}
                   alt={`${organizationName} logo`}
-                  className="h-8 w-8 object-contain rounded"
+                  className="h-7 w-7 sm:h-8 sm:w-8 object-contain rounded shrink-0"
                 />
               )}
-              <h1 className="text-xl font-bold text-foreground tracking-tight">{getPageTitle()}</h1>
+              <h1 className="text-base sm:text-xl font-bold text-foreground tracking-tight truncate">{getPageTitle()}</h1>
             </div>
             {breadcrumbs.length > 0 && (
-              <nav className="flex items-center text-sm text-muted-foreground mt-1">
+              <nav className="hidden sm:flex items-center text-sm text-muted-foreground mt-1 overflow-hidden">
                 {breadcrumbs.map((crumb, index) => (
                   <React.Fragment key={index}>
                     {index > 0 && <span className="mx-2 text-muted-foreground/50">/</span>}
                     <button
                       onClick={() => navigate(crumb.path)}
-                      className={`hover:text-primary transition-colors ${index === breadcrumbs.length - 1 ? "font-medium text-foreground" : ""}`}
+                      className={`hover:text-primary transition-colors truncate ${index === breadcrumbs.length - 1 ? "font-medium text-foreground" : ""}`}
                     >
                       {crumb.name}
                     </button>
@@ -417,12 +436,12 @@ const Header = () => {
         </div>
 
         {/* Right side - Actions */}
-        <div className="flex items-center space-x-3">
-          {/* Theme toggle */}
+        <div className="flex items-center gap-0.5 sm:gap-2 shrink-0">
+          {/* Theme + Finance: desktop / tablet only; mobile via More */}
           <Button
             variant="ghost"
             size="icon"
-            className="text-muted-foreground hover:text-foreground"
+            className="hidden md:inline-flex text-muted-foreground hover:text-foreground h-10 w-10"
             onClick={() => setTheme(themeChoice === 'dark' ? 'light' : 'dark')}
             aria-label="Toggle theme"
           >
@@ -433,7 +452,7 @@ const Header = () => {
               variant="ghost"
               size="icon"
               className={cn(
-                'text-muted-foreground hover:text-foreground',
+                'hidden md:inline-flex text-muted-foreground hover:text-foreground h-10 w-10',
                 location.pathname.startsWith('/dashboard/finance') &&
                   'text-jure-600 dark:text-jure-400 bg-jure-50 dark:bg-jure-950/40'
               )}
@@ -447,7 +466,7 @@ const Header = () => {
           {/* Search - Icon only that expands */}
           <Popover open={searchExpanded} onOpenChange={setSearchExpanded}>
             <PopoverTrigger asChild>
-              <div className={`flex items-center transition-all duration-300 ${searchExpanded ? 'w-64' : 'w-10'}`}>
+              <div className={`flex items-center transition-all duration-300 ${searchExpanded ? 'w-[min(100vw-8rem,16rem)] sm:w-64' : 'w-10'}`}>
                 {searchExpanded ? (
                   <div className="relative w-full">
                     <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground z-10" />
@@ -455,7 +474,7 @@ const Header = () => {
                       value={searchValue}
                       onChange={(e) => setSearchValue(e.target.value)}
                       placeholder={t.header.searchPlaceholder}
-                      className="pl-10 pr-10 py-2 text-sm rounded-lg focus-visible:ring-primary"
+                      className="pl-10 pr-10 py-2 text-sm rounded-lg focus-visible:ring-primary h-10"
                       autoFocus
                     />
                     {isSearching && (
@@ -474,8 +493,9 @@ const Header = () => {
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="text-muted-foreground hover:text-foreground"
+                    className="text-muted-foreground hover:text-foreground h-11 w-11 sm:h-10 sm:w-10"
                     onClick={handleSearchToggle}
+                    aria-label="Search"
                   >
                     <Search size={18} />
                   </Button>
@@ -483,7 +503,7 @@ const Header = () => {
               </div>
             </PopoverTrigger>
             <PopoverContent 
-              className="w-[400px] p-0 rounded-xl shadow-lg border" 
+              className="w-[min(100vw-1.5rem,400px)] p-0 rounded-xl shadow-lg border" 
               align="end"
               onOpenAutoFocus={(e) => e.preventDefault()}
             >
@@ -596,10 +616,15 @@ const Header = () => {
             </PopoverContent>
           </Popover>
 
-          {/* Messages */}
+          {/* Messages — hide on very small screens; available in More */}
           <Popover open={messagesOpen} onOpenChange={setMessagesOpen}>
             <PopoverTrigger asChild>
-              <Button variant="ghost" size="icon" className="relative text-muted-foreground hover:text-foreground">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="relative hidden xs:inline-flex sm:inline-flex text-muted-foreground hover:text-foreground h-11 w-11 sm:h-10 sm:w-10 max-[379px]:hidden"
+                aria-label="Messages"
+              >
                 <Mail size={18} />
                 {unreadMessagesCount > 0 && (
                   <Badge className="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center bg-blue-500 text-white">
@@ -608,7 +633,7 @@ const Header = () => {
                 )}
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-80 p-0 rounded-xl shadow-lg border" align="end">
+            <PopoverContent className="w-[min(100vw-1.5rem,20rem)] p-0 rounded-xl shadow-lg border" align="end">
               <div className="p-3 border-b">
                 <div className="flex items-center justify-between">
                   <h3 className="font-semibold text-foreground text-sm">{t.header.messagesTitle}</h3>
@@ -715,10 +740,69 @@ const Header = () => {
 
           <NotificationBell />
 
+          {/* Mobile More menu — theme, finance, messages, calendar shortcuts */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="md:hidden h-11 w-11 text-muted-foreground hover:text-foreground"
+                aria-label="More actions"
+              >
+                <MoreHorizontal size={20} />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuItem
+                onClick={() => setTheme(themeChoice === 'dark' ? 'light' : 'dark')}
+                className="min-h-11"
+              >
+                {themeChoice === 'dark' ? <Sun size={16} className="mr-2" /> : <Moon size={16} className="mr-2" />}
+                {themeChoice === 'dark' ? 'Light mode' : 'Dark mode'}
+              </DropdownMenuItem>
+              {canAccessFinance && (
+                <DropdownMenuItem
+                  onClick={() => navigate('/dashboard/finance')}
+                  className="min-h-11"
+                >
+                  <Coins size={16} className="mr-2" />
+                  Finance
+                </DropdownMenuItem>
+              )}
+              <DropdownMenuItem
+                onClick={() => navigate('/dashboard/conversations')}
+                className="min-h-11"
+              >
+                <Mail size={16} className="mr-2" />
+                Messages
+                {unreadMessagesCount > 0 && (
+                  <Badge className="ml-auto h-5 min-w-5 px-1.5 bg-blue-500 text-white">
+                    {unreadMessagesCount}
+                  </Badge>
+                )}
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => navigate('/dashboard/calendar')}
+                className="min-h-11"
+              >
+                <Calendar size={16} className="mr-2" />
+                Calendar
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={() => navigate('/dashboard/settings')}
+                className="min-h-11"
+              >
+                <Settings size={16} className="mr-2" />
+                Settings
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
           {/* User Profile */}
           <Popover open={profileOpen} onOpenChange={setProfileOpen}>
             <PopoverTrigger asChild>
-              <Button variant="ghost" className="h-10 px-2 rounded-full hover:bg-muted">
+              <Button variant="ghost" className="h-11 w-11 sm:h-10 sm:w-auto sm:px-2 rounded-full hover:bg-muted p-0 sm:p-2">
                 <div className="flex items-center space-x-2">
                   <Avatar className="h-8 w-8">
                     <AvatarImage src={user?.image} className='object-cover' />
@@ -752,7 +836,7 @@ const Header = () => {
               <div className="py-1">
                 <Button
                   variant="ghost"
-                  className="w-full justify-start px-4 py-2 text-sm font-medium"
+                  className="w-full justify-start px-4 py-2 text-sm font-medium min-h-11"
                   onClick={() => navigateTo('/dashboard/me')}
                 >
                   <User size={16} className="mr-3 text-muted-foreground" />
@@ -760,7 +844,7 @@ const Header = () => {
                 </Button>
                 <Button
                   variant="ghost"
-                  className="w-full justify-start px-4 py-2 text-sm font-medium"
+                  className="w-full justify-start px-4 py-2 text-sm font-medium min-h-11"
                   onClick={() => navigateTo('/dashboard/conversations')}
                 >
                   <Mail size={16} className="mr-3 text-muted-foreground" />
@@ -768,7 +852,7 @@ const Header = () => {
                 </Button>
                 <Button
                   variant="ghost"
-                  className="w-full justify-start px-4 py-2 text-sm font-medium"
+                  className="w-full justify-start px-4 py-2 text-sm font-medium min-h-11"
                   onClick={() => navigateTo('/dashboard/calendar')}
                 >
                   <Calendar size={16} className="mr-3 text-muted-foreground" />
@@ -776,7 +860,7 @@ const Header = () => {
                 </Button>
                 <Button
                   variant="ghost"
-                  className="w-full justify-start px-4 py-2 text-sm font-medium"
+                  className="w-full justify-start px-4 py-2 text-sm font-medium min-h-11"
                   onClick={() => navigateTo('/dashboard/settings')}
                 >
                   <Settings size={16} className="mr-3 text-muted-foreground" />
@@ -786,7 +870,7 @@ const Header = () => {
               <div className="p-2 border-t">
                 <Button
                   variant="ghost"
-                  className="w-full justify-start px-4 py-2 text-sm font-medium text-destructive hover:bg-destructive/10"
+                  className="w-full justify-start px-4 py-2 text-sm font-medium text-destructive hover:bg-destructive/10 min-h-11"
                   onClick={() => {
                     logoutModalRef.current?.show();
                   }}

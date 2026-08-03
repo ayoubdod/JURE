@@ -257,14 +257,14 @@ const useI18n = () => {
 const SectionCard: React.FC<{ icon: React.ReactNode; title: string; children?: React.ReactNode }> = ({
   icon, title, children,
 }) => (
-  <div className="landing-glass landing-glass-glow rounded-2xl p-6 h-full">
-    <div className="flex items-center gap-3 mb-3">
-      <div className="w-11 h-11 rounded-xl grid place-items-center text-white" style={{ background: "#64499D" }}>
+  <div className="landing-glass landing-glass-glow rounded-2xl p-5 sm:p-6 h-full min-w-0">
+    <div className="flex items-center gap-3 mb-3 min-w-0">
+      <div className="w-11 h-11 rounded-xl grid place-items-center text-white shrink-0" style={{ background: "#64499D" }}>
         {icon}
       </div>
-      <h3 className="font-display text-xl font-semibold">{title}</h3>
+      <h3 className="font-display text-xl font-semibold break-words">{title}</h3>
     </div>
-    <div>{children}</div>
+    <div className="min-w-0 break-words">{children}</div>
   </div>
 );
 
@@ -283,31 +283,31 @@ const Privacy: React.FC = () => {
       dir={t.dir}
       activeNav="none"
     >
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 pt-14 pb-10 md:pt-24 md:pb-16">
-        <Reveal className="max-w-4xl mx-auto text-center">
-          <h1 className="font-display text-4xl md:text-5xl font-bold tracking-tight">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 pt-8 sm:pt-14 pb-10 md:pt-24 md:pb-16">
+        <Reveal className="max-w-4xl mx-auto text-center min-w-0">
+          <h1 className="font-display text-[2rem] leading-[1.15] sm:text-4xl md:text-5xl font-bold tracking-tight break-words">
             <span className="landing-hero-shimmer bg-gradient-to-r from-slate-900 via-[#64499D] to-slate-900 dark:from-white dark:via-[#8B6FD1] dark:to-white bg-clip-text text-transparent">
               {t.hero.titleA}
             </span>
           </h1>
-          <p className="mt-4 text-lg text-slate-600 dark:text-slate-300">{t.hero.subtitle}</p>
+          <p className="mt-4 text-base sm:text-lg text-slate-600 dark:text-slate-300 break-words">{t.hero.subtitle}</p>
           <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
             {t.hero.lastUpdated}: {lastUpdated}
           </p>
 
-          <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
-            <Button onClick={() => go("/contact")} className="bg-gradient-to-r from-[#64499D] to-[#4D3680]">
+          <div className="mt-8 flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center w-full sm:w-auto">
+            <Button onClick={() => go("/contact")} className="w-full sm:w-auto px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg bg-gradient-to-r from-[#64499D] to-[#4D3680]">
               {t.hero.ctaPrimary} <ArrowRight className="ms-2 h-4 w-4" />
             </Button>
-            <Button variant="outline" onClick={() => go("/status")} className="border-[#64499D]/30">
+            <Button variant="outline" onClick={() => go("/status")} className="w-full sm:w-auto px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg border-[#64499D]/30">
               {t.hero.ctaSecondary}
             </Button>
           </div>
         </Reveal>
 
-        <div className="landing-divider my-12 max-w-md mx-auto" />
+        <div className="landing-divider my-10 sm:my-12 max-w-md mx-auto" />
 
-        <div className="grid md:grid-cols-2 gap-6 md:gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6 md:gap-8">
           <Reveal subtle>
             <SectionCard icon={<FileText className="w-5 h-5" />} title={t.sections.intro.title}>
               <p className="text-slate-600 dark:text-slate-300">{t.sections.intro.text}</p>

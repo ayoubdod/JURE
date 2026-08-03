@@ -146,32 +146,32 @@ const Status: React.FC = () => {
       dir={t.dir}
       activeNav="none"
     >
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 pt-14 pb-10 md:pt-24 md:pb-12">
-        <Reveal className="max-w-4xl mx-auto text-center">
-          <h1 className="font-display text-4xl md:text-5xl font-bold tracking-tight">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 pt-8 sm:pt-14 pb-10 md:pt-24 md:pb-12">
+        <Reveal className="max-w-4xl mx-auto text-center min-w-0">
+          <h1 className="font-display text-[2rem] leading-[1.15] sm:text-4xl md:text-5xl font-bold tracking-tight break-words">
             <span className="landing-hero-shimmer bg-gradient-to-r from-slate-900 via-[#64499D] to-slate-900 dark:from-white dark:via-[#8B6FD1] dark:to-white bg-clip-text text-transparent">
               {t.hero.titleA}
             </span>
           </h1>
-          <p className="mt-4 text-lg text-slate-600 dark:text-slate-300">{t.hero.subtitle}</p>
+          <p className="mt-4 text-base sm:text-lg text-slate-600 dark:text-slate-300 break-words">{t.hero.subtitle}</p>
           <div className="mt-4">
             <Badge tone={overallTone} text={overallText} />
           </div>
 
-          <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
-            <Button onClick={() => go("/contact")} className="bg-gradient-to-r from-[#64499D] to-[#4D3680]">
+          <div className="mt-8 flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center w-full sm:w-auto">
+            <Button onClick={() => go("/contact")} className="w-full sm:w-auto px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg bg-gradient-to-r from-[#64499D] to-[#4D3680]">
               {t.hero.ctaPrimary} <ArrowRight className="ms-2 h-4 w-4" />
             </Button>
-            <Button variant="outline" onClick={() => go("/docs")} className="border-[#64499D]/30">
+            <Button variant="outline" onClick={() => go("/docs")} className="w-full sm:w-auto px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg border-[#64499D]/30">
               {t.hero.ctaSecondary}
             </Button>
           </div>
         </Reveal>
 
-        <div className="landing-divider my-12 max-w-md mx-auto" />
+        <div className="landing-divider my-10 sm:my-12 max-w-md mx-auto" />
 
         {/* Components */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6 md:gap-8">
           {components.map((c, i) => {
             const tone =
               c.status === "operational" ? "ok" : c.status === "degraded" ? "minor" : "major";
@@ -190,13 +190,13 @@ const Status: React.FC = () => {
                 : "text-red-600";
             return (
               <Reveal key={i} delay={i * 0.05} subtle>
-                <div className="landing-glass landing-glass-glow rounded-2xl p-6 h-full">
-                  <div className="flex items-center gap-3">
-                    <div className={`w-11 h-11 rounded-xl grid place-items-center text-white ${tone === "ok" ? "bg-green-600" : tone === "minor" ? "bg-amber-600" : "bg-red-600"}`}>
+                <div className="landing-glass landing-glass-glow rounded-2xl p-5 sm:p-6 h-full min-w-0">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className={`w-11 h-11 rounded-xl grid place-items-center text-white shrink-0 ${tone === "ok" ? "bg-green-600" : tone === "minor" ? "bg-amber-600" : "bg-red-600"}`}>
                       <Icon className="w-5 h-5" />
                     </div>
-                    <div>
-                      <h3 className="font-display text-xl font-semibold">{c.name}</h3>
+                    <div className="min-w-0">
+                      <h3 className="font-display text-xl font-semibold break-words">{c.name}</h3>
                       <p className={`text-sm ${cls}`}>{label}</p>
                     </div>
                   </div>
@@ -213,15 +213,15 @@ const Status: React.FC = () => {
         </div>
 
         {/* Uptime */}
-        <Reveal className="mt-12">
-          <div className="landing-glass landing-panel-glow rounded-2xl p-6 md:p-8">
-            <h2 className="font-display text-xl font-semibold">{t.uptime.title}</h2>
-            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{t.uptime.foot}</p>
-            <div className="mt-4 grid grid-cols-30 md:grid-cols-30 gap-1">
+        <Reveal className="mt-10 sm:mt-12">
+          <div className="landing-glass landing-panel-glow rounded-2xl p-5 sm:p-6 md:p-8 min-w-0 overflow-x-auto">
+            <h2 className="font-display text-xl font-semibold break-words">{t.uptime.title}</h2>
+            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400 break-words">{t.uptime.foot}</p>
+            <div className="mt-4 grid grid-cols-30 md:grid-cols-30 gap-1 min-w-0">
               {uptimeBars.map((v, i) => {
                 const tone = v > 99.5 ? "bg-green-500" : v > 98.5 ? "bg-amber-500" : "bg-red-500";
                 return (
-                  <div key={i} className="h-8 rounded" title={`${v.toFixed(2)}%`} style={{ width: "100%" }}>
+                  <div key={i} className="h-8 rounded min-w-0" title={`${v.toFixed(2)}%`} style={{ width: "100%" }}>
                     <div className={`h-full ${tone} rounded`} style={{ width: `${v}%` }} />
                   </div>
                 );
@@ -231,10 +231,10 @@ const Status: React.FC = () => {
         </Reveal>
 
         {/* Incidents */}
-        <Reveal className="mt-12">
-          <div className="landing-glass landing-glass-glow rounded-2xl p-6 md:p-8">
-            <h2 className="font-display text-xl font-semibold">{t.incidents.title}</h2>
-            <p className="mt-3 text-slate-600 dark:text-slate-300">{t.incidents.none}</p>
+        <Reveal className="mt-10 sm:mt-12">
+          <div className="landing-glass landing-glass-glow rounded-2xl p-5 sm:p-6 md:p-8 min-w-0">
+            <h2 className="font-display text-xl font-semibold break-words">{t.incidents.title}</h2>
+            <p className="mt-3 text-slate-600 dark:text-slate-300 break-words">{t.incidents.none}</p>
           </div>
         </Reveal>
       </section>

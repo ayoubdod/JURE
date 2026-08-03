@@ -165,14 +165,14 @@ const Contact: React.FC = () => {
       dir={t.dir}
       activeNav="contact"
     >
-      <section className="max-w-7xl mx-auto px-6 pt-12 pb-16 md:pt-20 md:pb-20">
-        <Reveal className="text-center max-w-3xl mx-auto">
-          <h1 className="font-display text-5xl md:text-6xl font-bold tracking-tight">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 pt-8 sm:pt-12 pb-14 sm:pb-16 md:pt-20 md:pb-20">
+        <Reveal className="text-center max-w-3xl mx-auto min-w-0">
+          <h1 className="font-display text-[2rem] leading-[1.15] sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight break-words">
             <span className="landing-hero-shimmer bg-gradient-to-r from-slate-900 via-[#64499D] to-slate-900 dark:from-white dark:via-[#8B6FD1] dark:to-white bg-clip-text text-transparent">
               {t.hero.title}
             </span>
           </h1>
-          <p className="mt-4 text-lg text-slate-600 dark:text-slate-300">{t.hero.subtitle}</p>
+          <p className="mt-4 text-base sm:text-lg text-slate-600 dark:text-slate-300 break-words">{t.hero.subtitle}</p>
           <div className="mt-6 flex justify-center gap-3">
             <a
               href="mailto:contact@jure.ma"
@@ -183,12 +183,12 @@ const Contact: React.FC = () => {
           </div>
         </Reveal>
 
-        <div className="grid md:grid-cols-3 gap-5 md:gap-6 mt-12">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 md:gap-6 mt-10 sm:mt-12">
           {/* Form */}
-          <Reveal className="md:col-span-2" delay={0.05}>
-            <div className="landing-glass landing-glass-glow rounded-2xl p-6 md:p-8 h-full">
-              <h2 className="font-display text-2xl font-bold tracking-tight mb-1">{t.hero.title}</h2>
-              <p className="text-slate-600 dark:text-slate-400 mb-6">{t.hero.subtitle}</p>
+          <Reveal className="md:col-span-2 min-w-0" delay={0.05}>
+            <div className="landing-glass landing-glass-glow rounded-2xl p-5 sm:p-6 md:p-8 h-full min-w-0">
+              <h2 className="font-display text-xl sm:text-2xl font-bold tracking-tight mb-1 break-words">{t.hero.title}</h2>
+              <p className="text-slate-600 dark:text-slate-400 mb-6 break-words">{t.hero.subtitle}</p>
               <form onSubmit={submit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="text-sm text-slate-700 dark:text-slate-300">{t.form.name}</label>
@@ -257,7 +257,7 @@ const Contact: React.FC = () => {
                 <div className="md:col-span-2">
                   <Button
                     type="submit"
-                    className="bg-gradient-to-r from-[#64499D] to-[#4D3680] hover:from-[#4D3680] hover:to-[#3E2D71] text-white shadow-lg hover:shadow-[0_0_28px_-6px_rgba(100,73,157,0.55)]"
+                    className="w-full sm:w-auto px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg bg-gradient-to-r from-[#64499D] to-[#4D3680] hover:from-[#4D3680] hover:to-[#3E2D71] text-white shadow-lg hover:shadow-[0_0_28px_-6px_rgba(100,73,157,0.55)]"
                   >
                     <Send className={`w-4 h-4 ${isRtl ? "ms-2" : "me-2"}`} /> {t.hero.cta}
                   </Button>
@@ -267,9 +267,9 @@ const Contact: React.FC = () => {
           </Reveal>
 
           {/* Contact info */}
-          <Reveal delay={0.1}>
-            <div className="landing-glass landing-glass-glow rounded-2xl p-6 md:p-8 h-full">
-              <h2 className="font-display text-2xl font-bold tracking-tight mb-1">{t.info.title}</h2>
+          <Reveal delay={0.1} className="min-w-0">
+            <div className="landing-glass landing-glass-glow rounded-2xl p-5 sm:p-6 md:p-8 h-full min-w-0">
+              <h2 className="font-display text-xl sm:text-2xl font-bold tracking-tight mb-1 break-words">{t.info.title}</h2>
               <p className="text-slate-500 dark:text-slate-400 text-sm mb-6">JURE</p>
               <div className="space-y-4">
                 <div className={`flex items-center gap-3 ${isRtl ? "flex-row-reverse" : ""}`}>

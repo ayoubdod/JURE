@@ -69,7 +69,7 @@ export function NotificationBell() {
         aria-expanded={isDropdownOpen}
         aria-haspopup="dialog"
         className={cn(
-          'relative text-muted-foreground hover:text-foreground',
+          'relative text-muted-foreground hover:text-foreground h-11 w-11 sm:h-10 sm:w-10',
           isDropdownOpen && 'bg-indigo-50 text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-300'
         )}
         onClick={() => toggleDropdown()}

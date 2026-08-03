@@ -34,6 +34,7 @@ interface Props {
   onNewChat?: () => void;
   /** Start or switch to direct chat with a member (cabinet member id) */
   onSelectMember?: (memberId: number) => void;
+  className?: string;
 }
 
 const formatTimestamp = (dateStr?: string) => {
@@ -102,6 +103,7 @@ const ConversationList: React.FC<Props> = ({
   onSelectConversation,
   onNewChat,
   onSelectMember,
+  className,
 }) => {
   const [q, setQ] = useState('');
   const [members, setMembers] = useState<API.CabinetMember[]>([]);
@@ -152,7 +154,10 @@ const ConversationList: React.FC<Props> = ({
   );
 
   return (
-    <div className="w-[300px] shrink-0 flex flex-col border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60">
+    <div className={cn(
+      'w-full md:w-[300px] shrink-0 flex-col border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 h-full min-h-0',
+      className ?? 'flex'
+    )}>
       {/* Search bar */}
       <div className="shrink-0 p-2 border-b border-slate-200 dark:border-slate-800">
         <div className="relative">
