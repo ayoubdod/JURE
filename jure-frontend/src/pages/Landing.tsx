@@ -1,14 +1,8 @@
 // src/pages/Landing.tsx
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router"; // keep your existing navigation logic
+import { motion, useReducedMotion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import {
   ArrowRight,
   Shield,
@@ -22,17 +16,18 @@ import {
   Moon,
   FileText,
   Search,
-  Bot,
-  Sparkles,
-  Play,
   Briefcase,
   Calendar,
-  CheckSquare,
   UserCheck,
-  ChevronLeft,
-  ChevronRight,
+  Sparkles,
+  Bot,
 } from "lucide-react";
-
+import MeshBackdrop from "@/components/landing/MeshBackdrop";
+import Reveal from "@/components/landing/Reveal";
+import FeatureTile from "@/components/landing/FeatureTile";
+import DemoFeatureCard from "@/components/landing/DemoFeatureCard";
+import AiAssistantDemo from "@/components/landing/AiAssistantDemo";
+import "@/components/landing/landing.css";
 
 /**
  * Brand
@@ -155,11 +150,27 @@ const STRINGS: Record<Lang, any> = {
       cta: "Essayer la démo complète",
     },
     stats: {
-      title: "Rejoignez des milliers d'avocats",
-      subtitle: "qui font confiance à JURE pour transformer leur pratique",
-      lawyers: "Avocats actifs",
-      cases: "Dossiers traités",
-      csat: "Satisfaction client",
+      title: "Nous construisons JURE avec les premiers cabinets",
+      subtitle:
+        "Produit en phase de lancement — des modules réels déjà disponibles, affinés avec les cabinets qui nous rejoignent dès maintenant.",
+      chipEarly: "Accès anticipé",
+      chipAi: "Juria IA",
+      items: [
+        {
+          title: "Accès fondateur",
+          desc: "Rejoignez la première vague de cabinets et aidez à orienter la feuille de route.",
+        },
+        {
+          title: "Déjà opérationnel",
+          desc: "Dossiers, clients, Juria, bibliothèque, calendrier, équipe et finance — dans une seule plateforme.",
+        },
+        {
+          title: "Équipe à l’écoute",
+          desc: "Feedback direct : vos besoins juridiques réels façonnent chaque itération.",
+        },
+      ],
+      ctaPrimary: "Créer un compte",
+      ctaSecondary: "Voir la démo",
     },
     footer: {
       privacy: "Confidentialité",
@@ -278,11 +289,27 @@ const STRINGS: Record<Lang, any> = {
       cta: "Try full demo",
     },
     stats: {
-      title: "Join thousands of lawyers",
-      subtitle: "who trust JURE to transform their practice",
-      lawyers: "Active lawyers",
-      cases: "Matters handled",
-      csat: "Customer satisfaction",
+      title: "We're building JURE with the first firms",
+      subtitle:
+        "Early-stage product — real modules shipping today, refined with the practices that join us now.",
+      chipEarly: "Early access",
+      chipAi: "Juria AI",
+      items: [
+        {
+          title: "Founding access",
+          desc: "Join the first wave of firms and help steer what we build next.",
+        },
+        {
+          title: "Already operational",
+          desc: "Cases, clients, Juria, library, calendar, team, and finance — in one workspace.",
+        },
+        {
+          title: "Close to the team",
+          desc: "Direct feedback loop: real legal needs shape every iteration.",
+        },
+      ],
+      ctaPrimary: "Create an account",
+      ctaSecondary: "View demo",
     },
     footer: {
       privacy: "Privacy",
@@ -401,11 +428,27 @@ const STRINGS: Record<Lang, any> = {
       cta: "جرب العرض الكامل",
     },
     stats: {
-      title: "انضم إلى آلاف المحامين",
-      subtitle: "الذين يثقون بـ JURE لتحويل ممارستهم",
-      lawyers: "محامون نشطون",
-      cases: "قضايا معالجة",
-      csat: "رضا العملاء",
+      title: "نبني JURE مع أوائل المكاتب",
+      subtitle:
+        "منتج في مرحلة مبكرة — وحدات حقيقية متاحة اليوم، وتُطوَّر مع المكاتب التي تنضم إلينا الآن.",
+      chipEarly: "وصول مبكر",
+      chipAi: "Juria AI",
+      items: [
+        {
+          title: "وصول تأسيسي",
+          desc: "انضم إلى الموجة الأولى من المكاتب وساعد في توجيه خارطة الطريق.",
+        },
+        {
+          title: "جاهز للعمل",
+          desc: "قضايا وعملاء وJuria ومكتبة وتقويم وفريق ومالية — في مساحة واحدة.",
+        },
+        {
+          title: "قريبون من الفريق",
+          desc: "ملاحظات مباشرة: احتياجات قانونية حقيقية تشكّل كل إصدار.",
+        },
+      ],
+      ctaPrimary: "إنشاء حساب",
+      ctaSecondary: "شاهد العرض",
     },
     footer: {
       privacy: "الخصوصية",
@@ -461,7 +504,7 @@ const ThemeToggle: React.FC<{ label?: string; title?: string }> = ({ label, titl
     <Button
       onClick={toggle}
       variant="outline"
-      className="border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800"
+      className="border-[#64499D]/20 dark:border-[#8B6FD1]/30 text-slate-700 dark:text-slate-200 hover:bg-[#F4F1FF]/80 dark:hover:bg-[#64499D]/20 backdrop-blur-sm"
       aria-label={label || "Toggle theme"}
       title={title || "Toggle theme"}
     >
@@ -472,21 +515,44 @@ const ThemeToggle: React.FC<{ label?: string; title?: string }> = ({ label, titl
 
 const LangSwitcher: React.FC<{ lang: Lang; onChange: (l: Lang) => void }> = ({ lang, onChange }) => {
   return (
-    <div className="inline-flex rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700">
+    <div className="inline-flex rounded-lg overflow-hidden border border-[#64499D]/20 dark:border-[#8B6FD1]/30 backdrop-blur-sm bg-white/50 dark:bg-slate-900/40">
       {(["fr", "en", "ar"] as Lang[]).map((code) => (
         <button
           key={code}
           onClick={() => onChange(code)}
-          className={`px-3 py-2 text-sm ${
+          className={`px-3 py-2 text-sm transition-colors ${
             lang === code
               ? "bg-[#64499D] text-white"
-              : "bg-transparent text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
+              : "bg-transparent text-slate-700 dark:text-slate-200 hover:bg-[#F4F1FF] dark:hover:bg-[#64499D]/20"
           }`}
         >
           {code === "fr" ? "FR" : code === "en" ? "EN" : "AR"}
         </button>
       ))}
     </div>
+  );
+};
+
+const HeroStatChip: React.FC<{ label: string; value: string; delay?: number }> = ({
+  label,
+  value,
+  delay = 0,
+}) => {
+  const reduce = useReducedMotion();
+  return (
+    <motion.div
+      initial={reduce ? false : { opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay, duration: 0.45 }}
+      className="landing-glass px-4 py-2.5 rounded-full flex items-center gap-2 text-sm landing-float"
+      style={reduce ? undefined : { animationDelay: `${delay}s` }}
+    >
+      <span className="w-1.5 h-1.5 rounded-full bg-[#64499D] dark:bg-[#8B6FD1] motion-safe:animate-pulse" />
+      <span className="font-display font-semibold text-[#64499D] dark:text-[#CFC2FF] tabular-nums">
+        {value}
+      </span>
+      <span className="text-slate-600 dark:text-slate-300 text-xs">{label}</span>
+    </motion.div>
   );
 };
 
@@ -497,507 +563,497 @@ const Landing: React.FC = () => {
   const handleDemo = () => navigate("/demo");
   const handleNav = (to: string) => navigate(to);
   const year = new Date().getFullYear();
+  const reduce = useReducedMotion();
+  const isRtl = t.dir === "rtl";
+
+  const demoFeatures = [
+    {
+      key: "contract",
+      icon: <FileText className="w-5 h-5 text-white" />,
+      title: t.demo.contractAnalysis.title,
+      desc: t.demo.contractAnalysis.desc,
+      gradient: "bg-gradient-to-br from-[#64499D] to-[#4D3680]",
+    },
+    {
+      key: "research",
+      icon: <Search className="w-5 h-5 text-white" />,
+      title: t.demo.legalResearch.title,
+      desc: t.demo.legalResearch.desc,
+      gradient: "bg-gradient-to-br from-[#8B6FD1] to-[#64499D]",
+    },
+    {
+      key: "drafting",
+      icon: <FileText className="w-5 h-5 text-white" />,
+      title: t.demo.documentDrafting.title,
+      desc: t.demo.documentDrafting.desc,
+      gradient: "bg-gradient-to-br from-[#4D3680] to-[#3E2D71]",
+    },
+    {
+      key: "cases",
+      icon: <Briefcase className="w-5 h-5 text-white" />,
+      title: t.demo.caseManagement.title,
+      desc: t.demo.caseManagement.desc,
+      gradient: "bg-gradient-to-br from-[#64499D] to-[#8B6FD1]",
+    },
+    {
+      key: "clients",
+      icon: <UserCheck className="w-5 h-5 text-white" />,
+      title: t.demo.clientManagement.title,
+      desc: t.demo.clientManagement.desc,
+      gradient: "bg-gradient-to-br from-[#8B6FD1] to-[#4D3680]",
+    },
+    {
+      key: "calendar",
+      icon: <Calendar className="w-5 h-5 text-white" />,
+      title: t.demo.calendarTasks.title,
+      desc: t.demo.calendarTasks.desc,
+      gradient: "bg-gradient-to-br from-[#4D3680] to-[#64499D]",
+    },
+    {
+      key: "library",
+      icon: <BookOpen className="w-5 h-5 text-white" />,
+      title: t.demo.library.title,
+      desc: t.demo.library.desc,
+      gradient: "bg-gradient-to-br from-[#3E2D71] to-[#8B6FD1]",
+    },
+    {
+      key: "team",
+      icon: <Users className="w-5 h-5 text-white" />,
+      title: t.demo.teamCollaboration.title,
+      desc: t.demo.teamCollaboration.desc,
+      gradient: "bg-gradient-to-br from-[#64499D] to-[#3E2D71]",
+    },
+  ];
 
   return (
-    <div className="min-h-screen relative overflow-hidden text-slate-900 dark:text-slate-100 bg-gradient-to-br from-white via-white to-slate-50 dark:from-slate-950 dark:via-slate-950 dark:to-slate-900">
-      {/* Decorative brand blobs */}
-      <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div
-          className="absolute -top-40 -right-32 w-80 h-80 rounded-full blur-3xl opacity-20 dark:opacity-30 animate-blob"
-          style={{ background: "#64499D" }}
-        />
-        <div
-          className="absolute -bottom-40 -left-32 w-80 h-80 rounded-full blur-3xl opacity-10 dark:opacity-20 animate-blob animation-delay-2000"
-          style={{ background: "#3E2D71" }}
-        />
-        <div
-          className="absolute top-48 left-24 w-72 h-72 rounded-full blur-3xl opacity-10 dark:opacity-20 animate-blob animation-delay-4000"
-          style={{ background: "#8B6FD1" }}
-        />
-      </div>
+    <div className="landing-root min-h-screen relative overflow-hidden text-slate-900 dark:text-slate-100 bg-gradient-to-br from-white via-[#FBF9FF] to-slate-50 dark:from-slate-950 dark:via-[#0c0a14] dark:to-slate-900">
+      <MeshBackdrop />
 
-      {/* Header */}
-      <header className="relative z-10">
-        <nav
-          className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between"
-          aria-label="main navigation"
-        >
-          <div className="flex items-center gap-3">
-            {/* ✅ Use your Jure logo */}
-            <img
-              src="/images/Jure logo.png"
-              alt="JURE"
-              className="w-[140px] h-10 object-contain"
-              loading="eager"
-              decoding="async"
+      {/* Header — frosted HUD nav */}
+      <header className="relative z-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-3">
+          <nav
+            className="landing-glass rounded-2xl px-4 sm:px-6 py-3 flex items-center justify-between gap-3"
+            aria-label="main navigation"
+          >
+            <div className="flex items-center gap-3 min-w-0">
+              <img
+                src="/images/Jure logo.png"
+                alt="JURE"
+                className="w-[120px] sm:w-[140px] h-9 sm:h-10 object-contain"
+                loading="eager"
+                decoding="async"
+              />
+            </div>
+
+            <div className="hidden md:flex items-center gap-6 text-sm font-medium">
+              <button
+                onClick={() => handleNav("/features")}
+                className="hover:text-[#64499D] dark:hover:text-[#8B6FD1] transition-colors"
+              >
+                {t.nav.features}
+              </button>
+              <button
+                onClick={() => handleNav("/about")}
+                className="hover:text-[#64499D] dark:hover:text-[#8B6FD1] transition-colors"
+              >
+                {t.nav.about}
+              </button>
+              <button
+                onClick={() => handleNav("/contact")}
+                className="hover:text-[#64499D] dark:hover:text-[#8B6FD1] transition-colors"
+              >
+                {t.nav.contact}
+              </button>
+            </div>
+
+            <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+              <LangSwitcher lang={lang} onChange={setLang} />
+              <ThemeToggle label={t.themeToggle.label} title={t.themeToggle.title} />
+              <Button
+                onClick={handleGetStarted}
+                variant="outline"
+                className="border-[#64499D]/30 text-[#64499D] hover:bg-[#64499D]/10 dark:text-[#CFC2FF] dark:hover:bg-[#64499D]/20"
+              >
+                {t.auth.signin}
+              </Button>
+            </div>
+          </nav>
+        </div>
+      </header>
+
+      <main className="relative z-10">
+        {/* Hero */}
+        <section className="max-w-7xl mx-auto px-6 pt-12 pb-12 md:pt-20 md:pb-24">
+          <div className="grid lg:grid-cols-12 gap-10 lg:gap-12 items-center">
+            <div className="lg:col-span-7 text-center lg:text-start">
+              <motion.div
+                initial={reduce ? false : { opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full landing-glass text-xs font-medium text-[#64499D] dark:text-[#CFC2FF] mb-6"
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>JURE · AI Legal OS</span>
+              </motion.div>
+
+              <motion.h1
+                initial={reduce ? false : { opacity: 0, y: 24 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.05 }}
+                className="font-display text-5xl sm:text-6xl md:text-7xl font-bold tracking-tight leading-[1.05]"
+              >
+                <span className="landing-hero-shimmer bg-gradient-to-r from-slate-900 via-[#64499D] to-slate-900 dark:from-white dark:via-[#8B6FD1] dark:to-white bg-clip-text text-transparent">
+                  {t.hero.h1a}
+                </span>
+                <br />
+                <span className="relative inline-block mt-1">
+                  <span
+                    aria-hidden
+                    className="absolute inset-0 blur-2xl opacity-40 dark:opacity-50 bg-gradient-to-r from-[#64499D] to-[#8B6FD1]"
+                  />
+                  <span className="relative bg-gradient-to-r from-[#64499D] via-[#8B6FD1] to-[#4D3680] bg-clip-text text-transparent">
+                    {t.hero.h1b}
+                  </span>
+                </span>
+              </motion.h1>
+
+              <motion.p
+                initial={reduce ? false : { opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.55, delay: 0.12 }}
+                className="mt-6 text-lg md:text-xl text-slate-600 dark:text-slate-300 leading-relaxed max-w-xl mx-auto lg:mx-0"
+              >
+                {t.hero.subtitle}
+              </motion.p>
+
+              <motion.div
+                initial={reduce ? false : { opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.55, delay: 0.18 }}
+                className={`mt-10 flex flex-col sm:flex-row gap-4 justify-center lg:justify-start ${
+                  isRtl ? "sm:flex-row-reverse" : ""
+                }`}
+              >
+                <Button
+                  onClick={handleGetStarted}
+                  size="lg"
+                  className="px-7 py-6 text-lg font-medium shadow-lg hover:shadow-[0_0_32px_-6px_rgba(100,73,157,0.55)] transition-shadow bg-gradient-to-r from-[#64499D] to-[#4D3680] hover:from-[#4D3680] hover:to-[#3E2D71] text-white"
+                >
+                  {t.hero.ctaStart}
+                  <ArrowRight className={`ms-2 h-5 w-5 ${isRtl ? "rotate-180" : ""}`} />
+                </Button>
+                <Button
+                  onClick={handleDemo}
+                  variant="outline"
+                  size="lg"
+                  className="px-7 py-6 text-lg border-[#64499D]/25 dark:border-[#8B6FD1]/30 text-slate-800 dark:text-slate-100 hover:bg-[#F4F1FF]/80 dark:hover:bg-[#64499D]/15 backdrop-blur-sm"
+                >
+                  {t.hero.ctaDemo}
+                </Button>
+              </motion.div>
+
+              <div className="mt-6 text-sm text-slate-500 dark:text-slate-400 flex items-center justify-center lg:justify-start gap-6 flex-wrap">
+                <button
+                  onClick={() => handleNav("/security")}
+                  className="underline-offset-4 hover:underline hover:text-[#64499D] dark:hover:text-[#8B6FD1] transition-colors"
+                >
+                  {t.hero.links.security}
+                </button>
+                <button
+                  onClick={() => handleNav("/docs")}
+                  className="underline-offset-4 hover:underline hover:text-[#64499D] dark:hover:text-[#8B6FD1] transition-colors"
+                >
+                  {t.hero.links.docs}
+                </button>
+                <button
+                  onClick={() => handleNav("/community")}
+                  className="underline-offset-4 hover:underline hover:text-[#64499D] dark:hover:text-[#8B6FD1] transition-colors"
+                >
+                  {t.hero.links.community}
+                </button>
+              </div>
+
+              <div className="mt-8 flex flex-wrap gap-3 justify-center lg:justify-start">
+                <HeroStatChip label={t.stats.chipEarly} value="β" delay={0.25} />
+                <HeroStatChip label={t.stats.chipAi} value="AI" delay={0.35} />
+              </div>
+            </div>
+
+            {/* Floating mini AI preview — desktop-first visual anchor */}
+            <div className="lg:col-span-5 relative hidden md:block">
+              <motion.div
+                initial={reduce ? false : { opacity: 0, scale: 0.96, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                transition={{ duration: 0.65, delay: 0.15 }}
+                className="relative"
+              >
+                <div
+                  aria-hidden
+                  className="absolute -inset-6 rounded-[2rem] bg-gradient-to-br from-[#64499D]/25 via-transparent to-[#8B6FD1]/20 blur-2xl"
+                />
+                <div className="landing-glass landing-float rounded-3xl p-5 relative">
+                  <div className={`flex items-center gap-3 mb-4 ${isRtl ? "flex-row-reverse" : ""}`}>
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#64499D] to-[#4D3680] flex items-center justify-center landing-bot-pulse">
+                      <Bot className="w-5 h-5 text-white" />
+                    </div>
+                    <div className={isRtl ? "text-end" : "text-start"}>
+                      <div className="font-display font-semibold text-sm">{t.demo.aiAssistant.title}</div>
+                      <div className="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 motion-safe:animate-pulse" />
+                        Online
+                      </div>
+                    </div>
+                  </div>
+                  <div className="space-y-3">
+                    <div className="p-3 rounded-xl bg-white/60 dark:bg-slate-800/60 text-xs text-slate-700 dark:text-slate-200 border border-[#64499D]/10 dark:border-[#8B6FD1]/15">
+                      {t.demo.aiAssistant.greeting}
+                    </div>
+                    <div className="p-3 rounded-xl bg-gradient-to-r from-[#64499D] to-[#4D3680] text-xs text-white max-w-[90%] ms-auto">
+                      {t.demo.aiAssistant.userMessage}
+                    </div>
+                    <div className="p-3 rounded-xl bg-white/60 dark:bg-slate-800/60 text-xs text-slate-700 dark:text-slate-200 border border-[#64499D]/10 dark:border-[#8B6FD1]/15">
+                      {t.demo.aiAssistant.suggestions[0]} →
+                    </div>
+                  </div>
+                </div>
+
+                <div className="absolute -bottom-4 -end-2 landing-glass landing-float-delay rounded-2xl px-4 py-3 text-xs shadow-lg">
+                  <div className="flex items-center gap-2">
+                    <Shield className="w-4 h-4 text-[#64499D] dark:text-[#8B6FD1]" />
+                    <span className="font-medium text-slate-700 dark:text-slate-200">
+                      {t.features.security.title}
+                    </span>
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+          </div>
+
+          {/* Feature tiles */}
+          <div className="mt-20 md:mt-28 grid md:grid-cols-2 lg:grid-cols-4 gap-5 md:gap-6">
+            <FeatureTile
+              icon={<Zap className="w-6 h-6" />}
+              title={t.features.ai.title}
+              description={t.features.ai.desc}
+              accent="#64499D"
+              delay={0}
+            />
+            <FeatureTile
+              icon={<Shield className="w-6 h-6" />}
+              title={t.features.security.title}
+              description={t.features.security.desc}
+              accent="#4D3680"
+              delay={0.06}
+            />
+            <FeatureTile
+              icon={<Users className="w-6 h-6" />}
+              title={t.features.collab.title}
+              description={t.features.collab.desc}
+              accent="#3E2D71"
+              delay={0.12}
+            />
+            <FeatureTile
+              icon={<BookOpen className="w-6 h-6" />}
+              title={t.features.library.title}
+              description={t.features.library.desc}
+              accent="#8B6FD1"
+              delay={0.18}
+            />
+          </div>
+        </section>
+
+        <div className="landing-divider mb-16 md:mb-20" aria-hidden />
+
+        {/* Demo Section */}
+        <section className="max-w-7xl mx-auto px-6 pb-16 md:pb-28">
+          <Reveal className="text-center mb-12 md:mb-16">
+            <h2 className="font-display text-3xl md:text-5xl font-bold tracking-tight">
+              {t.demo.title}
+            </h2>
+            <p className="mt-4 text-slate-600 dark:text-slate-300 text-lg max-w-2xl mx-auto">
+              {t.demo.subtitle}
+            </p>
+          </Reveal>
+
+          <div className="grid lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
+            <div className="lg:col-span-2 space-y-4">
+              <div className="grid sm:grid-cols-2 gap-4">
+                {demoFeatures.map((f, i) => (
+                  <DemoFeatureCard
+                    key={f.key}
+                    icon={f.icon}
+                    title={f.title}
+                    description={f.desc}
+                    gradient={f.gradient}
+                    delay={i * 0.04}
+                  />
+                ))}
+              </div>
+            </div>
+
+            <AiAssistantDemo
+              key={lang}
+              copy={t.demo.aiAssistant}
+              dir={t.dir as "ltr" | "rtl"}
             />
           </div>
 
-          <div className="hidden md:flex items-center gap-6">
-            <button
-              onClick={() => handleNav("/features")}
-              className="hover:text-[#64499D] dark:hover:text-[#8B6FD1] transition-colors"
-            >
-              {t.nav.features}
-            </button>
-            <button
-              onClick={() => handleNav("/about")}
-              className="hover:text-[#64499D] dark:hover:text-[#8B6FD1] transition-colors"
-            >
-              {t.nav.about}
-            </button>
-            <button
-              onClick={() => handleNav("/contact")}
-              className="hover:text-[#64499D] dark:hover:text-[#8B6FD1] transition-colors"
-            >
-              {t.nav.contact}
-            </button>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <LangSwitcher lang={lang} onChange={setLang} />
-            <ThemeToggle label={t.themeToggle.label} title={t.themeToggle.title} />
-            <Button
-              onClick={handleGetStarted}
-              variant="outline"
-              className="border-[#64499D]/30 text-[#64499D] hover:bg-[#64499D]/10 dark:text-[#CFC2FF] dark:hover:bg-[#64499D]/20"
-            >
-              {t.auth.signin}
-            </Button>
-          </div>
-        </nav>
-      </header>
-
-      {/* Hero */}
-      <main className="relative z-10">
-        <section className="max-w-7xl mx-auto px-6 pt-14 pb-10 md:pt-24 md:pb-20">
-          <div className="text-center max-w-3xl mx-auto">
-            <h1 className="text-5xl md:text-6xl font-bold tracking-tight leading-tight">
-              <span className="bg-gradient-to-r from-slate-900 via-[#64499D] to-slate-900 dark:from-white dark:via-[#8B6FD1] dark:to-white bg-clip-text text-transparent">
-                {t.hero.h1a}
-              </span>
-              <br />
-              <span className="bg-gradient-to-r from-[#64499D] to-[#4D3680] bg-clip-text text-transparent">
-                {t.hero.h1b}
-              </span>
-            </h1>
-            <p className="mt-6 text-lg md:text-xl text-slate-600 dark:text-slate-300 leading-relaxed">
-              {t.hero.subtitle}
-            </p>
-
-            <div className={`mt-10 flex flex-col sm:flex-row gap-4 justify-center ${t.dir === "rtl" ? "sm:flex-row-reverse" : ""}`}>
-              <Button
-                onClick={handleGetStarted}
-                size="lg"
-                className="px-7 py-6 text-lg font-medium shadow-lg hover:shadow-xl transition-shadow bg-gradient-to-r from-[#64499D] to-[#4D3680] hover:from-[#4D3680] hover:to-[#3E2D71] text-white"
-              >
-                {t.hero.ctaStart}
-                <ArrowRight className={`ml-2 h-5 w-5 ${t.dir === "rtl" ? "rotate-180" : ""}`} />
-              </Button>
-              <Button
-                onClick={handleDemo}
-                variant="outline"
-                size="lg"
-                className="px-7 py-6 text-lg border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800"
-              >
-                {t.hero.ctaDemo}
-              </Button>
-            </div>
-
-            <div className="mt-6 text-sm text-slate-500 dark:text-slate-400 flex items-center justify-center gap-6">
-              <button
-                onClick={() => handleNav("/security")}
-                className="underline-offset-4 hover:underline"
-              >
-                {t.hero.links.security}
-              </button>
-              <button
-                onClick={() => handleNav("/docs")}
-                className="underline-offset-4 hover:underline"
-              >
-                {t.hero.links.docs}
-              </button>
-              <button
-                onClick={() => handleNav("/community")}
-                className="underline-offset-4 hover:underline"
-              >
-                {t.hero.links.community}
-              </button>
-            </div>
-          </div>
-
-          {/* Features */}
-          <div className="mt-20 grid md:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
-            <div className="group p-7 rounded-2xl border border-slate-200/70 dark:border-slate-700 bg-white/80 dark:bg-slate-900/60 backdrop-blur-sm hover:shadow-lg transition-all">
-              <div
-                className="w-12 h-12 rounded-xl flex items-center justify-center mb-5 text-white group-hover:scale-105 transition-transform"
-                style={{ background: "#64499D" }}
-              >
-                <Zap className="w-6 h-6" />
-              </div>
-              <h3 className="text-xl font-semibold mb-2">{t.features.ai.title}</h3>
-              <p className="text-slate-600 dark:text-slate-300">{t.features.ai.desc}</p>
-            </div>
-
-            <div className="group p-7 rounded-2xl border border-slate-200/70 dark:border-slate-700 bg-white/80 dark:bg-slate-900/60 backdrop-blur-sm hover:shadow-lg transition-all">
-              <div
-                className="w-12 h-12 rounded-xl flex items-center justify-center mb-5 text-white group-hover:scale-105 transition-transform"
-                style={{ background: "#4D3680" }}
-              >
-                <Shield className="w-6 h-6" />
-              </div>
-              <h3 className="text-xl font-semibold mb-2">{t.features.security.title}</h3>
-              <p className="text-slate-600 dark:text-slate-300">{t.features.security.desc}</p>
-            </div>
-
-            <div className="group p-7 rounded-2xl border border-slate-200/70 dark:border-slate-700 bg-white/80 dark:bg-slate-900/60 backdrop-blur-sm hover:shadow-lg transition-all">
-              <div
-                className="w-12 h-12 rounded-xl flex items-center justify-center mb-5 text-white group-hover:scale-105 transition-transform"
-                style={{ background: "#3E2D71" }}
-              >
-                <Users className="w-6 h-6" />
-              </div>
-              <h3 className="text-xl font-semibold mb-2">{t.features.collab.title}</h3>
-              <p className="text-slate-600 dark:text-slate-300">{t.features.collab.desc}</p>
-            </div>
-
-            <div className="group p-7 rounded-2xl border border-slate-200/70 dark:border-slate-700 bg-white/80 dark:bg-slate-900/60 backdrop-blur-sm hover:shadow-lg transition-all">
-              <div
-                className="w-12 h-12 rounded-xl flex items-center justify-center mb-5 text-white group-hover:scale-105 transition-transform"
-                style={{ background: "#8B6FD1" }}
-              >
-                <BookOpen className="w-6 h-6" />
-              </div>
-              <h3 className="text-xl font-semibold mb-2">{t.features.library.title}</h3>
-              <p className="text-slate-600 dark:text-slate-300">{t.features.library.desc}</p>
-            </div>
-          </div>
-        </section>
-
-        {/* Demo Section */}
-        <section className="max-w-7xl mx-auto px-6 pb-16 md:pb-24">
-          <div className="text-center mb-10 md:mb-14">
-            <h2 className="text-3xl md:text-4xl font-bold">{t.demo.title}</h2>
-            <p className="mt-3 text-slate-600 dark:text-slate-300 text-lg">{t.demo.subtitle}</p>
-          </div>
-
-          <div className="grid lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
-            {/* Left side - Feature Cards Grid */}
-            <div className="lg:col-span-2 space-y-4">
-              <div className="grid md:grid-cols-2 gap-4">
-                {/* Contract Analysis */}
-                <Card className="bg-white/90 dark:bg-slate-900/70 backdrop-blur border-slate-200 dark:border-slate-700 hover:shadow-lg transition-all group">
-                  <CardContent className="p-5">
-                    <div className="flex items-start gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#64499D] to-[#4D3680] flex items-center justify-center group-hover:scale-105 transition-transform flex-shrink-0">
-                        <FileText className="w-5 h-5 text-white" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h3 className="text-lg font-semibold mb-1">{t.demo.contractAnalysis.title}</h3>
-                        <p className="text-slate-600 dark:text-slate-300 text-xs">{t.demo.contractAnalysis.desc}</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Legal Research */}
-                <Card className="bg-white/90 dark:bg-slate-900/70 backdrop-blur border-slate-200 dark:border-slate-700 hover:shadow-lg transition-all group">
-                  <CardContent className="p-5">
-                    <div className="flex items-start gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#8B6FD1] to-[#64499D] flex items-center justify-center group-hover:scale-105 transition-transform flex-shrink-0">
-                        <Search className="w-5 h-5 text-white" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h3 className="text-lg font-semibold mb-1">{t.demo.legalResearch.title}</h3>
-                        <p className="text-slate-600 dark:text-slate-300 text-xs">{t.demo.legalResearch.desc}</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Document Drafting */}
-                <Card className="bg-white/90 dark:bg-slate-900/70 backdrop-blur border-slate-200 dark:border-slate-700 hover:shadow-lg transition-all group">
-                  <CardContent className="p-5">
-                    <div className="flex items-start gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#4D3680] to-[#3E2D71] flex items-center justify-center group-hover:scale-105 transition-transform flex-shrink-0">
-                        <FileText className="w-5 h-5 text-white" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h3 className="text-lg font-semibold mb-1">{t.demo.documentDrafting.title}</h3>
-                        <p className="text-slate-600 dark:text-slate-300 text-xs">{t.demo.documentDrafting.desc}</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Case Management */}
-                <Card className="bg-white/90 dark:bg-slate-900/70 backdrop-blur border-slate-200 dark:border-slate-700 hover:shadow-lg transition-all group">
-                  <CardContent className="p-5">
-                    <div className="flex items-start gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#64499D] to-[#8B6FD1] flex items-center justify-center group-hover:scale-105 transition-transform flex-shrink-0">
-                        <Briefcase className="w-5 h-5 text-white" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h3 className="text-lg font-semibold mb-1">{t.demo.caseManagement.title}</h3>
-                        <p className="text-slate-600 dark:text-slate-300 text-xs">{t.demo.caseManagement.desc}</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Client Management */}
-                <Card className="bg-white/90 dark:bg-slate-900/70 backdrop-blur border-slate-200 dark:border-slate-700 hover:shadow-lg transition-all group">
-                  <CardContent className="p-5">
-                    <div className="flex items-start gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#8B6FD1] to-[#4D3680] flex items-center justify-center group-hover:scale-105 transition-transform flex-shrink-0">
-                        <UserCheck className="w-5 h-5 text-white" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h3 className="text-lg font-semibold mb-1">{t.demo.clientManagement.title}</h3>
-                        <p className="text-slate-600 dark:text-slate-300 text-xs">{t.demo.clientManagement.desc}</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Calendar & Tasks */}
-                <Card className="bg-white/90 dark:bg-slate-900/70 backdrop-blur border-slate-200 dark:border-slate-700 hover:shadow-lg transition-all group">
-                  <CardContent className="p-5">
-                    <div className="flex items-start gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#4D3680] to-[#64499D] flex items-center justify-center group-hover:scale-105 transition-transform flex-shrink-0">
-                        <Calendar className="w-5 h-5 text-white" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h3 className="text-lg font-semibold mb-1">{t.demo.calendarTasks.title}</h3>
-                        <p className="text-slate-600 dark:text-slate-300 text-xs">{t.demo.calendarTasks.desc}</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Library */}
-                <Card className="bg-white/90 dark:bg-slate-900/70 backdrop-blur border-slate-200 dark:border-slate-700 hover:shadow-lg transition-all group">
-                  <CardContent className="p-5">
-                    <div className="flex items-start gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#3E2D71] to-[#8B6FD1] flex items-center justify-center group-hover:scale-105 transition-transform flex-shrink-0">
-                        <BookOpen className="w-5 h-5 text-white" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h3 className="text-lg font-semibold mb-1">{t.demo.library.title}</h3>
-                        <p className="text-slate-600 dark:text-slate-300 text-xs">{t.demo.library.desc}</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Team Collaboration */}
-                <Card className="bg-white/90 dark:bg-slate-900/70 backdrop-blur border-slate-200 dark:border-slate-700 hover:shadow-lg transition-all group">
-                  <CardContent className="p-5">
-                    <div className="flex items-start gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#64499D] to-[#3E2D71] flex items-center justify-center group-hover:scale-105 transition-transform flex-shrink-0">
-                        <Users className="w-5 h-5 text-white" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h3 className="text-lg font-semibold mb-1">{t.demo.teamCollaboration.title}</h3>
-                        <p className="text-slate-600 dark:text-slate-300 text-xs">{t.demo.teamCollaboration.desc}</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            </div>
-
-            {/* Right side - AI Chat Demo */}
-            <Card className="bg-white/90 dark:bg-slate-900/70 backdrop-blur border-slate-200 dark:border-slate-700 lg:sticky lg:top-24 h-fit">
-              <CardHeader className="pb-3">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-gradient-to-br from-[#64499D] to-[#4D3680] rounded-xl flex items-center justify-center flex-shrink-0">
-                    <Sparkles className="w-5 h-5 text-white" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <CardTitle className="text-lg">{t.demo.aiAssistant.title}</CardTitle>
-                    <CardDescription className="dark:text-slate-400 text-xs">{t.demo.aiAssistant.desc}</CardDescription>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3 max-h-[500px] overflow-y-auto">
-                  {/* AI Message */}
-                  <div className="flex gap-2">
-                    <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[#64499D] to-[#4D3680] flex items-center justify-center flex-shrink-0">
-                      <Bot className="w-3.5 h-3.5 text-white" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="p-3 bg-slate-50 dark:bg-slate-800 rounded-xl text-xs">
-                        <p className="text-slate-900 dark:text-slate-100">
-                          {t.demo.aiAssistant.greeting}
-                        </p>
-                        <ul className="mt-1.5 space-y-0.5 text-slate-700 dark:text-slate-300">
-                          {t.demo.aiAssistant.features.map((feature: string, index: number) => (
-                            <li key={index}>• {feature}</li>
-                          ))}
-                        </ul>
-                      </div>
-                      {/* Suggestions - Fixed placement inside message bubble */}
-                      <div className="flex flex-wrap gap-1.5 mt-2">
-                        {t.demo.aiAssistant.suggestions.map((suggestion: string, index: number) => (
-                          <button
-                            key={index}
-                            className="px-2.5 py-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-full text-[10px] text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
-                          >
-                            {suggestion}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* User Message */}
-                  <div className={`flex gap-2 ${t.dir === "rtl" ? "flex-row-reverse" : ""}`}>
-                    <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[#8B6FD1] to-[#64499D] flex items-center justify-center flex-shrink-0">
-                      <Users className="w-3.5 h-3.5 text-white" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="p-3 bg-gradient-to-r from-[#64499D] to-[#4D3680] rounded-xl text-xs text-white">
-                        <p>{t.demo.aiAssistant.userMessage}</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* AI Response */}
-                  <div className="flex gap-2">
-                    <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[#64499D] to-[#4D3680] flex items-center justify-center flex-shrink-0">
-                      <Bot className="w-3.5 h-3.5 text-white" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="p-3 bg-slate-50 dark:bg-slate-800 rounded-xl text-xs">
-                        <p className="text-slate-900 dark:text-slate-100">
-                          {t.demo.aiAssistant.aiResponse}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Input Area */}
-                  <div className="pt-3 border-t border-slate-200 dark:border-slate-700 sticky bottom-0 bg-white/90 dark:bg-slate-900/70 backdrop-blur">
-                    <div className="flex gap-2">
-                      <input
-                        type="text"
-                        placeholder={t.demo.aiAssistant.placeholder}
-                        className="flex-1 px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg text-xs bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-[#64499D] focus:border-transparent"
-                        disabled
-                      />
-                      <Button
-                        size="icon"
-                        className="h-9 w-9 bg-gradient-to-r from-[#64499D] to-[#4D3680] hover:from-[#4D3680] hover:to-[#3E2D71] flex-shrink-0"
-                        disabled
-                      >
-                        <Play className="w-3.5 h-3.5" />
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* CTA Button */}
-          <div className="text-center mt-10">
+          <Reveal className="text-center mt-12">
             <Button
               onClick={handleDemo}
               size="lg"
-              className="px-8 py-6 text-lg font-medium bg-gradient-to-r from-[#64499D] to-[#4D3680] hover:from-[#4D3680] hover:to-[#3E2D71] text-white shadow-lg hover:shadow-xl transition-all"
+              className="px-8 py-6 text-lg font-medium bg-gradient-to-r from-[#64499D] to-[#4D3680] hover:from-[#4D3680] hover:to-[#3E2D71] text-white shadow-lg hover:shadow-[0_0_36px_-6px_rgba(100,73,157,0.55)] transition-all"
             >
               {t.demo.cta}
-              <ArrowRight className={`ml-2 h-5 w-5 ${t.dir === "rtl" ? "rotate-180" : ""}`} />
+              <ArrowRight className={`ms-2 h-5 w-5 ${isRtl ? "rotate-180" : ""}`} />
             </Button>
-          </div>
+          </Reveal>
         </section>
+
+        <div className="landing-divider mb-16 md:mb-20" aria-hidden />
 
         {/* Community */}
-        <section className="max-w-7xl mx-auto px-6 pb-16 md:pb-24">
-          <div className="rounded-3xl p-10 md:p-12 text-white bg-gradient-to-r from-slate-800 to-slate-900">
-            <div className="text-center max-w-3xl mx-auto">
-              <h2 className="text-3xl md:text-4xl font-bold mb-3">{t.community.title}</h2>
-              <p className="text-slate-300 text-lg">{t.community.subtitle}</p>
-            </div>
-
-            <div className="mt-10 grid md:grid-cols-3 gap-6 md:gap-8 text-center">
-              <div className="space-y-3">
-                <div
-                  className="w-16 h-16 rounded-2xl mx-auto flex items-center justify-center"
-                  style={{ background: "#64499D" }}
-                >
-                  <MessageSquare className="w-8 h-8 text-white" />
-                </div>
-                <h3 className="text-xl font-semibold">{t.community.forums.title}</h3>
-                <p className="text-slate-300">{t.community.forums.desc}</p>
+        <section className="max-w-7xl mx-auto px-6 pb-16 md:pb-28">
+          <Reveal>
+            <div className="relative rounded-3xl p-10 md:p-14 text-white overflow-hidden landing-panel-glow bg-gradient-to-br from-slate-900 via-slate-900 to-[#2A1F4A]">
+              <div
+                aria-hidden
+                className="pointer-events-none absolute inset-0 opacity-40"
+                style={{
+                  background:
+                    "radial-gradient(ellipse 60% 50% at 20% 0%, rgba(100,73,157,0.55), transparent), radial-gradient(ellipse 50% 40% at 90% 100%, rgba(139,111,209,0.35), transparent)",
+                }}
+              />
+              <div className="relative text-center max-w-3xl mx-auto">
+                <h2 className="font-display text-3xl md:text-5xl font-bold tracking-tight mb-3">
+                  {t.community.title}
+                </h2>
+                <p className="text-slate-300 text-lg">{t.community.subtitle}</p>
               </div>
 
-              <div className="space-y-3">
-                <div
-                  className="w-16 h-16 rounded-2xl mx-auto flex items-center justify-center"
-                  style={{ background: "#4D3680" }}
-                >
-                  <Heart className="w-8 h-8 text-white" />
-                </div>
-                <h3 className="text-xl font-semibold">{t.community.help.title}</h3>
-                <p className="text-slate-300">{t.community.help.desc}</p>
+              <div className="relative mt-12 grid md:grid-cols-3 gap-8 text-center">
+                {[
+                  {
+                    icon: <MessageSquare className="w-8 h-8 text-white" />,
+                    bg: "#64499D",
+                    title: t.community.forums.title,
+                    desc: t.community.forums.desc,
+                  },
+                  {
+                    icon: <Heart className="w-8 h-8 text-white" />,
+                    bg: "#4D3680",
+                    title: t.community.help.title,
+                    desc: t.community.help.desc,
+                  },
+                  {
+                    icon: <Award className="w-8 h-8 text-white" />,
+                    bg: "#3E2D71",
+                    title: t.community.training.title,
+                    desc: t.community.training.desc,
+                  },
+                ].map((item) => (
+                  <div key={item.title} className="space-y-3 group">
+                    <div
+                      className="w-16 h-16 rounded-2xl mx-auto flex items-center justify-center transition-transform duration-300 group-hover:scale-110 group-hover:shadow-[0_0_28px_-4px_rgba(139,111,209,0.7)]"
+                      style={{ background: item.bg }}
+                    >
+                      {item.icon}
+                    </div>
+                    <h3 className="font-display text-xl font-semibold">{item.title}</h3>
+                    <p className="text-slate-300 text-sm md:text-base leading-relaxed">
+                      {item.desc}
+                    </p>
+                  </div>
+                ))}
               </div>
 
-              <div className="space-y-3">
-                <div
-                  className="w-16 h-16 rounded-2xl mx-auto flex items-center justify-center"
-                  style={{ background: "#3E2D71" }}
+              <div className="relative text-center mt-12">
+                <Button
+                  size="lg"
+                  className="px-8 py-6 text-lg font-medium bg-white text-slate-900 hover:bg-slate-100 shadow-lg"
+                  onClick={() => handleNav("/community")}
                 >
-                  <Award className="w-8 h-8 text-white" />
-                </div>
-                <h3 className="text-xl font-semibold">{t.community.training.title}</h3>
-                <p className="text-slate-300">{t.community.training.desc}</p>
+                  {t.community.cta}
+                </Button>
               </div>
             </div>
-
-            <div className="text-center mt-10">
-              <Button
-                size="lg"
-                className="px-8 py-6 text-lg font-medium bg-white text-slate-900 hover:bg-slate-100"
-                onClick={() => handleNav("/community")}
-              >
-                {t.community.cta}
-              </Button>
-            </div>
-          </div>
+          </Reveal>
         </section>
 
-        {/* Stats */}
+        {/* Early stage — honest positioning */}
         <section className="max-w-7xl mx-auto px-6 pb-24">
-          <div className="rounded-3xl p-10 md:p-12 text-white bg-gradient-to-r from-[#64499D] to-[#4D3680]">
-            <div className="text-center mb-10">
-              <h2 className="text-3xl md:text-4xl font-bold mb-3">{t.stats.title}</h2>
-              <p className="text-purple-100 text-lg">{t.stats.subtitle}</p>
+          <Reveal>
+            <div className="relative rounded-3xl p-10 md:p-14 text-white overflow-hidden landing-panel-glow bg-gradient-to-br from-[#64499D] via-[#4D3680] to-[#3E2D71]">
+              <div
+                aria-hidden
+                className="pointer-events-none absolute inset-0 opacity-30"
+                style={{
+                  backgroundImage:
+                    "linear-gradient(rgba(255,255,255,0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.08) 1px, transparent 1px)",
+                  backgroundSize: "40px 40px",
+                  maskImage: "radial-gradient(ellipse 80% 70% at 50% 50%, black, transparent)",
+                }}
+              />
+              <div className="relative text-center mb-10 md:mb-12 max-w-3xl mx-auto">
+                <h2 className="font-display text-3xl md:text-5xl font-bold tracking-tight mb-3">
+                  {t.stats.title}
+                </h2>
+                <p className="text-purple-100 text-lg leading-relaxed">{t.stats.subtitle}</p>
+              </div>
+              <div className="relative grid md:grid-cols-3 gap-6 md:gap-8 mb-10">
+                {t.stats.items.map(
+                  (item: { title: string; desc: string }, i: number) => {
+                    const Icon = [Sparkles, Briefcase, Users][i] || Sparkles;
+                    return (
+                      <div
+                        key={item.title}
+                        className="rounded-2xl bg-white/10 border border-white/15 backdrop-blur-sm p-6 text-center md:text-start"
+                      >
+                        <div className="w-11 h-11 rounded-xl bg-white/15 flex items-center justify-center mx-auto md:mx-0 mb-4">
+                          <Icon className="w-5 h-5 text-white" />
+                        </div>
+                        <h3 className="font-display text-lg font-semibold mb-2">{item.title}</h3>
+                        <p className="text-purple-100/90 text-sm leading-relaxed">{item.desc}</p>
+                      </div>
+                    );
+                  }
+                )}
+              </div>
+              <div
+                className={`relative flex flex-col sm:flex-row gap-4 justify-center ${
+                  isRtl ? "sm:flex-row-reverse" : ""
+                }`}
+              >
+                <Button
+                  size="lg"
+                  className="px-8 py-6 text-lg font-medium bg-white text-slate-900 hover:bg-slate-100"
+                  onClick={handleGetStarted}
+                >
+                  {t.stats.ctaPrimary}
+                </Button>
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="px-8 py-6 text-lg font-medium border-white/70 text-white hover:bg-white/10"
+                  onClick={handleDemo}
+                >
+                  {t.stats.ctaSecondary}
+                </Button>
+              </div>
             </div>
-            <div className="grid md:grid-cols-3 gap-8 text-center">
-              <div>
-                <div className="text-4xl font-bold mb-1">10 000+</div>
-                <div className="text-purple-200">{t.stats.lawyers}</div>
-              </div>
-              <div>
-                <div className="text-4xl font-bold mb-1">50 000+</div>
-                <div className="text-purple-200">{t.stats.cases}</div>
-              </div>
-              <div>
-                <div className="text-4xl font-bold mb-1">95%</div>
-                <div className="text-purple-200">{t.stats.csat}</div>
-              </div>
-            </div>
-          </div>
+          </Reveal>
         </section>
       </main>
 
       {/* Footer */}
-      <footer className="bg-slate-900 dark:bg-black text-white py-10 relative z-10">
+      <footer className="relative z-10 border-t border-[#64499D]/15 dark:border-[#8B6FD1]/20 bg-slate-950/95 dark:bg-black text-white py-10 backdrop-blur-md">
         <div className="max-w-7xl mx-auto px-6">
-          <div className={`flex flex-col md:flex-row justify-between items-center gap-6 ${t.dir === "rtl" ? "md:flex-row-reverse" : ""}`}>
+          <div
+            className={`flex flex-col md:flex-row justify-between items-center gap-6 ${
+              isRtl ? "md:flex-row-reverse" : ""
+            }`}
+          >
             <div className="flex items-center gap-3">
               <img
                 src="/images/Jure logo.png"
@@ -1008,13 +1064,22 @@ const Landing: React.FC = () => {
               />
             </div>
             <div className="flex items-center gap-6 text-sm text-slate-300">
-              <button onClick={() => handleNav("/privacy")} className="hover:text-white">
+              <button
+                onClick={() => handleNav("/privacy")}
+                className="hover:text-white transition-colors"
+              >
                 {t.footer.privacy}
               </button>
-              <button onClick={() => handleNav("/terms")} className="hover:text-white">
+              <button
+                onClick={() => handleNav("/terms")}
+                className="hover:text-white transition-colors"
+              >
                 {t.footer.terms}
               </button>
-              <button onClick={() => handleNav("/status")} className="hover:text-white">
+              <button
+                onClick={() => handleNav("/status")}
+                className="hover:text-white transition-colors"
+              >
                 {t.footer.status}
               </button>
             </div>
@@ -1024,19 +1089,6 @@ const Landing: React.FC = () => {
           </div>
         </div>
       </footer>
-
-      {/* Scoped animation styles */}
-      <style>{`
-        @keyframes blob {
-          0% { transform: translate(0px, 0px) scale(1); }
-          33% { transform: translate(20px, -10px) scale(1.05); }
-          66% { transform: translate(-10px, 10px) scale(0.98); }
-          100% { transform: translate(0px, 0px) scale(1); }
-        }
-        .animate-blob { animation: blob 12s infinite; }
-        .animation-delay-2000 { animation-delay: 2s; }
-        .animation-delay-4000 { animation-delay: 4s; }
-      `}</style>
     </div>
   );
 };

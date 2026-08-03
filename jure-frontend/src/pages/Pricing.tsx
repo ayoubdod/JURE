@@ -162,7 +162,6 @@ const Pricing: React.FC = () => {
           <img src="/images/Jure logo.png" alt="JURE" className="w-[140px] h-10 object-contain"/>
           <div className="hidden md:flex items-center gap-6">
             <button onClick={() => navigate("/features")} className="hover:text-[#64499D]">{t.nav.features}</button>
-            <button onClick={() => navigate("/pricing")} className="text-[#64499D] font-semibold">{t.nav.pricing}</button>
             <button onClick={() => navigate("/about")} className="hover:text-[#64499D]">{t.nav.about}</button>
             <button onClick={() => navigate("/contact")} className="hover:text-[#64499D]">{t.nav.contact}</button>
           </div>

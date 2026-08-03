@@ -2,8 +2,9 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { CheckCircle2, AlertTriangle, Clock, Server, Database, Network, ArrowRight } from "lucide-react";
+import MarketingShell from "@/components/landing/MarketingShell";
+import Reveal from "@/components/landing/Reveal";
 
 type Lang = "fr" | "en" | "ar";
 
@@ -100,52 +101,6 @@ const useI18n = () => {
   return { lang, setLang, t: STRINGS[lang] };
 };
 
-const ThemeToggle: React.FC<{ label?: string; title?: string }> = ({ label, title }) => {
-  const [isDark, setIsDark] = useState(false);
-  useEffect(() => {
-    const stored = localStorage.getItem("theme");
-    const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
-    const shouldDark = stored ? stored === "dark" : prefersDark;
-    document.documentElement.classList.toggle("dark", shouldDark);
-    setIsDark(shouldDark);
-  }, []);
-  const toggle = () => {
-    const next = !isDark;
-    setIsDark(next);
-    document.documentElement.classList.toggle("dark", next);
-    localStorage.setItem("theme", next ? "dark" : "light");
-  };
-  return (
-    <Button
-      onClick={toggle}
-      variant="outline"
-      className="border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800"
-      aria-label={label || "Toggle theme"}
-      title={title || "Toggle theme"}
-    >
-      {isDark ? "☀️" : "🌙"}
-    </Button>
-  );
-};
-
-const LangSwitcher: React.FC<{ lang: Lang; onChange: (l: Lang) => void }> = ({ lang, onChange }) => (
-  <div className="inline-flex rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700">
-    {(["fr", "en", "ar"] as Lang[]).map((code) => (
-      <button
-        key={code}
-        onClick={() => onChange(code)}
-        className={`px-3 py-2 text-sm ${
-          lang === code
-            ? "bg-[#64499D] text-white"
-            : "bg-transparent text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
-        }`}
-      >
-        {code === "fr" ? "FR" : code === "en" ? "EN" : "AR"}
-      </button>
-    ))}
-  </div>
-);
-
 const Badge: React.FC<{ tone: "ok" | "minor" | "major"; text: string }> = ({ tone, text }) => {
   const cls =
     tone === "ok"
@@ -155,7 +110,7 @@ const Badge: React.FC<{ tone: "ok" | "minor" | "major"; text: string }> = ({ ton
       : "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-200";
   const Icon = tone === "ok" ? CheckCircle2 : tone === "minor" ? Clock : AlertTriangle;
   return (
-    <span className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm ${cls}`}>
+    <span className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm landing-glass ${cls}`}>
       <Icon className="w-4 h-4" /> {text}
     </span>
   );
@@ -164,7 +119,6 @@ const Badge: React.FC<{ tone: "ok" | "minor" | "major"; text: string }> = ({ ton
 const Status: React.FC = () => {
   const { lang, setLang, t } = useI18n();
   const navigate = useNavigate();
-  const year = new Date().getFullYear();
   const go = (to: string) => navigate(to);
 
   // Demo component states (replace with live data later)
@@ -185,140 +139,106 @@ const Status: React.FC = () => {
   }, []);
 
   return (
-    <div className="min-h-screen relative overflow-hidden text-slate-900 dark:text-slate-100 bg-gradient-to-br from-white via-white to-slate-50 dark:from-slate-950 dark:via-slate-950 dark:to-slate-900">
-      {/* Header */}
-      <header className="relative z-10">
-        <nav className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-          <img src="/images/Jure logo.png" alt="JURE" className="w-[140px] h-10 object-contain" />
-          <div className="hidden md:flex items-center gap-6">
-            <button onClick={() => go("/features")} className="hover:text-[#64499D]"> {t.nav.features} </button>
-            <button onClick={() => go("/pricing")} className="hover:text-[#64499D]"> {t.nav.pricing} </button>
-            <button onClick={() => go("/about")} className="hover:text-[#64499D]"> {t.nav.about} </button>
-            <button onClick={() => go("/contact")} className="hover:text-[#64499D]"> {t.nav.contact} </button>
+    <MarketingShell
+      lang={lang}
+      onLangChange={setLang}
+      labels={{ nav: t.nav, auth: t.auth, themeToggle: t.themeToggle, footer: t.footer }}
+      dir={t.dir}
+      activeNav="none"
+    >
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 pt-14 pb-10 md:pt-24 md:pb-12">
+        <Reveal className="max-w-4xl mx-auto text-center">
+          <h1 className="font-display text-4xl md:text-5xl font-bold tracking-tight">
+            <span className="landing-hero-shimmer bg-gradient-to-r from-slate-900 via-[#64499D] to-slate-900 dark:from-white dark:via-[#8B6FD1] dark:to-white bg-clip-text text-transparent">
+              {t.hero.titleA}
+            </span>
+          </h1>
+          <p className="mt-4 text-lg text-slate-600 dark:text-slate-300">{t.hero.subtitle}</p>
+          <div className="mt-4">
+            <Badge tone={overallTone} text={overallText} />
           </div>
-          <div className="flex items-center gap-3">
-            <LangSwitcher lang={lang} onChange={setLang} />
-            <ThemeToggle label={t.themeToggle.label} title={t.themeToggle.title} />
-            <Button onClick={() => go("/signin")} variant="outline" className="border-[#64499D]/30 text-[#64499D]">
-              {t.auth.signin}
+
+          <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
+            <Button onClick={() => go("/contact")} className="bg-gradient-to-r from-[#64499D] to-[#4D3680]">
+              {t.hero.ctaPrimary} <ArrowRight className="ms-2 h-4 w-4" />
+            </Button>
+            <Button variant="outline" onClick={() => go("/docs")} className="border-[#64499D]/30">
+              {t.hero.ctaSecondary}
             </Button>
           </div>
-        </nav>
-      </header>
+        </Reveal>
 
-      {/* Hero */}
-      <main className="relative z-10">
-        <section className="max-w-7xl mx-auto px-6 pt-14 pb-10 md:pt-24 md:pb-12">
-          <div className="max-w-4xl mx-auto text-center">
-            <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-slate-900 via-[#64499D] to-slate-900 dark:from-white dark:via-[#8B6FD1] dark:to-white bg-clip-text text-transparent">
-              {t.hero.titleA}
-            </h1>
-            <p className="mt-4 text-lg text-slate-600 dark:text-slate-300">{t.hero.subtitle}</p>
-            <div className="mt-4">
-              <Badge tone={overallTone} text={overallText} />
-            </div>
+        <div className="landing-divider my-12 max-w-md mx-auto" />
 
-            <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
-              <Button onClick={() => go("/contact")} className="bg-gradient-to-r from-[#64499D] to-[#4D3680]">
-                {t.hero.ctaPrimary} <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-              <Button variant="outline" onClick={() => go("/docs")}>{t.hero.ctaSecondary}</Button>
-            </div>
-          </div>
-
-          {/* Components */}
-          <div className="mt-12 grid md:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
-            {components.map((c, i) => {
-              const tone =
-                c.status === "operational" ? "ok" : c.status === "degraded" ? "minor" : "major";
-              const Icon = i === 0 ? Server : i === 1 ? CheckCircle2 : i === 2 ? Database : Network;
-              const label =
-                c.status === "operational"
-                  ? t.components.status.operational
-                  : c.status === "degraded"
-                  ? t.components.status.degraded
-                  : t.components.status.outage;
-              const cls =
-                tone === "ok"
-                  ? "text-green-600"
-                  : tone === "minor"
-                  ? "text-amber-600"
-                  : "text-red-600";
-              return (
-                <Card key={i} className="bg-white/90 dark:bg-slate-900/70 backdrop-blur border-slate-200 dark:border-slate-700">
-                  <CardHeader className="pb-2">
-                    <div className="flex items-center gap-3">
-                      <div className={`w-11 h-11 rounded-xl grid place-items-center text-white ${tone === "ok" ? "bg-green-600" : tone === "minor" ? "bg-amber-600" : "bg-red-600"}`}>
-                        <Icon className="w-5 h-5" />
-                      </div>
-                      <div>
-                        <CardTitle className="text-xl">{c.name}</CardTitle>
-                        <CardDescription className={`${cls}`}>{label}</CardDescription>
-                      </div>
+        {/* Components */}
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
+          {components.map((c, i) => {
+            const tone =
+              c.status === "operational" ? "ok" : c.status === "degraded" ? "minor" : "major";
+            const Icon = i === 0 ? Server : i === 1 ? CheckCircle2 : i === 2 ? Database : Network;
+            const label =
+              c.status === "operational"
+                ? t.components.status.operational
+                : c.status === "degraded"
+                ? t.components.status.degraded
+                : t.components.status.outage;
+            const cls =
+              tone === "ok"
+                ? "text-green-600"
+                : tone === "minor"
+                ? "text-amber-600"
+                : "text-red-600";
+            return (
+              <Reveal key={i} delay={i * 0.05} subtle>
+                <div className="landing-glass landing-glass-glow rounded-2xl p-6 h-full">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-11 h-11 rounded-xl grid place-items-center text-white ${tone === "ok" ? "bg-green-600" : tone === "minor" ? "bg-amber-600" : "bg-red-600"}`}>
+                      <Icon className="w-5 h-5" />
                     </div>
-                  </CardHeader>
-                  <CardContent className="pt-2">
-                    <p className="text-sm text-slate-600 dark:text-slate-300">
-                      {/* placeholder description */}
-                      {lang === "fr" && "Aucun incident en cours signalé."}
-                      {lang === "en" && "No ongoing incidents reported."}
-                      {lang === "ar" && "لا توجد حوادث جارية."}
-                    </p>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
-
-          {/* Uptime */}
-          <div className="mt-12">
-            <Card className="bg-white/90 dark:bg-slate-900/70 backdrop-blur border-slate-200 dark:border-slate-700">
-              <CardHeader>
-                <CardTitle>{t.uptime.title}</CardTitle>
-                <CardDescription className="text-slate-500 dark:text-slate-400">{t.uptime.foot}</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-30 md:grid-cols-30 gap-1">
-                  {uptimeBars.map((v, i) => {
-                    const tone = v > 99.5 ? "bg-green-500" : v > 98.5 ? "bg-amber-500" : "bg-red-500";
-                    return (
-                      <div key={i} className="h-8 rounded" title={`${v.toFixed(2)}%`} style={{ width: "100%" }}>
-                        <div className={`h-full ${tone} rounded`} style={{ width: `${v}%` }} />
-                      </div>
-                    );
-                  })}
+                    <div>
+                      <h3 className="font-display text-xl font-semibold">{c.name}</h3>
+                      <p className={`text-sm ${cls}`}>{label}</p>
+                    </div>
+                  </div>
+                  <p className="mt-3 text-sm text-slate-600 dark:text-slate-300">
+                    {/* placeholder description */}
+                    {lang === "fr" && "Aucun incident en cours signalé."}
+                    {lang === "en" && "No ongoing incidents reported."}
+                    {lang === "ar" && "لا توجد حوادث جارية."}
+                  </p>
                 </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Incidents */}
-          <div className="mt-12">
-            <Card className="bg-white/90 dark:bg-slate-900/70 backdrop-blur border-slate-200 dark:border-slate-700">
-              <CardHeader>
-                <CardTitle>{t.incidents.title}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-slate-600 dark:text-slate-300">{t.incidents.none}</p>
-              </CardContent>
-            </Card>
-          </div>
-        </section>
-      </main>
-
-      {/* Footer */}
-      <footer className="bg-slate-900 text-white py-10">
-        <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6">
-          <img src="/images/Jure logo.png" alt="JURE" className="w-[120px] h-8 object-contain" />
-          <div className="flex items-center gap-6 text-sm text-slate-300">
-            <button onClick={() => go("/privacy")} className="hover:text-white">{t.footer.privacy}</button>
-            <button onClick={() => go("/terms")} className="hover:text-white">{t.footer.terms}</button>
-            <button onClick={() => go("/status")} className="hover:text-white">{t.footer.status}</button>
-          </div>
-          <div className="text-slate-400 text-sm">© {year} JURE. {t.footer.rights}</div>
+              </Reveal>
+            );
+          })}
         </div>
-      </footer>
-    </div>
+
+        {/* Uptime */}
+        <Reveal className="mt-12">
+          <div className="landing-glass landing-panel-glow rounded-2xl p-6 md:p-8">
+            <h2 className="font-display text-xl font-semibold">{t.uptime.title}</h2>
+            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{t.uptime.foot}</p>
+            <div className="mt-4 grid grid-cols-30 md:grid-cols-30 gap-1">
+              {uptimeBars.map((v, i) => {
+                const tone = v > 99.5 ? "bg-green-500" : v > 98.5 ? "bg-amber-500" : "bg-red-500";
+                return (
+                  <div key={i} className="h-8 rounded" title={`${v.toFixed(2)}%`} style={{ width: "100%" }}>
+                    <div className={`h-full ${tone} rounded`} style={{ width: `${v}%` }} />
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </Reveal>
+
+        {/* Incidents */}
+        <Reveal className="mt-12">
+          <div className="landing-glass landing-glass-glow rounded-2xl p-6 md:p-8">
+            <h2 className="font-display text-xl font-semibold">{t.incidents.title}</h2>
+            <p className="mt-3 text-slate-600 dark:text-slate-300">{t.incidents.none}</p>
+          </div>
+        </Reveal>
+      </section>
+    </MarketingShell>
   );
 };
 

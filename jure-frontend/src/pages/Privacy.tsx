@@ -2,8 +2,9 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Shield, Lock, FileText, Globe, Cookie, ArrowRight } from "lucide-react";
+import MarketingShell from "@/components/landing/MarketingShell";
+import Reveal from "@/components/landing/Reveal";
 
 type Lang = "fr" | "en" | "ar";
 
@@ -253,197 +254,122 @@ const useI18n = () => {
   return { lang, setLang, t: STRINGS[lang] };
 };
 
-const ThemeToggle: React.FC<{ label?: string; title?: string }> = ({ label, title }) => {
-  const [isDark, setIsDark] = useState(false);
-  useEffect(() => {
-    const stored = localStorage.getItem("theme");
-    const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
-    const shouldDark = stored ? stored === "dark" : prefersDark;
-    document.documentElement.classList.toggle("dark", shouldDark);
-    setIsDark(shouldDark);
-  }, []);
-  const toggle = () => {
-    const next = !isDark;
-    setIsDark(next);
-    document.documentElement.classList.toggle("dark", next);
-    localStorage.setItem("theme", next ? "dark" : "light");
-  };
-  return (
-    <Button
-      onClick={toggle}
-      variant="outline"
-      className="border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800"
-      aria-label={label || "Toggle theme"}
-      title={title || "Toggle theme"}
-    >
-      {isDark ? "☀️" : "🌙"}
-    </Button>
-  );
-};
-
-const LangSwitcher: React.FC<{ lang: Lang; onChange: (l: Lang) => void }> = ({ lang, onChange }) => (
-  <div className="inline-flex rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700">
-    {(["fr", "en", "ar"] as Lang[]).map((code) => (
-      <button
-        key={code}
-        onClick={() => onChange(code)}
-        className={`px-3 py-2 text-sm ${
-          lang === code
-            ? "bg-[#64499D] text-white"
-            : "bg-transparent text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
-        }`}
-      >
-        {code === "fr" ? "FR" : code === "en" ? "EN" : "AR"}
-      </button>
-    ))}
-  </div>
-);
-
 const SectionCard: React.FC<{ icon: React.ReactNode; title: string; children?: React.ReactNode }> = ({
   icon, title, children,
 }) => (
-  <Card className="bg-white/90 dark:bg-slate-900/70 backdrop-blur border-slate-200 dark:border-slate-700">
-    <CardHeader className="pb-2">
-      <div className="flex items-center gap-3">
-        <div className="w-11 h-11 rounded-xl grid place-items-center text-white" style={{ background: "#64499D" }}>
-          {icon}
-        </div>
-        <CardTitle className="text-xl">{title}</CardTitle>
+  <div className="landing-glass landing-glass-glow rounded-2xl p-6 h-full">
+    <div className="flex items-center gap-3 mb-3">
+      <div className="w-11 h-11 rounded-xl grid place-items-center text-white" style={{ background: "#64499D" }}>
+        {icon}
       </div>
-    </CardHeader>
-    <CardContent className="pt-2">{children}</CardContent>
-  </Card>
+      <h3 className="font-display text-xl font-semibold">{title}</h3>
+    </div>
+    <div>{children}</div>
+  </div>
 );
 
 const Privacy: React.FC = () => {
   const { lang, setLang, t } = useI18n();
   const navigate = useNavigate();
-  const year = new Date().getFullYear();
   const lastUpdated = "2025-08-15";
 
   const go = (to: string) => navigate(to);
 
   return (
-    <div className="min-h-screen relative overflow-hidden text-slate-900 dark:text-slate-100 bg-gradient-to-br from-white via-white to-slate-50 dark:from-slate-950 dark:via-slate-950 dark:to-slate-900">
-      {/* Blobs */}
-      <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-32 w-80 h-80 rounded-full blur-3xl opacity-20 dark:opacity-30 animate-blob" style={{ background: "#64499D" }} />
-        <div className="absolute -bottom-40 -left-32 w-80 h-80 rounded-full blur-3xl opacity-10 dark:opacity-20 animate-blob animation-delay-2000" style={{ background: "#3E2D71" }} />
-        <div className="absolute top-48 left-24 w-72 h-72 rounded-full blur-3xl opacity-10 dark:opacity-20 animate-blob animation-delay-4000" style={{ background: "#8B6FD1" }} />
-      </div>
+    <MarketingShell
+      lang={lang}
+      onLangChange={setLang}
+      labels={{ nav: t.nav, auth: t.auth, themeToggle: t.themeToggle, footer: t.footer }}
+      dir={t.dir}
+      activeNav="none"
+    >
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 pt-14 pb-10 md:pt-24 md:pb-16">
+        <Reveal className="max-w-4xl mx-auto text-center">
+          <h1 className="font-display text-4xl md:text-5xl font-bold tracking-tight">
+            <span className="landing-hero-shimmer bg-gradient-to-r from-slate-900 via-[#64499D] to-slate-900 dark:from-white dark:via-[#8B6FD1] dark:to-white bg-clip-text text-transparent">
+              {t.hero.titleA}
+            </span>
+          </h1>
+          <p className="mt-4 text-lg text-slate-600 dark:text-slate-300">{t.hero.subtitle}</p>
+          <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+            {t.hero.lastUpdated}: {lastUpdated}
+          </p>
 
-      {/* Header */}
-      <header className="relative z-10">
-        <nav className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-          <img src="/images/Jure logo.png" alt="JURE" className="w-[140px] h-10 object-contain" />
-          <div className="hidden md:flex items-center gap-6">
-            <button onClick={() => go("/features")} className="hover:text-[#64499D]"> {t.nav.features} </button>
-            <button onClick={() => go("/pricing")} className="hover:text-[#64499D]"> {t.nav.pricing} </button>
-            <button onClick={() => go("/about")} className="hover:text-[#64499D]"> {t.nav.about} </button>
-            <button onClick={() => go("/contact")} className="hover:text-[#64499D]"> {t.nav.contact} </button>
-          </div>
-          <div className="flex items-center gap-3">
-            <LangSwitcher lang={lang} onChange={setLang} />
-            <ThemeToggle label={t.themeToggle.label} title={t.themeToggle.title} />
-            <Button onClick={() => go("/signin")} variant="outline" className="border-[#64499D]/30 text-[#64499D]">
-              {t.auth.signin}
+          <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
+            <Button onClick={() => go("/contact")} className="bg-gradient-to-r from-[#64499D] to-[#4D3680]">
+              {t.hero.ctaPrimary} <ArrowRight className="ms-2 h-4 w-4" />
+            </Button>
+            <Button variant="outline" onClick={() => go("/status")} className="border-[#64499D]/30">
+              {t.hero.ctaSecondary}
             </Button>
           </div>
-        </nav>
-      </header>
+        </Reveal>
 
-      {/* Hero */}
-      <main className="relative z-10">
-        <section className="max-w-7xl mx-auto px-6 pt-14 pb-10 md:pt-24 md:pb-16">
-          <div className="max-w-4xl mx-auto text-center">
-            <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-slate-900 via-[#64499D] to-slate-900 dark:from-white dark:via-[#8B6FD1] dark:to-white bg-clip-text text-transparent">
-              {t.hero.titleA}
-            </h1>
-            <p className="mt-4 text-lg text-slate-600 dark:text-slate-300">{t.hero.subtitle}</p>
-            <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-              {t.hero.lastUpdated}: {lastUpdated}
-            </p>
+        <div className="landing-divider my-12 max-w-md mx-auto" />
 
-            <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
-              <Button onClick={() => go("/contact")} className="bg-gradient-to-r from-[#64499D] to-[#4D3680]">
-                {t.hero.ctaPrimary} <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-              <Button variant="outline" onClick={() => go("/status")}>{t.hero.ctaSecondary}</Button>
-            </div>
-          </div>
-
-          {/* Body */}
-          <div className="mt-12 grid md:grid-cols-2 gap-6 md:gap-8">
+        <div className="grid md:grid-cols-2 gap-6 md:gap-8">
+          <Reveal subtle>
             <SectionCard icon={<FileText className="w-5 h-5" />} title={t.sections.intro.title}>
               <p className="text-slate-600 dark:text-slate-300">{t.sections.intro.text}</p>
             </SectionCard>
+          </Reveal>
 
+          <Reveal subtle delay={0.05}>
             <SectionCard icon={<Lock className="w-5 h-5" />} title={t.sections.data.title}>
               <ul className="list-disc ms-5 space-y-2 text-slate-700 dark:text-slate-300">
                 {t.sections.data.bullets.map((b: string, i: number) => <li key={i}>{b}</li>)}
               </ul>
             </SectionCard>
+          </Reveal>
 
+          <Reveal subtle delay={0.08}>
             <SectionCard icon={<Shield className="w-5 h-5" />} title={t.sections.use.title}>
               <ul className="list-disc ms-5 space-y-2 text-slate-700 dark:text-slate-300">
                 {t.sections.use.bullets.map((b: string, i: number) => <li key={i}>{b}</li>)}
               </ul>
             </SectionCard>
+          </Reveal>
 
+          <Reveal subtle delay={0.1}>
             <SectionCard icon={<FileText className="w-5 h-5" />} title={t.sections.retention.title}>
               <p className="text-slate-600 dark:text-slate-300">{t.sections.retention.text}</p>
             </SectionCard>
+          </Reveal>
 
+          <Reveal subtle delay={0.12}>
             <SectionCard icon={<Globe className="w-5 h-5" />} title={t.sections.transfers.title}>
               <p className="text-slate-600 dark:text-slate-300">{t.sections.transfers.text}</p>
             </SectionCard>
+          </Reveal>
 
+          <Reveal subtle delay={0.14}>
             <SectionCard icon={<Cookie className="w-5 h-5" />} title={t.sections.cookies.title}>
               <p className="text-slate-600 dark:text-slate-300">{t.sections.cookies.text}</p>
             </SectionCard>
+          </Reveal>
 
+          <Reveal subtle delay={0.16}>
             <SectionCard icon={<Shield className="w-5 h-5" />} title={t.sections.security.title}>
               <p className="text-slate-600 dark:text-slate-300">{t.sections.security.text}</p>
             </SectionCard>
+          </Reveal>
 
+          <Reveal subtle delay={0.18}>
             <SectionCard icon={<Globe className="w-5 h-5" />} title={t.sections.rights.title}>
               <ul className="list-disc ms-5 space-y-2 text-slate-700 dark:text-slate-300">
                 {t.sections.rights.bullets.map((b: string, i: number) => <li key={i}>{b}</li>)}
               </ul>
             </SectionCard>
+          </Reveal>
 
+          <Reveal subtle delay={0.2}>
             <SectionCard icon={<FileText className="w-5 h-5" />} title={t.sections.contact.title}>
               <p className="text-slate-600 dark:text-slate-300">{t.sections.contact.text}</p>
             </SectionCard>
-          </div>
-        </section>
-      </main>
-
-      {/* Footer */}
-      <footer className="bg-slate-900 text-white py-10">
-        <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6">
-          <img src="/images/Jure logo.png" alt="JURE" className="w-[120px] h-8 object-contain" />
-          <div className="flex items-center gap-6 text-sm text-slate-300">
-            <button onClick={() => go("/privacy")} className="hover:text-white">{t.footer.privacy}</button>
-            <button onClick={() => go("/terms")} className="hover:text-white">{t.footer.terms}</button>
-            <button onClick={() => go("/status")} className="hover:text-white">{t.footer.status}</button>
-          </div>
-          <div className="text-slate-400 text-sm">© {year} JURE. {t.footer.rights}</div>
+          </Reveal>
         </div>
-      </footer>
-
-      <style>{`
-        @keyframes blob {
-          0% { transform: translate(0px, 0px) scale(1); }
-          33% { transform: translate(20px, -10px) scale(1.05); }
-          66% { transform: translate(-10px, 10px) scale(0.98); }
-          100% { transform: translate(0px, 0px) scale(1); }
-        }
-        .animate-blob { animation: blob 12s infinite; }
-        .animation-delay-2000 { animation-delay: 2s; }
-        .animation-delay-4000 { animation-delay: 4s; }
-      `}</style>
-    </div>
+      </section>
+    </MarketingShell>
   );
 };
 

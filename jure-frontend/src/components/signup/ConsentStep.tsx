@@ -155,25 +155,25 @@ const ConsentStep = ({ onNext, onPrev, setStep, form }: ConsentStepProps) => {
     <div className="max-w-4xl mx-auto animate-fade-in">
       {/* Header Section */}
       <div className="text-center mb-8">
-        <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-purple-600 to-purple-700 rounded-2xl mb-4 shadow-lg">
+        <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-[#64499D] to-[#4D3680] rounded-2xl mb-4 shadow-lg">
           <ShieldCheck className="w-8 h-8 text-white" />
         </div>
-        <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">
+        <h2 className="text-2xl sm:text-3xl font-bold font-display text-slate-900 dark:text-slate-100 mb-2">
           Finalisation de l'inscription
         </h2>
-        <p className="text-gray-600 max-w-2xl mx-auto">
+        <p className="text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
           Acceptez les conditions pour finaliser la création de votre compte
         </p>
       </div>
 
       {/* Main Form Card */}
-      <Card className="border-0 shadow-2xl bg-white/95 backdrop-blur-sm">
-        <CardHeader className="bg-gradient-to-r from-purple-50 to-purple-100/50 rounded-t-lg border-b border-purple-100">
-          <CardTitle className="text-xl text-purple-800 flex items-center gap-2">
-            <FileText className="w-5 h-5" />
+      <Card className="landing-glass border-0 shadow-none ring-1 ring-[#64499D]/12 dark:ring-[#8B6FD1]/20">
+        <CardHeader className="bg-gradient-to-r from-[#F4F1FF]/80 to-transparent dark:from-[#64499D]/15 dark:to-transparent rounded-t-lg border-b border-[#64499D]/10 dark:border-[#8B6FD1]/20">
+          <CardTitle className="text-xl font-display text-slate-900 dark:text-slate-100 flex items-center gap-2">
+            <FileText className="w-5 h-5 text-[#64499D] dark:text-[#8B6FD1]" />
             Consentement & RGPD / Loi 09-08
           </CardTitle>
-          <CardDescription className="text-purple-700">
+          <CardDescription className="text-slate-600 dark:text-slate-400">
             Dernière étape : Acceptez les conditions d'utilisation
           </CardDescription>
         </CardHeader>
@@ -181,9 +181,9 @@ const ConsentStep = ({ onNext, onPrev, setStep, form }: ConsentStepProps) => {
         <CardContent className="p-6 sm:p-8">
           <div className="space-y-6">
             {/* Consent Section */}
-            <div className="bg-gradient-to-r from-purple-50/50 to-transparent rounded-xl p-6 border border-purple-100">
-              <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                <ShieldCheck className="w-5 h-5 text-purple-600" />
+            <div className="bg-gradient-to-r from-[#F4F1FF]/60 to-transparent dark:from-[#64499D]/10 dark:to-transparent rounded-xl p-6 border border-[#64499D]/15 dark:border-[#8B6FD1]/20">
+              <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-4 flex items-center gap-2">
+                <ShieldCheck className="w-5 h-5 text-[#64499D] dark:text-[#8B6FD1]" />
                 Acceptation des conditions
               </h3>
               
@@ -193,16 +193,16 @@ const ConsentStep = ({ onNext, onPrev, setStep, form }: ConsentStepProps) => {
                     id="accept_terms"
                     checked={watchedAcceptTerms}
                     onCheckedChange={(checked) => setValue('accept_terms', checked as boolean)}
-                    className="mt-0.5 data-[state=checked]:bg-purple-600"
+                    className="mt-0.5 data-[state=checked]:bg-[#64499D]"
                   />
                   <div className="flex-1">
-                    <Label htmlFor="accept_terms" className="text-sm font-medium text-gray-700">
+                    <Label htmlFor="accept_terms" className="text-sm font-medium text-slate-700 dark:text-slate-300">
                       J'accepte les{' '}
-                      <a href="/terms" target="_blank" className="text-purple-600 hover:underline font-semibold">
+                      <a href="/terms" target="_blank" className="text-[#64499D] dark:text-[#CFC2FF] hover:underline font-semibold">
                         Conditions Générales d'Utilisation
                       </a>{' '}
                       et la{' '}
-                      <a href="/privacy" target="_blank" className="text-purple-600 hover:underline font-semibold">
+                      <a href="/privacy" target="_blank" className="text-[#64499D] dark:text-[#CFC2FF] hover:underline font-semibold">
                         Politique de Confidentialité
                       </a>{' '}
                       de Jure *
@@ -215,10 +215,10 @@ const ConsentStep = ({ onNext, onPrev, setStep, form }: ConsentStepProps) => {
                     id="accept_data_processing"
                     checked={watchedAcceptDataProcessing}
                     onCheckedChange={(checked) => setValue('accept_data_processing', checked as boolean)}
-                    className="mt-0.5 data-[state=checked]:bg-purple-600"
+                    className="mt-0.5 data-[state=checked]:bg-[#64499D]"
                   />
                   <div className="flex-1">
-                    <Label htmlFor="accept_data_processing" className="text-sm font-medium text-gray-700">
+                    <Label htmlFor="accept_data_processing" className="text-sm font-medium text-slate-700 dark:text-slate-300">
                       Je consens au traitement de mes données personnelles conformément à la loi 09-08 
                       relative à la protection des personnes physiques à l'égard du traitement des données à caractère personnel *
                     </Label>
@@ -228,17 +228,17 @@ const ConsentStep = ({ onNext, onPrev, setStep, form }: ConsentStepProps) => {
             </div>
 
             {/* Rights Section */}
-            <div className="bg-gradient-to-r from-purple-50/50 to-transparent rounded-xl p-6 border border-purple-100">
-              <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                <ShieldCheck className="w-5 h-5 text-purple-600" />
+            <div className="bg-gradient-to-r from-[#F4F1FF]/60 to-transparent dark:from-[#64499D]/10 dark:to-transparent rounded-xl p-6 border border-[#64499D]/15 dark:border-[#8B6FD1]/20">
+              <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-4 flex items-center gap-2">
+                <ShieldCheck className="w-5 h-5 text-[#64499D] dark:text-[#8B6FD1]" />
                 Vos droits RGPD
               </h3>
               
               <div className="space-y-3">
-                <p className="text-gray-700 text-sm">
+                <p className="text-slate-700 dark:text-slate-300 text-sm">
                   Conformément à la réglementation en vigueur, vous disposez des droits suivants :
                 </p>
-                <ul className="text-gray-700 text-sm space-y-2 pl-5 list-disc">
+                <ul className="text-slate-700 dark:text-slate-300 text-sm space-y-2 pl-5 list-disc">
                   <li>Droit d'accès à vos données personnelles</li>
                   <li>Droit de rectification de vos données</li>
                   <li>Droit à l'effacement de vos données</li>
@@ -249,7 +249,7 @@ const ConsentStep = ({ onNext, onPrev, setStep, form }: ConsentStepProps) => {
                   <a 
                     href="/data-rights" 
                     target="_blank" 
-                    className="text-purple-600 hover:underline font-medium inline-flex items-center"
+                    className="text-[#64499D] dark:text-[#CFC2FF] hover:underline font-medium inline-flex items-center"
                   >
                     En savoir plus sur vos droits <ArrowLeft className="w-4 h-4 ml-1 rotate-180" />
                   </a>
@@ -258,24 +258,24 @@ const ConsentStep = ({ onNext, onPrev, setStep, form }: ConsentStepProps) => {
             </div>
 
             {/* Important Notice */}
-            <div className="bg-gradient-to-r from-yellow-50/50 to-transparent rounded-xl p-6 border border-yellow-200">
-              <h3 className="text-lg font-semibold text-yellow-800 mb-3 flex items-center gap-2">
-                <ShieldAlert className="w-5 h-5 text-yellow-600" />
+            <div className="bg-gradient-to-r from-amber-50/60 to-transparent dark:from-amber-500/10 dark:to-transparent rounded-xl p-6 border border-amber-200/80 dark:border-amber-500/30">
+              <h3 className="text-lg font-semibold text-amber-800 dark:text-amber-200 mb-3 flex items-center gap-2">
+                <ShieldAlert className="w-5 h-5 text-amber-600 dark:text-amber-400" />
                 Information importante
               </h3>
-              <p className="text-yellow-700 text-sm">
+              <p className="text-amber-700 dark:text-amber-300/90 text-sm">
                 Une fois votre inscription soumise, nos équipes examineront vos documents. 
                 Vous recevrez un email de confirmation dans un délai maximum de 48 heures.
               </p>
             </div>
 
             {/* Navigation Buttons */}
-            <div className="flex flex-col sm:flex-row justify-between gap-4 pt-6 border-t border-gray-200">
+            <div className="flex flex-col sm:flex-row justify-between gap-4 pt-6 border-t border-[#64499D]/10 dark:border-[#8B6FD1]/20">
               <Button 
                 type="button"
                 variant="outline"
                 onClick={onPrev}
-                className="order-2 sm:order-1 bg-white border-gray-300 text-gray-700 hover:bg-gray-50 transition-all duration-200 h-12 px-8"
+                className="order-2 sm:order-1 border-[#64499D]/30 text-[#64499D] dark:text-[#CFC2FF] hover:bg-[#64499D]/10 hover:border-[#64499D]/50 dark:hover:bg-[#64499D]/20 transition-all duration-200 h-12 px-8"
               >
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Retour
@@ -283,7 +283,7 @@ const ConsentStep = ({ onNext, onPrev, setStep, form }: ConsentStepProps) => {
               
               <Button 
                 onClick={onSubmit}
-                className="order-1 sm:order-2 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 shadow-lg hover:shadow-xl transition-all duration-200 h-12 px-8"
+                className="order-1 sm:order-2 bg-gradient-to-r from-[#64499D] to-[#4D3680] hover:from-[#4D3680] hover:to-[#3E2D71] shadow-lg hover:shadow-xl transition-all duration-200 h-12 px-8"
                 disabled={!watchedAcceptTerms || !watchedAcceptDataProcessing}
               >
                 Créer mon compte
@@ -296,9 +296,9 @@ const ConsentStep = ({ onNext, onPrev, setStep, form }: ConsentStepProps) => {
 
       {/* Progress Indicator */}
       <div className="text-center mt-6">
-        <div className="inline-flex items-center px-4 py-2 bg-purple-100 rounded-full">
-          <div className="w-2 h-2 bg-purple-600 rounded-full mr-2"></div>
-          <span className="text-sm text-purple-700 font-medium">
+        <div className="inline-flex items-center px-4 py-2 bg-[#F4F1FF]/80 dark:bg-[#64499D]/20 rounded-full ring-1 ring-[#64499D]/15 dark:ring-[#8B6FD1]/25">
+          <div className="w-2 h-2 bg-[#64499D] rounded-full mr-2"></div>
+          <span className="text-sm text-[#64499D] dark:text-[#CFC2FF] font-medium">
             Étape 5 sur 5 - Finalisation
           </span>
         </div>

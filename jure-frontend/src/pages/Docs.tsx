@@ -2,8 +2,9 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { BookOpen, Shield, Code2, PlugZap, FileText, GitBranch, ArrowRight } from "lucide-react";
+import MarketingShell from "@/components/landing/MarketingShell";
+import Reveal from "@/components/landing/Reveal";
 
 type Lang = "fr" | "en" | "ar";
 
@@ -12,6 +13,7 @@ const STRINGS: Record<Lang, any> = {
     htmlLang: "en", dir: "ltr",
     nav: { features: "Features", pricing: "Pricing", about: "About", contact: "Contact" },
     auth: { signin: "Sign in" },
+    themeToggle: { label: "Toggle theme", title: "Toggle theme" },
     hero: { title: "Documentation", subtitle: "Guides, API, security, and changelog." },
     sections: {
       start: { title: "Getting started", desc: "Accounts, onboarding, and first matters." },
@@ -28,6 +30,7 @@ const STRINGS: Record<Lang, any> = {
     htmlLang: "fr", dir: "ltr",
     nav: { features: "Fonctionnalités", pricing: "Tarifs", about: "À propos", contact: "Contact" },
     auth: { signin: "Se connecter" },
+    themeToggle: { label: "Basculer le thème", title: "Basculer le thème" },
     hero: { title: "Documentation", subtitle: "Guides, API, sécurité et journal des versions." },
     sections: {
       start: { title: "Bien démarrer", desc: "Comptes, onboarding et premiers dossiers." },
@@ -44,6 +47,7 @@ const STRINGS: Record<Lang, any> = {
     htmlLang: "ar", dir: "rtl",
     nav: { features: "الميزات", pricing: "الأسعار", about: "حول", contact: "اتصل بنا" },
     auth: { signin: "تسجيل الدخول" },
+    themeToggle: { label: "تبديل السمة", title: "تبديل السمة" },
     hero: { title: "الوثائق", subtitle: "أدلة وواجهة API والأمان وسجلّ التحديثات." },
     sections: {
       start: { title: "البدء", desc: "الحسابات والإعداد وأول القضايا." },
@@ -77,9 +81,8 @@ const useI18n = () => {
 };
 
 const Docs: React.FC = () => {
-  const { t } = useI18n();
+  const { lang, setLang, t } = useI18n();
   const navigate = useNavigate();
-  const year = new Date().getFullYear();
 
   const tiles = [
     { icon: <BookOpen className="w-6 h-6" />, ...t.sections.start },
@@ -91,57 +94,58 @@ const Docs: React.FC = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-white to-slate-50 dark:from-slate-950 dark:to-slate-900 text-slate-900 dark:text-slate-100">
-      {/* Header */}
-      <header className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-        <img src="/images/Jure logo.png" alt="JURE" className="w-[140px] h-10 object-contain" />
-        <Button variant="outline" onClick={() => navigate("/status")}>← {t.footer.status}</Button>
-      </header>
-
-      {/* Hero */}
-      <main className="max-w-7xl mx-auto px-6 pt-12 pb-20">
-        <div className="text-center max-w-3xl mx-auto">
-          <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-slate-900 via-[#64499D] to-slate-900 dark:from-white dark:via-[#8B6FD1] dark:to-white bg-clip-text text-transparent">
-            {t.hero.title}
+    <MarketingShell
+      lang={lang}
+      onLangChange={setLang}
+      labels={{ nav: t.nav, auth: t.auth, themeToggle: t.themeToggle, footer: t.footer }}
+      dir={t.dir}
+      activeNav="none"
+    >
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 pt-12 pb-20 md:pt-20">
+        <Reveal className="text-center max-w-3xl mx-auto">
+          <h1 className="font-display text-4xl md:text-5xl font-bold tracking-tight">
+            <span className="landing-hero-shimmer bg-gradient-to-r from-slate-900 via-[#64499D] to-slate-900 dark:from-white dark:via-[#8B6FD1] dark:to-white bg-clip-text text-transparent">
+              {t.hero.title}
+            </span>
           </h1>
           <p className="mt-3 text-slate-600 dark:text-slate-300">{t.hero.subtitle}</p>
-          <div className="mt-6 flex gap-3 justify-center">
-            <Button onClick={() => navigate("/status")} variant="outline">{t.cta.status}</Button>
+          <div className="mt-6 flex gap-3 justify-center flex-wrap">
+            <Button onClick={() => navigate("/status")} variant="outline" className="border-[#64499D]/30">
+              {t.cta.status}
+            </Button>
             <Button onClick={() => navigate("/contact")} className="bg-gradient-to-r from-[#64499D] to-[#4D3680]">
-              {t.cta.contact} <ArrowRight className="w-4 h-4 ml-2" />
+              {t.cta.contact} <ArrowRight className="w-4 h-4 ms-2" />
             </Button>
           </div>
-        </div>
+        </Reveal>
 
-        {/* Tiles */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 mt-12">
+        <div className="landing-divider my-12 max-w-md mx-auto" />
+
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
           {tiles.map((tile, i) => (
-            <Card key={i} className="bg-white/90 dark:bg-slate-900/70 border-slate-200 dark:border-slate-700 hover:shadow-lg transition">
-              <CardHeader>
-                <div className="w-12 h-12 rounded-xl grid place-items-center text-white" style={{ background: "#64499D" }}>
+            <Reveal key={i} delay={i * 0.06} subtle>
+              <div className="landing-glass landing-glass-glow rounded-2xl p-6 h-full flex flex-col">
+                <div
+                  className="w-12 h-12 rounded-xl grid place-items-center text-white"
+                  style={{ background: "#64499D" }}
+                >
                   {tile.icon}
                 </div>
-                <CardTitle className="mt-4">{tile.title}</CardTitle>
-                <CardDescription className="dark:text-slate-400">{tile.desc}</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Button variant="outline" onClick={() => navigate("/docs")} className="w-full">
+                <h3 className="font-display text-xl font-semibold mt-4">{tile.title}</h3>
+                <p className="mt-2 text-sm text-slate-600 dark:text-slate-400 flex-1">{tile.desc}</p>
+                <Button
+                  variant="outline"
+                  onClick={() => navigate("/docs")}
+                  className="w-full mt-4 border-[#64499D]/25 hover:bg-[#64499D]/10"
+                >
                   {t.cta.open}
                 </Button>
-              </CardContent>
-            </Card>
+              </div>
+            </Reveal>
           ))}
         </div>
-      </main>
-
-      {/* Footer */}
-      <footer className="bg-slate-900 text-white py-10">
-        <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6">
-          <img src="/images/Jure logo.png" alt="JURE" className="w-[120px] h-8 object-contain" />
-          <div className="text-slate-400 text-sm">© {year} JURE</div>
-        </div>
-      </footer>
-    </div>
+      </section>
+    </MarketingShell>
   );
 };
 

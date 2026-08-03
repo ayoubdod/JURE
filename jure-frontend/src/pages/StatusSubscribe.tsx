@@ -1,11 +1,11 @@
 // src/pages/StatusSubscribe.tsx
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { CheckCircle2, Mail, Bell, Server, Database, Network, Webhook } from "lucide-react";
+import { CheckCircle2, Mail, Bell, Database, Network, Webhook } from "lucide-react";
 import { devLog } from "@/utils/devLog";
+import MarketingShell from "@/components/landing/MarketingShell";
+import Reveal from "@/components/landing/Reveal";
 
 type Lang = "fr" | "en" | "ar";
 
@@ -15,6 +15,7 @@ const STRINGS: Record<Lang, any> = {
     dir: "ltr",
     nav: { features: "Features", pricing: "Pricing", about: "About", contact: "Contact" },
     auth: { signin: "Sign in" },
+    themeToggle: { label: "Toggle theme", title: "Toggle theme" },
     hero: { title: "Subscribe to status alerts", subtitle: "Get incident and maintenance updates by email." },
     form: {
       email: "Email",
@@ -37,6 +38,7 @@ const STRINGS: Record<Lang, any> = {
     dir: "ltr",
     nav: { features: "Fonctionnalités", pricing: "Tarifs", about: "À propos", contact: "Contact" },
     auth: { signin: "Se connecter" },
+    themeToggle: { label: "Basculer le thème", title: "Basculer le thème" },
     hero: { title: "S’abonner aux alertes", subtitle: "Recevez par email les incidents et maintenances." },
     form: {
       email: "Email",
@@ -59,6 +61,7 @@ const STRINGS: Record<Lang, any> = {
     dir: "rtl",
     nav: { features: "الميزات", pricing: "الأسعار", about: "حول", contact: "اتصل بنا" },
     auth: { signin: "تسجيل الدخول" },
+    themeToggle: { label: "تبديل السمة", title: "تبديل السمة" },
     hero: { title: "الاشتراك في تنبيهات الحالة", subtitle: "استلم تحديثات الأعطال والصيانة عبر البريد." },
     form: {
       email: "البريد الإلكتروني",
@@ -97,8 +100,7 @@ const useI18n = () => {
 };
 
 const StatusSubscribe: React.FC = () => {
-  const { t } = useI18n();
-  const navigate = useNavigate();
+  const { lang, setLang, t } = useI18n();
   const [email, setEmail] = useState("");
   const [freq, setFreq] = useState<"instant" | "daily" | "weekly">("instant");
   const [components, setComponents] = useState({ api: true, app: true, db: true, net: true });
@@ -115,35 +117,42 @@ const StatusSubscribe: React.FC = () => {
     setEmail("");
   };
 
-  const year = new Date().getFullYear();
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-white to-slate-50 dark:from-slate-950 dark:to-slate-900 text-slate-900 dark:text-slate-100">
-      <header className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-        <img src="/images/Jure logo.png" alt="JURE" className="w-[140px] h-10 object-contain" />
-        <Button variant="outline" onClick={() => navigate("/status")}>← {t.footer.status}</Button>
-      </header>
-
-      <main className="max-w-7xl mx-auto px-6 pt-10 pb-20">
-        <div className="text-center max-w-3xl mx-auto">
-          <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-slate-900 via-[#64499D] to-slate-900 dark:from-white dark:via-[#8B6FD1] dark:to-white bg-clip-text text-transparent">
-            {t.hero.title}
+    <MarketingShell
+      lang={lang}
+      onLangChange={setLang}
+      labels={{ nav: t.nav, auth: t.auth, themeToggle: t.themeToggle, footer: t.footer }}
+      dir={t.dir}
+      activeNav="none"
+    >
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 pt-12 pb-20 md:pt-20">
+        <Reveal className="text-center max-w-3xl mx-auto">
+          <h1 className="font-display text-4xl md:text-5xl font-bold tracking-tight">
+            <span className="landing-hero-shimmer bg-gradient-to-r from-slate-900 via-[#64499D] to-slate-900 dark:from-white dark:via-[#8B6FD1] dark:to-white bg-clip-text text-transparent">
+              {t.hero.title}
+            </span>
           </h1>
           <p className="mt-3 text-slate-600 dark:text-slate-300">{t.hero.subtitle}</p>
-        </div>
+        </Reveal>
 
-        <form onSubmit={submit} className="max-w-3xl mx-auto mt-10">
-          <Card className="bg-white/90 dark:bg-slate-900/70 border-slate-200 dark:border-slate-700">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2"><Bell className="w-5 h-5" /> {t.hero.title}</CardTitle>
-              <CardDescription className="dark:text-slate-400">{t.hero.subtitle}</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
+        <div className="landing-divider my-10 max-w-md mx-auto" />
+
+        <Reveal>
+          <form onSubmit={submit} className="max-w-3xl mx-auto">
+            <div className="landing-glass landing-panel-glow rounded-2xl p-6 md:p-8 space-y-6">
+              <div className="flex items-center gap-2">
+                <Bell className="w-5 h-5 text-[#64499D] dark:text-[#CFC2FF]" />
+                <h2 className="font-display text-xl font-semibold">{t.hero.title}</h2>
+              </div>
+              <p className="text-sm text-slate-500 dark:text-slate-400 -mt-2">{t.hero.subtitle}</p>
+
               <div>
                 <label className="text-sm">{t.form.email}</label>
-                <div className="mt-1 flex gap-2">
+                <div className="mt-1 flex gap-2 flex-col sm:flex-row">
                   <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-                  <Button type="submit"><Mail className="w-4 h-4 mr-2" /> {t.form.submit}</Button>
+                  <Button type="submit" className="bg-gradient-to-r from-[#64499D] to-[#4D3680]">
+                    <Mail className="w-4 h-4 me-2" /> {t.form.submit}
+                  </Button>
                 </div>
               </div>
 
@@ -155,7 +164,11 @@ const StatusSubscribe: React.FC = () => {
                       key={v}
                       type="button"
                       onClick={() => setFreq(v)}
-                      className={`px-4 py-3 rounded-lg border ${freq===v ? "border-[#64499D] bg-[#64499D]/10" : "border-slate-200 dark:border-slate-700"}`}
+                      className={`px-4 py-3 rounded-xl border text-sm transition-colors ${
+                        freq === v
+                          ? "border-[#64499D] bg-[#64499D]/10 dark:bg-[#64499D]/20"
+                          : "border-[#64499D]/15 dark:border-[#8B6FD1]/20 landing-glass"
+                      }`}
                     >
                       {v==="instant"?t.form.instant:v==="daily"?t.form.daily:t.form.weekly}
                     </button>
@@ -172,18 +185,11 @@ const StatusSubscribe: React.FC = () => {
                   <ToggleTile on={components.net} icon={<Network className="w-4 h-4" />} label={t.form.net} onClick={() => toggle("net")} />
                 </div>
               </div>
-            </CardContent>
-          </Card>
-        </form>
-      </main>
-
-      <footer className="bg-slate-900 text-white py-10">
-        <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6">
-          <img src="/images/Jure logo.png" alt="JURE" className="w-[120px] h-8 object-contain" />
-          <div className="text-slate-400 text-sm">© {year} JURE</div>
-        </div>
-      </footer>
-    </div>
+            </div>
+          </form>
+        </Reveal>
+      </section>
+    </MarketingShell>
   );
 };
 
@@ -191,7 +197,11 @@ const ToggleTile: React.FC<{ on: boolean; icon: React.ReactNode; label: string; 
   <button
     type="button"
     onClick={onClick}
-    className={`px-3 py-3 rounded-lg border text-sm flex items-center justify-center gap-2 ${on ? "border-[#64499D] bg-[#64499D]/10" : "border-slate-200 dark:border-slate-700"}`}
+    className={`px-3 py-3 rounded-xl border text-sm flex items-center justify-center gap-2 transition-colors ${
+      on
+        ? "border-[#64499D] bg-[#64499D]/10 dark:bg-[#64499D]/20"
+        : "border-[#64499D]/15 dark:border-[#8B6FD1]/20 landing-glass"
+    }`}
   >
     {icon} {label}
   </button>

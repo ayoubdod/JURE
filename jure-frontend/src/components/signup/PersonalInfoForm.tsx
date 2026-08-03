@@ -55,25 +55,25 @@ const PersonalInfoForm = ({ onNext, form }: PersonalInfoFormProps) => {
     <div className="max-w-4xl mx-auto animate-fade-in">
       {/* Header Section */}
       <div className="text-center mb-8">
-        <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-purple-600 to-purple-700 rounded-2xl mb-4 shadow-lg">
+        <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-[#64499D] to-[#4D3680] rounded-2xl mb-4 shadow-lg">
           <User className="w-8 h-8 text-white" />
         </div>
-        <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">
+        <h2 className="text-2xl sm:text-3xl font-bold font-display text-slate-900 dark:text-slate-100 mb-2">
           Informations personnelles
         </h2>
-        <p className="text-gray-600 max-w-2xl mx-auto">
+        <p className="text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
           Créez votre compte en remplissant les informations ci-dessous
         </p>
       </div>
 
       {/* Main Form Card */}
-      <Card className="border-0 shadow-2xl bg-white/95 backdrop-blur-sm">
-        <CardHeader className="bg-gradient-to-r from-purple-50 to-purple-100/50 rounded-t-lg border-b border-purple-100">
-          <CardTitle className="text-xl text-purple-800 flex items-center gap-2">
-            <User className="w-5 h-5" />
+      <Card className="landing-glass border-0 shadow-none ring-1 ring-[#64499D]/12 dark:ring-[#8B6FD1]/20">
+        <CardHeader className="bg-gradient-to-r from-[#F4F1FF]/80 to-transparent dark:from-[#64499D]/15 dark:to-transparent rounded-t-lg border-b border-[#64499D]/10 dark:border-[#8B6FD1]/20">
+          <CardTitle className="text-xl font-display text-slate-900 dark:text-slate-100 flex items-center gap-2">
+            <User className="w-5 h-5 text-[#64499D] dark:text-[#8B6FD1]" />
             Détails personnels
           </CardTitle>
-          <CardDescription className="text-purple-700">
+          <CardDescription className="text-slate-600 dark:text-slate-400">
             Phase 1 : Vos informations de base pour créer votre compte
           </CardDescription>
         </CardHeader>
@@ -81,22 +81,22 @@ const PersonalInfoForm = ({ onNext, form }: PersonalInfoFormProps) => {
         <CardContent className="p-6 sm:p-8">
           <div className="space-y-6">
             {/* Name Section */}
-            <div className="bg-gradient-to-r from-purple-50/50 to-transparent rounded-xl p-6 border border-purple-100">
-              <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                <User className="w-5 h-5 text-purple-600" />
+            <div className="bg-gradient-to-r from-[#F4F1FF]/60 to-transparent dark:from-[#64499D]/10 dark:to-transparent rounded-xl p-6 border border-[#64499D]/15 dark:border-[#8B6FD1]/20">
+              <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-4 flex items-center gap-2">
+                <User className="w-5 h-5 text-[#64499D] dark:text-[#8B6FD1]" />
                 Identité
               </h3>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <Label htmlFor="first_name" className="text-sm font-medium text-gray-700 flex items-center gap-2">
-                    <User className="w-4 h-4 text-purple-600" />
+                  <Label htmlFor="first_name" className="text-sm font-medium text-slate-700 dark:text-slate-300 flex items-center gap-2">
+                    <User className="w-4 h-4 text-[#64499D] dark:text-[#8B6FD1]" />
                     Nom *
                   </Label>
                   <Input
                     id="first_name"
                     {...register('first_name')}
-                    className={`transition-all duration-200 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 border-gray-300 h-12 ${
+                    className={`transition-all duration-200 focus:ring-2 focus:ring-[#64499D]/40 focus:border-[#64499D] border-gray-300 dark:border-slate-600 h-12 ${
                       errors.first_name ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''
                     }`}
                   />
@@ -106,14 +106,14 @@ const PersonalInfoForm = ({ onNext, form }: PersonalInfoFormProps) => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="last_name" className="text-sm font-medium text-gray-700 flex items-center gap-2">
-                    <User className="w-4 h-4 text-purple-600" />
+                  <Label htmlFor="last_name" className="text-sm font-medium text-slate-700 dark:text-slate-300 flex items-center gap-2">
+                    <User className="w-4 h-4 text-[#64499D] dark:text-[#8B6FD1]" />
                     Prénom *
                   </Label>
                   <Input
                     id="last_name"
                     {...register('last_name')}
-                    className={`transition-all duration-200 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 border-gray-300 h-12 ${
+                    className={`transition-all duration-200 focus:ring-2 focus:ring-[#64499D]/40 focus:border-[#64499D] border-gray-300 dark:border-slate-600 h-12 ${
                       errors.last_name ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''
                     }`}
                   />
@@ -125,16 +125,16 @@ const PersonalInfoForm = ({ onNext, form }: PersonalInfoFormProps) => {
             </div>
 
             {/* Contact Section */}
-            <div className="bg-gradient-to-r from-purple-50/50 to-transparent rounded-xl p-6 border border-purple-100">
-              <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                <Mail className="w-5 h-5 text-purple-600" />
+            <div className="bg-gradient-to-r from-[#F4F1FF]/60 to-transparent dark:from-[#64499D]/10 dark:to-transparent rounded-xl p-6 border border-[#64499D]/15 dark:border-[#8B6FD1]/20">
+              <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-4 flex items-center gap-2">
+                <Mail className="w-5 h-5 text-[#64499D] dark:text-[#8B6FD1]" />
                 Coordonnées
               </h3>
               
               <div className="space-y-6">
                 <div className="space-y-2">
-                  <Label htmlFor="country" className="text-sm font-medium text-gray-700 flex items-center gap-2">
-                    <MapPin className="w-4 h-4 text-purple-600" />
+                  <Label htmlFor="country" className="text-sm font-medium text-slate-700 dark:text-slate-300 flex items-center gap-2">
+                    <MapPin className="w-4 h-4 text-[#64499D] dark:text-[#8B6FD1]" />
                     Pays *
                   </Label>
                   <CountrySelect 
@@ -150,8 +150,8 @@ const PersonalInfoForm = ({ onNext, form }: PersonalInfoFormProps) => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="phone" className="text-sm font-medium text-gray-700 flex items-center gap-2">
-                    <Phone className="w-4 h-4 text-purple-600" />
+                  <Label htmlFor="phone" className="text-sm font-medium text-slate-700 dark:text-slate-300 flex items-center gap-2">
+                    <Phone className="w-4 h-4 text-[#64499D] dark:text-[#8B6FD1]" />
                     Numéro de téléphone *
                   </Label>
                   <PhoneInput
@@ -162,7 +162,7 @@ const PersonalInfoForm = ({ onNext, form }: PersonalInfoFormProps) => {
                       trigger('phone')
                     }}
                     defaultCountry='MA'
-                    className={`transition-all duration-200 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 border-gray-300 h-12 ${
+                    className={`transition-all duration-200 focus:ring-2 focus:ring-[#64499D]/40 focus:border-[#64499D] border-gray-300 dark:border-slate-600 h-12 ${
                       errors.phone ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''
                     }`}
                   />
@@ -172,15 +172,15 @@ const PersonalInfoForm = ({ onNext, form }: PersonalInfoFormProps) => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="email" className="text-sm font-medium text-gray-700 flex items-center gap-2">
-                    <Mail className="w-4 h-4 text-purple-600" />
+                  <Label htmlFor="email" className="text-sm font-medium text-slate-700 dark:text-slate-300 flex items-center gap-2">
+                    <Mail className="w-4 h-4 text-[#64499D] dark:text-[#8B6FD1]" />
                     Email *
                   </Label>
                   <Input
                     id="email"
                     type="email"
                     {...register('email')}
-                    className={`transition-all duration-200 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 border-gray-300 h-12 ${
+                    className={`transition-all duration-200 focus:ring-2 focus:ring-[#64499D]/40 focus:border-[#64499D] border-gray-300 dark:border-slate-600 h-12 ${
                       errors.email ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''
                     }`}
                   />
@@ -192,16 +192,16 @@ const PersonalInfoForm = ({ onNext, form }: PersonalInfoFormProps) => {
             </div>
 
             {/* Password Section */}
-            <div className="bg-gradient-to-r from-purple-50/50 to-transparent rounded-xl p-6 border border-purple-100">
-              <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                <Lock className="w-5 h-5 text-purple-600" />
+            <div className="bg-gradient-to-r from-[#F4F1FF]/60 to-transparent dark:from-[#64499D]/10 dark:to-transparent rounded-xl p-6 border border-[#64499D]/15 dark:border-[#8B6FD1]/20">
+              <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-4 flex items-center gap-2">
+                <Lock className="w-5 h-5 text-[#64499D] dark:text-[#8B6FD1]" />
                 Sécurité du compte
               </h3>
               
               <div className="space-y-6">
                 <div className="space-y-2">
-                  <Label htmlFor="password" className="text-sm font-medium text-gray-700 flex items-center gap-2">
-                    <Lock className="w-4 h-4 text-purple-600" />
+                  <Label htmlFor="password" className="text-sm font-medium text-slate-700 dark:text-slate-300 flex items-center gap-2">
+                    <Lock className="w-4 h-4 text-[#64499D] dark:text-[#8B6FD1]" />
                     Créer mot de passe *
                   </Label>
                   <div className="relative">
@@ -209,14 +209,14 @@ const PersonalInfoForm = ({ onNext, form }: PersonalInfoFormProps) => {
                       id="password"
                       type={showPassword ? "text" : "password"}
                       {...register('password1')}
-                      className={`transition-all duration-200 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 border-gray-300 h-12 pr-12 ${
+                      className={`transition-all duration-200 focus:ring-2 focus:ring-[#64499D]/40 focus:border-[#64499D] border-gray-300 dark:border-slate-600 h-12 pr-12 ${
                         errors.password1 ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''
                       }`}
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors duration-200"
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 transition-colors duration-200"
                     >
                       {showPassword ? (
                         <EyeOff className="w-5 h-5" />
@@ -232,8 +232,8 @@ const PersonalInfoForm = ({ onNext, form }: PersonalInfoFormProps) => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="confirm_password" className="text-sm font-medium text-gray-700 flex items-center gap-2">
-                    <Lock className="w-4 h-4 text-purple-600" />
+                  <Label htmlFor="confirm_password" className="text-sm font-medium text-slate-700 dark:text-slate-300 flex items-center gap-2">
+                    <Lock className="w-4 h-4 text-[#64499D] dark:text-[#8B6FD1]" />
                     Confirmer mot de passe *
                   </Label>
                   <div className="relative">
@@ -241,14 +241,14 @@ const PersonalInfoForm = ({ onNext, form }: PersonalInfoFormProps) => {
                       id="confirm_password"
                       type={showConfirmPassword ? "text" : "password"}
                       {...register('password2')}
-                      className={`transition-all duration-200 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 border-gray-300 h-12 pr-12 ${
+                      className={`transition-all duration-200 focus:ring-2 focus:ring-[#64499D]/40 focus:border-[#64499D] border-gray-300 dark:border-slate-600 h-12 pr-12 ${
                         errors.password2 ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''
                       }`}
                     />
                     <button
                       type="button"
                       onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors duration-200"
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 transition-colors duration-200"
                     >
                       {showConfirmPassword ? (
                         <EyeOff className="w-5 h-5" />
@@ -265,11 +265,11 @@ const PersonalInfoForm = ({ onNext, form }: PersonalInfoFormProps) => {
             </div>
 
             {/* Navigation Buttons */}
-            <div className="flex flex-col sm:flex-row justify-between gap-4 pt-6 border-t border-gray-200">
+            <div className="flex flex-col sm:flex-row justify-between gap-4 pt-6 border-t border-[#64499D]/10 dark:border-[#8B6FD1]/20">
               <div className="order-2 sm:order-1">
                 <Link 
                   to="/signin" 
-                  className="inline-flex items-center text-sm text-purple-700 hover:text-purple-800 font-medium transition-colors duration-200"
+                  className="inline-flex items-center text-sm text-[#64499D] dark:text-[#CFC2FF] hover:text-[#4D3680] dark:hover:text-[#E9E0FF] font-medium transition-colors duration-200"
                 >
                   <LogIn className="w-4 h-4 mr-2" />
                   Déjà un compte ? Se connecter
@@ -278,7 +278,7 @@ const PersonalInfoForm = ({ onNext, form }: PersonalInfoFormProps) => {
               
               <Button
                 onClick={onSubmit}
-                className="order-1 sm:order-2 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 shadow-lg hover:shadow-xl transition-all duration-200 h-12 px-8"
+                className="order-1 sm:order-2 bg-gradient-to-r from-[#64499D] to-[#4D3680] hover:from-[#4D3680] hover:to-[#3E2D71] shadow-lg hover:shadow-xl transition-all duration-200 h-12 px-8"
               >
                 Continuer
               </Button>
@@ -289,9 +289,9 @@ const PersonalInfoForm = ({ onNext, form }: PersonalInfoFormProps) => {
 
       {/* Progress Indicator */}
       <div className="text-center mt-6">
-        <div className="inline-flex items-center px-4 py-2 bg-purple-100 rounded-full">
-          <div className="w-2 h-2 bg-purple-600 rounded-full mr-2"></div>
-          <span className="text-sm text-purple-700 font-medium">
+        <div className="inline-flex items-center px-4 py-2 bg-[#F4F1FF]/80 dark:bg-[#64499D]/20 rounded-full ring-1 ring-[#64499D]/15 dark:ring-[#8B6FD1]/25">
+          <div className="w-2 h-2 bg-[#64499D] rounded-full mr-2"></div>
+          <span className="text-sm text-[#64499D] dark:text-[#CFC2FF] font-medium">
             Étape 1 sur 5 - Informations personnelles
           </span>
         </div>

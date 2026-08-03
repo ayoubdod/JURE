@@ -10,13 +10,17 @@ import VerificationPending from '@/components/signup/VerificationPending';
 import { signupValidationSchema } from '@/schemas/signupValidation';
 import * as yup from 'yup';
 import { cn } from '@/lib/utils';
+import AuthShell from '@/components/landing/AuthShell';
+import { Check } from 'lucide-react';
+import { useAppTranslation } from '@/i18n';
 
 // Type for the complete signup form
 export type SignUpData = yup.InferType<typeof signupValidationSchema>;
 
 const SignUp = () => {
   const [currentStep, setCurrentStep] = useState(1);
-  
+  const { t } = useAppTranslation();
+
   // Centralized form using react-hook-form
   const mainForm = useForm<SignUpData>({
     resolver: yupResolver(signupValidationSchema),
@@ -29,7 +33,7 @@ const SignUp = () => {
       email: '',
       password1: '',
       password2: '',
-      
+
       // Step 2: Profile
       trade_name: '',
       logo: null,
@@ -49,8 +53,8 @@ const SignUp = () => {
     mode: 'onChange',
   });
 
-  const nextStep = () => setCurrentStep(prev => prev + 1);
-  const prevStep = () => setCurrentStep(prev => prev - 1);
+  const nextStep = () => setCurrentStep((prev) => prev + 1);
+  const prevStep = () => setCurrentStep((prev) => prev - 1);
 
   const handleStep1Complete = () => {
     nextStep();
@@ -77,7 +81,7 @@ const SignUp = () => {
     { number: 2, title: 'Profil', description: 'Nom commercial et identité visuelle' },
     { number: 3, title: 'Qualifications professionnelles', description: 'Type de structure et adresse' },
     { number: 4, title: 'Organisation', description: 'Équipe et présence en ligne' },
-    { number: 5, title: 'Consentement', description: 'Conditions d’utilisation et confidentialité' },
+    { number: 5, title: 'Consentement', description: "Conditions d'utilisation et confidentialité" },
   ];
 
   const renderStep = () => {
@@ -85,10 +89,7 @@ const SignUp = () => {
       <>
         {/* Step 1: Personal Info */}
         <div className={cn(currentStep === 1 ? '' : 'hidden')}>
-          <PersonalInfoStep
-            onNext={handleStep1Complete}
-            form={mainForm}
-          />
+          <PersonalInfoStep onNext={handleStep1Complete} form={mainForm} />
         </div>
 
         {/* Step 2: Profile */}
@@ -137,50 +138,60 @@ const SignUp = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-purple-100">
-      <div className="container mx-auto px-4 py-8">
-        {/* Progress Steps */}
-        {currentStep <= 5 && (
-          <div className="max-w-4xl mx-auto mb-8">
-            <div className="flex items-center justify-between">
+    <AuthShell wide homeLabel={t.auth.backToHome}>
+      {/* Progress Steps */}
+      {currentStep <= 5 && (
+        <div className="mb-8">
+          <div className="landing-glass rounded-2xl px-4 sm:px-6 py-5">
+            <div className="flex items-center justify-between gap-1 overflow-x-auto pb-1">
               {steps.map((step, index) => (
-                <div key={step.number} className="flex items-center">
-                  <div className={`flex items-center justify-center w-8 h-8 rounded-full border-2 ${
-                    currentStep >= step.number 
-                      ? 'bg-purple-600 border-purple-600 text-white' 
-                      : 'border-gray-300 text-gray-400'
-                  }`}>
+                <div key={step.number} className="flex items-center shrink-0">
+                  <div
+                    className={cn(
+                      'flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-full border-2 text-sm font-semibold transition-all',
+                      currentStep > step.number
+                        ? 'bg-[#64499D] border-[#64499D] text-white shadow-[0_0_16px_-4px_rgba(100,73,157,0.7)]'
+                        : currentStep === step.number
+                          ? 'bg-gradient-to-br from-[#64499D] to-[#4D3680] border-transparent text-white shadow-[0_0_20px_-4px_rgba(100,73,157,0.65)]'
+                          : 'border-[#64499D]/25 dark:border-[#8B6FD1]/30 text-slate-400 dark:text-slate-500'
+                    )}
+                  >
                     {currentStep > step.number ? (
-                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                      </svg>
+                      <Check className="w-4 h-4" />
                     ) : (
                       step.number
                     )}
                   </div>
                   {index < steps.length - 1 && (
-                    <div className={`w-12 h-0.5 mx-2 ${
-                      currentStep > step.number ? 'bg-purple-600' : 'bg-gray-300'
-                    }`} />
+                    <div
+                      className={cn(
+                        'w-6 sm:w-10 md:w-14 h-0.5 mx-1 sm:mx-2 rounded-full',
+                        currentStep > step.number
+                          ? 'bg-[#64499D]'
+                          : 'bg-slate-200 dark:bg-slate-700'
+                      )}
+                    />
                   )}
                 </div>
               ))}
             </div>
-            {currentStep <= 5 && (
-              <div className="text-center mt-4">
-                <h1 className="text-2xl font-bold text-gray-900">{steps[currentStep - 1]?.title}</h1>
-                <p className="text-gray-600">{steps[currentStep - 1]?.description}</p>
-              </div>
-            )}
+            <div className="text-center mt-5">
+              <h1 className="font-display text-xl sm:text-2xl font-bold tracking-tight">
+                <span className="landing-hero-shimmer bg-gradient-to-r from-slate-900 via-[#64499D] to-slate-900 dark:from-white dark:via-[#8B6FD1] dark:to-white bg-clip-text text-transparent">
+                  {steps[currentStep - 1]?.title}
+                </span>
+              </h1>
+              <p className="text-slate-600 dark:text-slate-300 text-sm mt-1">
+                {steps[currentStep - 1]?.description}
+              </p>
+            </div>
           </div>
-        )}
-
-        {/* Step Content */}
-        <div className="max-w-5xl mx-auto">
-          {renderStep()}
         </div>
-      </div>
-    </div>
+      )}
+
+      {/* Step Content */}
+      <div className="w-full">{renderStep()}</div>
+    </AuthShell>
   );
 };
 

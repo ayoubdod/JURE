@@ -44,6 +44,8 @@ import Contact from "@/pages/Contact";
 import StatusSubscribe from "@/pages/StatusSubscribe";
 import Docs from "@/pages/Docs";
 import Pricing from "@/pages/Pricing";
+import Community from "@/pages/Community";
+import Security from "@/pages/Security";
 
 
 const queryClient = new QueryClient();
@@ -127,6 +129,22 @@ const router = createBrowserRouter([
     element: (
       <ProtectedRoute requireAuth={false}>
         <Docs />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/community",
+    element: (
+      <ProtectedRoute requireAuth={false}>
+        <Community />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/security",
+    element: (
+      <ProtectedRoute requireAuth={false}>
+        <Security />
       </ProtectedRoute>
     ),
   },

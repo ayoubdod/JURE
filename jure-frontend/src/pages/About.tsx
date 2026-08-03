@@ -1,14 +1,7 @@
 // src/pages/About.tsx
-import React, { useEffect, useState } from "react"; // removed useMemo
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import {
   ArrowRight,
   Shield,
@@ -20,13 +13,14 @@ import {
   Target,
   Check,
 } from "lucide-react";
-import ThemeToggle from "@/components/ThemeToggle"; // ✅ use the shared minimalist toggle
+import MarketingShell from "@/components/landing/MarketingShell";
+import Reveal from "@/components/landing/Reveal";
+import FeatureTile from "@/components/landing/FeatureTile";
 
 /**
  * About Page
- * - Independent, but visually aligned with Landing.tsx
- * - Brand Primary: #64499D (deep purple)
- * - Auto RTL for Arabic, dark mode aware
+ * - Shared MarketingShell (nav / lang / theme / footer)
+ * - Visual language aligned with Landing (glass, reveal, brand #64499D)
  */
 
 type Lang = "fr" | "en" | "ar";
@@ -243,30 +237,11 @@ const useI18n = () => {
   return { lang, setLang, t: STRINGS[lang] };
 };
 
-const LangSwitcher: React.FC<{ lang: Lang; onChange: (l: Lang) => void }> = ({ lang, onChange }) => (
-  <div className="inline-flex rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700">
-    {(["fr", "en", "ar"] as Lang[]).map((code) => (
-      <button
-        key={code}
-        onClick={() => onChange(code)}
-        className={`px-3 py-2 text-sm ${
-          lang === code
-            ? "bg-[#64499D] text-white"
-            : "bg-transparent text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
-        }`}
-      >
-        {code === "fr" ? "FR" : code === "en" ? "EN" : "AR"}
-      </button>
-    ))}
-  </div>
-);
-
 const AvatarCircle: React.FC<{ initials: string }> = ({ initials }) => (
   <div
-    className="w-14 h-14 rounded-full grid place-items-center text-white font-semibold"
+    className="w-14 h-14 rounded-full grid place-items-center text-white font-semibold shrink-0"
     style={{
-      background:
-        "linear-gradient(135deg, #64499D 0%, #4D3680 50%, #3E2D71 100%)",
+      background: "linear-gradient(135deg, #64499D 0%, #4D3680 50%, #3E2D71 100%)",
     }}
   >
     {initials}
@@ -276,251 +251,258 @@ const AvatarCircle: React.FC<{ initials: string }> = ({ initials }) => (
 const About: React.FC = () => {
   const navigate = useNavigate();
   const { lang, setLang, t } = useI18n();
-  const year = new Date().getFullYear();
+  const isRtl = t.dir === "rtl";
+  const dirClass = isRtl ? "md:flex-row-reverse" : "";
 
   const go = (to: string) => navigate(to);
 
-  const dirClass = t.dir === "rtl" ? "md:flex-row-reverse" : "";
+  const impactIcons = [BookOpen, Shield, Users, Award];
+  const impactAccents = ["#64499D", "#4D3680", "#3E2D71", "#8B6FD1"];
 
   return (
-    <div className="min-h-screen relative overflow-hidden text-slate-900 dark:text-slate-100 bg-gradient-to-br from-white via-white to-slate-50 dark:from-slate-950 dark:via-slate-950 dark:to-slate-900">
-      {/* Decorative blobs */}
-      <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div
-          className="absolute -top-40 -right-32 w-80 h-80 rounded-full blur-3xl opacity-20 dark:opacity-30 animate-blob"
-          style={{ background: "#64499D" }}
-        />
-        <div
-          className="absolute -bottom-40 -left-32 w-80 h-80 rounded-full blur-3xl opacity-10 dark:opacity-20 animate-blob animation-delay-2000"
-          style={{ background: "#3E2D71" }}
-        />
-        <div
-          className="absolute top-48 left-24 w-72 h-72 rounded-full blur-3xl opacity-10 dark:opacity-20 animate-blob animation-delay-4000"
-          style={{ background: "#8B6FD1" }}
-        />
-      </div>
-
-      {/* Header */}
-      <header className="relative z-10">
-        <nav className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between" aria-label="main navigation">
-          <div className="flex items-center gap-3">
-            <img
-              src="/images/Jure logo.png"
-              alt="JURE"
-              className="w-[140px] h-10 object-contain"
-              loading="eager"
-              decoding="async"
-            />
-          </div>
-
-          <div className="hidden md:flex items-center gap-6">
-            <button onClick={() => go("/features")} className="hover:text-[#64499D] dark:hover:text-[#8B6FD1] transition-colors">
-              {t.nav.features}
-            </button>
-            <button onClick={() => go("/pricing")} className="hover:text-[#64499D] dark:hover:text-[#8B6FD1] transition-colors">
-              {t.nav.pricing}
-            </button>
-            <button onClick={() => go("/about")} className="text-[#64499D] dark:text-[#CFC2FF] font-semibold">
-              {t.nav.about}
-            </button>
-            <button onClick={() => go("/contact")} className="hover:text-[#64499D] dark:hover:text-[#8B6FD1] transition-colors">
-              {t.nav.contact}
-            </button>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <LangSwitcher lang={lang} onChange={setLang} />
-            {/* ✅ shared minimalist toggle */}
-            <ThemeToggle label={t.themeToggle.label} title={t.themeToggle.title} />
-            <Button
-              onClick={() => go("/signin")}
-              variant="outline"
-              className="border-[#64499D]/30 text-[#64499D] hover:bg-[#64499D]/10 dark:text-[#CFC2FF] dark:hover:bg-[#64499D]/20"
-            >
-              {t.auth.signin}
-            </Button>
-          </div>
-        </nav>
-      </header>
-
+    <MarketingShell
+      lang={lang}
+      onLangChange={setLang}
+      labels={{
+        nav: { features: t.nav.features, about: t.nav.about, contact: t.nav.contact },
+        auth: t.auth,
+        themeToggle: t.themeToggle,
+        footer: t.footer,
+      }}
+      dir={t.dir}
+      activeNav="about"
+    >
       {/* Hero */}
-      <main className="relative z-10">
-        <section className="max-w-7xl mx-auto px-6 pt-14 pb-12 md:pt-24 md:pb-20">
-          <div className="text-center max-w-4xl mx-auto">
-            <h1 className="text-5xl md:text-6xl font-bold tracking-tight leading-tight">
-              <span className="bg-gradient-to-r from-slate-900 via-[#64499D] to-slate-900 dark:from-white dark:via-[#8B6FD1] dark:to-white bg-clip-text text-transparent">
-                {t.hero.titleA}
-              </span>
-              <br />
-              <span className="bg-gradient-to-r from-[#64499D] to-[#4D3680] bg-clip-text text-transparent">
+      <section className="max-w-7xl mx-auto px-6 pt-14 pb-12 md:pt-24 md:pb-20">
+        <Reveal className="text-center max-w-4xl mx-auto">
+          <h1 className="font-display text-5xl md:text-6xl font-bold tracking-tight leading-tight">
+            <span className="landing-hero-shimmer bg-gradient-to-r from-slate-900 via-[#64499D] to-slate-900 dark:from-white dark:via-[#8B6FD1] dark:to-white bg-clip-text text-transparent">
+              {t.hero.titleA}
+            </span>
+            <br />
+            <span className="relative inline-block mt-1">
+              <span
+                aria-hidden
+                className="absolute inset-0 blur-2xl opacity-40 dark:opacity-50 bg-gradient-to-r from-[#64499D] to-[#8B6FD1]"
+              />
+              <span className="relative bg-gradient-to-r from-[#64499D] via-[#8B6FD1] to-[#4D3680] bg-clip-text text-transparent">
                 {t.hero.titleB}
               </span>
-            </h1>
-            <p className="mt-6 text-lg md:text-xl text-slate-600 dark:text-slate-300 leading-relaxed">
-              {t.hero.subtitle}
-            </p>
+            </span>
+          </h1>
+          <p className="mt-6 text-lg md:text-xl text-slate-600 dark:text-slate-300 leading-relaxed">
+            {t.hero.subtitle}
+          </p>
 
-            <div className={`mt-10 flex flex-col sm:flex-row gap-4 justify-center ${t.dir === "rtl" ? "sm:flex-row-reverse" : ""}`}>
-              <Button
-                onClick={() => go("/contact")}
-                size="lg"
-                className="px-7 py-6 text-lg font-medium shadow-lg hover:shadow-xl transition-shadow bg-gradient-to-r from-[#64499D] to-[#4D3680] hover:from-[#4D3680] hover:to-[#3E2D71] text-white"
+          <div
+            className={`mt-10 flex flex-col sm:flex-row gap-4 justify-center ${
+              isRtl ? "sm:flex-row-reverse" : ""
+            }`}
+          >
+            <Button
+              onClick={() => go("/contact")}
+              size="lg"
+              className="px-7 py-6 text-lg font-medium shadow-lg hover:shadow-[0_0_32px_-6px_rgba(100,73,157,0.55)] transition-shadow bg-gradient-to-r from-[#64499D] to-[#4D3680] hover:from-[#4D3680] hover:to-[#3E2D71] text-white"
+            >
+              {t.hero.ctaContact}
+              <ArrowRight className={`ms-2 h-5 w-5 ${isRtl ? "rotate-180" : ""}`} />
+            </Button>
+            <Button
+              onClick={() => go("/demo")}
+              variant="outline"
+              size="lg"
+              className="px-7 py-6 text-lg border-[#64499D]/25 dark:border-[#8B6FD1]/30 text-slate-800 dark:text-slate-100 hover:bg-[#F4F1FF]/80 dark:hover:bg-[#64499D]/15 backdrop-blur-sm"
+            >
+              {t.hero.ctaDemo}
+            </Button>
+          </div>
+
+          <p className="mt-6 text-sm text-slate-500 dark:text-slate-400">{t.hero.trustLine}</p>
+        </Reveal>
+
+        {/* Pillars */}
+        <div className="mt-16 grid md:grid-cols-3 gap-5 md:gap-6">
+          <Reveal delay={0}>
+            <div className="landing-glass landing-glass-glow rounded-2xl p-7 h-full">
+              <div
+                className="w-12 h-12 rounded-xl flex items-center justify-center mb-4 text-white"
+                style={{ background: "#64499D" }}
               >
-                {t.hero.ctaContact}
-                <ArrowRight className={`ml-2 h-5 w-5 ${t.dir === "rtl" ? "rotate-180" : ""}`} />
-              </Button>
-              <Button
-                onClick={() => go("/demo")}
-                variant="outline"
-                size="lg"
-                className="px-7 py-6 text-lg border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800"
-              >
-                {t.hero.ctaDemo}
-              </Button>
+                <Target className="w-6 h-6" />
+              </div>
+              <h3 className="font-display text-2xl font-bold tracking-tight mb-2">
+                {t.pillars.mission.title}
+              </h3>
+              <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
+                {t.pillars.mission.desc}
+              </p>
             </div>
+          </Reveal>
 
-            <p className="mt-6 text-sm text-slate-500 dark:text-slate-400">{t.hero.trustLine}</p>
-          </div>
+          <Reveal delay={0.06}>
+            <div className="landing-glass landing-glass-glow rounded-2xl p-7 h-full">
+              <div
+                className="w-12 h-12 rounded-xl flex items-center justify-center mb-4 text-white"
+                style={{ background: "#4D3680" }}
+              >
+                <Zap className="w-6 h-6" />
+              </div>
+              <h3 className="font-display text-2xl font-bold tracking-tight mb-2">
+                {t.pillars.vision.title}
+              </h3>
+              <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
+                {t.pillars.vision.desc}
+              </p>
+            </div>
+          </Reveal>
 
-          {/* Pillars */}
-          <div className="mt-16 grid md:grid-cols-3 gap-6 md:gap-8">
-            {/* Mission */}
-            <Card className="bg-white/90 dark:bg-slate-900/70 backdrop-blur border-slate-200 dark:border-slate-700">
-              <CardHeader className="pb-4">
-                <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-3 text-white" style={{ background: "#64499D" }}>
-                  <Target className="w-6 h-6" />
-                </div>
-                <CardTitle className="text-2xl font-bold">{t.pillars.mission.title}</CardTitle>
-                <CardDescription className="dark:text-slate-400">{t.pillars.mission.desc}</CardDescription>
-              </CardHeader>
-            </Card>
+          <Reveal delay={0.12}>
+            <div className="landing-glass landing-glass-glow rounded-2xl p-7 h-full">
+              <div
+                className="w-12 h-12 rounded-xl flex items-center justify-center mb-4 text-white"
+                style={{ background: "#3E2D71" }}
+              >
+                <Heart className="w-6 h-6" />
+              </div>
+              <h3 className="font-display text-2xl font-bold tracking-tight mb-3">
+                {t.pillars.values.title}
+              </h3>
+              <ul className="space-y-2 text-slate-700 dark:text-slate-300">
+                {t.pillars.values.items.map((v: string, i: number) => (
+                  <li key={i} className="flex items-start gap-2">
+                    <Check className="w-5 h-5 text-[#64499D] dark:text-[#8B6FD1] shrink-0 mt-0.5" />
+                    <span>{v}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </Reveal>
+        </div>
+      </section>
 
-            {/* Vision */}
-            <Card className="bg-white/90 dark:bg-slate-900/70 backdrop-blur border-slate-200 dark:border-slate-700">
-              <CardHeader className="pb-4">
-                <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-3 text-white" style={{ background: "#4D3680" }}>
-                  <Zap className="w-6 h-6" />
-                </div>
-                <CardTitle className="text-2xl font-bold">{t.pillars.vision.title}</CardTitle>
-                <CardDescription className="dark:text-slate-400">{t.pillars.vision.desc}</CardDescription>
-              </CardHeader>
-            </Card>
+      <div className="landing-divider mb-16 md:mb-20" aria-hidden />
 
-            {/* Values */}
-            <Card className="bg-white/90 dark:bg-slate-900/70 backdrop-blur border-slate-200 dark:border-slate-700">
-              <CardHeader className="pb-2">
-                <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-3 text-white" style={{ background: "#3E2D71" }}>
-                  <Heart className="w-6 h-6" />
-                </div>
-                <CardTitle className="text-2xl font-bold">{t.pillars.values.title}</CardTitle>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <ul className="space-y-2 text-slate-700 dark:text-slate-300">
-                  {t.pillars.values.items.map((v: string, i: number) => (
-                    <li key={i} className="flex items-center">
-                      <Check className="w-5 h-5 text-green-600 mr-2" />
-                      {v}
-                    </li>
-                  ))}
-                </ul>
-              </CardContent>
-            </Card>
-          </div>
-        </section>
+      {/* Differentiators */}
+      <section className="max-w-7xl mx-auto px-6 pb-16 md:pb-20">
+        <Reveal className="text-center mb-10 md:mb-14">
+          <h2 className="font-display text-3xl md:text-4xl font-bold tracking-tight">
+            {t.impact.title}
+          </h2>
+        </Reveal>
 
-        {/* Differentiators */}
-        <section className="max-w-7xl mx-auto px-6 pb-16 md:pb-20">
-          <div className="text-center mb-10 md:mb-14">
-            <h2 className="text-3xl md:text-4xl font-bold">{t.impact.title}</h2>
-          </div>
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-5 md:gap-6">
+          {t.impact.items.map((it: { title: string; desc: string }, idx: number) => {
+            const Icon = impactIcons[idx] || Award;
+            return (
+              <FeatureTile
+                key={idx}
+                icon={<Icon className="w-6 h-6" />}
+                title={it.title}
+                description={it.desc}
+                accent={impactAccents[idx] || "#64499D"}
+                delay={idx * 0.04}
+              />
+            );
+          })}
+        </div>
+      </section>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
-            {t.impact.items.map((it: any, idx: number) => {
-              const color =
-                idx === 0 ? "#64499D" : idx === 1 ? "#4D3680" : idx === 2 ? "#3E2D71" : "#8B6FD1";
-              const Icon = idx === 0 ? BookOpen : idx === 1 ? Shield : idx === 2 ? Users : Award;
-              return (
-                <div
-                  key={idx}
-                  className="group p-7 rounded-2xl border border-slate-200/70 dark:border-slate-700 bg-white/80 dark:bg-slate-900/60 backdrop-blur-sm hover:shadow-lg transition-all"
-                >
-                  <div
-                    className="w-12 h-12 rounded-xl flex items-center justify-center mb-5 text-white group-hover:scale-105 transition-transform"
-                    style={{ background: color }}
-                  >
-                    <Icon className="w-6 h-6" />
-                  </div>
-                  <h3 className="text-xl font-semibold mb-2">{it.title}</h3>
-                  <p className="text-slate-600 dark:text-slate-300">{it.desc}</p>
-                </div>
-              );
-            })}
-          </div>
-        </section>
+      {/* Timeline */}
+      <section className="max-w-6xl mx-auto px-6 pb-16 md:pb-20">
+        <Reveal>
+          <div className="relative rounded-3xl p-8 md:p-12 text-white overflow-hidden landing-panel-glow bg-gradient-to-br from-slate-900 via-slate-900 to-[#2A1F4A]">
+            <div
+              aria-hidden
+              className="pointer-events-none absolute inset-0 opacity-40"
+              style={{
+                background:
+                  "radial-gradient(ellipse 60% 50% at 20% 0%, rgba(100,73,157,0.55), transparent), radial-gradient(ellipse 50% 40% at 90% 100%, rgba(139,111,209,0.35), transparent)",
+              }}
+            />
+            <h2 className="relative font-display text-3xl md:text-4xl font-bold tracking-tight mb-10 text-center">
+              {t.timeline.title}
+            </h2>
 
-        {/* Timeline */}
-        <section className="max-w-6xl mx-auto px-6 pb-16 md:pb-20">
-          <div className="rounded-3xl p-8 md:p-10 bg-gradient-to-r from-slate-800 to-slate-900 text-white">
-            <h2 className="text-3xl md:4xl font-bold mb-8 text-center">{t.timeline.title}</h2>
-
-            <div className={`flex flex-col md:flex-row ${dirClass} gap-8`}>
-              {t.timeline.items.map((step: any, i: number) => (
+            <div className={`relative flex flex-col md:flex-row ${dirClass} gap-8`}>
+              {t.timeline.items.map((step: { when: string; what: string }, i: number) => (
                 <div key={i} className="flex-1">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl grid place-items-center bg-white/10">
+                    <div className="w-10 h-10 rounded-xl grid place-items-center bg-white/10 landing-glass border-0">
                       <span className="text-lg font-semibold">{i + 1}</span>
                     </div>
-                    <div className="text-xl font-semibold">{step.when}</div>
+                    <div className="font-display text-xl font-semibold">{step.when}</div>
                   </div>
                   <p className="mt-3 text-slate-200 leading-relaxed">{step.what}</p>
                 </div>
               ))}
             </div>
           </div>
-        </section>
+        </Reveal>
+      </section>
 
-        {/* Team */}
-        <section className="max-w-7xl mx-auto px-6 pb-16 md:pb-24">
-          <div className="text-center max-w-3xl mx-auto">
-            <h2 className="text-3xl md:text-4xl font-bold mb-2">{t.team.title}</h2>
-            <p className="text-slate-600 dark:text-slate-300">{t.team.subtitle}</p>
-          </div>
+      {/* Team */}
+      <section className="max-w-7xl mx-auto px-6 pb-16 md:pb-24">
+        <Reveal className="text-center max-w-3xl mx-auto">
+          <h2 className="font-display text-3xl md:text-4xl font-bold tracking-tight mb-2">
+            {t.team.title}
+          </h2>
+          <p className="text-slate-600 dark:text-slate-300">{t.team.subtitle}</p>
+        </Reveal>
 
-          <div className="mt-10 grid sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
-            {t.team.members.map((m: any, i: number) => (
-              <Card key={i} className="bg-white/90 dark:bg-slate-900/70 backdrop-blur border-slate-200 dark:border-slate-700">
-                <CardHeader className="pb-3">
-                  <div className="flex items-center gap-4">
+        <div className="mt-10 grid sm:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6">
+          {t.team.members.map(
+            (m: { name: string; role: string; initials: string }, i: number) => (
+              <Reveal key={i} delay={i * 0.06}>
+                <div className="landing-glass landing-glass-glow rounded-2xl p-6 h-full">
+                  <div className={`flex items-center gap-4 mb-4 ${isRtl ? "flex-row-reverse" : ""}`}>
                     <AvatarCircle initials={m.initials} />
-                    <div>
-                      <CardTitle className="text-lg">{m.name}</CardTitle>
-                      <CardDescription className="dark:text-slate-400">{m.role}</CardDescription>
+                    <div className={isRtl ? "text-end" : "text-start"}>
+                      <h3 className="font-display text-lg font-semibold tracking-tight">{m.name}</h3>
+                      <p className="text-sm text-slate-500 dark:text-slate-400">{m.role}</p>
                     </div>
                   </div>
-                </CardHeader>
-                <CardContent className="pt-0">
-                  <p className="text-sm text-slate-600 dark:text-slate-300">
-                    {lang === "fr" && "Focalisé sur des solutions concrètes, du discovery au déploiement sécurisé."}
-                    {lang === "en" && "Focused on real outcomes, from discovery to secure deployment."}
+                  <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                    {lang === "fr" &&
+                      "Focalisé sur des solutions concrètes, du discovery au déploiement sécurisé."}
+                    {lang === "en" &&
+                      "Focused on real outcomes, from discovery to secure deployment."}
                     {lang === "ar" && "يركز على النتائج الواقعية من الاستكشاف إلى النشر الآمن."}
                   </p>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </section>
+                </div>
+              </Reveal>
+            )
+          )}
+        </div>
+      </section>
 
-        {/* CTA */}
-        <section className="max-w-7xl mx-auto px-6 pb-24">
-          <div className="rounded-3xl p-10 md:p-12 text-white bg-gradient-to-r from-[#64499D] to-[#4D3680]">
-            <div className="text-center max-w-3xl mx-auto">
-              <h3 className="text-3xl md:text-4xl font-bold mb-3">{t.cta.title}</h3>
+      {/* CTA */}
+      <section className="max-w-7xl mx-auto px-6 pb-24">
+        <Reveal>
+          <div className="relative rounded-3xl p-10 md:p-14 text-white overflow-hidden landing-panel-glow bg-gradient-to-br from-[#64499D] via-[#4D3680] to-[#3E2D71]">
+            <div
+              aria-hidden
+              className="pointer-events-none absolute inset-0 opacity-30"
+              style={{
+                backgroundImage:
+                  "linear-gradient(rgba(255,255,255,0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.08) 1px, transparent 1px)",
+                backgroundSize: "40px 40px",
+                maskImage: "radial-gradient(ellipse 80% 70% at 50% 50%, black, transparent)",
+              }}
+            />
+            <div className="relative text-center max-w-3xl mx-auto">
+              <h3 className="font-display text-3xl md:text-4xl font-bold tracking-tight mb-3">
+                {t.cta.title}
+              </h3>
               <p className="text-purple-100 text-lg">{t.cta.subtitle}</p>
 
-              <div className={`mt-8 flex flex-col sm:flex-row gap-4 justify-center ${t.dir === "rtl" ? "sm:flex-row-reverse" : ""}`}>
+              <div
+                className={`mt-8 flex flex-col sm:flex-row gap-4 justify-center ${
+                  isRtl ? "sm:flex-row-reverse" : ""
+                }`}
+              >
                 <Button
                   size="lg"
-                  className="px-8 py-6 text-lg font-medium bg-white text-slate-900 hover:bg-slate-100"
+                  className="px-8 py-6 text-lg font-medium bg-white text-slate-900 hover:bg-slate-100 shadow-lg"
                   onClick={() => go("/contact")}
                 >
                   {t.cta.primary}
@@ -536,51 +518,9 @@ const About: React.FC = () => {
               </div>
             </div>
           </div>
-        </section>
-      </main>
-
-      {/* Footer */}
-      <footer className="bg-slate-900 dark:bg-black text-white py-10 relative z-10">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className={`flex flex-col md:flex-row justify-between items-center gap-6 ${dirClass}`}>
-            <div className="flex items-center gap-3">
-              <img
-                src="/images/Jure logo.png"
-                alt="JURE"
-                className="w-[120px] h-8 object-contain"
-                loading="lazy"
-                decoding="async"
-              />
-            </div>
-            <div className="flex items-center gap-6 text-sm text-slate-300">
-              <button onClick={() => go("/privacy")} className="hover:text-white">
-                {t.footer.privacy}
-              </button>
-              <button onClick={() => go("/terms")} className="hover:text-white">
-                {t.footer.terms}
-              </button>
-              <button onClick={() => go("/status")} className="hover:text-white">
-                {t.footer.status}
-              </button>
-            </div>
-            <div className="text-slate-400 text-sm">© {year} JURE. {t.footer.rights}</div>
-          </div>
-        </div>
-      </footer>
-
-      {/* Scoped animations */}
-      <style>{`
-        @keyframes blob {
-          0% { transform: translate(0px, 0px) scale(1); }
-          33% { transform: translate(20px, -10px) scale(1.05); }
-          66% { transform: translate(-10px, 10px) scale(0.98); }
-          100% { transform: translate(0px, 0px) scale(1); }
-        }
-        .animate-blob { animation: blob 12s infinite; }
-        .animation-delay-2000 { animation-delay: 2s; }
-        .animation-delay-4000 { animation-delay: 4s; }
-      `}</style>
-    </div>
+        </Reveal>
+      </section>
+    </MarketingShell>
   );
 };
 

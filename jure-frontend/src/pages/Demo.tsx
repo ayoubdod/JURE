@@ -1,559 +1,1098 @@
+// src/pages/Demo.tsx
+import React, { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router";
+import { motion, useReducedMotion, AnimatePresence } from "framer-motion";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  ArrowLeft,
+  ArrowRight,
+  Play,
+  Pause,
+  RotateCcw,
+  Zap,
+  Shield,
+  Users,
+  BookOpen,
+  FileText,
+  Calendar,
+  MessageSquare,
+  Search,
+  Bot,
+  Briefcase,
+  UserCheck,
+  Wallet,
+  Sun,
+  Moon,
+  CheckSquare,
+  Sparkles,
+} from "lucide-react";
+import MeshBackdrop from "@/components/landing/MeshBackdrop";
+import Reveal from "@/components/landing/Reveal";
+import "@/components/landing/landing.css";
 
-import React, { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useNavigate } from 'react-router';
-import { ArrowLeft, ArrowRight, Play, Pause, RotateCcw, Zap, Shield, Users, BookOpen, FileText, Calendar, MessageSquare, Search, Brain, Scale } from 'lucide-react';
+type Lang = "fr" | "en" | "ar";
 
-const Demo = () => {
+const STRINGS: Record<Lang, any> = {
+  fr: {
+    htmlLang: "fr",
+    dir: "ltr",
+    back: "Retour",
+    title: "Démonstration JURE",
+    subtitle: "Parcourez les modules réels de la plateforme — tels qu’ils existent dans votre espace de travail.",
+    cta: "Commencer maintenant",
+    prev: "Précédent",
+    next: "Suivant",
+    themeToggle: { label: "Basculer le thème", title: "Basculer le thème" },
+    steps: [
+      {
+        id: "dashboard",
+        title: "Tableau de bord",
+        description:
+          "Vue d’ensemble de vos dossiers, rendez-vous, messages et accès rapide à Juria.",
+      },
+      {
+        id: "juria",
+        title: "Juria — IA juridique",
+        description:
+          "Chat juridique, analyse de contrats, recherche et rédaction assistée — directement dans JURE.",
+      },
+      {
+        id: "cases",
+        title: "Gestion des dossiers",
+        description:
+          "Suivez vos affaires : statut, client, échéances, documents et équipe assignée.",
+      },
+      {
+        id: "clients",
+        title: "Gestion des clients",
+        description:
+          "Centralisez fiches clients, contacts et historique liés à vos dossiers.",
+      },
+      {
+        id: "library",
+        title: "Bibliothèque documentaire",
+        description:
+          "Organisez dossiers, recherchez et téléchargez vos documents professionnels.",
+      },
+      {
+        id: "calendar",
+        title: "Calendrier & tâches",
+        description:
+          "Planifiez audiences, rendez-vous et tâches avec un calendrier intégré.",
+      },
+      {
+        id: "collab",
+        title: "Conversations & équipe",
+        description:
+          "Messagerie interne, activité d’équipe et collaboration sur vos dossiers.",
+      },
+      {
+        id: "finance",
+        title: "Finance",
+        description:
+          "Factures, paiements et suivi TVA pour piloter l’activité du cabinet.",
+      },
+    ],
+    mock: {
+      urgent: "Urgent",
+      inProgress: "En cours",
+      caseSale: "Vente immobilière",
+      caseDivorce: "Divorce amiable",
+      rdvToday: "3 RDV aujourd’hui",
+      nextAt: "Prochain : 14h30",
+      newMessages: "7 nouveaux messages",
+      juriaReady: "Juria est prête pour vos recherches",
+      start: "Ouvrir Juria",
+      modes: ["Chat juridique", "Analyse de contrat", "Recherche", "Rédaction"],
+      userAsk: "Analyse ce bail et signale les clauses à risque.",
+      aiReply:
+        "3 points à surveiller : résiliation (art. 12), dépôt de garantie (art. 8), charges non détaillées (art. 15).",
+      caseTitle: "Dupont c/ Martin",
+      client: "Client",
+      type: "Type",
+      deadline: "Échéance",
+      commercial: "Commercial",
+      daysLeft: "3 jours",
+      docs: "Documents",
+      tasks: "Tâches",
+      notes: "Notes",
+      team: "Équipe",
+      hearing: "Prochaine audience",
+      clientCard: "Marie Dupont",
+      clientMeta: "12 dossiers · Actif",
+      lastContact: "Dernier contact : hier",
+      searchPlaceholder: "Rechercher un document…",
+      folderContracts: "Contrats",
+      folderPleadings: "Conclusions",
+      folderEvidence: "Pièces",
+      files: "fichiers",
+      agenda: "Agenda",
+      taskDue: "Échéance dossier",
+      appointment: "RDV client",
+      hearingShort: "Audience",
+      inbox: "Conversations",
+      unread: "non lus",
+      online: "En ligne",
+      away: "Absent",
+      roleLead: "Avocat principal",
+      roleCollab: "Collaboratrice",
+      invoice: "Facture",
+      paid: "Payée",
+      pending: "En attente",
+      tva: "TVA ce mois",
+      revenue: "Encaissements",
+    },
+    highlights: [
+      {
+        title: "Sécurité",
+        desc: "Contrôles d’accès et chiffrement pour protéger les données du cabinet.",
+      },
+      {
+        title: "IA intégrée",
+        desc: "Juria accélère recherche, analyse et rédaction sans quitter JURE.",
+      },
+      {
+        title: "Cabinet unifié",
+        desc: "Dossiers, clients, calendrier, finance et équipe dans une seule plateforme.",
+      },
+    ],
+  },
+  en: {
+    htmlLang: "en",
+    dir: "ltr",
+    back: "Back",
+    title: "JURE Demo",
+    subtitle: "Walk through the real product modules — the same ones you’ll use in your workspace.",
+    cta: "Get started",
+    prev: "Previous",
+    next: "Next",
+    themeToggle: { label: "Toggle theme", title: "Toggle theme" },
+    steps: [
+      {
+        id: "dashboard",
+        title: "Dashboard",
+        description: "Overview of matters, appointments, messages, and quick access to Juria.",
+      },
+      {
+        id: "juria",
+        title: "Juria — Legal AI",
+        description:
+          "Legal chat, contract analysis, research, and assisted drafting — built into JURE.",
+      },
+      {
+        id: "cases",
+        title: "Case management",
+        description: "Track matters by status, client, deadlines, documents, and assigned team.",
+      },
+      {
+        id: "clients",
+        title: "Client management",
+        description: "Centralize client records, contacts, and history linked to your matters.",
+      },
+      {
+        id: "library",
+        title: "Document library",
+        description: "Organize folders, search, and download your professional documents.",
+      },
+      {
+        id: "calendar",
+        title: "Calendar & tasks",
+        description: "Schedule hearings, appointments, and tasks with an integrated calendar.",
+      },
+      {
+        id: "collab",
+        title: "Conversations & team",
+        description: "Internal messaging, team activity, and collaboration on matters.",
+      },
+      {
+        id: "finance",
+        title: "Finance",
+        description: "Invoices, payments, and VAT tracking to run your firm’s finances.",
+      },
+    ],
+    mock: {
+      urgent: "Urgent",
+      inProgress: "In progress",
+      caseSale: "Real-estate sale",
+      caseDivorce: "Amicable divorce",
+      rdvToday: "3 appointments today",
+      nextAt: "Next: 2:30 PM",
+      newMessages: "7 new messages",
+      juriaReady: "Juria is ready for your research",
+      start: "Open Juria",
+      modes: ["Legal chat", "Contract analysis", "Research", "Drafting"],
+      userAsk: "Review this lease and flag risky clauses.",
+      aiReply:
+        "3 watch-outs: termination (cl. 12), security deposit (cl. 8), unspecified charges (cl. 15).",
+      caseTitle: "Dupont v. Martin",
+      client: "Client",
+      type: "Type",
+      deadline: "Deadline",
+      commercial: "Commercial",
+      daysLeft: "3 days",
+      docs: "Documents",
+      tasks: "Tasks",
+      notes: "Notes",
+      team: "Team",
+      hearing: "Next hearing",
+      clientCard: "Marie Dupont",
+      clientMeta: "12 matters · Active",
+      lastContact: "Last contact: yesterday",
+      searchPlaceholder: "Search documents…",
+      folderContracts: "Contracts",
+      folderPleadings: "Pleadings",
+      folderEvidence: "Evidence",
+      files: "files",
+      agenda: "Agenda",
+      taskDue: "Matter deadline",
+      appointment: "Client meeting",
+      hearingShort: "Hearing",
+      inbox: "Conversations",
+      unread: "unread",
+      online: "Online",
+      away: "Away",
+      roleLead: "Lead counsel",
+      roleCollab: "Associate",
+      invoice: "Invoice",
+      paid: "Paid",
+      pending: "Pending",
+      tva: "VAT this month",
+      revenue: "Collections",
+    },
+    highlights: [
+      {
+        title: "Security",
+        desc: "Access controls and encryption to protect firm data.",
+      },
+      {
+        title: "Built-in AI",
+        desc: "Juria speeds research, analysis, and drafting without leaving JURE.",
+      },
+      {
+        title: "One workspace",
+        desc: "Matters, clients, calendar, finance, and team in a single platform.",
+      },
+    ],
+  },
+  ar: {
+    htmlLang: "ar",
+    dir: "rtl",
+    back: "رجوع",
+    title: "عرض JURE",
+    subtitle: "استكشف وحدات المنتج الحقيقية — نفس الأدوات التي ستستخدمها في مساحة عملك.",
+    cta: "ابدأ الآن",
+    prev: "السابق",
+    next: "التالي",
+    themeToggle: { label: "تبديل السمة", title: "تبديل السمة" },
+    steps: [
+      {
+        id: "dashboard",
+        title: "لوحة التحكم",
+        description: "نظرة عامة على القضايا والمواعيد والرسائل مع وصول سريع إلى Juria.",
+      },
+      {
+        id: "juria",
+        title: "Juria — الذكاء القانوني",
+        description: "دردشة قانونية، تحليل عقود، بحث وصياغة بمساعدة الذكاء الاصطناعي داخل JURE.",
+      },
+      {
+        id: "cases",
+        title: "إدارة القضايا",
+        description: "تتبع القضايا حسب الحالة والعميل والمواعيد والمستندات والفريق.",
+      },
+      {
+        id: "clients",
+        title: "إدارة العملاء",
+        description: "ركّز ملفات العملاء وجهات الاتصال والتاريخ المرتبط بقضاياك.",
+      },
+      {
+        id: "library",
+        title: "مكتبة المستندات",
+        description: "نظّم المجلدات وابحث وحمّل مستنداتك المهنية.",
+      },
+      {
+        id: "calendar",
+        title: "التقويم والمهام",
+        description: "جدول الجلسات والمواعيد والمهام عبر تقويم مدمج.",
+      },
+      {
+        id: "collab",
+        title: "المحادثات والفريق",
+        description: "مراسلة داخلية ونشاط الفريق والتعاون على القضايا.",
+      },
+      {
+        id: "finance",
+        title: "المالية",
+        description: "فواتير ومدفوعات ومتابعة الضريبة لإدارة نشاط المكتب.",
+      },
+    ],
+    mock: {
+      urgent: "عاجل",
+      inProgress: "قيد التنفيذ",
+      caseSale: "بيع عقاري",
+      caseDivorce: "طلاق بالتراضي",
+      rdvToday: "3 مواعيد اليوم",
+      nextAt: "التالي: 14:30",
+      newMessages: "7 رسائل جديدة",
+      juriaReady: "Juria جاهزة لمساعدتك",
+      start: "افتح Juria",
+      modes: ["دردشة قانونية", "تحليل عقد", "بحث", "صياغة"],
+      userAsk: "حلّل عقد الإيجار وحدّد البنود الخطرة.",
+      aiReply: "3 نقاط: الإنهاء (12)، الضمان (8)، الأعباء غير المفصّلة (15).",
+      caseTitle: "Dupont ضد Martin",
+      client: "العميل",
+      type: "النوع",
+      deadline: "الموعد",
+      commercial: "تجاري",
+      daysLeft: "3 أيام",
+      docs: "مستندات",
+      tasks: "مهام",
+      notes: "ملاحظات",
+      team: "الفريق",
+      hearing: "الجلسة القادمة",
+      clientCard: "ماري دوبون",
+      clientMeta: "12 قضية · نشط",
+      lastContact: "آخر تواصل: أمس",
+      searchPlaceholder: "ابحث في المستندات…",
+      folderContracts: "عقود",
+      folderPleadings: "مذكرات",
+      folderEvidence: "أدلة",
+      files: "ملفات",
+      agenda: "الأجندة",
+      taskDue: "موعد قضية",
+      appointment: "لقاء عميل",
+      hearingShort: "جلسة",
+      inbox: "المحادثات",
+      unread: "غير مقروء",
+      online: "متصل",
+      away: "غائب",
+      roleLead: "محامٍ رئيسي",
+      roleCollab: "مساعدة",
+      invoice: "فاتورة",
+      paid: "مدفوعة",
+      pending: "معلّقة",
+      tva: "الضريبة هذا الشهر",
+      revenue: "التحصيلات",
+    },
+    highlights: [
+      {
+        title: "الأمان",
+        desc: "ضوابط وصول وتشفير لحماية بيانات المكتب.",
+      },
+      {
+        title: "ذكاء مدمج",
+        desc: "Juria تسرّع البحث والتحليل والصياغة دون مغادرة JURE.",
+      },
+      {
+        title: "مساحة موحّدة",
+        desc: "قضايا وعملاء وتقويم ومالية وفريق في منصة واحدة.",
+      },
+    ],
+  },
+};
+
+const useI18n = () => {
+  const [lang, setLang] = useState<Lang>(() => {
+    const stored = localStorage.getItem("lang") as Lang | null;
+    if (stored === "fr" || stored === "en" || stored === "ar") return stored;
+    const nav = (navigator.language || "en").toLowerCase();
+    if (nav.startsWith("fr")) return "fr";
+    if (nav.startsWith("ar")) return "ar";
+    return "en";
+  });
+
+  useEffect(() => {
+    const pack = STRINGS[lang];
+    document.documentElement.setAttribute("lang", pack.htmlLang);
+    document.documentElement.setAttribute("dir", pack.dir);
+    localStorage.setItem("lang", lang);
+  }, [lang]);
+
+  return { lang, setLang, t: STRINGS[lang] };
+};
+
+const ThemeToggle: React.FC<{ label?: string; title?: string }> = ({ label, title }) => {
+  const [isDark, setIsDark] = useState(false);
+
+  useEffect(() => {
+    const stored = localStorage.getItem("theme");
+    const prefersDark =
+      window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+    const shouldDark = stored ? stored === "dark" : prefersDark;
+    document.documentElement.classList.toggle("dark", shouldDark);
+    setIsDark(shouldDark);
+  }, []);
+
+  const toggle = () => {
+    const next = !isDark;
+    setIsDark(next);
+    document.documentElement.classList.toggle("dark", next);
+    localStorage.setItem("theme", next ? "dark" : "light");
+  };
+
+  return (
+    <Button
+      onClick={toggle}
+      variant="outline"
+      size="icon"
+      className="border-[#64499D]/20 dark:border-[#8B6FD1]/30"
+      aria-label={label || "Toggle theme"}
+      title={title || "Toggle theme"}
+    >
+      {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+    </Button>
+  );
+};
+
+const LangSwitcher: React.FC<{ lang: Lang; onChange: (l: Lang) => void }> = ({
+  lang,
+  onChange,
+}) => (
+  <div className="inline-flex rounded-lg overflow-hidden border border-[#64499D]/20 dark:border-[#8B6FD1]/30 bg-white/50 dark:bg-slate-900/40 backdrop-blur-sm">
+    {(["fr", "en", "ar"] as Lang[]).map((code) => (
+      <button
+        key={code}
+        onClick={() => onChange(code)}
+        className={`px-2.5 py-1.5 text-xs sm:text-sm transition-colors ${
+          lang === code
+            ? "bg-[#64499D] text-white"
+            : "text-slate-700 dark:text-slate-200 hover:bg-[#F4F1FF] dark:hover:bg-[#64499D]/20"
+        }`}
+      >
+        {code.toUpperCase()}
+      </button>
+    ))}
+  </div>
+);
+
+const MockPane: React.FC<{ children: React.ReactNode; className?: string }> = ({
+  children,
+  className = "",
+}) => (
+  <div
+    className={`rounded-xl p-4 sm:p-5 min-h-[280px] sm:min-h-[320px] bg-gradient-to-br from-white/80 to-[#F4F1FF]/60 dark:from-slate-900/70 dark:to-[#2A1F4A]/40 border border-[#64499D]/10 dark:border-[#8B6FD1]/20 ${className}`}
+  >
+    {children}
+  </div>
+);
+
+const SoftCard: React.FC<{ children: React.ReactNode; className?: string; delay?: number }> = ({
+  children,
+  className = "",
+  delay = 0,
+}) => {
+  const reduce = useReducedMotion();
+  return (
+    <motion.div
+      initial={reduce ? false : { opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay, duration: 0.35 }}
+      className={`rounded-xl bg-white/90 dark:bg-slate-900/70 border border-[#64499D]/10 dark:border-[#8B6FD1]/15 p-3 sm:p-4 shadow-sm ${className}`}
+    >
+      {children}
+    </motion.div>
+  );
+};
+
+const ScaleIcon: React.FC<{ className?: string }> = ({ className }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <path d="M12 3v18M5 7h14M7 7l-3 7h6L7 7zm10 0l-3 7h6l-3-7z" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
+function StepMock({ stepId, m, isRtl }: { stepId: string; m: any; isRtl: boolean }) {
+  switch (stepId) {
+    case "dashboard":
+      return (
+        <MockPane>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 h-full">
+            <div className="space-y-3">
+              <SoftCard>
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="w-2 h-2 rounded-full bg-rose-500" />
+                  <span className="text-xs font-medium">{m.urgent}</span>
+                </div>
+                <p className="text-xs text-slate-600 dark:text-slate-300">{m.caseSale}</p>
+              </SoftCard>
+              <SoftCard delay={0.08}>
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="w-2 h-2 rounded-full bg-amber-400" />
+                  <span className="text-xs font-medium">{m.inProgress}</span>
+                </div>
+                <p className="text-xs text-slate-600 dark:text-slate-300">{m.caseDivorce}</p>
+              </SoftCard>
+            </div>
+            <div className="space-y-3">
+              <SoftCard delay={0.1}>
+                <Calendar className="w-5 h-5 text-[#64499D] dark:text-[#8B6FD1] mb-2" />
+                <p className="text-sm font-medium">{m.rdvToday}</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">{m.nextAt}</p>
+              </SoftCard>
+              <SoftCard delay={0.16}>
+                <MessageSquare className="w-5 h-5 text-[#64499D] dark:text-[#8B6FD1] mb-2" />
+                <p className="text-sm font-medium">{m.newMessages}</p>
+              </SoftCard>
+            </div>
+            <SoftCard
+              delay={0.12}
+              className="!bg-gradient-to-br from-[#64499D] to-[#4D3680] text-white !border-transparent"
+            >
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center landing-bot-pulse">
+                  <Bot className="w-4 h-4" />
+                </div>
+                <span className="font-display font-semibold">Juria</span>
+              </div>
+              <p className="text-xs text-white/90 mb-3">{m.juriaReady}</p>
+              <span className="inline-flex text-[11px] font-medium bg-white text-[#64499D] px-3 py-1.5 rounded-lg">
+                {m.start}
+              </span>
+            </SoftCard>
+          </div>
+        </MockPane>
+      );
+
+    case "juria":
+      return (
+        <MockPane>
+          <div className="flex flex-wrap gap-2 mb-4">
+            {m.modes.map((mode: string, i: number) => (
+              <span
+                key={mode}
+                className={`text-[10px] sm:text-xs px-2.5 py-1 rounded-full border ${
+                  i === 1
+                    ? "bg-[#64499D] text-white border-transparent"
+                    : "border-[#64499D]/25 dark:border-[#8B6FD1]/30 text-slate-600 dark:text-slate-300"
+                }`}
+              >
+                {mode}
+              </span>
+            ))}
+          </div>
+          <div className="space-y-3">
+            <SoftCard className={isRtl ? "" : ""}>
+              <div className={`flex gap-2 ${isRtl ? "flex-row-reverse" : ""}`}>
+                <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[#8B6FD1] to-[#64499D] flex items-center justify-center text-white text-[10px] font-bold shrink-0">
+                  U
+                </div>
+                <p className="text-xs text-slate-700 dark:text-slate-200">{m.userAsk}</p>
+              </div>
+            </SoftCard>
+            <SoftCard
+              delay={0.15}
+              className="bg-gradient-to-r from-[#64499D] to-[#4D3680] text-white border-0"
+            >
+              <div className={`flex gap-2 ${isRtl ? "flex-row-reverse" : ""}`}>
+                <div className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center shrink-0 landing-bot-pulse">
+                  <Bot className="w-3.5 h-3.5" />
+                </div>
+                <p className="text-xs text-white/95 leading-relaxed">{m.aiReply}</p>
+              </div>
+            </SoftCard>
+            <SoftCard delay={0.25} className="flex items-center gap-3 max-w-xs">
+              <FileText className="w-8 h-8 text-[#64499D] dark:text-[#8B6FD1]" />
+              <div>
+                <p className="text-xs font-medium">bail_commercial.pdf</p>
+                <p className="text-[10px] text-slate-500">PDF · 240 KB</p>
+              </div>
+            </SoftCard>
+          </div>
+        </MockPane>
+      );
+
+    case "cases":
+      return (
+        <MockPane>
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
+            <SoftCard className="sm:col-span-3">
+              <div className="flex items-center justify-between mb-3 gap-2">
+                <h4 className="font-display font-semibold text-sm">{m.caseTitle}</h4>
+                <span className="text-[10px] bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-200 px-2 py-0.5 rounded-full">
+                  {m.inProgress}
+                </span>
+              </div>
+              <div className="grid grid-cols-3 gap-2 text-xs mb-3">
+                <div>
+                  <p className="text-slate-500">{m.client}</p>
+                  <p className="font-medium">M. Dupont</p>
+                </div>
+                <div>
+                  <p className="text-slate-500">{m.type}</p>
+                  <p className="font-medium">{m.commercial}</p>
+                </div>
+                <div>
+                  <p className="text-slate-500">{m.deadline}</p>
+                  <p className="font-medium text-amber-600 dark:text-amber-400">{m.daysLeft}</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                {[
+                  [m.docs, "12", "bg-sky-500"],
+                  [m.tasks, "5", "bg-[#64499D]"],
+                  [m.notes, "8", "bg-emerald-500"],
+                ].map(([label, n, dot]) => (
+                  <div
+                    key={String(label)}
+                    className="rounded-lg bg-slate-50 dark:bg-slate-800/60 px-2 py-2 text-[11px] flex items-center gap-2"
+                  >
+                    <span className={`w-1.5 h-1.5 rounded-full ${dot}`} />
+                    {label}: {n}
+                  </div>
+                ))}
+              </div>
+            </SoftCard>
+            <div className="space-y-3">
+              <SoftCard delay={0.1}>
+                <Users className="w-5 h-5 text-slate-400 mb-2" />
+                <p className="text-xs font-medium mb-2">{m.team}</p>
+                <div className="flex -space-x-1 rtl:space-x-reverse">
+                  <div className="w-6 h-6 rounded-full bg-[#64499D] border-2 border-white dark:border-slate-900" />
+                  <div className="w-6 h-6 rounded-full bg-[#8B6FD1] border-2 border-white dark:border-slate-900" />
+                  <div className="w-6 h-6 rounded-full bg-[#4D3680] border-2 border-white dark:border-slate-900" />
+                </div>
+              </SoftCard>
+              <SoftCard delay={0.18}>
+                <Calendar className="w-5 h-5 text-slate-400 mb-2" />
+                <p className="text-xs font-medium">{m.hearing}</p>
+                <p className="text-[11px] text-slate-500">15 Nov</p>
+              </SoftCard>
+            </div>
+          </div>
+        </MockPane>
+      );
+
+    case "clients":
+      return (
+        <MockPane>
+          <div className="grid sm:grid-cols-2 gap-3">
+            <SoftCard>
+              <div className={`flex items-center gap-3 ${isRtl ? "flex-row-reverse" : ""}`}>
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#64499D] to-[#8B6FD1] flex items-center justify-center text-white">
+                  <UserCheck className="w-6 h-6" />
+                </div>
+                <div>
+                  <p className="font-display font-semibold text-sm">{m.clientCard}</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">{m.clientMeta}</p>
+                </div>
+              </div>
+              <p className="text-xs text-slate-600 dark:text-slate-300 mt-3">{m.lastContact}</p>
+            </SoftCard>
+            <SoftCard delay={0.1}>
+              <Briefcase className="w-5 h-5 text-[#64499D] dark:text-[#8B6FD1] mb-2" />
+              <p className="text-xs font-medium mb-2">{m.caseTitle}</p>
+              <div className="space-y-1.5">
+                <div className="h-1.5 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden">
+                  <div className="h-full w-2/3 bg-gradient-to-r from-[#64499D] to-[#8B6FD1]" />
+                </div>
+                <p className="text-[10px] text-slate-500">{m.inProgress}</p>
+              </div>
+            </SoftCard>
+            <SoftCard delay={0.15} className="sm:col-span-2">
+              <div className="grid grid-cols-3 gap-3 text-center text-xs">
+                <div>
+                  <p className="font-display text-lg font-bold text-[#64499D] dark:text-[#CFC2FF]">12</p>
+                  <p className="text-slate-500">{m.docs}</p>
+                </div>
+                <div>
+                  <p className="font-display text-lg font-bold text-[#64499D] dark:text-[#CFC2FF]">5</p>
+                  <p className="text-slate-500">{m.tasks}</p>
+                </div>
+                <div>
+                  <p className="font-display text-lg font-bold text-[#64499D] dark:text-[#CFC2FF]">3</p>
+                  <p className="text-slate-500">{m.hearingShort}</p>
+                </div>
+              </div>
+            </SoftCard>
+          </div>
+        </MockPane>
+      );
+
+    case "library":
+      return (
+        <MockPane>
+          <div className="grid sm:grid-cols-3 gap-3">
+            <SoftCard className="sm:col-span-1">
+              <Search className="w-5 h-5 text-slate-400 mb-2" />
+              <div className="rounded-lg bg-slate-100 dark:bg-slate-800 px-3 py-2 text-xs text-slate-500 mb-2">
+                {m.searchPlaceholder}
+              </div>
+              <Button size="sm" className="w-full bg-[#64499D] hover:bg-[#4D3680] text-xs h-8">
+                <Search className="w-3.5 h-3.5" />
+              </Button>
+            </SoftCard>
+            <div className="sm:col-span-2 grid grid-cols-1 sm:grid-cols-3 gap-2">
+              {[
+                [m.folderContracts, "24", BookOpen],
+                [m.folderPleadings, "11", FileText],
+                [m.folderEvidence, "38", Briefcase],
+              ].map(([label, count, Icon], i) => {
+                const I = Icon as React.FC<{ className?: string }>;
+                return (
+                  <SoftCard key={String(label)} delay={0.08 * i}>
+                    <I className="w-5 h-5 text-[#64499D] dark:text-[#8B6FD1] mb-2" />
+                    <p className="text-xs font-medium">{label as string}</p>
+                    <p className="text-[10px] text-slate-500">
+                      {count as string} {m.files}
+                    </p>
+                  </SoftCard>
+                );
+              })}
+            </div>
+          </div>
+        </MockPane>
+      );
+
+    case "calendar":
+      return (
+        <MockPane>
+          <p className="font-display text-sm font-semibold mb-3">{m.agenda}</p>
+          <div className="space-y-2">
+            {[
+              { time: "09:30", label: m.taskDue, icon: CheckSquare, color: "text-amber-500" },
+              { time: "14:30", label: m.appointment, icon: UserCheck, color: "text-[#64499D]" },
+              { time: "16:00", label: m.hearingShort, icon: ScaleIcon, color: "text-emerald-500" },
+            ].map((row, i) => (
+              <SoftCard key={row.time} delay={0.08 * i} className="flex items-center gap-3">
+                <span className="text-xs font-mono tabular-nums text-slate-500 w-12">{row.time}</span>
+                <row.icon className={`w-4 h-4 ${row.color}`} />
+                <span className="text-xs font-medium">{row.label}</span>
+              </SoftCard>
+            ))}
+          </div>
+        </MockPane>
+      );
+
+    case "collab":
+      return (
+        <MockPane>
+          <div className="grid sm:grid-cols-2 gap-3">
+            <SoftCard>
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-xs font-semibold">{m.inbox}</p>
+                <span className="text-[10px] bg-[#64499D]/15 text-[#64499D] dark:text-[#CFC2FF] px-2 py-0.5 rounded-full">
+                  7 {m.unread}
+                </span>
+              </div>
+              <div className="space-y-2">
+                {["Ahmed H.", "Sarah B."].map((name, i) => (
+                  <div
+                    key={name}
+                    className={`flex items-center gap-2 text-xs ${isRtl ? "flex-row-reverse" : ""}`}
+                  >
+                    <div
+                      className={`w-7 h-7 rounded-full flex items-center justify-center text-white text-[10px] font-bold ${
+                        i === 0 ? "bg-[#64499D]" : "bg-[#8B6FD1]"
+                      }`}
+                    >
+                      {name.slice(0, 1)}
+                    </div>
+                    <span className="font-medium">{name}</span>
+                    <span className="ms-auto text-[10px] text-slate-400">2m</span>
+                  </div>
+                ))}
+              </div>
+            </SoftCard>
+            <SoftCard delay={0.1}>
+              <p className="text-xs font-semibold mb-3">{m.team}</p>
+              <div className="space-y-3">
+                <div className={`flex items-center gap-2 ${isRtl ? "flex-row-reverse" : ""}`}>
+                  <div className="w-8 h-8 rounded-full bg-[#64499D] text-white text-[10px] font-bold flex items-center justify-center">
+                    AH
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-medium">Ahmed Hassan</p>
+                    <p className="text-[10px] text-slate-500">{m.roleLead}</p>
+                  </div>
+                  <span className="w-2 h-2 rounded-full bg-emerald-400" title={m.online} />
+                </div>
+                <div className={`flex items-center gap-2 ${isRtl ? "flex-row-reverse" : ""}`}>
+                  <div className="w-8 h-8 rounded-full bg-[#8B6FD1] text-white text-[10px] font-bold flex items-center justify-center">
+                    SB
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-medium">Sarah Benali</p>
+                    <p className="text-[10px] text-slate-500">{m.roleCollab}</p>
+                  </div>
+                  <span className="w-2 h-2 rounded-full bg-amber-400" title={m.away} />
+                </div>
+              </div>
+            </SoftCard>
+          </div>
+        </MockPane>
+      );
+
+    case "finance":
+      return (
+        <MockPane>
+          <div className="grid sm:grid-cols-3 gap-3 mb-3">
+            <SoftCard>
+              <Wallet className="w-5 h-5 text-[#64499D] dark:text-[#8B6FD1] mb-2" />
+              <p className="text-[10px] text-slate-500">{m.revenue}</p>
+              <p className="font-display text-xl font-bold">48 200 €</p>
+            </SoftCard>
+            <SoftCard delay={0.08}>
+              <p className="text-[10px] text-slate-500 mb-1">{m.tva}</p>
+              <p className="font-display text-xl font-bold">9 640 €</p>
+            </SoftCard>
+            <SoftCard delay={0.12}>
+              <p className="text-[10px] text-slate-500 mb-1">{m.invoice}</p>
+              <p className="font-display text-xl font-bold">14</p>
+            </SoftCard>
+          </div>
+          <div className="space-y-2">
+            {[
+              ["INV-2401", m.paid, "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200"],
+              ["INV-2402", m.pending, "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200"],
+            ].map(([id, status, cls], i) => (
+              <SoftCard key={id as string} delay={0.14 + i * 0.06} className="flex items-center justify-between text-xs">
+                <span className="font-medium">{id as string}</span>
+                <span className={`px-2 py-0.5 rounded-full text-[10px] ${cls}`}>{status as string}</span>
+              </SoftCard>
+            ))}
+          </div>
+        </MockPane>
+      );
+
+    default:
+      return null;
+  }
+}
+
+const STEP_ICONS: Record<string, React.ReactNode> = {
+  dashboard: <Zap className="w-6 h-6" />,
+  juria: <Bot className="w-6 h-6" />,
+  cases: <Briefcase className="w-6 h-6" />,
+  clients: <UserCheck className="w-6 h-6" />,
+  library: <BookOpen className="w-6 h-6" />,
+  calendar: <Calendar className="w-6 h-6" />,
+  collab: <MessageSquare className="w-6 h-6" />,
+  finance: <Wallet className="w-6 h-6" />,
+};
+
+const HIGHLIGHT_ICONS = [Shield, Sparkles, Users];
+
+const Demo: React.FC = () => {
   const navigate = useNavigate();
+  const { lang, setLang, t } = useI18n();
+  const reduce = useReducedMotion();
+  const isRtl = t.dir === "rtl";
   const [currentStep, setCurrentStep] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
 
-  const demoSteps = [
-    {
-      title: "Tableau de bord intelligent",
-      description: "Découvrez votre espace de travail personnalisé avec une vue d'ensemble de tous vos dossiers, tâches et rendez-vous.",
-      icon: <Zap className="w-8 h-8" />,
-      content: (
-        <div className="bg-gradient-to-br from-slate-50 to-slate-100 rounded-xl p-6 h-80 relative overflow-hidden">
-          <div className="grid grid-cols-3 gap-4 h-full">
-            <div className="space-y-3">
-              <div className="bg-white rounded-lg p-4 shadow-sm animate-fade-in">
-                <div className="flex items-center space-x-2 mb-2">
-                  <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                  <span className="text-sm font-medium">Dossier urgent</span>
-                </div>
-                <p className="text-xs text-gray-600">Contrat de vente immobilière</p>
-              </div>
-              <div className="bg-white rounded-lg p-4 shadow-sm animate-fade-in animation-delay-200">
-                <div className="flex items-center space-x-2 mb-2">
-                  <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
-                  <span className="text-sm font-medium">En cours</span>
-                </div>
-                <p className="text-xs text-gray-600">Divorce à l'amiable</p>
-              </div>
-            </div>
-            <div className="space-y-3">
-              <div className="bg-white rounded-lg p-4 shadow-sm animate-scale-in">
-                <Calendar className="w-6 h-6 text-purple-600 mb-2" />
-                <p className="text-sm font-medium">3 RDV aujourd'hui</p>
-                <p className="text-xs text-gray-600">Prochain: 14h30</p>
-              </div>
-              <div className="bg-white rounded-lg p-4 shadow-sm animate-scale-in animation-delay-300">
-                <MessageSquare className="w-6 h-6 text-blue-600 mb-2" />
-                <p className="text-sm font-medium">7 nouveaux messages</p>
-              </div>
-            </div>
-           <div className="animated-gradient rounded-lg p-6 text-white animate-slide-in-right hover-lift pulse-glow shimmer-effect floating-particles relative">
-  <div className="relative z-10">
-    <div className="flex items-center mb-3">
-      <div className="w-8 h-8 bg-white bg-opacity-20 rounded-full flex items-center justify-center mr-3">
-        <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
-          <path fillRule="evenodd" d="M9.504 1.132a1 1 0 01.992 0l1.75 1a1 1 0 11-.992 1.736L10 3.152l-1.254.716a1 1 0 11-.992-1.736l1.75-1zM5.618 4.504a1 1 0 01-.372 1.364L5.016 6l.23.132a1 1 0 11-.992 1.736L3 7.723V8a1 1 0 01-2 0V6a.996.996 0 01.52-.878l1.734-.99a1 1 0 011.364.372zm8.764 0a1 1 0 011.364-.372l1.734.99A.996.996 0 0118 6v2a1 1 0 11-2 0v-.277l-1.254.145a1 1 0 11-.992-1.736L14.984 6l-.23-.132a1 1 0 01-.372-1.364zm-7 4a1 1 0 011.364-.372L10 8.848l1.254-.716a1 1 0 11.992 1.736L11 10.723V12a1 1 0 11-2 0v-1.277l-1.246-.855a1 1 0 01-.372-1.364zM3 11a1 1 0 011 1v1.277l1.246.855a1 1 0 01-.372 1.364l-1.75-1A.996.996 0 013 14v-2a1 1 0 011-1zm14 0a1 1 0 011 1v2a.996.996 0 01-.52.878l-1.75 1a1 1 0 11-.372-1.364L16 14.277V12a1 1 0 011-1zm-9.618 4.504a1 1 0 01.372-1.364L9 13.848l1.254.716a1 1 0 01-.372 1.364l-1.75 1a.996.996 0 01-.992 0l-1.75-1z" clipRule="evenodd"></path>
-        </svg>
-      </div>
-      <h3 className="font-bold text-lg">Assistant IA</h3>
-    </div>
-    <p className="text-sm opacity-90 mb-4 leading-relaxed">
-      Prêt à vous aider avec vos recherches juridiques
-    </p>
-    <Button size="sm" className="bg-white text-purple-600 hover:bg-gray-100 hover:text-purple-700 hover:shadow-lg transform hover:scale-105 active:scale-95 transition-all duration-300">
-      Démarrer
-    </Button>
-  </div>
-</div>
-          </div>
-        </div>
-      )
-    },
-    {
-      title: "Assistant IA juridique",
-      description: "L'IA de Jure vous aide dans vos recherches, analyses de contrats et rédaction de documents juridiques.",
-      icon: <Brain className="w-8 h-8" />,
-      content: (
-        <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-xl p-6 h-80 relative">
-          <div className="flex h-full">
-            <div className="flex-1 space-y-4">
-              <div className="bg-white rounded-lg p-4 shadow-sm animate-fade-in">
-                <div className="flex items-start space-x-3">
-                  <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-sm font-bold">
-                    U
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm">Peux-tu analyser ce contrat de bail et identifier les clauses problématiques ?</p>
-                  </div>
-                </div>
-              </div>
-              <div className="bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-lg p-4 shadow-sm animate-fade-in animation-delay-500">
-                <div className="flex items-start space-x-3">
-                  <div className="w-8 h-8 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
-                    <Brain className="w-4 h-4" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm">J'ai analysé votre contrat. J'ai identifié 3 clauses potentiellement problématiques :</p>
-                    <ul className="text-xs mt-2 space-y-1 opacity-90">
-                      <li>• Clause de résiliation abusive (Art. 12)</li>
-                      <li>• Dépôt de garantie non conforme (Art. 8)</li>
-                      <li>• Charges non détaillées (Art. 15)</li>
-                    </ul>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="w-32 ml-4 flex flex-col justify-center">
-              <div className="bg-white rounded-lg p-3 shadow-sm text-center animate-scale-in animation-delay-1000">
-                <FileText className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                <p className="text-xs text-gray-600">Contrat analysé</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      )
-    },
-    {
-      title: "Gestion des dossiers",
-      description: "Organisez vos affaires avec un système de gestion avancé, suivi des échéances et collaboration en équipe.",
-      icon: <FileText className="w-8 h-8" />,
-      content: (
-        <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-6 h-80">
-          <div className="grid grid-cols-4 gap-4 h-full">
-            <div className="col-span-3 space-y-3">
-              <div className="bg-white rounded-lg p-4 shadow-sm animate-fade-in">
-                <div className="flex items-center justify-between mb-3">
-                  <h4 className="font-medium">Affaire Dupont vs. Martin</h4>
-                  <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">En cours</span>
-                </div>
-                <div className="grid grid-cols-3 gap-2 text-xs">
-                  <div>
-                    <p className="text-gray-500">Client</p>
-                    <p className="font-medium">M. Dupont</p>
-                  </div>
-                  <div>
-                    <p className="text-gray-500">Type</p>
-                    <p className="font-medium">Commercial</p>
-                  </div>
-                  <div>
-                    <p className="text-gray-500">Échéance</p>
-                    <p className="font-medium text-orange-600">3 jours</p>
-                  </div>
-                </div>
-              </div>
-              <div className="grid grid-cols-3 gap-2">
-                <div className="bg-white rounded-lg p-3 shadow-sm animate-scale-in animation-delay-300">
-                  <div className="flex items-center space-x-2">
-                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                    <span className="text-xs">Documents: 12</span>
-                  </div>
-                </div>
-                <div className="bg-white rounded-lg p-3 shadow-sm animate-scale-in animation-delay-500">
-                  <div className="flex items-center space-x-2">
-                    <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-                    <span className="text-xs">Tâches: 5</span>
-                  </div>
-                </div>
-                <div className="bg-white rounded-lg p-3 shadow-sm animate-scale-in animation-delay-700">
-                  <div className="flex items-center space-x-2">
-                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                    <span className="text-xs">Notes: 8</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="space-y-3">
-              <div className="bg-white rounded-lg p-3 shadow-sm animate-slide-in-right">
-                <Users className="w-6 h-6 text-gray-400 mb-2" />
-                <p className="text-xs font-medium">Équipe</p>
-                <div className="flex -space-x-1 mt-2">
-                  <div className="w-6 h-6 bg-purple-500 rounded-full border-2 border-white"></div>
-                  <div className="w-6 h-6 bg-blue-500 rounded-full border-2 border-white"></div>
-                  <div className="w-6 h-6 bg-green-500 rounded-full border-2 border-white"></div>
-                </div>
-              </div>
-              <div className="bg-white rounded-lg p-3 shadow-sm animate-slide-in-right animation-delay-400">
-                <Calendar className="w-6 h-6 text-gray-400 mb-2" />
-                <p className="text-xs font-medium">Prochaine audience</p>
-                <p className="text-xs text-gray-600">15 Nov 2024</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      )
-    },
-    {
-      title: "Bibliothèque juridique",
-      description: "Accédez à une vaste base de données juridique avec recherche intelligente et références croisées.",
-      icon: <BookOpen className="w-8 h-8" />,
-      content: (
-        <div className="bg-gradient-to-br from-orange-50 to-amber-50 rounded-xl p-6 h-80">
-          <div className="flex h-full space-x-4">
-            <div className="w-1/3 space-y-3">
-              <div className="bg-white rounded-lg p-4 shadow-sm animate-fade-in">
-                <Search className="w-6 h-6 text-gray-400 mb-3" />
-                <div className="space-y-2">
-                  <div className="bg-gray-100 rounded px-3 py-2 text-sm">
-                    "responsabilité civile contractuelle"
-                  </div>
-                  <Button size="sm" className="w-full">
-                    Rechercher
-                  </Button>
-                </div>
-              </div>
-              <div className="bg-white rounded-lg p-3 shadow-sm animate-fade-in animation-delay-300">
-                <p className="text-xs font-medium text-gray-600 mb-2">Filtres</p>
-                <div className="space-y-1 text-xs">
-                  <div className="flex items-center space-x-2">
-                    <input type="checkbox" className="w-3 h-3" defaultChecked />
-                    <span>Code civil</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <input type="checkbox" className="w-3 h-3" />
-                    <span>Jurisprudence</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <input type="checkbox" className="w-3 h-3" />
-                    <span>Doctrine</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="flex-1 space-y-3">
-              <div className="bg-white rounded-lg p-4 shadow-sm animate-slide-in-right">
-                <div className="flex items-start space-x-3">
-                  <Scale className="w-6 h-6 text-purple-600 mt-1" />
-                  <div>
-                    <h4 className="font-medium text-sm mb-1">Article 1147 du Code civil</h4>
-                    <p className="text-xs text-gray-600 mb-2">
-                      Le débiteur est condamné, s'il y a lieu, au paiement de dommages et intérêts...
-                    </p>
-                    <div className="flex space-x-2">
-                      <span className="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded">Contrats</span>
-                      <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">Responsabilité</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div className="bg-white rounded-lg p-4 shadow-sm animate-slide-in-right animation-delay-300">
-                <div className="flex items-start space-x-3">
-                  <BookOpen className="w-6 h-6 text-orange-600 mt-1" />
-                  <div>
-                    <h4 className="font-medium text-sm mb-1">Cass. Civ. 1ère, 15 mars 2023</h4>
-                    <p className="text-xs text-gray-600 mb-2">
-                      Arrêt de principe sur la responsabilité contractuelle en matière de...
-                    </p>
-                    <div className="flex space-x-2">
-                      <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">Jurisprudence</span>
-                      <span className="text-xs bg-red-100 text-red-800 px-2 py-1 rounded">Récent</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )
-    },
-    {
-      title: "Collaboration d'équipe",
-      description: "Travaillez efficacement en équipe avec des outils de partage, commentaires et suivi des modifications.",
-      icon: <Users className="w-8 h-8" />,
-      content: (
-        <div className="bg-gradient-to-br from-rose-50 to-pink-50 rounded-xl p-6 h-80">
-          <div className="grid grid-cols-2 gap-6 h-full">
-            <div className="space-y-4">
-              <div className="bg-white rounded-lg p-4 shadow-sm animate-fade-in">
-                <h4 className="font-medium mb-3">Équipe sur l'affaire Martin</h4>
-                <div className="space-y-3">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center text-white text-xs font-bold">
-                      AH
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium">Ahmed Hassan</p>
-                      <p className="text-xs text-gray-500">Avocat principal</p>
-                    </div>
-                    <div className="w-2 h-2 bg-green-500 rounded-full ml-auto"></div>
-                  </div>
-                  <div className="flex items-center space-x-3">
-                    <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs font-bold">
-                      SB
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium">Sarah Benali</p>
-                      <p className="text-xs text-gray-500">Collaboratrice</p>
-                    </div>
-                    <div className="w-2 h-2 bg-orange-500 rounded-full ml-auto"></div>
-                  </div>
-                </div>
-              </div>
-              <div className="bg-white rounded-lg p-4 shadow-sm animate-fade-in animation-delay-400">
-                <h4 className="font-medium mb-3">Activité récente</h4>
-                <div className="space-y-2 text-xs">
-                  <div className="flex items-center space-x-2">
-                    <div className="w-1 h-8 bg-blue-500 rounded"></div>
-                    <div>
-                      <p><strong>Sarah</strong> a ajouté un commentaire</p>
-                      <p className="text-gray-500">Il y a 5 min</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <div className="w-1 h-8 bg-green-500 rounded"></div>
-                    <div>
-                      <p><strong>Ahmed</strong> a modifié le document</p>
-                      <p className="text-gray-500">Il y a 1h</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="space-y-4">
-              <div className="bg-white rounded-lg p-4 shadow-sm animate-slide-in-right">
-                <h4 className="font-medium mb-3">Commentaires</h4>
-                <div className="space-y-3">
-                  <div className="bg-blue-50 rounded-lg p-3">
-                    <div className="flex items-center space-x-2 mb-1">
-                      <div className="w-4 h-4 bg-blue-500 rounded-full"></div>
-                      <span className="text-xs font-medium">Sarah</span>
-                      <span className="text-xs text-gray-500">14:30</span>
-                    </div>
-                    <p className="text-xs">Je pense qu'il faut revoir la clause 12. Qu'en pensez-vous ?</p>
-                  </div>
-                  <div className="bg-purple-50 rounded-lg p-3">
-                    <div className="flex items-center space-x-2 mb-1">
-                      <div className="w-4 h-4 bg-purple-500 rounded-full"></div>
-                      <span className="text-xs font-medium">Ahmed</span>
-                      <span className="text-xs text-gray-500">14:45</span>
-                    </div>
-                    <p className="text-xs">Bonne observation ! Je vais apporter les modifications.</p>
-                  </div>
-                </div>
-              </div>
-              <div className="bg-white rounded-lg p-4 shadow-sm animate-slide-in-right animation-delay-300">
-                <h4 className="font-medium mb-3">Permissions</h4>
-                <div className="space-y-2 text-xs">
-                  <div className="flex justify-between items-center">
-                    <span>Lecture</span>
-                    <span className="bg-green-100 text-green-800 px-2 py-1 rounded">Tous</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span>Modification</span>
-                    <span className="bg-orange-100 text-orange-800 px-2 py-1 rounded">Équipe</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span>Administration</span>
-                    <span className="bg-purple-100 text-purple-800 px-2 py-1 rounded">Ahmed</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )
-    }
-  ];
+  const steps = t.steps as { id: string; title: string; description: string }[];
+  const stepCount = steps.length;
 
   useEffect(() => {
-    let interval: NodeJS.Timeout;
-    if (isPlaying) {
-      interval = setInterval(() => {
-        setProgress((prev) => {
-          if (prev >= 100) {
-            if (currentStep < demoSteps.length - 1) {
-              setCurrentStep(prev => prev + 1);
-              return 0;
-            } else {
-              setIsPlaying(false);
-              return 100;
-            }
-          }
-          return prev + 2;
-        });
-      }, 100);
-    }
-    return () => clearInterval(interval);
-  }, [isPlaying, currentStep, demoSteps.length]);
-
-  const handlePlayPause = () => {
-    setIsPlaying(!isPlaying);
-  };
-
-  const handleRestart = () => {
     setCurrentStep(0);
+    setProgress(0);
+    setIsPlaying(false);
+  }, [lang]);
+
+  useEffect(() => {
+    if (!isPlaying || reduce) return;
+    const interval = window.setInterval(() => {
+      setProgress((prev) => {
+        if (prev >= 100) {
+          setCurrentStep((s) => {
+            if (s < stepCount - 1) return s + 1;
+            setIsPlaying(false);
+            return s;
+          });
+          return 0;
+        }
+        return prev + 2;
+      });
+    }, 100);
+    return () => window.clearInterval(interval);
+  }, [isPlaying, stepCount, reduce]);
+
+  const goStep = (index: number) => {
+    setCurrentStep(index);
     setProgress(0);
     setIsPlaying(false);
   };
 
-  const handleNext = () => {
-    if (currentStep < demoSteps.length - 1) {
-      setCurrentStep(currentStep + 1);
-      setProgress(0);
-      setIsPlaying(false);
-    }
-  };
-
-  const handlePrev = () => {
-    if (currentStep > 0) {
-      setCurrentStep(currentStep - 1);
-      setProgress(0);
-      setIsPlaying(false);
-    }
-  };
+  const active = steps[currentStep];
+  const highlightIcons = useMemo(() => HIGHLIGHT_ICONS, []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 relative overflow-hidden">
-      {/* Animated Background */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-purple-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-blue-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
-        <div className="absolute top-40 left-40 w-80 h-80 bg-pink-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-4000"></div>
-      </div>
+    <div className="landing-root min-h-screen relative overflow-hidden text-slate-900 dark:text-slate-100 bg-gradient-to-br from-white via-[#FBF9FF] to-slate-50 dark:from-slate-950 dark:via-[#0c0a14] dark:to-slate-900">
+      <MeshBackdrop />
 
-      <div className="relative z-10 container mx-auto px-6 py-8">
+      <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        <header className="landing-glass rounded-2xl px-4 sm:px-5 py-3 mb-8 flex flex-wrap items-center justify-between gap-3">
           <Button
-            onClick={() => navigate('/')}
+            onClick={() => navigate("/")}
             variant="outline"
-            className="border-purple-200 text-purple-700 hover:bg-purple-50"
+            className="border-[#64499D]/25 text-[#64499D] dark:text-[#CFC2FF] hover:bg-[#64499D]/10"
           >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Retour à l'accueil
+            <ArrowLeft className={`w-4 h-4 me-2 ${isRtl ? "rotate-180" : ""}`} />
+            {t.back}
           </Button>
-          <div className="text-center">
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-purple-800 bg-clip-text text-transparent">
-              Démonstration de Jure
-            </h1>
-            <p className="text-slate-600 mt-2">Découvrez comment Jure révolutionne votre pratique juridique</p>
-          </div>
-          <Button
-            onClick={() => navigate('/signin')}
-            className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800"
-          >
-            Commencer maintenant
-          </Button>
-        </div>
 
-        {/* Demo Navigation */}
-        <div className="flex items-center justify-center space-x-4 mb-8">
-          {demoSteps.map((_, index) => (
+          <div className="order-last sm:order-none w-full sm:w-auto text-center">
+            <h1 className="font-display text-xl sm:text-2xl md:text-3xl font-bold tracking-tight">
+              <span className="landing-hero-shimmer bg-gradient-to-r from-[#64499D] via-[#8B6FD1] to-[#4D3680] bg-clip-text text-transparent">
+                {t.title}
+              </span>
+            </h1>
+            <p className="text-slate-600 dark:text-slate-300 text-xs sm:text-sm mt-1 max-w-md mx-auto">
+              {t.subtitle}
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <LangSwitcher lang={lang} onChange={setLang} />
+            <ThemeToggle label={t.themeToggle.label} title={t.themeToggle.title} />
+            <Button
+              onClick={() => navigate("/signin")}
+              className="bg-gradient-to-r from-[#64499D] to-[#4D3680] hover:from-[#4D3680] hover:to-[#3E2D71] text-white hidden sm:inline-flex"
+            >
+              {t.cta}
+            </Button>
+          </div>
+        </header>
+
+        {/* Step pills */}
+        <div className="flex items-center justify-center gap-2 mb-6 flex-wrap">
+          {steps.map((step, index) => (
             <button
-              key={index}
-              onClick={() => {
-                setCurrentStep(index);
-                setProgress(0);
-                setIsPlaying(false);
-              }}
-              className={`w-3 h-3 rounded-full transition-all duration-300 ${
+              key={step.id}
+              type="button"
+              onClick={() => goStep(index)}
+              aria-label={step.title}
+              aria-current={index === currentStep ? "step" : undefined}
+              className={`h-2.5 rounded-full transition-all duration-300 ${
                 index === currentStep
-                  ? 'bg-purple-600 scale-125'
+                  ? "w-8 bg-[#64499D] shadow-[0_0_12px_rgba(100,73,157,0.55)]"
                   : index < currentStep
-                  ? 'bg-purple-400'
-                  : 'bg-gray-300'
+                    ? "w-2.5 bg-[#8B6FD1]"
+                    : "w-2.5 bg-slate-300 dark:bg-slate-600"
               }`}
             />
           ))}
         </div>
 
-        {/* Main Demo Content */}
-        <div className="max-w-6xl mx-auto">
-          <Card className="bg-white/80 backdrop-blur-sm border-slate-200 overflow-hidden">
-            <CardHeader className="text-center bg-gradient-to-r from-purple-50 to-purple-100 border-b">
-              <div className="flex items-center justify-center space-x-3 mb-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-purple-600 to-purple-800 rounded-xl flex items-center justify-center text-white">
-                  {demoSteps[currentStep].icon}
-                </div>
-                <div>
-                  <CardTitle className="text-2xl text-slate-900">
-                    {demoSteps[currentStep].title}
-                  </CardTitle>
-                  <p className="text-slate-600 mt-1">
-                    {demoSteps[currentStep].description}
-                  </p>
-                </div>
+        {/* Main stage */}
+        <Card className="landing-glass border-0 shadow-none overflow-hidden ring-1 ring-[#64499D]/12 dark:ring-[#8B6FD1]/20">
+          <CardHeader className="border-b border-[#64499D]/10 dark:border-[#8B6FD1]/15 bg-gradient-to-r from-[#F4F1FF]/80 to-transparent dark:from-[#64499D]/15 dark:to-transparent pb-4">
+            <div
+              className={`flex flex-col sm:flex-row items-center gap-4 text-center sm:text-start ${
+                isRtl ? "sm:flex-row-reverse sm:text-end" : ""
+              }`}
+            >
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#64499D] to-[#4D3680] flex items-center justify-center text-white shrink-0 shadow-[0_0_24px_-4px_rgba(100,73,157,0.6)]">
+                {STEP_ICONS[active.id]}
               </div>
-              
-              {/* Progress Bar */}
-              <div className="w-full bg-slate-200 rounded-full h-2">
-                <div
-                  className="bg-gradient-to-r from-purple-600 to-purple-700 h-2 rounded-full transition-all duration-200"
-                  style={{ width: `${progress}%` }}
-                />
+              <div className="flex-1 min-w-0">
+                <CardTitle className="font-display text-xl sm:text-2xl tracking-tight">
+                  {active.title}
+                </CardTitle>
+                <p className="text-slate-600 dark:text-slate-300 text-sm mt-1">{active.description}</p>
               </div>
-            </CardHeader>
-            
-            <CardContent className="p-8">
-              {demoSteps[currentStep].content}
-              
-              {/* Controls */}
-              <div className="flex items-center justify-between mt-8">
-                <Button
-                  onClick={handlePrev}
-                  variant="outline"
-                  disabled={currentStep === 0}
-                  className="border-slate-200"
-                >
-                  <ArrowLeft className="w-4 h-4 mr-2" />
-                  Précédent
-                </Button>
-                
-                <div className="flex items-center space-x-2">
-                  <Button
-                    onClick={handleRestart}
-                    variant="outline"
-                    size="sm"
-                    className="border-slate-200"
-                  >
-                    <RotateCcw className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    onClick={handlePlayPause}
-                    className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800"
-                    size="sm"
-                  >
-                    {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-                  </Button>
-                </div>
-                
-                <Button
-                  onClick={handleNext}
-                  variant="outline"
-                  disabled={currentStep === demoSteps.length - 1}
-                  className="border-slate-200"
-                >
-                  Suivant
-                  <ArrowRight className="w-4 h-4 ml-2" />
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+              <span className="text-xs tabular-nums text-slate-500 dark:text-slate-400 font-medium">
+                {currentStep + 1} / {stepCount}
+              </span>
+            </div>
+            <div className="w-full bg-slate-200/80 dark:bg-slate-800 rounded-full h-1.5 mt-4 overflow-hidden">
+              <div
+                className="h-full rounded-full bg-gradient-to-r from-[#64499D] to-[#8B6FD1] transition-[width] duration-200 ease-linear"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+          </CardHeader>
 
-          {/* Feature highlights */}
-          <div className="grid md:grid-cols-3 gap-6 mt-12">
-            <Card className="bg-white/60 backdrop-blur-sm border-slate-200/50 hover:shadow-lg transition-all duration-300">
-              <CardContent className="p-6 text-center">
-                <Shield className="w-12 h-12 text-green-600 mx-auto mb-4" />
-                <h3 className="font-semibold text-slate-900 mb-2">Sécurité maximale</h3>
-                <p className="text-slate-600 text-sm">Vos données sont protégées par un chiffrement de niveau bancaire</p>
-              </CardContent>
-            </Card>
-            
-            <Card className="bg-white/60 backdrop-blur-sm border-slate-200/50 hover:shadow-lg transition-all duration-300">
-              <CardContent className="p-6 text-center">
-                <Zap className="w-12 h-12 text-blue-600 mx-auto mb-4" />
-                <h3 className="font-semibold text-slate-900 mb-2">Performance optimisée</h3>
-                <p className="text-slate-600 text-sm">Interface rapide et réactive pour une productivité maximale</p>
-              </CardContent>
-            </Card>
-            
-            <Card className="bg-white/60 backdrop-blur-sm border-slate-200/50 hover:shadow-lg transition-all duration-300">
-              <CardContent className="p-6 text-center">
-                <Users className="w-12 h-12 text-purple-600 mx-auto mb-4" />
-                <h3 className="font-semibold text-slate-900 mb-2">Collaboration fluide</h3>
-                <p className="text-slate-600 text-sm">Travaillez en équipe efficacement avec des outils intégrés</p>
-              </CardContent>
-            </Card>
-          </div>
+          <CardContent className="p-4 sm:p-6 md:p-8">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={`${lang}-${active.id}`}
+                initial={reduce ? false : { opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={reduce ? undefined : { opacity: 0, y: -8 }}
+                transition={{ duration: 0.35 }}
+              >
+                <StepMock stepId={active.id} m={t.mock} isRtl={isRtl} />
+              </motion.div>
+            </AnimatePresence>
+
+            <div
+              className={`flex items-center justify-between mt-6 sm:mt-8 gap-2 ${
+                isRtl ? "flex-row-reverse" : ""
+              }`}
+            >
+              <Button
+                onClick={() => goStep(Math.max(0, currentStep - 1))}
+                variant="outline"
+                disabled={currentStep === 0}
+                className="border-[#64499D]/20"
+              >
+                <ArrowLeft className={`w-4 h-4 me-2 ${isRtl ? "rotate-180" : ""}`} />
+                {t.prev}
+              </Button>
+
+              <div className="flex items-center gap-2">
+                <Button
+                  onClick={() => {
+                    setCurrentStep(0);
+                    setProgress(0);
+                    setIsPlaying(false);
+                  }}
+                  variant="outline"
+                  size="icon"
+                  className="border-[#64499D]/20"
+                  aria-label="restart"
+                >
+                  <RotateCcw className="w-4 h-4" />
+                </Button>
+                <Button
+                  onClick={() => setIsPlaying((p) => !p)}
+                  size="icon"
+                  className="bg-gradient-to-r from-[#64499D] to-[#4D3680] hover:from-[#4D3680] hover:to-[#3E2D71]"
+                  aria-label={isPlaying ? "pause" : "play"}
+                >
+                  {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+                </Button>
+              </div>
+
+              <Button
+                onClick={() => goStep(Math.min(stepCount - 1, currentStep + 1))}
+                variant="outline"
+                disabled={currentStep === stepCount - 1}
+                className="border-[#64499D]/20"
+              >
+                {t.next}
+                <ArrowRight className={`w-4 h-4 ms-2 ${isRtl ? "rotate-180" : ""}`} />
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Highlights */}
+        <div className="grid md:grid-cols-3 gap-4 sm:gap-6 mt-10 mb-8">
+          {t.highlights.map((h: { title: string; desc: string }, i: number) => {
+            const Icon = highlightIcons[i] || Shield;
+            return (
+              <Reveal key={h.title} delay={i * 0.06}>
+                <div className="landing-glass landing-glass-glow rounded-2xl p-6 text-center h-full">
+                  <Icon className="w-10 h-10 text-[#64499D] dark:text-[#8B6FD1] mx-auto mb-3" />
+                  <h3 className="font-display font-semibold mb-2">{h.title}</h3>
+                  <p className="text-slate-600 dark:text-slate-300 text-sm leading-relaxed">{h.desc}</p>
+                </div>
+              </Reveal>
+            );
+          })}
+        </div>
+
+        <div className="text-center sm:hidden">
+          <Button
+            onClick={() => navigate("/signin")}
+            className="bg-gradient-to-r from-[#64499D] to-[#4D3680] text-white w-full"
+          >
+            {t.cta}
+          </Button>
         </div>
       </div>
     </div>
