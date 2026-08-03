@@ -46,18 +46,46 @@ except ImportError:
 UserModel = User
 
 
+def _cabinet_for_user(obj):
+    cabinet = None
+    if hasattr(obj, 'get_owned_cabinet_or_none'):
+        cabinet = obj.get_owned_cabinet_or_none()
+    if not cabinet:
+        cabinet = getattr(obj, 'cabinet', None)
+    return cabinet
+
+
 class CabinetLogoField(serializers.ImageField):
     """ImageField that reads from cabinet.logo and writes to cabinet.logo."""
 
     def get_attribute(self, obj):
-        cabinet = None
-        if hasattr(obj, 'get_owned_cabinet_or_none'):
-            cabinet = obj.get_owned_cabinet_or_none()
-        if not cabinet:
-            cabinet = getattr(obj, 'cabinet', None)
+        cabinet = _cabinet_for_user(obj)
         if cabinet:
             return getattr(cabinet, 'logo', None)
         return None
+
+
+class CabinetAttrField(serializers.Field):
+    """Writable field that reads/writes an attribute on the user's cabinet."""
+
+    def __init__(self, cabinet_attr, child, **kwargs):
+        self.cabinet_attr = cabinet_attr
+        self.child = child
+        kwargs.setdefault('required', False)
+        kwargs.setdefault('allow_null', True)
+        super().__init__(**kwargs)
+
+    def get_attribute(self, instance):
+        cabinet = _cabinet_for_user(instance)
+        if cabinet is None:
+            return None
+        return getattr(cabinet, self.cabinet_attr, None)
+
+    def to_representation(self, value):
+        return self.child.to_representation(value) if value is not None else None
+
+    def to_internal_value(self, data):
+        return self.child.run_validation(data)
 
 
 class UserAddressSerializer(serializers.ModelSerializer):
@@ -68,12 +96,18 @@ class UserAddressSerializer(serializers.ModelSerializer):
 
 class CustomUserDetailsSerializer(UserDetailsSerializer):
     default_address = UserAddressSerializer(read_only=True)
-    trade_name = serializers.SerializerMethodField()
+    trade_name = CabinetAttrField('trade_name', serializers.CharField(allow_blank=True, max_length=255))
     logo = CabinetLogoField(required=False, allow_null=True)
-    structure_type = serializers.SerializerMethodField()
-    business_address = serializers.SerializerMethodField()
-    team_size = serializers.SerializerMethodField()
-    website = serializers.SerializerMethodField()
+    structure_type = CabinetAttrField(
+        'structure_type', serializers.CharField(allow_blank=True, allow_null=True, max_length=100)
+    )
+    business_address = CabinetAttrField(
+        'business_address', serializers.CharField(allow_blank=True, max_length=255)
+    )
+    team_size = CabinetAttrField('team_size', serializers.IntegerField(min_value=1))
+    website = CabinetAttrField(
+        'website', serializers.URLField(allow_blank=True, allow_null=True)
+    )
 
     class Meta:
         extra_fields = []
@@ -99,49 +133,11 @@ class CustomUserDetailsSerializer(UserDetailsSerializer):
         ]
         read_only_fields = ('email',)
 
-    def _get_cabinet(self, obj: UserModel | None):
-        cabinet = None
-        if hasattr(obj, 'get_owned_cabinet_or_none'):
-            cabinet = obj.get_owned_cabinet_or_none()
-        if not cabinet:
-            cabinet = getattr(obj, 'cabinet', None)
-        return cabinet
-
-    def get_trade_name(self, obj):
-        if getattr(obj, 'trade_name', None):
-            return obj.trade_name
-        cabinet = self._get_cabinet(obj)
-        return cabinet.trade_name if cabinet else None
-
-    def get_structure_type(self, obj):
-        if getattr(obj, 'structure_type', None):
-            return obj.structure_type
-        cabinet = self._get_cabinet(obj)
-        return cabinet.structure_type if cabinet else None
-
-    def get_business_address(self, obj):
-        if getattr(obj, 'business_address', None):
-            return obj.business_address
-        cabinet = self._get_cabinet(obj)
-        return cabinet.business_address if cabinet else None
-
-    def get_team_size(self, obj):
-        if getattr(obj, 'team_size', None) is not None:
-            return obj.team_size
-        cabinet = self._get_cabinet(obj)
-        return cabinet.team_size if cabinet else None
-
-    def get_website(self, obj):
-        if getattr(obj, 'website', None):
-            return obj.website
-        cabinet = self._get_cabinet(obj)
-        return cabinet.website if cabinet else None
-
     def to_representation(self, instance):
         """Build absolute URL for logo in response."""
         data = super().to_representation(instance)
         logo = data.get('logo')
-        if logo and not logo.startswith('http'):
+        if logo and not str(logo).startswith('http'):
             request = self.context.get('request') if hasattr(self, 'context') else None
             if request:
                 data['logo'] = request.build_absolute_uri(logo)
@@ -149,7 +145,7 @@ class CustomUserDetailsSerializer(UserDetailsSerializer):
 
     def update(self, instance, validated_data):
         """Update user and sync cabinet fields (logo, etc.) to the cabinet."""
-        cabinet = self._get_cabinet(instance)
+        cabinet = _cabinet_for_user(instance)
         cabinet_fields = ['logo', 'trade_name', 'structure_type', 'business_address', 'team_size', 'website']
         cabinet_data = {}
         for field in cabinet_fields:

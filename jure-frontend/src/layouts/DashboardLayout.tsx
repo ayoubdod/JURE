@@ -7,6 +7,7 @@ import { TVAThresholdNotification } from '@/components/finance/tva/TVAThresholdN
 import { NotificationProvider } from '@/context/NotificationContext'
 import { NotificationToastStack } from '@/components/notifications/NotificationToastStack'
 import { JuriaFloatingAssistant } from '@/components/juria/JuriaFloatingAssistant'
+import { JURIA_ENABLED } from '@/config/features'
 
 const isDashboardIndex = (path: string) =>
   path === '/dashboard' || path === '/dashboard/'
@@ -53,7 +54,7 @@ const DashboardLayout = () => {
 
                 <NotificationToastStack />
 
-                <JuriaFloatingAssistant />
+                {JURIA_ENABLED ? <JuriaFloatingAssistant /> : null}
 
                 <main className={
                     isCockpit

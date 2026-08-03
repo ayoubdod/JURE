@@ -28,7 +28,7 @@ if not _is_deployed_settings:
 env = environ.Env(
     DEBUG=(bool, False),
     USE_INMEMORY_CHANNEL_LAYER=(bool, True),
-    JURIA_ENABLED=(bool, True),
+    JURIA_ENABLED=(bool, False),
     ENABLE_DEPLOYMENT_DEBUG=(bool, False),
 )
 
@@ -386,7 +386,7 @@ JURIA_API_URL = env.str("JURIA_API_URL", default="https://api.juria.ma/v1").rstr
 JURIA_API_KEY = env.str("JURIA_API_KEY", default="")
 JURIA_MAX_TOKENS = env.int("JURIA_MAX_TOKENS", default=4000)
 JURIA_TIMEOUT_SECONDS = env.int("JURIA_TIMEOUT_SECONDS", default=60)
-JURIA_ENABLED = env.bool("JURIA_ENABLED", default=True)
+JURIA_ENABLED = env.bool("JURIA_ENABLED", default=False)
 
 # --------------------------------------------------------------------------------------
 # Logging

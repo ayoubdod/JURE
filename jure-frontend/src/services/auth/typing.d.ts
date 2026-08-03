@@ -51,7 +51,7 @@ declare namespace API {
         firm_name?: string
         structure_type?: string
         business_address?: string
-        team_size?: string
+        team_size?: string | number
         website?: string
     }
 

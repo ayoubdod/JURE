@@ -79,7 +79,7 @@ export const apiUpdateUserImage = (image: File) => {
 
 export const apiUpdateCabinet = (data: API.CabinetUpdateForm) => {
     const formData = getFormDataFromObject(data);
-    return axiosInstance.patch<API.User>('/dj-rest-auth/user/', formData);
+    return axiosInstance.patch<API.CabinetUpdateResponse>('/cabinets/me/', formData);
 }
 
 export const apiChangePassword = (data: API.ChangePasswordForm) => {

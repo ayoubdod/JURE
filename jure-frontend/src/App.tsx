@@ -33,6 +33,7 @@ import NotFound from "./pages/NotFound";
 import EditTask from "./components/EditTask";
 import ProtectedRoute from "./components/ProtectedRoute";
 import DashboardLayout from "./layouts/DashboardLayout";
+import { JURIA_ENABLED } from "@/config/features";
 
 // ✅ new public pages
 import About from "./pages/About";
@@ -292,22 +293,26 @@ const router = createBrowserRouter([
           </ProtectedRoute>
         ),
       },
-      {
-        path: "legal-ai",
-        element: (
-          <ProtectedRoute requireAuth={true}>
-            <LegalAI />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: "juria",
-        element: (
-          <ProtectedRoute requireAuth={true}>
-            <LegalAI />
-          </ProtectedRoute>
-        ),
-      },
+      ...(JURIA_ENABLED
+        ? [
+            {
+              path: "legal-ai",
+              element: (
+                <ProtectedRoute requireAuth={true}>
+                  <LegalAI />
+                </ProtectedRoute>
+              ),
+            },
+            {
+              path: "juria",
+              element: (
+                <ProtectedRoute requireAuth={true}>
+                  <LegalAI />
+                </ProtectedRoute>
+              ),
+            },
+          ]
+        : []),
       {
         path: "conversations",
         element: (

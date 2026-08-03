@@ -282,14 +282,27 @@ const Settings: React.FC = () => {
 
   const handleCabinetInfoSubmit = async (data: CabinetFormData) => {
     try {
-      const response = await apiUpdateCabinet(data);
-      const updatedUser = response.data;
-      const logoVersion = updatedUser.logo ? Date.now() : undefined;
-      useUserStore.setState({
-        user: { ...updatedUser, ...(logoVersion && { logo_version: logoVersion }) },
-      });
-      if (updatedUser.logo) {
-        const cacheBust = `${updatedUser.logo}${updatedUser.logo.includes('?') ? '&' : '?'}t=${logoVersion}`;
+      const { firm_name: _firmName, ...cabinetPayload } = data;
+      const response = await apiUpdateCabinet(cabinetPayload);
+      const cabinet = response.data;
+      const logoVersion = cabinet.logo ? Date.now() : undefined;
+      if (user) {
+        useUserStore.setState({
+          user: {
+            ...user,
+            trade_name: cabinet.trade_name ?? user.trade_name,
+            structure_type: cabinet.structure_type ?? user.structure_type,
+            business_address: cabinet.business_address ?? user.business_address,
+            team_size:
+              cabinet.team_size != null ? String(cabinet.team_size) : user.team_size,
+            website: cabinet.website ?? user.website,
+            logo: cabinet.logo ?? user.logo,
+            ...(logoVersion && { logo_version: logoVersion }),
+          },
+        });
+      }
+      if (cabinet.logo) {
+        const cacheBust = `${cabinet.logo}${cabinet.logo.includes('?') ? '&' : '?'}t=${logoVersion}`;
         setLogoUrl(cacheBust);
       }
       toast({

@@ -20,13 +20,13 @@ import {
   Calendar,
   UserCheck,
   Sparkles,
-  Bot,
 } from "lucide-react";
 import MeshBackdrop from "@/components/landing/MeshBackdrop";
 import Reveal from "@/components/landing/Reveal";
 import FeatureTile from "@/components/landing/FeatureTile";
 import DemoFeatureCard from "@/components/landing/DemoFeatureCard";
 import AiAssistantDemo from "@/components/landing/AiAssistantDemo";
+import { JURIA_ENABLED } from "@/config/features";
 import "@/components/landing/landing.css";
 
 /**
@@ -154,7 +154,7 @@ const STRINGS: Record<Lang, any> = {
       subtitle:
         "Produit en phase de lancement — des modules réels déjà disponibles, affinés avec les cabinets qui nous rejoignent dès maintenant.",
       chipEarly: "Accès anticipé",
-      chipAi: "Juria IA",
+      chipProduct: "Cabinet OS",
       items: [
         {
           title: "Accès fondateur",
@@ -162,7 +162,7 @@ const STRINGS: Record<Lang, any> = {
         },
         {
           title: "Déjà opérationnel",
-          desc: "Dossiers, clients, Juria, bibliothèque, calendrier, équipe et finance — dans une seule plateforme.",
+          desc: "Dossiers, clients, bibliothèque, calendrier, équipe et finance — dans une seule plateforme.",
         },
         {
           title: "Équipe à l’écoute",
@@ -293,7 +293,7 @@ const STRINGS: Record<Lang, any> = {
       subtitle:
         "Early-stage product — real modules shipping today, refined with the practices that join us now.",
       chipEarly: "Early access",
-      chipAi: "Juria AI",
+      chipProduct: "Practice OS",
       items: [
         {
           title: "Founding access",
@@ -301,7 +301,7 @@ const STRINGS: Record<Lang, any> = {
         },
         {
           title: "Already operational",
-          desc: "Cases, clients, Juria, library, calendar, team, and finance — in one workspace.",
+          desc: "Cases, clients, library, calendar, team, and finance — in one workspace.",
         },
         {
           title: "Close to the team",
@@ -432,7 +432,7 @@ const STRINGS: Record<Lang, any> = {
       subtitle:
         "منتج في مرحلة مبكرة — وحدات حقيقية متاحة اليوم، وتُطوَّر مع المكاتب التي تنضم إلينا الآن.",
       chipEarly: "وصول مبكر",
-      chipAi: "Juria AI",
+      chipProduct: "نظام المكتب",
       items: [
         {
           title: "وصول تأسيسي",
@@ -440,7 +440,7 @@ const STRINGS: Record<Lang, any> = {
         },
         {
           title: "جاهز للعمل",
-          desc: "قضايا وعملاء وJuria ومكتبة وتقويم وفريق ومالية — في مساحة واحدة.",
+          desc: "قضايا وعملاء ومكتبة وتقويم وفريق ومالية — في مساحة واحدة.",
         },
         {
           title: "قريبون من الفريق",
@@ -694,7 +694,7 @@ const Landing: React.FC = () => {
                 className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full landing-glass text-xs font-medium text-[#64499D] dark:text-[#CFC2FF] mb-6"
               >
                 <Sparkles className="w-3.5 h-3.5" />
-                <span>JURE · AI Legal OS</span>
+                <span>JURE · Legal OS</span>
               </motion.div>
 
               <motion.h1
@@ -776,11 +776,11 @@ const Landing: React.FC = () => {
 
               <div className="mt-8 flex flex-wrap gap-3 justify-center lg:justify-start">
                 <HeroStatChip label={t.stats.chipEarly} value="β" delay={0.25} />
-                <HeroStatChip label={t.stats.chipAi} value="AI" delay={0.35} />
+                <HeroStatChip label={t.stats.chipProduct} value="OS" delay={0.35} />
               </div>
             </div>
 
-            {/* Floating mini AI preview — desktop-first visual anchor */}
+            {/* Floating workspace preview — desktop-first visual anchor */}
             <div className="lg:col-span-5 relative hidden md:block">
               <motion.div
                 initial={reduce ? false : { opacity: 0, scale: 0.96, y: 20 }}
@@ -794,27 +794,32 @@ const Landing: React.FC = () => {
                 />
                 <div className="landing-glass landing-float rounded-3xl p-5 relative">
                   <div className={`flex items-center gap-3 mb-4 ${isRtl ? "flex-row-reverse" : ""}`}>
-                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#64499D] to-[#4D3680] flex items-center justify-center landing-bot-pulse">
-                      <Bot className="w-5 h-5 text-white" />
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#64499D] to-[#4D3680] flex items-center justify-center">
+                      <Briefcase className="w-5 h-5 text-white" />
                     </div>
                     <div className={isRtl ? "text-end" : "text-start"}>
-                      <div className="font-display font-semibold text-sm">{t.demo.aiAssistant.title}</div>
-                      <div className="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 motion-safe:animate-pulse" />
-                        Online
+                      <div className="font-display font-semibold text-sm">
+                        {t.demo.caseManagement.title}
+                      </div>
+                      <div className="text-[11px] text-slate-500 dark:text-slate-400">
+                        {t.demo.caseManagement.desc}
                       </div>
                     </div>
                   </div>
-                  <div className="space-y-3">
-                    <div className="p-3 rounded-xl bg-white/60 dark:bg-slate-800/60 text-xs text-slate-700 dark:text-slate-200 border border-[#64499D]/10 dark:border-[#8B6FD1]/15">
-                      {t.demo.aiAssistant.greeting}
-                    </div>
-                    <div className="p-3 rounded-xl bg-gradient-to-r from-[#64499D] to-[#4D3680] text-xs text-white max-w-[90%] ms-auto">
-                      {t.demo.aiAssistant.userMessage}
-                    </div>
-                    <div className="p-3 rounded-xl bg-white/60 dark:bg-slate-800/60 text-xs text-slate-700 dark:text-slate-200 border border-[#64499D]/10 dark:border-[#8B6FD1]/15">
-                      {t.demo.aiAssistant.suggestions[0]} →
-                    </div>
+                  <div className="space-y-2.5">
+                    {[
+                      t.demo.clientManagement.title,
+                      t.demo.calendarTasks.title,
+                      t.demo.library.title,
+                    ].map((label) => (
+                      <div
+                        key={label}
+                        className="p-3 rounded-xl bg-white/60 dark:bg-slate-800/60 text-xs text-slate-700 dark:text-slate-200 border border-[#64499D]/10 dark:border-[#8B6FD1]/15 flex items-center justify-between gap-3"
+                      >
+                        <span className="font-medium">{label}</span>
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />
+                      </div>
+                    ))}
                   </div>
                 </div>
 
@@ -876,9 +881,15 @@ const Landing: React.FC = () => {
             </p>
           </Reveal>
 
-          <div className="grid lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
-            <div className="lg:col-span-2 space-y-4">
-              <div className="grid sm:grid-cols-2 gap-4">
+          <div
+            className={
+              JURIA_ENABLED
+                ? "grid lg:grid-cols-3 gap-8 max-w-7xl mx-auto"
+                : "max-w-7xl mx-auto"
+            }
+          >
+            <div className={JURIA_ENABLED ? "lg:col-span-2 space-y-4" : "space-y-4"}>
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {demoFeatures.map((f, i) => (
                   <DemoFeatureCard
                     key={f.key}
@@ -892,11 +903,13 @@ const Landing: React.FC = () => {
               </div>
             </div>
 
-            <AiAssistantDemo
-              key={lang}
-              copy={t.demo.aiAssistant}
-              dir={t.dir as "ltr" | "rtl"}
-            />
+            {JURIA_ENABLED ? (
+              <AiAssistantDemo
+                key={lang}
+                copy={t.demo.aiAssistant}
+                dir={t.dir as "ltr" | "rtl"}
+              />
+            ) : null}
           </div>
 
           <Reveal className="text-center mt-12">

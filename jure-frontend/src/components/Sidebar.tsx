@@ -6,6 +6,7 @@ import useChatStore from '@/stores/chatStore';
 import { useAppTranslation } from '@/i18n';
 import LangSwitcher from '@/components/common/LangSwitcher';
 import { useFinanceAccess } from '@/hooks/useFinanceAccess';
+import { JURIA_ENABLED } from '@/config/features';
 
 interface SidebarProps {
   activeTab: string;
@@ -49,14 +50,23 @@ const Sidebar = ({ activeTab, setActiveTab }: SidebarProps) => {
         { id: 'cases', icon: Briefcase, label: t.sidebar.cases, path: '/dashboard/cases', badge: null },
       ] as MenuItem[];
     const afterCases = financeAuthorized ? [...base, financeItem] : base;
-    return [
+    const items: MenuItem[] = [
       ...afterCases,
       { id: 'clients', icon: UserCheck, label: t.sidebar.clients, path: '/dashboard/clients', badge: null },
       { id: 'tasks', icon: CheckSquare, label: t.sidebar.calendar, path: '/dashboard/tasks', badge: null },
       { id: 'conversations', icon: MessageSquare, label: t.sidebar.conversations, path: '/dashboard/conversations', badge: unreadMessagesCount > 0 ? unreadMessagesCount : null },
       { id: 'settings', icon: Settings, label: t.sidebar.settings, path: '/dashboard/settings', badge: null },
-      { id: 'legal-ai', icon: Sparkles, label: t.sidebar.legalAi, path: '/dashboard/juria', badge: 'Beta' },
-    ] as MenuItem[];
+    ];
+    if (JURIA_ENABLED) {
+      items.push({
+        id: 'legal-ai',
+        icon: Sparkles,
+        label: t.sidebar.legalAi,
+        path: '/dashboard/juria',
+        badge: 'Beta',
+      });
+    }
+    return items;
   }, [t, financeAuthorized, unreadMessagesCount]);
 
   const handleMenuClick = (item: MenuItem) => {

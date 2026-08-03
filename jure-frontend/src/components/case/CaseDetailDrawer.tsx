@@ -35,6 +35,7 @@ import { FinanceTab } from '@/components/case/panel/tabs/FinanceTab';
 import { getTVAStatus, isCabinetTvaExonerated, type TVAStatus } from '@/services/financeService';
 import { JuriaCasePanel } from '@/components/juria/JuriaCasePanel';
 import useJuriaStore from '@/stores/juriaStore';
+import { JURIA_ENABLED } from '@/config/features';
 
 export interface CaseDetailDrawerRef {
   open: (instance: API.Case) => void;
@@ -191,6 +192,7 @@ const CaseDetailDrawer = forwardRef<CaseDetailDrawerRef, CaseDetailDrawerProps>(
     }, [showFinanceTab, casePanelTab]);
 
     useEffect(() => {
+      if (!JURIA_ENABLED) return;
       if (!open || !fetched) {
         useJuriaStore.getState().setFabCaseContext(null);
         return;
@@ -433,10 +435,12 @@ const CaseDetailDrawer = forwardRef<CaseDetailDrawerRef, CaseDetailDrawerProps>(
                         : null}
                       </TabsTrigger>
                     : null}
-                    <TabsTrigger value="juria" className="rounded-lg px-4 text-[13px] text-indigo-700 dark:text-indigo-300">
-                      <Sparkles className="mr-1.5 h-4 w-4 opacity-90" aria-hidden />
-                      Juria
-                    </TabsTrigger>
+                    {JURIA_ENABLED ?
+                      <TabsTrigger value="juria" className="rounded-lg px-4 text-[13px] text-indigo-700 dark:text-indigo-300">
+                        <Sparkles className="mr-1.5 h-4 w-4 opacity-90" aria-hidden />
+                        Juria
+                      </TabsTrigger>
+                    : null}
                   </TabsList>
                 </div>
                 <TabsContent
@@ -480,12 +484,14 @@ const CaseDetailDrawer = forwardRef<CaseDetailDrawerRef, CaseDetailDrawerProps>(
                     {casePanelTab === 'finance' ? <FinanceTab caseId={fetched.id} /> : null}
                   </TabsContent>
                 : null}
-                <TabsContent
-                  value="juria"
-                  className="mt-0 flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden p-0 data-[state=inactive]:hidden"
-                >
-                  <JuriaCasePanel caseItem={fetched} />
-                </TabsContent>
+                {JURIA_ENABLED ?
+                  <TabsContent
+                    value="juria"
+                    className="mt-0 flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden p-0 data-[state=inactive]:hidden"
+                  >
+                    <JuriaCasePanel caseItem={fetched} />
+                  </TabsContent>
+                : null}
               </Tabs>
             </div>
 
