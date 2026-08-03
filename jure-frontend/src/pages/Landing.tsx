@@ -20,6 +20,8 @@ import {
   Calendar,
   UserCheck,
   Sparkles,
+  Menu,
+  X,
 } from "lucide-react";
 import MeshBackdrop from "@/components/landing/MeshBackdrop";
 import Reveal from "@/components/landing/Reveal";
@@ -504,7 +506,8 @@ const ThemeToggle: React.FC<{ label?: string; title?: string }> = ({ label, titl
     <Button
       onClick={toggle}
       variant="outline"
-      className="border-[#64499D]/20 dark:border-[#8B6FD1]/30 text-slate-700 dark:text-slate-200 hover:bg-[#F4F1FF]/80 dark:hover:bg-[#64499D]/20 backdrop-blur-sm"
+      size="icon"
+      className="h-9 w-9 shrink-0 border-[#64499D]/20 dark:border-[#8B6FD1]/30 text-slate-700 dark:text-slate-200 hover:bg-[#F4F1FF]/80 dark:hover:bg-[#64499D]/20 backdrop-blur-sm"
       aria-label={label || "Toggle theme"}
       title={title || "Toggle theme"}
     >
@@ -515,12 +518,12 @@ const ThemeToggle: React.FC<{ label?: string; title?: string }> = ({ label, titl
 
 const LangSwitcher: React.FC<{ lang: Lang; onChange: (l: Lang) => void }> = ({ lang, onChange }) => {
   return (
-    <div className="inline-flex rounded-lg overflow-hidden border border-[#64499D]/20 dark:border-[#8B6FD1]/30 backdrop-blur-sm bg-white/50 dark:bg-slate-900/40">
+    <div className="inline-flex rounded-lg overflow-hidden border border-[#64499D]/20 dark:border-[#8B6FD1]/30 backdrop-blur-sm bg-white/50 dark:bg-slate-900/40 shrink-0">
       {(["fr", "en", "ar"] as Lang[]).map((code) => (
         <button
           key={code}
           onClick={() => onChange(code)}
-          className={`px-3 py-2 text-sm transition-colors ${
+          className={`px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm transition-colors ${
             lang === code
               ? "bg-[#64499D] text-white"
               : "bg-transparent text-slate-700 dark:text-slate-200 hover:bg-[#F4F1FF] dark:hover:bg-[#64499D]/20"
@@ -559,12 +562,23 @@ const HeroStatChip: React.FC<{ label: string; value: string; delay?: number }> =
 const Landing: React.FC = () => {
   const navigate = useNavigate();
   const { lang, setLang, t } = useI18n();
+  const [mobileOpen, setMobileOpen] = useState(false);
   const handleGetStarted = () => navigate("/signin");
   const handleDemo = () => navigate("/demo");
-  const handleNav = (to: string) => navigate(to);
+  const handleNav = (to: string) => {
+    setMobileOpen(false);
+    navigate(to);
+  };
   const year = new Date().getFullYear();
   const reduce = useReducedMotion();
   const isRtl = t.dir === "rtl";
+
+  useEffect(() => {
+    document.body.style.overflow = mobileOpen ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [mobileOpen]);
 
   const demoFeatures = [
     {
@@ -626,21 +640,21 @@ const Landing: React.FC = () => {
   ];
 
   return (
-    <div className="landing-root min-h-screen relative overflow-hidden text-slate-900 dark:text-slate-100 bg-gradient-to-br from-white via-[#FBF9FF] to-slate-50 dark:from-slate-950 dark:via-[#0c0a14] dark:to-slate-900">
+    <div className="landing-root min-h-screen relative overflow-x-hidden text-slate-900 dark:text-slate-100 bg-gradient-to-br from-white via-[#FBF9FF] to-slate-50 dark:from-slate-950 dark:via-[#0c0a14] dark:to-slate-900">
       <MeshBackdrop />
 
       {/* Header — frosted HUD nav */}
-      <header className="relative z-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-3">
+      <header className="relative z-30">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 pt-3">
           <nav
-            className="landing-glass rounded-2xl px-4 sm:px-6 py-3 flex items-center justify-between gap-3"
+            className="landing-glass rounded-2xl px-3 sm:px-6 py-2.5 sm:py-3 flex items-center justify-between gap-2 sm:gap-3"
             aria-label="main navigation"
           >
-            <div className="flex items-center gap-3 min-w-0">
+            <div className="flex items-center gap-2 min-w-0">
               <img
                 src="/images/Jure logo.png"
                 alt="JURE"
-                className="w-[120px] sm:w-[140px] h-9 sm:h-10 object-contain"
+                className="w-[100px] sm:w-[140px] h-8 sm:h-10 object-contain"
                 loading="eager"
                 decoding="async"
               />
@@ -667,33 +681,78 @@ const Landing: React.FC = () => {
               </button>
             </div>
 
-            <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+            <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
               <LangSwitcher lang={lang} onChange={setLang} />
               <ThemeToggle label={t.themeToggle.label} title={t.themeToggle.title} />
               <Button
                 onClick={handleGetStarted}
                 variant="outline"
-                className="border-[#64499D]/30 text-[#64499D] hover:bg-[#64499D]/10 dark:text-[#CFC2FF] dark:hover:bg-[#64499D]/20"
+                size="sm"
+                className="hidden sm:inline-flex border-[#64499D]/30 text-[#64499D] hover:bg-[#64499D]/10 dark:text-[#CFC2FF] dark:hover:bg-[#64499D]/20"
+              >
+                {t.auth.signin}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                className="md:hidden h-9 w-9 border-[#64499D]/30 text-[#64499D] dark:text-[#CFC2FF]"
+                aria-expanded={mobileOpen}
+                aria-controls="landing-mobile-menu"
+                aria-label={mobileOpen ? "Close menu" : "Open menu"}
+                onClick={() => setMobileOpen((o) => !o)}
+              >
+                {mobileOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
+              </Button>
+            </div>
+          </nav>
+
+          {/* Mobile menu */}
+          {mobileOpen && (
+            <div
+              id="landing-mobile-menu"
+              className="md:hidden mt-2 landing-glass rounded-2xl p-3 flex flex-col gap-1"
+            >
+              {[
+                { to: "/features", label: t.nav.features },
+                { to: "/about", label: t.nav.about },
+                { to: "/contact", label: t.nav.contact },
+              ].map((item) => (
+                <button
+                  key={item.to}
+                  type="button"
+                  onClick={() => handleNav(item.to)}
+                  className="w-full text-start px-3 py-3 rounded-xl text-sm font-medium hover:bg-[#64499D]/10 dark:hover:bg-[#64499D]/20 transition-colors"
+                >
+                  {item.label}
+                </button>
+              ))}
+              <Button
+                onClick={() => {
+                  setMobileOpen(false);
+                  handleGetStarted();
+                }}
+                className="mt-2 w-full bg-gradient-to-r from-[#64499D] to-[#4D3680] text-white"
               >
                 {t.auth.signin}
               </Button>
             </div>
-          </nav>
+          )}
         </div>
       </header>
 
       <main className="relative z-10">
         {/* Hero */}
-        <section className="max-w-7xl mx-auto px-6 pt-12 pb-12 md:pt-20 md:pb-24">
-          <div className="grid lg:grid-cols-12 gap-10 lg:gap-12 items-center">
-            <div className="lg:col-span-7 text-center lg:text-start">
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 pt-8 sm:pt-12 pb-10 sm:pb-12 md:pt-20 md:pb-24">
+          <div className="grid lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+            <div className="lg:col-span-7 text-center lg:text-start min-w-0">
               <motion.div
                 initial={reduce ? false : { opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
-                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full landing-glass text-xs font-medium text-[#64499D] dark:text-[#CFC2FF] mb-6"
+                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full landing-glass text-xs font-medium text-[#64499D] dark:text-[#CFC2FF] mb-4 sm:mb-6"
               >
-                <Sparkles className="w-3.5 h-3.5" />
+                <Sparkles className="w-3.5 h-3.5 shrink-0" />
                 <span>JURE · Legal OS</span>
               </motion.div>
 
@@ -701,7 +760,7 @@ const Landing: React.FC = () => {
                 initial={reduce ? false : { opacity: 0, y: 24 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.05 }}
-                className="font-display text-5xl sm:text-6xl md:text-7xl font-bold tracking-tight leading-[1.05]"
+                className="font-display text-[2rem] leading-[1.15] sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight sm:leading-[1.05] break-words"
               >
                 <span className="landing-hero-shimmer bg-gradient-to-r from-slate-900 via-[#64499D] to-slate-900 dark:from-white dark:via-[#8B6FD1] dark:to-white bg-clip-text text-transparent">
                   {t.hero.h1a}
@@ -722,7 +781,7 @@ const Landing: React.FC = () => {
                 initial={reduce ? false : { opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.55, delay: 0.12 }}
-                className="mt-6 text-lg md:text-xl text-slate-600 dark:text-slate-300 leading-relaxed max-w-xl mx-auto lg:mx-0"
+                className="mt-4 sm:mt-6 text-base sm:text-lg md:text-xl text-slate-600 dark:text-slate-300 leading-relaxed max-w-xl mx-auto lg:mx-0 px-1"
               >
                 {t.hero.subtitle}
               </motion.p>
@@ -731,29 +790,29 @@ const Landing: React.FC = () => {
                 initial={reduce ? false : { opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.55, delay: 0.18 }}
-                className={`mt-10 flex flex-col sm:flex-row gap-4 justify-center lg:justify-start ${
+                className={`mt-8 sm:mt-10 flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center lg:justify-start w-full sm:w-auto ${
                   isRtl ? "sm:flex-row-reverse" : ""
                 }`}
               >
                 <Button
                   onClick={handleGetStarted}
                   size="lg"
-                  className="px-7 py-6 text-lg font-medium shadow-lg hover:shadow-[0_0_32px_-6px_rgba(100,73,157,0.55)] transition-shadow bg-gradient-to-r from-[#64499D] to-[#4D3680] hover:from-[#4D3680] hover:to-[#3E2D71] text-white"
+                  className="w-full sm:w-auto px-6 sm:px-7 py-5 sm:py-6 text-base sm:text-lg font-medium shadow-lg hover:shadow-[0_0_32px_-6px_rgba(100,73,157,0.55)] transition-shadow bg-gradient-to-r from-[#64499D] to-[#4D3680] hover:from-[#4D3680] hover:to-[#3E2D71] text-white"
                 >
                   {t.hero.ctaStart}
-                  <ArrowRight className={`ms-2 h-5 w-5 ${isRtl ? "rotate-180" : ""}`} />
+                  <ArrowRight className={`ms-2 h-5 w-5 shrink-0 ${isRtl ? "rotate-180" : ""}`} />
                 </Button>
                 <Button
                   onClick={handleDemo}
                   variant="outline"
                   size="lg"
-                  className="px-7 py-6 text-lg border-[#64499D]/25 dark:border-[#8B6FD1]/30 text-slate-800 dark:text-slate-100 hover:bg-[#F4F1FF]/80 dark:hover:bg-[#64499D]/15 backdrop-blur-sm"
+                  className="w-full sm:w-auto px-6 sm:px-7 py-5 sm:py-6 text-base sm:text-lg border-[#64499D]/25 dark:border-[#8B6FD1]/30 text-slate-800 dark:text-slate-100 hover:bg-[#F4F1FF]/80 dark:hover:bg-[#64499D]/15 backdrop-blur-sm"
                 >
                   {t.hero.ctaDemo}
                 </Button>
               </motion.div>
 
-              <div className="mt-6 text-sm text-slate-500 dark:text-slate-400 flex items-center justify-center lg:justify-start gap-6 flex-wrap">
+              <div className="mt-6 text-sm text-slate-500 dark:text-slate-400 flex items-center justify-center lg:justify-start gap-4 sm:gap-6 flex-wrap">
                 <button
                   onClick={() => handleNav("/security")}
                   className="underline-offset-4 hover:underline hover:text-[#64499D] dark:hover:text-[#8B6FD1] transition-colors"
@@ -781,16 +840,16 @@ const Landing: React.FC = () => {
             </div>
 
             {/* Floating workspace preview — desktop-first visual anchor */}
-            <div className="lg:col-span-5 relative hidden md:block">
+            <div className="lg:col-span-5 relative hidden lg:block">
               <motion.div
                 initial={reduce ? false : { opacity: 0, scale: 0.96, y: 20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 transition={{ duration: 0.65, delay: 0.15 }}
-                className="relative"
+                className="relative overflow-visible"
               >
                 <div
                   aria-hidden
-                  className="absolute -inset-6 rounded-[2rem] bg-gradient-to-br from-[#64499D]/25 via-transparent to-[#8B6FD1]/20 blur-2xl"
+                  className="absolute -inset-6 rounded-[2rem] bg-gradient-to-br from-[#64499D]/25 via-transparent to-[#8B6FD1]/20 blur-2xl pointer-events-none"
                 />
                 <div className="landing-glass landing-float rounded-3xl p-5 relative">
                   <div className={`flex items-center gap-3 mb-4 ${isRtl ? "flex-row-reverse" : ""}`}>
@@ -836,7 +895,7 @@ const Landing: React.FC = () => {
           </div>
 
           {/* Feature tiles */}
-          <div className="mt-20 md:mt-28 grid md:grid-cols-2 lg:grid-cols-4 gap-5 md:gap-6">
+          <div className="mt-14 sm:mt-20 md:mt-28 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 md:gap-6">
             <FeatureTile
               icon={<Zap className="w-6 h-6" />}
               title={t.features.ai.title}
@@ -868,15 +927,15 @@ const Landing: React.FC = () => {
           </div>
         </section>
 
-        <div className="landing-divider mb-16 md:mb-20" aria-hidden />
+        <div className="landing-divider mb-10 sm:mb-16 md:mb-20" aria-hidden />
 
         {/* Demo Section */}
-        <section className="max-w-7xl mx-auto px-6 pb-16 md:pb-28">
-          <Reveal className="text-center mb-12 md:mb-16">
-            <h2 className="font-display text-3xl md:text-5xl font-bold tracking-tight">
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 pb-14 sm:pb-16 md:pb-28">
+          <Reveal className="text-center mb-8 sm:mb-12 md:mb-16 px-1">
+            <h2 className="font-display text-2xl sm:text-3xl md:text-5xl font-bold tracking-tight break-words">
               {t.demo.title}
             </h2>
-            <p className="mt-4 text-slate-600 dark:text-slate-300 text-lg max-w-2xl mx-auto">
+            <p className="mt-3 sm:mt-4 text-slate-600 dark:text-slate-300 text-base sm:text-lg max-w-2xl mx-auto">
               {t.demo.subtitle}
             </p>
           </Reveal>
@@ -884,12 +943,12 @@ const Landing: React.FC = () => {
           <div
             className={
               JURIA_ENABLED
-                ? "grid lg:grid-cols-3 gap-8 max-w-7xl mx-auto"
+                ? "grid lg:grid-cols-3 gap-5 sm:gap-8 max-w-7xl mx-auto"
                 : "max-w-7xl mx-auto"
             }
           >
-            <div className={JURIA_ENABLED ? "lg:col-span-2 space-y-4" : "space-y-4"}>
-              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className={JURIA_ENABLED ? "lg:col-span-2 space-y-4 min-w-0" : "space-y-4 min-w-0"}>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                 {demoFeatures.map((f, i) => (
                   <DemoFeatureCard
                     key={f.key}
@@ -904,32 +963,34 @@ const Landing: React.FC = () => {
             </div>
 
             {JURIA_ENABLED ? (
-              <AiAssistantDemo
-                key={lang}
-                copy={t.demo.aiAssistant}
-                dir={t.dir as "ltr" | "rtl"}
-              />
+              <div className="min-w-0">
+                <AiAssistantDemo
+                  key={lang}
+                  copy={t.demo.aiAssistant}
+                  dir={t.dir as "ltr" | "rtl"}
+                />
+              </div>
             ) : null}
           </div>
 
-          <Reveal className="text-center mt-12">
+          <Reveal className="text-center mt-10 sm:mt-12 px-1">
             <Button
               onClick={handleDemo}
               size="lg"
-              className="px-8 py-6 text-lg font-medium bg-gradient-to-r from-[#64499D] to-[#4D3680] hover:from-[#4D3680] hover:to-[#3E2D71] text-white shadow-lg hover:shadow-[0_0_36px_-6px_rgba(100,73,157,0.55)] transition-all"
+              className="w-full sm:w-auto px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg font-medium bg-gradient-to-r from-[#64499D] to-[#4D3680] hover:from-[#4D3680] hover:to-[#3E2D71] text-white shadow-lg hover:shadow-[0_0_36px_-6px_rgba(100,73,157,0.55)] transition-all"
             >
               {t.demo.cta}
-              <ArrowRight className={`ms-2 h-5 w-5 ${isRtl ? "rotate-180" : ""}`} />
+              <ArrowRight className={`ms-2 h-5 w-5 shrink-0 ${isRtl ? "rotate-180" : ""}`} />
             </Button>
           </Reveal>
         </section>
 
-        <div className="landing-divider mb-16 md:mb-20" aria-hidden />
+        <div className="landing-divider mb-10 sm:mb-16 md:mb-20" aria-hidden />
 
         {/* Community */}
-        <section className="max-w-7xl mx-auto px-6 pb-16 md:pb-28">
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 pb-14 sm:pb-16 md:pb-28">
           <Reveal>
-            <div className="relative rounded-3xl p-10 md:p-14 text-white overflow-hidden landing-panel-glow bg-gradient-to-br from-slate-900 via-slate-900 to-[#2A1F4A]">
+            <div className="relative rounded-2xl sm:rounded-3xl p-6 sm:p-10 md:p-14 text-white overflow-hidden landing-panel-glow bg-gradient-to-br from-slate-900 via-slate-900 to-[#2A1F4A]">
               <div
                 aria-hidden
                 className="pointer-events-none absolute inset-0 opacity-40"
@@ -939,13 +1000,13 @@ const Landing: React.FC = () => {
                 }}
               />
               <div className="relative text-center max-w-3xl mx-auto">
-                <h2 className="font-display text-3xl md:text-5xl font-bold tracking-tight mb-3">
+                <h2 className="font-display text-2xl sm:text-3xl md:text-5xl font-bold tracking-tight mb-3 break-words">
                   {t.community.title}
                 </h2>
-                <p className="text-slate-300 text-lg">{t.community.subtitle}</p>
+                <p className="text-slate-300 text-base sm:text-lg">{t.community.subtitle}</p>
               </div>
 
-              <div className="relative mt-12 grid md:grid-cols-3 gap-8 text-center">
+              <div className="relative mt-8 sm:mt-12 grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 text-center">
                 {[
                   {
                     icon: <MessageSquare className="w-8 h-8 text-white" />,
@@ -981,10 +1042,10 @@ const Landing: React.FC = () => {
                 ))}
               </div>
 
-              <div className="relative text-center mt-12">
+              <div className="relative text-center mt-8 sm:mt-12">
                 <Button
                   size="lg"
-                  className="px-8 py-6 text-lg font-medium bg-white text-slate-900 hover:bg-slate-100 shadow-lg"
+                  className="w-full sm:w-auto px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg font-medium bg-white text-slate-900 hover:bg-slate-100 shadow-lg"
                   onClick={() => handleNav("/community")}
                 >
                   {t.community.cta}
@@ -995,9 +1056,9 @@ const Landing: React.FC = () => {
         </section>
 
         {/* Early stage — honest positioning */}
-        <section className="max-w-7xl mx-auto px-6 pb-24">
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 pb-16 sm:pb-24">
           <Reveal>
-            <div className="relative rounded-3xl p-10 md:p-14 text-white overflow-hidden landing-panel-glow bg-gradient-to-br from-[#64499D] via-[#4D3680] to-[#3E2D71]">
+            <div className="relative rounded-2xl sm:rounded-3xl p-6 sm:p-10 md:p-14 text-white overflow-hidden landing-panel-glow bg-gradient-to-br from-[#64499D] via-[#4D3680] to-[#3E2D71]">
               <div
                 aria-hidden
                 className="pointer-events-none absolute inset-0 opacity-30"
@@ -1008,20 +1069,20 @@ const Landing: React.FC = () => {
                   maskImage: "radial-gradient(ellipse 80% 70% at 50% 50%, black, transparent)",
                 }}
               />
-              <div className="relative text-center mb-10 md:mb-12 max-w-3xl mx-auto">
-                <h2 className="font-display text-3xl md:text-5xl font-bold tracking-tight mb-3">
+              <div className="relative text-center mb-8 sm:mb-10 md:mb-12 max-w-3xl mx-auto">
+                <h2 className="font-display text-2xl sm:text-3xl md:text-5xl font-bold tracking-tight mb-3 break-words">
                   {t.stats.title}
                 </h2>
-                <p className="text-purple-100 text-lg leading-relaxed">{t.stats.subtitle}</p>
+                <p className="text-purple-100 text-base sm:text-lg leading-relaxed">{t.stats.subtitle}</p>
               </div>
-              <div className="relative grid md:grid-cols-3 gap-6 md:gap-8 mb-10">
+              <div className="relative grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 md:gap-8 mb-8 sm:mb-10">
                 {t.stats.items.map(
                   (item: { title: string; desc: string }, i: number) => {
                     const Icon = [Sparkles, Briefcase, Users][i] || Sparkles;
                     return (
                       <div
                         key={item.title}
-                        className="rounded-2xl bg-white/10 border border-white/15 backdrop-blur-sm p-6 text-center md:text-start"
+                        className="rounded-2xl bg-white/10 border border-white/15 backdrop-blur-sm p-5 sm:p-6 text-center md:text-start"
                       >
                         <div className="w-11 h-11 rounded-xl bg-white/15 flex items-center justify-center mx-auto md:mx-0 mb-4">
                           <Icon className="w-5 h-5 text-white" />
@@ -1034,13 +1095,13 @@ const Landing: React.FC = () => {
                 )}
               </div>
               <div
-                className={`relative flex flex-col sm:flex-row gap-4 justify-center ${
+                className={`relative flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center ${
                   isRtl ? "sm:flex-row-reverse" : ""
                 }`}
               >
                 <Button
                   size="lg"
-                  className="px-8 py-6 text-lg font-medium bg-white text-slate-900 hover:bg-slate-100"
+                  className="w-full sm:w-auto px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg font-medium bg-white text-slate-900 hover:bg-slate-100"
                   onClick={handleGetStarted}
                 >
                   {t.stats.ctaPrimary}
@@ -1048,7 +1109,7 @@ const Landing: React.FC = () => {
                 <Button
                   size="lg"
                   variant="outline"
-                  className="px-8 py-6 text-lg font-medium border-white/70 text-white hover:bg-white/10"
+                  className="w-full sm:w-auto px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg font-medium border-white/70 text-white hover:bg-white/10"
                   onClick={handleDemo}
                 >
                   {t.stats.ctaSecondary}
@@ -1060,10 +1121,10 @@ const Landing: React.FC = () => {
       </main>
 
       {/* Footer */}
-      <footer className="relative z-10 border-t border-[#64499D]/15 dark:border-[#8B6FD1]/20 bg-slate-950/95 dark:bg-black text-white py-10 backdrop-blur-md">
-        <div className="max-w-7xl mx-auto px-6">
+      <footer className="relative z-10 border-t border-[#64499D]/15 dark:border-[#8B6FD1]/20 bg-slate-950/95 dark:bg-black text-white py-8 sm:py-10 backdrop-blur-md">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div
-            className={`flex flex-col md:flex-row justify-between items-center gap-6 ${
+            className={`flex flex-col md:flex-row justify-between items-center gap-5 sm:gap-6 text-center md:text-start ${
               isRtl ? "md:flex-row-reverse" : ""
             }`}
           >
@@ -1076,7 +1137,7 @@ const Landing: React.FC = () => {
                 decoding="async"
               />
             </div>
-            <div className="flex items-center gap-6 text-sm text-slate-300">
+            <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 text-sm text-slate-300">
               <button
                 onClick={() => handleNav("/privacy")}
                 className="hover:text-white transition-colors"

@@ -5,6 +5,8 @@
   --landing-purple-mid: #4d3680;
   --landing-purple-deep: #3e2d71;
   --landing-purple-soft: #8b6fd1;
+  overflow-x: clip;
+  max-width: 100vw;
 }
 
 /* Animated mesh / grid backdrop */
@@ -244,6 +246,25 @@
 .landing-float-delay {
   animation: landing-float 6.5s ease-in-out infinite;
   animation-delay: 1.2s;
+}
+
+@media (max-width: 640px) {
+  .landing-mesh__aurora--a,
+  .landing-mesh__aurora--b,
+  .landing-mesh__aurora--c {
+    width: min(70vw, 280px);
+    height: min(70vw, 280px);
+    filter: blur(56px);
+  }
+
+  .landing-mesh__grid {
+    background-size: 40px 40px;
+  }
+
+  .landing-float,
+  .landing-float-delay {
+    animation: none;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
