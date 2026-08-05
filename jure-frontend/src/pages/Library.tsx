@@ -1,35 +1,17 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, {
+  lazy,
+  Suspense,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  startTransition,
+} from 'react';
+import { FolderTree } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import {
-  Search,
-  Plus,
-  Download,
-  Eye,
-  Edit,
-  Trash2,
-  FileText,
-  Video,
-  Image,
-  Archive,
-  File,
-  Radio,
-  Calendar,
-  HardDrive,
-  ChevronUp,
-  ChevronDown,
-  FolderTree,
-} from 'lucide-react';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { useToast } from '@/hooks/use-toast';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import { getFileType } from '@/utils/functions';
-import { DocumentCategory } from '@/utils/constants';
 import { apiGetDocuments } from '@/services/library/api';
 import DocumentCreateModal, {
   DocumentCreateModalRef,
@@ -40,24 +22,77 @@ import DocumentUpdateModal, {
 import DocumentDeleteModal, {
   DocumentDeleteModalRef,
 } from '@/components/document/DocumentDeleteModal';
-import LibraryFolderTree, {
-  buildFolderTreeFromDocuments,
-} from '@/components/library/LibraryFolderTree';
 import DocumentDetailDrawer, {
   DocumentDetailDrawerRef,
 } from '@/components/library/DocumentDetailDrawer';
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import {
+  KnowledgeHubHeader,
+  KnowledgeSearch,
+  SmartMetricsBar,
+  CollectionsSidebar,
+  ViewTabs,
+  KnowledgeCard,
+  KnowledgeTableView,
+  KnowledgeEmptyState,
+  AICopilotPanel,
+  MobileKnowledgeNav,
+  enrichDocuments,
+  computeSmartMetrics,
+  semanticFilter,
+  matchesCollection,
+  getFavorites,
+  toggleFavorite,
+  COLLECTIONS,
+  type CollectionId,
+  type EnrichedDocument,
+  type KnowledgeViewMode,
+  type MobileKnowledgeTab,
+} from '@/components/library/knowledge-hub';
 import { cn } from '@/lib/utils';
 import { devError } from '@/utils/devLog';
 
+const KnowledgeTimelineView = lazy(
+  () => import('@/components/library/knowledge-hub/KnowledgeTimelineView')
+);
+const KnowledgeGraphView = lazy(
+  () => import('@/components/library/knowledge-hub/KnowledgeGraphView')
+);
+const KnowledgeAIView = lazy(
+  () => import('@/components/library/knowledge-hub/KnowledgeAIView')
+);
+
+type SortKey = 'date' | 'name' | 'size' | 'score';
+
+function parseDocuments(data: unknown): API.Document[] {
+  if (Array.isArray(data)) return data;
+  if (data && typeof data === 'object' && 'results' in data) {
+    const results = (data as { results: unknown }).results;
+    return Array.isArray(results) ? results : [];
+  }
+  return [];
+}
+
+const ViewFallback = () => (
+  <div className="animate-pulse space-y-3 p-4" aria-hidden>
+    {[...Array(4)].map((_, i) => (
+      <div key={i} className="h-16 rounded-xl bg-slate-200/80 dark:bg-slate-800" />
+    ))}
+  </div>
+);
+
 const Library = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('all');
-  const [folderSheetOpen, setFolderSheetOpen] = useState(false);
+  const [collection, setCollection] = useState<CollectionId>('all');
+  const [viewMode, setViewMode] = useState<KnowledgeViewMode>('grid');
   const [libraryItems, setLibraryItems] = useState<API.Document[]>([]);
   const [loading, setLoading] = useState(true);
-  const [sortBy, setSortBy] = useState<'date' | 'name' | 'size'>('date');
+  const [sortBy, setSortBy] = useState<SortKey>('date');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [selectedDoc, setSelectedDoc] = useState<EnrichedDocument | null>(null);
+  const [favorites, setFavorites] = useState<number[]>(() => getFavorites());
+  const [folderSheetOpen, setFolderSheetOpen] = useState(false);
+  const [aiSheetOpen, setAiSheetOpen] = useState(false);
+  const [mobileTab, setMobileTab] = useState<MobileKnowledgeTab>('browse');
   const { toast } = useToast();
 
   const createModalRef = useRef<DocumentCreateModalRef>(null);
@@ -65,45 +100,17 @@ const Library = () => {
   const deleteModalRef = useRef<DocumentDeleteModalRef>(null);
   const detailDrawerRef = useRef<DocumentDetailDrawerRef>(null);
 
-  const fetchDocuments = () => {
+  const fetchDocuments = useCallback(() => {
     setLoading(true);
     apiGetDocuments({ all: true })
       .then((response) => {
-        let documents: API.Document[] = [];
-        if (Array.isArray(response.data)) {
-          documents = response.data;
-        } else if (
-          response.data &&
-          typeof response.data === 'object' &&
-          'results' in response.data
-        ) {
-          documents = Array.isArray(response.data.results)
-            ? response.data.results
-            : [];
-        } else {
-          documents = Array.isArray(response.data) ? response.data : [];
-        }
-        setLibraryItems(Array.isArray(documents) ? documents : []);
+        setLibraryItems(parseDocuments(response.data));
       })
       .catch((error) => {
         devError('Error fetching documents:', error);
         apiGetDocuments()
           .then((response) => {
-            let documents: API.Document[] = [];
-            if (Array.isArray(response.data)) {
-              documents = response.data;
-            } else if (
-              response.data &&
-              typeof response.data === 'object' &&
-              'results' in response.data
-            ) {
-              documents = Array.isArray(response.data.results)
-                ? response.data.results
-                : [];
-            } else {
-              documents = Array.isArray(response.data) ? response.data : [];
-            }
-            setLibraryItems(Array.isArray(documents) ? documents : []);
+            setLibraryItems(parseDocuments(response.data));
           })
           .catch((fallbackError) => {
             devError('Fallback fetch also failed:', fallbackError);
@@ -112,412 +119,359 @@ const Library = () => {
               fallbackError.response?.data?.detail ||
               fallbackError.response?.data?.message ||
               fallbackError.message ||
-              'Failed to load documents.';
+              'Failed to load knowledge repository.';
             toast({
-              title: 'Error Loading Library',
+              title: 'Error Loading Knowledge Hub',
               description: errorMessage,
               variant: 'destructive',
             });
           });
       })
       .finally(() => setLoading(false));
-  };
+  }, [toast]);
 
   useEffect(() => {
     fetchDocuments();
-  }, []);
+  }, [fetchDocuments]);
 
-  const getFileSizeLabel = (size: number) => {
-    if (size < 1024) return `${size} B`;
-    if (size < 1024 * 1024) return `${(size / 1024).toFixed(2)} KB`;
-    if (size < 1024 * 1024 * 1024)
-      return `${(size / (1024 * 1024)).toFixed(2)} MB`;
-    return `${(size / (1024 * 1024 * 1024)).toFixed(2)} GB`;
-  };
+  const enriched = useMemo(() => enrichDocuments(libraryItems), [libraryItems]);
 
-  const getFileIcon = (fileName: string) => {
-    const fileType = getFileType(fileName);
-    switch (fileType) {
-      case 'archive':
-        return <Archive size={16} className="text-slate-500 shrink-0" />;
-      case 'document':
-        return <FileText size={16} className="text-slate-500 shrink-0" />;
-      case 'image':
-        return <Image size={16} className="text-slate-500 shrink-0" />;
-      case 'video':
-        return <Video size={16} className="text-slate-500 shrink-0" />;
-      case 'audio':
-        return <Radio size={16} className="text-slate-500 shrink-0" />;
-      default:
-        return <File size={16} className="text-slate-500 shrink-0" />;
+  useEffect(() => {
+    if (!selectedDoc) return;
+    const next = enriched.find((d) => d.id === selectedDoc.id);
+    if (next) setSelectedDoc(next);
+    else setSelectedDoc(null);
+  }, [enriched]); // eslint-disable-line react-hooks/exhaustive-deps — sync selection when corpus refreshes
+
+  const collectionCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const def of COLLECTIONS) {
+      counts[def.id] = enriched.filter((d) =>
+        matchesCollection(d, def.id, favorites)
+      ).length;
     }
-  };
+    return counts;
+  }, [enriched, favorites]);
 
-  const safeLibraryItems = Array.isArray(libraryItems) ? libraryItems : [];
-  const filteredItems = safeLibraryItems
-    .filter((item) => {
-      if (!item || typeof item !== 'object') return false;
-      const matchesSearch =
-        item.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (Array.isArray(item.tags) &&
-          item.tags.some((tag) =>
-            tag?.toLowerCase().includes(searchTerm.toLowerCase())
-          )) ||
-        item.description?.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesCategory =
-        selectedCategory === 'all' || item.category === selectedCategory;
-      return matchesSearch && matchesCategory;
-    })
-    .sort((a, b) => {
+  const metrics = useMemo(
+    () =>
+      computeSmartMetrics(
+        enriched,
+        COLLECTIONS.filter((c) => c.group === 'core' && c.id !== 'all').length
+      ),
+    [enriched]
+  );
+
+  const filteredItems = useMemo(() => {
+    const byCollection = enriched.filter((d) =>
+      matchesCollection(d, collection, favorites)
+    );
+    const searched = semanticFilter(byCollection, searchTerm);
+    return [...searched].sort((a, b) => {
       let comparison = 0;
       if (sortBy === 'date') {
         comparison =
-          new Date(a.modified || 0).getTime() -
-          new Date(b.modified || 0).getTime();
+          new Date(a.modified || 0).getTime() - new Date(b.modified || 0).getTime();
       } else if (sortBy === 'name') {
         comparison = (a.title || '').localeCompare(b.title || '');
       } else if (sortBy === 'size') {
         comparison = (a.size || 0) - (b.size || 0);
+      } else {
+        comparison = a.insight.knowledgeScore - b.insight.knowledgeScore;
       }
       return sortOrder === 'asc' ? comparison : -comparison;
     });
+  }, [enriched, collection, favorites, searchTerm, sortBy, sortOrder]);
 
-  const handleRowClick = (item: API.Document) => {
-    detailDrawerRef.current?.open(item);
-  };
+  const handleSelect = useCallback((doc: EnrichedDocument) => {
+    startTransition(() => {
+      setSelectedDoc(doc);
+    });
+  }, []);
 
-  const handleEdit = (e: React.MouseEvent, item: API.Document) => {
+  const handleOpen = useCallback((doc: EnrichedDocument) => {
+    setSelectedDoc(doc);
+    detailDrawerRef.current?.open(doc);
+  }, []);
+
+  const handleEdit = useCallback((e: React.MouseEvent, item: EnrichedDocument) => {
     e.stopPropagation();
     updateModalRef.current?.show(item);
-  };
+  }, []);
 
-  const handleDownload = (e: React.MouseEvent, item: API.Document) => {
-    e.stopPropagation();
-    toast({
-      title: 'Download Started',
-      description: `Downloading ${item.title}...`,
-    });
-  };
+  const handleDownload = useCallback(
+    (e: React.MouseEvent, item: EnrichedDocument) => {
+      e.stopPropagation();
+      toast({
+        title: 'Download Started',
+        description: `Downloading ${item.title}…`,
+      });
+    },
+    [toast]
+  );
 
-  const handleDelete = (e: React.MouseEvent, item: API.Document) => {
+  const handleDelete = useCallback((e: React.MouseEvent, item: EnrichedDocument) => {
     e.stopPropagation();
     deleteModalRef.current?.show(item);
-  };
+  }, []);
+
+  const handleToggleFavorite = useCallback(
+    (e: React.MouseEvent, item: EnrichedDocument) => {
+      e.stopPropagation();
+      setFavorites(toggleFavorite(item.id));
+    },
+    []
+  );
 
   const handleAddNew = () => createModalRef.current?.show();
+
   const handleCreateSuccess = (document: API.Document) => {
     toast({
-      title: 'Success',
-      description: `Document "${document.title}" created successfully`,
+      title: 'Knowledge added',
+      description: `"${document.title}" is now in your repository`,
     });
     fetchDocuments();
   };
   const handleUpdateSuccess = (document: API.Document) => {
     toast({
-      title: 'Success',
-      description: `Document "${document.title}" updated successfully`,
+      title: 'Updated',
+      description: `"${document.title}" saved`,
     });
     fetchDocuments();
   };
   const handleDeleteSuccess = (document: API.Document) => {
     toast({
-      title: 'Success',
-      description: `Document "${document.title}" deleted successfully`,
+      title: 'Removed',
+      description: `"${document.title}" deleted`,
     });
+    if (selectedDoc?.id === document.id) setSelectedDoc(null);
     fetchDocuments();
   };
 
-  const toggleSort = (newSortBy: 'date' | 'name' | 'size') => {
-    if (sortBy === newSortBy) {
-      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+  const toggleSort = (key: SortKey) => {
+    if (sortBy === key) {
+      setSortOrder((o) => (o === 'asc' ? 'desc' : 'asc'));
     } else {
-      setSortBy(newSortBy);
+      setSortBy(key);
       setSortOrder('desc');
     }
   };
 
-  const folderTreeItems = buildFolderTreeFromDocuments(
-    libraryItems,
-    DocumentCategory.options
-  );
+  const handleMobileNav = (tab: MobileKnowledgeTab) => {
+    setMobileTab(tab);
+    if (tab === 'upload') {
+      handleAddNew();
+      return;
+    }
+    if (tab === 'search') {
+      document.getElementById('knowledge-search-anchor')?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center',
+      });
+      return;
+    }
+    if (tab === 'ai') {
+      setAiSheetOpen(true);
+      return;
+    }
+    setFolderSheetOpen(true);
+  };
+
+  const cardHandlers = {
+    onSelect: handleSelect,
+    onOpen: handleOpen,
+    onEdit: handleEdit,
+    onDownload: handleDownload,
+    onDelete: handleDelete,
+    onToggleFavorite: handleToggleFavorite,
+  };
 
   return (
     <>
-      <div className="flex h-full min-h-0 overflow-hidden">
-        {/* Folder Tree Sidebar — desktop */}
-        <aside
-          className={cn(
-            'hidden md:flex w-56 shrink-0 flex-col border-r border-slate-200 dark:border-slate-800',
-            'bg-[#F8FAFC] dark:bg-[#0F172A]'
-          )}
-        >
-          <div className="p-4 border-b border-slate-200 dark:border-slate-800">
-            <h2 className="text-[13px] font-semibold text-[#0F172A] dark:text-[#F8FAFC]">
-              Library
-            </h2>
-          </div>
-          <div className="p-2 flex-1 overflow-y-auto">
-            <LibraryFolderTree
-              selectedId={selectedCategory}
-              onSelect={setSelectedCategory}
-              items={folderTreeItems}
+      <div className="relative flex h-full min-h-[calc(100vh-4rem)] flex-col overflow-hidden bg-slate-50/50 dark:bg-slate-950 md:min-h-0">
+        <KnowledgeHubHeader
+          documentCount={enriched.length}
+          onUpload={handleAddNew}
+          className="shrink-0"
+        />
+
+        <div className="shrink-0 space-y-4 border-b border-slate-200/80 px-4 py-4 dark:border-slate-800 sm:px-6">
+          <div id="knowledge-search-anchor">
+            <KnowledgeSearch
+              value={searchTerm}
+              onChange={setSearchTerm}
+              onSubmit={setSearchTerm}
             />
           </div>
-        </aside>
+          <SmartMetricsBar metrics={metrics} />
+        </div>
 
-        {/* Mobile folder sheet */}
-        <Sheet open={folderSheetOpen} onOpenChange={setFolderSheetOpen}>
-          <SheetContent side="left" className="w-[min(100vw,18rem)] p-0 sm:max-w-xs md:hidden">
-            <SheetHeader className="border-b border-slate-200 px-4 py-3 dark:border-slate-800">
-              <SheetTitle className="text-sm">Folders</SheetTitle>
-            </SheetHeader>
-            <div className="p-2 overflow-y-auto h-[calc(100%-3.5rem)]">
-              <LibraryFolderTree
-                selectedId={selectedCategory}
-                onSelect={(id) => {
-                  setSelectedCategory(id);
-                  setFolderSheetOpen(false);
-                }}
-                items={folderTreeItems}
+        <div className="flex min-h-0 flex-1 overflow-hidden">
+          {/* Collections — desktop */}
+          <aside
+            className={cn(
+              'hidden w-56 shrink-0 flex-col border-r border-slate-200/80 bg-white/60 dark:border-slate-800 dark:bg-slate-950/40 lg:flex',
+              'xl:w-60'
+            )}
+          >
+            <div className="min-h-0 flex-1 overflow-y-auto p-3">
+              <CollectionsSidebar
+                selected={collection}
+                onSelect={setCollection}
+                documents={enriched}
+                favorites={favorites}
+                counts={collectionCounts}
               />
             </div>
-          </SheetContent>
-        </Sheet>
+          </aside>
 
-        {/* Main Content */}
-        <div className="flex-1 flex flex-col min-w-0 min-h-0">
-          {/* Header */}
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4 p-3 sm:p-4 border-b border-slate-200 dark:border-slate-800">
-            <div className="flex items-center gap-2 min-w-0">
+          {/* Mobile collections sheet */}
+          <Sheet open={folderSheetOpen} onOpenChange={setFolderSheetOpen}>
+            <SheetContent
+              side="left"
+              className="w-[min(100vw,18rem)] p-0 sm:max-w-xs lg:hidden"
+            >
+              <SheetHeader className="border-b border-slate-200 px-4 py-3 dark:border-slate-800">
+                <SheetTitle className="text-sm">Collections</SheetTitle>
+              </SheetHeader>
+              <div className="h-[calc(100%-3.5rem)] overflow-y-auto p-3">
+                <CollectionsSidebar
+                  selected={collection}
+                  onSelect={(id) => {
+                    setCollection(id);
+                    setFolderSheetOpen(false);
+                  }}
+                  documents={enriched}
+                  favorites={favorites}
+                  counts={collectionCounts}
+                />
+              </div>
+            </SheetContent>
+          </Sheet>
+
+          {/* Main workspace */}
+          <div className="flex min-w-0 flex-1 flex-col">
+            <div className="flex flex-wrap items-center gap-2 border-b border-slate-200/80 px-3 py-2.5 dark:border-slate-800 sm:px-4">
               <Button
                 type="button"
                 variant="outline"
                 size="icon"
-                className="md:hidden h-11 w-11 shrink-0"
+                className="h-9 w-9 shrink-0 lg:hidden"
                 onClick={() => setFolderSheetOpen(true)}
-                aria-label="Open folders"
+                aria-label="Open collections"
               >
                 <FolderTree className="h-4 w-4" />
               </Button>
-              <div className="min-w-0">
-                <h1 className="text-[13px] font-semibold text-[#0F172A] dark:text-[#F8FAFC]">
-                  Document Library
-                </h1>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                  {filteredItems.length} documents
-                </p>
+              <ViewTabs value={viewMode} onChange={setViewMode} className="min-w-0" />
+              <div className="ml-auto hidden items-center gap-1 sm:flex">
+                <span className="mr-1 text-[11px] text-slate-400">
+                  {filteredItems.length} results
+                </span>
               </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="ml-auto h-8 text-[12px] xl:hidden"
+                onClick={() => setAiSheetOpen(true)}
+                aria-label="Open AI Copilot"
+              >
+                Copilot
+              </Button>
             </div>
-            <Button
-              onClick={handleAddNew}
-              className="h-11 sm:h-8 w-full sm:w-auto text-[13px] bg-[#0F172A] dark:bg-[#F8FAFC] text-[#F8FAFC] dark:text-[#0F172A] hover:opacity-90 border-0"
-            >
-              <Plus size={14} className="mr-2" />
-              Add Document
-            </Button>
-          </div>
 
-          {/* Search & Sort */}
-          <div className="flex flex-col sm:flex-row gap-3 p-4 border-b border-slate-200 dark:border-slate-800">
-            <div className="relative flex-1">
-              <Search
-                size={14}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
-              />
-              <input
-                type="text"
-                placeholder="Search documents..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className={cn(
-                  'w-full pl-9 pr-3 py-2 text-[13px] rounded-md',
-                  'border border-slate-200 dark:border-slate-800',
-                  'bg-[#F8FAFC] dark:bg-[#0F172A]',
-                  'text-[#0F172A] dark:text-[#F8FAFC]',
-                  'placeholder:text-slate-400',
-                  'focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-0'
-                )}
-              />
-            </div>
-            <div className="flex items-center gap-1">
-              <span className="text-[11px] text-slate-500 mr-2">Sort:</span>
-              {(['name', 'date', 'size'] as const).map((key) => (
-                <button
-                  key={key}
-                  onClick={() => toggleSort(key)}
-                  className={cn(
-                    'flex items-center gap-1 px-2 py-1.5 text-[11px] rounded-md border transition-colors',
-                    'border-slate-200 dark:border-slate-800',
-                    sortBy === key
-                      ? 'bg-slate-100 dark:bg-slate-800 text-[#0F172A] dark:text-[#F8FAFC]'
-                      : 'bg-transparent text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800/50'
-                  )}
-                >
-                  {key === 'name' && 'Name'}
-                  {key === 'date' && 'Date'}
-                  {key === 'size' && 'Size'}
-                  {sortBy === key &&
-                    (sortOrder === 'asc' ? (
-                      <ChevronUp size={12} />
-                    ) : (
-                      <ChevronDown size={12} />
-                    ))}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* High-Density Data Table */}
-          <div className="flex-1 overflow-auto">
-            {loading ? (
-              <div className="p-8">
-                <div className="animate-pulse space-y-3">
-                  {[...Array(10)].map((_, i) => (
+            <div className="min-h-0 flex-1 overflow-y-auto pb-20 md:pb-4">
+              {loading ? (
+                <div className="grid gap-3 p-4 sm:grid-cols-2 xl:grid-cols-3">
+                  {[...Array(6)].map((_, i) => (
                     <div
                       key={i}
-                      className="h-9 bg-slate-200 dark:bg-slate-800 rounded"
+                      className="h-44 animate-pulse rounded-xl bg-slate-200/70 dark:bg-slate-800"
                     />
                   ))}
                 </div>
-              </div>
-            ) : (
-              <div className="overflow-x-auto min-w-0">
-              <Table className="min-w-[640px]">
-                <TableHeader>
-                  <TableRow className="border-slate-200 dark:border-slate-800 hover:bg-transparent">
-                    <TableHead className="h-9 px-4 text-[11px] font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                      Name
-                    </TableHead>
-                    <TableHead className="h-9 px-4 text-[11px] font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider w-32">
-                      Category
-                    </TableHead>
-                    <TableHead className="h-9 px-4 text-[11px] font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider w-24">
-                      Size
-                    </TableHead>
-                    <TableHead className="h-9 px-4 text-[11px] font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider w-28">
-                      Modified
-                    </TableHead>
-                    <TableHead className="h-9 px-4 w-24" />
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredItems.map((item) => {
-                    const categoryLabel =
-                      DocumentCategory.options.find(
-                        (c) => c.value === item.category
-                      )?.label || item.category;
-                    return (
-                      <TableRow
-                        key={item.id}
-                        onClick={() => handleRowClick(item)}
-                        className={cn(
-                          'border-slate-200 dark:border-slate-800',
-                          'cursor-pointer transition-colors duration-150',
-                          'hover:bg-slate-50 dark:hover:bg-slate-800/50'
-                        )}
-                      >
-                        <TableCell className="py-2 px-4">
-                          <div className="flex items-center gap-3">
-                            {getFileIcon(item.file)}
-                            <div className="min-w-0">
-                              <p className="text-[13px] font-medium text-[#0F172A] dark:text-[#F8FAFC] truncate">
-                                {item.title}
-                              </p>
-                              {item.description && (
-                                <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
-                                  {item.description}
-                                </p>
-                              )}
-                            </div>
-                          </div>
-                        </TableCell>
-                        <TableCell className="py-2 px-4 text-[11px] text-slate-600 dark:text-slate-300">
-                          {categoryLabel}
-                        </TableCell>
-                        <TableCell className="py-2 px-4 text-[11px] text-slate-500 dark:text-slate-400">
-                          {getFileSizeLabel(item.size)}
-                        </TableCell>
-                        <TableCell className="py-2 px-4 text-[11px] text-slate-500 dark:text-slate-400">
-                          {new Date(item.modified).toLocaleDateString(
-                            undefined,
-                            { month: 'short', day: 'numeric', year: 'numeric' }
-                          )}
-                        </TableCell>
-                        <TableCell className="py-2 px-4" onClick={(e) => e.stopPropagation()}>
-                          <div className="flex items-center gap-1">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-7 w-7 p-0 text-slate-500 hover:text-[#0F172A] dark:hover:text-[#F8FAFC] hover:bg-slate-100 dark:hover:bg-slate-800"
-                              onClick={() => handleRowClick(item)}
-                              title="View"
-                            >
-                              <Eye size={14} />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-7 w-7 p-0 text-slate-500 hover:text-[#0F172A] dark:hover:text-[#F8FAFC] hover:bg-slate-100 dark:hover:bg-slate-800"
-                              onClick={(e) => handleEdit(e, item)}
-                              title="Edit"
-                            >
-                              <Edit size={14} />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-7 w-7 p-0 text-slate-500 hover:text-[#0F172A] dark:hover:text-[#F8FAFC] hover:bg-slate-100 dark:hover:bg-slate-800"
-                              onClick={(e) => handleDownload(e, item)}
-                              title="Download"
-                            >
-                              <Download size={14} />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-7 w-7 p-0 text-slate-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20"
-                              onClick={(e) => handleDelete(e, item)}
-                              title="Delete"
-                            >
-                              <Trash2 size={14} />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-              </div>
-            )}
-
-            {!loading && filteredItems.length === 0 && (
-              <div className="flex flex-col items-center justify-center py-16 px-4 border-t border-slate-200 dark:border-slate-800">
-                <FileText
-                  size={40}
-                  className="text-slate-300 dark:text-slate-600 mb-4"
+              ) : filteredItems.length === 0 ? (
+                <KnowledgeEmptyState
+                  filtered={Boolean(searchTerm) || collection !== 'all'}
+                  onUpload={handleAddNew}
                 />
-                <h3 className="text-[13px] font-medium text-[#0F172A] dark:text-[#F8FAFC] mb-1">
-                  No documents found
-                </h3>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400 mb-4 text-center">
-                  {searchTerm || selectedCategory !== 'all'
-                    ? 'Try adjusting your search or filter'
-                    : 'Add your first document to get started'}
-                </p>
-                {!searchTerm && selectedCategory === 'all' && (
-                  <Button
-                    onClick={handleAddNew}
-                    className="h-8 text-[13px] bg-[#0F172A] dark:bg-[#F8FAFC] text-[#F8FAFC] dark:text-[#0F172A] hover:opacity-90"
-                  >
-                    <Plus size={14} className="mr-2" />
-                    Add Document
-                  </Button>
-                )}
-              </div>
-            )}
+              ) : viewMode === 'grid' ? (
+                <div className="grid gap-3 p-3 sm:grid-cols-2 sm:p-4 xl:grid-cols-2 2xl:grid-cols-3">
+                  {filteredItems.map((item) => (
+                    <KnowledgeCard
+                      key={item.id}
+                      document={item}
+                      selected={selectedDoc?.id === item.id}
+                      isFavorite={favorites.includes(item.id)}
+                      {...cardHandlers}
+                    />
+                  ))}
+                </div>
+              ) : viewMode === 'table' ? (
+                <KnowledgeTableView
+                  items={filteredItems}
+                  selectedId={selectedDoc?.id}
+                  sortBy={sortBy === 'score' ? 'score' : sortBy}
+                  sortOrder={sortOrder}
+                  onSort={toggleSort}
+                  onSelect={handleSelect}
+                  onOpen={handleOpen}
+                  onEdit={handleEdit}
+                  onDownload={handleDownload}
+                  onDelete={handleDelete}
+                />
+              ) : (
+                <div className="p-3 sm:p-4">
+                  <Suspense fallback={<ViewFallback />}>
+                    {viewMode === 'timeline' && (
+                      <KnowledgeTimelineView
+                        items={filteredItems}
+                        selectedId={selectedDoc?.id}
+                        onSelect={handleSelect}
+                      />
+                    )}
+                    {viewMode === 'graph' && (
+                      <KnowledgeGraphView
+                        items={filteredItems}
+                        selectedId={selectedDoc?.id}
+                        onSelect={handleSelect}
+                      />
+                    )}
+                    {viewMode === 'ai' && (
+                      <KnowledgeAIView items={filteredItems} onSelect={handleSelect} />
+                    )}
+                  </Suspense>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* AI Copilot — desktop */}
+          <div className="hidden w-72 shrink-0 xl:block 2xl:w-80">
+            <AICopilotPanel
+              document={selectedDoc}
+              onOpen={handleOpen}
+              className="h-full"
+            />
           </div>
         </div>
+
+        {/* AI Copilot — mobile / tablet sheet */}
+        <Sheet open={aiSheetOpen} onOpenChange={setAiSheetOpen}>
+          <SheetContent side="right" className="w-full max-w-md p-0 sm:max-w-md xl:hidden">
+            <AICopilotPanel
+              document={selectedDoc}
+              onClose={() => setAiSheetOpen(false)}
+              onOpen={(doc) => {
+                setAiSheetOpen(false);
+                handleOpen(doc);
+              }}
+              className="h-full border-0"
+            />
+          </SheetContent>
+        </Sheet>
+
+        <MobileKnowledgeNav active={mobileTab} onChange={handleMobileNav} />
       </div>
 
       <DocumentCreateModal ref={createModalRef} onSuccess={handleCreateSuccess} />
@@ -526,9 +480,7 @@ const Library = () => {
       <DocumentDetailDrawer
         ref={detailDrawerRef}
         onSuccess={(doc) => {
-          setLibraryItems((prev) =>
-            prev.map((d) => (d.id === doc.id ? doc : d))
-          );
+          setLibraryItems((prev) => prev.map((d) => (d.id === doc.id ? doc : d)));
         }}
       />
     </>

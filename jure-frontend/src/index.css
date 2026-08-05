@@ -243,4 +243,24 @@
   .shadow-jure-lg {
     box-shadow: 0 10px 25px -3px rgba(100, 73, 157, 0.2);
   }
+
+  .knowledge-glass {
+    background: rgba(255, 255, 255, 0.78);
+    backdrop-filter: blur(16px);
+  }
+
+  .dark .knowledge-glass {
+    background: rgba(2, 6, 23, 0.72);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animated-gradient,
+  .pulse-glow,
+  .shimmer-effect::before,
+  .animate-pulse-slow,
+  .animate-float,
+  .animate-float-delayed {
+    animation: none !important;
+  }
 }

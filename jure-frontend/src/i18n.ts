@@ -94,7 +94,7 @@ const messages: Record<Lang, AppMessages> = {
     sidebar: {
       dashboard: 'Dashboard',
       team: 'Team management',
-      library: 'Library',
+      library: 'Knowledge Hub',
       cases: 'My Cases',
       clients: 'Clients',
       calendar: 'Calendar',
@@ -185,7 +185,7 @@ const messages: Record<Lang, AppMessages> = {
     sidebar: {
       dashboard: 'Tableau de bord',
       team: 'Gestion de l’équipe',
-      library: 'Bibliothèque',
+      library: 'Centre de savoir',
       cases: 'Mes dossiers',
       clients: 'Clients',
       calendar: 'Calendrier',
@@ -276,7 +276,7 @@ const messages: Record<Lang, AppMessages> = {
     sidebar: {
       dashboard: 'لوحة التحكم',
       team: 'إدارة الفريق',
-      library: 'المكتبة',
+      library: 'مركز المعرفة',
       cases: 'القضايا الخاصة بي',
       clients: 'العملاء',
       calendar: 'التقويم',
