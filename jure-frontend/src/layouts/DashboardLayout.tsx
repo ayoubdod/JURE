@@ -1,7 +1,7 @@
 import Header from '@/components/Header'
 import Sidebar from '@/components/Sidebar'
 import useChatStore from '@/stores/chatStore'
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Outlet, useLocation } from 'react-router'
 import { TVAThresholdNotification } from '@/components/finance/tva/TVAThresholdNotification'
 import { NotificationProvider } from '@/context/NotificationContext'
@@ -44,7 +44,13 @@ const DashboardLayout = () => {
     const isCases = isCasesPage(location.pathname)
     const isFinance = isFinancePage(location.pathname)
     const isJuria = isJuriaPage(location.pathname)
-    useChatStore.getState().connect()
+
+    useEffect(() => {
+      useChatStore.getState().connect()
+      return () => {
+        useChatStore.getState().disconnect()
+      }
+    }, [])
 
     const fillViewport = isCockpit || isConversations || isWorkspace || isTeam || isCases || isFinance || isJuria
 

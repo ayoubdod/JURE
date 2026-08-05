@@ -54,7 +54,13 @@ const useChatStore = create<ChatStore>()(
     // Connection methods
     connect: async () => {
       const state = get();
-      
+
+      // Already connected / connecting — avoid tearing down on layout re-renders
+      if (state.isConnecting) return;
+      if (state.ws && (state.isConnected || state.ws.readyState === WebSocket.OPEN || state.ws.readyState === WebSocket.CONNECTING)) {
+        return;
+      }
+
       // Close existing connection if any
       if (state.ws) {
         state.disconnect();

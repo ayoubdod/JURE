@@ -11,57 +11,96 @@ interface ProtectedRouteProps {
   requireAuth?: boolean;
 }
 
+/** Deduplicate /api/me across remounted route guards for the same token. */
+let validatedToken: string | null = null;
+let validationPromise: Promise<boolean> | null = null;
+
+const clearSessionValidationCache = () => {
+  validatedToken = null;
+  validationPromise = null;
+};
+
+const validateSession = (
+  accessToken: string,
+  setUser: (user: API.User) => void,
+  onInvalid: () => void,
+): Promise<boolean> => {
+  if (validatedToken === accessToken) {
+    return Promise.resolve(true);
+  }
+  if (validationPromise) {
+    return validationPromise;
+  }
+
+  validationPromise = apiGetMe()
+    .then((response) => {
+      setUser(response.data);
+      validatedToken = accessToken;
+      return true;
+    })
+    .catch((error) => {
+      devError('Session validation failed:', error);
+      clearSessionValidationCache();
+      onInvalid();
+      return false;
+    })
+    .finally(() => {
+      validationPromise = null;
+    });
+
+  return validationPromise;
+};
+
 const ProtectedRoute = ({ children, requireAuth = true }: ProtectedRouteProps) => {
-  const { user, isLoggedIn, accessToken, logout, setUser } = useUserStore();
-  const [isLoading, setIsLoading] = useState(true);
-  const [isValidating, setIsValidating] = useState(false);
+  const { isLoggedIn, accessToken, logout, setUser } = useUserStore();
   const location = useLocation();
   const { toast } = useToast();
 
-  // Function to validate user session
-  const validateUserSession = () => {
+  // Persisted session → render immediately; never block in-app navigation.
+  const hasCachedSession = Boolean(accessToken && isLoggedIn);
+  // Cold start with token but no hydrated user yet → show loader once.
+  const needsBlockingValidation = Boolean(accessToken && !isLoggedIn);
+  const [isResolving, setIsResolving] = useState(needsBlockingValidation);
+
+  useEffect(() => {
     if (!accessToken) {
-      setIsLoading(false);
+      clearSessionValidationCache();
+      setIsResolving(false);
       return;
     }
 
-    setIsValidating(true);
-    apiGetMe()
-      .then((response) => {
-        setUser(response.data);
-        
-      })
-      .catch((error) => {
-        devError('Session validation failed:', error);
-        logout();
+    let cancelled = false;
+
+    if (!hasCachedSession) {
+      setIsResolving(true);
+    }
+
+    validateSession(accessToken, setUser, logout).then((ok) => {
+      if (cancelled) return;
+      if (!ok) {
         toast({
-          title: "Session expirée",
-          description: "Votre session a expiré. Veuillez vous reconnecter.",
-          variant: "destructive"
+          title: 'Session expirée',
+          description: 'Votre session a expiré. Veuillez vous reconnecter.',
+          variant: 'destructive',
         });
-      })
-      .finally(() => {
-        setIsValidating(false);
-        setIsLoading(false);
-      });
-  };
+      }
+      setIsResolving(false);
+    });
 
-  // Validate session on route change
-  useEffect(() => {
-    validateUserSession();
-  }, [location.pathname]);
+    return () => {
+      cancelled = true;
+    };
+    // Validate on token change only — not on every pathname (that caused the slow clicks).
+  }, [accessToken, hasCachedSession, logout, setUser, toast]);
 
-  // Show loading state while validating
-  if (isLoading || isValidating) {
+  if (isResolving && needsBlockingValidation) {
     return <LogoLoading />;
   }
 
-  // If route requires auth but user is not logged in
   if (requireAuth && !isLoggedIn) {
     return <Navigate to="/signin" state={{ from: location }} replace />;
   }
 
-  // If route is for non-authenticated users but user is logged in
   if (!requireAuth && isLoggedIn) {
     return <Navigate to="/dashboard" replace />;
   }
@@ -69,4 +108,4 @@ const ProtectedRoute = ({ children, requireAuth = true }: ProtectedRouteProps) =
   return <>{children}</>;
 };
 
-export default ProtectedRoute; 
+export default ProtectedRoute;
