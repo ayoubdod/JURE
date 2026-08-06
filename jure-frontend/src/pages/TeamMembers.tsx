@@ -14,14 +14,9 @@ import {
   Loader2,
   Eye,
   Users,
-  UserCheck,
-  Briefcase,
-  MailWarning,
-  Calendar,
   FolderOpen,
   CheckSquare,
   X,
-  UserCircle2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
@@ -71,6 +66,7 @@ import UserAvatar, { getPersonImage } from '@/components/common/UserAvatar';
 import { getRoleDisplayName } from '@/utils/permissions';
 import { getCabinetMemberRouteId, getMemberWorkloadDisplay } from '@/utils/cabinetMemberHelpers';
 import { cn } from '@/lib/utils';
+import '@/styles/workspace-list.css';
 
 const JURE_PURPLE = '#6D54B5';
 
@@ -112,7 +108,7 @@ function workloadFillPct(assigned: number): number {
 
 const TeamMembers: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [viewMode, setViewMode] = useState<ViewMode>('grid');
+  const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [roleFilter, setRoleFilter] = useState<API.Role | ''>('');
   const [statusFilter, setStatusFilter] = useState<string>('');
   const { toast } = useToast();
@@ -132,6 +128,7 @@ const TeamMembers: React.FC = () => {
   const cabinetMemberUpdateModalRef = useRef<CabinetMemberUpdateModalRef>(null);
   const cabinetMemberDeleteModalRef = useRef<CabinetMemberDeleteModalRef>(null);
   const profileDrawerRef = useRef<TeamMemberProfileDrawerRef>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   const refreshTeamAndCases = () => {
     setLoading(true);
@@ -302,41 +299,37 @@ const TeamMembers: React.FC = () => {
       <div
         key={member.id}
         className={cn(
-          'group relative flex flex-col overflow-hidden rounded-xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-950',
-          'shadow-[0_1px_3px_rgba(0,0,0,0.08)]',
-          'transition-[transform,box-shadow,border-color] duration-300 ease-out',
-          'hover:-translate-y-0.5 hover:border-purple-200/80 dark:hover:border-purple-800/55 hover:shadow-lg hover:shadow-purple-500/15',
-          selected && 'ring-2 ring-[#6D54B5]/40 ring-offset-2 ring-offset-slate-50 dark:ring-offset-slate-950'
+          'group relative flex flex-col overflow-hidden rounded-lg border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-950',
+          'shadow-[0_1px_2px_rgba(0,0,0,0.04)]',
+          'transition-[box-shadow,border-color] duration-150',
+          'hover:border-slate-300 dark:hover:border-slate-700 hover:shadow-sm',
+          selected && 'ring-2 ring-[#6D54B5]/40 ring-offset-1 ring-offset-slate-50 dark:ring-offset-slate-950'
         )}
       >
-        <div
-          className="pointer-events-none absolute inset-0 rounded-[inherit] bg-gradient-to-br from-purple-500/[0.16] via-violet-500/[0.09] to-indigo-600/[0.2] opacity-0 transition-opacity duration-300 ease-out group-hover:opacity-100"
-          aria-hidden
-        />
-        <div className="relative z-[1] flex flex-1 flex-col items-stretch p-4">
-          <div className="flex items-start gap-3">
+        <div className="relative z-[1] flex flex-1 flex-col items-stretch p-3">
+          <div className="flex items-start gap-2.5">
             <div className="relative shrink-0">
               <UserAvatar
                 image={getPersonImage(member as Record<string, unknown>)}
                 firstName={member.first_name}
                 lastName={member.last_name}
-                size="lg"
+                size="md"
               />
               <span
                 className={cn(
-                  'absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-white dark:border-slate-950',
+                  'absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-white dark:border-slate-950',
                   pending ? 'bg-amber-400' : member.is_active ? 'bg-emerald-500' : 'bg-slate-400'
                 )}
               />
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-[15px] font-semibold leading-snug text-slate-900 dark:text-white truncate">
+              <p className="text-[14px] font-semibold leading-snug text-slate-900 dark:text-white truncate">
                 {fullName}
               </p>
-              <div className="mt-1.5 flex flex-wrap items-center gap-2">
+              <div className="mt-1 flex flex-wrap items-center gap-1.5">
                 <span
                   className={cn(
-                    'inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold uppercase tracking-[0.06em]',
+                    'inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.06em]',
                     rolePillClass[memberRole]
                   )}
                 >
@@ -349,7 +342,7 @@ const TeamMembers: React.FC = () => {
                       e.stopPropagation();
                       setResendTarget(member);
                     }}
-                    className="inline-flex items-center rounded-full bg-amber-500/15 px-2 py-0.5 text-[11px] font-semibold text-amber-800 ring-1 ring-amber-500/25 transition-colors hover:bg-amber-500/25 dark:text-amber-200"
+                    className="inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-semibold text-amber-800 bg-amber-500/15 ring-1 ring-amber-500/25 dark:text-amber-200"
                   >
                     Resend
                   </button>
@@ -358,34 +351,27 @@ const TeamMembers: React.FC = () => {
             </div>
           </div>
 
-          <div className="mt-4 border-t border-slate-200/80 dark:border-slate-800 pt-3">
-            <div className="flex items-center gap-1.5 text-[12px] text-slate-500 dark:text-slate-400">
-              <Calendar className="h-3.5 w-3.5 shrink-0 opacity-70" aria-hidden />
-              <span>Joined {formatDate(member.date_joined as string)}</span>
-            </div>
-          </div>
-
-          <div className="mt-4 grid grid-cols-2 gap-3">
-            <div className="rounded-lg border border-slate-200/80 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/40 px-3 py-2.5">
-              <div className="flex items-center gap-1.5 text-[11px] font-medium text-slate-500 dark:text-slate-400">
-                <FolderOpen className="h-3.5 w-3.5 opacity-70" aria-hidden />
+          <div className="mt-3 grid grid-cols-2 gap-2">
+            <div className="rounded-md border border-slate-200/80 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/40 px-2 py-1.5">
+              <div className="flex items-center gap-1 text-[10px] font-medium text-slate-500">
+                <FolderOpen className="h-3 w-3 opacity-70" aria-hidden />
                 In Progress
               </div>
-              <p className="mt-1 text-xl font-bold tabular-nums text-slate-900 dark:text-white">{inProgress}</p>
+              <p className="mt-0.5 text-base font-bold tabular-nums text-slate-900 dark:text-white">{inProgress}</p>
             </div>
-            <div className="rounded-lg border border-slate-200/80 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/40 px-3 py-2.5">
-              <div className="flex items-center gap-1.5 text-[11px] font-medium text-slate-500 dark:text-slate-400">
-                <CheckSquare className="h-3.5 w-3.5 opacity-70" aria-hidden />
+            <div className="rounded-md border border-slate-200/80 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/40 px-2 py-1.5">
+              <div className="flex items-center gap-1 text-[10px] font-medium text-slate-500">
+                <CheckSquare className="h-3 w-3 opacity-70" aria-hidden />
                 Assigned
               </div>
-              <p className="mt-1 text-xl font-bold tabular-nums" style={{ color: JURE_PURPLE }}>
+              <p className="mt-0.5 text-base font-bold tabular-nums" style={{ color: JURE_PURPLE }}>
                 {assignedTotal}
               </p>
             </div>
           </div>
 
-          <div className="mt-4">
-            <div className="mb-1.5 flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400">
+          <div className="mt-2.5">
+            <div className="mb-1 flex items-center justify-between text-[10px] text-slate-500">
               <span>Workload</span>
               <span>{assignedTotal} cases</span>
             </div>
@@ -399,11 +385,11 @@ const TeamMembers: React.FC = () => {
           </div>
         </div>
 
-        <div className="relative z-[1] mt-auto flex items-center justify-between gap-2 border-t border-slate-200/80 dark:border-slate-800 px-4 py-3">
+        <div className="relative z-[1] mt-auto flex items-center justify-between gap-2 border-t border-slate-200/80 dark:border-slate-800 px-3 py-2">
           <Button
             variant="outline"
             size="sm"
-            className="h-9 flex-1 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950"
+            className="h-8 flex-1 text-[12px] border-slate-200 dark:border-slate-700"
             onClick={() => openProfile(member)}
           >
             <Eye className="mr-1.5 h-3.5 w-3.5" />
@@ -414,7 +400,7 @@ const TeamMembers: React.FC = () => {
               <Button
                 variant="outline"
                 size="icon"
-                className="h-9 w-9 shrink-0 border-slate-200 dark:border-slate-700"
+                className="h-8 w-8 shrink-0 border-slate-200 dark:border-slate-700"
                 aria-label="More actions"
               >
                 <MoreHorizontal className="h-4 w-4" />
@@ -459,27 +445,25 @@ const TeamMembers: React.FC = () => {
     );
   };
 
-  /* ─── List row ─── */
-  const renderListRow = (member: API.CabinetMember) => {
+  /* ─── Dense mobile card ─── */
+  const renderMobileCard = (member: API.CabinetMember) => {
     const fullName =
       `${member.first_name || ''} ${member.last_name || ''}`.trim() || 'Unnamed';
     const memberRole = (member.role || 'VIEWER') as API.Role;
     const { inProgress, assignedTotal } = getMemberWorkloadDisplay(member, allCases);
-    const selected = selectedMemberId === member.id && detailOpen;
 
     return (
-      <tr
+      <article
         key={member.id}
-        className={cn(
-          'cursor-pointer border-b border-slate-200/80 dark:border-slate-800 transition-colors',
-          'odd:bg-white even:bg-slate-50/90 dark:odd:bg-slate-950 dark:even:bg-slate-900/50',
-          'hover:bg-indigo-50/50 dark:hover:bg-indigo-950/20',
-          selected && 'bg-indigo-50/80 dark:bg-indigo-950/30'
-        )}
-        onClick={() => openProfile(member)}
+        className="rounded-lg border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-950 shadow-[0_1px_2px_rgba(0,0,0,0.04)]"
       >
-        <td className="px-3 py-3 align-middle">
-          <div className="flex items-center gap-3 min-w-0">
+        <button
+          type="button"
+          className="w-full text-left px-3 py-2.5 min-h-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-inset rounded-lg"
+          onClick={() => openProfile(member)}
+          aria-label={`Open ${fullName}`}
+        >
+          <div className="flex items-start gap-2.5">
             <div className="relative shrink-0">
               <UserAvatar
                 image={getPersonImage(member as Record<string, unknown>)}
@@ -495,41 +479,150 @@ const TeamMembers: React.FC = () => {
                 )}
               />
             </div>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-start justify-between gap-2">
+                <p className="text-[14px] font-semibold text-slate-900 dark:text-white truncate">{fullName}</p>
+                <span
+                  className={cn(
+                    'shrink-0 inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-semibold',
+                    statusBadgeClass(member)
+                  )}
+                >
+                  {statusBadgeText(member)}
+                </span>
+              </div>
+              <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                <span
+                  className={cn(
+                    'inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase',
+                    rolePillClass[memberRole]
+                  )}
+                >
+                  {getRoleDisplayName(memberRole)}
+                </span>
+                <span className="text-[11px] tabular-nums text-slate-500">
+                  {inProgress} active · {assignedTotal} assigned
+                </span>
+              </div>
+              {member.email ? (
+                <p className="mt-1 text-[11px] text-slate-500 truncate">{member.email}</p>
+              ) : null}
+            </div>
+          </div>
+        </button>
+        <div className="flex items-center gap-1 border-t border-slate-100 dark:border-slate-800/80 px-2 py-1.5">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-8 flex-1 text-[12px]"
+            onClick={() => openProfile(member)}
+          >
+            <Eye className="mr-1 h-3.5 w-3.5" />
+            View
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-8 flex-1 text-[12px]"
+            onClick={() => cabinetMemberUpdateModalRef.current?.show(member)}
+          >
+            <Edit className="mr-1 h-3.5 w-3.5" />
+            Edit
+          </Button>
+          {showResendForMember(member) && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 text-[12px] text-amber-700"
+              onClick={() => setResendTarget(member)}
+            >
+              <Send className="h-3.5 w-3.5" />
+            </Button>
+          )}
+        </div>
+      </article>
+    );
+  };
+
+  /* ─── List row ─── */
+  const renderListRow = (member: API.CabinetMember) => {
+    const fullName =
+      `${member.first_name || ''} ${member.last_name || ''}`.trim() || 'Unnamed';
+    const memberRole = (member.role || 'VIEWER') as API.Role;
+    const { inProgress, assignedTotal } = getMemberWorkloadDisplay(member, allCases);
+    const selected = selectedMemberId === member.id && detailOpen;
+
+    return (
+      <tr
+        key={member.id}
+        tabIndex={0}
+        className={cn(
+          'cursor-pointer border-b border-slate-100 dark:border-slate-800/60 transition-colors duration-100',
+          'odd:bg-white even:bg-slate-50/40 dark:odd:bg-slate-950 dark:even:bg-slate-900/20',
+          'hover:bg-slate-100/80 dark:hover:bg-slate-900/50',
+          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary/40',
+          selected && 'bg-primary/[0.06] dark:bg-primary/10'
+        )}
+        onClick={() => openProfile(member)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            openProfile(member);
+          }
+        }}
+      >
+        <td className="px-3 py-2 align-middle">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="relative shrink-0">
+              <UserAvatar
+                image={getPersonImage(member as Record<string, unknown>)}
+                firstName={member.first_name}
+                lastName={member.last_name}
+                size="sm"
+                className="h-8 w-8"
+              />
+              <span
+                className={cn(
+                  'absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-white dark:border-slate-950',
+                  isPending(member) ? 'bg-amber-400' : member.is_active ? 'bg-emerald-500' : 'bg-slate-400'
+                )}
+              />
+            </div>
             <div className="min-w-0">
               <p className="text-[13px] font-semibold text-slate-900 dark:text-white truncate">{fullName}</p>
               <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">{member.email || '—'}</p>
             </div>
           </div>
         </td>
-        <td className="px-3 py-3 align-middle">
+        <td className="px-3 py-2 align-middle">
           <span
             className={cn(
-              'inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold uppercase tracking-[0.05em]',
+              'inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.05em]',
               rolePillClass[memberRole]
             )}
           >
             {getRoleDisplayName(memberRole)}
           </span>
         </td>
-        <td className="px-3 py-3 align-middle">
+        <td className="px-3 py-2 align-middle">
           <span
             className={cn(
-              'inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold',
+              'inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-semibold',
               statusBadgeClass(member)
             )}
           >
             {statusBadgeText(member)}
           </span>
         </td>
-        <td className="px-3 py-3 align-middle text-right tabular-nums text-[13px] font-semibold text-slate-900 dark:text-white">
+        <td className="px-3 py-2 align-middle text-right tabular-nums text-[12px] font-semibold text-slate-900 dark:text-white">
           {inProgress}
         </td>
-        <td className="px-3 py-3 align-middle text-right tabular-nums text-[13px] font-semibold text-slate-900 dark:text-white">
+        <td className="px-3 py-2 align-middle text-right tabular-nums text-[12px] font-semibold text-slate-900 dark:text-white">
           {assignedTotal}
         </td>
-        <td className="px-3 py-3 align-middle text-right">
+        <td className="px-3 py-2 align-middle text-right">
           <div
-            className="ml-auto h-4 w-24 max-w-full overflow-hidden rounded-full bg-slate-200 dark:bg-slate-800"
+            className="ml-auto h-3.5 w-20 max-w-full overflow-hidden rounded-full bg-slate-200 dark:bg-slate-800"
             title={`${inProgress} active cases / ${assignedTotal} total assigned`}
           >
             <div
@@ -538,32 +631,27 @@ const TeamMembers: React.FC = () => {
             />
           </div>
         </td>
-        <td className="px-3 py-3 align-middle whitespace-nowrap text-[12px] text-slate-600 dark:text-slate-400">
+        <td className="px-3 py-2 align-middle whitespace-nowrap text-[11px] text-slate-600 dark:text-slate-400">
           {formatDate(member.date_joined as string)}
         </td>
-        <td className="px-3 py-3 align-middle text-right" onClick={(e) => e.stopPropagation()}>
-          <div className="flex items-center justify-end gap-1">
+        <td className="px-2 py-2 align-middle text-right" onClick={(e) => e.stopPropagation()}>
+          <div className="flex items-center justify-end gap-0.5">
             {showResendForMember(member) && (
               <button
                 type="button"
                 onClick={() => setResendTarget(member)}
-                className="mr-1 rounded-full bg-amber-500/15 px-2 py-0.5 text-[11px] font-semibold text-amber-800 ring-1 ring-amber-500/25 dark:text-amber-200"
+                className="mr-1 rounded px-1.5 py-0.5 text-[10px] font-semibold text-amber-800 bg-amber-500/15 ring-1 ring-amber-500/25 dark:text-amber-200"
               >
                 Resend
               </button>
             )}
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-8 px-2"
-              onClick={() => openProfile(member)}
-            >
+            <Button variant="ghost" size="sm" className="h-7 px-2 text-[12px]" onClick={() => openProfile(member)}>
               <Eye className="mr-1 h-3.5 w-3.5" />
               View
             </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="More actions">
+                <Button variant="ghost" size="icon" className="h-7 w-7" aria-label="More actions">
                   <MoreHorizontal className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
@@ -689,263 +777,347 @@ const TeamMembers: React.FC = () => {
     );
   };
 
-  const statPillClass =
-    'group relative flex items-center gap-3 overflow-hidden rounded-xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-950 px-4 py-3 shadow-[0_1px_3px_rgba(0,0,0,0.06)] transition-transform duration-200 hover:-translate-y-px hover:shadow-md';
+  const openCreate = () => cabinetMemberCreateModalRef.current?.show();
+
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      const tag = target?.tagName?.toLowerCase();
+      const inField =
+        tag === 'input' || tag === 'textarea' || tag === 'select' || target?.isContentEditable;
+      if (e.key === '/' && !inField && !e.metaKey && !e.ctrlKey) {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+        searchInputRef.current?.select();
+      }
+      if ((e.key === 'n' || e.key === 'N') && !inField && !e.metaKey && !e.ctrlKey) {
+        e.preventDefault();
+        openCreate();
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, []);
+
+  const kpiItems = [
+    { key: 'total', label: 'Total', value: totalMembers, accent: 'border-l-slate-400' },
+    { key: 'active', label: 'Active', value: activeCount, accent: 'border-l-emerald-500' },
+    { key: 'lawyers', label: 'Lawyers', value: lawyersCount, accent: 'border-l-indigo-500' },
+    { key: 'pending', label: 'Pending', value: pendingInviteCount, accent: 'border-l-amber-500' },
+  ] as const;
 
   return (
     <div
       ref={setTeamHolderEl}
-      className="relative flex h-full min-h-0 flex-col overflow-hidden"
+      className="relative flex h-full min-h-0 flex-col overflow-hidden bg-slate-50 dark:bg-slate-950"
     >
-      {/* Page header */}
-      <div className="shrink-0 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <div className="flex items-center gap-2.5">
-            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#6D54B5]/10 text-[#6D54B5] dark:bg-[#6D54B5]/20 dark:text-violet-200">
-              <UserCircle2 className="h-5 w-5" aria-hidden />
-            </span>
-            <div>
-              <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Team Cockpit</h1>
-              <p className="mt-0.5 text-[13px] text-slate-500 dark:text-slate-400">
-                Manage your firm&apos;s members and workload
-              </p>
-            </div>
-          </div>
-        </div>
-        <Button
-          size="sm"
-          className="h-10 shrink-0 rounded-lg px-4 text-[13px] font-semibold shadow-md shadow-[#6D54B5]/25"
-          style={{ backgroundColor: JURE_PURPLE }}
-          onClick={() => cabinetMemberCreateModalRef.current?.show()}
-        >
-          <Plus className="mr-2 h-4 w-4" strokeWidth={2.5} />
-          Add Member
-        </Button>
-      </div>
-
-      {/* Stats strip */}
-      <div className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <div className={cn(statPillClass, 'border-l-[3px] border-l-slate-400')}>
-          <div className="rounded-lg bg-slate-100 p-2 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
-            <Users className="h-4 w-4" aria-hidden />
-          </div>
-          <div>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-500 dark:text-slate-400">Total Members</p>
-            <p className="text-2xl font-bold tabular-nums text-slate-900 dark:text-white">{totalMembers}</p>
-          </div>
-        </div>
-        <div className={cn(statPillClass, 'border-l-[3px] border-l-emerald-500')}>
-          <div className="rounded-lg bg-emerald-500/12 p-2 text-emerald-700 dark:text-emerald-400">
-            <UserCheck className="h-4 w-4" aria-hidden />
-          </div>
-          <div>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-500 dark:text-slate-400">Active</p>
-            <p className="text-2xl font-bold tabular-nums text-slate-900 dark:text-white">{activeCount}</p>
-          </div>
-        </div>
-        <div className={cn(statPillClass, 'border-l-[3px] border-l-indigo-500')}>
-          <div className="rounded-lg bg-indigo-500/12 p-2 text-indigo-700 dark:text-indigo-400">
-            <Briefcase className="h-4 w-4" aria-hidden />
-          </div>
-          <div>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-500 dark:text-slate-400">Lawyers</p>
-            <p className="text-2xl font-bold tabular-nums text-slate-900 dark:text-white">{lawyersCount}</p>
-          </div>
-        </div>
-        <div className={cn(statPillClass, 'border-l-[3px] border-l-amber-500')}>
-          <div className="rounded-lg bg-amber-500/12 p-2 text-amber-700 dark:text-amber-400">
-            <MailWarning className="h-4 w-4" aria-hidden />
-          </div>
-          <div>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-500 dark:text-slate-400">Pending Invite</p>
-            <p className="text-2xl font-bold tabular-nums text-slate-900 dark:text-white">{pendingInviteCount}</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Filter bar */}
-      <div className="mt-5 shrink-0 rounded-xl border border-slate-200/90 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-900/40 px-3 py-3 sm:px-4">
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:gap-4">
-          <div className="relative min-w-0 flex-1">
-            <Search
-              size={16}
-              className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500"
-            />
-            <input
-              type="text"
-              placeholder="Search name, email, role…"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className={cn(
-                'h-10 w-full rounded-lg border bg-white pl-10 pr-10 text-[13px] text-slate-900 dark:bg-slate-950 dark:text-white',
-                'border-slate-200 dark:border-slate-700',
-                'focus:border-[#6D54B5] focus:outline-none focus:ring-2 focus:ring-[#6D54B5]/25',
-                searchTerm.trim() && 'ring-2 ring-[#6D54B5]/20 border-[#6D54B5]/40'
-              )}
-            />
-            {searchTerm.trim() ? (
-              <button
-                type="button"
-                className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800"
-                onClick={() => setSearchTerm('')}
-                aria-label="Clear search"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            ) : null}
-          </div>
-          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-            <Select value={roleFilter || 'all'} onValueChange={(v) => setRoleFilter(v === 'all' ? '' : (v as API.Role))}>
-              <SelectTrigger
-                className={cn(
-                  'h-10 w-[150px] rounded-lg border-slate-200 text-[13px] dark:border-slate-700',
-                  roleFilter && 'ring-2 ring-[#6D54B5]/25 border-[#6D54B5]/40'
-                )}
-              >
-                <SelectValue placeholder="Role" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All roles</SelectItem>
-                {ROLE_OPTIONS.filter(Boolean).map((r) => (
-                  <SelectItem key={r} value={r}>
-                    {r === 'OWNER' ? 'Owner' : r === 'ADMIN' ? 'Admin' : getRoleDisplayName(r as API.Role)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select value={statusFilter || 'all'} onValueChange={(v) => setStatusFilter(v === 'all' ? '' : v)}>
-              <SelectTrigger
-                className={cn(
-                  'h-10 w-[150px] rounded-lg border-slate-200 text-[13px] dark:border-slate-700',
-                  statusFilter && 'ring-2 ring-[#6D54B5]/25 border-[#6D54B5]/40'
-                )}
-              >
-                <SelectValue placeholder="Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All statuses</SelectItem>
-                {STATUS_OPTIONS.filter(Boolean).map((s) => (
-                  <SelectItem key={s} value={s}>
-                    {s.charAt(0).toUpperCase() + s.slice(1)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="flex flex-1 flex-wrap items-center justify-end gap-2 lg:ml-auto">
-            <div
-              className="inline-flex items-center rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 p-0.5 shadow-sm"
-              role="group"
-              aria-label="View mode"
-            >
-              {(['grid', 'list', 'workload'] as const).map((mode) => (
-                <button
-                  key={mode}
-                  type="button"
-                  onClick={() => setViewMode(mode)}
-                  className={cn(
-                    'inline-flex items-center gap-1.5 rounded-md px-3 py-2 text-[12px] font-semibold transition-colors',
-                    viewMode === mode
-                      ? 'bg-[#6D54B5] text-white shadow-sm'
-                      : 'text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800'
-                  )}
-                >
-                  {mode === 'grid' && <LayoutGrid className="h-3.5 w-3.5" />}
-                  {mode === 'list' && <List className="h-3.5 w-3.5" />}
-                  {mode === 'workload' && <BarChart3 className="h-3.5 w-3.5" />}
-                  {mode.charAt(0).toUpperCase() + mode.slice(1)}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Content */}
       <div
         className={cn(
-          'mt-0 flex min-h-0 flex-1 flex-col overflow-hidden',
-          detailOpen && !isNarrow && 'md:pr-[420px]' 
+          'flex-1 min-h-0 overflow-y-auto overflow-x-hidden',
+          detailOpen && !isNarrow && 'md:pr-[420px]'
         )}
       >
-        <div className="flex-1 min-h-0 overflow-y-auto">
-        {loading ? (
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <div
-                key={i}
-                className="h-40 animate-pulse rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900/50"
-              />
-            ))}
-          </div>
-        ) : displayedMembers.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 text-center">
-            <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-100 dark:bg-slate-800/80 shadow-inner">
-              <Users className="h-8 w-8 text-slate-400" aria-hidden />
+        {/* KPI strip — scrolls away */}
+        <div
+          className="ws-kpi-strip flex gap-2 overflow-x-auto snap-x snap-mandatory py-2"
+          role="region"
+          aria-label="Team statistics"
+        >
+          {kpiItems.map((item) => (
+            <div
+              key={item.key}
+              className={cn(
+                'snap-start shrink-0 flex items-center gap-2 rounded-md border border-slate-200/90 dark:border-slate-800',
+                'bg-white dark:bg-slate-950 border-l-[3px] px-2.5 py-1.5 min-w-[5.75rem] sm:flex-1 sm:min-w-0',
+                item.accent
+              )}
+            >
+              <div className="min-w-0">
+                <p className="text-[10px] font-medium uppercase tracking-[0.06em] text-slate-500 leading-none">
+                  {item.label}
+                </p>
+                <p className="mt-0.5 text-base font-bold tabular-nums text-slate-900 dark:text-white leading-none ws-stat-value">
+                  {item.value}
+                </p>
+              </div>
             </div>
-            <p className="text-lg font-semibold text-slate-900 dark:text-white">No team members found</p>
-            <p className="mt-1 max-w-sm text-[13px] text-slate-500 dark:text-slate-400">
-              {hasActiveFilters
-                ? 'Try adjusting your search or filters to see more results.'
-                : 'Add your first colleague to collaborate on cases.'}
-            </p>
-            {hasActiveFilters ? (
-              <Button variant="outline" className="mt-6" onClick={resetFilters}>
-                Reset Filters
-              </Button>
-            ) : (
-              <Button
-                className="mt-6 bg-[#6D54B5] hover:bg-[#5a4699]"
-                onClick={() => cabinetMemberCreateModalRef.current?.show()}
+          ))}
+        </div>
+
+        {/* Sticky work controls */}
+        <div className="ws-toolbar-sticky sticky top-0 z-30 bg-slate-50/95 dark:bg-slate-950/95 border-b border-slate-200/90 dark:border-slate-800 pt-1">
+          <div className="rounded-lg border border-slate-200/90 dark:border-slate-800 bg-white/95 dark:bg-slate-950/90 px-2 py-2 sm:px-3">
+            <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+              <div className="relative min-w-[min(100%,12rem)] flex-1 sm:min-w-[14rem] sm:flex-[1.4]">
+                <Search
+                  size={14}
+                  className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400"
+                />
+                <input
+                  ref={searchInputRef}
+                  type="search"
+                  placeholder="Search members… (press /)"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Escape') {
+                      setSearchTerm('');
+                      (e.target as HTMLInputElement).blur();
+                    }
+                  }}
+                  className={cn(
+                    'h-9 w-full rounded-md border bg-white pl-8 pr-8 text-[13px] text-slate-900 dark:bg-slate-950 dark:text-white',
+                    'border-slate-200 dark:border-slate-700',
+                    'focus:border-[#6D54B5] focus:outline-none focus:ring-2 focus:ring-[#6D54B5]/25',
+                    searchTerm.trim() && 'ring-1 ring-[#6D54B5]/25 border-[#6D54B5]/40'
+                  )}
+                  aria-label="Search team members"
+                />
+                {searchTerm.trim() ? (
+                  <button
+                    type="button"
+                    className="absolute right-1.5 top-1/2 -translate-y-1/2 rounded p-1 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 min-h-[28px] min-w-[28px] flex items-center justify-center"
+                    onClick={() => setSearchTerm('')}
+                    aria-label="Clear search"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                ) : null}
+              </div>
+
+              <Select
+                value={roleFilter || 'all'}
+                onValueChange={(v) => setRoleFilter(v === 'all' ? '' : (v as API.Role))}
               >
-                <Plus className="mr-2 h-4 w-4" />
+                <SelectTrigger
+                  className={cn(
+                    'h-9 w-[130px] rounded-md border-slate-200 text-[12px] dark:border-slate-700',
+                    roleFilter && 'ring-1 ring-[#6D54B5]/25 border-[#6D54B5]/40'
+                  )}
+                >
+                  <SelectValue placeholder="Role" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All roles</SelectItem>
+                  {ROLE_OPTIONS.filter(Boolean).map((r) => (
+                    <SelectItem key={r} value={r}>
+                      {r === 'OWNER' ? 'Owner' : r === 'ADMIN' ? 'Admin' : getRoleDisplayName(r as API.Role)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select
+                value={statusFilter || 'all'}
+                onValueChange={(v) => setStatusFilter(v === 'all' ? '' : v)}
+              >
+                <SelectTrigger
+                  className={cn(
+                    'h-9 w-[130px] rounded-md border-slate-200 text-[12px] dark:border-slate-700',
+                    statusFilter && 'ring-1 ring-[#6D54B5]/25 border-[#6D54B5]/40'
+                  )}
+                >
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All statuses</SelectItem>
+                  {STATUS_OPTIONS.filter(Boolean).map((s) => (
+                    <SelectItem key={s} value={s}>
+                      {s.charAt(0).toUpperCase() + s.slice(1)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              {hasActiveFilters && (
+                <Button variant="ghost" size="sm" className="h-9 text-[12px] px-2" onClick={resetFilters}>
+                  Reset
+                </Button>
+              )}
+
+              <div
+                className="inline-flex md:hidden items-center rounded-md border border-slate-200 dark:border-slate-700 bg-slate-100/80 p-0.5 ml-auto"
+                role="group"
+                aria-label="View mode"
+              >
+                <button
+                  type="button"
+                  onClick={() => setViewMode('list')}
+                  className={cn(
+                    'inline-flex items-center rounded-md px-2.5 py-1.5 text-[11px] font-semibold',
+                    viewMode !== 'workload'
+                      ? 'bg-white shadow-sm ring-1 ring-slate-200/80'
+                      : 'text-slate-600'
+                  )}
+                  aria-pressed={viewMode !== 'workload'}
+                >
+                  <List className="h-3.5 w-3.5" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setViewMode('workload')}
+                  className={cn(
+                    'inline-flex items-center rounded-md px-2.5 py-1.5 text-[11px] font-semibold',
+                    viewMode === 'workload'
+                      ? 'bg-white shadow-sm ring-1 ring-slate-200/80'
+                      : 'text-slate-600'
+                  )}
+                  aria-pressed={viewMode === 'workload'}
+                >
+                  <BarChart3 className="h-3.5 w-3.5" />
+                </button>
+              </div>
+
+              <div
+                className="hidden md:inline-flex items-center rounded-md border border-slate-200 dark:border-slate-700 bg-slate-100/80 dark:bg-slate-900/50 p-0.5 ml-auto"
+                role="group"
+                aria-label="View mode"
+              >
+                {(['list', 'grid', 'workload'] as const).map((mode) => (
+                  <button
+                    key={mode}
+                    type="button"
+                    onClick={() => setViewMode(mode)}
+                    className={cn(
+                      'inline-flex items-center gap-1 rounded-md px-2.5 py-1.5 text-[11px] font-semibold transition-colors',
+                      viewMode === mode
+                        ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm ring-1 ring-slate-200/80 dark:ring-slate-700'
+                        : 'text-slate-600 hover:bg-white/60 dark:text-slate-400 dark:hover:bg-slate-800/60'
+                    )}
+                    aria-pressed={viewMode === mode}
+                  >
+                    {mode === 'grid' && <LayoutGrid className="h-3.5 w-3.5" />}
+                    {mode === 'list' && <List className="h-3.5 w-3.5" />}
+                    {mode === 'workload' && <BarChart3 className="h-3.5 w-3.5" />}
+                    <span className="hidden lg:inline">{mode.charAt(0).toUpperCase() + mode.slice(1)}</span>
+                  </button>
+                ))}
+              </div>
+
+              <Button
+                size="sm"
+                className="hidden md:inline-flex h-9 shrink-0 rounded-md px-3 text-[12px] font-semibold shadow-sm"
+                style={{ backgroundColor: JURE_PURPLE }}
+                onClick={openCreate}
+              >
+                <Plus className="mr-1.5 h-4 w-4" strokeWidth={2.5} />
                 Add Member
               </Button>
-            )}
+            </div>
+            <p className="mt-1.5 text-[11px] text-slate-500 tabular-nums">
+              {loading ? 'Loading…' : `${displayedMembers.length} of ${teamMembers.length} members`}
+            </p>
           </div>
-        ) : viewMode === 'grid' ? (
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {displayedMembers.map(renderTile)}
-          </div>
-        ) : viewMode === 'list' ? (
-          <div className="overflow-x-auto rounded-xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-950 shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
-            <table className="w-full min-w-[880px] border-collapse text-left">
-              <thead>
-                <tr className="border-b border-slate-200 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-900/40">
-                  <th className="px-3 py-3 text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400">
-                    Name
-                  </th>
-                  <th className="px-3 py-3 text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400">
-                    Role
-                  </th>
-                  <th className="px-3 py-3 text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400">
-                    Status
-                  </th>
-                  <th className="px-3 py-3 text-right text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400">
-                    In Progress
-                  </th>
-                  <th className="px-3 py-3 text-right text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400">
-                    Assigned
-                  </th>
-                  <th className="px-3 py-3 text-right text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400">
-                    Workload
-                  </th>
-                  <th className="px-3 py-3 text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400">
-                    Joined
-                  </th>
-                  <th className="px-3 py-3 text-right text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody>{displayedMembers.map(renderListRow)}</tbody>
-            </table>
-          </div>
-        ) : (
-          renderWorkloadView()
-        )}
+        </div>
+
+        {/* Work surface */}
+        <div className="py-3 md:py-4 pb-20 md:pb-4">
+          {loading ? (
+            <div className="grid grid-cols-1 gap-2 md:grid-cols-2 xl:grid-cols-3">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="h-28 animate-pulse rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900/50"
+                />
+              ))}
+            </div>
+          ) : displayedMembers.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-12 text-center">
+              <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800/80">
+                <Users className="h-6 w-6 text-slate-400" aria-hidden />
+              </div>
+              <p className="text-sm font-semibold text-slate-900 dark:text-white">No team members found</p>
+              <p className="mt-1 max-w-sm text-[12px] text-slate-500">
+                {hasActiveFilters
+                  ? 'Try adjusting your search or filters.'
+                  : 'Add your first colleague to collaborate on cases.'}
+              </p>
+              {hasActiveFilters ? (
+                <Button variant="outline" size="sm" className="mt-4 h-8 text-[12px]" onClick={resetFilters}>
+                  Reset Filters
+                </Button>
+              ) : (
+                <Button
+                  size="sm"
+                  className="mt-4 h-8 text-[12px] bg-[#6D54B5] hover:bg-[#5a4699]"
+                  onClick={openCreate}
+                >
+                  <Plus className="mr-1.5 h-3.5 w-3.5" />
+                  Add Member
+                </Button>
+              )}
+            </div>
+          ) : (
+            <>
+              {/* Mobile: cards or workload */}
+              <div className="md:hidden">
+                {viewMode === 'workload' ? (
+                  renderWorkloadView()
+                ) : (
+                  <div className="flex flex-col gap-2">{displayedMembers.map(renderMobileCard)}</div>
+                )}
+              </div>
+              {/* Desktop */}
+              <div className="hidden md:block">
+                {viewMode === 'grid' ? (
+                  <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+                    {displayedMembers.map(renderTile)}
+                  </div>
+                ) : viewMode === 'list' ? (
+                  <div className="overflow-x-auto rounded-lg border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-950 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+                    <table className="w-full min-w-[880px] border-collapse text-left" aria-label="Team members">
+                      <thead>
+                        <tr className="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/90">
+                          {[
+                            'Name',
+                            'Role',
+                            'Status',
+                            'In Progress',
+                            'Assigned',
+                            'Workload',
+                            'Joined',
+                            'Actions',
+                          ].map((h, i) => (
+                            <th
+                              key={h}
+                              className={cn(
+                                'px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-500',
+                                i >= 3 && i <= 5 ? 'text-right' : i === 7 ? 'text-right' : 'text-left'
+                              )}
+                            >
+                              {h}
+                            </th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>{displayedMembers.map(renderListRow)}</tbody>
+                    </table>
+                  </div>
+                ) : (
+                  renderWorkloadView()
+                )}
+              </div>
+            </>
+          )}
         </div>
       </div>
+
+      <Button
+        type="button"
+        size="icon"
+        className="md:hidden fixed z-40 bottom-[max(1.25rem,env(safe-area-inset-bottom))] right-4 h-12 w-12 rounded-full shadow-lg"
+        style={{ backgroundColor: JURE_PURPLE }}
+        onClick={openCreate}
+        aria-label="Add Member"
+      >
+        <Plus className="w-5 h-5" strokeWidth={2.5} />
+      </Button>
+
+      <p className="sr-only" aria-live="polite">
+        {loading
+          ? 'Loading team members'
+          : `${displayedMembers.length} members. Press slash to search, N to add.`}
+      </p>
 
       <CabinetMemberCreateModal
         ref={cabinetMemberCreateModalRef}

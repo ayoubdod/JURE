@@ -13,6 +13,7 @@ interface AppMessages {
     settings: string;
     legalAi: string;
     profile: string;
+    account: string;
     myProfile: string;
     notifications: string;
     help: string;
@@ -102,9 +103,10 @@ const messages: Record<Lang, AppMessages> = {
       settings: 'Settings',
       legalAi: 'Juria',
       profile: 'Profile',
+      account: 'Account',
       myProfile: 'My Profile',
       notifications: 'Notifications',
-      help: 'Help',
+      help: 'Help Center',
       contactSupport: 'Contact Support',
       upgradeTitle: 'Upgrade',
       upgradeSubtitle: 'Premium features',
@@ -193,9 +195,10 @@ const messages: Record<Lang, AppMessages> = {
       settings: 'Paramètres',
       legalAi: 'Juria',
       profile: 'Profil',
+      account: 'Compte',
       myProfile: 'Mon profil',
       notifications: 'Notifications',
-      help: 'Aide',
+      help: "Centre d'aide",
       contactSupport: 'Contacter le support',
       upgradeTitle: 'Mise à niveau',
       upgradeSubtitle: 'Fonctionnalités premium',
@@ -284,9 +287,10 @@ const messages: Record<Lang, AppMessages> = {
       settings: 'الإعدادات',
       legalAi: 'جوريا',
       profile: 'الملف الشخصي',
+      account: 'الحساب',
       myProfile: 'ملفي الشخصي',
       notifications: 'الإشعارات',
-      help: 'المساعدة',
+      help: 'مركز المساعدة',
       contactSupport: 'الاتصال بالدعم',
       upgradeTitle: 'الترقية',
       upgradeSubtitle: 'ميزات احترافية',

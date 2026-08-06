@@ -102,6 +102,22 @@ export default {
 						height: '0'
 					}
 				},
+				'collapsible-down': {
+					from: {
+						height: '0'
+					},
+					to: {
+						height: 'var(--radix-collapsible-content-height)'
+					}
+				},
+				'collapsible-up': {
+					from: {
+						height: 'var(--radix-collapsible-content-height)'
+					},
+					to: {
+						height: '0'
+					}
+				},
 				'logo-breathe': {
 					'0%, 100%': { opacity: '1', transform: 'scale(1)' },
 					'50%': { opacity: '0.85', transform: 'scale(1.02)' }
@@ -150,6 +166,8 @@ export default {
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
 				'accordion-up': 'accordion-up 0.2s ease-out',
+				'collapsible-down': 'collapsible-down 250ms ease-out',
+				'collapsible-up': 'collapsible-up 250ms ease-out',
 				'logo-breathe': 'logo-breathe 2s ease-in-out infinite',
 				'logo-dot': 'logo-dot 1.2s ease-in-out infinite',
 				'notification-badge-pulse': 'notification-badge-pulse 400ms ease-out',

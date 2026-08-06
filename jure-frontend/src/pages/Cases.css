@@ -1,19 +1,18 @@
-/* Cases page — stat card hover lift (complements Tailwind) */
-.cases-stat-card {
-  transition:
-    transform 0.2s ease,
-    box-shadow 0.2s ease,
-    border-color 0.2s ease;
+/* Cases workspace — density + motion (respects reduced motion) */
+
+.cases-kpi-strip {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 
-.cases-stat-card:hover {
-  transform: translateY(-2px);
-  box-shadow:
-    0 4px 14px rgba(15, 23, 42, 0.08),
-    0 1px 3px rgba(0, 0, 0, 0.06);
+.cases-kpi-strip::-webkit-scrollbar {
+  display: none;
 }
 
-/* Critical deadline pulse — WCAG: motion-reduced users see static dot */
+.cases-kpi-chip {
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
 @keyframes cases-critical-pulse {
   0%,
   100% {
@@ -30,12 +29,35 @@
   animation: cases-critical-pulse 1.4s ease-in-out infinite;
 }
 
+.cases-toolbar-sticky {
+  backdrop-filter: blur(8px);
+}
+
+@keyframes cases-count-fade {
+  from {
+    opacity: 0.35;
+    transform: translateY(2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.cases-stat-value {
+  animation: cases-count-fade 0.35s ease-out;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .cases-critical-dot {
     animation: none;
   }
 
-  .cases-stat-card:hover {
-    transform: none;
+  .cases-stat-value {
+    animation: none;
+  }
+
+  .cases-kpi-chip {
+    transition: none;
   }
 }

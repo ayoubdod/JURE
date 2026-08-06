@@ -26,6 +26,9 @@ const isTeamPage = (path: string) =>
 const isCasesPage = (path: string) =>
   path.startsWith('/dashboard/cases')
 
+const isClientsPage = (path: string) =>
+  path.startsWith('/dashboard/clients')
+
 const isFinancePage = (path: string) =>
   path.startsWith('/dashboard/finance')
 
@@ -45,6 +48,7 @@ const DashboardLayout = () => {
     const isWorkspace = isWorkspacePage(location.pathname)
     const isTeam = isTeamPage(location.pathname)
     const isCases = isCasesPage(location.pathname)
+    const isClients = isClientsPage(location.pathname)
     const isFinance = isFinancePage(location.pathname)
     const isJuria = isJuriaPage(location.pathname)
     const isLibrary = isLibraryPage(location.pathname)
@@ -56,7 +60,7 @@ const DashboardLayout = () => {
       }
     }, [])
 
-    const fillViewport = isCockpit || isConversations || isWorkspace || isTeam || isCases || isFinance || isJuria || isLibrary
+    const fillViewport = isCockpit || isConversations || isWorkspace || isTeam || isCases || isClients || isFinance || isJuria || isLibrary
 
     return (
         <NotificationProvider>
@@ -64,7 +68,7 @@ const DashboardLayout = () => {
         <div className={fillViewport ? 'h-screen overflow-hidden bg-slate-50 dark:bg-slate-950 flex' : 'min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col'}>
             <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
 
-            <div className={`flex-1 flex flex-col min-w-0 ${isRTL ? 'lg:mr-16' : 'lg:ml-16'} ${isCockpit || isConversations || isCases || isFinance || isJuria || isLibrary ? 'min-h-0 overflow-hidden' : ''}`}>
+            <div className={`flex-1 flex flex-col min-w-0 ${isRTL ? 'lg:mr-16' : 'lg:ml-16'} ${isCockpit || isConversations || isTeam || isCases || isClients || isFinance || isJuria || isLibrary ? 'min-h-0 overflow-hidden' : ''}`}>
                 <Header />
 
                 <TVAThresholdNotification />
@@ -80,10 +84,8 @@ const DashboardLayout = () => {
                         ? 'flex-1 min-h-0 overflow-hidden pt-0'
                         : isWorkspace
                         ? 'flex-1 min-h-0 overflow-hidden pt-0'
-                        : isTeam
-                        ? 'flex-1 min-h-0 overflow-hidden overflow-x-hidden p-3 sm:p-6 lg:p-8 pt-4 sm:pt-6'
-                        : isCases
-                        ? 'flex-1 min-h-0 overflow-hidden overflow-x-hidden p-3 sm:p-6 lg:p-8 pt-4 sm:pt-6'
+                        : isTeam || isClients || isCases
+                        ? 'flex-1 min-h-0 overflow-hidden overflow-x-hidden p-2 sm:p-3 lg:p-4 pt-2 sm:pt-3'
                         : isFinance
                         ? 'flex-1 min-h-0 overflow-hidden overflow-x-hidden p-3 sm:p-6 lg:p-8 pt-4 sm:pt-6'
                         : isJuria

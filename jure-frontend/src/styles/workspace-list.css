@@ -1,0 +1,29 @@
+/* Shared workspace list motion — Clients / Team */
+.ws-kpi-strip {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.ws-kpi-strip::-webkit-scrollbar {
+  display: none;
+}
+.ws-toolbar-sticky {
+  backdrop-filter: blur(8px);
+}
+@keyframes ws-count-fade {
+  from {
+    opacity: 0.35;
+    transform: translateY(2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.ws-stat-value {
+  animation: ws-count-fade 0.35s ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ws-stat-value {
+    animation: none;
+  }
+}

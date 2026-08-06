@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Grid3X3,
   Users,
@@ -23,6 +23,7 @@ import LogoutModal, { LogoutModalRef } from './layout/LogoutModal';
 import useChatStore from '@/stores/chatStore';
 import { useAppTranslation } from '@/i18n';
 import LangSwitcher from '@/components/common/LangSwitcher';
+import CollapsibleSection from '@/components/common/CollapsibleSection';
 import { useFinanceAccess } from '@/hooks/useFinanceAccess';
 import { JURIA_ENABLED } from '@/config/features';
 import { useMobileNav } from '@/context/MobileNavContext';
@@ -48,10 +49,14 @@ type MenuItem = {
   badge: number | string | null;
 };
 
+const mobileSecondaryActionClass =
+  'flex min-h-11 w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted/70 hover:text-foreground';
+
 const Sidebar = ({ activeTab, setActiveTab }: SidebarProps) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
+  const [isAccountSectionOpen, setIsAccountSectionOpen] = useState(false);
   const chatStore = useChatStore();
   const { t, dir } = useAppTranslation();
   const isRTL = dir === 'rtl';
@@ -60,6 +65,13 @@ const Sidebar = ({ activeTab, setActiveTab }: SidebarProps) => {
 
   const recentMessages = chatStore.notifications.filter((m) => m.is_message);
   const unreadMessagesCount = recentMessages.filter((m) => m.unread).length;
+
+  // Reset Account to collapsed when the drawer closes so reopen starts compact.
+  useEffect(() => {
+    if (!mobileNavOpen) {
+      setIsAccountSectionOpen(false);
+    }
+  }, [mobileNavOpen]);
 
   const menuItems = useMemo(() => {
     const financeItem = {
@@ -148,7 +160,7 @@ const Sidebar = ({ activeTab, setActiveTab }: SidebarProps) => {
             </SheetDescription>
           </SheetHeader>
 
-          <nav className="min-h-0 flex-1 overflow-y-auto px-2 py-3">
+          <nav className="min-h-0 flex-1 overflow-y-auto px-2 py-3" aria-label="Primary">
             <div className="flex flex-col gap-0.5">
               {menuItems.map((item) => {
                 const Icon = item.icon;
@@ -186,52 +198,59 @@ const Sidebar = ({ activeTab, setActiveTab }: SidebarProps) => {
             </div>
           </nav>
 
-          <div className="shrink-0 space-y-1 border-t border-border px-2 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
-            <div className="mb-2 flex justify-center px-2">
+          <div className="shrink-0 border-t border-border px-2 py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
+            <div className="mb-1.5 flex h-9 items-center justify-center px-2">
               <LangSwitcher />
             </div>
-            <button
-              type="button"
-              onClick={() => navigateAndClose('/dashboard/profile')}
-              className="flex min-h-11 w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
+
+            <CollapsibleSection
+              id="mobile-sidebar-account"
+              title={t.sidebar.account}
+              tone="muted"
+              open={isAccountSectionOpen}
+              onOpenChange={setIsAccountSectionOpen}
+              triggerClassName="min-h-12 max-h-14"
             >
-              <UserCog size={18} className="shrink-0" />
-              {t.sidebar.myProfile}
-            </button>
-            <button
-              type="button"
-              onClick={() => navigateAndClose('/dashboard/notifications')}
-              className="flex min-h-11 w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
-            >
-              <Bell size={18} className="shrink-0" />
-              {t.sidebar.notifications}
-            </button>
-            <button
-              type="button"
-              onClick={() => navigateAndClose('/dashboard/help')}
-              className="flex min-h-11 w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
-            >
-              <HelpCircle size={18} className="shrink-0" />
-              {t.sidebar.help}
-            </button>
-            <button
-              type="button"
-              className="flex min-h-11 w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
-            >
-              <Headphones size={18} className="shrink-0" />
-              {t.sidebar.contactSupport}
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                closeMobileNav();
-                logoutModalRef.current?.show();
-              }}
-              className="flex min-h-11 w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-destructive hover:bg-destructive/10"
-            >
-              <LogOut size={18} className="shrink-0" />
-              {t.sidebar.logout}
-            </button>
+              <button
+                type="button"
+                onClick={() => navigateAndClose('/dashboard/profile')}
+                className={mobileSecondaryActionClass}
+              >
+                <UserCog size={17} className="shrink-0 text-muted-foreground/70" aria-hidden />
+                {t.sidebar.myProfile}
+              </button>
+              <button
+                type="button"
+                onClick={() => navigateAndClose('/dashboard/notifications')}
+                className={mobileSecondaryActionClass}
+              >
+                <Bell size={17} className="shrink-0 text-muted-foreground/70" aria-hidden />
+                {t.sidebar.notifications}
+              </button>
+              <button
+                type="button"
+                onClick={() => navigateAndClose('/dashboard/help')}
+                className={mobileSecondaryActionClass}
+              >
+                <HelpCircle size={17} className="shrink-0 text-muted-foreground/70" aria-hidden />
+                {t.sidebar.help}
+              </button>
+              <button type="button" className={mobileSecondaryActionClass}>
+                <Headphones size={17} className="shrink-0 text-muted-foreground/70" aria-hidden />
+                {t.sidebar.contactSupport}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  closeMobileNav();
+                  logoutModalRef.current?.show();
+                }}
+                className="flex min-h-11 w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-destructive transition-colors hover:bg-destructive/10"
+              >
+                <LogOut size={17} className="shrink-0" aria-hidden />
+                {t.sidebar.logout}
+              </button>
+            </CollapsibleSection>
           </div>
         </SheetContent>
       </Sheet>
