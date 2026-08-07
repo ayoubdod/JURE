@@ -38,6 +38,31 @@ class NotificationConsumer(AsyncJsonWebsocketConsumer):
             }
         )
 
+    # Call signaling shares `user_{id}`; ignore so Channels doesn't disconnect this socket.
+    async def call_incoming(self, event):
+        return
+
+    async def call_accepted(self, event):
+        return
+
+    async def call_rejected(self, event):
+        return
+
+    async def call_offer(self, event):
+        return
+
+    async def call_answer(self, event):
+        return
+
+    async def call_ice_candidate(self, event):
+        return
+
+    async def call_ended(self, event):
+        return
+
+    async def call_missed(self, event):
+        return
+
     async def receive_json(self, content, **kwargs):
         if not isinstance(content, dict):
             return

@@ -544,9 +544,9 @@ This document contains a comprehensive list of all actions available in the Jure
 ### Authenticated Routes (Dashboard)
 - `/dashboard` - Main dashboard
 - `/dashboard/team` - Team members
-- `/dashboard/me` - Own profile
-- `/dashboard/profile` - Profile
-- `/dashboard/profile/:id` - User profile by ID
+- `/dashboard/profile` - Own profile (canonical)
+- `/dashboard/me` - Legacy alias, redirects to `/dashboard/profile`
+- `/dashboard/profile/:id` - Team member profile by ID
 - `/dashboard/cases` - Cases management
 - `/dashboard/library` - Document library
 - `/dashboard/clients` - Clients management

@@ -837,7 +837,7 @@ const Header = () => {
                 <Button
                   variant="ghost"
                   className="w-full justify-start px-4 py-2 text-sm font-medium min-h-11"
-                  onClick={() => navigateTo('/dashboard/me')}
+                  onClick={() => navigateTo('/dashboard/profile')}
                 >
                   <User size={16} className="mr-3 text-muted-foreground" />
                   My Profile

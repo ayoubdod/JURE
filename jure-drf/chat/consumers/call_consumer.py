@@ -9,7 +9,8 @@ class CallConsumer(CallSignalingMixin, AsyncJsonWebsocketConsumer):
     """WebRTC signaling only; user authenticated by JwtAuthMiddleware."""
 
     async def connect(self):
-        user = getattr(self.scope, "user", None)
+        # scope is a dict — use .get(), not getattr (that always misses and closes 4001)
+        user = self.scope.get("user")
         if not user or not getattr(user, "is_authenticated", False):
             await self.close(code=4001)
             return
@@ -23,3 +24,7 @@ class CallConsumer(CallSignalingMixin, AsyncJsonWebsocketConsumer):
         await self._discard_all_call_groups()
         if hasattr(self, "personal_group"):
             await self.channel_layer.group_discard(self.personal_group, self.channel_name)
+
+    async def notification_new(self, event):
+        # Same personal group as NotificationConsumer (`user_{id}`); ignore here.
+        return

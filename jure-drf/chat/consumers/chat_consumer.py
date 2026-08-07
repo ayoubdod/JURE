@@ -153,10 +153,14 @@ class ChatConsumer(CallSignalingMixin, AsyncJsonWebsocketConsumer):
         )
 
     async def notification_new(self, event):
+        # Chat message rings use `payload`; app notifications use `notification`.
+        body = event.get("payload", event.get("notification"))
+        if body is None:
+            return
         await self.send_json(
             {
                 "type": "notification.new",
-                "payload": event["payload"],
+                "payload": body,
             }
         )
 

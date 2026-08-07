@@ -67,13 +67,16 @@ class ConversationConsumer(AsyncJsonWebsocketConsumer):
             await self.send_json(payload)
 
     @database_sync_to_async
-    def get_last_messages(self):
-        return list(
+    def get_last_messages_payload(self):
+        """Fetch + serialize in a sync thread (ORM cannot run in the async event loop)."""
+        messages = list(
             _message_queryset_with_shares()
             .filter(conversation_id=self.conversation.pk)
             .prefetch_related("attachments", "pinned_by", "deliveries", "read_by")
             .order_by("sent_at")
         )
+        payload = MessageSerializer(messages, many=True, context={"request": None}).data
+        return messages, payload
 
     @database_sync_to_async
     def record_delivery_and_broadcast(self, message_ids, user_id, conversation_id):
@@ -109,8 +112,7 @@ class ConversationConsumer(AsyncJsonWebsocketConsumer):
         return to_broadcast
 
     async def send_initial_messages(self):
-        messages = await self.get_last_messages()
-        payload = MessageSerializer(messages, many=True, context={"request": None}).data
+        messages, payload = await self.get_last_messages_payload()
         await self.send_json({"type": "message.history", "payload": payload})
 
         user = self.scope.get("user")

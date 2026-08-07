@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { createBrowserRouter, RouterProvider } from "react-router"; // ✅ keep react-router
+import { createBrowserRouter, RouterProvider, Navigate } from "react-router"; // ✅ keep react-router
 import { useTheme } from "@/hooks/useTheme";
 
 import Landing from "./pages/Landing";
@@ -236,12 +236,9 @@ const router = createBrowserRouter([
         ),
       },
       {
+        // Legacy alias — /dashboard/profile is the canonical personal profile URL.
         path: "me",
-        element: (
-          <ProtectedRoute requireAuth={true}>
-            <Profile />
-          </ProtectedRoute>
-        ),
+        element: <Navigate to="/dashboard/profile" replace />,
       },
       {
         path: "profile",

@@ -58,7 +58,8 @@ urlpatterns = [
     path("api/v1/search/", include("search.urls")),
     path("api/v1/juria/", include("juria.urls")),
     path("api/search/", include("search.urls")),
-    path("api/calls/", include("calls.urls")),
+    path("api/v1/calls/", include("calls.urls")),
+    path("api/calls/", include("calls.urls")),  # legacy alias
     path("health/", health, name="health"),
     path("debug/settings", deployment_settings_debug),
     path("debug/settings/", deployment_settings_debug),
