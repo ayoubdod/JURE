@@ -62,6 +62,13 @@ if BACKEND_BASE_URL:  # noqa: F405
     if _backend_host:
         _allowed_hosts.append(_backend_host)
 
+# AllowedHostsOriginValidator checks the WebSocket Origin host against ALLOWED_HOSTS.
+# Frontend origin must be listed or WS upgrades from the SPA are rejected.
+if FRONTEND_BASE_URL:  # noqa: F405
+    _frontend_host = urlparse(FRONTEND_BASE_URL).hostname  # noqa: F405
+    if _frontend_host:
+        _allowed_hosts.append(_frontend_host)
+
 # Railway injects these automatically — keep DisallowedHost from breaking deploys
 # even when ALLOWED_HOSTS / BACKEND_BASE_URL are misconfigured.
 for _railway_host in (
@@ -91,13 +98,9 @@ SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
 X_FRAME_OPTIONS = "DENY"
 
-USE_INMEMORY_CHANNEL_LAYER = True
-
-CHANNEL_LAYERS = {
-    "default": {
-        "BACKEND": "channels.layers.InMemoryChannelLayer",
-    }
-}
+# Channel layer: inherit base.py / env (REDIS_URL + USE_INMEMORY_CHANNEL_LAYER).
+# Do NOT force InMemory here — multi-replica call signaling needs Redis.
+# Single Daphne process + InMemory is OK for a first staging smoke test.
 
 # WhiteNoise is already registered in base.MIDDLEWARE (immediately after SecurityMiddleware).
 # Do not insert it again — duplicate middleware breaks static serving and wastes cycles.

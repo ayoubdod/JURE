@@ -33,7 +33,8 @@ python manage.py migrate --noinput
 
 python manage.py collectstatic --noinput
 
-exec gunicorn core.wsgi:application \
-    --bind 0.0.0.0:${PORT:-8000} \
-    --workers 2 \
-    --timeout 120
+# ASGI (Daphne) is required for WebSockets: /ws/calls/, /ws/chat/, /ws/conversation/, /ws/notifications/
+# Gunicorn+WSGI cannot upgrade WebSockets — that is why calls work locally (Daphne) but fail on Railway.
+# Single process: InMemory channel layer does not cross workers; use Redis (USE_INMEMORY_CHANNEL_LAYER=False)
+# when you need multiple replicas.
+exec daphne -b 0.0.0.0 -p "${PORT:-8000}" core.asgi:application
