@@ -9,6 +9,7 @@ import {
   sendConversationCallSignal,
 } from '@/stores/conversationCallBridge';
 import useUserStore from '@/stores/userStore';
+import { playCallSoundForStatus, stopCallSounds } from '@/utils/callSounds';
 import { devError, devLog, devWarn } from '@/utils/devLog';
 import {
   addIceCandidate,
@@ -110,6 +111,12 @@ function parseSdp(raw: unknown, fallbackType: RTCSdpType): RTCSessionDescription
   return null;
 }
 
+/** Must match backend `_pair_call_group` in chat/consumers/signaling.py */
+function pairCallGroup(uidA: number, uidB: number): string {
+  const [a, b] = [uidA, uidB].sort((x, y) => x - y);
+  return `call_${a}_${b}`;
+}
+
 function attachRemoteStream(stream: MediaStream) {
   const el = document.getElementById('remote-audio') as HTMLAudioElement | null;
   if (el) {
@@ -197,8 +204,29 @@ export function useWebRtcCall() {
     const q = pendingRemoteIceRef.current;
     pendingRemoteIceRef.current = [];
     for (const c of q) {
-      await addIceCandidate(pc, c);
+      try {
+        await addIceCandidate(pc, c);
+      } catch (e) {
+        devWarn('[call] drop bad remote ICE candidate', e);
+      }
     }
+  }, []);
+
+  const markCallActive = useCallback(() => {
+    connectingRef.current = false;
+    const start = callStartMsRef.current != null ? new Date(callStartMsRef.current) : new Date();
+    if (callStartMsRef.current == null) {
+      callStartMsRef.current = start.getTime();
+    }
+    setUi((prev) =>
+      prev.status === 'active'
+        ? prev
+        : {
+            ...prev,
+            status: 'active',
+            startTime: prev.startTime ?? start,
+          }
+    );
   }, []);
 
   const handleRemoteIce = useCallback(
@@ -212,7 +240,11 @@ export function useWebRtcCall() {
         pendingRemoteIceRef.current.push(candidate);
         return;
       }
-      await addIceCandidate(pc, candidate);
+      try {
+        await addIceCandidate(pc, candidate);
+      } catch (e) {
+        devWarn('[call] addIceCandidate failed', e);
+      }
     },
     []
   );
@@ -235,9 +267,20 @@ export function useWebRtcCall() {
       };
       pc.ontrack = (ev) => {
         const [stream] = ev.streams;
-        if (stream) attachRemoteStream(stream);
+        if (stream) {
+          attachRemoteStream(stream);
+          // Audio can arrive before answer-handler finishes ICE flush — leave connecting.
+          if (statusRef.current === 'connecting') {
+            markCallActive();
+          }
+        }
       };
       pc.onconnectionstatechange = () => {
+        if (pc.connectionState === 'connected' || pc.connectionState === 'completed') {
+          if (statusRef.current === 'connecting') {
+            markCallActive();
+          }
+        }
         if (pc.connectionState === 'failed') {
           setUi((prev) =>
             prev.status === 'idle'
@@ -247,7 +290,7 @@ export function useWebRtcCall() {
         }
       };
     },
-    []
+    [markCallActive]
   );
 
   const processCalleeOffer = useCallback(
@@ -258,15 +301,12 @@ export function useWebRtcCall() {
       if (!gn) return;
       try {
         const answer = await createAnswer(pc, offerSdp);
-        sendCallSignal({ type: 'call.answer', sdp: answer, groupName: gn });
-        await flushRemoteIce(pc);
-        const start = new Date();
-        callStartMsRef.current = start.getTime();
-        setUi((prev) => ({
-          ...prev,
-          status: 'active',
-          startTime: start,
-        }));
+        sendCallSignal(
+          { type: 'call.answer', sdp: answer, groupName: gn },
+          conversationIdRef.current
+        );
+        markCallActive();
+        void flushRemoteIce(pc);
       } catch (e) {
         devError('[call] answer failed', e);
         sendCallSignal(
@@ -278,7 +318,7 @@ export function useWebRtcCall() {
         scheduleTerminalReset();
       }
     },
-    [flushRemoteIce, scheduleTerminalReset, teardownMedia]
+    [flushRemoteIce, markCallActive, scheduleTerminalReset, teardownMedia]
   );
 
   const ensureCalleeOfferProcessed = useCallback(async () => {
@@ -437,12 +477,18 @@ export function useWebRtcCall() {
 
       if (type === 'call.accepted') {
         if (roleRef.current !== 'caller') return;
-        const gn = String(m.groupName ?? m.group_name ?? groupNameRef.current ?? '');
+        let gn = String(m.groupName ?? m.group_name ?? groupNameRef.current ?? '');
         if (!gn) {
-          devWarn('[call] call.accepted missing groupName');
-          return;
+          const peerId = Number(m.receiverId ?? m.receiver_id);
+          if (myId != null && Number.isFinite(peerId)) {
+            gn = pairCallGroup(myId, peerId);
+          } else {
+            devWarn('[call] call.accepted missing groupName');
+            return;
+          }
         }
         groupNameRef.current = gn;
+        setUi((prev) => ({ ...prev, groupName: gn }));
         const receiverName = typeof m.receiverName === 'string' ? m.receiverName : undefined;
         if (receiverName) {
           setUi((prev) =>
@@ -455,12 +501,24 @@ export function useWebRtcCall() {
         return;
       }
 
+      if (type === 'call.initiated') {
+        if (roleRef.current !== 'caller') return;
+        const gn = String(m.groupName ?? m.group_name ?? '');
+        if (gn) {
+          groupNameRef.current = gn;
+          setUi((prev) => ({ ...prev, groupName: gn }));
+        }
+        return;
+      }
+
       if (type === 'call.offer') {
         const offerSid = Number(m.senderId ?? m.sender_id);
         if (Number.isFinite(offerSid) && myId != null && offerSid === myId) return;
         const sdp = parseSdp(m.sdp ?? m.offer, 'offer');
         if (!sdp) return;
         if (roleRef.current !== 'callee') return;
+        const gn = String(m.groupName ?? m.group_name ?? '');
+        if (gn) groupNameRef.current = gn;
         if (!calleeReadyRef.current || !mediaRef.current.pc) {
           offerPendingRef.current = sdp;
           return;
@@ -479,15 +537,8 @@ export function useWebRtcCall() {
         void (async () => {
           try {
             await setRemoteAnswer(pc, sdp);
-            await flushRemoteIce(pc);
-            connectingRef.current = false;
-            const start = new Date();
-            callStartMsRef.current = start.getTime();
-            setUi((prev) => ({
-              ...prev,
-              status: 'active',
-              startTime: start,
-            }));
+            markCallActive();
+            void flushRemoteIce(pc);
           } catch (e) {
             devError('[call] setRemote answer', e);
           }
@@ -552,6 +603,7 @@ export function useWebRtcCall() {
     [
       flushRemoteIce,
       handleRemoteIce,
+      markCallActive,
       processCalleeOffer,
       scheduleTerminalReset,
       startCallerPipeline,
@@ -592,6 +644,16 @@ export function useWebRtcCall() {
   );
 
   useEffect(() => {
+    void playCallSoundForStatus(ui.status);
+  }, [ui.status]);
+
+  useEffect(() => {
+    return () => {
+      void stopCallSounds();
+    };
+  }, []);
+
+  useEffect(() => {
     const unsubChat = subscribeCallMessages(ingestCallMessage);
     const unsubCalls = subscribeCallsMessages(ingestCallMessage);
     const unsubConv = subscribeConversationCallMessages(ingestCallMessage);
@@ -620,15 +682,18 @@ export function useWebRtcCall() {
         return false;
       }
       if (ui.status !== 'idle') return false;
+      const myId = useUserStore.getState().user?.id;
       roleRef.current = 'caller';
       conversationIdRef.current = conversationId;
-      groupNameRef.current = null;
+      groupNameRef.current =
+        myId != null ? pairCallGroup(myId, targetUserId) : null;
       callerIdRef.current = null;
       callingDeadlineRef.current = Date.now() + CALLING_TIMEOUT_MS;
       setUi({
         ...initialUi(),
         status: 'calling',
         conversationId,
+        groupName: groupNameRef.current,
         kind,
         remoteUser,
         callingProgress: 0,

@@ -169,6 +169,15 @@ class CallSignalingMixin:
         await self.channel_layer.group_add(group_name, self.channel_name)
         self.call_groups_joined.add(group_name)
         _schedule_ring_timeout(self, group_name)
+        # Tell the caller the group name so SDP/ICE can proceed after accept.
+        await self.send_json(
+            {
+                "type": "call.initiated",
+                "groupName": group_name,
+                "conversationId": conv_id,
+                "targetUserId": target_id,
+            }
+        )
         caller_name = await database_sync_to_async(
             lambda u: u.get_full_name() or u.get_username()
         )(self.user)
@@ -237,6 +246,15 @@ class CallSignalingMixin:
             },
         )
 
+    async def _ensure_in_call_group(self, group_name: str) -> None:
+        """Join the call room if this socket wasn't the one that initiated/accepted."""
+        if not hasattr(self, "call_groups_joined"):
+            self.call_groups_joined = set()
+        if group_name in self.call_groups_joined:
+            return
+        await self.channel_layer.group_add(group_name, self.channel_name)
+        self.call_groups_joined.add(group_name)
+
     async def _handle_offer(self, content: dict):
         group_name = content.get("groupName", content.get("group_name"))
         sdp = _normalize_sdp(content)
@@ -250,6 +268,7 @@ class CallSignalingMixin:
             or self.user.id not in (state.get("callerId"), state.get("targetUserId"))
         ):
             return
+        await self._ensure_in_call_group(group_name)
         await self.channel_layer.group_send(
             group_name,
             {
@@ -274,6 +293,7 @@ class CallSignalingMixin:
             or self.user.id not in (state.get("callerId"), state.get("targetUserId"))
         ):
             return
+        await self._ensure_in_call_group(group_name)
         await self.channel_layer.group_send(
             group_name,
             {
@@ -290,12 +310,11 @@ class CallSignalingMixin:
         candidate = content.get("candidate")
         if not group_name or candidate is None:
             return
-        if group_name not in self.call_groups_joined:
-            return
         key = _call_state_cache_key(group_name)
         state = await asyncio.to_thread(cache.get, key)
         if not state or self.user.id not in (state.get("callerId"), state.get("targetUserId")):
             return
+        await self._ensure_in_call_group(group_name)
         await self.channel_layer.group_send(
             group_name,
             {
@@ -345,13 +364,19 @@ class CallSignalingMixin:
                 "type": "call.accepted",
                 "receiverId": event["receiver_id"],
                 "receiverName": event["receiver_name"],
+                "groupName": event.get("group_name"),
             }
         )
 
     async def call_rejected(self, event):
         if event.get("sender_channel") == self.channel_name:
             return
-        await self.send_json({"type": "call.rejected"})
+        await self.send_json(
+            {
+                "type": "call.rejected",
+                "groupName": event.get("group_name"),
+            }
+        )
         gn = event.get("group_name")
         if gn:
             await self.channel_layer.group_discard(gn, self.channel_name)
@@ -365,6 +390,7 @@ class CallSignalingMixin:
                 "type": "call.offer",
                 "sdp": event["sdp"],
                 "senderId": event["sender_id"],
+                "groupName": event.get("group_name"),
             }
         )
 
@@ -376,6 +402,7 @@ class CallSignalingMixin:
                 "type": "call.answer",
                 "sdp": event["sdp"],
                 "senderId": event["sender_id"],
+                "groupName": event.get("group_name"),
             }
         )
 
@@ -387,6 +414,7 @@ class CallSignalingMixin:
                 "type": "call.ice_candidate",
                 "candidate": event["candidate"],
                 "senderId": event["sender_id"],
+                "groupName": event.get("group_name"),
             }
         )
 
