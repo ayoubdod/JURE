@@ -218,6 +218,7 @@ export async function playCallSoundForStatus(
     | 'calling'
     | 'ringing'
     | 'connecting'
+    | 'reconnecting'
     | 'active'
     | 'ended'
     | 'declined'
@@ -233,6 +234,7 @@ export async function playCallSoundForStatus(
     ringing: 'ringing',
     calling: 'calling',
     connecting: 'connecting',
+    reconnecting: 'connecting',
     active: 'connected',
     ended: 'ended',
     declined: 'busy',

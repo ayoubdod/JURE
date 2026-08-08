@@ -33,8 +33,6 @@ import { isAxiosError } from 'axios';
 import DeleteChatModal, { DeleteChatModalRef } from '@/components/chat/DeleteChatModal';
 import RenameGroupModal, { RenameGroupModalRef } from '@/components/chat/RenameGroupModal';
 import ChangeGroupIconModal, { ChangeGroupIconModalRef } from '@/components/chat/ChangeGroupIconModal';
-import CallDialog from '@/components/chat/CallDialog';
-import IncomingCallNotification from '@/components/conversations/call/IncomingCallNotification';
 import useChatStore from '@/stores/chatStore';
 import useCallsWsStore from '@/stores/callsWsStore';
 import useUserStore from '@/stores/userStore';
@@ -53,18 +51,8 @@ const ConversationsPage: React.FC = () => {
   const changeGroupIconModalRef = useRef<ChangeGroupIconModalRef>(null);
   const { toast } = useToast();
 
-  const {
-    callState,
-    initiateCall,
-    acceptIncoming,
-    rejectIncoming,
-    endCall,
-    toggleMute,
-    retryMic,
-    closeUi,
-    showCallModal,
-    showIncomingNotification,
-  } = useWebRtcCall();
+  // Call UI lives in DashboardLayout <CallShell />; this page only initiates calls.
+  const { callState, initiateCall } = useWebRtcCall();
 
   const user = useUserStore((s) => s.user);
 
@@ -347,22 +335,32 @@ const ConversationsPage: React.FC = () => {
   };
 
   const handleStartVideoCall = () => {
-    toast({
-      title: 'Video calls',
-      description: 'Video calls are not available yet.',
+    if (!activeId || !activeConversation) return;
+    if (activeConversation.type !== 'direct') {
+      toast({
+        title: 'Video calls unavailable',
+        description: 'Video calls are only available in direct messages.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    if (!remoteUserForActiveDirect) {
+      toast({
+        title: 'Cannot start call',
+        description: 'Could not resolve the other participant.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    initiateCall({
+      conversationId: activeId,
+      targetUserId: remoteUserForActiveDirect.id,
+      remoteUser: remoteUserForActiveDirect,
+      kind: 'video',
     });
   };
 
   const callInProgress = callState.status !== 'idle';
-
-  const handleCallModalClose = () => {
-    const s = callState.status;
-    if (s === 'ended' || s === 'declined' || s === 'missed' || s === 'error') {
-      closeUi();
-    } else {
-      endCall();
-    }
-  };
 
   const chatStore = useChatStore();
   const recentMessages = useMemo(
@@ -743,37 +741,6 @@ const ConversationsPage: React.FC = () => {
       />
       <TaskUpdateModal ref={taskUpdateRef} onSuccess={bumpWorkspaceCache} />
       <AppointmentUpdateModal ref={appointmentUpdateRef} onSuccess={bumpWorkspaceCache} />
-
-      {showIncomingNotification && callState.remoteUser && (
-        <IncomingCallNotification
-          visible
-          callerName={callState.remoteUser.name}
-          callerAvatar={callState.remoteUser.avatar}
-          firstName={callState.remoteUser.firstName}
-          lastName={callState.remoteUser.lastName}
-          onAccept={acceptIncoming}
-          onDecline={rejectIncoming}
-        />
-      )}
-
-      {showCallModal && callState.remoteUser && (
-        <CallDialog
-          open
-          onOpenChange={(open) => {
-            if (!open) handleCallModalClose();
-          }}
-          callState={callState}
-          remoteName={callState.remoteUser.name}
-          remoteAvatar={callState.remoteUser.avatar}
-          remoteFirstName={callState.remoteUser.firstName}
-          remoteLastName={callState.remoteUser.lastName}
-          callingProgress={callState.callingProgress}
-          onEndCall={endCall}
-          onClose={handleCallModalClose}
-          onToggleMute={toggleMute}
-          onRetryMic={retryMic}
-        />
-      )}
 
       <NewChatModal
         ref={newChatModalRef}

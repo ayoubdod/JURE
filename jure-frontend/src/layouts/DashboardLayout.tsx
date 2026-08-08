@@ -1,6 +1,7 @@
 import Header from '@/components/Header'
 import Sidebar from '@/components/Sidebar'
 import useChatStore from '@/stores/chatStore'
+import useCallsWsStore from '@/stores/callsWsStore'
 import React, { useEffect, useState } from 'react'
 import { Outlet, useLocation } from 'react-router'
 import { TVAThresholdNotification } from '@/components/finance/tva/TVAThresholdNotification'
@@ -8,6 +9,7 @@ import { NotificationProvider } from '@/context/NotificationContext'
 import { MobileNavProvider } from '@/context/MobileNavContext'
 import { NotificationToastStack } from '@/components/notifications/NotificationToastStack'
 import { JuriaFloatingAssistant } from '@/components/juria/JuriaFloatingAssistant'
+import CallShell from '@/components/conversations/call/CallShell'
 import { JURIA_ENABLED } from '@/config/features'
 import { useAppTranslation } from '@/i18n'
 
@@ -55,8 +57,10 @@ const DashboardLayout = () => {
 
     useEffect(() => {
       useChatStore.getState().connect()
+      void useCallsWsStore.getState().connect().catch(() => {})
       return () => {
         useChatStore.getState().disconnect()
+        // Keep /ws/calls/ open across dashboard routes; CallShell owns call lifecycle.
       }
     }, [])
 
@@ -76,6 +80,8 @@ const DashboardLayout = () => {
                 <NotificationToastStack />
 
                 {JURIA_ENABLED ? <JuriaFloatingAssistant /> : null}
+
+                <CallShell />
 
                 <main className={
                     isCockpit

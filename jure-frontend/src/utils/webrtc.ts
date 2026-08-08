@@ -30,6 +30,11 @@ export async function fetchIceServers(): Promise<RTCIceServer[]> {
   return cachedIceServers;
 }
 
+/** Clear ICE cache so the next call can pick up fresh ephemeral TURN credentials. */
+export function clearIceServersCache(): void {
+  cachedIceServers = null;
+}
+
 export function initPeerConnection(iceServers: RTCIceServer[]): RTCPeerConnection {
   return new RTCPeerConnection({ iceServers });
 }
@@ -65,6 +70,7 @@ export async function addIceCandidate(
 export interface CallMediaRefs {
   pc: RTCPeerConnection | null;
   localStream: MediaStream | null;
+  remoteStream: MediaStream | null;
 }
 
 export function cleanupCall(refs: CallMediaRefs): void {
@@ -80,6 +86,207 @@ export function cleanupCall(refs: CallMediaRefs): void {
       /* ignore */
     }
   });
+  refs.remoteStream?.getTracks().forEach((t) => {
+    try {
+      t.stop();
+    } catch {
+      /* ignore */
+    }
+  });
   refs.pc = null;
   refs.localStream = null;
+  refs.remoteStream = null;
+}
+
+export type CallKind = 'voice' | 'video';
+
+export type MediaErrorKind =
+  | 'permission'
+  | 'not_found'
+  | 'in_use'
+  | 'insecure'
+  | 'unknown';
+
+export function classifyMediaError(e: unknown): MediaErrorKind {
+  if (!(e instanceof DOMException)) return 'unknown';
+  switch (e.name) {
+    case 'NotAllowedError':
+    case 'PermissionDeniedError':
+      return 'permission';
+    case 'NotFoundError':
+    case 'DevicesNotFoundError':
+      return 'not_found';
+    case 'NotReadableError':
+    case 'TrackStartError':
+    case 'AbortError':
+      return 'in_use';
+    case 'SecurityError':
+      return 'insecure';
+    default:
+      return 'unknown';
+  }
+}
+
+export function mediaErrorMessage(kind: MediaErrorKind, callKind: CallKind): string {
+  const wantsVideo = callKind === 'video';
+  switch (kind) {
+    case 'permission':
+      return wantsVideo
+        ? 'Camera access is blocked. Allow camera and microphone access in your browser settings to use video calls.'
+        : 'Microphone access is blocked. Allow microphone access in your browser settings to use voice calls.';
+    case 'not_found':
+      return wantsVideo
+        ? 'No camera or microphone was detected on this device.'
+        : 'No microphone was detected on this device.';
+    case 'in_use':
+      return wantsVideo
+        ? 'Camera or microphone is already in use by another application.'
+        : 'Microphone is already in use by another application.';
+    case 'insecure':
+      return 'Media devices require a secure (HTTPS) connection.';
+    default:
+      return wantsVideo
+        ? 'Unable to access camera or microphone.'
+        : 'Unable to access microphone.';
+  }
+}
+
+export async function getCallUserMedia(
+  kind: CallKind,
+  deviceIds?: { audioId?: string; videoId?: string }
+): Promise<MediaStream> {
+  const constraints: MediaStreamConstraints = {
+    audio: deviceIds?.audioId ? { deviceId: { exact: deviceIds.audioId } } : true,
+    video:
+      kind === 'video'
+        ? deviceIds?.videoId
+          ? { deviceId: { exact: deviceIds.videoId }, width: { ideal: 1280 }, height: { ideal: 720 } }
+          : { width: { ideal: 1280 }, height: { ideal: 720 } }
+        : false,
+  };
+  return navigator.mediaDevices.getUserMedia(constraints);
+}
+
+export function attachRemoteMedia(stream: MediaStream) {
+  const audio = document.getElementById('remote-audio') as HTMLAudioElement | null;
+  if (audio) {
+    audio.srcObject = stream;
+    void audio.play().catch(() => {});
+  }
+  const video = document.getElementById('remote-video') as HTMLVideoElement | null;
+  if (video) {
+    video.srcObject = stream;
+    void video.play().catch(() => {});
+  }
+}
+
+export function attachLocalVideo(stream: MediaStream | null) {
+  const video = document.getElementById('local-video') as HTMLVideoElement | null;
+  if (video) {
+    video.srcObject = stream;
+    if (stream) void video.play().catch(() => {});
+  }
+}
+
+export function clearRemoteMediaElements() {
+  const audio = document.getElementById('remote-audio') as HTMLAudioElement | null;
+  if (audio) audio.srcObject = null;
+  const remote = document.getElementById('remote-video') as HTMLVideoElement | null;
+  if (remote) remote.srcObject = null;
+  const local = document.getElementById('local-video') as HTMLVideoElement | null;
+  if (local) local.srcObject = null;
+}
+
+export type ConnectionQuality = 'excellent' | 'good' | 'poor' | 'unknown';
+
+export async function sampleConnectionQuality(pc: RTCPeerConnection): Promise<ConnectionQuality> {
+  try {
+    const stats = await pc.getStats();
+    let rttMs: number | null = null;
+    let packetLoss = 0;
+    let packetsReceived = 0;
+    let packetsLost = 0;
+    let jitter = 0;
+
+    stats.forEach((report) => {
+      if (report.type === 'candidate-pair' && (report as RTCIceCandidatePairStats).state === 'succeeded') {
+        const pair = report as RTCIceCandidatePairStats;
+        if (typeof pair.currentRoundTripTime === 'number') {
+          rttMs = pair.currentRoundTripTime * 1000;
+        }
+      }
+      if (report.type === 'inbound-rtp') {
+        const inbound = report as RTCInboundRtpStreamStats;
+        if (typeof inbound.packetsLost === 'number') packetsLost += inbound.packetsLost;
+        if (typeof inbound.packetsReceived === 'number') packetsReceived += inbound.packetsReceived;
+        if (typeof inbound.jitter === 'number') jitter = Math.max(jitter, inbound.jitter);
+      }
+    });
+
+    if (packetsReceived + packetsLost > 0) {
+      packetLoss = packetsLost / (packetsReceived + packetsLost);
+    }
+
+    if (rttMs == null && packetLoss === 0 && jitter === 0) return 'unknown';
+
+    if ((rttMs != null && rttMs > 400) || packetLoss > 0.08 || jitter > 0.05) return 'poor';
+    if ((rttMs != null && rttMs > 200) || packetLoss > 0.03 || jitter > 0.03) return 'good';
+    return 'excellent';
+  } catch {
+    return 'unknown';
+  }
+}
+
+export async function replaceInputTrack(
+  pc: RTCPeerConnection,
+  localStream: MediaStream,
+  kind: 'audio' | 'video',
+  deviceId: string
+): Promise<MediaStreamTrack | null> {
+  const constraints: MediaStreamConstraints =
+    kind === 'audio'
+      ? { audio: { deviceId: { exact: deviceId } }, video: false }
+      : { audio: false, video: { deviceId: { exact: deviceId } } };
+  const fresh = await navigator.mediaDevices.getUserMedia(constraints);
+  const newTrack = kind === 'audio' ? fresh.getAudioTracks()[0] : fresh.getVideoTracks()[0];
+  if (!newTrack) {
+    fresh.getTracks().forEach((t) => t.stop());
+    return null;
+  }
+  const sender = pc.getSenders().find((s) => s.track?.kind === kind);
+  if (sender) {
+    await sender.replaceTrack(newTrack);
+  }
+  const oldTracks = kind === 'audio' ? localStream.getAudioTracks() : localStream.getVideoTracks();
+  oldTracks.forEach((t) => {
+    localStream.removeTrack(t);
+    t.stop();
+  });
+  localStream.addTrack(newTrack);
+  // Stop unused tracks from the temporary stream (opposite kind none)
+  fresh.getTracks().forEach((t) => {
+    if (t !== newTrack) t.stop();
+  });
+  return newTrack;
+}
+
+export async function setAudioOutputDevice(deviceId: string): Promise<boolean> {
+  const audio = document.getElementById('remote-audio') as HTMLAudioElement & {
+    setSinkId?: (id: string) => Promise<void>;
+  } | null;
+  const video = document.getElementById('remote-video') as HTMLVideoElement & {
+    setSinkId?: (id: string) => Promise<void>;
+  } | null;
+  let ok = false;
+  for (const el of [audio, video]) {
+    if (el && typeof el.setSinkId === 'function') {
+      try {
+        await el.setSinkId(deviceId);
+        ok = true;
+      } catch (e) {
+        devWarn('[webrtc] setSinkId failed', e);
+      }
+    }
+  }
+  return ok;
 }

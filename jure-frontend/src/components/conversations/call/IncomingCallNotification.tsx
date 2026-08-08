@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Phone, X, Check } from 'lucide-react';
+import { Phone, Video, X, Check } from 'lucide-react';
 import UserAvatar from '@/components/common/UserAvatar';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -8,16 +8,27 @@ const AUTO_DISMISS_MS = 30_000;
 
 const IncomingCallNotification: React.FC<{
   visible: boolean;
+  kind?: 'voice' | 'video';
   callerName: string;
   callerAvatar?: string | null;
   firstName?: string;
   lastName?: string;
   onAccept: () => void;
   onDecline: () => void;
-}> = ({ visible, callerName, callerAvatar, firstName, lastName, onAccept, onDecline }) => {
+}> = ({
+  visible,
+  kind = 'voice',
+  callerName,
+  callerAvatar,
+  firstName,
+  lastName,
+  onAccept,
+  onDecline,
+}) => {
   const isMobile = useIsMobile();
   const [entered, setEntered] = useState(false);
   const [progress, setProgress] = useState(0);
+  const isVideo = kind === 'video';
 
   useEffect(() => {
     if (!visible) {
@@ -50,6 +61,7 @@ const IncomingCallNotification: React.FC<{
 
   const circumference = 2 * Math.PI * 26;
   const dashOffset = circumference * (1 - progress);
+  const Icon = isVideo ? Video : Phone;
 
   return (
     <div
@@ -60,33 +72,74 @@ const IncomingCallNotification: React.FC<{
         entered ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'
       )}
       role="dialog"
-      aria-label="Incoming call"
+      aria-label={isVideo ? 'Incoming video call' : 'Incoming call'}
     >
       <div className="p-4">
         <div className="mb-3 flex items-center gap-2 text-slate-800 dark:text-slate-100">
-          <Phone className="h-4 w-4 shrink-0 text-emerald-600" aria-hidden />
-          <span className="text-sm font-semibold tracking-tight">Incoming Call</span>
+          <Icon className="h-4 w-4 shrink-0 text-emerald-600" aria-hidden />
+          <span className="text-sm font-semibold tracking-tight">
+            {isVideo ? 'Incoming Video Call' : 'Incoming Call'}
+          </span>
         </div>
         <div className="flex gap-3">
           <div className="relative h-12 w-12 shrink-0">
             <svg className="absolute inset-0 h-12 w-12 -rotate-90" viewBox="0 0 56 56" aria-hidden>
-              <circle cx="28" cy="28" r="26" fill="none" stroke="currentColor" strokeWidth="2" className="text-slate-200 dark:text-slate-700" />
-              <circle cx="28" cy="28" r="26" fill="none" stroke="currentColor" strokeWidth="2" strokeDasharray={circumference} strokeDashoffset={dashOffset} strokeLinecap="round" className="text-emerald-500 transition-[stroke-dashoffset] duration-200" />
+              <circle
+                cx="28"
+                cy="28"
+                r="26"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                className="text-slate-200 dark:text-slate-700"
+              />
+              <circle
+                cx="28"
+                cy="28"
+                r="26"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeDasharray={circumference}
+                strokeDashoffset={dashOffset}
+                strokeLinecap="round"
+                className="text-emerald-500 transition-[stroke-dashoffset] duration-200"
+              />
             </svg>
             <div className="absolute inset-[3px] overflow-hidden rounded-full">
-              <UserAvatar image={callerAvatar ?? undefined} firstName={firstName} lastName={lastName} size="md" className="h-full w-full" />
+              <UserAvatar
+                image={callerAvatar ?? undefined}
+                firstName={firstName}
+                lastName={lastName}
+                size="md"
+                className="h-full w-full"
+              />
             </div>
           </div>
           <div className="min-w-0 flex-1">
-            <p className="truncate text-[15px] font-semibold text-slate-900 dark:text-slate-50">{callerName}</p>
-            <p className="text-xs text-slate-500 dark:text-slate-400">is calling you…</p>
+            <p className="truncate text-[15px] font-semibold text-slate-900 dark:text-slate-50">
+              {callerName}
+            </p>
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              {isVideo ? 'is video calling you…' : 'is calling you…'}
+            </p>
           </div>
         </div>
         <div className="mt-4 flex justify-end gap-2">
-          <button type="button" onClick={onDecline} aria-label="Decline call" className="inline-flex h-10 items-center gap-1.5 rounded-full bg-rose-600 px-4 text-sm font-medium text-white hover:bg-rose-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400">
+          <button
+            type="button"
+            onClick={onDecline}
+            aria-label="Decline call"
+            className="inline-flex h-10 items-center gap-1.5 rounded-full bg-rose-600 px-4 text-sm font-medium text-white hover:bg-rose-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400"
+          >
             <X className="h-4 w-4" /> Decline
           </button>
-          <button type="button" onClick={onAccept} aria-label="Accept call" className="inline-flex h-10 items-center gap-1.5 rounded-full bg-emerald-600 px-4 text-sm font-medium text-white hover:bg-emerald-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400">
+          <button
+            type="button"
+            onClick={onAccept}
+            aria-label="Accept call"
+            className="inline-flex h-10 items-center gap-1.5 rounded-full bg-emerald-600 px-4 text-sm font-medium text-white hover:bg-emerald-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
+          >
             <Check className="h-4 w-4" /> Accept
           </button>
         </div>

@@ -14,7 +14,16 @@ from ..models import ConversationMembership
 RING_TIMEOUT_TASKS: dict[str, asyncio.Task] = {}
 
 
-def _notify_call_missed_sync(user_id: int | None, conversation_id: int | None) -> None:
+def _normalize_call_kind(raw) -> str:
+    kind = str(raw or "voice").strip().lower()
+    return "video" if kind == "video" else "voice"
+
+
+def _notify_call_missed_sync(
+    user_id: int | None,
+    conversation_id: int | None,
+    kind: str = "voice",
+) -> None:
     if not user_id:
         return
     try:
@@ -26,11 +35,16 @@ def _notify_call_missed_sync(user_id: int | None, conversation_id: int | None) -
             if conversation_id
             else "/dashboard/chat"
         )
+        is_video = _normalize_call_kind(kind) == "video"
         create_notification(
             recipient_id=int(user_id),
             notification_type=NotificationType.CALL_MISSED,
             title="Appel manqué",
-            message="Vous avez manqué un appel vocal.",
+            message=(
+                "Vous avez manqué un appel vidéo."
+                if is_video
+                else "Vous avez manqué un appel vocal."
+            ),
             priority=NotificationPriority.HIGH,
             action_url=url,
             send_email=True,
@@ -41,7 +55,51 @@ def _notify_call_missed_sync(user_id: int | None, conversation_id: int | None) -
         logging.getLogger(__name__).exception("call_missed notification failed")
 
 
+def _persist_call_started_sync(
+    conversation_id: int,
+    caller_id: int,
+    target_id: int,
+    kind: str,
+) -> int | None:
+    """Create Call + CallParticipant rows; return call id for cache."""
+    try:
+        from ..models import Call, CallParticipant
+
+        call = Call.objects.create(
+            conversation_id=conversation_id,
+            created_by_id=caller_id,
+            kind=_normalize_call_kind(kind),
+        )
+        CallParticipant.objects.create(call=call, user_id=caller_id)
+        CallParticipant.objects.create(call=call, user_id=target_id)
+        return call.id
+    except Exception:
+        import logging
+
+        logging.getLogger(__name__).exception("persist call start failed")
+        return None
+
+
+def _persist_call_ended_sync(call_id: int | None) -> None:
+    if not call_id:
+        return
+    try:
+        from django.utils import timezone as dj_tz
+
+        from ..models import Call, CallParticipant
+
+        now = dj_tz.now()
+        Call.objects.filter(id=call_id, ended_at__isnull=True).update(ended_at=now)
+        CallParticipant.objects.filter(call_id=call_id, left_at__isnull=True).update(left_at=now)
+    except Exception:
+        import logging
+
+        logging.getLogger(__name__).exception("persist call end failed")
+
+
 _notify_call_missed_async = database_sync_to_async(_notify_call_missed_sync)
+_persist_call_started_async = database_sync_to_async(_persist_call_started_sync)
+_persist_call_ended_async = database_sync_to_async(_persist_call_ended_sync)
 
 
 def _pair_call_group(uid_a: int, uid_b: int) -> str:
@@ -73,12 +131,15 @@ def _schedule_ring_timeout(consumer: Any, group_name: str) -> None:
             return
         target_uid = state.get("targetUserId")
         conv_id = state.get("conversationId")
+        kind = state.get("kind", "voice")
+        call_id = state.get("callId")
         await consumer.channel_layer.group_send(
             group_name,
             {"type": "call.missed", "group_name": group_name},
         )
         if target_uid:
-            await _notify_call_missed_async(target_uid, conv_id)
+            await _notify_call_missed_async(target_uid, conv_id, kind)
+        await _persist_call_ended_async(call_id)
         await asyncio.to_thread(cache.delete, key)
 
     RING_TIMEOUT_TASKS[group_name] = asyncio.create_task(_run())
@@ -156,14 +217,18 @@ class CallSignalingMixin:
         if not await self._verify_call_pair(conv_id, self.user.id, target_id):
             await self.send_json({"type": "error", "message": "not a participant"})
             return
+        kind = _normalize_call_kind(content.get("kind"))
         group_name = _pair_call_group(self.user.id, target_id)
         key = _call_state_cache_key(group_name)
+        call_id = await _persist_call_started_async(conv_id, self.user.id, target_id, kind)
         state = {
             "callerId": self.user.id,
             "targetUserId": target_id,
             "status": "ringing",
             "startedAt": timezone.now().isoformat(),
             "conversationId": conv_id,
+            "kind": kind,
+            "callId": call_id,
         }
         await asyncio.to_thread(cache.set, key, state, 120)
         await self.channel_layer.group_add(group_name, self.channel_name)
@@ -176,6 +241,7 @@ class CallSignalingMixin:
                 "groupName": group_name,
                 "conversationId": conv_id,
                 "targetUserId": target_id,
+                "kind": kind,
             }
         )
         caller_name = await database_sync_to_async(
@@ -187,6 +253,7 @@ class CallSignalingMixin:
             "callerName": caller_name,
             "conversationId": conv_id,
             "groupName": group_name,
+            "kind": kind,
         }
         ring_event = {
             "type": "call.incoming",
@@ -236,6 +303,7 @@ class CallSignalingMixin:
             await self.send_json({"type": "error", "message": "invalid call"})
             return
         _cancel_ring_timeout(group_name)
+        await _persist_call_ended_async(state.get("callId"))
         await asyncio.to_thread(cache.delete, key)
         await self.channel_layer.group_send(
             group_name,
@@ -335,6 +403,7 @@ class CallSignalingMixin:
         if not state or self.user.id not in (state.get("callerId"), state.get("targetUserId")):
             return
         _cancel_ring_timeout(group_name)
+        await _persist_call_ended_async(state.get("callId"))
         await asyncio.to_thread(cache.delete, key)
         await self.send_json({"type": "call.ended", "groupName": group_name})
         await self.channel_layer.group_discard(group_name, self.channel_name)

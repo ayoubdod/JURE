@@ -23,7 +23,11 @@ interface CallDialogProps {
   onEndCall: () => void;
   onClose: () => void;
   onToggleMute: () => void;
+  onToggleCamera?: () => void;
   onRetryMic: () => void;
+  onSelectAudioInput?: (id: string) => void;
+  onSelectVideoInput?: (id: string) => void;
+  onSelectAudioOutput?: (id: string) => void;
 }
 
 const CallDialog: React.FC<CallDialogProps> = ({
@@ -38,19 +42,30 @@ const CallDialog: React.FC<CallDialogProps> = ({
   onEndCall,
   onClose,
   onToggleMute,
+  onToggleCamera,
   onRetryMic,
+  onSelectAudioInput,
+  onSelectVideoInput,
+  onSelectAudioOutput,
 }) => {
   const isMobile = useIsMobile();
   const status = callState.status as CallModalStatus;
-  const isLive = status === 'calling' || status === 'connecting' || status === 'active';
-  const [presentation, setPresentation] = useState<Presentation>('expanded');
+  const isLive =
+    status === 'calling' ||
+    status === 'connecting' ||
+    status === 'active' ||
+    status === 'reconnecting';
+  const isVideo = callState.kind === 'video';
+  const [presentation, setPresentation] = useState<Presentation>(
+    isMobile && isVideo ? 'fullscreen' : 'expanded'
+  );
   const dragStartY = useRef<number | null>(null);
   const showCompact = open && presentation === 'compact' && isLive;
   const showExpanded = open && !showCompact;
 
   useEffect(() => {
-    if (!open) setPresentation('expanded');
-  }, [open]);
+    if (!open) setPresentation(isMobile && isVideo ? 'fullscreen' : 'expanded');
+  }, [open, isMobile, isVideo]);
 
   useEffect(() => {
     if (!isLive && presentation === 'compact') setPresentation('expanded');
@@ -60,7 +75,9 @@ const CallDialog: React.FC<CallDialogProps> = ({
     if (isLive) setPresentation('compact');
   }, [isLive]);
 
-  const expand = useCallback(() => setPresentation('expanded'), []);
+  const expand = useCallback(() => {
+    setPresentation(isMobile && isVideo ? 'fullscreen' : 'expanded');
+  }, [isMobile, isVideo]);
 
   const toggleFullscreen = useCallback(() => {
     setPresentation((p) => (p === 'fullscreen' ? 'expanded' : 'fullscreen'));
@@ -81,7 +98,8 @@ const CallDialog: React.FC<CallDialogProps> = ({
 
   if (!open) return null;
 
-  const layout = presentation === 'fullscreen' ? 'fullscreen' : isMobile ? 'sheet' : 'card';
+  const layout =
+    presentation === 'fullscreen' ? 'fullscreen' : isMobile ? (isVideo ? 'fullscreen' : 'sheet') : 'card';
 
   return (
     <>
@@ -92,25 +110,72 @@ const CallDialog: React.FC<CallDialogProps> = ({
           role="dialog"
           aria-label={`Call with ${remoteName}`}
           className={cn(
-            'fixed inset-x-3 bottom-3 z-[110] mx-auto flex max-w-lg items-center gap-3 rounded-2xl border border-slate-200/80 bg-white/90 px-3 py-2.5 shadow-[0_8px_30px_-8px_rgba(15,23,42,0.25)] backdrop-blur-xl',
+            'fixed inset-x-3 bottom-3 z-[110] mx-auto flex max-w-lg flex-col gap-2 rounded-2xl border border-slate-200/80 bg-white/90 px-3 py-2.5 shadow-[0_8px_30px_-8px_rgba(15,23,42,0.25)] backdrop-blur-xl',
             'dark:border-slate-700/80 dark:bg-slate-900/90 sm:inset-x-auto sm:bottom-6 sm:left-auto sm:right-6 sm:w-[380px]'
           )}
         >
-          <button type="button" onClick={expand} className="flex min-w-0 flex-1 items-center gap-3 rounded-xl text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400" aria-label="Expand call">
-            <div className="relative shrink-0">
-              <UserAvatar image={remoteAvatar ?? undefined} firstName={remoteFirstName} lastName={remoteLastName} size="md" className="h-10 w-10 ring-2 ring-emerald-400/50 ring-offset-2 ring-offset-white dark:ring-offset-slate-900" />
-              <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-white bg-emerald-500 dark:border-slate-900" aria-hidden />
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-semibold text-slate-900 dark:text-slate-50">{remoteName}</p>
-              <p className="flex items-center gap-1.5 text-xs text-emerald-600">
-                <CallTimer active startTime={callState.startTime} className="font-medium tabular-nums" />
-                <span className="text-slate-400">·</span>
-                <span className="truncate text-slate-500">{getCallStatusLabel(status)}</span>
-              </p>
-            </div>
-          </button>
-          <CallControls variant="compact" isMuted={callState.isMuted} onToggleMute={onToggleMute} onEndCall={onEndCall} canExpand onExpand={expand} />
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={expand}
+              className="flex min-w-0 flex-1 items-center gap-3 rounded-xl text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
+              aria-label="Expand call"
+            >
+              <div className="relative shrink-0">
+                <UserAvatar
+                  image={remoteAvatar ?? undefined}
+                  firstName={remoteFirstName}
+                  lastName={remoteLastName}
+                  size="md"
+                  className="h-10 w-10 ring-2 ring-emerald-400/50 ring-offset-2 ring-offset-white dark:ring-offset-slate-900"
+                />
+                <span
+                  className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-white bg-emerald-500 dark:border-slate-900"
+                  aria-hidden
+                />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-semibold text-slate-900 dark:text-slate-50">
+                  {remoteName}
+                </p>
+                <p className="flex items-center gap-1.5 text-xs text-emerald-600">
+                  <CallTimer
+                    active={status === 'active'}
+                    startTime={callState.startTime}
+                    className="font-medium tabular-nums"
+                  />
+                  <span className="text-slate-400">·</span>
+                  <span className="truncate text-slate-500">{getCallStatusLabel(status)}</span>
+                </p>
+              </div>
+            </button>
+            <CallControls
+              variant="compact"
+              kind={callState.kind}
+              isMuted={callState.isMuted}
+              isCameraOff={callState.isCameraOff}
+              onToggleMute={onToggleMute}
+              onToggleCamera={onToggleCamera}
+              onEndCall={onEndCall}
+              canExpand
+              onExpand={expand}
+            />
+          </div>
+          {isVideo ? (
+            <button type="button" onClick={expand} className="relative h-28 w-full overflow-hidden rounded-xl bg-slate-900">
+              <video
+                autoPlay
+                playsInline
+                muted
+                className="h-full w-full object-cover opacity-90"
+                ref={(el) => {
+                  if (!el) return;
+                  const remote = document.getElementById('remote-video') as HTMLVideoElement | null;
+                  if (remote?.srcObject) el.srcObject = remote.srcObject;
+                }}
+              />
+            </button>
+          ) : null}
         </div>
       ) : null}
 
@@ -131,15 +196,21 @@ const CallDialog: React.FC<CallDialogProps> = ({
             <DialogPrimitive.Overlay
               className={cn(
                 'fixed inset-0 z-50 transition-colors duration-200',
-                layout === 'fullscreen' ? 'bg-slate-950/40 backdrop-blur-sm' : layout === 'sheet' ? 'bg-slate-950/25 backdrop-blur-[2px]' : 'bg-slate-950/30 backdrop-blur-[3px]',
+                layout === 'fullscreen'
+                  ? 'bg-slate-950/40 backdrop-blur-sm'
+                  : layout === 'sheet'
+                    ? 'bg-slate-950/25 backdrop-blur-[2px]'
+                    : 'bg-slate-950/30 backdrop-blur-[3px]',
                 'data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0'
               )}
             />
             <DialogPrimitive.Content
               className={cn(
                 'fixed z-50 outline-none duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out',
-                layout === 'card' && 'left-1/2 top-1/2 w-auto max-w-[calc(100vw-2rem)] -translate-x-1/2 -translate-y-1/2 data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95',
-                layout === 'sheet' && 'inset-x-0 bottom-0 max-h-[78dvh] data-[state=open]:slide-in-from-bottom data-[state=closed]:slide-out-to-bottom',
+                layout === 'card' &&
+                  'left-1/2 top-1/2 w-auto max-w-[calc(100vw-2rem)] -translate-x-1/2 -translate-y-1/2 data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95',
+                layout === 'sheet' &&
+                  'inset-x-0 bottom-0 max-h-[78dvh] data-[state=open]:slide-in-from-bottom data-[state=closed]:slide-out-to-bottom',
                 layout === 'fullscreen' && 'inset-0 data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95'
               )}
               onPointerDownOutside={(e) => {
@@ -155,24 +226,37 @@ const CallDialog: React.FC<CallDialogProps> = ({
               onTouchEnd={onTouchEnd}
               aria-describedby={undefined}
             >
-              <DialogPrimitive.Title className="sr-only">Voice call with {remoteName}</DialogPrimitive.Title>
+              <DialogPrimitive.Title className="sr-only">
+                {isVideo ? 'Video' : 'Voice'} call with {remoteName}
+              </DialogPrimitive.Title>
               <CallModal
                 status={status}
+                kind={callState.kind}
                 remoteName={remoteName}
                 remoteAvatar={remoteAvatar}
                 remoteFirstName={remoteFirstName}
                 remoteLastName={remoteLastName}
                 isMuted={callState.isMuted}
+                isCameraOff={callState.isCameraOff}
                 callStartTime={callState.startTime}
                 endedDurationSec={callState.endedDurationSec}
                 micDenied={callState.micDenied}
+                mediaErrorMessage={callState.mediaErrorMessage}
+                connectionQuality={callState.connectionQuality}
                 layout={layout}
                 onToggleMute={onToggleMute}
+                onToggleCamera={onToggleCamera}
                 onEndCall={onEndCall}
                 onClose={onClose}
                 onRetryMic={onRetryMic}
                 onMinimize={isLive ? minimize : undefined}
-                onToggleFullscreen={isMobile && isLive ? toggleFullscreen : undefined}
+                onToggleFullscreen={isLive ? toggleFullscreen : undefined}
+                selectedAudioInputId={callState.selectedAudioInputId}
+                selectedVideoInputId={callState.selectedVideoInputId}
+                selectedAudioOutputId={callState.selectedAudioOutputId}
+                onSelectAudioInput={onSelectAudioInput}
+                onSelectVideoInput={onSelectVideoInput}
+                onSelectAudioOutput={onSelectAudioOutput}
                 callingProgress={callingProgress}
               />
             </DialogPrimitive.Content>

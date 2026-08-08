@@ -376,8 +376,12 @@ else:
 # --------------------------------------------------------------------------------------
 TURN_HOST = env.str("TURN_HOST", default="").strip()
 TURN_PORT = env.int("TURN_PORT", default=3478)
+TURN_TLS_PORT = env.int("TURN_TLS_PORT", default=0)
 TURN_USERNAME = env.str("TURN_USERNAME", default="")
 TURN_CREDENTIAL = env.str("TURN_CREDENTIAL", default="")
+# Prefer TURN_SECRET for short-lived coturn HMAC credentials (never ship static creds to clients long-term).
+TURN_SECRET = env.str("TURN_SECRET", default="")
+TURN_CREDENTIAL_TTL = env.int("TURN_CREDENTIAL_TTL", default=86400)
 
 # --------------------------------------------------------------------------------------
 # Juria AI
