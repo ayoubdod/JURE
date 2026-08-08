@@ -80,18 +80,18 @@ const KnowledgeCard = memo(function KnowledgeCard({
         }
       }}
       className={cn(
-        'group relative flex flex-col gap-3 rounded-xl border p-4 transition-all duration-200',
-        'bg-white/90 dark:bg-slate-950/80 backdrop-blur-sm',
-        'hover:-translate-y-0.5 hover:shadow-[0_12px_40px_-16px_rgba(100,73,157,0.35)]',
+        'group relative flex flex-col gap-2 rounded-lg border p-3 transition-[border-color,box-shadow] duration-150',
+        'bg-white dark:bg-slate-950',
+        'hover:border-slate-300 dark:hover:border-slate-700 hover:shadow-sm',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#64499D]/40',
-        'motion-reduce:transform-none motion-reduce:transition-none',
+        'motion-reduce:transition-none',
         selected
-          ? 'border-[#64499D]/45 shadow-[0_0_0_1px_rgba(100,73,157,0.2),0_8px_28px_-12px_rgba(100,73,157,0.35)]'
-          : 'border-slate-200/90 dark:border-slate-800 hover:border-[#64499D]/25'
+          ? 'border-[#64499D]/45 ring-1 ring-[#64499D]/20'
+          : 'border-slate-200/90 dark:border-slate-800'
       )}
     >
-      <div className="flex items-start gap-3">
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-slate-200/80 bg-[#F4F1FF]/60 dark:border-slate-800 dark:bg-[#64499D]/15">
+      <div className="flex items-start gap-2.5">
+        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-slate-200/80 bg-[#F4F1FF]/60 dark:border-slate-800 dark:bg-[#64499D]/15">
           <FileIcon file={doc.file} />
         </div>
         <div className="min-w-0 flex-1">
@@ -104,7 +104,7 @@ const KnowledgeCard = memo(function KnowledgeCard({
               aria-label={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
               onClick={(e) => onToggleFavorite(e, doc)}
               className={cn(
-                'rounded-md p-1 transition-colors',
+                'rounded-md p-1 transition-colors min-h-[28px] min-w-[28px] flex items-center justify-center',
                 isFavorite
                   ? 'text-amber-500'
                   : 'text-slate-300 opacity-0 group-hover:opacity-100 hover:text-amber-500'
@@ -113,7 +113,7 @@ const KnowledgeCard = memo(function KnowledgeCard({
               <Star className={cn('h-3.5 w-3.5', isFavorite && 'fill-current')} />
             </button>
           </div>
-          <p className="mt-0.5 line-clamp-2 text-[11px] leading-relaxed text-slate-500 dark:text-slate-400">
+          <p className="mt-0.5 line-clamp-1 text-[11px] leading-snug text-slate-500 dark:text-slate-400">
             {insight.summary}
           </p>
         </div>
@@ -145,9 +145,9 @@ const KnowledgeCard = memo(function KnowledgeCard({
         </span>
       </div>
 
-      <div className="mt-auto flex items-center justify-between border-t border-slate-100 pt-3 dark:border-slate-800/80">
-        <div className="flex flex-col gap-0.5">
-          <span className="text-[10px] text-slate-400">
+      <div className="mt-auto flex items-center justify-between border-t border-slate-100 pt-2 dark:border-slate-800/80">
+        <div className="flex flex-col gap-0.5 min-w-0">
+          <span className="text-[10px] text-slate-400 truncate">
             {new Date(doc.modified).toLocaleDateString(undefined, {
               month: 'short',
               day: 'numeric',
@@ -155,9 +155,8 @@ const KnowledgeCard = memo(function KnowledgeCard({
             })}
             <span className="mx-1 text-slate-300">·</span>
             {formatFileSize(doc.size)}
-          </span>
-          <span className="text-[10px] text-slate-400">
-            Score {insight.knowledgeScore} · {insight.references} refs · Conf. {insight.confidence}%
+            <span className="mx-1 text-slate-300">·</span>
+            Score {insight.knowledgeScore}
           </span>
         </div>
         <div

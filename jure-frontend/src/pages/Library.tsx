@@ -8,7 +8,7 @@ import React, {
   useState,
   startTransition,
 } from 'react';
-import { FolderTree } from 'lucide-react';
+import { FolderTree, Plus, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { useToast } from '@/hooks/use-toast';
@@ -26,7 +26,6 @@ import DocumentDetailDrawer, {
   DocumentDetailDrawerRef,
 } from '@/components/library/DocumentDetailDrawer';
 import {
-  KnowledgeHubHeader,
   KnowledgeSearch,
   SmartMetricsBar,
   CollectionsSidebar,
@@ -47,9 +46,11 @@ import {
   type EnrichedDocument,
   type KnowledgeViewMode,
   type MobileKnowledgeTab,
+  type KnowledgeSearchHandle,
 } from '@/components/library/knowledge-hub';
 import { cn } from '@/lib/utils';
 import { devError } from '@/utils/devLog';
+import '@/styles/workspace-list.css';
 
 const KnowledgeTimelineView = lazy(
   () => import('@/components/library/knowledge-hub/KnowledgeTimelineView')
@@ -73,9 +74,9 @@ function parseDocuments(data: unknown): API.Document[] {
 }
 
 const ViewFallback = () => (
-  <div className="animate-pulse space-y-3 p-4" aria-hidden>
+  <div className="animate-pulse space-y-2 p-3" aria-hidden>
     {[...Array(4)].map((_, i) => (
-      <div key={i} className="h-16 rounded-xl bg-slate-200/80 dark:bg-slate-800" />
+      <div key={i} className="h-12 rounded-lg bg-slate-200/80 dark:bg-slate-800" />
     ))}
   </div>
 );
@@ -83,7 +84,7 @@ const ViewFallback = () => (
 const Library = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [collection, setCollection] = useState<CollectionId>('all');
-  const [viewMode, setViewMode] = useState<KnowledgeViewMode>('grid');
+  const [viewMode, setViewMode] = useState<KnowledgeViewMode>('table');
   const [libraryItems, setLibraryItems] = useState<API.Document[]>([]);
   const [loading, setLoading] = useState(true);
   const [sortBy, setSortBy] = useState<SortKey>('date');
@@ -99,6 +100,7 @@ const Library = () => {
   const updateModalRef = useRef<DocumentUpdateModalRef>(null);
   const deleteModalRef = useRef<DocumentDeleteModalRef>(null);
   const detailDrawerRef = useRef<DocumentDetailDrawerRef>(null);
+  const searchRef = useRef<KnowledgeSearchHandle>(null);
 
   const fetchDocuments = useCallback(() => {
     setLoading(true);
@@ -223,7 +225,9 @@ const Library = () => {
     []
   );
 
-  const handleAddNew = () => createModalRef.current?.show();
+  const handleAddNew = useCallback(() => {
+    createModalRef.current?.show();
+  }, []);
 
   const handleCreateSuccess = (document: API.Document) => {
     toast({
@@ -264,10 +268,8 @@ const Library = () => {
       return;
     }
     if (tab === 'search') {
-      document.getElementById('knowledge-search-anchor')?.scrollIntoView({
-        behavior: 'smooth',
-        block: 'center',
-      });
+      searchRef.current?.focus();
+      searchRef.current?.select();
       return;
     }
     if (tab === 'ai') {
@@ -276,6 +278,37 @@ const Library = () => {
     }
     setFolderSheetOpen(true);
   };
+
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      const tag = target?.tagName?.toLowerCase();
+      const inField =
+        tag === 'input' ||
+        tag === 'textarea' ||
+        tag === 'select' ||
+        target?.isContentEditable;
+
+      if (e.key === '/' && !inField && !e.metaKey && !e.ctrlKey && !e.altKey) {
+        e.preventDefault();
+        searchRef.current?.focus();
+        searchRef.current?.select();
+        return;
+      }
+      if (
+        (e.key === 'n' || e.key === 'N' || e.key === 'u' || e.key === 'U') &&
+        !inField &&
+        !e.metaKey &&
+        !e.ctrlKey &&
+        !e.altKey
+      ) {
+        e.preventDefault();
+        handleAddNew();
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [handleAddNew]);
 
   const cardHandlers = {
     onSelect: handleSelect,
@@ -288,33 +321,16 @@ const Library = () => {
 
   return (
     <>
-      <div className="relative flex h-full min-h-[calc(100vh-4rem)] flex-col overflow-hidden bg-slate-50/50 dark:bg-slate-950 md:min-h-0">
-        <KnowledgeHubHeader
-          documentCount={enriched.length}
-          onUpload={handleAddNew}
-          className="shrink-0"
-        />
-
-        <div className="shrink-0 space-y-4 border-b border-slate-200/80 px-4 py-4 dark:border-slate-800 sm:px-6">
-          <div id="knowledge-search-anchor">
-            <KnowledgeSearch
-              value={searchTerm}
-              onChange={setSearchTerm}
-              onSubmit={setSearchTerm}
-            />
-          </div>
-          <SmartMetricsBar metrics={metrics} />
-        </div>
-
+      <div className="relative flex h-full min-h-0 flex-col overflow-hidden bg-slate-50 dark:bg-slate-950">
         <div className="flex min-h-0 flex-1 overflow-hidden">
-          {/* Collections — desktop */}
+          {/* Collections — desktop (persistent) */}
           <aside
             className={cn(
-              'hidden w-56 shrink-0 flex-col border-r border-slate-200/80 bg-white/60 dark:border-slate-800 dark:bg-slate-950/40 lg:flex',
-              'xl:w-60'
+              'hidden w-52 shrink-0 flex-col border-r border-slate-200/80 bg-white/80 dark:border-slate-800 dark:bg-slate-950/50 lg:flex',
+              'xl:w-56'
             )}
           >
-            <div className="min-h-0 flex-1 overflow-y-auto p-3">
+            <div className="min-h-0 flex-1 overflow-y-auto p-2.5">
               <CollectionsSidebar
                 selected={collection}
                 onSelect={setCollection}
@@ -325,7 +341,6 @@ const Library = () => {
             </div>
           </aside>
 
-          {/* Mobile collections sheet */}
           <Sheet open={folderSheetOpen} onOpenChange={setFolderSheetOpen}>
             <SheetContent
               side="left"
@@ -349,105 +364,144 @@ const Library = () => {
             </SheetContent>
           </Sheet>
 
-          {/* Main workspace */}
-          <div className="flex min-w-0 flex-1 flex-col">
-            <div className="flex flex-wrap items-center gap-2 border-b border-slate-200/80 px-3 py-2.5 dark:border-slate-800 sm:px-4">
-              <Button
-                type="button"
-                variant="outline"
-                size="icon"
-                className="h-9 w-9 shrink-0 lg:hidden"
-                onClick={() => setFolderSheetOpen(true)}
-                aria-label="Open collections"
-              >
-                <FolderTree className="h-4 w-4" />
-              </Button>
-              <ViewTabs value={viewMode} onChange={setViewMode} className="min-w-0" />
-              <div className="ml-auto hidden items-center gap-1 sm:flex">
-                <span className="mr-1 text-[11px] text-slate-400">
-                  {filteredItems.length} results
-                </span>
+          {/* Main workspace — metrics scroll away; toolbar sticky */}
+          <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
+            <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden">
+              <div className="px-3 pt-2 sm:px-4">
+                <SmartMetricsBar metrics={metrics} />
               </div>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="ml-auto h-8 text-[12px] xl:hidden"
-                onClick={() => setAiSheetOpen(true)}
-                aria-label="Open AI Copilot"
-              >
-                Copilot
-              </Button>
-            </div>
 
-            <div className="min-h-0 flex-1 overflow-y-auto pb-20 md:pb-4">
-              {loading ? (
-                <div className="grid gap-3 p-4 sm:grid-cols-2 xl:grid-cols-3">
-                  {[...Array(6)].map((_, i) => (
-                    <div
-                      key={i}
-                      className="h-44 animate-pulse rounded-xl bg-slate-200/70 dark:bg-slate-800"
+              <div
+                className={cn(
+                  'ws-toolbar-sticky sticky top-0 z-30',
+                  'border-b border-slate-200/90 bg-slate-50/95 px-3 py-2 backdrop-blur-sm dark:border-slate-800 dark:bg-slate-950/95 sm:px-4'
+                )}
+              >
+                <div className="rounded-lg border border-slate-200/90 bg-white/95 px-2 py-2 dark:border-slate-800 dark:bg-slate-950/90 sm:px-3">
+                  <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      className="h-9 w-9 shrink-0 lg:hidden"
+                      onClick={() => setFolderSheetOpen(true)}
+                      aria-label="Open collections"
+                    >
+                      <FolderTree className="h-4 w-4" />
+                    </Button>
+
+                    <KnowledgeSearch
+                      ref={searchRef}
+                      value={searchTerm}
+                      onChange={setSearchTerm}
+                      onSubmit={setSearchTerm}
+                      compact
+                      className="min-w-[min(100%,12rem)] flex-1 sm:min-w-[14rem] sm:flex-[1.6]"
                     />
-                  ))}
+
+                    <ViewTabs value={viewMode} onChange={setViewMode} className="min-w-0" />
+
+                    <span className="hidden text-[11px] tabular-nums text-slate-400 sm:inline">
+                      {filteredItems.length} results
+                    </span>
+
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="h-9 text-[12px] xl:hidden"
+                      onClick={() => setAiSheetOpen(true)}
+                      aria-label="Open AI Copilot"
+                    >
+                      Copilot
+                    </Button>
+
+                    <Button
+                      type="button"
+                      size="sm"
+                      className="ml-auto hidden h-9 shrink-0 gap-1.5 rounded-md bg-[#64499D] px-3 text-[12px] font-semibold text-white hover:bg-[#4D3680] md:inline-flex"
+                      onClick={handleAddNew}
+                    >
+                      <Upload className="h-3.5 w-3.5" />
+                      Upload
+                    </Button>
+                  </div>
                 </div>
-              ) : filteredItems.length === 0 ? (
-                <KnowledgeEmptyState
-                  filtered={Boolean(searchTerm) || collection !== 'all'}
-                  onUpload={handleAddNew}
-                />
-              ) : viewMode === 'grid' ? (
-                <div className="grid gap-3 p-3 sm:grid-cols-2 sm:p-4 xl:grid-cols-2 2xl:grid-cols-3">
-                  {filteredItems.map((item) => (
-                    <KnowledgeCard
-                      key={item.id}
-                      document={item}
-                      selected={selectedDoc?.id === item.id}
-                      isFavorite={favorites.includes(item.id)}
-                      {...cardHandlers}
-                    />
-                  ))}
-                </div>
-              ) : viewMode === 'table' ? (
-                <KnowledgeTableView
-                  items={filteredItems}
-                  selectedId={selectedDoc?.id}
-                  sortBy={sortBy === 'score' ? 'score' : sortBy}
-                  sortOrder={sortOrder}
-                  onSort={toggleSort}
-                  onSelect={handleSelect}
-                  onOpen={handleOpen}
-                  onEdit={handleEdit}
-                  onDownload={handleDownload}
-                  onDelete={handleDelete}
-                />
-              ) : (
-                <div className="p-3 sm:p-4">
-                  <Suspense fallback={<ViewFallback />}>
-                    {viewMode === 'timeline' && (
-                      <KnowledgeTimelineView
+              </div>
+
+              <div className="pb-20 md:pb-4">
+                {loading ? (
+                  <div className="grid gap-2 p-3 sm:grid-cols-2 xl:grid-cols-3">
+                    {[...Array(6)].map((_, i) => (
+                      <div
+                        key={i}
+                        className="h-28 animate-pulse rounded-lg bg-slate-200/70 dark:bg-slate-800"
+                      />
+                    ))}
+                  </div>
+                ) : filteredItems.length === 0 ? (
+                  <KnowledgeEmptyState
+                    filtered={Boolean(searchTerm) || collection !== 'all'}
+                    onUpload={handleAddNew}
+                  />
+                ) : viewMode === 'grid' ? (
+                  <div className="grid gap-2 p-3 sm:grid-cols-2 sm:p-3 xl:grid-cols-2 2xl:grid-cols-3">
+                    {filteredItems.map((item) => (
+                      <KnowledgeCard
+                        key={item.id}
+                        document={item}
+                        selected={selectedDoc?.id === item.id}
+                        isFavorite={favorites.includes(item.id)}
+                        {...cardHandlers}
+                      />
+                    ))}
+                  </div>
+                ) : viewMode === 'table' ? (
+                  <div className="p-2 sm:p-3">
+                    <div className="overflow-hidden rounded-lg border border-slate-200/90 bg-white dark:border-slate-800 dark:bg-slate-950">
+                      <KnowledgeTableView
                         items={filteredItems}
                         selectedId={selectedDoc?.id}
+                        sortBy={sortBy === 'score' ? 'score' : sortBy}
+                        sortOrder={sortOrder}
+                        onSort={toggleSort}
                         onSelect={handleSelect}
+                        onOpen={handleOpen}
+                        onEdit={handleEdit}
+                        onDownload={handleDownload}
+                        onDelete={handleDelete}
                       />
-                    )}
-                    {viewMode === 'graph' && (
-                      <KnowledgeGraphView
-                        items={filteredItems}
-                        selectedId={selectedDoc?.id}
-                        onSelect={handleSelect}
-                      />
-                    )}
-                    {viewMode === 'ai' && (
-                      <KnowledgeAIView items={filteredItems} onSelect={handleSelect} />
-                    )}
-                  </Suspense>
-                </div>
-              )}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-3">
+                    <Suspense fallback={<ViewFallback />}>
+                      {viewMode === 'timeline' && (
+                        <KnowledgeTimelineView
+                          items={filteredItems}
+                          selectedId={selectedDoc?.id}
+                          onSelect={handleSelect}
+                        />
+                      )}
+                      {viewMode === 'graph' && (
+                        <KnowledgeGraphView
+                          items={filteredItems}
+                          selectedId={selectedDoc?.id}
+                          onSelect={handleSelect}
+                        />
+                      )}
+                      {viewMode === 'ai' && (
+                        <KnowledgeAIView items={filteredItems} onSelect={handleSelect} />
+                      )}
+                    </Suspense>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
           {/* AI Copilot — desktop */}
-          <div className="hidden w-72 shrink-0 xl:block 2xl:w-80">
+          <div className="hidden w-72 shrink-0 border-l border-slate-200/80 dark:border-slate-800 xl:block 2xl:w-80">
             <AICopilotPanel
               document={selectedDoc}
               onOpen={handleOpen}
@@ -456,7 +510,6 @@ const Library = () => {
           </div>
         </div>
 
-        {/* AI Copilot — mobile / tablet sheet */}
         <Sheet open={aiSheetOpen} onOpenChange={setAiSheetOpen}>
           <SheetContent side="right" className="w-full max-w-md p-0 sm:max-w-md xl:hidden">
             <AICopilotPanel
@@ -471,7 +524,24 @@ const Library = () => {
           </SheetContent>
         </Sheet>
 
+        {/* Mobile FAB for upload (also in bottom nav) */}
+        <Button
+          type="button"
+          size="icon"
+          className="fixed z-40 bottom-[max(4.75rem,calc(env(safe-area-inset-bottom)+3.75rem))] right-4 h-12 w-12 rounded-full bg-[#64499D] shadow-lg hover:bg-[#4D3680] md:hidden"
+          onClick={handleAddNew}
+          aria-label="Upload documents"
+        >
+          <Plus className="h-5 w-5" strokeWidth={2.5} />
+        </Button>
+
         <MobileKnowledgeNav active={mobileTab} onChange={handleMobileNav} />
+
+        <p className="sr-only" aria-live="polite">
+          {loading
+            ? 'Loading knowledge repository'
+            : `${filteredItems.length} documents. Press slash to search, N or U to upload.`}
+        </p>
       </div>
 
       <DocumentCreateModal ref={createModalRef} onSuccess={handleCreateSuccess} />

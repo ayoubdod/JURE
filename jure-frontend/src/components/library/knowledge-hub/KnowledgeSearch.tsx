@@ -1,8 +1,13 @@
-import React, { useId, useState } from 'react';
+import React, { forwardRef, useId, useImperativeHandle, useRef, useState } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
-import { Search, Sparkles, X, CornerDownLeft } from 'lucide-react';
+import { Search, X, CornerDownLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { SEARCH_EXAMPLES } from './types';
+
+export type KnowledgeSearchHandle = {
+  focus: () => void;
+  select: () => void;
+};
 
 type Props = {
   value: string;
@@ -12,59 +17,63 @@ type Props = {
   compact?: boolean;
 };
 
-const KnowledgeSearch: React.FC<Props> = ({
-  value,
-  onChange,
-  onSubmit,
-  className,
-  compact = false,
-}) => {
+const KnowledgeSearch = forwardRef<KnowledgeSearchHandle, Props>(function KnowledgeSearch(
+  { value, onChange, onSubmit, className, compact = false },
+  ref
+) {
   const inputId = useId();
+  const inputRef = useRef<HTMLInputElement>(null);
   const [focused, setFocused] = useState(false);
   const reduceMotion = useReducedMotion();
-  const showExamples = focused && !value;
+  const showExamples = focused && !value && !compact;
+
+  useImperativeHandle(ref, () => ({
+    focus: () => inputRef.current?.focus(),
+    select: () => inputRef.current?.select(),
+  }));
 
   return (
-    <div className={cn('relative', className)}>
+    <div className={cn('relative', className)} id="knowledge-search-anchor">
       <label htmlFor={inputId} className="sr-only">
-        Ask your knowledge
+        Search knowledge
       </label>
       <div
         className={cn(
-          'group relative flex items-center gap-3 rounded-2xl border transition-all duration-300',
-          'bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl',
+          'group relative flex items-center gap-2 rounded-md border transition-all duration-150',
+          'bg-white dark:bg-slate-950',
           focused
-            ? 'border-[#64499D]/40 shadow-[0_0_0_3px_rgba(100,73,157,0.12),0_8px_30px_-8px_rgba(100,73,157,0.25)]'
-            : 'border-slate-200/90 dark:border-slate-700/80 shadow-sm hover:border-slate-300 dark:hover:border-slate-600',
-          compact ? 'px-3 py-2.5' : 'px-4 py-3.5 sm:px-5 sm:py-4'
+            ? 'border-[#64499D]/40 ring-2 ring-[#64499D]/20'
+            : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600',
+          compact ? 'h-9 px-2.5' : 'h-10 px-3'
         )}
       >
-        <div
+        <Search
           className={cn(
-            'flex h-8 w-8 shrink-0 items-center justify-center rounded-xl transition-colors',
-            focused
-              ? 'bg-[#64499D]/10 text-[#64499D] dark:text-[#CFC2FF]'
-              : 'bg-slate-100 text-slate-400 dark:bg-slate-800'
+            'h-3.5 w-3.5 shrink-0',
+            focused ? 'text-[#64499D] dark:text-[#CFC2FF]' : 'text-slate-400'
           )}
           aria-hidden
-        >
-          <Sparkles className="h-4 w-4" />
-        </div>
+        />
         <input
+          ref={inputRef}
           id={inputId}
           type="search"
           role="searchbox"
-          aria-label="Ask anything about your firm's knowledge"
-          placeholder="Ask anything about your firm's knowledge…"
+          aria-label="Search knowledge repository"
+          placeholder={compact ? 'Search knowledge… (press /)' : "Ask anything about your firm's knowledge…"}
           value={value}
           onChange={(e) => onChange(e.target.value)}
           onFocus={() => setFocused(true)}
           onBlur={() => setTimeout(() => setFocused(false), 150)}
           onKeyDown={(e) => {
             if (e.key === 'Enter' && onSubmit) onSubmit(value);
+            if (e.key === 'Escape') {
+              onChange('');
+              inputRef.current?.blur();
+            }
           }}
           className={cn(
-            'min-w-0 flex-1 bg-transparent text-[14px] text-slate-900 outline-none',
+            'min-w-0 flex-1 bg-transparent text-[13px] text-slate-900 outline-none',
             'placeholder:text-slate-400 dark:text-slate-100 dark:placeholder:text-slate-500',
             '[&::-webkit-search-cancel-button]:hidden'
           )}
@@ -73,32 +82,31 @@ const KnowledgeSearch: React.FC<Props> = ({
           <button
             type="button"
             onClick={() => onChange('')}
-            className="rounded-md p-1.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800"
+            className="rounded p-1 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800 min-h-[28px] min-w-[28px] flex items-center justify-center"
             aria-label="Clear search"
           >
-            <X className="h-4 w-4" />
+            <X className="h-3.5 w-3.5" />
           </button>
         ) : (
-          <kbd className="hidden items-center gap-1 rounded-md border border-slate-200 bg-slate-50 px-1.5 py-0.5 text-[10px] font-medium text-slate-400 sm:inline-flex dark:border-slate-700 dark:bg-slate-800">
+          <kbd className="hidden items-center gap-1 rounded border border-slate-200 bg-slate-50 px-1.5 py-0.5 text-[10px] font-medium text-slate-400 sm:inline-flex dark:border-slate-700 dark:bg-slate-800">
             <CornerDownLeft className="h-2.5 w-2.5" />
-            Ask
+            /
           </kbd>
         )}
-        <Search className="hidden h-4 w-4 text-slate-300 sm:block" aria-hidden />
       </div>
 
       <AnimatePresence>
-        {showExamples && !compact && (
+        {showExamples && (
           <motion.div
             initial={reduceMotion ? false : { opacity: 0, y: -4 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -4 }}
-            transition={{ duration: 0.2 }}
-            className="absolute left-0 right-0 z-20 mt-2 overflow-hidden rounded-xl border border-slate-200/90 bg-white/95 p-2 shadow-lg backdrop-blur-xl dark:border-slate-700 dark:bg-slate-900/95"
+            transition={{ duration: 0.15 }}
+            className="absolute left-0 right-0 z-40 mt-1.5 overflow-hidden rounded-lg border border-slate-200/90 bg-white p-1.5 shadow-lg dark:border-slate-700 dark:bg-slate-900"
             role="listbox"
             aria-label="Example queries"
           >
-            <p className="px-2 pb-1.5 pt-1 text-[10px] font-medium uppercase tracking-wider text-slate-400">
+            <p className="px-2 pb-1 pt-0.5 text-[10px] font-medium uppercase tracking-wider text-slate-400">
               Try asking
             </p>
             <div className="grid gap-0.5 sm:grid-cols-2">
@@ -112,7 +120,7 @@ const KnowledgeSearch: React.FC<Props> = ({
                     onChange(example);
                     onSubmit?.(example);
                   }}
-                  className="rounded-lg px-2.5 py-2 text-left text-[12px] text-slate-600 transition-colors hover:bg-[#64499D]/06 hover:text-[#64499D] dark:text-slate-300 dark:hover:bg-[#64499D]/15 dark:hover:text-[#CFC2FF]"
+                  className="rounded-md px-2 py-1.5 text-left text-[12px] text-slate-600 transition-colors hover:bg-[#64499D]/06 hover:text-[#64499D] dark:text-slate-300 dark:hover:bg-[#64499D]/15 dark:hover:text-[#CFC2FF]"
                 >
                   {example}
                 </button>
@@ -123,6 +131,6 @@ const KnowledgeSearch: React.FC<Props> = ({
       </AnimatePresence>
     </div>
   );
-};
+});
 
 export default KnowledgeSearch;

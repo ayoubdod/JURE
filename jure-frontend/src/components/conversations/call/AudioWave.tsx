@@ -1,44 +1,47 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
 
-const BAR_COUNT = 5;
+const PEAKS = [0.35, 0.55, 0.8, 0.45, 0.95, 0.6, 0.75, 0.4, 0.9, 0.5, 0.7, 0.4];
 
-const AudioWave: React.FC<{
-  active: boolean;
-  muted: boolean;
-  className?: string;
-}> = ({ active, muted, className }) => {
+const AudioWave: React.FC<{ active: boolean; muted: boolean; className?: string }> = ({
+  active,
+  muted,
+  className,
+}) => {
+  const animate = active && !muted;
   return (
     <div
-      className={cn('flex h-10 items-end justify-center gap-1', className)}
-      aria-hidden
+      className={cn('flex h-8 items-center justify-center gap-[3px]', className)}
+      role="img"
+      aria-label={muted ? 'Microphone muted' : active ? 'Live audio' : 'Audio idle'}
     >
-      {Array.from({ length: BAR_COUNT }).map((_, i) => (
+      {PEAKS.map((peak, i) => (
         <span
-          // eslint-disable-next-line react/no-array-index-key
           key={i}
           className={cn(
-            'w-1 rounded-full bg-emerald-400/90 transition-all duration-300',
-            muted || !active ? 'h-1 opacity-40' : 'call-wave-bar'
+            'w-[2.5px] rounded-full bg-emerald-500/80 transition-all duration-200',
+            !animate && 'h-[3px] opacity-40'
           )}
           style={
-            !muted && active
-              ? { animationDelay: `${i * 0.12}s` }
+            animate
+              ? {
+                  animation: `call-wave-smooth ${0.85 + (i % 4) * 0.08}s ease-in-out infinite`,
+                  animationDelay: `${i * 0.05}s`,
+                  ['--wave-peak' as string]: `${Math.round(4 + peak * 24)}px`,
+                }
               : undefined
           }
         />
       ))}
       <style>{`
-        @keyframes call-wave {
-          0%, 100% { height: 4px; opacity: 0.5; }
-          50% { height: 28px; opacity: 1; }
-        }
-        .call-wave-bar {
-          animation: call-wave 0.9s ease-in-out infinite;
+        @keyframes call-wave-smooth {
+          0%, 100% { height: 3px; opacity: 0.45; }
+          50% { height: var(--wave-peak, 20px); opacity: 0.95; }
         }
       `}</style>
     </div>
   );
 };
 
-export default AudioWave;
+export default React.memo(AudioWave);
+

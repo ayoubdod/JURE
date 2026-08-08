@@ -157,10 +157,10 @@ export function getDateGroupKey(iso: string): DateGroupKey {
 }
 
 const GROUP_LABELS: Record<DateGroupKey, string> = {
-  today: "AUJOURD'HUI",
-  yesterday: 'HIER',
-  week: 'CETTE SEMAINE',
-  older: 'PLUS ANCIEN',
+  today: 'Today',
+  yesterday: 'Yesterday',
+  week: 'This Week',
+  older: 'Older',
 };
 
 export function groupNotificationsByDate(

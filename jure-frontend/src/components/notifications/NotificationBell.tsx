@@ -66,26 +66,23 @@ export function NotificationBell() {
         type="button"
         variant="ghost"
         size="icon"
+        aria-label={showBadge ? `Notifications, ${unreadCount} unread` : 'Notifications'}
         aria-expanded={isDropdownOpen}
         aria-haspopup="dialog"
         className={cn(
-          'relative text-muted-foreground hover:text-foreground h-11 w-11 sm:h-10 sm:w-10',
+          'relative h-11 w-11 text-muted-foreground hover:text-foreground sm:h-10 sm:w-10',
           isDropdownOpen && 'bg-indigo-50 text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-300'
         )}
         onClick={() => toggleDropdown()}
       >
-        <span className={cn(animationTick > 0 && 'animate-notification-bell-shake')} key={animationTick}>
-          <Bell
-            size={18}
-            className={cn(isDropdownOpen && 'fill-indigo-600 text-indigo-600')}
-            strokeWidth={2}
-          />
+        <span className={cn(animationTick > 0 && 'motion-safe:animate-notification-bell-shake')} key={animationTick}>
+          <Bell size={18} className={cn(isDropdownOpen && 'fill-indigo-600 text-indigo-600')} strokeWidth={2} />
         </span>
         {showBadge ? (
           <span
             className={cn(
               'absolute -right-0.5 -top-0.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-[#ef4444] px-1 text-[10px] font-bold leading-none text-white',
-              animationTick > 0 && 'animate-notification-badge-pulse'
+              animationTick > 0 && 'motion-safe:animate-notification-badge-pulse'
             )}
             key={`badge-${animationTick}`}
           >

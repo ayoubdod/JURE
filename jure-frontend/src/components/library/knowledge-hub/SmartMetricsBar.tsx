@@ -1,67 +1,67 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { FileStack, Brain, FolderTree, Clock3, Sparkles, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { SmartMetrics } from './types';
+import '@/styles/workspace-list.css';
 
 type MetricDef = {
   key: keyof SmartMetrics;
   label: string;
-  icon: React.ElementType;
   suffix?: string;
-  accent?: string;
+  accent: string;
 };
 
 const METRICS: MetricDef[] = [
-  { key: 'totalDocuments', label: 'Total Documents', icon: FileStack },
-  { key: 'aiIndexed', label: 'AI Indexed', icon: Brain, accent: 'text-[#64499D] dark:text-[#CFC2FF]' },
-  { key: 'folders', label: 'Folders', icon: FolderTree },
+  { key: 'totalDocuments', label: 'Total', accent: 'border-l-slate-400' },
+  {
+    key: 'aiIndexed',
+    label: 'AI Indexed',
+    accent: 'border-l-[#64499D]',
+  },
+  { key: 'folders', label: 'Folders', accent: 'border-l-indigo-500' },
   {
     key: 'pendingClassification',
-    label: 'Pending Classification',
-    icon: AlertCircle,
-    accent: 'text-amber-600 dark:text-amber-400',
+    label: 'Pending',
+    accent: 'border-l-amber-500',
   },
-  { key: 'recentlyUpdated', label: 'Recently Updated', icon: Clock3 },
+  { key: 'recentlyUpdated', label: 'Updated', accent: 'border-l-emerald-500' },
   {
     key: 'knowledgeScore',
-    label: 'Knowledge Score',
-    icon: Sparkles,
+    label: 'Score',
     suffix: '%',
-    accent: 'text-[#64499D] dark:text-[#CFC2FF]',
+    accent: 'border-l-[#64499D]',
   },
 ];
 
 function AnimatedCounter({ value, suffix = '' }: { value: number; suffix?: string }) {
-  const [display, setDisplay] = useState(0);
-  const prev = useRef(0);
+  const [display, setDisplay] = useState(value);
+  const prev = useRef(value);
   const reduced =
     typeof window !== 'undefined' &&
     window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   useEffect(() => {
-    if (reduced) {
+    if (reduced || value === prev.current) {
       setDisplay(value);
       prev.current = value;
       return;
     }
-    const from = prev.current;
-    const to = value;
-    const start = performance.now();
-    const duration = 700;
+    let frame = 0;
+    const start = prev.current;
+    const diff = value - start;
+    const steps = 12;
     let raf = 0;
-    const tick = (now: number) => {
-      const t = Math.min(1, (now - start) / duration);
-      const eased = 1 - Math.pow(1 - t, 3);
-      setDisplay(Math.round(from + (to - from) * eased));
-      if (t < 1) raf = requestAnimationFrame(tick);
-      else prev.current = to;
+    const tick = () => {
+      frame += 1;
+      setDisplay(Math.round(start + (diff * frame) / steps));
+      if (frame < steps) raf = requestAnimationFrame(tick);
+      else prev.current = value;
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
   }, [value, reduced]);
 
   return (
-    <span className="tabular-nums">
+    <span className="tabular-nums ws-stat-value">
       {display}
       {suffix}
     </span>
@@ -73,35 +73,34 @@ type Props = {
   className?: string;
 };
 
+/** Compact single-row KPI strip — scrolls away; never sticky. */
 const SmartMetricsBar: React.FC<Props> = ({ metrics, className }) => {
   return (
     <section
       aria-label="Smart metrics"
       className={cn(
-        'grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-slate-200/80 bg-slate-200/60',
-        'dark:border-slate-800 dark:bg-slate-800 sm:grid-cols-3 lg:grid-cols-6',
+        'ws-kpi-strip flex gap-2 overflow-x-auto snap-x snap-mandatory py-2',
         className
       )}
     >
-      {METRICS.map(({ key, label, icon: Icon, suffix, accent }) => (
+      {METRICS.map(({ key, label, suffix, accent }) => (
         <div
           key={key}
-          className="flex flex-col gap-1 bg-white px-3 py-3 dark:bg-slate-950 sm:px-4 sm:py-3.5"
+          className={cn(
+            'snap-start shrink-0 flex items-center gap-2 rounded-md border border-slate-200/90 dark:border-slate-800',
+            'bg-white dark:bg-slate-950 border-l-[3px] px-2.5 py-1.5 min-w-[5.5rem]',
+            'sm:flex-1 sm:min-w-0',
+            accent
+          )}
         >
-          <div className="flex items-center gap-1.5 text-slate-400">
-            <Icon className="h-3 w-3" aria-hidden />
-            <span className="truncate text-[10px] font-medium uppercase tracking-wider">
+          <div className="min-w-0">
+            <p className="text-[10px] font-medium uppercase tracking-[0.06em] text-slate-500 dark:text-slate-400 leading-none truncate">
               {label}
-            </span>
+            </p>
+            <p className="mt-0.5 text-base font-bold text-slate-900 dark:text-white leading-none">
+              <AnimatedCounter value={metrics[key]} suffix={suffix} />
+            </p>
           </div>
-          <p
-            className={cn(
-              'text-lg font-semibold tracking-tight text-slate-900 dark:text-slate-50 sm:text-xl',
-              accent
-            )}
-          >
-            <AnimatedCounter value={metrics[key]} suffix={suffix} />
-          </p>
         </div>
       ))}
     </section>

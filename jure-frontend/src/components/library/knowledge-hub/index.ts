@@ -1,5 +1,6 @@
 export { default as KnowledgeHubHeader } from './KnowledgeHubHeader';
 export { default as KnowledgeSearch } from './KnowledgeSearch';
+export type { KnowledgeSearchHandle } from './KnowledgeSearch';
 export { default as SmartMetricsBar } from './SmartMetricsBar';
 export { default as CollectionsSidebar } from './CollectionsSidebar';
 export { default as ViewTabs } from './ViewTabs';

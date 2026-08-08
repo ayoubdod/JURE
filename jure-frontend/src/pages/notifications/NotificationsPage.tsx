@@ -120,10 +120,10 @@ export default function NotificationsPage() {
         <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Notifications</h1>
         <div className="flex flex-wrap gap-2">
           <Button variant="outline" size="sm" onClick={handleMarkAllRead}>
-            ✓ Tout marquer comme lu
+            Mark all as read
           </Button>
           <Button variant="ghost" size="sm" className="text-red-600 hover:bg-red-50 hover:text-red-700" onClick={handleDeleteRead}>
-            🗑 Supprimer les lus
+            Delete read
           </Button>
         </div>
       </div>
@@ -145,8 +145,9 @@ export default function NotificationsPage() {
       {loading ? (
         <p className="text-center text-slate-500">Chargement…</p>
       ) : items.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-slate-200 py-20 text-center text-slate-500 dark:border-slate-800">
-          Aucune notification pour ces critères.
+        <div className="rounded-2xl border border-dashed border-slate-200 py-20 text-center dark:border-slate-800">
+          <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">You&apos;re all caught up.</p>
+          <p className="mt-1 text-sm text-slate-500">No notifications match these filters.</p>
         </div>
       ) : (
         <div className="space-y-8">

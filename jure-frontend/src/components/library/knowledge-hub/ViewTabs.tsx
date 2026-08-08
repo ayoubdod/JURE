@@ -37,15 +37,15 @@ const ViewTabs: React.FC<Props> = ({ value, onChange, className }) => {
             aria-selected={active}
             onClick={() => onChange(id)}
             className={cn(
-              'inline-flex shrink-0 items-center gap-1.5 rounded-md px-2.5 py-1.5 text-[12px] font-medium transition-all duration-150',
+              'inline-flex shrink-0 items-center gap-1 rounded-md px-2 py-1.5 text-[11px] font-medium transition-colors duration-100',
               active
-                ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-800 dark:text-slate-50'
+                ? 'bg-white text-slate-900 shadow-sm ring-1 ring-slate-200/80 dark:bg-slate-800 dark:text-slate-50 dark:ring-slate-700'
                 : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
             )}
           >
             <Icon className="h-3.5 w-3.5" aria-hidden />
-            <span className="hidden sm:inline">{label}</span>
-            <span className="sm:hidden">{label.split(' ')[0]}</span>
+            <span className="hidden lg:inline">{label}</span>
+            <span className="lg:hidden">{label.split(' ')[0]}</span>
           </button>
         );
       })}
