@@ -156,7 +156,7 @@ export function getDateGroupKey(iso: string): DateGroupKey {
   return 'older';
 }
 
-const GROUP_LABELS: Record<DateGroupKey, string> = {
+const DEFAULT_GROUP_LABELS: Record<DateGroupKey, string> = {
   today: 'Today',
   yesterday: 'Yesterday',
   week: 'This Week',
@@ -164,7 +164,8 @@ const GROUP_LABELS: Record<DateGroupKey, string> = {
 };
 
 export function groupNotificationsByDate(
-  notifications: AppNotification[]
+  notifications: AppNotification[],
+  labels: Partial<Record<DateGroupKey, string>> = DEFAULT_GROUP_LABELS
 ): { key: DateGroupKey; label: string; items: AppNotification[] }[] {
   const order: DateGroupKey[] = ['today', 'yesterday', 'week', 'older'];
   const buckets: Record<DateGroupKey, AppNotification[]> = {
@@ -178,7 +179,11 @@ export function groupNotificationsByDate(
   }
   return order
     .filter((k) => buckets[k].length > 0)
-    .map((k) => ({ key: k, label: GROUP_LABELS[k], items: buckets[k] }));
+    .map((k) => ({
+      key: k,
+      label: labels[k] ?? DEFAULT_GROUP_LABELS[k],
+      items: buckets[k],
+    }));
 }
 
 function parseRelatedCase(raw: Record<string, unknown>): RelatedCase | null {

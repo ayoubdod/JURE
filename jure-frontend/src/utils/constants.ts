@@ -1,4 +1,6 @@
 import { API_ORIGIN } from '@/config/api';
+import { translateEnum } from '@/i18n/enums';
+import { detectInitialLanguage } from '@/i18n/locale';
 
 export type Option = {
     label:string;
@@ -12,10 +14,11 @@ export class Languages {
     static readonly EN = 'en';
     static readonly AR = 'ar';
 
+    /** Native endonyms — keep labels language-neutral for the switcher. */
     static readonly options: Option[] = [
-        { label: 'French', value: Languages.FR, country: 'FR' },
-        { label: 'English', value: Languages.EN, country: 'US' },
-        { label: 'Arabic', value: Languages.AR, country: 'MA' },
+        { label: 'Français', value: Languages.FR, country: 'FR', nativeLabel: 'Français' },
+        { label: 'English', value: Languages.EN, country: 'US', nativeLabel: 'English' },
+        { label: 'العربية', value: Languages.AR, country: 'MA', nativeLabel: 'العربية' },
     ];
 
     static getLabel(value: string): string {
@@ -46,8 +49,9 @@ export class CaseStatus {
         { label: 'CONVERTED TO CASE', value: CaseStatus.CONVERTED_TO_CASE },
     ];
 
+    /** Presentation label — stable IDs stay in `value`; never store the result. */
     static getLabel(value: string): string {
-        return this.options.find(option => option.value === value)?.label || '';
+        return translateEnum(detectInitialLanguage(), 'caseStatus', value) || value;
     }
 }
 
@@ -69,7 +73,7 @@ export class CaseCategory {
     ];
 
     static getLabel(value: string): string {
-        return this.options.find(option => option.value === value)?.label || '';
+        return translateEnum(detectInitialLanguage(), 'caseCategory', value) || value;
     }
 }
 export class TaskPriority {
@@ -84,7 +88,7 @@ export class TaskPriority {
   ];
 
   static getLabel(value: string): string {
-    return this.options.find(option => option.value === value)?.label || '';
+    return translateEnum(detectInitialLanguage(), 'taskPriority', value) || value;
   }
 }
 
@@ -102,7 +106,7 @@ export class TaskStatus {
   ];
 
   static getLabel(value: string): string {
-    return this.options.find(option => option.value === value)?.label || '';
+    return translateEnum(detectInitialLanguage(), 'taskStatus', value) || value;
   }
 }
 
@@ -121,7 +125,7 @@ export class AddressTypes {
     ];
 
     static getLabel(value: string): string {
-        return this.options.find(option => option.value === value)?.label || '';
+        return translateEnum(detectInitialLanguage(), 'addressType', value) || value;
     }
 }
 
@@ -145,7 +149,7 @@ export class DocumentCategory {
     ];
 
     static getLabel(value: string): string {
-        return this.options.find(option => option.value === value)?.label || '';
+        return translateEnum(detectInitialLanguage(), 'documentCategory', value) || value;
     }
 }
 

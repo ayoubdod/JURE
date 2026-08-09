@@ -8,6 +8,8 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { apiResetPassword } from '@/services/auth/api';
+import { useAppTranslation } from '@/i18n';
+import LangSwitcher from '@/components/common/LangSwitcher';
 import clsx from 'clsx';
 
 interface ForgotPasswordFormData {
@@ -22,6 +24,7 @@ const ForgotPassword = () => {
   } = useForm<ForgotPasswordFormData>();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { t } = useAppTranslation();
   const [isDarkMode, setIsDarkMode] = useState(() =>
     localStorage.getItem('theme') === 'dark'
   );
@@ -34,18 +37,17 @@ const ForgotPassword = () => {
   const onSubmit = async (data: ForgotPasswordFormData) => {
     try {
       await apiResetPassword(data);
-      
-      toast({ 
-        title: 'Email envoyé', 
-        description: "Si cet email existe, nous avons envoyé un lien de réinitialisation." 
-      });
-      
-      // Navigate back to signin after successful email send
-      navigate('/signin');
-    } catch (error) {
+
       toast({
-        title: 'Erreur',
-        description: 'Impossible d\'envoyer l\'email de réinitialisation. Veuillez réessayer.',
+        title: t.auth.forgotEmailSentTitle,
+        description: t.auth.forgotEmailSentDescription,
+      });
+
+      navigate('/signin');
+    } catch {
+      toast({
+        title: t.common.error,
+        description: t.auth.forgotSendErrorDescription,
         variant: 'destructive',
       });
     }
@@ -53,22 +55,22 @@ const ForgotPassword = () => {
 
   return (
     <div className={clsx('min-h-screen flex items-center justify-center p-4', isDarkMode ? 'bg-[#0f1117]' : 'bg-white')}>
-      <div className="absolute top-4 right-4">
+      <div className="absolute top-4 end-4 flex items-center gap-2">
+        <LangSwitcher />
         <Button
           variant="ghost"
           size="icon"
           onClick={() => setIsDarkMode(!isDarkMode)}
-          aria-label="Toggle theme"
+          aria-label={t.common.toggleTheme}
         >
           {isDarkMode ? <Sun className="h-5 w-5 text-white" /> : <Moon className="h-5 w-5 text-gray-800" />}
         </Button>
       </div>
 
       <div className="w-full max-w-md">
-        {/* Logo */}
         <div className="text-center mb-6">
           <img
-            src="./public/images/Jure logo.png"
+            src="/images/Jure logo.png"
             alt="Jure logo"
             className="w-22 h-20 mx-auto object-contain"
           />
@@ -76,29 +78,29 @@ const ForgotPassword = () => {
 
         <Card className={clsx('rounded-xl shadow-xl', isDarkMode ? 'bg-[#181b23] text-white' : 'bg-white text-black')}>
           <CardHeader className="text-center space-y-2">
-            <CardTitle className="text-2xl">Mot de passe oublié</CardTitle>
+            <CardTitle className="text-2xl">{t.auth.forgotTitle}</CardTitle>
             <CardDescription className={clsx('text-sm', isDarkMode ? 'text-gray-400' : 'text-gray-600')}>
-              Entrez votre email pour recevoir un lien de réinitialisation
+              {t.auth.forgotSubtitle}
             </CardDescription>
           </CardHeader>
 
           <CardContent className="space-y-5">
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               <div>
-                <Label>Email</Label>
+                <Label>{t.auth.emailLabel}</Label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <Mail className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                   <Input
                     type="email"
-                    placeholder="exemple@email.com"
+                    placeholder={t.auth.emailPlaceholder}
                     {...register('email', {
-                      required: 'L\'email est requis',
+                      required: t.validation.required,
                       pattern: {
                         value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                        message: 'Adresse email invalide'
-                      }
+                        message: t.validation.invalidEmail,
+                      },
                     })}
-                    className="pl-10"
+                    className="ps-10"
                   />
                 </div>
                 {errors.email && (
@@ -111,8 +113,8 @@ const ForgotPassword = () => {
                 disabled={isSubmitting}
                 className="w-full h-12 flex items-center justify-center gap-2 bg-[#64499d] hover:bg-gradient-to-r hover:from-[#64499d] hover:to-[#8a6ccf] text-white font-semibold transition-colors duration-300"
               >
-                {isSubmitting ? 'Envoi...' : 'Envoyer le lien'}
-                <ArrowRight className="h-4 w-4" />
+                {isSubmitting ? t.auth.forgotSending : t.auth.forgotSubmit}
+                <ArrowRight className="h-4 w-4 rtl:rotate-180" />
               </Button>
             </form>
 
@@ -121,26 +123,26 @@ const ForgotPassword = () => {
                 to="/signin"
                 className={clsx('inline-flex items-center gap-2 hover:underline', isDarkMode ? 'text-purple-300' : 'text-purple-600')}
               >
-                <ArrowLeft className="w-4 h-4" />
-                Retour à la connexion
+                <ArrowLeft className="w-4 h-4 rtl:rotate-180" />
+                {t.auth.forgotBackToSignIn}
               </Link>
             </div>
 
             <div className="text-center pt-4">
               <Link to="/" className={clsx('inline-flex items-center gap-1 text-sm hover:underline', isDarkMode ? 'text-gray-400' : 'text-gray-600')}>
                 <Home className="w-4 h-4" />
-                Retour à l'accueil
+                {t.auth.backToHome}
               </Link>
             </div>
           </CardContent>
         </Card>
 
         <div className={clsx('text-center mt-6 text-xs', isDarkMode ? 'text-gray-500' : 'text-gray-400')}>
-          © 2025 Jure. Tous droits réservés.
+          © {new Date().getFullYear()} Jure. {t.auth.footerRights}
         </div>
       </div>
     </div>
   );
 };
 
-export default ForgotPassword; 
+export default ForgotPassword;

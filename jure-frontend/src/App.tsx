@@ -33,6 +33,7 @@ const Pricing = lazy(() => import("./pages/Pricing"));
 const Community = lazy(() => import("./pages/Community"));
 const Security = lazy(() => import("./pages/Security"));
 const Demo = lazy(() => import("./pages/Demo"));
+const JuriaPage = lazy(() => import("./pages/Juria"));
 const IntentPage = lazy(() => import("./pages/intent/IntentPage"));
 const InsightsIndex = lazy(() => import("./pages/insights/InsightsIndex"));
 const InsightArticle = lazy(() => import("./pages/insights/InsightArticle"));
@@ -105,6 +106,7 @@ const LEGACY_MARKETING_SLUGS = [
   "community",
   "security",
   "demo",
+  "juria",
 ];
 
 const router = createBrowserRouter([
@@ -120,6 +122,7 @@ const router = createBrowserRouter([
       { path: "pricing", element: pub(<Pricing />) },
       { path: "security", element: pub(<Security />) },
       { path: "demo", element: pub(<Demo />) },
+      { path: "juria", element: pub(<JuriaPage />) },
       { path: "docs", element: pub(<Docs />) },
       { path: "community", element: pub(<Community />) },
       { path: "privacy", element: pub(<Privacy />) },

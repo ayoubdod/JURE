@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { formatMAD } from '@/utils/formatMAD';
 import { invoiceExonerationNote } from '@/components/finance/tva/TVAProgressBar';
+import { useAppTranslation } from '@/i18n';
 
 type Row = API.FinanceInvoiceListItem;
 
@@ -14,6 +15,8 @@ type Props = {
   onView: (row: Row) => void;
   onEdit: (row: Row) => void;
   onDelete: (row: Row) => void;
+  onDownloadPdf: (row: Row) => void;
+  onPreviewPdf: (row: Row) => void;
 };
 
 const statusClass: Record<API.FinanceInvoiceStatus, string> = {
@@ -23,15 +26,6 @@ const statusClass: Record<API.FinanceInvoiceStatus, string> = {
   PAID: 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 ring-emerald-500/25',
   OVERDUE: 'bg-red-500/15 text-red-700 dark:text-red-300 ring-red-500/25',
   CANCELLED: 'bg-slate-500/10 text-slate-500 line-through ring-slate-400/20',
-};
-
-const statusLabel: Record<API.FinanceInvoiceStatus, string> = {
-  DRAFT: 'Brouillon',
-  SENT: 'Envoyée',
-  PARTIALLY_PAID: 'Partiel',
-  PAID: 'Payée',
-  OVERDUE: 'En retard',
-  CANCELLED: 'Annulée',
 };
 
 export const InvoiceTable: React.FC<Props> = ({
@@ -44,21 +38,23 @@ export const InvoiceTable: React.FC<Props> = ({
   onDownloadPdf,
   onPreviewPdf,
 }) => {
+  const { t } = useAppTranslation();
+
   return (
     <div className="overflow-hidden rounded-xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-950 shadow-sm">
       <div className="overflow-x-auto">
         <table className="w-full min-w-[960px] text-left text-[13px]">
           <thead className="border-b border-slate-200 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-900/50">
             <tr>
-              <th className="py-3 px-4 font-semibold text-slate-600 dark:text-slate-400">N° Facture</th>
-              <th className="py-3 px-4 font-semibold text-slate-600 dark:text-slate-400">Dossier</th>
-              <th className="py-3 px-4 font-semibold text-slate-600 dark:text-slate-400">Client</th>
-              <th className="py-3 px-4 text-right font-semibold text-slate-600 dark:text-slate-400">Montant HT</th>
-              <th className="py-3 px-4 text-right font-semibold text-slate-600 dark:text-slate-400">TVA</th>
-              <th className="py-3 px-4 text-right font-semibold text-slate-600 dark:text-slate-400">TTC</th>
-              <th className="py-3 px-4 font-semibold text-slate-600 dark:text-slate-400">Statut</th>
-              <th className="py-3 px-4 font-semibold text-slate-600 dark:text-slate-400">Date</th>
-              <th className="py-3 px-4 text-right font-semibold text-slate-600 dark:text-slate-400">Actions</th>
+              <th className="py-3 px-4 font-semibold text-slate-600 dark:text-slate-400">{t.finance.columns.invoiceNumber}</th>
+              <th className="py-3 px-4 font-semibold text-slate-600 dark:text-slate-400">{t.finance.columns.case}</th>
+              <th className="py-3 px-4 font-semibold text-slate-600 dark:text-slate-400">{t.finance.columns.client}</th>
+              <th className="py-3 px-4 text-right font-semibold text-slate-600 dark:text-slate-400">{t.finance.columns.amountHt}</th>
+              <th className="py-3 px-4 text-right font-semibold text-slate-600 dark:text-slate-400">{t.finance.columns.tva}</th>
+              <th className="py-3 px-4 text-right font-semibold text-slate-600 dark:text-slate-400">{t.finance.columns.ttc}</th>
+              <th className="py-3 px-4 font-semibold text-slate-600 dark:text-slate-400">{t.finance.columns.status}</th>
+              <th className="py-3 px-4 font-semibold text-slate-600 dark:text-slate-400">{t.finance.columns.date}</th>
+              <th className="py-3 px-4 text-right font-semibold text-slate-600 dark:text-slate-400">{t.finance.columns.actions}</th>
             </tr>
           </thead>
           <tbody>
@@ -75,7 +71,7 @@ export const InvoiceTable: React.FC<Props> = ({
             ) : rows.length === 0 ? (
               <tr>
                 <td colSpan={9} className="px-4 py-12 text-center text-slate-500">
-                  Aucune facture
+                  {t.finance.emptyInvoices}
                 </td>
               </tr>
             ) : (
@@ -115,7 +111,7 @@ export const InvoiceTable: React.FC<Props> = ({
                         statusClass[row.status]
                       )}
                     >
-                      {statusLabel[row.status]}
+                      {t.finance.invoiceStatuses[row.status]}
                     </span>
                   </td>
                   <td className="px-4 py-3 tabular-nums text-slate-600 dark:text-slate-400">{row.issue_date}</td>
@@ -126,7 +122,7 @@ export const InvoiceTable: React.FC<Props> = ({
                         variant="ghost"
                         size="icon"
                         className="h-8 w-8"
-                        title="Télécharger PDF"
+                        title={t.finance.downloadPdf}
                         onClick={() => onDownloadPdf(row)}
                       >
                         <Download className="h-4 w-4" />
@@ -136,7 +132,7 @@ export const InvoiceTable: React.FC<Props> = ({
                         variant="ghost"
                         size="icon"
                         className="h-8 w-8"
-                        title="Aperçu PDF"
+                        title={t.finance.previewPdf}
                         onClick={() => onPreviewPdf(row)}
                       >
                         <ExternalLink className="h-4 w-4" />

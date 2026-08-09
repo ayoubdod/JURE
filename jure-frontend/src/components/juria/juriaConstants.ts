@@ -1,5 +1,28 @@
 import type { JuriaMode } from '@/types/juria';
 
+export const JURIA_MODE_VISUAL: Record<
+  JuriaMode,
+  { icon: string; segmentClass: string }
+> = {
+  CHAT: {
+    icon: '💬',
+    segmentClass: 'text-indigo-600',
+  },
+  CONTRACT_ANALYSIS: {
+    icon: '📄',
+    segmentClass: 'text-blue-600',
+  },
+  LEGAL_RESEARCH: {
+    icon: '🔍',
+    segmentClass: 'text-emerald-600',
+  },
+  DOCUMENT_DRAFTING: {
+    icon: '📝',
+    segmentClass: 'text-purple-600',
+  },
+};
+
+/** @deprecated Use t.juria.modes + JURIA_MODE_VISUAL */
 export const JURIA_MODE_META: Record<
   JuriaMode,
   { label: string; shortLabel: string; icon: string; segmentClass: string }
@@ -30,6 +53,7 @@ export const JURIA_MODE_META: Record<
   },
 };
 
+/** @deprecated Use t.juria.modes.*.placeholder */
 export const PLACEHOLDER_BY_MODE: Record<JuriaMode, string> = {
   CHAT: 'Posez votre question juridique...',
   CONTRACT_ANALYSIS: 'Décrivez ce que vous cherchez...',
@@ -37,6 +61,7 @@ export const PLACEHOLDER_BY_MODE: Record<JuriaMode, string> = {
   DOCUMENT_DRAFTING: 'Quel document souhaitez-vous...',
 };
 
+/** @deprecated Use t.juria.quickStarters */
 export const QUICK_STARTERS = [
   'Analyser un contrat de bail',
   'Rédiger une mise en demeure',
@@ -55,19 +80,18 @@ export type DocumentDraftTypeId =
   | 'conclusions'
   | 'autre';
 
-/** Backend `document_type` enum values for POST /draft/ */
+/** Backend `document_type` enum values for POST /draft/ — titles from i18n. */
 export const DOCUMENT_DRAFT_TYPES: {
   id: DocumentDraftTypeId;
   apiType: string;
   icon: string;
-  title: string;
 }[] = [
-  { id: 'bail', apiType: 'CONTRAT_BAIL', icon: '📄', title: 'Contrat de bail' },
-  { id: 'mise_en_demeure', apiType: 'MISE_EN_DEMEURE', icon: '✉️', title: 'Mise en demeure' },
-  { id: 'statuts_sarl', apiType: 'STATUTS_SARL', icon: '🏢', title: 'Statuts SARL' },
-  { id: 'procuration', apiType: 'PROCURATION', icon: '👤', title: 'Procuration' },
-  { id: 'requete', apiType: 'REQUETE', icon: '⚖️', title: 'Requête' },
-  { id: 'contrat_travail', apiType: 'CONTRAT_TRAVAIL', icon: '📋', title: 'Contrat de travail' },
-  { id: 'conclusions', apiType: 'CONCLUSIONS', icon: '📑', title: 'Conclusions' },
-  { id: 'autre', apiType: 'AUTRE', icon: '🔄', title: 'Autre...' },
+  { id: 'bail', apiType: 'CONTRAT_BAIL', icon: '📄' },
+  { id: 'mise_en_demeure', apiType: 'MISE_EN_DEMEURE', icon: '✉️' },
+  { id: 'statuts_sarl', apiType: 'STATUTS_SARL', icon: '🏢' },
+  { id: 'procuration', apiType: 'PROCURATION', icon: '👤' },
+  { id: 'requete', apiType: 'REQUETE', icon: '⚖️' },
+  { id: 'contrat_travail', apiType: 'CONTRAT_TRAVAIL', icon: '📋' },
+  { id: 'conclusions', apiType: 'CONCLUSIONS', icon: '📑' },
+  { id: 'autre', apiType: 'AUTRE', icon: '🔄' },
 ];

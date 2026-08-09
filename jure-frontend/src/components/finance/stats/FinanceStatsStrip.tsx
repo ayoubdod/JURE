@@ -5,6 +5,7 @@ import { formatMAD } from '@/utils/formatMAD';
 import { isCabinetTvaExonerated, type TVARegime, type TVAStatus } from '@/services/financeService';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { TVAProgressBar, TVA_LEGAL_THRESHOLD_MAD } from '@/components/finance/tva/TVAProgressBar';
+import { useAppTranslation } from '@/i18n';
 
 type Props = {
   totalCaTtc: number;
@@ -34,6 +35,7 @@ export const FinanceStatsStrip: React.FC<Props> = ({
   caTotalHint,
   collectedHint,
 }) => {
+  const { t, tf } = useAppTranslation();
   const regime = tvaStatus?.regime ?? tvaRegime ?? null;
   const tvaExonere =
     tvaStatus != null ? isCabinetTvaExonerated(tvaStatus) : regime === 'EXONÉRÉ';
@@ -67,14 +69,14 @@ export const FinanceStatsStrip: React.FC<Props> = ({
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1">
           <p className="text-[11px] font-medium uppercase tracking-[0.06em] text-slate-500 dark:text-slate-400">
-            TVA à payer
+            {t.finance.stats.tvaDue}
           </p>
           <p className="mt-1 text-xl sm:text-2xl font-bold tabular-nums text-slate-900 dark:text-white">
             {formatMAD(tvaExonere ? 0 : tvaUnpaid)}
           </p>
           {tvaExonere ? (
             <span className="mt-1 inline-flex rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-semibold text-emerald-800 dark:text-emerald-300">
-              Exonéré
+              {t.finance.stats.exempt}
             </span>
           ) : null}
 
@@ -83,13 +85,13 @@ export const FinanceStatsStrip: React.FC<Props> = ({
               <TVAProgressBar
                 compact
                 percent={progressPct}
-                aria-label={`Progression vers le seuil TVA : ${Math.round(progressPct)} pour cent`}
+                aria-label={tf(t.finance.stats.tvaProgressAria, { percent: Math.round(progressPct) })}
               />
               <div className="flex items-center justify-between gap-1 text-[10px] text-slate-600 dark:text-slate-400">
                 <span className="tabular-nums">{Math.round(progressPct)} %</span>
                 {remainingBefore != null ? (
                   <span className="text-right font-medium text-slate-700 dark:text-slate-300">
-                    {formatMAD(remainingBefore)} avant assujettissement
+                    {tf(t.finance.stats.beforeLiability, { amount: formatMAD(remainingBefore) })}
                   </span>
                 ) : null}
               </div>
@@ -98,7 +100,7 @@ export const FinanceStatsStrip: React.FC<Props> = ({
 
           {tvaAssujetti && tvaStatus ? (
             <p className="mt-2 text-[10px] leading-tight text-slate-500 dark:text-slate-400">
-              Seuil cumulé franchi — TVA obligatoire sur les nouvelles factures.
+              {t.finance.stats.thresholdCrossed}
             </p>
           ) : null}
         </div>
@@ -123,7 +125,7 @@ export const FinanceStatsStrip: React.FC<Props> = ({
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
               <p className="text-[11px] font-medium uppercase tracking-[0.06em] text-slate-500 dark:text-slate-400">
-                CA Total
+                {t.finance.stats.totalRevenue}
               </p>
               <p className="mt-1 text-xl sm:text-2xl font-bold tabular-nums text-slate-900 dark:text-white">
                 {formatMAD(totalCaTtc)}
@@ -141,7 +143,7 @@ export const FinanceStatsStrip: React.FC<Props> = ({
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
               <p className="text-[11px] font-medium uppercase tracking-[0.06em] text-slate-500 dark:text-slate-400">
-                Encaissé
+                {t.finance.stats.collected}
               </p>
               <p className="mt-1 text-xl sm:text-2xl font-bold tabular-nums text-slate-900 dark:text-white">
                 {formatMAD(totalCollected)}
@@ -159,7 +161,7 @@ export const FinanceStatsStrip: React.FC<Props> = ({
           <Tooltip>
             <TooltipTrigger asChild>{tvaCard}</TooltipTrigger>
             <TooltipContent side="bottom" className="max-w-xs text-[12px] leading-snug">
-              Exonéré de TVA — CA cumulé {'<'} 500 000 MAD (Art. 89 CGI Maroc). Définitif une fois le seuil franchi.
+              {t.finance.stats.exemptTooltip}
             </TooltipContent>
           </Tooltip>
         ) : (
@@ -169,7 +171,7 @@ export const FinanceStatsStrip: React.FC<Props> = ({
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
               <p className="text-[11px] font-medium uppercase tracking-[0.06em] text-slate-500 dark:text-slate-400">
-                Acomptes dus
+                {t.finance.stats.taxAdvancesDue}
               </p>
               <p className="mt-1 text-xl sm:text-2xl font-bold tabular-nums text-slate-900 dark:text-white">
                 {formatMAD(taxAdvancesDueMad)}

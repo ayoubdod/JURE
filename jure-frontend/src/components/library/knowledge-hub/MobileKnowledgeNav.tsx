@@ -1,6 +1,7 @@
 import React from 'react';
 import { BookOpen, Brain, LayoutGrid, Plus, Search } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useAppTranslation } from '@/i18n';
 
 type Tab = 'browse' | 'search' | 'ai' | 'upload';
 
@@ -11,16 +12,17 @@ type Props = {
 };
 
 const MobileKnowledgeNav: React.FC<Props> = ({ active, onChange, className }) => {
+  const { t } = useAppTranslation();
   const items: { id: Tab; label: string; icon: React.ElementType }[] = [
-    { id: 'browse', label: 'Browse', icon: LayoutGrid },
-    { id: 'search', label: 'Ask', icon: Search },
-    { id: 'ai', label: 'Copilot', icon: Brain },
-    { id: 'upload', label: 'Upload', icon: Plus },
+    { id: 'browse', label: t.library.mobile.browse, icon: LayoutGrid },
+    { id: 'search', label: t.library.mobile.ask, icon: Search },
+    { id: 'ai', label: t.library.mobile.copilot, icon: Brain },
+    { id: 'upload', label: t.library.mobile.upload, icon: Plus },
   ];
 
   return (
     <nav
-      aria-label="Knowledge Hub mobile"
+      aria-label={t.library.mobile.aria}
       className={cn(
         'fixed inset-x-0 bottom-0 z-40 border-t border-slate-200/90 bg-white/90 px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-1.5 backdrop-blur-xl dark:border-slate-800 dark:bg-slate-950/90 md:hidden',
         className

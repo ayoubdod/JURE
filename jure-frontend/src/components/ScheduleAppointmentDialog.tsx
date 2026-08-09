@@ -22,6 +22,7 @@ import { DialogDescription } from '@radix-ui/react-dialog';
 import ServerSelect from '@/components/common/ServerSelect';
 import { eventBus } from '@/utils/eventBus';
 import { devError } from '@/utils/devLog';
+import { useAppTranslation } from '@/i18n';
 
 export type ScheduleAppointmentOpenOptions = {
   relatedCaseId?: number;
@@ -48,6 +49,8 @@ const schema = yup.object({
 });
 
 const ScheduleAppointmentDialog = forwardRef<ScheduleAppointmentDialogRef, ScheduleAppointmentDialogProps>(({ onSuccess }, ref) => {
+  const { t } = useAppTranslation();
+  const dialog = t.calendar.scheduleDialog;
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [date, setDate] = useState('');
@@ -165,10 +168,10 @@ const ScheduleAppointmentDialog = forwardRef<ScheduleAppointmentDialogRef, Sched
               </div>
               <div>
                 <DialogTitle className="text-2xl font-bold text-white">
-                  Schedule Appointment
+                  {dialog.title}
                 </DialogTitle>
                 <DialogDescription className="text-white/90 mt-1">
-                  Book a meeting with clients or team members for your legal practice.
+                  {dialog.description}
                 </DialogDescription>
               </div>
             </div>
@@ -401,16 +404,16 @@ const ScheduleAppointmentDialog = forwardRef<ScheduleAppointmentDialogRef, Sched
               onClick={hide}
               disabled={isLoading}
             >
-              Cancel
+              {t.common.cancel}
             </Button>
             <Button type="submit" variant="default" disabled={isLoading} className="rounded-lg">
               {isLoading ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Scheduling…
+                  {dialog.scheduling}
                 </>
               ) : (
-                'Schedule Appointment'
+                dialog.submit
               )}
             </Button>
           </DialogFooter>

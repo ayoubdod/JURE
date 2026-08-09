@@ -49,12 +49,12 @@ const LogoutModal = forwardRef<LogoutModalRef>((_, ref) => {
     <Dialog open={isOpen} onOpenChange={isLoading ? undefined : setIsOpen}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{t.sidebar.logout}</DialogTitle>
+          <DialogTitle>{t.logoutModal.title}</DialogTitle>
         </DialogHeader>
         
         <div className="py-4">
           <p className="text-sm text-muted-foreground">
-            {t.auth.loginUnverifiedDescription}
+            {t.logoutModal.description}
           </p>
         </div>
 
@@ -64,14 +64,14 @@ const LogoutModal = forwardRef<LogoutModalRef>((_, ref) => {
             onClick={() => setIsOpen(false)}
             disabled={isLoading}
           >
-            {t.auth.or}
+            {t.logoutModal.cancel}
           </Button>
           <Button
             variant="destructive"
             onClick={handleLogout}
             disabled={isLoading}
           >
-            {isLoading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : t.sidebar.logout}
+            {isLoading ? <Loader2 className="w-4 h-4 me-2 animate-spin" /> : t.logoutModal.confirm}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -1,26 +1,7 @@
 import React, { useMemo } from 'react';
 import { cn } from '@/lib/utils';
 import type { NotificationFilterId } from '@/types/notification';
-
-const PRIMARY: { id: NotificationFilterId; label: string }[] = [
-  { id: 'all', label: 'All' },
-  { id: 'unread', label: 'Unread' },
-  { id: 'cases', label: 'Cases' },
-  { id: 'messages', label: 'Messages' },
-];
-
-const MORE: { id: NotificationFilterId; label: string }[] = [
-  { id: 'tasks', label: 'Tasks' },
-  { id: 'appointments', label: 'Calendar' },
-  { id: 'finance', label: 'Finance' },
-  { id: 'team', label: 'Team' },
-  { id: 'urgent', label: 'Urgent' },
-];
-
-const PAGE_EXTRA: { id: NotificationFilterId; label: string }[] = [
-  ...PRIMARY,
-  ...MORE,
-];
+import { useAppTranslation } from '@/i18n';
 
 export interface NotificationFiltersProps {
   value: NotificationFilterId;
@@ -29,23 +10,57 @@ export interface NotificationFiltersProps {
   className?: string;
 }
 
-export function NotificationFilters({ value, onChange, variant, className }: NotificationFiltersProps) {
-  const items = useMemo(() => (variant === 'page' ? PAGE_EXTRA : [...PRIMARY, ...MORE]), [variant]);
-  const primary = variant === 'dropdown' ? PRIMARY : items.slice(0, 5);
-  const overflow = variant === 'dropdown' ? MORE : items.slice(5);
+export function NotificationFilters({
+  value,
+  onChange,
+  variant,
+  className,
+}: NotificationFiltersProps) {
+  const { t } = useAppTranslation();
+  const f = t.notifications.filters;
+
+  const primary = useMemo(
+    () =>
+      [
+        { id: 'all' as const, label: f.all },
+        { id: 'unread' as const, label: f.unread },
+        { id: 'cases' as const, label: f.cases },
+        { id: 'messages' as const, label: f.messages },
+      ],
+    [f.all, f.unread, f.cases, f.messages]
+  );
+
+  const more = useMemo(
+    () =>
+      [
+        { id: 'tasks' as const, label: f.tasks },
+        { id: 'appointments' as const, label: f.appointments },
+        { id: 'finance' as const, label: f.finance },
+        { id: 'team' as const, label: f.team },
+        { id: 'urgent' as const, label: f.urgent },
+      ],
+    [f.tasks, f.appointments, f.finance, f.team, f.urgent]
+  );
+
+  const items = useMemo(
+    () => (variant === 'page' ? [...primary, ...more] : [...primary, ...more]),
+    [variant, primary, more]
+  );
+  const primaryPills = variant === 'dropdown' ? primary : items.slice(0, 5);
+  const overflow = variant === 'dropdown' ? more : items.slice(5);
   const overflowActive = overflow.some((i) => i.id === value);
 
   return (
     <div className={cn('flex flex-col gap-2', className)}>
       <div
         role="tablist"
-        aria-label="Notification filters"
+        aria-label={t.notifications.filtersAria}
         className={cn(
           'flex gap-1 rounded-lg bg-slate-100/90 p-1 dark:bg-slate-800/80',
           'overflow-x-auto scrollbar-none'
         )}
       >
-        {primary.map((pill) => {
+        {primaryPills.map((pill) => {
           const active = value === pill.id;
           return (
             <button

@@ -50,6 +50,14 @@ import { TaskPriority, TaskStatus } from '@/utils/constants';
 import { cn } from '@/lib/utils';
 import './Cases.css';
 import { useCabinetMemberDirectory } from '@/hooks/useCabinetMemberDirectory';
+import {
+  useAppTranslation,
+  formatDate,
+  formatDateTime,
+  formatTime,
+  type AppMessages,
+  type Lang,
+} from '@/i18n';
 
 type CaseDateSourceType = 'CASE_DEADLINE' | 'CASE_DUE_DATE' | 'CONSULTATION_DATE';
 
@@ -151,20 +159,18 @@ function eventMemberFilterId(event: CalendarEvent): number | undefined {
   return undefined;
 }
 
-function formatListDate(iso: string): string {
+function formatListDate(iso: string, lang: Lang): string {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return '—';
-  const day = d.getDate();
-  const mon = d.toLocaleString('en-GB', { month: 'short' });
-  const y = d.getFullYear();
-  const time = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
-  return `${String(day).padStart(2, '0')} ${mon} ${y} · ${time}`;
+  const datePart = formatDate(d, lang, { day: '2-digit', month: 'short', year: 'numeric' });
+  const timePart = formatTime(d, lang, { hour: '2-digit', minute: '2-digit', hour12: false });
+  return `${datePart} · ${timePart}`;
 }
 
-function formatDayMonthYear(iso: string): string {
+function formatDayMonthYear(iso: string, lang: Lang): string {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return '—';
-  return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+  return formatDate(d, lang, { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
 function getCountdownDays(iso: string): number | null {
@@ -195,11 +201,11 @@ function isTaskAppointmentOverdue(e: CalendarEvent): boolean {
   return false;
 }
 
-function sourceTypeLabel(st?: CaseDateSourceType): string {
-  if (st === 'CASE_DEADLINE') return 'Next Hearing';
-  if (st === 'CASE_DUE_DATE') return 'Due Date';
-  if (st === 'CONSULTATION_DATE') return 'Consultation';
-  return 'Case date';
+function sourceTypeLabel(st: CaseDateSourceType | undefined, cal: AppMessages['calendar']): string {
+  if (st === 'CASE_DEADLINE') return cal.sourceTypes.nextHearing;
+  if (st === 'CASE_DUE_DATE') return cal.sourceTypes.dueDate;
+  if (st === 'CONSULTATION_DATE') return cal.sourceTypes.consultation;
+  return cal.sourceTypes.caseDate;
 }
 
 function caseDateTypeBadgeClass(st?: CaseDateSourceType): string {
@@ -253,6 +259,9 @@ function CaseDateDetailPanel({
   portalContainer: HTMLElement | null;
   onViewCase: (caseId: number) => void;
 }) {
+  const { t, tf, lang } = useAppTranslation();
+  const cal = t.calendar;
+
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
@@ -275,6 +284,14 @@ function CaseDateDetailPanel({
   const caseStatus = (raw?.case_status ?? raw?.status) as string | undefined;
   const assignedName = (raw?.assigned_attorney_name ?? raw?.assigned_to_name ?? raw?.lead_attorney_name) as string | undefined;
   const clientName = (raw?.client_name ?? raw?.client) as string | undefined;
+  const deadlineLabel =
+    days == null
+      ? null
+      : overdue
+        ? tf(t.cases.deadline.overdue, { days: Math.abs(days) })
+        : days === 0
+          ? t.cases.deadline.today
+          : tf(t.cases.deadline.inDays, { days });
 
   return (
     <Sheet modal={false} open={open} onOpenChange={onOpenChange}>
@@ -284,14 +301,14 @@ function CaseDateDetailPanel({
             <div className="flex flex-wrap items-center gap-2">
               {ev?.sourceType && (
                 <span className={cn('inline-flex rounded-md px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ring-1 ring-inset', caseDateTypeBadgeClass(ev.sourceType))}>
-                  {sourceTypeLabel(ev.sourceType)}
+                  {sourceTypeLabel(ev.sourceType, cal)}
                 </span>
               )}
               <span className="inline-flex rounded-md bg-slate-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase text-slate-700 dark:text-slate-300 ring-1 ring-slate-500/20">
                 {String(caseType).replace(/_/g, ' ')}
               </span>
             </div>
-            <Button type="button" variant="ghost" size="icon" className="h-8 w-8 shrink-0" aria-label="Close" onClick={() => onOpenChange(false)}>
+            <Button type="button" variant="ghost" size="icon" className="h-8 w-8 shrink-0" aria-label={t.common.close} onClick={() => onOpenChange(false)}>
               <X className="h-4 w-4" />
             </Button>
           </div>
@@ -303,9 +320,9 @@ function CaseDateDetailPanel({
           {ev && (
             <>
               <section>
-                <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400 mb-2">Date</p>
-                <p className="text-sm font-medium text-slate-900 dark:text-white">{formatDayMonthYear(ev.start)}</p>
-                <p className="text-xs text-slate-500 mt-1">{sourceTypeLabel(ev.sourceType)}</p>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400 mb-2">{cal.caseDateDetail.date}</p>
+                <p className="text-sm font-medium text-slate-900 dark:text-white">{formatDayMonthYear(ev.start, lang)}</p>
+                <p className="text-xs text-slate-500 mt-1">{sourceTypeLabel(ev.sourceType, cal)}</p>
                 <div className="mt-2 flex flex-wrap items-center gap-2">
                   <span
                     className={cn(
@@ -314,14 +331,14 @@ function CaseDateDetailPanel({
                       tone === 'normal' && 'text-slate-600 dark:text-slate-400'
                     )}
                   >
-                    {days != null && (overdue ? `${Math.abs(days)}d overdue` : days === 0 ? 'Today' : `in ${days}d`)}
+                    {deadlineLabel}
                   </span>
-                  {overdue && <span className="rounded-md bg-red-500/15 px-1.5 py-0.5 text-[10px] font-bold uppercase text-red-700">Overdue</span>}
+                  {overdue && <span className="rounded-md bg-red-500/15 px-1.5 py-0.5 text-[10px] font-bold uppercase text-red-700">{cal.caseDateDetail.overdue}</span>}
                 </div>
               </section>
 
               <section>
-                <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400 mb-2">Case</p>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400 mb-2">{cal.caseDateDetail.case}</p>
                 {ev.relatedCase?.reference && <p className="font-mono text-xs text-slate-600 dark:text-slate-400">{ev.relatedCase.reference}</p>}
                 <p className="text-sm font-medium text-slate-900 dark:text-white mt-1">{ev.relatedCase?.title || '—'}</p>
                 {caseStatus && (
@@ -332,9 +349,11 @@ function CaseDateDetailPanel({
               </section>
 
               <section>
-                <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400 mb-2">People</p>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400 mb-2">{cal.caseDateDetail.people}</p>
                 {assignedName && <p className="text-sm text-slate-700 dark:text-slate-300">{assignedName}</p>}
-                {clientName && typeof clientName === 'string' && <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">Client: {clientName}</p>}
+                {clientName && typeof clientName === 'string' && (
+                  <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">{tf(cal.caseDateDetail.client, { name: clientName })}</p>
+                )}
               </section>
             </>
           )}
@@ -350,7 +369,7 @@ function CaseDateDetailPanel({
                 onViewCase(caseId);
               }}
             >
-              View Case
+              {cal.caseDateDetail.viewCase}
               <ChevronRight className="h-4 w-4 ml-1" />
             </Button>
           )}
@@ -361,6 +380,18 @@ function CaseDateDetailPanel({
 }
 
 const CalendarPage: React.FC = () => {
+  const { t, tf, lang, enumLabel } = useAppTranslation();
+  const cal = t.calendar;
+  const fcButtonText = useMemo(
+    () => ({
+      today: cal.fc.today,
+      month: cal.fc.month,
+      week: cal.fc.week,
+      day: cal.fc.day,
+      list: cal.fc.agenda,
+    }),
+    [cal.fc.today, cal.fc.month, cal.fc.week, cal.fc.day, cal.fc.agenda]
+  );
   const lookupCabinet = useCabinetMemberDirectory();
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [caseDateItems, setCaseDateItems] = useState<CalendarEvent[]>([]);
@@ -586,6 +617,13 @@ const CalendarPage: React.FC = () => {
     });
   }, [mergedEvents]);
 
+  useEffect(() => {
+    const api = calendarRef.current?.getApi();
+    if (!api) return;
+    api.setOption('locale', lang);
+    api.setOption('buttonText', fcButtonText);
+  }, [lang, fcButtonText]);
+
   const upcomingApptList = useMemo(() => {
     const nowIso = new Date().toISOString();
     return events.filter((e) => e.type === 'appointment' && e.start >= nowIso).slice(0, 8);
@@ -599,7 +637,7 @@ const CalendarPage: React.FC = () => {
             <div className="cases-stat-card relative overflow-hidden rounded-xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-950 px-4 py-3 shadow-[0_1px_3px_rgba(0,0,0,0.06)] border-l-[3px] border-l-slate-500">
               <div className="flex items-start justify-between gap-2">
                 <div>
-                  <p className="text-[11px] font-medium uppercase tracking-[0.06em] text-slate-500 dark:text-slate-400">Tasks</p>
+                  <p className="text-[11px] font-medium uppercase tracking-[0.06em] text-slate-500 dark:text-slate-400">{cal.stats.tasks}</p>
                   <p className="mt-1 text-2xl font-bold tabular-nums text-slate-900 dark:text-white">{stats.totalTasks}</p>
                 </div>
                 <div className="rounded-lg bg-slate-500/12 p-2 text-slate-700 dark:text-slate-300">
@@ -610,7 +648,7 @@ const CalendarPage: React.FC = () => {
             <div className="cases-stat-card relative overflow-hidden rounded-xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-950 px-4 py-3 shadow-[0_1px_3px_rgba(0,0,0,0.06)] border-l-[3px] border-l-emerald-500">
               <div className="flex items-start justify-between gap-2">
                 <div>
-                  <p className="text-[11px] font-medium uppercase tracking-[0.06em] text-slate-500 dark:text-slate-400">Appointments</p>
+                  <p className="text-[11px] font-medium uppercase tracking-[0.06em] text-slate-500 dark:text-slate-400">{cal.stats.appointments}</p>
                   <p className="mt-1 text-2xl font-bold tabular-nums text-slate-900 dark:text-white">{stats.totalAppointments}</p>
                 </div>
                 <div className="rounded-lg bg-emerald-500/12 p-2 text-emerald-700 dark:text-emerald-400">
@@ -621,7 +659,7 @@ const CalendarPage: React.FC = () => {
             <div className="cases-stat-card relative overflow-hidden rounded-xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-950 px-4 py-3 shadow-[0_1px_3px_rgba(0,0,0,0.06)] border-l-[3px] border-l-indigo-500">
               <div className="flex items-start justify-between gap-2">
                 <div>
-                  <p className="text-[11px] font-medium uppercase tracking-[0.06em] text-slate-500 dark:text-slate-400">Today</p>
+                  <p className="text-[11px] font-medium uppercase tracking-[0.06em] text-slate-500 dark:text-slate-400">{cal.stats.today}</p>
                   <p className="mt-1 text-2xl font-bold tabular-nums text-slate-900 dark:text-white">{stats.todayEvents}</p>
                 </div>
                 <div className="rounded-lg bg-indigo-500/12 p-2 text-indigo-700 dark:text-indigo-400">
@@ -632,7 +670,7 @@ const CalendarPage: React.FC = () => {
             <div className="cases-stat-card relative overflow-hidden rounded-xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-950 px-4 py-3 shadow-[0_1px_3px_rgba(0,0,0,0.06)] border-l-[3px] border-l-red-500">
               <div className="flex items-start justify-between gap-2">
                 <div>
-                  <p className="text-[11px] font-medium uppercase tracking-[0.06em] text-slate-500 dark:text-slate-400">Overdue</p>
+                  <p className="text-[11px] font-medium uppercase tracking-[0.06em] text-slate-500 dark:text-slate-400">{cal.stats.overdue}</p>
                   <p className="mt-1 text-2xl font-bold tabular-nums text-slate-900 dark:text-white">{stats.overdueTasks}</p>
                 </div>
                 <div className="rounded-lg bg-red-500/12 p-2 text-red-700 dark:text-red-400">
@@ -649,10 +687,10 @@ const CalendarPage: React.FC = () => {
           <div className="min-w-0 flex-1 overflow-x-auto [scrollbar-width:thin]">
             <div className="inline-flex p-1 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-100/60 dark:bg-slate-900/50 shadow-sm">
               {[
-                { id: 'dashboard' as const, label: 'Dashboard', icon: LayoutDashboard },
-                { id: 'calendar' as const, label: 'Calendar', icon: CalendarIcon },
-                { id: 'tasks' as const, label: 'Tasks & Appointments', icon: List },
-              ].map(({ id, label, icon: Icon }) => (
+                { id: 'dashboard' as const, label: cal.views.dashboard, short: cal.views.dashboard, icon: LayoutDashboard },
+                { id: 'calendar' as const, label: cal.views.calendar, short: cal.views.calendar, icon: CalendarIcon },
+                { id: 'tasks' as const, label: cal.views.tasksAppointments, short: cal.views.listShort, icon: List },
+              ].map(({ id, label, short, icon: Icon }) => (
                 <button
                   key={id}
                   type="button"
@@ -666,7 +704,7 @@ const CalendarPage: React.FC = () => {
                 >
                   <Icon className="h-4 w-4 shrink-0 opacity-90" />
                   <span className="hidden sm:inline">{label}</span>
-                  <span className="sm:hidden">{id === 'tasks' ? 'List' : label.split(' ')[0]}</span>
+                  <span className="sm:hidden">{short}</span>
                 </button>
               ))}
             </div>
@@ -680,7 +718,7 @@ const CalendarPage: React.FC = () => {
               className="h-10 px-4 rounded-xl font-semibold shadow-md shadow-primary/15 bg-primary text-primary-foreground hover:bg-primary/90 whitespace-nowrap"
             >
               <Plus className="h-4 w-4 mr-2" strokeWidth={2.5} />
-              Add
+              {t.common.add}
               <ChevronDown className="h-4 w-4 ml-1.5 opacity-80" />
             </Button>
             {showAddDropdown && (
@@ -694,7 +732,7 @@ const CalendarPage: React.FC = () => {
                   className="w-full px-3 py-2.5 text-left text-sm hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-2"
                 >
                   <CheckSquare className="h-4 w-4 text-indigo-600" />
-                  Task
+                  {cal.task}
                 </button>
                 <button
                   type="button"
@@ -705,7 +743,7 @@ const CalendarPage: React.FC = () => {
                   className="w-full px-3 py-2.5 text-left text-sm hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-2"
                 >
                   <CalendarIcon className="h-4 w-4 text-emerald-600" />
-                  Appointment
+                  {cal.addAppointment}
                 </button>
               </div>
             )}
@@ -718,12 +756,12 @@ const CalendarPage: React.FC = () => {
         <div className="hidden sm:flex w-full sm:w-[320px] lg:w-[350px] shrink-0 flex-col border-r border-slate-200 dark:border-slate-800 overflow-hidden bg-slate-50/50 dark:bg-slate-950/50 max-h-[40vh] lg:max-h-none">
           <div className="shrink-0 p-3">
             <div className="rounded-xl border border-slate-200/90 dark:border-slate-800 bg-white/90 dark:bg-slate-900/40 shadow-[0_1px_3px_rgba(0,0,0,0.04)] p-3">
-              <p className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3">Task status</p>
+              <p className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3">{cal.taskStatusHeading}</p>
               <div className="space-y-3">
                 {[
-                  { label: 'Completed', count: stats.completedTasks, bar: 'bg-emerald-500', track: 'bg-emerald-500/15' },
-                  { label: 'In progress', count: stats.inProgressTasks, bar: 'bg-amber-500', track: 'bg-amber-500/15' },
-                  { label: 'To do', count: todoCount, bar: 'bg-slate-400', track: 'bg-slate-200 dark:bg-slate-700' },
+                  { label: cal.statusCompleted, count: stats.completedTasks, bar: 'bg-emerald-500', track: 'bg-emerald-500/15' },
+                  { label: cal.statusInProgress, count: stats.inProgressTasks, bar: 'bg-amber-500', track: 'bg-amber-500/15' },
+                  { label: cal.statusTodo, count: todoCount, bar: 'bg-slate-400', track: 'bg-slate-200 dark:bg-slate-700' },
                 ].map(({ label, count, bar, track }) => (
                   <div key={label}>
                     <div className="flex items-center justify-between gap-2 mb-1">
@@ -744,7 +782,7 @@ const CalendarPage: React.FC = () => {
           <div className="flex-1 min-h-0 flex flex-col overflow-hidden px-3 pb-3">
             <div className="rounded-xl border border-slate-200/90 dark:border-slate-800 bg-white/90 dark:bg-slate-900/40 shadow-[0_1px_3px_rgba(0,0,0,0.04)] flex flex-col min-h-0 flex-1">
               <p className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider px-3 py-2.5 border-b border-slate-200/80 dark:border-slate-800 shrink-0">
-                Activity
+                {cal.activity}
               </p>
               <div className="flex-1 overflow-y-auto">
                 {events.slice(0, 20).map((event, idx, arr) => (
@@ -771,18 +809,18 @@ const CalendarPage: React.FC = () => {
                                 event.type === 'task' ? 'bg-indigo-500/15 text-indigo-700 dark:text-indigo-400' : 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400'
                               )}
                             >
-                              {event.type === 'task' ? 'Task' : 'Appt'}
+                              {event.type === 'task' ? cal.task : cal.apptShort}
                             </span>
                           </div>
                           <p className="text-[10px] text-slate-500 mt-0.5">
-                            {event.type === 'task' ? 'Task' : 'Appointment'} · {new Date(event.start).toLocaleDateString()}
+                            {event.type === 'task' ? cal.task : cal.appointment} · {formatDate(event.start, lang)}
                           </p>
                         </div>
                       </div>
                     </button>
                   </div>
                 ))}
-                {events.length === 0 && <p className="text-xs text-slate-500 py-6 text-center px-3">No activity</p>}
+                {events.length === 0 && <p className="text-xs text-slate-500 py-6 text-center px-3">{cal.noActivity}</p>}
               </div>
             </div>
           </div>
@@ -796,7 +834,7 @@ const CalendarPage: React.FC = () => {
                 <div className="relative flex-1 min-w-[140px] max-w-md">
                   <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                   <Input
-                    placeholder="Search..."
+                    placeholder={cal.searchPlaceholder}
                     value={client}
                     onChange={(e) => setClient(e.target.value)}
                     className={cn(
@@ -809,7 +847,7 @@ const CalendarPage: React.FC = () => {
                       type="button"
                       className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800"
                       onClick={() => setClient('')}
-                      aria-label="Clear search"
+                      aria-label={cal.clearSearch}
                     >
                       <X className="w-4 h-4" />
                     </button>
@@ -825,9 +863,9 @@ const CalendarPage: React.FC = () => {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="both">All</SelectItem>
-                    <SelectItem value="tasks">Tasks</SelectItem>
-                    <SelectItem value="appointments">Appointments</SelectItem>
+                    <SelectItem value="both">{cal.filterAll}</SelectItem>
+                    <SelectItem value="tasks">{cal.filterTasks}</SelectItem>
+                    <SelectItem value="appointments">{cal.filterAppointments}</SelectItem>
                   </SelectContent>
                 </Select>
                 <Select value={status} onValueChange={setStatus}>
@@ -840,12 +878,12 @@ const CalendarPage: React.FC = () => {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">Status</SelectItem>
-                    <SelectItem value="todo">To Do</SelectItem>
-                    <SelectItem value="in_progress">In Progress</SelectItem>
-                    <SelectItem value="done">Done</SelectItem>
-                    <SelectItem value="cancelled">Cancelled</SelectItem>
-                    <SelectItem value="scheduled">Scheduled</SelectItem>
+                    <SelectItem value="all">{cal.filterStatus}</SelectItem>
+                    <SelectItem value="todo">{enumLabel('taskStatus', 'todo')}</SelectItem>
+                    <SelectItem value="in_progress">{enumLabel('taskStatus', 'in_progress')}</SelectItem>
+                    <SelectItem value="done">{enumLabel('taskStatus', 'done')}</SelectItem>
+                    <SelectItem value="cancelled">{enumLabel('taskStatus', 'cancelled')}</SelectItem>
+                    <SelectItem value="scheduled">{cal.statusScheduled}</SelectItem>
                   </SelectContent>
                 </Select>
                 <Select value={priority} onValueChange={setPriority}>
@@ -858,13 +896,13 @@ const CalendarPage: React.FC = () => {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">Priority</SelectItem>
-                    <SelectItem value="low">Low</SelectItem>
-                    <SelectItem value="medium">Medium</SelectItem>
-                    <SelectItem value="high">High</SelectItem>
+                    <SelectItem value="all">{cal.filterPriority}</SelectItem>
+                    <SelectItem value="low">{enumLabel('taskPriority', 'low')}</SelectItem>
+                    <SelectItem value="medium">{enumLabel('taskPriority', 'medium')}</SelectItem>
+                    <SelectItem value="high">{enumLabel('taskPriority', 'high')}</SelectItem>
                   </SelectContent>
                 </Select>
-                <Button variant="ghost" size="icon" className="h-10 w-10 rounded-lg shrink-0" onClick={refreshEvents} disabled={loading} aria-label="Refresh">
+                <Button variant="ghost" size="icon" className="h-10 w-10 rounded-lg shrink-0" onClick={refreshEvents} disabled={loading} aria-label={cal.refresh}>
                   <RefreshCw className={cn('h-4 w-4', loading && 'animate-spin')} />
                 </Button>
               </div>
@@ -877,7 +915,7 @@ const CalendarPage: React.FC = () => {
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                   <div className="rounded-xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900/50 shadow-[0_4px_14px_rgba(15,23,42,0.06)] p-4">
                     <div className="flex items-center justify-between gap-2 mb-3">
-                      <p className="text-sm font-semibold text-slate-900 dark:text-white">Upcoming appointments</p>
+                      <p className="text-sm font-semibold text-slate-900 dark:text-white">{cal.upcomingAppointments}</p>
                       <span className="text-[11px] font-semibold tabular-nums rounded-full bg-emerald-500/15 text-emerald-800 dark:text-emerald-400 px-2 py-0.5">
                         {upcomingApptList.length}
                       </span>
@@ -898,7 +936,7 @@ const CalendarPage: React.FC = () => {
                             )}
                           >
                             <p className="text-[11px] font-medium text-slate-500 tabular-nums">
-                              {start.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                              {formatTime(start, lang)}
                             </p>
                             <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">{a.title}</p>
                             <div className="flex flex-wrap gap-x-2 gap-y-0.5 mt-1 text-[11px] text-slate-500">
@@ -909,7 +947,9 @@ const CalendarPage: React.FC = () => {
                               )}
                               {a.end && a.start && (
                                 <span>
-                                  {Math.max(1, Math.round((new Date(a.end).getTime() - new Date(a.start).getTime()) / 60000))} min
+                                  {tf(cal.minutesShort, {
+                                    n: Math.max(1, Math.round((new Date(a.end).getTime() - new Date(a.start).getTime()) / 60000)),
+                                  })}
                                 </span>
                               )}
                             </div>
@@ -920,16 +960,16 @@ const CalendarPage: React.FC = () => {
                     {upcomingApptList.length === 0 && (
                       <div className="flex flex-col items-center justify-center py-10 text-center">
                         <CalendarDays className="h-10 w-10 text-slate-300 dark:text-slate-600 mb-2" />
-                        <p className="text-sm font-medium text-slate-700 dark:text-slate-300">No upcoming appointments</p>
+                        <p className="text-sm font-medium text-slate-700 dark:text-slate-300">{cal.noUpcomingAppointments}</p>
                         <p className="text-xs text-slate-500 mt-1 max-w-xs">
-                          Nothing scheduled from today onward in the current calendar range.
+                          {cal.noUpcomingHint}
                         </p>
                       </div>
                     )}
                   </div>
 
                   <div className="rounded-xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900/50 shadow-[0_4px_14px_rgba(15,23,42,0.06)] p-4">
-                    <p className="text-sm font-semibold text-slate-900 dark:text-white mb-3">Recent</p>
+                    <p className="text-sm font-semibold text-slate-900 dark:text-white mb-3">{cal.recent}</p>
                     <div className="space-y-0">
                       {events.slice(0, 8).map((e) => (
                         <button
@@ -952,15 +992,15 @@ const CalendarPage: React.FC = () => {
                                   e.type === 'task' ? 'bg-indigo-500/15 text-indigo-700' : 'bg-emerald-500/15 text-emerald-700'
                                 )}
                               >
-                                {e.type === 'task' ? 'Task' : 'Appt'}
+                                {e.type === 'task' ? cal.task : cal.apptShort}
                               </span>
                             </div>
-                            <p className="text-[11px] text-slate-500 mt-0.5">{new Date(e.start).toLocaleString()}</p>
+                            <p className="text-[11px] text-slate-500 mt-0.5">{formatDateTime(e.start, lang)}</p>
                           </div>
                         </button>
                       ))}
                     </div>
-                    {events.length === 0 && <p className="text-xs text-slate-500 py-6 text-center">No events</p>}
+                    {events.length === 0 && <p className="text-xs text-slate-500 py-6 text-center">{cal.noEvents}</p>}
                   </div>
                 </div>
               </div>
@@ -982,7 +1022,8 @@ const CalendarPage: React.FC = () => {
                             end: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek',
                           }
                     }
-                    buttonText={{ today: 'Today', month: 'Month', week: 'Week', day: 'Day', list: 'Agenda' }}
+                    buttonText={fcButtonText}
+                    locale={lang}
                     titleFormat={{ year: 'numeric', month: 'long' }}
                     height="100%"
                     events={fcEvents}
@@ -1040,7 +1081,7 @@ const CalendarPage: React.FC = () => {
                       const event = arg.event;
                       const ext = event.extendedProps as any;
                       const time = event.start
-                        ? new Date(event.start as any).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })
+                        ? formatTime(new Date(event.start as any), lang, { hour: '2-digit', minute: '2-digit', hour12: true })
                         : '';
                       const strike = ext?.overdue ? 'line-through opacity-80' : '';
                       return {
@@ -1051,15 +1092,15 @@ const CalendarPage: React.FC = () => {
                   {viewRange && eventsInView.length === 0 && !loading && (
                     <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center bg-white/80 dark:bg-slate-950/60 backdrop-blur-[1px] z-[5]">
                       <CalendarDays className="h-12 w-12 text-slate-300 mb-3" />
-                      <p className="text-sm font-medium text-slate-700 dark:text-slate-300">No events scheduled for this period</p>
+                      <p className="text-sm font-medium text-slate-700 dark:text-slate-300">{cal.emptyPeriod}</p>
                       <div className="pointer-events-auto mt-4 flex flex-wrap gap-2 justify-center">
                         <Button size="sm" className="rounded-lg" onClick={() => taskCreateRef.current?.show()}>
                           <Plus className="h-4 w-4 mr-1" />
-                          Add Task
+                          {cal.addTask}
                         </Button>
                         <Button size="sm" variant="outline" className="rounded-lg" onClick={() => appointmentCreateRef.current?.show()}>
                           <CalendarIcon className="h-4 w-4 mr-1" />
-                          Schedule Appointment
+                          {cal.scheduleAppointment}
                         </Button>
                       </div>
                     </div>
@@ -1068,11 +1109,11 @@ const CalendarPage: React.FC = () => {
                 <div className="shrink-0 flex flex-wrap items-center gap-2 px-3 py-2 border-t border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/80">
                   <Info className="h-3.5 w-3.5 text-slate-400 shrink-0" aria-hidden />
                   {[
-                    { k: 'Task', class: 'bg-indigo-600' },
-                    { k: 'Appointment', class: 'bg-emerald-600' },
-                    { k: 'Case deadline', class: 'bg-rose-600' },
-                    { k: 'Admin due', class: 'bg-amber-600' },
-                    { k: 'Consultation', class: 'bg-blue-600' },
+                    { k: cal.legend.task, class: 'bg-indigo-600' },
+                    { k: cal.legend.appointment, class: 'bg-emerald-600' },
+                    { k: cal.legend.caseDeadline, class: 'bg-rose-600' },
+                    { k: cal.legend.adminDue, class: 'bg-amber-600' },
+                    { k: cal.legend.consultation, class: 'bg-blue-600' },
                   ].map(({ k, class: c }) => (
                     <span key={k} className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 dark:border-slate-700 bg-white/80 dark:bg-slate-900/80 px-2 py-0.5 text-[10px] text-slate-600 dark:text-slate-400">
                       <span className={cn('w-2 h-2 rounded-full', c)} />
@@ -1088,40 +1129,40 @@ const CalendarPage: React.FC = () => {
                 {filteredEvents.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-16 px-4">
                     <GanttChartSquare className="h-12 w-12 text-slate-300 mb-3" />
-                    <p className="text-sm font-medium text-slate-700 dark:text-slate-300">No items match your filters</p>
+                    <p className="text-sm font-medium text-slate-700 dark:text-slate-300">{cal.noFilterMatch}</p>
                     <div className="mt-4 flex flex-wrap gap-2 justify-center">
                       <Button size="sm" className="rounded-lg" onClick={() => taskCreateRef.current?.show()}>
                         <Plus className="h-4 w-4 mr-1" />
-                        Add Task
+                        {cal.addTask}
                       </Button>
                       <Button size="sm" variant="outline" className="rounded-lg" onClick={() => appointmentCreateRef.current?.show()}>
-                        Schedule Appointment
+                        {cal.scheduleAppointment}
                       </Button>
                     </div>
                   </div>
                 ) : (
                   <div className="min-w-0">
                     <div className="hidden sm:grid grid-cols-[100px_1fr_150px_140px_100px_90px_32px] gap-2 px-4 py-2 border-b border-slate-200 dark:border-slate-800 text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-500">
-                      <span>Type</span>
-                      <span>Title</span>
-                      <span>Date</span>
-                      <span>Assigned</span>
-                      <span>Status</span>
-                      <span className="text-right">Priority</span>
+                      <span>{cal.columns.type}</span>
+                      <span>{cal.columns.title}</span>
+                      <span>{cal.columns.date}</span>
+                      <span>{cal.columns.assigned}</span>
+                      <span>{cal.columns.status}</span>
+                      <span className="text-right">{cal.columns.priority}</span>
                       <span />
                     </div>
                     {filteredEvents.map((event, i) => {
                       const isCaseDate = event.type === 'case_date';
                       const typeLabel =
                         event.type === 'task'
-                          ? 'Task'
+                          ? cal.task
                           : event.type === 'appointment'
-                            ? 'Appointment'
+                            ? cal.appointment
                             : event.sourceType === 'CASE_DEADLINE'
-                              ? 'Hearing'
+                              ? cal.sourceTypes.hearing
                               : event.sourceType === 'CASE_DUE_DATE'
-                                ? 'Due Date'
-                                : 'Consultation';
+                                ? cal.sourceTypes.dueDate
+                                : cal.sourceTypes.consultation;
                       const typePill =
                         event.type === 'task'
                           ? 'bg-indigo-500/15 text-indigo-800 dark:text-indigo-400 ring-indigo-500/25'
@@ -1164,7 +1205,7 @@ const CalendarPage: React.FC = () => {
                               <span className="ml-2 font-mono text-[11px] text-slate-500">{event.relatedCase.reference}</span>
                             )}
                           </div>
-                          <span className="text-xs text-slate-500 tabular-nums whitespace-nowrap">{formatListDate(event.start)}</span>
+                          <span className="text-xs text-slate-500 tabular-nums whitespace-nowrap">{formatListDate(event.start, lang)}</span>
                           <div className="flex items-center gap-2 min-w-0">
                             {(() => {
                               const m = calendarListMember(event);
@@ -1193,12 +1234,17 @@ const CalendarPage: React.FC = () => {
                             })()}
                           </div>
                           <span className="text-[11px] font-medium uppercase text-slate-600 dark:text-slate-400">
-                            {isCaseDate ? sourceTypeLabel(event.sourceType) : event.status?.replace(/_/g, ' ') || '—'}
+                            {isCaseDate
+                              ? sourceTypeLabel(event.sourceType, cal)
+                              : event.status
+                                ? enumLabel('taskStatus', event.status) ||
+                                  (event.status === 'scheduled' ? cal.statusScheduled : event.status.replace(/_/g, ' '))
+                                : '—'}
                           </span>
                           <span className="text-right text-[11px]">
                             {event.priority === TaskPriority.HIGH || String(event.priority || '').toLowerCase() === 'urgent' ? (
                               <span className="inline-flex rounded-full bg-rose-500/15 px-1.5 py-0.5 font-semibold text-rose-700 dark:text-rose-400">
-                                {String(event.priority || '').toLowerCase() === 'urgent' ? 'URGENT' : 'HIGH'}
+                                {String(event.priority || '').toLowerCase() === 'urgent' ? cal.priorityUrgent : cal.priorityHigh}
                               </span>
                             ) : (
                               '—'

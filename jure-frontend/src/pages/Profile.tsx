@@ -5,8 +5,10 @@ import Header from '../components/Header';
 import TeamMemberProfile from '../components/TeamMemberProfile';
 import { useNavigate, useParams } from 'react-router';
 import { apiGetCabinetMember, apiGetMyCabinetMember } from '@/services/cabinet-member/api';
+import { useAppTranslation } from '@/i18n';
 
 const Profile = () => {
+  const { t } = useAppTranslation();
   const params = useParams();
   const navigate = useNavigate();
   const id = parseInt(params.id as string);
@@ -39,7 +41,7 @@ const Profile = () => {
   }, [id]);
 
   if (isLoading && !profile) {
-    return <div>Loading...</div>;
+    return <div>{t.profile.loading}</div>;
   }
 
   return (

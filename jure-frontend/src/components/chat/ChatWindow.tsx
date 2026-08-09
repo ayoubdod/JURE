@@ -35,6 +35,7 @@ import { useToast } from '@/hooks/use-toast';
 import { isAxiosError } from 'axios';
 import { cn } from '@/lib/utils';
 import { devLog } from '@/utils/devLog';
+import { useAppTranslation } from '@/i18n';
 
 import { getConversationWsUrl } from '@/config/api';
 import type { WebSocketMessage } from '@/stores/chatStore';
@@ -112,6 +113,8 @@ const ChatWindow = forwardRef<
   onUnlinkConversationCase,
   onBack,
 }, ref) => {
+  const { t } = useAppTranslation();
+  const toastMsgs = t.conversations.toasts;
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const messageRefsMap = useRef<Map<number, HTMLDivElement>>(new Map());
   const wsRef = useRef<WebSocket | null>(null);
@@ -317,7 +320,7 @@ const ChatWindow = forwardRef<
     const res = await apiEditMessage(editMessage.id, body);
     if (res.data) updateMessageInList(res.data);
     setEditMessage(null);
-    toast({ title: 'Message updated' });
+    toast({ title: toastMsgs.messageUpdated });
   };
 
   const handleDeleteMessage = async () => {
@@ -326,7 +329,7 @@ const ChatWindow = forwardRef<
     updateMessageInList({ ...deleteMessage, body: '', is_deleted: true });
     setDeleteMessage(null);
     loadPinnedMessages();
-    toast({ title: 'Message deleted' });
+    toast({ title: toastMsgs.messageDeleted });
   };
 
   const handleForwardMessage = async (targetConversationId: number) => {
@@ -334,7 +337,7 @@ const ChatWindow = forwardRef<
     try {
       const res = await apiForwardMessage(forwardMessage.id, targetConversationId);
       setForwardMessage(null);
-      toast({ title: 'Message forwarded' });
+      toast({ title: toastMsgs.messageForwarded });
       if (onNavigateToConversation) {
         onNavigateToConversation(targetConversationId);
       } else if (res.data && targetConversationId === conversation?.id) {
@@ -342,9 +345,17 @@ const ChatWindow = forwardRef<
       }
     } catch (err) {
       if (isAxiosError(err) && err.response?.status === 403) {
-        toast({ title: 'Access denied', description: 'You cannot forward to that conversation.', variant: 'destructive' });
+        toast({
+          title: toastMsgs.accessDenied,
+          description: toastMsgs.cannotForward,
+          variant: 'destructive',
+        });
       } else {
-        toast({ title: 'Error', description: 'Could not forward message.', variant: 'destructive' });
+        toast({
+          title: t.common.error,
+          description: toastMsgs.couldNotForward,
+          variant: 'destructive',
+        });
       }
     }
   };
@@ -356,7 +367,11 @@ const ChatWindow = forwardRef<
         ? msg.id
         : parseInt(String(msg.id), 10);
     if (!Number.isFinite(numericId)) {
-      toast({ title: 'Error', description: 'Could not update pin.', variant: 'destructive' });
+      toast({
+        title: t.common.error,
+        description: toastMsgs.couldNotUpdatePin,
+        variant: 'destructive',
+      });
       return;
     }
     try {
@@ -368,13 +383,17 @@ const ChatWindow = forwardRef<
       }
       updateMessageInList({ ...msg, is_pinned: pinned });
       loadPinnedMessages();
-      toast({ title: pinned ? 'Message pinned' : 'Message unpinned' });
+      toast({ title: pinned ? toastMsgs.messagePinned : toastMsgs.messageUnpinned });
     } catch (err) {
       if (!pinned) {
         pinnedMessageIdsRef.current.add(key);
       }
       loadPinnedMessages();
-      toast({ title: 'Error', description: 'Could not update pin.', variant: 'destructive' });
+      toast({
+        title: t.common.error,
+        description: toastMsgs.couldNotUpdatePin,
+        variant: 'destructive',
+      });
     }
   };
 
@@ -392,13 +411,13 @@ const ChatWindow = forwardRef<
       <div className="flex-1 flex items-center justify-center bg-slate-50 dark:bg-slate-950/50 min-w-0">
         <div className="text-center px-6">
           <p className="text-[13px] text-slate-500 dark:text-slate-500">
-            Select a matter or contact to start collaborating
+            {t.conversations.emptyPane}
           </p>
           <button
             onClick={onStartNewChat}
             className="mt-3 text-[13px] font-medium text-primary hover:underline"
           >
-            New Chat
+            {t.conversations.newChat}
           </button>
         </div>
       </div>
@@ -439,7 +458,7 @@ const ChatWindow = forwardRef<
               type="button"
               onClick={onBack}
               className="md:hidden flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
-              aria-label="Back to conversations"
+              aria-label={t.conversations.backAria}
             >
               <ArrowLeft size={20} />
             </button>
@@ -466,7 +485,7 @@ const ChatWindow = forwardRef<
             </p>
             {isTyping && (
               <p className="text-[11px] text-slate-500 dark:text-slate-500 animate-pulse">
-                Typing…
+                {t.conversations.typing}
               </p>
             )}
           </div>
@@ -612,7 +631,7 @@ const ChatWindow = forwardRef<
           <div className="flex gap-2 items-end">
             <div className="w-7 h-7 rounded-full bg-slate-200 dark:bg-slate-700 shrink-0" />
             <div className="px-2.5 py-1.5 rounded-[4px] bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-500 text-[13px]">
-              Typing…
+              {t.conversations.typing}
             </div>
           </div>
         )}

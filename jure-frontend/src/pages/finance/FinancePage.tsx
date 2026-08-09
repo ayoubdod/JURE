@@ -18,6 +18,7 @@ import { FinanceInvoicesTab } from './FinanceInvoicesTab';
 import { FinancePaymentsTab } from './FinancePaymentsTab';
 import { InvoiceUpdateModal } from '@/components/finance/modals/InvoiceUpdateModal';
 import { getTVAStatus, type TVAStatus } from '@/services/financeService';
+import { useAppTranslation } from '@/i18n';
 
 const EMPTY_STATS: API.FinanceDashboardStats = {
   total_ca_ttc: 0,
@@ -29,6 +30,7 @@ const EMPTY_STATS: API.FinanceDashboardStats = {
 
 const FinancePage: React.FC = () => {
   const navigate = useNavigate();
+  const { t } = useAppTranslation();
   const year = new Date().getFullYear();
   const [dashboard, setDashboard] = useState<API.FinanceDashboard | null>(null);
   const [loadError, setLoadError] = useState(false);
@@ -87,17 +89,17 @@ const FinancePage: React.FC = () => {
     let totalCaTtc = apiCa > 0 ? apiCa : sumBilled;
     let caHint: string | null = null;
     if (apiCa <= 0 && sumBilled > 0) {
-      caHint = 'Total facturé sur la période (série mensuelle)';
+      caHint = t.finance.hints.monthlyBilled;
     }
     if (totalCaTtc <= 0 && tvaStatus && tvaStatus.cumulative_ca_mad > 0) {
       totalCaTtc = tvaStatus.cumulative_ca_mad;
-      caHint = 'CA cumulé depuis ouverture (seuil TVA)';
+      caHint = t.finance.hints.cumulativeCa;
     }
 
     let totalCollected = apiColl > 0 ? apiColl : sumColl;
     let collectedHint: string | null = null;
     if (apiColl <= 0 && sumColl > 0) {
-      collectedHint = 'Encaissements sur la période (série mensuelle)';
+      collectedHint = t.finance.hints.monthlyCollected;
     }
 
     return {
@@ -107,7 +109,7 @@ const FinancePage: React.FC = () => {
       caHint,
       collectedHint,
     };
-  }, [dashboard, tvaStatus]);
+  }, [dashboard, tvaStatus, t]);
 
   /** Prefer explicit MAD from API; fallback = count × 100 only if MAD not provided. */
   const taxAdvancesMad =
@@ -142,8 +144,8 @@ const FinancePage: React.FC = () => {
       <div className="shrink-0 border-b border-slate-200/80 dark:border-slate-800 px-3 sm:px-4 py-4">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">Finance</h1>
-            <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">Suivi financier du cabinet</p>
+            <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">{t.finance.title}</h1>
+            <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">{t.finance.subtitle}</p>
           </div>
           <div className="flex flex-wrap gap-2">
             <Button
@@ -152,11 +154,11 @@ const FinancePage: React.FC = () => {
               onClick={() => navigate('/dashboard/cases')}
             >
               <Plus className="mr-2 h-4 w-4" />
-              Ajouter paiement
+              {t.finance.addPayment}
             </Button>
             <Button type="button" variant="outline" className="h-10" disabled>
               <Download className="mr-2 h-4 w-4" />
-              Exporter
+              {t.finance.export}
             </Button>
           </div>
         </div>
@@ -181,17 +183,17 @@ const FinancePage: React.FC = () => {
         >
           <TabsList className="mb-4 h-11 w-full max-w-md justify-start rounded-xl border border-slate-200 bg-slate-100/80 p-1 dark:border-slate-800 dark:bg-slate-900/50">
             <TabsTrigger value="dashboard" className="rounded-lg px-4 data-[state=active]:bg-white data-[state=active]:shadow-sm dark:data-[state=active]:bg-slate-800">
-              Dashboard
+              {t.finance.tabs.dashboard}
             </TabsTrigger>
             <TabsTrigger value="invoices" className="rounded-lg px-4 data-[state=active]:bg-white data-[state=active]:shadow-sm dark:data-[state=active]:bg-slate-800">
-              Factures
+              {t.finance.tabs.invoices}
             </TabsTrigger>
             <TabsTrigger
               value="payments"
               data-finance-tab="payments"
               className="rounded-lg px-4 data-[state=active]:bg-white data-[state=active]:shadow-sm dark:data-[state=active]:bg-slate-800"
             >
-              Paiements
+              {t.finance.tabs.payments}
             </TabsTrigger>
           </TabsList>
 

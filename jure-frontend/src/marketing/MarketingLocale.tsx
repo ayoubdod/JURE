@@ -8,8 +8,7 @@ import {
   type MarketingLocale,
 } from "./site";
 import { getMarketingDict, type MarketingDict } from "./i18n";
-
-const LANG_STORAGE_KEY = "lang";
+import { LANG_STORAGE_KEY } from "@/i18n/types";
 
 export function readStoredLocale(): MarketingLocale {
   try {

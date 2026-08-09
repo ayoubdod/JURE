@@ -16,6 +16,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import { apiCreateConversation } from '@/services/conversations/api';
 import UserAvatar, { getPersonImage } from '@/components/common/UserAvatar';
+import { useAppTranslation } from '@/i18n';
 
 export interface NewChatModalRef {
   show: () => void;
@@ -29,6 +30,8 @@ export interface NewChatModalProps {
 
 const NewChatModal = forwardRef<NewChatModalRef, NewChatModalProps>(
   ({onCreateConversation, onClose }, ref) => {
+    const { t, tf } = useAppTranslation();
+    const m = t.conversations.newChatModal;
     const [isOpen, setIsOpen] = useState(false);
     const [activeTab, setActiveTab] = useState('direct');
     const [search, setSearch] = React.useState('');
@@ -97,7 +100,7 @@ const NewChatModal = forwardRef<NewChatModalRef, NewChatModalProps>(
       setCreateConversationLoading(true);
       await apiCreateConversation({
         participants: selectedMembers,
-        title: groupTitle || `Group Chat (${selectedMembers.length} members)`,
+        title: groupTitle || tf(m.defaultGroupTitle, { count: selectedMembers.length }),
         type: "group"
       }).then(res=>{
         onCreateConversation?.(res.data);
@@ -146,10 +149,10 @@ const NewChatModal = forwardRef<NewChatModalRef, NewChatModalProps>(
                 </div>
                 <div>
                   <DialogTitle className="text-2xl font-bold text-white">
-                    {createConversationLoading ? 'Creating chat...' : 'Start new chat'}
+                    {createConversationLoading ? m.creatingTitle : m.title}
                   </DialogTitle>
                   <p className="text-white/90 mt-1 text-sm">
-                    Select a teammate to start a conversation
+                    {m.subtitle}
                   </p>
                 </div>
               </div>
@@ -157,29 +160,29 @@ const NewChatModal = forwardRef<NewChatModalRef, NewChatModalProps>(
           </div>
 
           {isLoading ? (
-            <div className="py-8 text-center">Loading...</div>
+            <div className="py-8 text-center">{t.common.loading}</div>
           ) : (
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="direct" className="flex items-center gap-2">
                   <User className="w-4 h-4" />
-                  Direct
+                  {m.tabDirect}
                 </TabsTrigger>
                 <TabsTrigger value="group" className="flex items-center gap-2">
                   <Users className="w-4 h-4" />
-                  Group
+                  {m.tabGroup}
                 </TabsTrigger>
               </TabsList>
 
               {/* Direct Conversation Tab */}
               <TabsContent value="direct" className="mt-4">
                 <div className="relative mb-3">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+                  <Search className="absolute start-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
                   <Input
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
-                    className="w-full pl-9"
-                    placeholder="Search teammates…"
+                    className="w-full ps-9"
+                    placeholder={m.searchTeammates}
                     disabled={createConversationLoading}
                   />
                 </div>
@@ -187,7 +190,7 @@ const NewChatModal = forwardRef<NewChatModalRef, NewChatModalProps>(
                 <ScrollArea className="max-h-72">
                   <div className="divide-y">
                     {filtered.length === 0 && (
-                      <div className="py-8 text-center text-sm text-gray-500">No teammates found</div>
+                      <div className="py-8 text-center text-sm text-gray-500">{m.noTeammates}</div>
                     )}
                     {filtered.map(member => (
                       <button
@@ -224,18 +227,18 @@ const NewChatModal = forwardRef<NewChatModalRef, NewChatModalProps>(
                       value={groupTitle}
                       onChange={(e) => setGroupTitle(e.target.value)}
                       className="w-full"
-                      placeholder="Group name (optional)"
+                      placeholder={m.groupNamePlaceholder}
                       disabled={createConversationLoading}
                     />
                   </div>
 
                   <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+                    <Search className="absolute start-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
                     <Input
                       value={search}
                       onChange={(e) => setSearch(e.target.value)}
-                      className="w-full pl-9"
-                      placeholder="Search teammates…"
+                      className="w-full ps-9"
+                      placeholder={m.searchTeammates}
                       disabled={createConversationLoading}
                     />
                   </div>
@@ -243,7 +246,7 @@ const NewChatModal = forwardRef<NewChatModalRef, NewChatModalProps>(
                   <ScrollArea className="max-h-60">
                     <div className="divide-y">
                       {filtered.length === 0 && (
-                        <div className="py-8 text-center text-sm text-gray-500">No teammates found</div>
+                        <div className="py-8 text-center text-sm text-gray-500">{m.noTeammates}</div>
                       )}
                       {filtered.map(member => {
                         const isSelected = selectedMembers.includes(member.id);
@@ -279,7 +282,9 @@ const NewChatModal = forwardRef<NewChatModalRef, NewChatModalProps>(
 
                   {selectedMembers.length > 0 && (
                     <div className="text-sm text-gray-600">
-                      {selectedMembers.length} {selectedMembers.length === 1 ? 'member' : 'members'} selected
+                      {selectedMembers.length === 1
+                        ? m.memberSelectedOne
+                        : tf(m.membersSelected, { count: selectedMembers.length })}
                     </div>
                   )}
                 </div>
@@ -287,7 +292,7 @@ const NewChatModal = forwardRef<NewChatModalRef, NewChatModalProps>(
 
               <DialogFooter className="mt-4">
                 <Button variant="outline" onClick={hide} disabled={createConversationLoading}>
-                  Cancel
+                  {t.common.cancel}
                 </Button>
                 {activeTab === 'group' && (
                   <Button 
@@ -297,11 +302,11 @@ const NewChatModal = forwardRef<NewChatModalRef, NewChatModalProps>(
                   >
                     {createConversationLoading ? (
                       <>
-                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                        Creating...
+                        <Loader2 className="h-4 w-4 animate-spin me-2" />
+                        {m.creating}
                       </>
                     ) : (
-                      'Create Group'
+                      m.createGroup
                     )}
                   </Button>
                 )}

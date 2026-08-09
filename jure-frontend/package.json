@@ -9,7 +9,8 @@
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview",
-    "start": "node server.mjs"
+    "start": "node server.mjs",
+    "i18n:audit": "npx --yes tsx scripts/i18n-audit.ts"
   },
   "dependencies": {
     "@diceui/tags-input": "^0.7.2",

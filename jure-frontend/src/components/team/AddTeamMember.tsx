@@ -3,8 +3,10 @@ import { ArrowLeft, Upload, Calendar, X } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
+import { useAppTranslation } from '@/i18n';
 
 const AddTeamMember = ({ onMemberAdded, onCancel }) => {
+  const { t, tf } = useAppTranslation();
   const [activeTab, setActiveTab] = useState('personal');
   const [formData, setFormData] = useState({
     // Personal Information
@@ -51,8 +53,8 @@ const AddTeamMember = ({ onMemberAdded, onCancel }) => {
     // Validate required fields
     if (!formData.fullName || !formData.email || !formData.phone) {
       toast({
-        title: "Missing Information",
-        description: "Please fill in all required fields.",
+        title: t.team.addPage.missingTitle,
+        description: t.team.addPage.missingDesc,
         variant: "destructive"
       });
       return;
@@ -74,17 +76,17 @@ const AddTeamMember = ({ onMemberAdded, onCancel }) => {
     });
 
     toast({
-      title: "Team Member Added",
-      description: `${formData.fullName} has been successfully added to the team.`,
+      title: t.team.addPage.addedTitle,
+      description: tf(t.team.addPage.addedDesc, { name: formData.fullName }),
     });
     
     if (onCancel) onCancel();
   };
 
   const tabs = [
-    { id: 'personal', label: 'Informations personnelles' },
-    { id: 'professional', label: 'Informations professionnelles' },
-    { id: 'administrative', label: 'Informations administratives' }
+    { id: 'personal', label: t.team.addPage.tabPersonal },
+    { id: 'professional', label: t.team.addPage.tabProfessional },
+    { id: 'administrative', label: t.team.addPage.tabAdministrative }
   ];
 
   const FileUploadArea = ({ field, label, accept = "*/*" }) => (
@@ -92,7 +94,7 @@ const AddTeamMember = ({ onMemberAdded, onCancel }) => {
       <label className="block text-sm font-medium text-gray-700">{label}</label>
       <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-purple-400 transition-colors">
         <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-        <p className="text-sm text-gray-600 mb-2">Glisser-déposer ou parcourir</p>
+        <p className="text-sm text-gray-600 mb-2">{t.team.addPage.dragDrop}</p>
         <input
           type="file"
           accept={accept}
@@ -104,11 +106,11 @@ const AddTeamMember = ({ onMemberAdded, onCancel }) => {
           htmlFor={field}
           className="text-purple-600 hover:text-purple-700 cursor-pointer text-sm underline"
         >
-          Choisir le fichier
+          {t.team.addPage.chooseFile}
         </label>
         {formData[field] && (
           <p className="text-sm text-green-600 mt-2">
-            Fichier sélectionné: {formData[field].name}
+            {tf(t.team.addPage.fileSelected, { name: formData[field].name })}
           </p>
         )}
       </div>
@@ -127,7 +129,7 @@ const AddTeamMember = ({ onMemberAdded, onCancel }) => {
           >
             <ArrowLeft className="w-5 h-5" />
           </Button>
-          <h1 className="text-2xl font-bold text-gray-900">Add new team member</h1>
+          <h1 className="text-2xl font-bold text-gray-900">{t.team.addPage.title}</h1>
           <Button
             variant="ghost"
             onClick={onCancel}

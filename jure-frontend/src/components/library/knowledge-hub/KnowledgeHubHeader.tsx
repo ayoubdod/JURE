@@ -2,6 +2,7 @@ import React from 'react';
 import { Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { useAppTranslation } from '@/i18n';
 
 type Props = {
   documentCount: number;
@@ -16,6 +17,7 @@ type Props = {
  * Knowledge Hub workspace uses sticky toolbar instead; this component is unused/minimal.
  */
 const KnowledgeHubHeader: React.FC<Props> = ({ documentCount, onUpload, className, hidden }) => {
+  const { t, tf } = useAppTranslation();
   if (hidden) return null;
 
   return (
@@ -26,9 +28,9 @@ const KnowledgeHubHeader: React.FC<Props> = ({ documentCount, onUpload, classNam
       )}
     >
       <p className="text-[12px] text-slate-500 tabular-nums">
-        <span className="font-semibold text-slate-800 dark:text-slate-200">Knowledge Hub</span>
+        <span className="font-semibold text-slate-800 dark:text-slate-200">{t.library.title}</span>
         <span className="mx-1.5 text-slate-300">·</span>
-        {documentCount} assets
+        {tf(t.library.assetsCount, { count: documentCount })}
       </p>
       <Button
         onClick={onUpload}
@@ -36,7 +38,7 @@ const KnowledgeHubHeader: React.FC<Props> = ({ documentCount, onUpload, classNam
         className="hidden h-8 gap-1.5 rounded-md bg-[#64499D] px-2.5 text-[12px] text-white hover:bg-[#4D3680] md:inline-flex"
       >
         <Upload className="h-3.5 w-3.5" />
-        Upload
+        {t.library.upload}
       </Button>
     </header>
   );

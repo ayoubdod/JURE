@@ -73,12 +73,12 @@ export interface HomeContent {
 
 const en: HomeContent = {
   hero: {
-    eyebrow: "JURE · LegalTech",
-    h1a: "The AI-native",
-    h1b: "legal work platform",
-    verbs: "Manage matters. Research law. Work with AI. Collaborate securely.",
+    eyebrow: "JURE · LegalTech Platform",
+    h1a: "The LegalTech Platform",
+    h1b: "for the Modern Legal Team",
+    verbs: "AI-powered legal work. Case management. Research. Documents. Collaboration. Security.",
     subtitle:
-      "JURE brings matters, clients, documents, tasks, knowledge and responsible AI into one secure workspace — built for law firms and legal teams working in French, English and Arabic.",
+      "JURE is a LegalTech platform for law firms and legal teams — combining AI-powered legal research, matter management, document workflows and secure collaboration in one workspace. Built for modern practice across Morocco, MENA and Africa.",
     ctaPrimary: "See JURE in action",
     ctaSecondary: "Explore the platform",
     trustChips: [
@@ -109,9 +109,9 @@ const en: HomeContent = {
     ai: {
       title: "Legal AI, built responsibly",
       badge: "Early access",
-      body: "Juria, JURE's legal AI assistant, helps with contract analysis, research-style questions and document drafting — inside the matter you're working on. Output is clearly marked as AI-generated and always subject to lawyer review.",
+      body: "Juria, JURE's AI legal assistant, helps with contract analysis, research-style questions and document drafting — inside the matter you're working on. Output is clearly marked as AI-generated and always subject to lawyer review.",
       disclaimer: "AI assists. Lawyers decide.",
-      link: "Explore Legal AI",
+      link: "Meet Juria",
     },
     documents: {
       title: "Documents & knowledge",
@@ -175,12 +175,12 @@ const en: HomeContent = {
       {
         question: "What is JURE?",
         answer:
-          "JURE is an AI-native legal work platform: one secure workspace where law firms and legal teams manage matters, clients, documents, tasks, deadlines and team collaboration, with an integrated legal AI assistant (Juria) available in early access.",
+          "JURE is a LegalTech platform for modern legal teams: one secure workspace where law firms and legal teams manage matters, clients, documents, tasks, deadlines and collaboration, with Juria — JURE's AI legal assistant — available in early access.",
       },
       {
-        question: "What is a legal work platform?",
+        question: "What is a LegalTech platform?",
         answer:
-          "A legal work platform unifies the operational work of legal teams (matters, tasks, deadlines, documents, collaboration) and the intellectual work (research, analysis, drafting, knowledge) in a single system, instead of spreading it across disconnected tools.",
+          "A LegalTech platform unifies the operational work of legal teams (matters, tasks, deadlines, documents, collaboration) and the intellectual work (research, analysis, drafting, knowledge) in a single system, instead of spreading it across disconnected tools.",
       },
       {
         question: "Who is JURE designed for?",
@@ -195,7 +195,7 @@ const en: HomeContent = {
       {
         question: "How does JURE's legal AI work?",
         answer:
-          "Juria, JURE's legal AI assistant, offers chat, contract analysis, research-style questions and document drafting, connected to the matter you're working on. It's currently in early access, and its output is always subject to human review.",
+          "Juria is JURE's AI legal assistant. It offers chat, contract analysis, research-style questions and document drafting, connected to the matter you're working on. It's currently in early access, and its output is always subject to human review.",
       },
       {
         question: "How does JURE protect confidential legal information?",
@@ -210,7 +210,7 @@ const en: HomeContent = {
       {
         question: "How is JURE different from traditional legal practice management software?",
         answer:
-          "Traditional practice management tools digitize administration. JURE is designed AI-native: matters, documents, knowledge, collaboration and AI assistance live in one workspace, so the intellectual work of law and the operational work of running it stay connected.",
+          "Traditional practice management tools digitize administration. JURE is a LegalTech platform designed so matters, documents, knowledge, collaboration and AI assistance live in one workspace — keeping the intellectual work of law connected to the operational work of running it.",
       },
     ],
   },
@@ -219,18 +219,18 @@ const en: HomeContent = {
     body: "JURE is in active development with early legal teams. Join now to shape the platform — your feedback drives what we build next.",
     primary: "Start with JURE",
     secondary: "See JURE in action",
-    tagline: "The future of law, built responsibly.",
+    tagline: "LegalTech for modern legal teams — built responsibly.",
   },
 };
 
 const fr: HomeContent = {
   hero: {
-    eyebrow: "JURE · LegalTech",
-    h1a: "La plateforme de travail juridique",
-    h1b: "native IA",
-    verbs: "Gérez vos dossiers. Recherchez le droit. Travaillez avec l'IA. Collaborez en sécurité.",
+    eyebrow: "JURE · Plateforme LegalTech",
+    h1a: "La plateforme LegalTech",
+    h1b: "pour l'équipe juridique moderne",
+    verbs: "Travail juridique assisté par IA. Gestion de dossiers. Recherche. Documents. Collaboration. Sécurité.",
     subtitle:
-      "JURE réunit dossiers, clients, documents, tâches, connaissances et IA responsable dans un espace de travail sécurisé — conçu pour les cabinets d'avocats et équipes juridiques travaillant en français, anglais et arabe.",
+      "JURE est une plateforme LegalTech pour cabinets d'avocats et équipes juridiques — recherche juridique assistée par IA, gestion de dossiers, flux documentaires et collaboration sécurisée dans un seul espace. Conçue pour la pratique moderne au Maroc, au Moyen-Orient et en Afrique.",
     ctaPrimary: "Voir JURE en action",
     ctaSecondary: "Explorer la plateforme",
     trustChips: [
@@ -263,7 +263,7 @@ const fr: HomeContent = {
       badge: "Accès anticipé",
       body: "Juria, l'assistant IA juridique de JURE, aide à l'analyse de contrats, aux questions de recherche et à la rédaction de documents — au sein du dossier sur lequel vous travaillez. Les résultats sont clairement identifiés comme générés par IA et toujours soumis à la relecture de l'avocat.",
       disclaimer: "L'IA assiste. Les avocats décident.",
-      link: "Explorer l'IA juridique",
+      link: "Découvrir Juria",
     },
     documents: {
       title: "Documents & connaissances",
@@ -327,12 +327,12 @@ const fr: HomeContent = {
       {
         question: "Qu'est-ce que JURE ?",
         answer:
-          "JURE est une plateforme de travail juridique native IA : un espace de travail sécurisé où cabinets et équipes juridiques gèrent dossiers, clients, documents, tâches, échéances et collaboration, avec un assistant IA juridique intégré (Juria) disponible en accès anticipé.",
+          "JURE est une plateforme LegalTech pour les équipes juridiques modernes : un espace de travail sécurisé où cabinets et équipes juridiques gèrent dossiers, clients, documents, tâches, échéances et collaboration, avec Juria — l'assistant IA juridique de JURE — disponible en accès anticipé.",
       },
       {
-        question: "Qu'est-ce qu'une plateforme de travail juridique ?",
+        question: "Qu'est-ce qu'une plateforme LegalTech ?",
         answer:
-          "Une plateforme de travail juridique unifie le travail opérationnel des équipes juridiques (dossiers, tâches, échéances, documents, collaboration) et le travail intellectuel (recherche, analyse, rédaction, connaissances) dans un seul système, au lieu de le disperser entre des outils déconnectés.",
+          "Une plateforme LegalTech unifie le travail opérationnel des équipes juridiques (dossiers, tâches, échéances, documents, collaboration) et le travail intellectuel (recherche, analyse, rédaction, connaissances) dans un seul système, au lieu de le disperser entre des outils déconnectés.",
       },
       {
         question: "À qui s'adresse JURE ?",
@@ -347,7 +347,7 @@ const fr: HomeContent = {
       {
         question: "Comment fonctionne l'IA juridique de JURE ?",
         answer:
-          "Juria, l'assistant IA juridique de JURE, propose du chat, de l'analyse de contrats, des questions de recherche et de la rédaction de documents, connectés au dossier sur lequel vous travaillez. Il est actuellement en accès anticipé et ses résultats sont toujours soumis à une relecture humaine.",
+          "Juria est l'assistant IA juridique de JURE. Il propose du chat, de l'analyse de contrats, des questions de recherche et de la rédaction de documents, connectés au dossier sur lequel vous travaillez. Il est actuellement en accès anticipé et ses résultats sont toujours soumis à une relecture humaine.",
       },
       {
         question: "Comment JURE protège-t-il les informations juridiques confidentielles ?",
@@ -362,7 +362,7 @@ const fr: HomeContent = {
       {
         question: "En quoi JURE diffère-t-il d'un logiciel de gestion de cabinet traditionnel ?",
         answer:
-          "Les outils traditionnels numérisent l'administration. JURE est conçu nativement autour de l'IA : dossiers, documents, connaissances, collaboration et assistance IA vivent dans un même espace de travail, pour que le travail intellectuel du droit et le travail opérationnel du cabinet restent connectés.",
+          "Les outils traditionnels numérisent l'administration. JURE est une plateforme LegalTech conçue pour que dossiers, documents, connaissances, collaboration et assistance IA vivent dans un même espace de travail — pour que le travail intellectuel du droit reste connecté au travail opérationnel du cabinet.",
       },
     ],
   },
@@ -371,18 +371,18 @@ const fr: HomeContent = {
     body: "JURE est en développement actif avec des équipes juridiques pionnières. Rejoignez-nous pour façonner la plateforme — vos retours orientent ce que nous construisons.",
     primary: "Commencer avec JURE",
     secondary: "Voir JURE en action",
-    tagline: "L'avenir du droit, construit de manière responsable.",
+    tagline: "La LegalTech pour les équipes juridiques modernes — construite de manière responsable.",
   },
 };
 
 const ar: HomeContent = {
   hero: {
-    eyebrow: "JURE · التقنية القانونية",
-    h1a: "منصة العمل القانوني",
-    h1b: "القائمة على الذكاء الاصطناعي",
-    verbs: "أدر ملفاتك. ابحث في القانون. اعمل مع الذكاء الاصطناعي. تعاون بأمان.",
+    eyebrow: "JURE · منصة LegalTech",
+    h1a: "منصة LegalTech",
+    h1b: "للفريق القانوني الحديث",
+    verbs: "عمل قانوني بالذكاء الاصطناعي. إدارة القضايا. البحث. المستندات. التعاون. الأمان.",
     subtitle:
-      "تجمع JURE الملفات والعملاء والمستندات والمهام والمعرفة والذكاء الاصطناعي المسؤول في مساحة عمل آمنة واحدة — صُممت لمكاتب المحاماة والفرق القانونية العاملة بالفرنسية والإنجليزية والعربية.",
+      "JURE منصة LegalTech لمكاتب المحاماة والفرق القانونية — تجمع البحث القانوني المدعوم بالذكاء الاصطناعي وإدارة الملفات وسير عمل المستندات والتعاون الآمن في مساحة واحدة. صُممت للممارسة الحديثة في المغرب ومنطقة الشرق الأوسط وشمال أفريقيا وأفريقيا.",
     ctaPrimary: "شاهد JURE عمليًا",
     ctaSecondary: "استكشف المنصة",
     trustChips: [
@@ -412,9 +412,9 @@ const ar: HomeContent = {
     ai: {
       title: "ذكاء اصطناعي قانوني، مبني بمسؤولية",
       badge: "وصول مبكر",
-      body: "جوريا، مساعد JURE للذكاء الاصطناعي القانوني، يساعد في تحليل العقود وأسئلة البحث وصياغة المستندات — داخل الملف الذي تعمل عليه. المخرجات موسومة بوضوح كنتاج ذكاء اصطناعي وتخضع دائمًا لمراجعة المحامي.",
+      body: "جوريا، مساعد الذكاء الاصطناعي القانوني من JURE، يساعد في تحليل العقود وأسئلة البحث وصياغة المستندات — داخل الملف الذي تعمل عليه. المخرجات موسومة بوضوح كنتاج ذكاء اصطناعي وتخضع دائمًا لمراجعة المحامي.",
       disclaimer: "الذكاء الاصطناعي يساعد. والمحامون يقررون.",
-      link: "استكشف الذكاء الاصطناعي القانوني",
+      link: "تعرّف على جوريا",
     },
     documents: {
       title: "المستندات والمعرفة",
@@ -478,12 +478,12 @@ const ar: HomeContent = {
       {
         question: "ما هي JURE؟",
         answer:
-          "JURE منصة عمل قانوني قائمة على الذكاء الاصطناعي: مساحة عمل آمنة واحدة تدير فيها مكاتب المحاماة والفرق القانونية الملفات والعملاء والمستندات والمهام والمواعيد والتعاون، مع مساعد ذكاء اصطناعي قانوني مدمج (جوريا) متاح في مرحلة الوصول المبكر.",
+          "JURE منصة LegalTech للفرق القانونية الحديثة: مساحة عمل آمنة واحدة تدير فيها مكاتب المحاماة والفرق القانونية الملفات والعملاء والمستندات والمهام والمواعيد والتعاون، مع جوريا — مساعد الذكاء الاصطناعي القانوني من JURE — المتاح في مرحلة الوصول المبكر.",
       },
       {
-        question: "ما هي منصة العمل القانوني؟",
+        question: "ما هي منصة LegalTech؟",
         answer:
-          "منصة العمل القانوني توحّد العمل التشغيلي للفرق القانونية (الملفات والمهام والمواعيد والمستندات والتعاون) والعمل الفكري (البحث والتحليل والصياغة والمعرفة) في نظام واحد، بدلًا من تشتيته بين أدوات منفصلة.",
+          "منصة LegalTech توحّد العمل التشغيلي للفرق القانونية (الملفات والمهام والمواعيد والمستندات والتعاون) والعمل الفكري (البحث والتحليل والصياغة والمعرفة) في نظام واحد، بدلًا من تشتيته بين أدوات منفصلة.",
       },
       {
         question: "لمن صُممت JURE؟",
@@ -498,7 +498,7 @@ const ar: HomeContent = {
       {
         question: "كيف يعمل الذكاء الاصطناعي القانوني في JURE؟",
         answer:
-          "جوريا، مساعد JURE للذكاء الاصطناعي القانوني، يقدم المحادثة وتحليل العقود وأسئلة البحث وصياغة المستندات، متصلة بالملف الذي تعمل عليه. وهو حاليًا في مرحلة الوصول المبكر، ومخرجاته تخضع دائمًا لمراجعة بشرية.",
+          "جوريا هو مساعد الذكاء الاصطناعي القانوني من JURE. يقدم المحادثة وتحليل العقود وأسئلة البحث وصياغة المستندات، متصلة بالملف الذي تعمل عليه. وهو حاليًا في مرحلة الوصول المبكر، ومخرجاته تخضع دائمًا لمراجعة بشرية.",
       },
       {
         question: "كيف تحمي JURE المعلومات القانونية السرية؟",
@@ -513,7 +513,7 @@ const ar: HomeContent = {
       {
         question: "بماذا تختلف JURE عن برامج إدارة المكاتب التقليدية؟",
         answer:
-          "الأدوات التقليدية ترقمن الإدارة فقط. أما JURE فمصممة أصلًا حول الذكاء الاصطناعي: الملفات والمستندات والمعرفة والتعاون والمساعدة الذكية تعيش في مساحة عمل واحدة، ليبقى العمل الفكري للقانون والعمل التشغيلي للمكتب متصلين.",
+          "الأدوات التقليدية ترقمن الإدارة فقط. أما JURE فمنصة LegalTech صُممت لتكون الملفات والمستندات والمعرفة والتعاون والمساعدة الذكية في مساحة عمل واحدة — ليبقى العمل الفكري للقانون متصلًا بالعمل التشغيلي للمكتب.",
       },
     ],
   },
@@ -522,7 +522,7 @@ const ar: HomeContent = {
     body: "JURE في تطوير نشط مع فرق قانونية رائدة. انضم الآن لتشكيل المنصة — ملاحظاتك توجه ما نبنيه.",
     primary: "ابدأ مع JURE",
     secondary: "شاهد JURE عمليًا",
-    tagline: "مستقبل القانون، مبني بمسؤولية.",
+    tagline: "LegalTech للفرق القانونية الحديثة — مبنية بمسؤولية.",
   },
 };
 

@@ -14,6 +14,7 @@ import useChatStore from '@/stores/chatStore';
 import GroupChatIcon from './GroupChatIcon';
 import { getSharedMessagePreviewText } from '@/components/chat/SharedMessageCard';
 import { cn } from '@/lib/utils';
+import { useAppTranslation } from '@/i18n';
 
 interface Props {
   isLoading?: boolean;
@@ -49,20 +50,23 @@ const formatTimestamp = (dateStr?: string) => {
 
 const truncateSnippet = (text: string, maxLen = 40) => {
   if (!text?.trim()) return '—';
-  const t = text.trim();
-  return t.length <= maxLen ? t : t.slice(0, maxLen) + '…';
+  const trimmed = text.trim();
+  return trimmed.length <= maxLen ? trimmed : trimmed.slice(0, maxLen) + '…';
 };
 
-const getPreviewText = (latestMessage: API.Message | undefined) => {
+const getPreviewText = (
+  latestMessage: API.Message | undefined,
+  labels: { deleted: string; attachment: string }
+) => {
   if (!latestMessage) return '—';
   const isDeleted = (latestMessage as any).is_deleted === true;
-  if (isDeleted) return '[Message deleted]';
+  if (isDeleted) return labels.deleted;
   const sharedPreview = getSharedMessagePreviewText(latestMessage);
   if (sharedPreview) return sharedPreview;
   const body = (latestMessage as any).body ?? (latestMessage as any).content ?? '';
   if (body?.trim()) return body.trim();
   const hasAtt = ((latestMessage as API.Message).attachments ?? []).length > 0;
-  if (hasAtt) return '[Attachment]';
+  if (hasAtt) return labels.attachment;
   return '—';
 };
 
@@ -75,12 +79,18 @@ const getDirectPeerImage = (c: API.Conversation, peer: API.ConversationMembershi
   getPersonImage((c as any).other_participant) ?? getPersonImage(peer ? getMemberPerson(peer) as Record<string, unknown> : null);
 
 /** Get peer display name and initials for direct chat. */
-const getDirectPeerInfo = (c: API.Conversation, peer: API.ConversationMembership | undefined) => {
+const getDirectPeerInfo = (
+  c: API.Conversation,
+  peer: API.ConversationMembership | undefined,
+  unknownLabel: string
+) => {
   const op = (c as any).other_participant;
   const person = peer ? getMemberPerson(peer) : null;
   const firstName = op?.first_name ?? person?.first_name;
   const lastName = op?.last_name ?? person?.last_name;
-  const fullName = op?.full_name ?? (`${firstName ?? ''} ${lastName ?? ''}`.trim() || person?.email || 'Unknown');
+  const fullName =
+    op?.full_name ??
+    (`${firstName ?? ''} ${lastName ?? ''}`.trim() || person?.email || unknownLabel);
   const initials = [firstName?.[0], lastName?.[0]].filter(Boolean).join('').toUpperCase() || '?';
   return { fullName, firstName, lastName, initials };
 };
@@ -105,6 +115,7 @@ const ConversationList: React.FC<Props> = ({
   onSelectMember,
   className,
 }) => {
+  const { t } = useAppTranslation();
   const [q, setQ] = useState('');
   const [members, setMembers] = useState<API.CabinetMember[]>([]);
   const chatStore = useChatStore();
@@ -161,12 +172,12 @@ const ConversationList: React.FC<Props> = ({
       {/* Search bar */}
       <div className="shrink-0 p-2 border-b border-slate-200 dark:border-slate-800">
         <div className="relative">
-          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
+          <Search className="absolute start-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
           <input
-            placeholder="Search conversations"
+            placeholder={t.conversations.searchPlaceholder}
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            className="w-full h-8 pl-8 pr-3 text-[13px] rounded-md border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 text-slate-800 dark:text-slate-200 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-400 dark:focus:ring-slate-500"
+            className="w-full h-8 ps-8 pe-3 text-[13px] rounded-md border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 text-slate-800 dark:text-slate-200 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-400 dark:focus:ring-slate-500"
           />
         </div>
         {/* Member avatars - connected first */}
@@ -214,7 +225,7 @@ const ConversationList: React.FC<Props> = ({
           </div>
         ) : filtered.length === 0 ? (
           <div className="p-4 text-center text-[12px] text-slate-500 dark:text-slate-500">
-            No conversations found
+            {t.conversations.empty}
           </div>
         ) : (
           <div className="divide-y divide-slate-100 dark:divide-slate-800/80">
@@ -233,15 +244,25 @@ const ConversationList: React.FC<Props> = ({
                       (getMemberPerson(m)?.email ?? '').toLowerCase() !== (currentUser?.email ?? '').toLowerCase()
                     )
                   : undefined;
-              const peerInfo = conversation.type === 'direct' ? getDirectPeerInfo(conversation, peer) : null;
+              const peerInfo =
+                conversation.type === 'direct'
+                  ? getDirectPeerInfo(conversation, peer, t.conversations.unknownContact)
+                  : null;
               const displayName =
                 (conversation as any).display_name ||
-                (conversation.type === 'direct' ? peerInfo?.fullName ?? 'Unknown' : conversation.title);
+                (conversation.type === 'direct'
+                  ? peerInfo?.fullName ?? t.conversations.unknownContact
+                  : conversation.title);
               const initials =
                 conversation.type === 'direct'
                   ? peerInfo?.initials ?? '?'
                   : (conversation as any).icon_preset_emoji || conversation.title?.slice(0, 2).toUpperCase() || '?';
-              const snippet = truncateSnippet(getPreviewText(conversation.latest_message));
+              const snippet = truncateSnippet(
+                getPreviewText(conversation.latest_message, {
+                  deleted: t.conversations.messageDeletedPreview,
+                  attachment: t.conversations.attachmentPreview,
+                })
+              );
               const lm = conversation.latest_message as any;
               const timestamp = formatTimestamp(lm?.sent_at ?? lm?.created);
               const caseTitle = (conversation as any).case_title ?? (conversation as any).matter?.title;
@@ -302,7 +323,7 @@ const ConversationList: React.FC<Props> = ({
                           <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
                             <button
                               className="shrink-0 p-0.5 rounded opacity-0 group-hover:opacity-100 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500"
-                              aria-label="Conversation options"
+                              aria-label={t.conversations.optionsAria}
                             >
                               <ChevronDown className="h-3.5 w-3.5" />
                             </button>
@@ -310,32 +331,32 @@ const ConversationList: React.FC<Props> = ({
                           <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
                             {conversation.type === 'group' && onRename && (
                               <DropdownMenuItem onClick={() => onRename(conversation)}>
-                                <Pencil className="h-3.5 w-3.5 mr-2" />
-                                Rename group
+                                <Pencil className="h-3.5 w-3.5 me-2" />
+                                {t.conversations.renameGroup}
                               </DropdownMenuItem>
                             )}
                             {conversation.type === 'group' && onChangeIcon && (
                               <DropdownMenuItem onClick={() => onChangeIcon(conversation)}>
-                                <ImageIcon className="h-3.5 w-3.5 mr-2" />
-                                Change icon
+                                <ImageIcon className="h-3.5 w-3.5 me-2" />
+                                {t.conversations.changeIcon}
                               </DropdownMenuItem>
                             )}
                             {onArchive && (
                               <DropdownMenuItem onClick={() => onArchive(conversation)}>
-                                <Archive className="h-3.5 w-3.5 mr-2" />
-                                Archive
+                                <Archive className="h-3.5 w-3.5 me-2" />
+                                {t.conversations.archive}
                               </DropdownMenuItem>
                             )}
                             {isPinned && onUnpin && (
                               <DropdownMenuItem onClick={() => onUnpin(conversation)}>
-                                <PinOff className="h-3.5 w-3.5 mr-2" />
-                                Unpin
+                                <PinOff className="h-3.5 w-3.5 me-2" />
+                                {t.conversations.unpin}
                               </DropdownMenuItem>
                             )}
                             {!isPinned && onPin && (
                               <DropdownMenuItem onClick={() => onPin(conversation)}>
-                                <Pin className="h-3.5 w-3.5 mr-2" />
-                                Pin
+                                <Pin className="h-3.5 w-3.5 me-2" />
+                                {t.conversations.pin}
                               </DropdownMenuItem>
                             )}
                             {onDelete && (
@@ -343,8 +364,8 @@ const ConversationList: React.FC<Props> = ({
                                 onClick={() => onDelete(conversation)}
                                 className="text-destructive focus:text-destructive"
                               >
-                                <Trash2 className="h-3.5 w-3.5 mr-2" />
-                                Delete
+                                <Trash2 className="h-3.5 w-3.5 me-2" />
+                                {t.common.delete}
                               </DropdownMenuItem>
                             )}
                           </DropdownMenuContent>
@@ -374,7 +395,8 @@ const ConversationList: React.FC<Props> = ({
             ) : (
               <ChevronRight className="h-3.5 w-3.5" />
             )}
-            Archived {archivedConversations.length > 0 && `(${archivedConversations.length})`}
+            {t.conversations.archived}
+            {archivedConversations.length > 0 ? ` (${archivedConversations.length})` : ''}
           </button>
           {showArchived && (
             <div className="max-h-[200px] overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800/80 border-t border-slate-100 dark:border-slate-800/80">
@@ -383,7 +405,9 @@ const ConversationList: React.FC<Props> = ({
                   <Loader2 className="w-4 h-4 animate-spin text-slate-400" />
                 </div>
               ) : archivedConversations.length === 0 ? (
-                <p className="p-3 text-[12px] text-slate-500 dark:text-slate-500">No archived conversations</p>
+                <p className="p-3 text-[12px] text-slate-500 dark:text-slate-500">
+                  {t.conversations.archivedEmpty}
+                </p>
               ) : (
                 archivedConversations.map((conversation) => {
                   const peer =
@@ -392,10 +416,15 @@ const ConversationList: React.FC<Props> = ({
                           (getMemberPerson(m)?.email ?? '').toLowerCase() !== (currentUser?.email ?? '').toLowerCase()
                         )
                       : undefined;
-                  const peerInfo = conversation.type === 'direct' ? getDirectPeerInfo(conversation, peer) : null;
+                  const peerInfo =
+                    conversation.type === 'direct'
+                      ? getDirectPeerInfo(conversation, peer, t.conversations.unknownContact)
+                      : null;
                   const displayName =
                     (conversation as any).display_name ||
-                    (conversation.type === 'direct' ? peerInfo?.fullName ?? 'Unknown' : conversation.title);
+                    (conversation.type === 'direct'
+                      ? peerInfo?.fullName ?? t.conversations.unknownContact
+                      : conversation.title);
                   return (
                     <div
                       key={conversation.id}
@@ -431,7 +460,7 @@ const ConversationList: React.FC<Props> = ({
                           <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
                             <button
                               className="shrink-0 p-0.5 rounded opacity-0 group-hover:opacity-100 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500"
-                              aria-label="Options"
+                              aria-label={t.conversations.optionsAria}
                             >
                               <ChevronDown className="h-3 w-3" />
                             </button>
@@ -439,20 +468,20 @@ const ConversationList: React.FC<Props> = ({
                           <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
                             {conversation.type === 'group' && onRename && (
                               <DropdownMenuItem onClick={() => onRename(conversation)}>
-                                <Pencil className="h-3.5 w-3.5 mr-2" />
-                                Rename group
+                                <Pencil className="h-3.5 w-3.5 me-2" />
+                                {t.conversations.renameGroup}
                               </DropdownMenuItem>
                             )}
                             {conversation.type === 'group' && onChangeIcon && (
                               <DropdownMenuItem onClick={() => onChangeIcon(conversation)}>
-                                <ImageIcon className="h-3.5 w-3.5 mr-2" />
-                                Change icon
+                                <ImageIcon className="h-3.5 w-3.5 me-2" />
+                                {t.conversations.changeIcon}
                               </DropdownMenuItem>
                             )}
                             {onUnarchive && (
                               <DropdownMenuItem onClick={() => onUnarchive(conversation)}>
-                                <ArchiveRestore className="h-3.5 w-3.5 mr-2" />
-                                Unarchive
+                                <ArchiveRestore className="h-3.5 w-3.5 me-2" />
+                                {t.conversations.unarchive}
                               </DropdownMenuItem>
                             )}
                             {onDelete && (
@@ -460,8 +489,8 @@ const ConversationList: React.FC<Props> = ({
                                 onClick={() => onDelete(conversation)}
                                 className="text-destructive focus:text-destructive"
                               >
-                                <Trash2 className="h-3.5 w-3.5 mr-2" />
-                                Delete
+                                <Trash2 className="h-3.5 w-3.5 me-2" />
+                                {t.common.delete}
                               </DropdownMenuItem>
                             )}
                           </DropdownMenuContent>
@@ -482,8 +511,8 @@ const ConversationList: React.FC<Props> = ({
           size="sm"
           className="w-full h-8 text-[13px] font-medium"
         >
-          <MessageSquarePlus className="w-4 h-4 mr-1.5" />
-          New Chat
+          <MessageSquarePlus className="w-4 h-4 me-1.5" />
+          {t.conversations.newChat}
         </Button>
       </div>
     </div>

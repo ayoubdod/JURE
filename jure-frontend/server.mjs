@@ -57,6 +57,7 @@ const LEGACY_MARKETING_SLUGS = new Set([
   'community',
   'security',
   'demo',
+  'juria',
   'insights',
   'legal-ai',
   'legal-case-management',

@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { useNotifications } from '@/context/NotificationContext';
 import { useFinanceAccess } from '@/hooks/useFinanceAccess';
 import type { NotificationPrefs } from '@/types/notification';
+import { useAppTranslation } from '@/i18n';
 
 export function NotificationPreferences({
   open,
@@ -18,9 +19,11 @@ export function NotificationPreferences({
   open: boolean;
   onOpenChange: (v: boolean) => void;
 }) {
+  const { t } = useAppTranslation();
   const { preferences, setPreferences } = useNotifications();
   const { authorized: canFinance } = useFinanceAccess();
   const [local, setLocal] = useState<NotificationPrefs>(preferences);
+  const p = t.notifications.preferences;
 
   useEffect(() => {
     if (open) setLocal(preferences);
@@ -36,51 +39,51 @@ export function NotificationPreferences({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md rounded-2xl sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Préférences de notifications</DialogTitle>
+          <DialogTitle>{p.title}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4 py-2">
           <PrefRow
             id="tasks"
-            label="Tâches et rappels"
+            label={p.tasks}
             checked={local.tasks}
             onCheckedChange={(v) => update('tasks', v)}
           />
           <PrefRow
             id="cases"
-            label="Dossiers"
+            label={p.cases}
             checked={local.cases}
             onCheckedChange={(v) => update('cases', v)}
           />
           <PrefRow
             id="appointments"
-            label="Rendez-vous"
+            label={p.appointments}
             checked={local.appointments}
             onCheckedChange={(v) => update('appointments', v)}
           />
           <PrefRow
             id="messages"
-            label="Messages et appels"
+            label={p.messages}
             checked={local.messages}
             onCheckedChange={(v) => update('messages', v)}
           />
           {canFinance ? (
             <PrefRow
               id="finance"
-              label="Finance"
+              label={p.finance}
               checked={local.finance}
               onCheckedChange={(v) => update('finance', v)}
             />
           ) : null}
           <PrefRow
             id="team"
-            label="Équipe et profil"
+            label={p.team}
             checked={local.team}
             onCheckedChange={(v) => update('team', v)}
           />
           <div className="border-t border-slate-200 pt-4 dark:border-slate-700" />
           <PrefRow
             id="email"
-            label="Notifications par email"
+            label={p.email}
             checked={local.email}
             onCheckedChange={(v) => update('email', v)}
           />

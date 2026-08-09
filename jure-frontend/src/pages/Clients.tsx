@@ -36,6 +36,7 @@ import ClientProfilePreview, { ClientProfilePreviewRef } from '@/components/clie
 import userIcon from '@/assets/icons/userIcon.png';
 import { useDebounce } from '@/hooks/use-debounce';
 import { cn } from '@/lib/utils';
+import { useAppTranslation } from '@/i18n';
 import '@/styles/workspace-list.css';
 
 type StatusFilter = 'all' | 'active' | 'inactive';
@@ -53,24 +54,27 @@ const companyOf = (c: API.Client) =>
   (c as API.Client & { company?: string }).company || '';
 
 const KPI_ACCENTS: Record<string, string> = {
-  total: 'border-l-slate-400',
-  active: 'border-l-emerald-500',
-  inactive: 'border-l-slate-300 dark:border-l-slate-600',
-  withCases: 'border-l-indigo-500',
+  total: 'border-s-slate-400',
+  active: 'border-s-emerald-500',
+  inactive: 'border-s-slate-300 dark:border-s-slate-600',
+  withCases: 'border-s-indigo-500',
 };
 
-const StatusPill: React.FC<{ active: boolean }> = ({ active }) => (
-  <span
-    className={cn(
-      'inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wider ring-1 ring-inset',
-      active
-        ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 ring-emerald-500/30'
-        : 'bg-slate-500/15 text-slate-600 dark:text-slate-400 ring-slate-500/30'
-    )}
-  >
-    {active ? 'Active' : 'Inactive'}
-  </span>
-);
+const StatusPill: React.FC<{ active: boolean }> = ({ active }) => {
+  const { t } = useAppTranslation();
+  return (
+    <span
+      className={cn(
+        'inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wider ring-1 ring-inset',
+        active
+          ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 ring-emerald-500/30'
+          : 'bg-slate-500/15 text-slate-600 dark:text-slate-400 ring-slate-500/30'
+      )}
+    >
+      {active ? t.clients.status.active : t.clients.status.inactive}
+    </span>
+  );
+};
 
 const ClientAvatar: React.FC<{ client: API.Client; size?: 'sm' | 'md' }> = ({
   client,
@@ -90,7 +94,7 @@ const ClientAvatar: React.FC<{ client: API.Client; size?: 'sm' | 'md' }> = ({
       </div>
       <span
         className={cn(
-          'absolute -bottom-0.5 -right-0.5 rounded-full border-2 border-white dark:border-slate-950',
+          'absolute -bottom-0.5 -end-0.5 rounded-full border-2 border-white dark:border-slate-950',
           size === 'sm' ? 'h-2.5 w-2.5' : 'h-3 w-3',
           client.is_active ? 'bg-emerald-500' : 'bg-slate-400'
         )}
@@ -107,8 +111,9 @@ interface ClientRowProps {
 }
 
 const ClientTableRow = memo(function ClientTableRow({ client, rowIdx, onOpen }: ClientRowProps) {
+  const { t, tf } = useAppTranslation();
   const fullName =
-    `${client.first_name || ''} ${client.last_name || ''}`.trim() || 'Unnamed Client';
+    `${client.first_name || ''} ${client.last_name || ''}`.trim() || t.clients.unnamed;
   const casesCount = casesOf(client);
   const company = companyOf(client);
 
@@ -128,7 +133,7 @@ const ClientTableRow = memo(function ClientTableRow({ client, rowIdx, onOpen }: 
           onOpen(client);
         }
       }}
-      aria-label={`Open ${fullName}`}
+      aria-label={tf(t.clients.aria.openClient, { name: fullName })}
     >
       <td className="px-3 py-2 align-middle">
         <div className="flex items-center gap-2.5 min-w-0">
@@ -147,15 +152,15 @@ const ClientTableRow = memo(function ClientTableRow({ client, rowIdx, onOpen }: 
       <td className="px-3 py-2 align-middle text-[12px] text-slate-600 dark:text-slate-400 truncate max-w-[120px]">
         {client.phone || '—'}
       </td>
-      <td className="px-3 py-2 align-middle text-right tabular-nums text-[13px] font-semibold text-slate-900 dark:text-white">
+      <td className="px-3 py-2 align-middle text-end tabular-nums text-[13px] font-semibold text-slate-900 dark:text-white">
         {casesCount}
       </td>
       <td className="px-3 py-2 align-middle">
         <StatusPill active={!!client.is_active} />
       </td>
-      <td className="px-1.5 py-2 align-middle text-right w-8">
+      <td className="px-1.5 py-2 align-middle text-end w-8">
         <ChevronRight
-          className="w-4 h-4 text-slate-300 dark:text-slate-600 group-hover:text-slate-500 ml-auto"
+          className="w-4 h-4 text-slate-300 dark:text-slate-600 group-hover:text-slate-500 ms-auto rtl:rotate-180"
           aria-hidden
         />
       </td>
@@ -170,19 +175,24 @@ const ClientMobileCard = memo(function ClientMobileCard({
   client: API.Client;
   onOpen: (c: API.Client) => void;
 }) {
+  const { t, tf } = useAppTranslation();
   const [expanded, setExpanded] = useState(false);
   const fullName =
-    `${client.first_name || ''} ${client.last_name || ''}`.trim() || 'Unnamed Client';
+    `${client.first_name || ''} ${client.last_name || ''}`.trim() || t.clients.unnamed;
   const casesCount = casesOf(client);
   const company = companyOf(client);
+  const casesLabel = tf(
+    casesCount === 1 ? t.clients.casesCountOne : t.clients.casesCountOther,
+    { count: casesCount }
+  );
 
   return (
     <article className="rounded-lg border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-950 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
       <button
         type="button"
-        className="w-full text-left px-3 py-2.5 min-h-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-inset rounded-lg"
+        className="w-full text-start px-3 py-2.5 min-h-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-inset rounded-lg"
         onClick={() => onOpen(client)}
-        aria-label={`Open ${fullName}`}
+        aria-label={tf(t.clients.aria.openClient, { name: fullName })}
       >
         <div className="flex items-start gap-2.5">
           <ClientAvatar client={client} size="md" />
@@ -202,7 +212,7 @@ const ClientMobileCard = memo(function ClientMobileCard({
             <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[12px] text-slate-600 dark:text-slate-400">
               <span className="inline-flex items-center gap-1 tabular-nums">
                 <Briefcase className="w-3 h-3" aria-hidden />
-                {casesCount} {casesCount === 1 ? 'case' : 'cases'}
+                {casesLabel}
               </span>
               {client.email ? <span className="truncate max-w-[55%]">{client.email}</span> : null}
             </div>
@@ -219,7 +229,7 @@ const ClientMobileCard = memo(function ClientMobileCard({
           }}
           aria-expanded={expanded}
         >
-          {expanded ? 'Less' : 'More'}
+          {expanded ? t.clients.less : t.clients.more}
           <ChevronDown
             className={cn('w-3.5 h-3.5 transition-transform', expanded && 'rotate-180')}
             aria-hidden
@@ -229,9 +239,9 @@ const ClientMobileCard = memo(function ClientMobileCard({
       {expanded && (
         <div className="px-3 pb-3 pt-1 space-y-2 border-t border-slate-100 dark:border-slate-800/80">
           <dl className="grid grid-cols-[4.5rem_1fr] gap-x-2 gap-y-1.5 text-[12px]">
-            <dt className="text-slate-400 uppercase tracking-wider text-[10px] font-medium">Phone</dt>
+            <dt className="text-slate-400 uppercase tracking-wider text-[10px] font-medium">{t.clients.phone}</dt>
             <dd className="text-slate-700 dark:text-slate-300">{client.phone || '—'}</dd>
-            <dt className="text-slate-400 uppercase tracking-wider text-[10px] font-medium">Email</dt>
+            <dt className="text-slate-400 uppercase tracking-wider text-[10px] font-medium">{t.clients.email}</dt>
             <dd className="text-slate-700 dark:text-slate-300 truncate">{client.email || '—'}</dd>
           </dl>
           <Button
@@ -240,8 +250,8 @@ const ClientMobileCard = memo(function ClientMobileCard({
             className="h-9 w-full text-[12px]"
             onClick={() => onOpen(client)}
           >
-            <Eye className="w-3.5 h-3.5 mr-1.5" aria-hidden />
-            View
+            <Eye className="w-3.5 h-3.5 me-1.5" aria-hidden />
+            {t.clients.view}
           </Button>
         </div>
       )}
@@ -250,6 +260,7 @@ const ClientMobileCard = memo(function ClientMobileCard({
 });
 
 const Clients: React.FC = () => {
+  const { t, tf } = useAppTranslation();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [viewMode, setViewMode] = useState<ViewMode>('list');
@@ -335,31 +346,39 @@ const Clients: React.FC = () => {
   }, [openCreate]);
 
   const kpiItems = [
-    { key: 'total', label: 'Total', value: stats.total },
-    { key: 'active', label: 'Active', value: stats.active },
-    { key: 'inactive', label: 'Inactive', value: stats.inactive },
-    { key: 'withCases', label: 'With Cases', value: stats.withCases },
+    { key: 'total', label: t.clients.stats.total, value: stats.total },
+    { key: 'active', label: t.clients.stats.active, value: stats.active },
+    { key: 'inactive', label: t.clients.stats.inactive, value: stats.inactive },
+    { key: 'withCases', label: t.clients.stats.withCases, value: stats.withCases },
   ] as const;
+
+  const columnHeaders = [
+    t.clients.columns.name,
+    t.clients.columns.company,
+    t.clients.columns.email,
+    t.clients.columns.phone,
+    t.clients.columns.cases,
+    t.clients.columns.status,
+    '',
+  ];
 
   const emptyState = (
     <div className="flex flex-col items-center justify-center py-12 px-6">
       <div className="h-12 w-12 rounded-xl bg-slate-100 dark:bg-slate-800/80 flex items-center justify-center mb-3">
         <Users className="w-6 h-6 text-slate-500" aria-hidden />
       </div>
-      <p className="text-sm font-semibold text-slate-900 dark:text-white">No clients found</p>
+      <p className="text-sm font-semibold text-slate-900 dark:text-white">{t.clients.empty.title}</p>
       <p className="text-xs text-slate-500 mt-1 text-center max-w-sm">
-        {hasActiveFilters
-          ? 'Try adjusting your search or filters.'
-          : 'Add your first client to get started.'}
+        {hasActiveFilters ? t.clients.empty.filteredHint : t.clients.empty.emptyHint}
       </p>
       {hasActiveFilters ? (
         <Button variant="outline" size="sm" className="mt-4 h-8 text-[12px]" onClick={resetFilters}>
-          Reset Filters
+          {t.clients.empty.resetFilters}
         </Button>
       ) : (
         <Button size="sm" className="mt-4 h-8 text-[12px]" onClick={openCreate}>
-          <Plus className="w-3.5 h-3.5 mr-1.5" />
-          Add Client
+          <Plus className="w-3.5 h-3.5 me-1.5" />
+          {t.clients.empty.addClient}
         </Button>
       )}
     </div>
@@ -368,15 +387,15 @@ const Clients: React.FC = () => {
   const renderList = () => (
     <div className="rounded-lg border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-950 shadow-[0_1px_2px_rgba(0,0,0,0.04)] overflow-hidden">
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[800px]" aria-label="Clients list">
+        <table className="w-full min-w-[800px]" aria-label={t.clients.aria.list}>
           <thead>
             <tr className="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/90">
-              {['Name', 'Company', 'Email', 'Phone', 'Cases', 'Status', ''].map((h, i) => (
+              {columnHeaders.map((h, i) => (
                 <th
                   key={h || 'a'}
                   className={cn(
                     'py-2 px-3 text-[10px] uppercase tracking-[0.08em] font-semibold text-slate-500 dark:text-slate-400',
-                    i === 4 ? 'text-right' : 'text-left',
+                    i === 4 ? 'text-end' : 'text-start',
                     i === 6 && 'w-8 px-1'
                   )}
                 >
@@ -422,15 +441,19 @@ const Clients: React.FC = () => {
           ? <div className="col-span-full">{emptyState}</div>
           : displayedClients.map((client) => {
               const fullName =
-                `${client.first_name || ''} ${client.last_name || ''}`.trim() || 'Unnamed Client';
+                `${client.first_name || ''} ${client.last_name || ''}`.trim() || t.clients.unnamed;
               const casesCount = casesOf(client);
               const company = companyOf(client);
+              const casesLabel = tf(
+                casesCount === 1 ? t.clients.casesCountOne : t.clients.casesCountOther,
+                { count: casesCount }
+              );
               return (
                 <button
                   key={client.id}
                   type="button"
                   onClick={() => handleView(client)}
-                  className="text-left rounded-lg border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-950 p-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:border-slate-300 dark:hover:border-slate-700 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                  className="text-start rounded-lg border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-950 p-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:border-slate-300 dark:hover:border-slate-700 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
                 >
                   <div className="flex items-start gap-2.5">
                     <ClientAvatar client={client} size="md" />
@@ -445,7 +468,7 @@ const Clients: React.FC = () => {
                         <p className="mt-0.5 text-[12px] text-slate-500 truncate">{company}</p>
                       ) : null}
                       <p className="mt-2 text-[12px] tabular-nums text-slate-600 dark:text-slate-400">
-                        {casesCount} {casesCount === 1 ? 'case' : 'cases'}
+                        {casesLabel}
                         {client.email ? ` · ${client.email}` : ''}
                       </p>
                     </div>
@@ -457,7 +480,7 @@ const Clients: React.FC = () => {
   );
 
   const renderMobile = () => (
-    <div className="flex flex-col gap-2 pb-16" role="list" aria-label="Clients">
+    <div className="flex flex-col gap-2 pb-16" role="list" aria-label={t.clients.aria.list}>
       {clientsIsLoading
         ? Array.from({ length: 6 }).map((_, i) => (
             <div
@@ -480,14 +503,14 @@ const Clients: React.FC = () => {
         <div
           className="ws-kpi-strip flex gap-2 overflow-x-auto snap-x snap-mandatory py-2"
           role="region"
-          aria-label="Client statistics"
+          aria-label={t.clients.aria.stats}
         >
           {kpiItems.map((item) => (
             <div
               key={item.key}
               className={cn(
                 'snap-start shrink-0 flex items-center gap-2 rounded-md border border-slate-200/90 dark:border-slate-800',
-                'bg-white dark:bg-slate-950 border-l-[3px] px-2.5 py-1.5 min-w-[5.75rem] sm:flex-1 sm:min-w-0',
+                'bg-white dark:bg-slate-950 border-s-[3px] px-2.5 py-1.5 min-w-[5.75rem] sm:flex-1 sm:min-w-0',
                 KPI_ACCENTS[item.key]
               )}
             >
@@ -509,15 +532,15 @@ const Clients: React.FC = () => {
             <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
               <div className="relative flex-1 min-w-[min(100%,12rem)] sm:min-w-[14rem] sm:flex-[1.4]">
                 <Search
-                  className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400"
+                  className="pointer-events-none absolute start-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400"
                   aria-hidden
                 />
                 <Input
                   ref={searchInputRef}
                   type="search"
-                  placeholder="Search clients… (press /)"
+                  placeholder={t.clients.searchPlaceholder}
                   className={cn(
-                    'h-9 pl-8 pr-8 text-[13px] rounded-md',
+                    'h-9 ps-8 pe-8 text-[13px] rounded-md',
                     searchTerm.trim() && 'ring-1 ring-primary/25 border-primary/30'
                   )}
                   value={searchTerm}
@@ -528,14 +551,14 @@ const Clients: React.FC = () => {
                       (e.target as HTMLInputElement).blur();
                     }
                   }}
-                  aria-label="Search clients"
+                  aria-label={t.clients.searchAria}
                 />
                 {searchTerm.trim() !== '' && (
                   <button
                     type="button"
-                    className="absolute right-1.5 top-1/2 -translate-y-1/2 rounded p-1 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 min-h-[28px] min-w-[28px] flex items-center justify-center"
+                    className="absolute end-1.5 top-1/2 -translate-y-1/2 rounded p-1 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 min-h-[28px] min-w-[28px] flex items-center justify-center"
                     onClick={() => setSearchTerm('')}
-                    aria-label="Clear search"
+                    aria-label={t.clients.clearSearch}
                   >
                     <X className="w-3.5 h-3.5" />
                   </button>
@@ -552,12 +575,12 @@ const Clients: React.FC = () => {
                     statusFilter !== 'all' && 'ring-1 ring-primary/30 border-primary/40'
                   )}
                 >
-                  <SelectValue placeholder="Status" />
+                  <SelectValue placeholder={t.clients.filters.status} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All statuses</SelectItem>
-                  <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="inactive">Inactive</SelectItem>
+                  <SelectItem value="all">{t.clients.filters.allStatuses}</SelectItem>
+                  <SelectItem value="active">{t.clients.filters.active}</SelectItem>
+                  <SelectItem value="inactive">{t.clients.filters.inactive}</SelectItem>
                 </SelectContent>
               </Select>
 
@@ -568,14 +591,14 @@ const Clients: React.FC = () => {
                   className="h-9 text-[12px] px-2"
                   onClick={resetFilters}
                 >
-                  Reset
+                  {t.clients.reset}
                 </Button>
               )}
 
               <div
-                className="hidden md:flex items-center gap-0.5 ml-auto p-0.5 rounded-md border border-slate-200 dark:border-slate-700 bg-slate-100/80 dark:bg-slate-900/50"
+                className="hidden md:flex items-center gap-0.5 ms-auto p-0.5 rounded-md border border-slate-200 dark:border-slate-700 bg-slate-100/80 dark:bg-slate-900/50"
                 role="group"
-                aria-label="View mode"
+                aria-label={t.clients.aria.viewMode}
               >
                 <Button
                   type="button"
@@ -588,7 +611,7 @@ const Clients: React.FC = () => {
                   )}
                   onClick={() => setViewMode('list')}
                   aria-pressed={viewMode === 'list'}
-                  aria-label="List view"
+                  aria-label={t.clients.aria.listView}
                 >
                   <List className="w-4 h-4" />
                 </Button>
@@ -603,7 +626,7 @@ const Clients: React.FC = () => {
                   )}
                   onClick={() => setViewMode('grid')}
                   aria-pressed={viewMode === 'grid'}
-                  aria-label="Grid view"
+                  aria-label={t.clients.aria.gridView}
                 >
                   <Grid3x3 className="w-4 h-4" />
                 </Button>
@@ -611,15 +634,20 @@ const Clients: React.FC = () => {
 
               <Button
                 size="sm"
-                className="hidden md:inline-flex h-9 px-3 text-[12px] font-semibold shrink-0 rounded-md ml-auto lg:ml-0"
+                className="hidden md:inline-flex h-9 px-3 text-[12px] font-semibold shrink-0 rounded-md ms-auto lg:ms-0"
                 onClick={openCreate}
               >
-                <Plus className="w-4 h-4 mr-1.5" strokeWidth={2.5} />
-                Add New Client
+                <Plus className="w-4 h-4 me-1.5" strokeWidth={2.5} />
+                {t.clients.addNewClient}
               </Button>
             </div>
             <p className="mt-1.5 text-[11px] text-slate-500 tabular-nums">
-              {clientsIsLoading ? 'Loading…' : `${displayedClients.length} of ${clients.length} clients`}
+              {clientsIsLoading
+                ? t.common.loading
+                : tf(t.clients.countSummary, {
+                    shown: displayedClients.length,
+                    total: clients.length,
+                  })}
             </p>
           </div>
         </div>
@@ -635,17 +663,17 @@ const Clients: React.FC = () => {
       <Button
         type="button"
         size="icon"
-        className="md:hidden fixed z-40 bottom-[max(1.25rem,env(safe-area-inset-bottom))] right-4 h-12 w-12 rounded-full shadow-lg shadow-primary/30"
+        className="md:hidden fixed z-40 bottom-[max(1.25rem,env(safe-area-inset-bottom))] end-4 h-12 w-12 rounded-full shadow-lg shadow-primary/30"
         onClick={openCreate}
-        aria-label="Add New Client"
+        aria-label={t.clients.aria.addNewClient}
       >
         <Plus className="w-5 h-5" strokeWidth={2.5} />
       </Button>
 
       <p className="sr-only" aria-live="polite">
         {clientsIsLoading
-          ? 'Loading clients'
-          : `${displayedClients.length} clients. Press slash to search, N to create.`}
+          ? t.clients.loadingClients
+          : tf(t.clients.aria.loadingSummary, { count: displayedClients.length })}
       </p>
 
       <ClientCreateModal ref={clientCreateModalRef} onSuccess={fetchClients} />

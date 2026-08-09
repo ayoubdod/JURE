@@ -9,10 +9,12 @@ import { NotificationFilters } from '@/components/notifications/NotificationFilt
 import { NotificationItem } from '@/components/notifications/NotificationItem';
 import { filterNotifications, groupNotificationsByDate } from '@/utils/notificationUtils';
 import { devError } from '@/utils/devLog';
+import { useAppTranslation } from '@/i18n';
 
 const PAGE_SIZE = 20;
 
 export default function NotificationsPage() {
+  const { t } = useAppTranslation();
   const {
     markAsRead,
     markAllAsRead,
@@ -112,18 +114,25 @@ export default function NotificationsPage() {
   const sorted = [...items].sort(
     (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
   );
-  const groups = groupNotificationsByDate(sorted);
+  const groups = groupNotificationsByDate(sorted, t.notifications.groups);
 
   return (
     <div className="mx-auto max-w-4xl space-y-6 pb-10">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Notifications</h1>
+        <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+          {t.notifications.title}
+        </h1>
         <div className="flex flex-wrap gap-2">
           <Button variant="outline" size="sm" onClick={handleMarkAllRead}>
-            Mark all as read
+            {t.notifications.markAllRead}
           </Button>
-          <Button variant="ghost" size="sm" className="text-red-600 hover:bg-red-50 hover:text-red-700" onClick={handleDeleteRead}>
-            Delete read
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-red-600 hover:bg-red-50 hover:text-red-700"
+            onClick={handleDeleteRead}
+          >
+            {t.notifications.deleteRead}
           </Button>
         </div>
       </div>
@@ -132,28 +141,42 @@ export default function NotificationsPage() {
         <NotificationFilters variant="page" value={filter} onChange={setFilter} />
         <div className="flex flex-wrap items-end gap-3 border-t border-slate-100 pt-3 dark:border-slate-800">
           <div className="flex flex-col gap-1">
-            <span className="text-xs font-medium text-slate-600">Du</span>
-            <Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="w-40" />
+            <span className="text-xs font-medium text-slate-600">{t.notifications.dateFrom}</span>
+            <Input
+              type="date"
+              value={dateFrom}
+              onChange={(e) => setDateFrom(e.target.value)}
+              className="w-40"
+            />
           </div>
           <div className="flex flex-col gap-1">
-            <span className="text-xs font-medium text-slate-600">Au</span>
-            <Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="w-40" />
+            <span className="text-xs font-medium text-slate-600">{t.notifications.dateTo}</span>
+            <Input
+              type="date"
+              value={dateTo}
+              onChange={(e) => setDateTo(e.target.value)}
+              className="w-40"
+            />
           </div>
         </div>
       </div>
 
       {loading ? (
-        <p className="text-center text-slate-500">Chargement…</p>
+        <p className="text-center text-slate-500">{t.common.loading}</p>
       ) : items.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-slate-200 py-20 text-center dark:border-slate-800">
-          <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">You&apos;re all caught up.</p>
-          <p className="mt-1 text-sm text-slate-500">No notifications match these filters.</p>
+          <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">
+            {t.notifications.emptyTitle}
+          </p>
+          <p className="mt-1 text-sm text-slate-500">{t.notifications.emptySubtitle}</p>
         </div>
       ) : (
         <div className="space-y-8">
           {groups.map((g) => (
             <section key={g.key}>
-              <h2 className="mb-3 text-xs font-bold uppercase tracking-wider text-slate-500">{g.label}</h2>
+              <h2 className="mb-3 text-xs font-bold uppercase tracking-wider text-slate-500">
+                {g.label}
+              </h2>
               <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950">
                 {g.items.map((n) => (
                   <NotificationItem
@@ -163,7 +186,9 @@ export default function NotificationsPage() {
                     onRead={(id) => {
                       markAsRead(id);
                       setItems((prev) =>
-                        prev.map((x) => (String(x.id) === String(id) ? { ...x, is_read: true } : x))
+                        prev.map((x) =>
+                          String(x.id) === String(id) ? { ...x, is_read: true } : x
+                        )
                       );
                     }}
                     onDelete={(id) => {
@@ -185,7 +210,7 @@ export default function NotificationsPage() {
             disabled={loadingMore}
             onClick={() => loadPage(page + 1, true)}
           >
-            {loadingMore ? 'Chargement…' : 'Charger plus'}
+            {loadingMore ? t.common.loading : t.notifications.loadMore}
           </Button>
         </div>
       ) : null}

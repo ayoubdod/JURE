@@ -77,7 +77,7 @@ const Sidebar = ({ activeTab, setActiveTab }: SidebarProps) => {
     const financeItem = {
       id: 'finance',
       icon: Coins,
-      label: 'Finance',
+      label: t.sidebar.finance,
       path: '/dashboard/finance',
       badge: null as number | string | null,
     };
@@ -91,7 +91,7 @@ const Sidebar = ({ activeTab, setActiveTab }: SidebarProps) => {
     const items: MenuItem[] = [
       ...afterCases,
       { id: 'clients', icon: UserCheck, label: t.sidebar.clients, path: '/dashboard/clients', badge: null },
-      { id: 'tasks', icon: CheckSquare, label: t.sidebar.calendar, path: '/dashboard/tasks', badge: null },
+      { id: 'tasks', icon: CheckSquare, label: t.sidebar.tasks, path: '/dashboard/tasks', badge: null },
       {
         id: 'conversations',
         icon: MessageSquare,

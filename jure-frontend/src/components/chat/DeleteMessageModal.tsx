@@ -8,6 +8,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
+import { useAppTranslation } from '@/i18n';
 
 interface DeleteMessageModalProps {
   open: boolean;
@@ -22,6 +23,7 @@ const DeleteMessageModal: React.FC<DeleteMessageModalProps> = ({
   message,
   onConfirm,
 }) => {
+  const { t } = useAppTranslation();
   const [loading, setLoading] = React.useState(false);
 
   const handleConfirm = async () => {
@@ -41,18 +43,18 @@ const DeleteMessageModal: React.FC<DeleteMessageModalProps> = ({
     <Dialog open={open} onOpenChange={loading ? undefined : onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Delete this message?</DialogTitle>
+          <DialogTitle>{t.conversations.deleteMessage.title}</DialogTitle>
         </DialogHeader>
         <p className="text-sm text-muted-foreground">
-          This message will be removed for everyone. This action cannot be undone.
+          {t.conversations.deleteMessage.description}
         </p>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
-            Cancel
+            {t.common.cancel}
           </Button>
           <Button variant="destructive" onClick={handleConfirm} disabled={loading}>
-            {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-            Delete
+            {loading ? <Loader2 className="h-4 w-4 animate-spin me-2" /> : null}
+            {t.common.delete}
           </Button>
         </DialogFooter>
       </DialogContent>

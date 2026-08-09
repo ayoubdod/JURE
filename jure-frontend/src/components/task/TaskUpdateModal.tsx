@@ -1,5 +1,5 @@
 'use client'
-import { forwardRef, useImperativeHandle, useState } from 'react';
+import { forwardRef, useImperativeHandle, useMemo, useRef, useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -22,6 +22,7 @@ import { DialogDescription } from '@radix-ui/react-dialog';
 import ServerSelect from '../common/ServerSelect';
 import { Textarea } from '../ui/textarea';
 import { devError } from '@/utils/devLog';
+import { useAppTranslation } from '@/i18n';
 
 export interface TaskUpdateModalRef {
   show: (instance: API.Task) => void;
@@ -32,25 +33,30 @@ export interface TaskUpdateModalProps {
   onSuccess?: (_: API.Task) => void;
 }
 
-const schema = yup.object({
-  title: yup.string().required('Title is required'),
-  description: yup.string().required('Description is required'),
-  priority: yup.string().required('Priority is required'),
-  status: yup.string().required('Status is required'),
-  due_date: yup.string().required('Due date is required'),
-  estimated_hours: yup.string().optional(),
-  assigned_to: yup.string().required('Assigned to is required'),
-  client: yup.string().optional(),
-  case: yup.string().optional(),
-});
-
 const TaskUpdateModal = forwardRef<TaskUpdateModalRef, TaskUpdateModalProps>(({ onSuccess }, ref) => {
+  const { t } = useAppTranslation();
   const [instance, setInstance] = useState<API.Task | null>(null);
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
+  const schema = useMemo(() => yup.object({
+    title: yup.string().required(t.tasks.validation.titleRequired),
+    description: yup.string().required(t.tasks.validation.descriptionRequired),
+    priority: yup.string().required(t.tasks.validation.priorityRequired),
+    status: yup.string().required(t.tasks.validation.statusRequired),
+    due_date: yup.string().required(t.tasks.validation.dueDateRequired),
+    estimated_hours: yup.string().optional(),
+    assigned_to: yup.string().required(t.tasks.validation.assignedToRequired),
+    client: yup.string().optional(),
+    case: yup.string().optional(),
+  }), [t]);
+
+  const schemaRef = useRef(schema);
+  schemaRef.current = schema;
+
   const mainForm = useForm<API.TaskUpdateForm>({
-    resolver: yupResolver(schema) as unknown as Resolver<API.TaskUpdateForm>
+    resolver: ((values, context, options) =>
+      yupResolver(schemaRef.current)(values, context, options)) as unknown as Resolver<API.TaskUpdateForm>
   });
 
   const show = (instance: API.Task) => {
@@ -136,10 +142,10 @@ const TaskUpdateModal = forwardRef<TaskUpdateModalRef, TaskUpdateModalProps>(({ 
               </div>
               <div>
                 <DialogTitle className="text-2xl font-bold text-white">
-                  Update Task
+                  {t.tasks.modal.updateTitle}
                 </DialogTitle>
                 <DialogDescription className="text-white/90 mt-1">
-                  Update the task information below.
+                  {t.tasks.modal.updateDescription}
                 </DialogDescription>
               </div>
             </div>
@@ -349,10 +355,17 @@ const TaskUpdateModal = forwardRef<TaskUpdateModalRef, TaskUpdateModalProps>(({ 
               onClick={hide}
               disabled={isLoading}
             >
-              Cancel
+              {t.common.cancel}
             </Button>
             <Button type="submit" variant="default" disabled={isLoading} className="bg-purple-600 hover:bg-purple-700">
-              {isLoading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : 'Update Task'}
+              {isLoading ? (
+                <>
+                  <Loader2 className="w-4 h-4 me-2 animate-spin" />
+                  {t.tasks.modal.updating}
+                </>
+              ) : (
+                t.tasks.modal.updateTask
+              )}
             </Button>
           </DialogFooter>
         </form>

@@ -1,8 +1,24 @@
 User-agent: Googlebot
 Allow: /
+Disallow: /dashboard
+Disallow: /signin
+Disallow: /signup
+Disallow: /forgot-password
+Disallow: /password-reset-confirm
+Disallow: /verify-email
+Disallow: /verify-email-waiting
+Disallow: /setup-password
 
 User-agent: Bingbot
 Allow: /
+Disallow: /dashboard
+Disallow: /signin
+Disallow: /signup
+Disallow: /forgot-password
+Disallow: /password-reset-confirm
+Disallow: /verify-email
+Disallow: /verify-email-waiting
+Disallow: /setup-password
 
 User-agent: Twitterbot
 Allow: /
@@ -12,5 +28,13 @@ Allow: /
 
 User-agent: *
 Allow: /
+Disallow: /dashboard
+Disallow: /signin
+Disallow: /signup
+Disallow: /forgot-password
+Disallow: /password-reset-confirm
+Disallow: /verify-email
+Disallow: /verify-email-waiting
+Disallow: /setup-password
 
 Sitemap: https://jure.ma/sitemap.xml

@@ -13,7 +13,7 @@ import { JuriaMarkdown } from '@/components/juria/JuriaMarkdown';
 import { JuriaComposer } from '@/components/juria/JuriaComposer';
 import { DocumentDraftingSection } from '@/components/juria/DocumentDraftingSection';
 import { CaseLinkDropdown } from '@/components/juria/CaseLinkDropdown';
-import { JURIA_MODE_META } from '@/components/juria/juriaConstants';
+import { JURIA_MODE_VISUAL } from '@/components/juria/juriaConstants';
 import useJuriaStore from '@/stores/juriaStore';
 import type { JuriaCaseContextPayload } from '@/types/juria';
 import { cn } from '@/lib/utils';
@@ -98,7 +98,7 @@ export function JuriaConversationView({
 
   if (!conv) return null;
 
-  const meta = JURIA_MODE_META[conv.mode];
+  const meta = JURIA_MODE_VISUAL[conv.mode];
   const linked = conv.caseId ?
       {
         reference: conv.caseReference,

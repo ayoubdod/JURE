@@ -49,6 +49,7 @@ import {
   type KnowledgeSearchHandle,
 } from '@/components/library/knowledge-hub';
 import { cn } from '@/lib/utils';
+import { useAppTranslation } from '@/i18n';
 import { devError } from '@/utils/devLog';
 import '@/styles/workspace-list.css';
 
@@ -82,6 +83,7 @@ const ViewFallback = () => (
 );
 
 const Library = () => {
+  const { t, tf } = useAppTranslation();
   const [searchTerm, setSearchTerm] = useState('');
   const [collection, setCollection] = useState<CollectionId>('all');
   const [viewMode, setViewMode] = useState<KnowledgeViewMode>('table');
@@ -121,16 +123,16 @@ const Library = () => {
               fallbackError.response?.data?.detail ||
               fallbackError.response?.data?.message ||
               fallbackError.message ||
-              'Failed to load knowledge repository.';
+              t.library.toasts.loadErrorFallback;
             toast({
-              title: 'Error Loading Knowledge Hub',
+              title: t.library.toasts.loadErrorTitle,
               description: errorMessage,
               variant: 'destructive',
             });
           });
       })
       .finally(() => setLoading(false));
-  }, [toast]);
+  }, [toast, t]);
 
   useEffect(() => {
     fetchDocuments();
@@ -205,11 +207,11 @@ const Library = () => {
     (e: React.MouseEvent, item: EnrichedDocument) => {
       e.stopPropagation();
       toast({
-        title: 'Download Started',
-        description: `Downloading ${item.title}…`,
+        title: t.library.toasts.downloadStarted,
+        description: tf(t.library.toasts.downloading, { title: item.title }),
       });
     },
-    [toast]
+    [toast, t, tf]
   );
 
   const handleDelete = useCallback((e: React.MouseEvent, item: EnrichedDocument) => {
@@ -231,22 +233,22 @@ const Library = () => {
 
   const handleCreateSuccess = (document: API.Document) => {
     toast({
-      title: 'Knowledge added',
-      description: `"${document.title}" is now in your repository`,
+      title: t.library.toasts.addedTitle,
+      description: tf(t.library.toasts.addedDesc, { title: document.title }),
     });
     fetchDocuments();
   };
   const handleUpdateSuccess = (document: API.Document) => {
     toast({
-      title: 'Updated',
-      description: `"${document.title}" saved`,
+      title: t.library.toasts.updatedTitle,
+      description: tf(t.library.toasts.updatedDesc, { title: document.title }),
     });
     fetchDocuments();
   };
   const handleDeleteSuccess = (document: API.Document) => {
     toast({
-      title: 'Removed',
-      description: `"${document.title}" deleted`,
+      title: t.library.toasts.removedTitle,
+      description: tf(t.library.toasts.removedDesc, { title: document.title }),
     });
     if (selectedDoc?.id === document.id) setSelectedDoc(null);
     fetchDocuments();
@@ -347,7 +349,7 @@ const Library = () => {
               className="w-[min(100vw,18rem)] p-0 sm:max-w-xs lg:hidden"
             >
               <SheetHeader className="border-b border-slate-200 px-4 py-3 dark:border-slate-800">
-                <SheetTitle className="text-sm">Collections</SheetTitle>
+                <SheetTitle className="text-sm">{t.library.collections}</SheetTitle>
               </SheetHeader>
               <div className="h-[calc(100%-3.5rem)] overflow-y-auto p-3">
                 <CollectionsSidebar
@@ -385,7 +387,7 @@ const Library = () => {
                       size="icon"
                       className="h-9 w-9 shrink-0 lg:hidden"
                       onClick={() => setFolderSheetOpen(true)}
-                      aria-label="Open collections"
+                      aria-label={t.library.openCollections}
                     >
                       <FolderTree className="h-4 w-4" />
                     </Button>
@@ -402,7 +404,7 @@ const Library = () => {
                     <ViewTabs value={viewMode} onChange={setViewMode} className="min-w-0" />
 
                     <span className="hidden text-[11px] tabular-nums text-slate-400 sm:inline">
-                      {filteredItems.length} results
+                      {tf(t.library.resultsCount, { count: filteredItems.length })}
                     </span>
 
                     <Button
@@ -411,9 +413,9 @@ const Library = () => {
                       size="sm"
                       className="h-9 text-[12px] xl:hidden"
                       onClick={() => setAiSheetOpen(true)}
-                      aria-label="Open AI Copilot"
+                      aria-label={t.library.openCopilot}
                     >
-                      Copilot
+                      {t.library.copilot}
                     </Button>
 
                     <Button
@@ -423,7 +425,7 @@ const Library = () => {
                       onClick={handleAddNew}
                     >
                       <Upload className="h-3.5 w-3.5" />
-                      Upload
+                      {t.library.upload}
                     </Button>
                   </div>
                 </div>
@@ -530,7 +532,7 @@ const Library = () => {
           size="icon"
           className="fixed z-40 bottom-[max(4.75rem,calc(env(safe-area-inset-bottom)+3.75rem))] right-4 h-12 w-12 rounded-full bg-[#64499D] shadow-lg hover:bg-[#4D3680] md:hidden"
           onClick={handleAddNew}
-          aria-label="Upload documents"
+          aria-label={t.library.uploadDocuments}
         >
           <Plus className="h-5 w-5" strokeWidth={2.5} />
         </Button>
@@ -539,8 +541,8 @@ const Library = () => {
 
         <p className="sr-only" aria-live="polite">
           {loading
-            ? 'Loading knowledge repository'
-            : `${filteredItems.length} documents. Press slash to search, N or U to upload.`}
+            ? t.library.loadingAria
+            : tf(t.library.countAria, { count: filteredItems.length })}
         </p>
       </div>
 

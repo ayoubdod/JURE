@@ -1,11 +1,14 @@
-
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { CheckCircle, Mail, Clock } from 'lucide-react';
 import { Link } from 'react-router';
+import { useAppTranslation } from '@/i18n';
 
 const VerificationPending = () => {
+  const { t } = useAppTranslation();
+  const v = t.auth.signup.verification;
+
   return (
     <div className="max-w-2xl mx-auto">
       <Card className="landing-glass border-0 shadow-none ring-1 ring-[#64499D]/12 dark:ring-[#8B6FD1]/20">
@@ -15,9 +18,9 @@ const VerificationPending = () => {
               <CheckCircle className="h-8 w-8 text-white" />
             </div>
           </div>
-          <CardTitle className="text-2xl font-display text-slate-900 dark:text-slate-100">Inscription soumise avec succès !</CardTitle>
+          <CardTitle className="text-2xl font-display text-slate-900 dark:text-slate-100">{v.title}</CardTitle>
           <CardDescription className="text-slate-600 dark:text-slate-400">
-            Votre demande d'inscription a été transmise à notre équipe
+            {v.description}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6 pt-6">
@@ -25,28 +28,17 @@ const VerificationPending = () => {
             <div className="bg-gradient-to-r from-[#F4F1FF]/60 to-transparent dark:from-[#64499D]/10 dark:to-transparent border border-[#64499D]/15 dark:border-[#8B6FD1]/20 rounded-xl p-6">
               <Mail className="h-8 w-8 text-[#64499D] dark:text-[#8B6FD1] mx-auto mb-3" />
               <h3 className="font-semibold text-slate-900 dark:text-slate-100 mb-2">
-                Vérification de votre email
+                {v.emailTitle}
               </h3>
               <p className="text-slate-600 dark:text-slate-400 text-sm mb-4">
-                Un email de vérification a été envoyé à votre adresse email. 
-                Veuillez cliquer sur le lien dans l'email pour activer votre compte.
+                {v.emailBody}
               </p>
               <div className="landing-glass border-0 ring-1 ring-[#64499D]/10 dark:ring-[#8B6FD1]/20 rounded-lg p-4 text-left">
-                <p className="text-sm text-slate-700 dark:text-slate-300">
-                  <strong>Objet :</strong> Inscription Jure
-                </p>
-                <p className="text-sm text-slate-700 dark:text-slate-300 mt-2">
-                  Bonjour [Prénom] [Nom] !
-                </p>
-                <p className="text-sm text-slate-700 dark:text-slate-300 mt-2">
-                  Félicitations pour la création de votre compte Jure. Pour finaliser votre souscription, 
-                  il vous suffit de l'activer depuis le lien ci-dessous :
-                </p>
-                <p className="text-sm text-[#64499D] dark:text-[#CFC2FF] mt-2">[Lien d'activation]</p>
-                <p className="text-sm text-slate-700 dark:text-slate-300 mt-2">
-                  À très bientôt,<br />
-                  L'équipe Jure
-                </p>
+                <p className="text-sm text-slate-700 dark:text-slate-300">{v.emailGreeting}</p>
+                <p className="text-sm text-slate-700 dark:text-slate-300 mt-2">{v.emailThanks}</p>
+                <p className="text-sm text-slate-700 dark:text-slate-300 mt-2">{v.emailClick}</p>
+                <p className="text-sm text-[#64499D] dark:text-[#CFC2FF] mt-2">{v.emailActivationLink}</p>
+                <p className="text-sm text-slate-700 dark:text-slate-300 mt-2">{v.emailIgnore}</p>
               </div>
             </div>
           </div>
@@ -55,49 +47,31 @@ const VerificationPending = () => {
             <div className="bg-gradient-to-r from-amber-50/60 to-transparent dark:from-amber-500/10 dark:to-transparent border border-amber-200/80 dark:border-amber-500/30 rounded-xl p-6">
               <Clock className="h-8 w-8 text-amber-600 dark:text-amber-400 mx-auto mb-3" />
               <h3 className="font-semibold text-slate-900 dark:text-slate-100 mb-2">
-                Examen de votre dossier
+                {v.reviewTitle}
               </h3>
-              <p className="text-slate-600 dark:text-slate-400 text-sm">
-                <strong className="text-slate-800 dark:text-slate-200">Vos données sont bien prises en compte.</strong> Une confirmation vous sera envoyée 
-                par email dès mise à jour de votre compte.
-              </p>
-              <p className="text-slate-500 dark:text-slate-500 text-xs mt-2">
-                Délai de traitement : maximum 48 heures
-              </p>
+              <p className="text-slate-600 dark:text-slate-400 text-sm">{v.reviewBody}</p>
+              <p className="text-slate-500 dark:text-slate-500 text-xs mt-2">{v.reviewHint}</p>
             </div>
           </div>
 
           <div className="text-center">
             <div className="bg-gradient-to-r from-emerald-50/60 to-transparent dark:from-emerald-500/10 dark:to-transparent border border-emerald-200/80 dark:border-emerald-500/30 rounded-xl p-4">
-              <h4 className="font-medium text-slate-900 dark:text-slate-100 mb-2">Email d'activation final</h4>
-              <p className="text-sm text-slate-600 dark:text-slate-400 mb-2">
-                Une fois votre compte validé par notre équipe, vous recevrez :
-              </p>
+              <h4 className="font-medium text-slate-900 dark:text-slate-100 mb-2">{v.finalEmailTitle}</h4>
+              <p className="text-sm text-slate-600 dark:text-slate-400 mb-2">{v.finalEmailBody}</p>
               <div className="landing-glass border-0 ring-1 ring-[#64499D]/10 dark:ring-[#8B6FD1]/20 rounded-lg p-3 text-left text-sm text-slate-700 dark:text-slate-300">
-                <p><strong>Objet :</strong> Activation de votre compte Jure</p>
-                <p className="mt-1">Bonjour [Prénom] [Nom] !</p>
-                <p className="mt-1">
-                  "Nous avons le plaisir de vous informer que votre profil est désormais à jour. 
-                  Nous vous invitons à le consulter rapidement en vous connectant sur votre espace."
-                </p>
-                <p className="mt-1">L'équipe Jure</p>
-                <p className="text-[#64499D] dark:text-[#CFC2FF] mt-1">[Lien de connexion]</p>
+                <p className="text-[#64499D] dark:text-[#CFC2FF]">{v.finalLoginLink}</p>
               </div>
             </div>
           </div>
 
           <div className="text-center space-y-4">
-            <p className="text-sm text-slate-600 dark:text-slate-400">
-              Vous n'avez pas reçu l'email ? Vérifiez votre dossier spam ou contactez notre support.
-            </p>
+            <p className="text-sm text-slate-600 dark:text-slate-400">{v.noEmailHint}</p>
             <div className="flex justify-center space-x-4">
               <Button variant="outline" asChild className="border-[#64499D]/30 text-[#64499D] dark:text-[#CFC2FF] hover:bg-[#64499D]/10 dark:hover:bg-[#64499D]/20">
-                <Link to="/signin">
-                  Retour à la connexion
-                </Link>
+                <Link to="/signin">{v.goSignIn}</Link>
               </Button>
               <Button variant="outline" className="border-[#64499D]/30 text-[#64499D] dark:text-[#CFC2FF] hover:bg-[#64499D]/10 dark:hover:bg-[#64499D]/20">
-                Renvoyer l'email
+                {v.contactSupport}
               </Button>
             </div>
           </div>

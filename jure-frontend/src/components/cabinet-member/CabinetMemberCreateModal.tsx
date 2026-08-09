@@ -1,5 +1,5 @@
 'use client'
-import { forwardRef, useImperativeHandle, useState } from 'react';
+import { forwardRef, useImperativeHandle, useMemo, useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -18,21 +18,12 @@ import { getRemoteFieldsValidation } from '@/utils/functions';
 import { isAxiosError } from 'axios';
 import { PhoneInput } from '../ui/phone-input';
 import { ToggleGroup, ToggleGroupItem } from '../ui/toggle-group';
-import { getRoleDisplayName } from '@/utils/permissions';
 import { cn } from '@/lib/utils';
 import { Switch } from '../ui/switch';
 import { Label } from '@/components/ui/label';
+import { useAppTranslation } from '@/i18n';
 
 const ALL_ROLES: API.Role[] = ['VIEWER', 'ASSISTANT', 'LAWYER', 'MANAGER', 'ADMIN', 'OWNER'];
-
-const ROLE_DESCRIPTIONS: Record<API.Role, string> = {
-  VIEWER: 'Can view cases and documents only',
-  ASSISTANT: 'Can manage documents and assist on cases',
-  LAWYER: 'Can manage and be assigned to cases',
-  MANAGER: 'Can manage team members and all cases',
-  ADMIN: 'Full access except ownership transfer',
-  OWNER: 'Full access including billing and settings',
-};
 
 const roleToggleClass: Record<API.Role, string> = {
   VIEWER:
@@ -58,20 +49,25 @@ export interface CabinetMemberCreateModalProps {
   onSuccess?: (_: API.CabinetMember) => void;
 }
 
-const schema = yup.object({
-  first_name: yup.string().required('First name is required'),
-  last_name: yup.string().required('Last name is required'),
-  email: yup.string().email('Invalid email address').required('Email is required'),
-  phone: yup.string().required('Phone is required'),
-  is_active: yup.boolean().default(true),
-  address: yup.string().required('Address is required'),
-  role: yup.string().oneOf(['OWNER', 'ADMIN', 'MANAGER', 'LAWYER', 'ASSISTANT', 'VIEWER']).optional(),
-  send_invitation_email: yup.boolean().default(true),
-});
-
 const CabinetMemberCreateModal = forwardRef<CabinetMemberCreateModalRef, CabinetMemberCreateModalProps>(({ onSuccess }, ref) => {
+  const { t } = useAppTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+
+  const schema = useMemo(
+    () =>
+      yup.object({
+        first_name: yup.string().required(t.team.validation.firstNameRequired),
+        last_name: yup.string().required(t.team.validation.lastNameRequired),
+        email: yup.string().email(t.validation.invalidEmail).required(t.team.validation.emailRequired),
+        phone: yup.string().required(t.team.validation.phoneRequired),
+        is_active: yup.boolean().default(true),
+        address: yup.string().required(t.team.validation.addressRequired),
+        role: yup.string().oneOf(['OWNER', 'ADMIN', 'MANAGER', 'LAWYER', 'ASSISTANT', 'VIEWER']).optional(),
+        send_invitation_email: yup.boolean().default(true),
+      }),
+    [t]
+  );
 
   const mainForm = useForm<API.CabinetMemberCreateForm>({
     resolver: yupResolver(schema) as Resolver<API.CabinetMemberCreateForm>,
@@ -157,7 +153,7 @@ const CabinetMemberCreateModal = forwardRef<CabinetMemberCreateModalRef, Cabinet
             className="absolute right-3 top-3 z-10 h-9 w-9 rounded-full bg-white/15 text-white hover:bg-white/25 border border-white/30"
             onClick={hide}
             disabled={isLoading}
-            aria-label="Close"
+            aria-label={t.common.close}
           >
             <X className="h-4 w-4" />
           </Button>
@@ -168,10 +164,10 @@ const CabinetMemberCreateModal = forwardRef<CabinetMemberCreateModalRef, Cabinet
             </div>
             <div>
               <DialogTitle className="text-xl font-bold tracking-tight text-white">
-                Add New Member
+                {t.team.modal.createTitle}
               </DialogTitle>
               <DialogDescription className="text-sm text-white/90 mt-1">
-                Add a new member to your team
+                {t.team.modal.createDescription}
               </DialogDescription>
             </div>
           </div>
@@ -183,13 +179,13 @@ const CabinetMemberCreateModal = forwardRef<CabinetMemberCreateModalRef, Cabinet
         >
           <div className="px-6 py-5 space-y-6 flex-1">
             <div>
-              {sectionLabel('Personal')}
+{sectionLabel(t.team.modal.personal)}
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-sm font-medium text-slate-700 dark:text-zinc-300">First Name</label>
+                  <label className="text-sm font-medium text-slate-700 dark:text-zinc-300">{t.team.modal.firstName}</label>
                   <Input
                     {...mainForm.register('first_name')}
-                    placeholder="Enter first name"
+                    placeholder={t.team.modal.firstNamePlaceholder}
                     className="h-10 rounded-lg border border-slate-200 dark:border-zinc-700 focus-visible:ring-2 focus-visible:ring-[#6D54B5] focus-visible:ring-offset-0"
                   />
                   {mainForm.formState.errors.first_name && (
@@ -197,10 +193,10 @@ const CabinetMemberCreateModal = forwardRef<CabinetMemberCreateModalRef, Cabinet
                   )}
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-sm font-medium text-slate-700 dark:text-zinc-300">Last Name</label>
+                  <label className="text-sm font-medium text-slate-700 dark:text-zinc-300">{t.team.modal.lastName}</label>
                   <Input
                     {...mainForm.register('last_name')}
-                    placeholder="Enter last name"
+                    placeholder={t.team.modal.lastNamePlaceholder}
                     className="h-10 rounded-lg border border-slate-200 dark:border-zinc-700 focus-visible:ring-2 focus-visible:ring-[#6D54B5] focus-visible:ring-offset-0"
                   />
                   {mainForm.formState.errors.last_name && (
@@ -211,13 +207,13 @@ const CabinetMemberCreateModal = forwardRef<CabinetMemberCreateModalRef, Cabinet
             </div>
 
             <div>
-              {sectionLabel('Contact')}
+{sectionLabel(t.team.modal.contact)}
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-sm font-medium text-slate-700 dark:text-zinc-300">Email</label>
+                  <label className="text-sm font-medium text-slate-700 dark:text-zinc-300">{t.team.modal.email}</label>
                   <Input
                     {...mainForm.register('email')}
-                    placeholder="Enter email"
+                    placeholder={t.team.modal.emailPlaceholder}
                     type="email"
                     className="h-10 rounded-lg border border-slate-200 dark:border-zinc-700 focus-visible:ring-2 focus-visible:ring-[#6D54B5] focus-visible:ring-offset-0"
                   />
@@ -226,7 +222,7 @@ const CabinetMemberCreateModal = forwardRef<CabinetMemberCreateModalRef, Cabinet
                   )}
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-sm font-medium text-slate-700 dark:text-zinc-300">Phone</label>
+                  <label className="text-sm font-medium text-slate-700 dark:text-zinc-300">{t.team.modal.phone}</label>
                   <PhoneInput
                     value={mainForm.watch('phone')}
                     onChange={(value) => mainForm.setValue('phone', value)}
@@ -240,11 +236,11 @@ const CabinetMemberCreateModal = forwardRef<CabinetMemberCreateModalRef, Cabinet
             </div>
 
             <div>
-              {sectionLabel('Address')}
+{sectionLabel(t.team.modal.address)}
               <div className="space-y-1.5">
                 <Input
                   {...mainForm.register('address')}
-                  placeholder="Enter address"
+                  placeholder={t.team.modal.addressPlaceholder}
                   className="h-10 rounded-lg border border-slate-200 dark:border-zinc-700 focus-visible:ring-2 focus-visible:ring-[#6D54B5] focus-visible:ring-offset-0"
                 />
                 {mainForm.formState.errors.address && (
@@ -254,7 +250,7 @@ const CabinetMemberCreateModal = forwardRef<CabinetMemberCreateModalRef, Cabinet
             </div>
 
             <div>
-              {sectionLabel('Access')}
+{sectionLabel(t.team.modal.access)}
               <ToggleGroup
                 type="single"
                 value={displayRole}
@@ -272,7 +268,7 @@ const CabinetMemberCreateModal = forwardRef<CabinetMemberCreateModalRef, Cabinet
                       roleToggleClass[role]
                     )}
                   >
-                    {getRoleDisplayName(role)}
+                    {t.team.roles[role]}
                   </ToggleGroupItem>
                 ))}
               </ToggleGroup>
@@ -280,17 +276,17 @@ const CabinetMemberCreateModal = forwardRef<CabinetMemberCreateModalRef, Cabinet
                 key={displayRole}
                 className="mt-3 text-[12px] italic text-slate-500 dark:text-zinc-400 animate-in fade-in duration-200"
               >
-                {ROLE_DESCRIPTIONS[displayRole]}
+{t.team.roleDescriptions[displayRole]}
               </p>
             </div>
 
             <div className="flex items-start justify-between gap-4 rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50/80 dark:bg-zinc-900/50 px-4 py-3">
               <div className="space-y-0.5">
                 <Label htmlFor="is_active_switch" className="text-sm font-medium text-slate-800 dark:text-zinc-200">
-                  Active member
+                  {t.team.modal.activeMember}
                 </Label>
                 <p className="text-[12px] text-slate-500 dark:text-zinc-400">
-                  Inactive members cannot log in or be assigned to cases
+                  {t.team.modal.activeMemberHint}
                 </p>
               </div>
               <Switch
@@ -306,10 +302,10 @@ const CabinetMemberCreateModal = forwardRef<CabinetMemberCreateModalRef, Cabinet
             <div className="flex w-full flex-col gap-2 rounded-xl border border-slate-200/90 dark:border-zinc-800 bg-slate-50/80 dark:bg-zinc-900/40 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
               <div className="space-y-0.5">
                 <Label htmlFor="send_invite_switch" className="text-sm font-medium text-slate-800 dark:text-zinc-200">
-                  Send invitation email immediately
+                  {t.team.modal.sendInvite}
                 </Label>
                 <p className="text-[12px] text-slate-500 dark:text-zinc-400">
-                  An invitation link will be sent to the member&apos;s email address
+                  {t.team.modal.sendInviteHint}
                 </p>
               </div>
               <Switch
@@ -327,7 +323,7 @@ const CabinetMemberCreateModal = forwardRef<CabinetMemberCreateModalRef, Cabinet
                 disabled={isLoading}
                 className="border-slate-200 dark:border-zinc-700"
               >
-                Cancel
+                {t.common.cancel}
               </Button>
               <Button
                 type="submit"
@@ -337,10 +333,10 @@ const CabinetMemberCreateModal = forwardRef<CabinetMemberCreateModalRef, Cabinet
                 {isLoading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Creating…
+                    {t.team.modal.creating}
                   </>
                 ) : (
-                  'Create'
+                  t.team.modal.create
                 )}
               </Button>
             </div>

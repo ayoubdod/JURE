@@ -39,7 +39,10 @@ import useUserStore from '@/stores/userStore';
 import { useWebRtcCall } from '@/hooks/useWebRtcCall';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import { useAppTranslation } from '@/i18n';
 const ConversationsPage: React.FC = () => {
+  const { t, tf } = useAppTranslation();
+  const toastMsgs = t.conversations.toasts;
   const [conversations, setConversations] = useState<API.Conversation[]>([]);
   const [activeId, setActiveId] = useState<number | undefined>(undefined);
   const [contextPanelOpen, setContextPanelOpen] = useState(true);
@@ -78,11 +81,15 @@ const ConversationsPage: React.FC = () => {
       .catch((err) => {
         setConversations([]);
         if (isAxiosError(err) && err.response?.status === 403) {
-          toast({ title: 'Access denied', description: 'You do not have access to these conversations.', variant: 'destructive' });
+          toast({
+            title: toastMsgs.accessDenied,
+            description: toastMsgs.accessDeniedConversations,
+            variant: 'destructive',
+          });
         }
       })
       .finally(() => { if (!silent) setIsLoading(false); });
-  }, [toast]);
+  }, [toast, toastMsgs]);
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastRefetchRef = useRef<number>(0);
@@ -206,12 +213,36 @@ const ConversationsPage: React.FC = () => {
     setSearchParams,
   ]);
 
-  const handleApiError = (err: unknown, action: string) => {
+  const handleApiError = (
+    err: unknown,
+    actionKey:
+      | 'actionArchive'
+      | 'actionUnarchive'
+      | 'actionPin'
+      | 'actionUnpin'
+      | 'actionStartChat'
+  ) => {
     if (isAxiosError(err)) {
       const status = err.response?.status;
-      if (status === 403) toast({ title: 'Access denied', description: 'You are not a member of this conversation.', variant: 'destructive' });
-      else if (status === 404) toast({ title: 'Not found', description: 'Conversation not found.', variant: 'destructive' });
-      else toast({ title: 'Error', description: `Could not ${action}. Please try again.`, variant: 'destructive' });
+      if (status === 403) {
+        toast({
+          title: toastMsgs.accessDenied,
+          description: toastMsgs.accessDeniedMember,
+          variant: 'destructive',
+        });
+      } else if (status === 404) {
+        toast({
+          title: toastMsgs.notFoundTitle,
+          description: toastMsgs.notFoundConversation,
+          variant: 'destructive',
+        });
+      } else {
+        toast({
+          title: t.common.error,
+          description: tf(toastMsgs.couldNotAction, { action: toastMsgs[actionKey] }),
+          variant: 'destructive',
+        });
+      }
     }
     loadConversations(undefined, true);
   };
@@ -223,7 +254,7 @@ const ConversationsPage: React.FC = () => {
         setArchivedConversations((prev) => [...prev, { ...conv, archived: true }]);
         if (activeId === conv.id) setActiveId(undefined);
       })
-      .catch((err) => handleApiError(err, 'archive'));
+      .catch((err) => handleApiError(err, 'actionArchive'));
   };
 
   const handleUnarchive = (conv: API.Conversation) => {
@@ -232,15 +263,15 @@ const ConversationsPage: React.FC = () => {
         setArchivedConversations((prev) => prev.filter((c) => c.id !== conv.id));
         loadConversations(undefined, true);
       })
-      .catch((err) => handleApiError(err, 'unarchive'));
+      .catch((err) => handleApiError(err, 'actionUnarchive'));
   };
 
   const handlePin = (conv: API.Conversation) => {
-    apiPinConversation(conv.id).then(() => loadConversations(undefined, true)).catch((err) => handleApiError(err, 'pin'));
+    apiPinConversation(conv.id).then(() => loadConversations(undefined, true)).catch((err) => handleApiError(err, 'actionPin'));
   };
 
   const handleUnpin = (conv: API.Conversation) => {
-    apiUnpinConversation(conv.id).then(() => loadConversations(undefined, true)).catch((err) => handleApiError(err, 'unpin'));
+    apiUnpinConversation(conv.id).then(() => loadConversations(undefined, true)).catch((err) => handleApiError(err, 'actionUnpin'));
   };
 
   const getMemberPerson = (m: API.ConversationMembership) =>
@@ -263,7 +294,7 @@ const ConversationsPage: React.FC = () => {
         if ((existing as any).archived) {
           apiUnarchiveConversation(existing.id)
             .then(() => loadConversations(undefined, true))
-            .catch((err) => handleApiError(err, 'unarchive'));
+            .catch((err) => handleApiError(err, 'actionUnarchive'));
         }
         return;
       }
@@ -277,7 +308,7 @@ const ConversationsPage: React.FC = () => {
           setConversations((prev) => [conv, ...prev]);
           selectConversation(conv.id);
         })
-        .catch((err) => handleApiError(err, 'start chat'));
+        .catch((err) => handleApiError(err, 'actionStartChat'));
     },
     [conversations, archivedConversations, loadConversations, selectConversation]
   );
@@ -298,7 +329,7 @@ const ConversationsPage: React.FC = () => {
     const u = peer?.user;
     if (!u?.id) return null;
     const name =
-      `${u.first_name ?? ''} ${u.last_name ?? ''}`.trim() || u.email || 'Contact';
+      `${u.first_name ?? ''} ${u.last_name ?? ''}`.trim() || u.email || t.conversations.contact;
     return {
       id: u.id,
       name,
@@ -306,22 +337,22 @@ const ConversationsPage: React.FC = () => {
       firstName: u.first_name ?? undefined,
       lastName: u.last_name ?? undefined,
     };
-  }, [activeConversation, user?.email]);
+  }, [activeConversation, user?.email, t.conversations.contact]);
 
   const handleStartVoiceCall = () => {
     if (!activeId || !activeConversation) return;
     if (activeConversation.type !== 'direct') {
       toast({
-        title: 'Voice calls unavailable',
-        description: 'Voice calls are only available in direct messages.',
+        title: toastMsgs.voiceCallsUnavailable,
+        description: toastMsgs.voiceCallsDirectOnly,
         variant: 'destructive',
       });
       return;
     }
     if (!remoteUserForActiveDirect) {
       toast({
-        title: 'Cannot start call',
-        description: 'Could not resolve the other participant.',
+        title: toastMsgs.cannotStartCall,
+        description: toastMsgs.cannotResolveParticipant,
         variant: 'destructive',
       });
       return;
@@ -338,16 +369,16 @@ const ConversationsPage: React.FC = () => {
     if (!activeId || !activeConversation) return;
     if (activeConversation.type !== 'direct') {
       toast({
-        title: 'Video calls unavailable',
-        description: 'Video calls are only available in direct messages.',
+        title: toastMsgs.videoCallsUnavailable,
+        description: toastMsgs.videoCallsDirectOnly,
         variant: 'destructive',
       });
       return;
     }
     if (!remoteUserForActiveDirect) {
       toast({
-        title: 'Cannot start call',
-        description: 'Could not resolve the other participant.',
+        title: toastMsgs.cannotStartCall,
+        description: toastMsgs.cannotResolveParticipant,
         variant: 'destructive',
       });
       return;
@@ -415,23 +446,26 @@ const ConversationsPage: React.FC = () => {
         handleConversationPatch(convId, { linkedCase: lc, linked_case: lc } as Partial<API.Conversation>);
         setLinkCaseModalOpen(false);
         const refLabel = lc?.reference ?? String(caseId);
-        toast({ title: `Case ${refLabel} linked to this conversation` });
+        toast({ title: tf(toastMsgs.caseLinked, { ref: refLabel }) });
       } catch (err) {
         handleConversationPatch(convId, { linkedCase: prev, linked_case: prev } as Partial<API.Conversation>);
         const st = isAxiosError(err) ? err.response?.status : undefined;
         toast({
-          title: st === 400 ? 'Cannot link case' : st === 403 ? 'Access denied' : 'Could not link case',
-          description:
+          title:
             st === 400
-              ? 'Only group chats can link a case, and the case must be in your cabinet.'
-              : 'Try again or check your permissions.',
+              ? toastMsgs.cannotLinkCase
+              : st === 403
+                ? toastMsgs.accessDenied
+                : toastMsgs.couldNotLinkCase,
+          description:
+            st === 400 ? toastMsgs.linkCaseHint : toastMsgs.tryAgainPermissions,
           variant: 'destructive',
         });
       } finally {
         setLinkCaseSubmitting(false);
       }
     },
-    [activeConversation, handleConversationPatch, toast]
+    [activeConversation, handleConversationPatch, toast, toastMsgs, tf]
   );
 
   const handleUnlinkConversationCase = useCallback(async () => {
@@ -445,11 +479,11 @@ const ConversationsPage: React.FC = () => {
       handleConversationPatch(convId, { linkedCase: prev, linked_case: prev } as Partial<API.Conversation>);
       const st = isAxiosError(err) ? err.response?.status : undefined;
       toast({
-        title: st === 403 ? 'Access denied' : 'Could not remove link',
+        title: st === 403 ? toastMsgs.accessDenied : toastMsgs.couldNotRemoveLink,
         variant: 'destructive',
       });
     }
-  }, [activeConversation, handleConversationPatch, toast]);
+  }, [activeConversation, handleConversationPatch, toast, toastMsgs]);
 
   const activeLinkedCaseForPanel = useMemo(() => {
     const c = activeConversation;
@@ -524,30 +558,34 @@ const ConversationsPage: React.FC = () => {
                     .join(' ')
                 : '';
             toast({
-              title: 'Invalid share',
-              description: detail || 'Check message type and selected item.',
+              title: toastMsgs.invalidShare,
+              description: detail || toastMsgs.invalidShareHint,
               variant: 'destructive',
             });
           } else if (st === 403) {
-            toast({ title: 'Access denied', description: 'You cannot send this share.', variant: 'destructive' });
+            toast({
+              title: toastMsgs.accessDenied,
+              description: toastMsgs.cannotSendShare,
+              variant: 'destructive',
+            });
           } else {
             toast({
-              title: 'Share not sent',
-              description: 'Check your connection and try again.',
+              title: toastMsgs.shareNotSent,
+              description: toastMsgs.shareNotSentHint,
               variant: 'destructive',
             });
           }
         } else {
           toast({
-            title: 'Share not sent',
-            description: 'Check your connection and try again.',
+            title: toastMsgs.shareNotSent,
+            description: toastMsgs.shareNotSentHint,
             variant: 'destructive',
           });
         }
         setLastLocallySentMessage({ key: Date.now(), removeOnlyId: tempId });
       }
     },
-    [activeId, user?.id, toast]
+    [activeId, user?.id, toast, toastMsgs]
   );
 
   return (
@@ -636,8 +674,8 @@ const ConversationsPage: React.FC = () => {
                   })
                   .catch(() => {
                     toast({
-                      title: 'Message not sent',
-                      description: 'Check your connection and try again.',
+                      title: toastMsgs.messageNotSent,
+                      description: toastMsgs.messageNotSentHint,
                       variant: 'destructive',
                     });
                   });
@@ -657,8 +695,8 @@ const ConversationsPage: React.FC = () => {
                 })
                 .catch(() => {
                   toast({
-                    title: 'Message not sent',
-                    description: 'Check your connection and try again.',
+                    title: toastMsgs.messageNotSent,
+                    description: toastMsgs.messageNotSentHint,
                     variant: 'destructive',
                   });
                 });
@@ -679,8 +717,8 @@ const ConversationsPage: React.FC = () => {
                 })
                 .catch(() => {
                   toast({
-                    title: 'Message not sent',
-                    description: 'Check your connection and try again.',
+                    title: toastMsgs.messageNotSent,
+                    description: toastMsgs.messageNotSentHint,
                     variant: 'destructive',
                   });
                 });

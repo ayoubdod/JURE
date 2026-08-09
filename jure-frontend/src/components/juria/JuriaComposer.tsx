@@ -2,9 +2,10 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Paperclip, Send, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { JURIA_MODE_META, PLACEHOLDER_BY_MODE } from '@/components/juria/juriaConstants';
+import { JURIA_MODE_VISUAL } from '@/components/juria/juriaConstants';
 import { CaseLinkDropdown } from '@/components/juria/CaseLinkDropdown';
 import type { JuriaMode } from '@/types/juria';
+import { useAppTranslation } from '@/i18n';
 
 const ACCEPT = '.pdf,.doc,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document';
 
@@ -40,6 +41,7 @@ export function JuriaComposer({
   attachment?: File | null;
   onAttachmentChange?: (f: File | null) => void;
 }) {
+  const { t } = useAppTranslation();
   const ta = useRef<HTMLTextAreaElement>(null);
   const [localFile, setLocalFile] = useState<File | null>(null);
   const file = attachment !== undefined ? attachment : localFile;
@@ -61,7 +63,7 @@ export function JuriaComposer({
       const f = input.files?.[0];
       if (!f) return;
       if (f.size > 10 * 1024 * 1024) {
-        window.alert('Fichier trop volumineux (max 10 Mo).');
+        window.alert(t.juria.fileTooLarge);
         return;
       }
       setFile(f);
@@ -110,7 +112,7 @@ export function JuriaComposer({
             }
           }}
           disabled={disabled}
-          placeholder={PLACEHOLDER_BY_MODE[mode]}
+          placeholder={t.juria.modes[mode].placeholder}
           className="min-h-[44px] flex-1 resize-none rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
         />
         <Button
@@ -126,8 +128,8 @@ export function JuriaComposer({
       <div className="mt-2 flex flex-wrap items-center gap-2">
         {modeReadOnly ?
           <span className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-2 py-1 text-[11px] text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
-            <span>{JURIA_MODE_META[mode].icon}</span>
-            <span className="font-medium">{JURIA_MODE_META[mode].shortLabel}</span>
+            <span>{JURIA_MODE_VISUAL[mode].icon}</span>
+            <span className="font-medium">{t.juria.modes[mode].shortLabel}</span>
           </span>
         : <div className="inline-flex rounded-lg border border-slate-200 bg-slate-50 p-0.5 dark:border-slate-700 dark:bg-slate-900">
             {modes.map((m) => (
@@ -141,9 +143,9 @@ export function JuriaComposer({
                     ? 'bg-white text-indigo-700 shadow-sm dark:bg-slate-800 dark:text-indigo-300'
                     : 'text-slate-600 hover:text-slate-900 dark:text-slate-400'
                 )}
-                title={JURIA_MODE_META[m].label}
+                title={t.juria.modes[m].label}
               >
-                {JURIA_MODE_META[m].icon}
+                {JURIA_MODE_VISUAL[m].icon}
               </button>
             ))}
           </div>

@@ -11,8 +11,8 @@ export default {
 	prefix: "",
 	theme: {
 		fontFamily: {
-			sans: ['Space Grotesk', 'Noto Sans Arabic', 'system-ui', 'sans-serif'],
-			display: ['Space Grotesk', 'Noto Sans Arabic', 'system-ui', 'sans-serif'],
+			sans: ['var(--font-sans)'],
+			display: ['var(--font-sans)'],
 		},
 		container: {
 			center: true,

@@ -42,14 +42,31 @@ export const MARKETING_ROUTES: MarketingRoute[] = [
     changefreq: "weekly",
     label: { en: "Home", fr: "Accueil", ar: "الرئيسية" },
     title: {
-      en: "JURE — The AI-Native Legal Work Platform",
-      fr: "JURE — La plateforme de travail juridique native IA",
-      ar: "JURE — منصة العمل القانوني القائمة على الذكاء الاصطناعي",
+      en: "JURE | AI-Powered LegalTech Platform for Modern Legal Teams",
+      fr: "JURE | Plateforme LegalTech et IA pour les équipes juridiques",
+      ar: "JURE | منصة LegalTech والذكاء الاصطناعي للفرق القانونية الحديثة",
     },
     description: {
-      en: "JURE brings matters, documents, tasks, legal research and responsible AI into one secure workspace for law firms and legal teams — in French, English and Arabic.",
-      fr: "JURE réunit dossiers, documents, tâches, recherche juridique et IA responsable dans un espace de travail sécurisé pour cabinets d'avocats et équipes juridiques — en français, anglais et arabe.",
-      ar: "تجمع JURE إدارة الملفات والمستندات والمهام والبحث القانوني والذكاء الاصطناعي المسؤول في مساحة عمل آمنة واحدة لمكاتب المحاماة والفرق القانونية — بالفرنسية والإنجليزية والعربية.",
+      en: "JURE is a LegalTech platform for law firms and legal teams, combining AI-powered legal research, case management, document workflows and secure collaboration in one workspace. Built for modern legal teams across Morocco, MENA and Africa.",
+      fr: "JURE est une plateforme LegalTech pour cabinets d'avocats et équipes juridiques, qui réunit recherche juridique assistée par IA, gestion de dossiers, flux documentaires et collaboration sécurisée. Conçue pour les équipes modernes au Maroc, au Moyen-Orient et en Afrique.",
+      ar: "JURE منصة LegalTech لمكاتب المحاماة والفرق القانونية، تجمع البحث القانوني المدعوم بالذكاء الاصطناعي وإدارة القضايا وسير عمل المستندات والتعاون الآمن في مساحة واحدة. صُممت للفرق القانونية الحديثة في المغرب ومنطقة الشرق الأوسط وشمال أفريقيا وأفريقيا.",
+    },
+  },
+  {
+    key: "juria",
+    slug: "juria",
+    priority: 0.9,
+    changefreq: "monthly",
+    label: { en: "Juria", fr: "Juria", ar: "جوريا" },
+    title: {
+      en: "Juria | AI Legal Assistant by JURE",
+      fr: "Juria | Assistant IA juridique par JURE",
+      ar: "جوريا | مساعد الذكاء الاصطناعي القانوني من JURE",
+    },
+    description: {
+      en: "Juria is JURE's AI legal assistant for legal research, contract analysis, drafting and knowledge workflows — inside the same secure workspace as your matters, with lawyer review at every step.",
+      fr: "Juria est l'assistant IA juridique de JURE pour la recherche, l'analyse de contrats, la rédaction et les flux de connaissances — dans le même espace sécurisé que vos dossiers, avec relecture par l'avocat à chaque étape.",
+      ar: "جوريا هو مساعد الذكاء الاصطناعي القانوني من JURE للبحث وتحليل العقود والصياغة وسير عمل المعرفة — داخل مساحة العمل الآمنة نفسها مع ملفاتك، مع مراجعة المحامي في كل خطوة.",
     },
   },
   {
@@ -64,9 +81,9 @@ export const MARKETING_ROUTES: MarketingRoute[] = [
       ar: "منصة JURE — الملفات والمستندات والمهام والذكاء الاصطناعي القانوني",
     },
     description: {
-      en: "Explore the JURE platform: matter management, document library, tasks and deadlines, team collaboration, practice finance, and Juria — our legal AI assistant in early access.",
-      fr: "Découvrez la plateforme JURE : gestion des dossiers, bibliothèque documentaire, tâches et échéances, collaboration d'équipe, finance du cabinet et Juria, l'assistant IA juridique en accès anticipé.",
-      ar: "اكتشف منصة JURE: إدارة الملفات القانونية، مكتبة المستندات، المهام والمواعيد النهائية، تعاون الفريق، ومساعد الذكاء الاصطناعي القانوني جوريا في مرحلة الوصول المبكر.",
+      en: "Explore the JURE LegalTech platform: matter management, document library, tasks and deadlines, team collaboration, practice finance, and Juria — JURE's AI legal assistant in early access.",
+      fr: "Découvrez la plateforme LegalTech JURE : gestion des dossiers, bibliothèque documentaire, tâches et échéances, collaboration d'équipe, finance du cabinet et Juria, l'assistant IA juridique de JURE en accès anticipé.",
+      ar: "اكتشف منصة LegalTech من JURE: إدارة الملفات القانونية، مكتبة المستندات، المهام والمواعيد النهائية، تعاون الفريق، ومساعد الذكاء الاصطناعي القانوني جوريا من JURE في مرحلة الوصول المبكر.",
     },
   },
   {
@@ -76,14 +93,14 @@ export const MARKETING_ROUTES: MarketingRoute[] = [
     changefreq: "monthly",
     label: { en: "About", fr: "À propos", ar: "من نحن" },
     title: {
-      en: "About JURE — Building Modern Legal Work Infrastructure",
-      fr: "À propos de JURE — L'infrastructure moderne du travail juridique",
-      ar: "عن JURE — نبني البنية التحتية الحديثة للعمل القانوني",
+      en: "About JURE — LegalTech Platform for Modern Legal Teams",
+      fr: "À propos de JURE — Plateforme LegalTech pour équipes juridiques",
+      ar: "عن JURE — منصة LegalTech للفرق القانونية الحديثة",
     },
     description: {
-      en: "JURE is a LegalTech company building an AI-native legal work platform, born in Morocco and designed for modern legal teams in multilingual markets.",
-      fr: "JURE est une entreprise LegalTech qui construit une plateforme de travail juridique native IA, née au Maroc et conçue pour les équipes juridiques modernes des marchés multilingues.",
-      ar: "JURE شركة تقنية قانونية تبني منصة عمل قانوني قائمة على الذكاء الاصطناعي، انطلقت من المغرب وصُممت للفرق القانونية الحديثة في الأسواق متعددة اللغات.",
+      en: "JURE is a LegalTech platform for modern legal teams — born in Morocco, built for multilingual practice across MENA and Africa, combining AI-powered legal work with matter management, documents and secure collaboration.",
+      fr: "JURE est une plateforme LegalTech pour les équipes juridiques modernes — née au Maroc, conçue pour la pratique multilingue au Moyen-Orient, en Afrique du Nord et en Afrique, alliant travail juridique assisté par IA, gestion de dossiers, documents et collaboration sécurisée.",
+      ar: "JURE منصة LegalTech للفرق القانونية الحديثة — انطلقت من المغرب وصُممت للممارسة متعددة اللغات عبر الشرق الأوسط وشمال أفريقيا وأفريقيا، تجمع العمل القانوني المدعوم بالذكاء الاصطناعي مع إدارة الملفات والمستندات والتعاون الآمن.",
     },
   },
   {

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useLayoutEffect } from "react";
 import { Helmet } from "react-helmet-async";
 import {
   LOCALES,
@@ -27,6 +27,33 @@ export interface SeoProps {
 }
 
 /**
+ * Clear server-injected tags between <!-- seo:start --> and <!-- seo:end -->
+ * once React Helmet owns the document head. Crawlers that never execute JS
+ * still receive the injected block from Express; JS sessions avoid duplicates.
+ */
+function clearServerSeoBlock() {
+  if (typeof document === "undefined") return;
+  const nodes = Array.from(document.head.childNodes);
+  let inBlock = false;
+  const toRemove: ChildNode[] = [];
+  for (const node of nodes) {
+    if (node.nodeType === Node.COMMENT_NODE) {
+      const text = node.textContent || "";
+      if (text.includes("seo:start")) {
+        inBlock = true;
+        continue;
+      }
+      if (text.includes("seo:end")) {
+        inBlock = false;
+        continue;
+      }
+    }
+    if (inBlock) toRemove.push(node);
+  }
+  toRemove.forEach((n) => n.parentNode?.removeChild(n));
+}
+
+/**
  * Per-page head manager: unique title/description, canonical, hreflang
  * alternates (en/fr/ar + x-default), Open Graph, Twitter and JSON-LD.
  */
@@ -42,8 +69,13 @@ export const Seo: React.FC<SeoProps> = ({
   const canonical = canonicalUrl(lang, slug);
   const ogImage = absoluteUrl(image);
 
+  useLayoutEffect(() => {
+    clearServerSeoBlock();
+  }, []);
+
   return (
     <Helmet prioritizeSeoTags>
+      <html lang={lang} dir={lang === "ar" ? "rtl" : "ltr"} />
       <title>{title}</title>
       <meta name="description" content={description} />
       <link rel="canonical" href={canonical} />

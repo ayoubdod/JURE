@@ -2,7 +2,7 @@ import React, { forwardRef, useId, useImperativeHandle, useRef, useState } from 
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { Search, X, CornerDownLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { SEARCH_EXAMPLES } from './types';
+import { useAppTranslation } from '@/i18n';
 
 export type KnowledgeSearchHandle = {
   focus: () => void;
@@ -21,6 +21,7 @@ const KnowledgeSearch = forwardRef<KnowledgeSearchHandle, Props>(function Knowle
   { value, onChange, onSubmit, className, compact = false },
   ref
 ) {
+  const { t } = useAppTranslation();
   const inputId = useId();
   const inputRef = useRef<HTMLInputElement>(null);
   const [focused, setFocused] = useState(false);
@@ -35,7 +36,7 @@ const KnowledgeSearch = forwardRef<KnowledgeSearchHandle, Props>(function Knowle
   return (
     <div className={cn('relative', className)} id="knowledge-search-anchor">
       <label htmlFor={inputId} className="sr-only">
-        Search knowledge
+        {t.library.searchLabel}
       </label>
       <div
         className={cn(
@@ -59,8 +60,8 @@ const KnowledgeSearch = forwardRef<KnowledgeSearchHandle, Props>(function Knowle
           id={inputId}
           type="search"
           role="searchbox"
-          aria-label="Search knowledge repository"
-          placeholder={compact ? 'Search knowledge… (press /)' : "Ask anything about your firm's knowledge…"}
+          aria-label={t.library.searchAria}
+          placeholder={compact ? t.library.searchPlaceholderCompact : t.library.searchPlaceholder}
           value={value}
           onChange={(e) => onChange(e.target.value)}
           onFocus={() => setFocused(true)}
@@ -83,7 +84,7 @@ const KnowledgeSearch = forwardRef<KnowledgeSearchHandle, Props>(function Knowle
             type="button"
             onClick={() => onChange('')}
             className="rounded p-1 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800 min-h-[28px] min-w-[28px] flex items-center justify-center"
-            aria-label="Clear search"
+            aria-label={t.library.clearSearch}
           >
             <X className="h-3.5 w-3.5" />
           </button>
@@ -104,13 +105,22 @@ const KnowledgeSearch = forwardRef<KnowledgeSearchHandle, Props>(function Knowle
             transition={{ duration: 0.15 }}
             className="absolute left-0 right-0 z-40 mt-1.5 overflow-hidden rounded-lg border border-slate-200/90 bg-white p-1.5 shadow-lg dark:border-slate-700 dark:bg-slate-900"
             role="listbox"
-            aria-label="Example queries"
+            aria-label={t.library.exampleQueries}
           >
             <p className="px-2 pb-1 pt-0.5 text-[10px] font-medium uppercase tracking-wider text-slate-400">
-              Try asking
+              {t.library.tryAsking}
             </p>
             <div className="grid gap-0.5 sm:grid-cols-2">
-              {SEARCH_EXAMPLES.map((example) => (
+              {(
+                [
+                  t.library.examples.nda,
+                  t.library.examples.expiring,
+                  t.library.examples.litigation,
+                  t.library.examples.arbitration,
+                  t.library.examples.whoSigned,
+                  t.library.examples.gdpr,
+                ] as const
+              ).map((example) => (
                 <button
                   key={example}
                   type="button"

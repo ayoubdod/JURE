@@ -11,9 +11,12 @@ import {
 } from '@/components/ui/select';
 import { PaymentTable } from '@/components/finance/tables/PaymentTable';
 import { getPayments } from '@/services/finance/api';
+import { useAppTranslation } from '@/i18n';
+
 const METHOD_OPTS: API.FinancePaymentMethod[] = ['CASH', 'VIREMENT_BANCAIRE', 'CHEQUE'];
 
 export const FinancePaymentsTab: React.FC = () => {
+  const { t, tf } = useAppTranslation();
   const [rows, setRows] = useState<API.FinancePaymentListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
@@ -66,13 +69,13 @@ export const FinancePaymentsTab: React.FC = () => {
         <div className="min-w-[140px]">
           <Select value={method || 'all'} onValueChange={(v) => setMethod(v === 'all' ? '' : v)}>
             <SelectTrigger className="h-10">
-              <SelectValue placeholder="Méthode" />
+              <SelectValue placeholder={t.finance.filters.method} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Toutes</SelectItem>
+              <SelectItem value="all">{t.finance.filters.allMethods}</SelectItem>
               {METHOD_OPTS.map((m) => (
                 <SelectItem key={m} value={m}>
-                  {m === 'VIREMENT_BANCAIRE' ? 'Virement' : m === 'CHEQUE' ? 'Chèque' : 'Cash'}
+                  {t.finance.paymentMethods[m]}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -80,7 +83,7 @@ export const FinancePaymentsTab: React.FC = () => {
         </div>
         <Input
           className="h-10 max-w-[160px]"
-          placeholder="Client"
+          placeholder={t.finance.filters.client}
           value={client}
           onChange={(e) => setClient(e.target.value)}
         />
@@ -90,13 +93,13 @@ export const FinancePaymentsTab: React.FC = () => {
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
           <Input
             className="h-10 pl-9"
-            placeholder="Recherche"
+            placeholder={t.finance.filters.search}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
         <Button type="button" className="h-10 bg-jure-600 hover:bg-jure-700" onClick={() => load()}>
-          Filtrer
+          {t.finance.filters.filter}
         </Button>
         {hasFilters ? (
           <Button
@@ -113,7 +116,7 @@ export const FinancePaymentsTab: React.FC = () => {
             }}
           >
             <RotateCcw className="mr-1.5 h-4 w-4" />
-            Reset
+            {t.finance.filters.reset}
           </Button>
         ) : null}
       </div>
@@ -123,7 +126,7 @@ export const FinancePaymentsTab: React.FC = () => {
       {!loading && totalCount > 0 ? (
         <div className="flex flex-col items-center justify-between gap-3 border-t border-slate-200 pt-3 text-sm text-slate-600 dark:border-slate-800 dark:text-slate-400 sm:flex-row">
           <p className="tabular-nums">
-            {start}–{end} sur {totalCount}
+            {tf(t.finance.pagination.range, { start, end, total: totalCount })}
           </p>
           <div className="flex gap-2">
             <Button
@@ -134,7 +137,7 @@ export const FinancePaymentsTab: React.FC = () => {
               disabled={page <= 1}
               onClick={() => setPage((p) => Math.max(1, p - 1))}
             >
-              Précédent
+              {t.finance.pagination.previous}
             </Button>
             <Button
               type="button"
@@ -144,7 +147,7 @@ export const FinancePaymentsTab: React.FC = () => {
               disabled={page >= totalPages}
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
             >
-              Suivant
+              {t.finance.pagination.next}
             </Button>
           </div>
         </div>

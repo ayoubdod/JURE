@@ -6,6 +6,7 @@ import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/comp
 import DocumentLibraryPicker from './DocumentLibraryPicker';
 import { SharePicker } from './SharePicker';
 import type { SharePickResult } from './sharePickerTypes';
+import { useAppTranslation } from '@/i18n';
 
 const Composer: React.FC<{
   disabled?: boolean;
@@ -21,6 +22,8 @@ const Composer: React.FC<{
     sharedItem: API.SharedItem;
   }) => Promise<void>;
 }> = ({ disabled, conversationId, onSend, onAttachFiles, onRecordVoice, onSendShared }) => {
+  const { t } = useAppTranslation();
+  const c = t.conversations.composer;
   const [text, setText] = useState('');
   const fileRef = useRef<HTMLInputElement>(null);
   const [rec, setRec] = useState<MediaRecorder | null>(null);
@@ -137,7 +140,7 @@ const Composer: React.FC<{
               variant="ghost"
               size="icon"
               className="h-11 w-11 sm:h-8 sm:w-8 shrink-0 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
-              aria-label="Attach from Document Library"
+              aria-label={c.attachAria}
             >
               <Paperclip className="h-4 w-4" />
             </Button>
@@ -152,12 +155,12 @@ const Composer: React.FC<{
                   size="icon"
                   className="h-11 w-11 sm:h-8 sm:w-8 shrink-0 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
                   disabled={disabled}
-                  aria-label="Record voice note"
+                  aria-label={c.recordAria}
                 >
                   <Mic className="h-4 w-4" />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>Record voice note</TooltipContent>
+              <TooltipContent>{c.recordTooltip}</TooltipContent>
             </Tooltip>
           ) : (
             <Tooltip>
@@ -168,12 +171,12 @@ const Composer: React.FC<{
                   variant="destructive"
                   size="icon"
                   className="h-11 w-11 sm:h-8 sm:w-8 shrink-0"
-                  aria-label="Stop recording"
+                  aria-label={c.stopRecordAria}
                 >
                   <Square className="h-4 w-4" />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>Stop recording</TooltipContent>
+              <TooltipContent>{c.stopRecordTooltip}</TooltipContent>
             </Tooltip>
           )}
         </TooltipProvider>
@@ -181,7 +184,7 @@ const Composer: React.FC<{
         <Input
           value={text}
           onChange={(e) => setText(e.target.value)}
-          placeholder="Type a message…"
+          placeholder={c.placeholder}
           className="flex-1 h-11 sm:h-8 text-[15px] sm:text-[13px] rounded-md border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 focus-visible:ring-1"
           onKeyDown={(e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
@@ -201,7 +204,7 @@ const Composer: React.FC<{
             onOpenChange={setShareOpen}
             disabled={disabled || shareSending}
             onPick={handleSharePick}
-            triggerTooltip="Share case, task or appointment"
+            triggerTooltip={c.shareAria}
             trigger={
               <Button
                 type="button"
@@ -209,7 +212,7 @@ const Composer: React.FC<{
                 size="icon"
                 className="h-11 w-11 sm:h-8 sm:w-8 shrink-0 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 disabled:opacity-40"
                 disabled={disabled || shareSending}
-                aria-label="Share case, task or appointment"
+                aria-label={c.shareAria}
               >
                 <Share2 className="h-4 w-4" />
               </Button>
@@ -227,7 +230,7 @@ const Composer: React.FC<{
           disabled={disabled || !text.trim()}
           size="icon"
           className="h-11 w-11 sm:h-8 sm:w-8 shrink-0"
-          aria-label="Send message"
+          aria-label={c.sendAria}
         >
           <Send className="h-4 w-4" />
         </Button>

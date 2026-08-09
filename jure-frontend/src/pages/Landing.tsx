@@ -275,7 +275,7 @@ const Landing: React.FC = () => {
               </p>
               <button
                 type="button"
-                onClick={() => navigate(path("legal-ai"))}
+                onClick={() => navigate(path("juria"))}
                 className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-[#64499D] dark:text-[#CFC2FF] hover:underline"
               >
                 {t.pillars.ai.link} <ArrowRight className="w-4 h-4 rtl:rotate-180" />

@@ -103,10 +103,10 @@ const STRINGS: Record<Lang, FeaturesStrings> = {
 
     deep: {
       ai: {
-        title: "Juria — IA juridique",
+        title: "Juria — assistant IA juridique de JURE",
         badge: "Accès anticipé",
         desc:
-          "Un assistant IA intégré à vos dossiers, conçu pour que chaque résultat soit relu et validé par un avocat.",
+          "L'assistant IA juridique de JURE, intégré à vos dossiers — conçu pour que chaque résultat soit relu et validé par un avocat.",
         bullets: [
           "Chat avec l'assistant",
           "Analyse de contrats",
@@ -225,10 +225,10 @@ const STRINGS: Record<Lang, FeaturesStrings> = {
 
     deep: {
       ai: {
-        title: "Juria — Legal AI",
+        title: "Juria — AI legal assistant by JURE",
         badge: "Early access",
         desc:
-          "An AI assistant embedded in your matters, built so every output is reviewed and validated by a lawyer.",
+          "JURE's AI legal assistant, embedded in your matters — built so every output is reviewed and validated by a lawyer.",
         bullets: [
           "Chat with the assistant",
           "Contract analysis",
@@ -347,10 +347,10 @@ const STRINGS: Record<Lang, FeaturesStrings> = {
 
     deep: {
       ai: {
-        title: "جوريا — الذكاء الاصطناعي القانوني",
+        title: "جوريا — مساعد الذكاء الاصطناعي القانوني من JURE",
         badge: "الوصول المبكر",
         desc:
-          "مساعد ذكاء اصطناعي مدمج في قضاياكم، مصمم بحيث تُراجَع كل نتيجة ويعتمدها محامٍ.",
+          "مساعد الذكاء الاصطناعي القانوني من JURE، مدمج في قضاياكم — مصمم بحيث تُراجَع كل نتيجة ويعتمدها محامٍ.",
         bullets: [
           "محادثة مع المساعد",
           "تحليل العقود",
@@ -519,7 +519,21 @@ const Features: React.FC = () => {
             const Icon = card.icon;
             return (
               <Reveal key={card.key} delay={i * 0.06}>
-                <div className="landing-glass landing-glass-glow rounded-2xl p-5 sm:p-7 h-full min-w-0">
+                <div
+                  className={`landing-glass landing-glass-glow rounded-2xl p-5 sm:p-7 h-full min-w-0 ${
+                    card.key === "ai" ? "cursor-pointer hover:ring-1 hover:ring-[#64499D]/40 transition" : ""
+                  }`}
+                  onClick={card.key === "ai" ? () => go(path("juria")) : undefined}
+                  role={card.key === "ai" ? "link" : undefined}
+                  tabIndex={card.key === "ai" ? 0 : undefined}
+                  onKeyDown={
+                    card.key === "ai"
+                      ? (e) => {
+                          if (e.key === "Enter" || e.key === " ") go(path("juria"));
+                        }
+                      : undefined
+                  }
+                >
                   <div
                     className="w-12 h-12 rounded-xl flex items-center justify-center mb-4 text-white"
                     style={{ background: card.accent }}

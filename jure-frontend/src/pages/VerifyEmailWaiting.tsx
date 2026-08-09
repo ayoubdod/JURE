@@ -8,12 +8,14 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Mail, Clock, RefreshCw, CheckCircle2, ArrowRight, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { isAxiosError } from 'axios';
+import { useAppTranslation } from '@/i18n';
 
 const VerifyEmailWaiting: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams] = useSearchParams();
   const { toast } = useToast();
+  const { t, tf, apiError } = useAppTranslation();
 
   const {
     email,
@@ -26,7 +28,6 @@ const VerifyEmailWaiting: React.FC = () => {
     decrementTimeLeft,
   } = useEmailVerificationStore();
 
-  // Initialiser l'email depuis l'état de navigation, l'URL ou le localStorage
   useEffect(() => {
     const emailFromState = (location.state as { email?: string })?.email;
     const emailFromUrl = searchParams.get('email');
@@ -35,22 +36,19 @@ const VerifyEmailWaiting: React.FC = () => {
 
     if (emailToUse) {
       setEmail(emailToUse);
-      // Sauvegarder dans localStorage si venant de l'URL ou de l'état
       if (emailFromUrl || emailFromState) {
         localStorage.setItem('pendingVerificationEmail', emailToUse);
       }
     } else {
-      // Aucun email trouvé, rediriger vers l'inscription ou afficher une erreur
       toast({
-        title: 'Email non trouvé',
-        description: 'Aucune vérification en attente trouvée.',
+        title: t.auth.verifyWaitingEmailMissingTitle,
+        description: t.auth.verifyWaitingEmailMissingDescription,
         variant: 'destructive',
       });
       navigate('/signup');
     }
-  }, [location.state, searchParams, setEmail, navigate, toast]);
+  }, [location.state, searchParams, setEmail, navigate, toast, t]);
 
-  // Gérer le compte à rebours
   useEffect(() => {
     if (timeLeft > 0 && !canResend) {
       const interval = setInterval(() => {
@@ -69,25 +67,25 @@ const VerifyEmailWaiting: React.FC = () => {
       await apiResendVerificationEmail({ email });
 
       toast({
-        title: 'Email envoyé',
-        description: 'Un nouvel email de vérification a été envoyé. Vérifiez votre boîte de réception.',
+        title: t.auth.verifyWaitingResendSuccessTitle,
+        description: t.auth.verifyWaitingResendSuccessDescription,
       });
 
       resetTimer();
     } catch (error) {
-      let errorMessage = 'Échec de l\'envoi de l\'email de vérification. Veuillez réessayer.';
+      let errorMessage = t.auth.verifyWaitingResendError;
 
       if (isAxiosError(error) && error.response?.data) {
         const data = error.response.data;
         if (typeof data === 'object' && 'detail' in data) {
-          errorMessage = String(data.detail);
+          errorMessage = apiError(String(data.detail), errorMessage);
         } else if (typeof data === 'object' && 'email' in data && Array.isArray(data.email)) {
-          errorMessage = data.email[0] || errorMessage;
+          errorMessage = apiError(data.email[0], errorMessage);
         }
       }
 
       toast({
-        title: 'Erreur',
+        title: t.common.error,
         description: errorMessage,
         variant: 'destructive',
       });
@@ -116,9 +114,9 @@ const VerifyEmailWaiting: React.FC = () => {
                 <Mail className="h-12 w-12 text-primary" />
               </div>
             </div>
-            <CardTitle className="text-3xl">Vérifiez votre email</CardTitle>
+            <CardTitle className="text-3xl">{t.auth.verifyWaitingTitle}</CardTitle>
             <CardDescription className="text-base">
-              Un lien de vérification a été envoyé à
+              {t.auth.verifyWaitingSentTo}
             </CardDescription>
             <p className="text-lg font-semibold break-all text-primary">
               {email}
@@ -129,8 +127,7 @@ const VerifyEmailWaiting: React.FC = () => {
             <Alert>
               <Clock className="h-4 w-4" />
               <AlertDescription>
-                Cliquez sur le lien de vérification dans votre email pour activer votre compte.
-                Si vous ne voyez pas l'email, vérifiez votre dossier spam.
+                {t.auth.verifyWaitingInboxHint}
               </AlertDescription>
             </Alert>
 
@@ -140,8 +137,8 @@ const VerifyEmailWaiting: React.FC = () => {
                 variant="outline"
                 className="w-full"
               >
-                <CheckCircle2 className="mr-2 h-4 w-4" />
-                J'ai vérifié mon email
+                <CheckCircle2 className="me-2 h-4 w-4" />
+                {t.auth.verifyWaitingChecked}
               </Button>
 
               <Button
@@ -151,18 +148,18 @@ const VerifyEmailWaiting: React.FC = () => {
               >
                 {isResending ? (
                   <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Envoi en cours...
+                    <Loader2 className="me-2 h-4 w-4 animate-spin" />
+                    {t.auth.verifyWaitingResending}
                   </>
                 ) : canResend ? (
                   <>
-                    <RefreshCw className="mr-2 h-4 w-4" />
-                    Renvoyer l'email de vérification
+                    <RefreshCw className="me-2 h-4 w-4" />
+                    {t.auth.verifyResend}
                   </>
                 ) : (
                   <>
-                    <Clock className="mr-2 h-4 w-4" />
-                    Renvoyer dans {formatTime(timeLeft)}
+                    <Clock className="me-2 h-4 w-4" />
+                    {tf(t.auth.verifyWaitingResendIn, { time: formatTime(timeLeft) })}
                   </>
                 )}
               </Button>
@@ -173,8 +170,8 @@ const VerifyEmailWaiting: React.FC = () => {
                 to="/signin"
                 className="text-sm text-muted-foreground hover:text-primary hover:underline inline-flex items-center gap-1"
               >
-                Retour à la connexion
-                <ArrowRight className="h-3 w-3" />
+                {t.auth.forgotBackToSignIn}
+                <ArrowRight className="h-3 w-3 rtl:rotate-180" />
               </Link>
             </div>
           </CardContent>
@@ -185,4 +182,3 @@ const VerifyEmailWaiting: React.FC = () => {
 };
 
 export default VerifyEmailWaiting;
-

@@ -1,5 +1,5 @@
 'use client'
-import { forwardRef, useImperativeHandle, useState } from 'react';
+import { forwardRef, useImperativeHandle, useMemo, useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -21,8 +21,8 @@ import { isAxiosError } from 'axios';
 import { DialogDescription } from '@radix-ui/react-dialog';
 import { PhoneInput } from '../ui/phone-input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
-import { getRoleDisplayName } from '@/utils/permissions';
 import { Shield } from 'lucide-react';
+import { useAppTranslation } from '@/i18n';
 
 
 export interface CabinetMemberUpdateModalRef {
@@ -34,20 +34,25 @@ export interface CabinetMemberUpdateModalProps {
   onSuccess?: (_: API.CabinetMember) => void;
 }
 
-const schema = yup.object({
-  first_name: yup.string().required('First name is required'),
-  last_name: yup.string().required('Last name is required'),
-  email: yup.string().email('Invalid email address').required('Email is required'),
-  phone: yup.string().required('Phone is required'),
-  is_active: yup.boolean().default(true),
-  address: yup.string().required('Address is required'),
-  role: yup.string().oneOf(['OWNER', 'ADMIN', 'MANAGER', 'LAWYER', 'ASSISTANT', 'VIEWER']).optional(),
-});
-
 const CabinetMemberUpdateModal = forwardRef<CabinetMemberUpdateModalRef, CabinetMemberUpdateModalProps>(({ onSuccess }, ref) => {
+  const { t } = useAppTranslation();
   const [instance, setInstance] = useState<API.CabinetMember | null>(null);
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+
+  const schema = useMemo(
+    () =>
+      yup.object({
+        first_name: yup.string().required(t.team.validation.firstNameRequired),
+        last_name: yup.string().required(t.team.validation.lastNameRequired),
+        email: yup.string().email(t.validation.invalidEmail).required(t.team.validation.emailRequired),
+        phone: yup.string().required(t.team.validation.phoneRequired),
+        is_active: yup.boolean().default(true),
+        address: yup.string().required(t.team.validation.addressRequired),
+        role: yup.string().oneOf(['OWNER', 'ADMIN', 'MANAGER', 'LAWYER', 'ASSISTANT', 'VIEWER']).optional(),
+      }),
+    [t]
+  );
 
   const mainForm = useForm<API.CabinetMemberUpdateForm>({
     resolver: yupResolver(schema) as unknown as Resolver<API.CabinetMemberUpdateForm>
@@ -144,10 +149,10 @@ const CabinetMemberUpdateModal = forwardRef<CabinetMemberUpdateModalRef, Cabinet
               </div>
               <div>
                 <DialogTitle className="text-2xl font-bold text-white">
-                  Update Cabinet Member
+                  {t.team.modal.updateTitle}
                 </DialogTitle>
                 <DialogDescription className="text-white/90 mt-1">
-                  Make changes to update cabinet member
+                  {t.team.modal.updateDescription}
                 </DialogDescription>
               </div>
             </div>
@@ -158,12 +163,12 @@ const CabinetMemberUpdateModal = forwardRef<CabinetMemberUpdateModalRef, Cabinet
           <div className="space-y-4">
             <div className="text-[10px] font-semibold uppercase tracking-[0.08em] text-[#6b7280] dark:text-slate-400 pb-2 border-b border-slate-200 dark:border-slate-800 flex items-center gap-2">
               <User className="w-3.5 h-3.5 text-[#64499D] dark:text-[#E9E0FF]" />
-              Personal information
+              {t.team.modal.personalInfo}
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-3">
                 <label className="text-sm font-medium  items-center gap-1">
-                  <span>First Name </span>
+                  <span>{t.team.modal.firstName} </span>
                   <Input className="h-10 rounded-lg" {...mainForm.register('first_name')} />
                   {
                     mainForm.formState.errors.first_name && (
@@ -174,7 +179,7 @@ const CabinetMemberUpdateModal = forwardRef<CabinetMemberUpdateModalRef, Cabinet
               </div>
               <div className="space-y-3">
                 <label className="text-sm font-medium  items-center gap-1">
-                  <span>Last Name </span>
+                  <span>{t.team.modal.lastName} </span>
                   <Input className="h-10 rounded-lg" {...mainForm.register('last_name')} />
                   {
                     mainForm.formState.errors.last_name && (
@@ -188,13 +193,13 @@ const CabinetMemberUpdateModal = forwardRef<CabinetMemberUpdateModalRef, Cabinet
           <div className="space-y-4">
             <div className="text-[10px] font-semibold uppercase tracking-[0.08em] text-[#6b7280] dark:text-slate-400 pb-2 border-b border-slate-200 dark:border-slate-800 flex items-center gap-2">
               <Mail className="w-3.5 h-3.5 text-[#64499D] dark:text-[#E9E0FF]" />
-              Contact information
+              {t.team.modal.contactInfo}
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="">
                 <label className="text-sm font-medium  flex items-center gap-1">
                   <Mail className="w-4 h-4 text-gray-400" />
-                  <span >Email </span>
+                  <span >{t.team.modal.email} </span>
 
                 </label>
 
@@ -209,7 +214,7 @@ const CabinetMemberUpdateModal = forwardRef<CabinetMemberUpdateModalRef, Cabinet
               <div className="">
                 <label className="text-sm font-medium flex items-center gap-1">
                   <Phone className="w-4 h-4 text-gray-400" />
-                  <span>Phone Number </span>
+                  <span>{t.team.modal.phoneNumber} </span>
 
                 </label>
                 <PhoneInput
@@ -229,13 +234,13 @@ const CabinetMemberUpdateModal = forwardRef<CabinetMemberUpdateModalRef, Cabinet
           <div className="space-y-4">
             <div className="text-[10px] font-semibold uppercase tracking-[0.08em] text-[#6b7280] dark:text-slate-400 pb-2 border-b border-slate-200 dark:border-slate-800 flex items-center gap-2">
               <Building2 className="w-3.5 h-3.5 text-[#64499D] dark:text-[#E9E0FF]" />
-              Other information
+              {t.team.modal.otherInfo}
             </div>
 
             <div>
               <label className="text-sm flex font-medium">
                 <MapPin className="w-4 h-4 text-gray-400 mb-1 mr-1" />
-                <span> Address </span>
+                <span> {t.team.modal.addressLabel} </span>
               </label>
             <Input className="h-10 rounded-lg" {...mainForm.register('address')} />
             {
@@ -248,23 +253,23 @@ const CabinetMemberUpdateModal = forwardRef<CabinetMemberUpdateModalRef, Cabinet
           <div className="space-y-4">
             <div className="text-[10px] font-semibold uppercase tracking-[0.08em] text-[#6b7280] dark:text-slate-400 pb-2 border-b border-slate-200 dark:border-slate-800 flex items-center gap-2">
               <Shield className="w-3.5 h-3.5 text-[#64499D] dark:text-[#E9E0FF]" />
-              Role & access
+              {t.team.modal.roleAccess}
             </div>
             <div>
               <label className="text-sm font-medium flex items-center gap-1 mb-2">
-                <span>Role</span>
+                <span>{t.team.modal.role}</span>
               </label>
               <Select
                 value={mainForm.watch('role') || instance?.role || 'VIEWER'}
                 onValueChange={(value) => mainForm.setValue('role', value as API.Role)}
               >
                 <SelectTrigger className="h-10 rounded-lg">
-                  <SelectValue placeholder="Select a role" />
+                  <SelectValue placeholder={t.team.modal.selectRole} />
                 </SelectTrigger>
                 <SelectContent>
                   {(['OWNER', 'ADMIN', 'MANAGER', 'LAWYER', 'ASSISTANT', 'VIEWER'] as API.Role[]).map((role) => (
                     <SelectItem key={role} value={role}>
-                      {getRoleDisplayName(role)}
+                      {t.team.roles[role]}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -281,7 +286,7 @@ const CabinetMemberUpdateModal = forwardRef<CabinetMemberUpdateModalRef, Cabinet
               onCheckedChange={(checked) => mainForm.setValue('is_active', checked as boolean)}
             />
             <label htmlFor="is_active" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-              Is Active
+              {t.team.modal.isActive}
             </label>
           </div>
           <DialogFooter className="pt-4 border-t border-gray-100">
@@ -291,7 +296,7 @@ const CabinetMemberUpdateModal = forwardRef<CabinetMemberUpdateModalRef, Cabinet
               onClick={hide}
               disabled={isLoading}
             >
-              Cancel
+              {t.common.cancel}
             </Button>
             <Button
               type="submit"
@@ -302,10 +307,10 @@ const CabinetMemberUpdateModal = forwardRef<CabinetMemberUpdateModalRef, Cabinet
               {isLoading ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Saving...
+                  {t.team.modal.updating}
                 </>
               ) : (
-                'Update'
+                t.team.modal.update
               )}
             </Button>
           </DialogFooter>

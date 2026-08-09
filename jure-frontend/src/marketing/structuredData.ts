@@ -15,9 +15,9 @@ const ORG_ID = `${SITE_URL}/#organization`;
 const WEBSITE_ID = `${SITE_URL}/#website`;
 
 const ORG_DESCRIPTION: Record<MarketingLocale, string> = {
-  en: "JURE is a LegalTech company building an AI-native legal work platform that brings matters, documents, tasks, legal research and responsible AI into one secure workspace for law firms and legal teams.",
-  fr: "JURE est une entreprise LegalTech qui construit une plateforme de travail juridique native IA réunissant dossiers, documents, tâches, recherche juridique et IA responsable dans un espace de travail sécurisé pour cabinets d'avocats et équipes juridiques.",
-  ar: "JURE شركة تقنية قانونية تبني منصة عمل قانوني قائمة على الذكاء الاصطناعي تجمع الملفات والمستندات والمهام والبحث القانوني والذكاء الاصطناعي المسؤول في مساحة عمل آمنة لمكاتب المحاماة والفرق القانونية.",
+  en: "JURE is a LegalTech platform for modern legal teams, combining AI-powered legal research, case management, document workflows and secure collaboration in one workspace.",
+  fr: "JURE est une plateforme LegalTech pour les équipes juridiques modernes, qui réunit recherche juridique assistée par IA, gestion de dossiers, flux documentaires et collaboration sécurisée dans un seul espace de travail.",
+  ar: "JURE منصة LegalTech للفرق القانونية الحديثة، تجمع البحث القانوني المدعوم بالذكاء الاصطناعي وإدارة القضايا وسير عمل المستندات والتعاون الآمن في مساحة عمل واحدة.",
 };
 
 export function organizationJsonLd(locale: MarketingLocale): JsonLd {
@@ -50,9 +50,9 @@ export function webSiteJsonLd(locale: MarketingLocale): JsonLd {
 }
 
 const APP_DESCRIPTION: Record<MarketingLocale, string> = {
-  en: "AI-native legal work platform: matter and case management, client records, document library with preview, tasks and deadlines, shared calendar, real-time team collaboration with voice and video calls, practice finance, and an early-access legal AI assistant with human review.",
-  fr: "Plateforme de travail juridique native IA : gestion des dossiers et affaires, fiches clients, bibliothèque documentaire avec prévisualisation, tâches et échéances, agenda partagé, collaboration d'équipe en temps réel avec appels audio et vidéo, finance du cabinet, et un assistant IA juridique en accès anticipé avec relecture humaine.",
-  ar: "منصة عمل قانوني قائمة على الذكاء الاصطناعي: إدارة الملفات والقضايا، سجلات العملاء، مكتبة مستندات مع معاينة، مهام ومواعيد نهائية، مفكرة مشتركة، تعاون فريق فوري مع مكالمات صوتية ومرئية، مالية المكتب، ومساعد ذكاء اصطناعي قانوني في مرحلة الوصول المبكر مع مراجعة بشرية.",
+  en: "LegalTech platform for modern legal teams: matter and case management, client records, document library with preview, tasks and deadlines, shared calendar, real-time team collaboration with voice and video calls, practice finance, and Juria — an early-access AI legal assistant with human review.",
+  fr: "Plateforme LegalTech pour équipes juridiques modernes : gestion des dossiers et affaires, fiches clients, bibliothèque documentaire avec prévisualisation, tâches et échéances, agenda partagé, collaboration d'équipe en temps réel avec appels audio et vidéo, finance du cabinet, et Juria — assistant IA juridique en accès anticipé avec relecture humaine.",
+  ar: "منصة LegalTech للفرق القانونية الحديثة: إدارة الملفات والقضايا، سجلات العملاء، مكتبة مستندات مع معاينة، مهام ومواعيد نهائية، مفكرة مشتركة، تعاون فريق فوري مع مكالمات صوتية ومرئية، مالية المكتب، وجوريا — مساعد ذكاء اصطناعي قانوني في مرحلة الوصول المبكر مع مراجعة بشرية.",
 };
 
 /** Only verified, shipped capabilities. Keep in sync with the product. */

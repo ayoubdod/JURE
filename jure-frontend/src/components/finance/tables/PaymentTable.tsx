@@ -3,6 +3,7 @@ import { Eye, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { formatMAD } from '@/utils/formatMAD';
+import { useAppTranslation } from '@/i18n';
 
 type Row = API.FinancePaymentListItem;
 
@@ -19,27 +20,23 @@ const methodClass: Record<API.FinancePaymentMethod, string> = {
   CHEQUE: 'bg-amber-500/15 text-amber-900 dark:text-amber-300 ring-amber-500/25',
 };
 
-const methodLabel: Record<API.FinancePaymentMethod, string> = {
-  CASH: 'Cash',
-  VIREMENT_BANCAIRE: 'Virement',
-  CHEQUE: 'Chèque',
-};
-
 export const PaymentTable: React.FC<Props> = ({ rows, loading, onView, onDelete }) => {
+  const { t } = useAppTranslation();
+
   return (
     <div className="overflow-hidden rounded-xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-950 shadow-sm">
       <div className="overflow-x-auto">
         <table className="w-full min-w-[900px] text-left text-[13px]">
           <thead className="border-b border-slate-200 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-900/50">
             <tr>
-              <th className="py-3 px-4 font-semibold text-slate-600 dark:text-slate-400">Dossier</th>
-              <th className="py-3 px-4 font-semibold text-slate-600 dark:text-slate-400">Client</th>
-              <th className="py-3 px-4 text-right font-semibold text-slate-600 dark:text-slate-400">Montant</th>
-              <th className="py-3 px-4 font-semibold text-slate-600 dark:text-slate-400">Méthode</th>
-              <th className="py-3 px-4 font-semibold text-slate-600 dark:text-slate-400">Référence</th>
-              <th className="py-3 px-4 font-semibold text-slate-600 dark:text-slate-400">Facture liée</th>
-              <th className="py-3 px-4 font-semibold text-slate-600 dark:text-slate-400">Date</th>
-              <th className="py-3 px-4 text-right font-semibold text-slate-600 dark:text-slate-400">Actions</th>
+              <th className="py-3 px-4 font-semibold text-slate-600 dark:text-slate-400">{t.finance.columns.case}</th>
+              <th className="py-3 px-4 font-semibold text-slate-600 dark:text-slate-400">{t.finance.columns.client}</th>
+              <th className="py-3 px-4 text-right font-semibold text-slate-600 dark:text-slate-400">{t.finance.columns.amount}</th>
+              <th className="py-3 px-4 font-semibold text-slate-600 dark:text-slate-400">{t.finance.columns.method}</th>
+              <th className="py-3 px-4 font-semibold text-slate-600 dark:text-slate-400">{t.finance.columns.reference}</th>
+              <th className="py-3 px-4 font-semibold text-slate-600 dark:text-slate-400">{t.finance.columns.linkedInvoice}</th>
+              <th className="py-3 px-4 font-semibold text-slate-600 dark:text-slate-400">{t.finance.columns.date}</th>
+              <th className="py-3 px-4 text-right font-semibold text-slate-600 dark:text-slate-400">{t.finance.columns.actions}</th>
             </tr>
           </thead>
           <tbody>
@@ -56,7 +53,7 @@ export const PaymentTable: React.FC<Props> = ({ rows, loading, onView, onDelete 
             ) : rows.length === 0 ? (
               <tr>
                 <td colSpan={8} className="px-4 py-12 text-center text-slate-500">
-                  Aucun paiement
+                  {t.finance.emptyPayments}
                 </td>
               </tr>
             ) : (
@@ -81,7 +78,7 @@ export const PaymentTable: React.FC<Props> = ({ rows, loading, onView, onDelete 
                         methodClass[row.method]
                       )}
                     >
-                      {methodLabel[row.method]}
+                      {t.finance.paymentMethods[row.method]}
                     </span>
                   </td>
                   <td className="px-4 py-3 font-mono text-[12px] text-slate-600">{row.reference || '—'}</td>

@@ -1,5 +1,5 @@
 'use client'
-import { forwardRef, useImperativeHandle, useState } from 'react';
+import { forwardRef, useImperativeHandle, useMemo, useRef, useState } from 'react';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
@@ -15,6 +15,7 @@ import { isAxiosError } from 'axios';
 import { DialogDescription } from '@radix-ui/react-dialog';
 import { PhoneInput } from '../ui/phone-input';
 import { devError } from '@/utils/devLog';
+import { useAppTranslation } from '@/i18n';
 
 export interface ClientCreateModalRef {
   show: () => void;
@@ -25,22 +26,27 @@ export interface ClientCreateModalProps {
   onSuccess?: (_: API.Client) => void;
 }
 
-const schema = yup.object({
-  first_name: yup.string().required('First name is required'),
-  last_name: yup.string().required('Last name is required'),
-  email: yup.string().email('Invalid email address').required('Email is required'),
-  phone: yup.string().required('Phone is required'),
-  address: yup.string().required('Address is required'),
-  ice: yup.string().optional(),
-  fiscal_if: yup.string().optional(),
-});
-
 const ClientCreateModal = forwardRef<ClientCreateModalRef, ClientCreateModalProps>(({ onSuccess }, ref) => {
+  const { t } = useAppTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
+  const schema = useMemo(() => yup.object({
+    first_name: yup.string().required(t.clients.validation.firstNameRequired),
+    last_name: yup.string().required(t.clients.validation.lastNameRequired),
+    email: yup.string().email(t.validation.invalidEmail).required(t.clients.validation.emailRequired),
+    phone: yup.string().required(t.clients.validation.phoneRequired),
+    address: yup.string().required(t.clients.validation.addressRequired),
+    ice: yup.string().optional(),
+    fiscal_if: yup.string().optional(),
+  }), [t]);
+
+  const schemaRef = useRef(schema);
+  schemaRef.current = schema;
+
   const mainForm = useForm<API.ClientCreateForm>({
-    resolver: yupResolver(schema) as unknown as Resolver<API.ClientCreateForm>,
+    resolver: ((values, context, options) =>
+      yupResolver(schemaRef.current)(values, context, options)) as unknown as Resolver<API.ClientCreateForm>,
     defaultValues: {
       first_name: '',
       last_name: '',
@@ -129,10 +135,10 @@ const ClientCreateModal = forwardRef<ClientCreateModalRef, ClientCreateModalProp
               </div>
               <div>
                 <DialogTitle className="text-2xl font-bold text-white">
-                  Add New Client
+                  {t.clients.modal.createTitle}
                 </DialogTitle>
                 <DialogDescription className="text-white/90 mt-1">
-                  Fill in the client information below to add them to your practice.
+                  {t.clients.modal.createDescription}
                 </DialogDescription>
               </div>
             </div>
@@ -286,12 +292,12 @@ const ClientCreateModal = forwardRef<ClientCreateModalRef, ClientCreateModalProp
               onClick={hide}
               disabled={isLoading}
             >
-              Cancel
+              {t.common.cancel}
             </Button>
 
             {/* IMPORTANT: make this a submit button */}
             <Button type="submit" variant="default" disabled={isLoading} className="bg-purple-600 hover:bg-purple-700">
-              {isLoading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : 'Create'}
+              {isLoading ? <Loader2 className="w-4 h-4 me-2 animate-spin" /> : t.common.create}
             </Button>
           </DialogFooter>
         </form>

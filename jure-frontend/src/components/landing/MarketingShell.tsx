@@ -42,6 +42,12 @@ type MarketingShellProps = {
   children: React.ReactNode;
 };
 
+const MARKETING_LANG_LABELS: Record<MarketingLang, string> = {
+  en: "English",
+  fr: "Français",
+  ar: "العربية",
+};
+
 const LangSwitcher: React.FC<{
   lang: MarketingLang;
   onChange: (l: MarketingLang) => void;
@@ -52,13 +58,16 @@ const LangSwitcher: React.FC<{
         key={code}
         type="button"
         onClick={() => onChange(code)}
-        className={`px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm transition-colors ${
+        title={MARKETING_LANG_LABELS[code]}
+        aria-label={MARKETING_LANG_LABELS[code]}
+        className={`px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm transition-colors whitespace-nowrap ${
           lang === code
             ? "bg-[#64499D] text-white"
             : "text-slate-700 dark:text-slate-200 hover:bg-[#F4F1FF] dark:hover:bg-[#64499D]/20"
         }`}
       >
-        {code.toUpperCase()}
+        <span className="sm:hidden">{code.toUpperCase()}</span>
+        <span className="hidden sm:inline">{MARKETING_LANG_LABELS[code]}</span>
       </button>
     ))}
   </div>
@@ -75,6 +84,7 @@ const NAV_ITEMS: Array<{ key: Exclude<MarketingNavKey, "none">; slug: string }> 
 
 const FOOTER_PLATFORM_SLUGS = ["features", "pricing", "security", "demo", "docs"];
 const FOOTER_SOLUTION_KEYS = [
+  "juria",
   "legalAi",
   "legalCaseManagement",
   "legalPracticeManagement",

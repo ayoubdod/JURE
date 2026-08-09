@@ -7,6 +7,7 @@ import AudioWave from './AudioWave';
 import CallControls from './CallControls';
 import VideoStage from './VideoStage';
 import type { ConnectionQuality } from '@/utils/webrtc';
+import { useAppTranslation, tFor, detectInitialLanguage } from '@/i18n';
 
 export type CallModalStatus =
   | 'calling'
@@ -20,26 +21,37 @@ export type CallModalStatus =
 
 export type CallLayoutMode = 'card' | 'sheet' | 'fullscreen';
 
-const STATUS_COPY: Record<string, { label: string; className: string }> = {
-  calling: { label: 'Calling…', className: 'text-amber-600 dark:text-amber-400' },
-  connecting: { label: 'Connecting…', className: 'text-sky-600 dark:text-sky-400' },
-  active: { label: 'Connected', className: 'text-emerald-600 dark:text-emerald-400' },
-  reconnecting: { label: 'Reconnecting…', className: 'text-amber-600 dark:text-amber-400' },
-  ended: { label: 'Call Ended', className: 'text-slate-500' },
-  declined: { label: 'Call declined', className: 'text-slate-500' },
-  missed: { label: 'No answer', className: 'text-slate-500' },
-  error: { label: 'Call failed', className: 'text-rose-600' },
+const STATUS_CLASS: Record<string, string> = {
+  calling: 'text-amber-600 dark:text-amber-400',
+  connecting: 'text-sky-600 dark:text-sky-400',
+  active: 'text-emerald-600 dark:text-emerald-400',
+  reconnecting: 'text-amber-600 dark:text-amber-400',
+  ended: 'text-slate-500',
+  declined: 'text-slate-500',
+  missed: 'text-slate-500',
+  error: 'text-rose-600',
 };
 
-const QUALITY_COPY: Record<ConnectionQuality, { label: string; className: string } | null> = {
-  excellent: { label: 'Excellent connection', className: 'text-emerald-600' },
-  good: { label: 'Good connection', className: 'text-sky-600' },
-  poor: { label: 'Poor connection', className: 'text-amber-600' },
+const QUALITY_CLASS: Record<ConnectionQuality, string | null> = {
+  excellent: 'text-emerald-600',
+  good: 'text-sky-600',
+  poor: 'text-amber-600',
   unknown: null,
 };
 
 export function getCallStatusLabel(status: CallModalStatus): string {
-  return STATUS_COPY[status]?.label ?? 'Call';
+  const call = tFor(detectInitialLanguage()).conversations.call;
+  const map: Record<CallModalStatus, string> = {
+    calling: call.calling,
+    connecting: call.connecting,
+    active: call.connected,
+    reconnecting: call.reconnecting,
+    ended: call.ended,
+    declined: call.declined,
+    missed: call.missed,
+    error: call.failed,
+  };
+  return map[status] ?? call.call;
 }
 
 const CallModal: React.FC<{
@@ -101,6 +113,8 @@ const CallModal: React.FC<{
   onSelectAudioOutput,
   callingProgress = 0,
 }) => {
+  const { t, tf } = useAppTranslation();
+  const call = t.conversations.call;
   const showActive = status === 'active' || status === 'reconnecting';
   const showCalling = status === 'calling';
   const showConnecting = status === 'connecting';
@@ -108,8 +122,26 @@ const CallModal: React.FC<{
   const showError = status === 'error';
   const showProgress = showCalling || showConnecting;
   const circumference = 2 * Math.PI * 46;
-  const statusMeta = STATUS_COPY[status] ?? STATUS_COPY.ended;
-  const qualityMeta = QUALITY_COPY[connectionQuality];
+  const statusLabelMap: Record<string, string> = {
+    calling: call.calling,
+    connecting: call.connecting,
+    active: call.connected,
+    reconnecting: call.reconnecting,
+    ended: call.ended,
+    declined: call.declined,
+    missed: call.missed,
+    error: call.failed,
+  };
+  const statusLabel = statusLabelMap[status] ?? call.ended;
+  const statusClass = STATUS_CLASS[status] ?? STATUS_CLASS.ended;
+  const qualityLabelMap: Record<ConnectionQuality, string | null> = {
+    excellent: call.qualityExcellent,
+    good: call.qualityGood,
+    poor: call.qualityPoor,
+    unknown: null,
+  };
+  const qualityLabel = qualityLabelMap[connectionQuality];
+  const qualityClass = QUALITY_CLASS[connectionQuality];
   const isVideo = kind === 'video';
   const videoLive = isVideo && (showActive || showConnecting);
 
@@ -135,23 +167,23 @@ const CallModal: React.FC<{
   if (micDenied || showError) {
     const title = micDenied
       ? isVideo
-        ? 'Camera access required'
-        : 'Microphone access denied'
-      : 'Call failed';
+        ? call.cameraRequired
+        : call.micDenied
+      : call.failed;
     const detail =
       mediaErrorMessage ||
       (micDenied
         ? isVideo
-          ? 'Allow camera and microphone access in your browser settings to use video calls.'
-          : 'Allow microphone access in your browser settings, then try again.'
-        : 'Check your microphone, camera, or network connection, then retry.');
+          ? call.cameraDeniedHint
+          : call.micDeniedHint
+        : call.failedHint);
     return (
       <div className={shellClass}>
         <button
           type="button"
           onClick={onClose}
-          className="absolute right-3 top-3 rounded-lg p-2 text-slate-400 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
-          aria-label="Close"
+          className="absolute end-3 top-3 rounded-lg p-2 text-slate-400 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
+          aria-label={t.common.close}
         >
           <X className="h-4 w-4" />
         </button>
@@ -165,14 +197,14 @@ const CallModal: React.FC<{
               onClick={onRetryMic}
               className="h-10 rounded-full bg-slate-900 px-5 text-sm font-medium text-white hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900"
             >
-              Try Again
+              {call.tryAgain}
             </button>
             <button
               type="button"
               onClick={onClose}
               className="h-10 rounded-full bg-rose-600 px-5 text-sm font-medium text-white hover:bg-rose-700"
             >
-              Cancel
+              {t.common.cancel}
             </button>
           </div>
         </div>
@@ -192,8 +224,8 @@ const CallModal: React.FC<{
         <div className="mb-3 flex items-center justify-between gap-3">
           <div className="min-w-0">
             <h2 className="truncate text-base font-semibold">{remoteName}</h2>
-            <p className={cn('text-xs font-medium', statusMeta.className)} aria-live="polite">
-              {statusMeta.label}
+            <p className={cn('text-xs font-medium', statusClass)} aria-live="polite">
+              {statusLabel}
               {showActive ? (
                 <>
                   {' '}
@@ -209,8 +241,8 @@ const CallModal: React.FC<{
         <button
           type="button"
           onClick={onClose}
-          className="absolute right-3 top-3 rounded-lg p-2 text-slate-400 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
-          aria-label="Close"
+          className="absolute end-3 top-3 rounded-lg p-2 text-slate-400 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
+          aria-label={t.common.close}
         >
           <X className="h-4 w-4" />
         </button>
@@ -295,13 +327,13 @@ const CallModal: React.FC<{
         {layout !== 'fullscreen' || !isVideo ? (
           <div className="w-full min-w-0 text-center">
             <h2 className="truncate text-xl font-semibold tracking-tight">{remoteName}</h2>
-            <p className={cn('mt-1.5 text-sm font-medium', statusMeta.className)} aria-live="polite">
+            <p className={cn('mt-1.5 text-sm font-medium', statusClass)} aria-live="polite">
               {showTerminal && status === 'ended' && terminalDetail()
-                ? `Call Ended · ${terminalDetail()}`
-                : statusMeta.label}
+                ? tf(call.endedWithDuration, { duration: terminalDetail()! })
+                : statusLabel}
             </p>
-            {showActive && qualityMeta ? (
-              <p className={cn('mt-1 text-xs', qualityMeta.className)}>● {qualityMeta.label}</p>
+            {showActive && qualityLabel && qualityClass ? (
+              <p className={cn('mt-1 text-xs', qualityClass)}>● {qualityLabel}</p>
             ) : null}
             {showActive && !videoLive ? (
               <div className="mt-2 font-mono text-2xl font-medium tabular-nums tracking-tight text-slate-800 dark:text-slate-100">
@@ -315,8 +347,8 @@ const CallModal: React.FC<{
             ) : null}
           </div>
         ) : (
-          showActive && qualityMeta ? (
-            <p className={cn('text-xs', qualityMeta.className)}>● {qualityMeta.label}</p>
+          showActive && qualityLabel && qualityClass ? (
+            <p className={cn('text-xs', qualityClass)}>● {qualityLabel}</p>
           ) : null
         )}
 
@@ -330,7 +362,7 @@ const CallModal: React.FC<{
                 onClick={onEndCall}
                 className="inline-flex h-11 min-w-[148px] items-center justify-center rounded-full bg-rose-600 px-6 text-sm font-medium text-white hover:bg-rose-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400"
               >
-                {showCalling ? 'End Call' : 'Cancel'}
+                {showCalling ? call.endCall : t.common.cancel}
               </button>
             </div>
           )}

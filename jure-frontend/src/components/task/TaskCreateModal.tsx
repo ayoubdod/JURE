@@ -1,5 +1,5 @@
 'use client'
-import { forwardRef, useImperativeHandle, useState } from 'react';
+import { forwardRef, useImperativeHandle, useMemo, useRef, useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -25,6 +25,7 @@ import { DialogDescription } from '@radix-ui/react-dialog';
 import ServerSelect from '../common/ServerSelect';
 import { Textarea } from '../ui/textarea';
 import { cn } from '@/lib/utils';
+import { useAppTranslation } from '@/i18n';
 
 
 export type TaskCreateModalOpenOptions = {
@@ -54,25 +55,30 @@ function statusDotClass(v: string) {
   return 'bg-slate-400';
 }
 
-const schema = yup.object({
-  title: yup.string().required('Title is required'),
-  description: yup.string().required('Description is required'),
-  priority: yup.string().required('Priority is required'),
-  status: yup.string().required('Status is required'),
-  due_date: yup.string().required('Due date is required'),
-  estimated_hours: yup.string().optional(),
-  assigned_to: yup.string().required('Assigned to is required'),
-  client: yup.string().optional(),
-  case: yup.string().optional(),   // <--
-});
-
 const TaskCreateModal = forwardRef<TaskCreateModalRef, TaskCreateModalProps>(({ onSuccess }, ref) => {
+  const { t } = useAppTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [lockedCase, setLockedCase] = useState<{ id: number; label: string } | null>(null);
 
+  const schema = useMemo(() => yup.object({
+    title: yup.string().required(t.tasks.validation.titleRequired),
+    description: yup.string().required(t.tasks.validation.descriptionRequired),
+    priority: yup.string().required(t.tasks.validation.priorityRequired),
+    status: yup.string().required(t.tasks.validation.statusRequired),
+    due_date: yup.string().required(t.tasks.validation.dueDateRequired),
+    estimated_hours: yup.string().optional(),
+    assigned_to: yup.string().required(t.tasks.validation.assignedToRequired),
+    client: yup.string().optional(),
+    case: yup.string().optional(),
+  }), [t]);
+
+  const schemaRef = useRef(schema);
+  schemaRef.current = schema;
+
   const mainForm = useForm<API.TaskCreateForm>({
-    resolver: yupResolver(schema) as unknown as Resolver<API.TaskCreateForm>
+    resolver: ((values, context, options) =>
+      yupResolver(schemaRef.current)(values, context, options)) as unknown as Resolver<API.TaskCreateForm>
   });
 
   const show = (opts?: TaskCreateModalOpenOptions) => {
@@ -154,10 +160,10 @@ const TaskCreateModal = forwardRef<TaskCreateModalRef, TaskCreateModalProps>(({ 
               </div>
               <div>
                 <DialogTitle className="text-2xl font-bold text-white">
-                  Add New Task
+                  {t.tasks.modal.createTitle}
                 </DialogTitle>
                 <DialogDescription className="text-white/90 mt-1">
-                  Create a new task or reminder for your legal practice.
+                  {t.tasks.modal.createDescription}
                 </DialogDescription>
               </div>
             </div>
@@ -408,7 +414,7 @@ const TaskCreateModal = forwardRef<TaskCreateModalRef, TaskCreateModalProps>(({ 
               onClick={hide}
               disabled={isLoading}
             >
-              Cancel
+              {t.common.cancel}
             </Button>
             <Button
               type="submit"
@@ -418,11 +424,11 @@ const TaskCreateModal = forwardRef<TaskCreateModalRef, TaskCreateModalProps>(({ 
             >
               {isLoading ? (
                 <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Creating…
+                  <Loader2 className="w-4 h-4 me-2 animate-spin" />
+                  {t.common.saving}
                 </>
               ) : (
-                'Create'
+                t.common.create
               )}
             </Button>
           </DialogFooter>

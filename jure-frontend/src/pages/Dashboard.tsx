@@ -33,6 +33,7 @@ import MatterCloseModal from '@/components/dashboard/MatterCloseModal';
 import { apiGetCabinetStats } from '@/services/dashboard/api';
 import { devError } from '@/utils/devLog';
 import { TaskCreateModalRef } from '@/components/task/TaskCreateModal';
+import { useAppTranslation } from '@/i18n';
 
 // Map API icon strings → lucide components
 const ICONS: Record<string, React.ComponentType<any>> = {
@@ -89,6 +90,8 @@ type DashboardOverview = {
 };
 
 const Dashboard = () => {
+  const { t, tf, enumLabel } = useAppTranslation();
+  const d = t.dashboard;
   const [activeTab, setActiveTab] = useState('dashboard');
   const [openDialogs, setOpenDialogs] = useState({
     client: false,
@@ -106,9 +109,9 @@ const Dashboard = () => {
 
   // --- FALLBACKS (used only when API fails) ---
   const fallbackStats = [
-    { title: 'Total Clients', value: '0', change: '+0%', icon: Users, iconBg: 'bg-blue-500', changeTone: 'text-emerald-600' },
-    { title: 'Active Cases', value: '0', change: '+0%', icon: Briefcase, iconBg: 'bg-emerald-500', changeTone: 'text-emerald-600' },
-    { title: 'Tasks Due', value: '0', change: '+0%', icon: CheckSquare, iconBg: 'bg-amber-500', changeTone: 'text-emerald-600' },
+    { title: d.stats.totalClients, value: '0', change: '+0%', icon: Users, iconBg: 'bg-blue-500', changeTone: 'text-emerald-600' },
+    { title: d.stats.activeCases, value: '0', change: '+0%', icon: Briefcase, iconBg: 'bg-emerald-500', changeTone: 'text-emerald-600' },
+    { title: d.stats.tasksDue, value: '0', change: '+0%', icon: CheckSquare, iconBg: 'bg-amber-500', changeTone: 'text-emerald-600' },
   ];
 
   const fallbackCases = [
@@ -140,8 +143,8 @@ const Dashboard = () => {
       } catch (err: any) {
         devError('Dashboard API error:', err);
         toast({
-          title: 'Dashboard',
-          description: 'Unable to load dashboard data. Showing fallback information.',
+          title: d.loadErrorTitle,
+          description: d.loadErrorDescription,
           variant: 'destructive',
         });
       } finally {
@@ -149,7 +152,7 @@ const Dashboard = () => {
       }
     })();
     return () => { mounted = false; };
-  }, [toast]);
+  }, [toast, d.loadErrorTitle, d.loadErrorDescription]);
 
   // Build display stats: prefer API, fallback to local
   const displayStats = useMemo(() => {
@@ -165,23 +168,29 @@ const Dashboard = () => {
     }
     return overview.stats.map(s => {
       const Icon = ICONS[s.icon] ?? CheckSquare;
-      // derive tones (simple): positive if not starting with '-', otherwise red
       const changeTone = s.change?.trim().startsWith('-') ? 'text-rose-600' : 'text-emerald-600';
-      // API had "color" but we stick to your design’s iconBg
       const iconBg = s.icon === 'Users' ? 'bg-blue-500' : s.icon === 'Briefcase' ? 'bg-emerald-500' : 'bg-amber-500';
-      return { title: s.title, value: s.value, change: s.change, Icon, iconBg, changeTone };
+      const localizedTitle =
+        s.icon === 'Users'
+          ? d.stats.totalClients
+          : s.icon === 'Briefcase'
+            ? d.stats.activeCases
+            : s.icon === 'CheckSquare' || s.icon === 'ClipboardList'
+              ? d.stats.tasksDue
+              : s.title;
+      return { title: localizedTitle, value: s.value, change: s.change, Icon, iconBg, changeTone };
     });
-  }, [overview]);
+  }, [overview, d.stats.totalClients, d.stats.activeCases, d.stats.tasksDue]);
 
   const displayAnnouncement = useMemo(() => {
     if (!overview?.announcement) {
       return {
-        title: 'Jure Announcement',
-        body: 'Welcome to Jure! New features: enhanced case management, better client comms, and streamlined document flows.'
+        title: d.announcementFallbackTitle,
+        body: d.announcementFallbackBody,
       };
     }
     return overview.announcement;
-  }, [overview]);
+  }, [overview, d.announcementFallbackTitle, d.announcementFallbackBody]);
 
   const displayCases: ApiCase[] = useMemo(
     () => overview?.recent_cases?.length ? overview.recent_cases : fallbackCases,
@@ -195,26 +204,30 @@ const Dashboard = () => {
 
   const displayActivity: ApiActivity[] = useMemo(() => {
     if (overview?.recent_activity?.length) return overview.recent_activity;
-    // fallback to your static three lines
     return [
-      { icon: 'CheckSquare', message: 'Task completed: Document review for Johnson case', ago: '2 hours ago' },
-      { icon: 'Users', message: 'New client added: Sarah Williams', ago: '4 hours ago' },
-      { icon: 'ClipboardList', message: 'Document uploaded to Tech Corp case', ago: '6 hours ago' },
+      { icon: 'CheckSquare', message: d.recentActivity.fallbackTaskCompleted, ago: tf(d.recentActivity.hoursAgo, { n: 2 }) },
+      { icon: 'Users', message: d.recentActivity.fallbackClientAdded, ago: tf(d.recentActivity.hoursAgo, { n: 4 }) },
+      { icon: 'ClipboardList', message: d.recentActivity.fallbackDocumentUploaded, ago: tf(d.recentActivity.hoursAgo, { n: 6 }) },
     ];
-  }, [overview]);
+  }, [overview, d.recentActivity, tf]);
 
   const kpis: ApiKpis | null = overview?.kpis ?? null; // If later you want to pass to RiskKpiCard as props
 
   const quickActions = [
-    { title: 'Add New Client', icon: UserPlus, description: 'Register a new client', action: 'client', modalRef: clientCreateModalRef },
-    { title: 'Create New Case', icon: FolderPlus, description: 'Open a new matter', action: 'case', modalRef: caseModalRef },
-    { title: 'Schedule Appointment', icon: CalendarPlus, description: 'Book a meeting', action: 'appointment', modalRef: appointmentCreateRef },
-    { title: 'Add Task', icon: ClipboardList, description: 'Create a reminder', action: 'task', modalRef: taskCreateModalRef },
-    { title: 'Conflict Check', icon: ShieldAlert, description: 'Search parties & conflicts', action: 'conflict', modalRef: undefined },
-    { title: 'Clause Library', icon: BookOpenCheck, description: 'Insert vetted clauses', action: 'clauseLib', modalRef: undefined },
-    { title: 'Close Matter', icon: Flag, description: 'Capture outcome & lessons', action: 'closeMatter', modalRef: undefined }
+    { title: d.quickActions.addClientTitle, icon: UserPlus, description: d.quickActions.addClientDescription, action: 'client', modalRef: clientCreateModalRef },
+    { title: d.quickActions.createCaseTitle, icon: FolderPlus, description: d.quickActions.createCaseDescription, action: 'case', modalRef: caseModalRef },
+    { title: d.quickActions.scheduleAppointmentTitle, icon: CalendarPlus, description: d.quickActions.scheduleAppointmentDescription, action: 'appointment', modalRef: appointmentCreateRef },
+    { title: d.quickActions.addTaskTitle, icon: ClipboardList, description: d.quickActions.addTaskDescription, action: 'task', modalRef: taskCreateModalRef },
+    { title: d.quickActions.conflictCheckTitle, icon: ShieldAlert, description: d.quickActions.conflictCheckDescription, action: 'conflict', modalRef: undefined },
+    { title: d.quickActions.clauseLibraryTitle, icon: BookOpenCheck, description: d.quickActions.clauseLibraryDescription, action: 'clauseLib', modalRef: undefined },
+    { title: d.quickActions.closeMatterTitle, icon: Flag, description: d.quickActions.closeMatterDescription, action: 'closeMatter', modalRef: undefined },
   ];
-  
+
+  const priorityLabel = (priority: string) => {
+    const key = priority.toLowerCase();
+    if (key === 'critical') return d.priorityCritical;
+    return enumLabel('taskPriority', key) || priority;
+  };
 
   const handleQuickAction = (qa: typeof quickActions[number]) => {
     if (qa.modalRef?.current?.show) return qa.modalRef.current.show();
@@ -228,10 +241,10 @@ const Dashboard = () => {
   };
 
   const handleViewCase = (caseItem: ApiCase | any) => {
-    // you can navigate to /cases/:id when routes exist
-    // navigate(`/cases/${caseItem.id}`);
-    // For now, keep your toast:
-    toast({ title: 'Case Details', description: `Opening details for ${caseItem.title}` });
+    toast({
+      title: d.recentCases.caseDetailsTitle,
+      description: tf(d.recentCases.openingDetails, { title: caseItem.title }),
+    });
   };
 
   const handleViewAllCases = () => {
@@ -245,10 +258,10 @@ const Dashboard = () => {
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
           <div>
             <h1 className="text-2xl font-semibold text-gray-900 tracking-tight">
-              Good morning, {user?.first_name}
+              {tf(d.greeting, { name: user?.first_name ?? '' })}
             </h1>
             <p className="text-sm text-muted-foreground mt-1">
-              Here’s what’s happening with your practice today.
+              {d.subtitle}
             </p>
           </div>
         </div>
@@ -287,7 +300,7 @@ const Dashboard = () => {
                       {loading ? '—' : value}
                     </div>
                     <p className={`text-xs ${change?.trim().startsWith('-') ? 'text-rose-600' : changeTone}`}>
-                      {loading ? '' : `${change} from last month`}
+                      {loading ? '' : tf(d.fromLastMonth, { change: change ?? '' })}
                     </p>
                   </div>
                   <div className={`w-11 h-11 rounded-xl ${iconBg} flex items-center justify-center shadow-sm`}>
@@ -302,8 +315,8 @@ const Dashboard = () => {
         {/* Quick Actions */}
         <Card className="rounded-2xl border border-gray-100">
           <CardHeader className="pb-3">
-            <CardTitle className="text-base">Quick Actions</CardTitle>
-            <CardDescription className="text-xs">Create fast without leaving the dashboard</CardDescription>
+            <CardTitle className="text-base">{d.quickActions.title}</CardTitle>
+            <CardDescription className="text-xs">{d.quickActions.description}</CardDescription>
           </CardHeader>
           <CardContent className="pt-0">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -358,12 +371,12 @@ const Dashboard = () => {
           <Card className="lg:col-span-2 rounded-2xl border border-gray-100">
             <CardHeader className="flex flex-row items-center justify-between pb-3">
               <div>
-                <CardTitle className="text-base">Recent Cases</CardTitle>
-                <CardDescription className="text-xs">Your most recent active matters</CardDescription>
+                <CardTitle className="text-base">{d.recentCases.title}</CardTitle>
+                <CardDescription className="text-xs">{d.recentCases.description}</CardDescription>
               </div>
               <Button variant="outline" size="sm" className="rounded-lg" onClick={handleViewAllCases}>
                 <Eye size={12} className="mr-1.5" />
-                View All
+                {t.common.viewAll}
               </Button>
             </CardHeader>
             <CardContent className="pt-0">
@@ -390,14 +403,14 @@ const Dashboard = () => {
                             : 'bg-emerald-100 text-emerald-700',
                         ].join(' ')}
                       >
-                        {c.priority}
+                        {priorityLabel(c.priority)}
                       </span>
                       <Button
                         variant="ghost"
                         size="icon"
                         className="h-7 w-7"
                         onClick={() => handleViewCase(c)}
-                        aria-label={`Open ${c.title}`}
+                        aria-label={tf(d.recentCases.openAria, { title: c.title })}
                       >
                         <ArrowRight size={14} />
                       </Button>
@@ -405,7 +418,7 @@ const Dashboard = () => {
                   </div>
                 ))}
                 {!displayCases.length && (
-                  <div className="text-xs text-muted-foreground">No recent cases.</div>
+                  <div className="text-xs text-muted-foreground">{d.recentCases.empty}</div>
                 )}
               </div>
             </CardContent>
@@ -414,42 +427,42 @@ const Dashboard = () => {
           {/* Today's Tasks */}
           <Card className="rounded-2xl border border-gray-100">
             <CardHeader className="pb-3">
-              <CardTitle className="text-base">Today’s Tasks</CardTitle>
-              <CardDescription className="text-xs">Tasks scheduled for today</CardDescription>
+              <CardTitle className="text-base">{d.todayTasks.title}</CardTitle>
+              <CardDescription className="text-xs">{d.todayTasks.description}</CardDescription>
             </CardHeader>
             <CardContent className="pt-0">
               <div className="space-y-2.5">
-                {displayTasks.map((t) => (
-                  <div key={t.id} className="flex items-center gap-3 rounded-xl border border-gray-100 bg-white p-3">
+                {displayTasks.map((taskItem) => (
+                  <div key={taskItem.id} className="flex items-center gap-3 rounded-xl border border-gray-100 bg-white p-3">
                     <div
                       className={[
                         'w-2 h-2 rounded-full',
-                        t.priority === 'Critical' ? 'bg-rose-600' : t.priority === 'High' ? 'bg-amber-500' : 'bg-blue-500',
+                        taskItem.priority === 'Critical' ? 'bg-rose-600' : taskItem.priority === 'High' ? 'bg-amber-500' : 'bg-blue-500',
                       ].join(' ')}
                     />
                     <div className="min-w-0 flex-1">
-                      <h4 className="truncate text-sm font-medium text-gray-900">{t.title}</h4>
+                      <h4 className="truncate text-sm font-medium text-gray-900">{taskItem.title}</h4>
                       <p className="text-xs text-muted-foreground flex items-center gap-1">
                         <Clock size={10} />
-                        {t.time}
+                        {taskItem.time}
                       </p>
                     </div>
                     <span
                       className={[
                         'px-2 py-1 rounded-full text-[10px] font-medium',
-                        t.priority === 'Critical'
+                        taskItem.priority === 'Critical'
                           ? 'bg-rose-100 text-rose-700'
-                          : t.priority === 'High'
+                          : taskItem.priority === 'High'
                           ? 'bg-amber-100 text-amber-700'
                           : 'bg-blue-100 text-blue-700',
                       ].join(' ')}
                     >
-                      {t.priority}
+                      {priorityLabel(taskItem.priority)}
                     </span>
                   </div>
                 ))}
                 {!displayTasks.length && (
-                  <div className="text-xs text-muted-foreground">No tasks today.</div>
+                  <div className="text-xs text-muted-foreground">{d.todayTasks.empty}</div>
                 )}
               </div>
             </CardContent>
@@ -459,8 +472,8 @@ const Dashboard = () => {
         {/* Recent Activity */}
         <Card className="rounded-2xl border border-gray-100">
           <CardHeader className="pb-3">
-            <CardTitle className="text-base">Recent Activity</CardTitle>
-            <CardDescription className="text-xs">Latest updates from your practice</CardDescription>
+            <CardTitle className="text-base">{d.recentActivity.title}</CardTitle>
+            <CardDescription className="text-xs">{d.recentActivity.description}</CardDescription>
           </CardHeader>
           <CardContent className="pt-0">
             <div className="space-y-3">

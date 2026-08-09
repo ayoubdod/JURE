@@ -14,6 +14,7 @@ import {
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import CallDeviceSettings from './CallDeviceSettings';
+import { useAppTranslation } from '@/i18n';
 
 const btn =
   'inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-45';
@@ -59,6 +60,8 @@ const CallControls: React.FC<{
   onSelectAudioOutput,
   className,
 }) => {
+  const { t } = useAppTranslation();
+  const call = t.conversations.call;
   const [moreOpen, setMoreOpen] = useState(false);
   const [devicesOpen, setDevicesOpen] = useState(false);
   const showCamera = kind === 'video' && Boolean(onToggleCamera);
@@ -71,7 +74,7 @@ const CallControls: React.FC<{
             type="button"
             onClick={onToggleMute}
             aria-pressed={isMuted}
-            aria-label={isMuted ? 'Unmute microphone' : 'Mute microphone'}
+            aria-label={isMuted ? call.unmuteAria : call.muteAria}
             className={cn(
               btn,
               'h-10 w-10',
@@ -88,7 +91,7 @@ const CallControls: React.FC<{
             type="button"
             onClick={onToggleCamera}
             aria-pressed={isCameraOff}
-            aria-label={isCameraOff ? 'Turn camera on' : 'Turn camera off'}
+            aria-label={isCameraOff ? call.cameraOnAria : call.cameraOffAria}
             className={cn(
               btn,
               'h-10 w-10',
@@ -104,7 +107,7 @@ const CallControls: React.FC<{
           <button
             type="button"
             onClick={onExpand}
-            aria-label="Expand call"
+            aria-label={call.expandAria}
             className={cn(btn, 'h-10 w-10 bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-100')}
           >
             <Maximize2 className="h-4 w-4" />
@@ -114,7 +117,7 @@ const CallControls: React.FC<{
           <button
             type="button"
             onClick={onEndCall}
-            aria-label="End call"
+            aria-label={call.endCallAria}
             className={cn(btn, 'h-10 w-10 bg-rose-600 text-white hover:bg-rose-700')}
           >
             <PhoneOff className="h-4 w-4" />
@@ -135,7 +138,7 @@ const CallControls: React.FC<{
                   type="button"
                   onClick={onToggleMute}
                   aria-pressed={isMuted}
-                  aria-label={isMuted ? 'Unmute microphone' : 'Mute microphone'}
+                  aria-label={isMuted ? call.unmuteAria : call.muteAria}
                   className={cn(
                     btn,
                     isMuted
@@ -146,7 +149,7 @@ const CallControls: React.FC<{
                   {isMuted ? <MicOff className="h-[18px] w-[18px]" /> : <Mic className="h-[18px] w-[18px]" />}
                 </button>
               </TooltipTrigger>
-              <TooltipContent>{isMuted ? 'Unmute' : 'Mute'}</TooltipContent>
+              <TooltipContent>{isMuted ? call.unmute : call.mute}</TooltipContent>
             </Tooltip>
           ) : null}
 
@@ -157,7 +160,7 @@ const CallControls: React.FC<{
                   type="button"
                   onClick={onToggleCamera}
                   aria-pressed={isCameraOff}
-                  aria-label={isCameraOff ? 'Turn camera on' : 'Turn camera off'}
+                  aria-label={isCameraOff ? call.cameraOnAria : call.cameraOffAria}
                   className={cn(
                     btn,
                     isCameraOff
@@ -172,7 +175,7 @@ const CallControls: React.FC<{
                   )}
                 </button>
               </TooltipTrigger>
-              <TooltipContent>{isCameraOff ? 'Camera on' : 'Camera off'}</TooltipContent>
+              <TooltipContent>{isCameraOff ? call.cameraOn : call.cameraOff}</TooltipContent>
             </Tooltip>
           ) : (
             <Tooltip>
@@ -180,13 +183,13 @@ const CallControls: React.FC<{
                 <button
                   type="button"
                   disabled
-                  aria-label="Speaker"
+                  aria-label={call.speaker}
                   className={cn(btn, 'bg-slate-100 text-slate-500 dark:bg-slate-800')}
                 >
                   <Volume2 className="h-[18px] w-[18px]" />
                 </button>
               </TooltipTrigger>
-              <TooltipContent>Use Device settings to change speaker</TooltipContent>
+              <TooltipContent>{call.speakerHint}</TooltipContent>
             </Tooltip>
           )}
 
@@ -194,7 +197,7 @@ const CallControls: React.FC<{
             <button
               type="button"
               aria-expanded={moreOpen}
-              aria-label="More call options"
+              aria-label={call.moreOptionsAria}
               onClick={() => {
                 setMoreOpen((v) => !v);
                 setDevicesOpen(false);
@@ -221,7 +224,7 @@ const CallControls: React.FC<{
                       onMinimize();
                     }}
                   >
-                    <Minimize2 className="h-3.5 w-3.5" /> Minimize
+                    <Minimize2 className="h-3.5 w-3.5" /> {call.minimize}
                   </button>
                 ) : null}
                 {canExpand && onExpand ? (
@@ -235,7 +238,7 @@ const CallControls: React.FC<{
                     }}
                   >
                     <Maximize2 className="h-3.5 w-3.5" />{' '}
-                    {isFullscreen ? 'Exit full screen' : 'Full screen'}
+                    {isFullscreen ? call.exitFullScreen : call.fullScreen}
                   </button>
                 ) : null}
                 {onSelectAudioInput ? (
@@ -248,7 +251,7 @@ const CallControls: React.FC<{
                       setDevicesOpen(true);
                     }}
                   >
-                    <Settings2 className="h-3.5 w-3.5" /> Device settings
+                    <Settings2 className="h-3.5 w-3.5" /> {call.deviceSettings}
                   </button>
                 ) : null}
               </div>
@@ -278,10 +281,10 @@ const CallControls: React.FC<{
           <button
             type="button"
             onClick={onEndCall}
-            aria-label="End call"
+            aria-label={call.endCallAria}
             className="inline-flex h-11 min-w-[148px] items-center justify-center gap-2 rounded-full bg-rose-600 px-6 text-sm font-medium text-white shadow-sm transition hover:bg-rose-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400"
           >
-            <PhoneOff className="h-4 w-4" /> End Call
+            <PhoneOff className="h-4 w-4" /> {call.endCall}
           </button>
         ) : null}
       </div>

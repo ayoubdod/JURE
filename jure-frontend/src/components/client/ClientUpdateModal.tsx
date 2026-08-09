@@ -1,5 +1,5 @@
 'use client';
-import React, { forwardRef, useImperativeHandle, useState } from 'react';
+import React, { forwardRef, useImperativeHandle, useMemo, useRef, useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -18,6 +18,7 @@ import { getRemoteFieldsValidation } from '@/utils/functions';
 import { isAxiosError } from 'axios';
 import { DialogDescription } from '@radix-ui/react-dialog';
 import { devError } from '@/utils/devLog';
+import { useAppTranslation } from '@/i18n';
 
 export interface ClientUpdateModalRef {
   show: (instance: API.Client) => void;
@@ -29,24 +30,29 @@ export interface ClientUpdateModalProps {
   readOnly?: boolean; // optional; use if you want view-only mode
 }
 
-const schema = yup.object({
-  first_name: yup.string().required('First name is required'),
-  last_name: yup.string().required('Last name is required'),
-  email: yup.string().email('Invalid email address').required('Email is required'),
-  phone: yup.string().required('Phone is required'),
-  address: yup.string().required('Address is required'),
-  ice: yup.string().optional(),
-  fiscal_if: yup.string().optional(),
-});
-
 const ClientUpdateModal = forwardRef<ClientUpdateModalRef, ClientUpdateModalProps>(
   ({ onSuccess, readOnly = false }, ref) => {
+    const { t } = useAppTranslation();
     const [instance, setInstance] = useState<API.Client | null>(null);
     const [isOpen, setIsOpen] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
 
+    const schema = useMemo(() => yup.object({
+      first_name: yup.string().required(t.clients.validation.firstNameRequired),
+      last_name: yup.string().required(t.clients.validation.lastNameRequired),
+      email: yup.string().email(t.validation.invalidEmail).required(t.clients.validation.emailRequired),
+      phone: yup.string().required(t.clients.validation.phoneRequired),
+      address: yup.string().required(t.clients.validation.addressRequired),
+      ice: yup.string().optional(),
+      fiscal_if: yup.string().optional(),
+    }), [t]);
+
+    const schemaRef = useRef(schema);
+    schemaRef.current = schema;
+
     const mainForm = useForm<API.ClientUpdateForm>({
-      resolver: yupResolver(schema) as unknown as Resolver<API.ClientUpdateForm>,
+      resolver: ((values, context, options) =>
+        yupResolver(schemaRef.current)(values, context, options)) as unknown as Resolver<API.ClientUpdateForm>,
     });
 
     const show = (inst: API.Client) => {
@@ -118,7 +124,7 @@ const ClientUpdateModal = forwardRef<ClientUpdateModalRef, ClientUpdateModalProp
                 const emailError = errorData.email[0];
                 if (emailError && typeof emailError === 'string' && emailError.toLowerCase().includes('already')) {
                   mainForm.setError('email', { 
-                    message: 'This email is already in use by another client. Please use a different email address.' 
+                    message: t.clients.validation.emailDuplicate 
                   });
                 } else {
                   mainForm.setError('email', { message: emailError });
@@ -129,7 +135,7 @@ const ClientUpdateModal = forwardRef<ClientUpdateModalRef, ClientUpdateModalProp
                 const phoneError = errorData.phone[0];
                 if (phoneError && typeof phoneError === 'string' && phoneError.toLowerCase().includes('already')) {
                   mainForm.setError('phone', { 
-                    message: 'This phone number is already in use by another client. Please use a different phone number.' 
+                    message: t.clients.validation.phoneDuplicate 
                   });
                 } else {
                   mainForm.setError('phone', { message: phoneError });
@@ -184,10 +190,10 @@ const ClientUpdateModal = forwardRef<ClientUpdateModalRef, ClientUpdateModalProp
                 </div>
                 <div>
                   <DialogTitle className="text-2xl font-bold text-white">
-                    Update Client Information
+                    {t.clients.modal.updateTitle}
                   </DialogTitle>
                   <DialogDescription className="text-white/90 mt-1">
-                    Modify the client details below
+                    {t.clients.modal.updateDescription}
                   </DialogDescription>
                 </div>
               </div>
@@ -376,7 +382,7 @@ const ClientUpdateModal = forwardRef<ClientUpdateModalRef, ClientUpdateModalProp
                 disabled={isLoading}
                 className="border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800"
               >
-                Cancel
+                {t.common.cancel}
               </Button>
               {!readOnly && (
                 <Button 
@@ -386,13 +392,13 @@ const ClientUpdateModal = forwardRef<ClientUpdateModalRef, ClientUpdateModalProp
                 >
                   {isLoading ? (
                     <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Updating...
+                      <Loader2 className="w-4 h-4 me-2 animate-spin" />
+                      {t.clients.modal.updating}
                     </>
                   ) : (
                     <>
-                      <Save className="w-4 h-4 mr-2" />
-                      Update Client
+                      <Save className="w-4 h-4 me-2" />
+                      {t.clients.modal.updateClient}
                     </>
                   )}
                 </Button>

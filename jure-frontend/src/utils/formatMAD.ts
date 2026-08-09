@@ -1,15 +1,16 @@
+import { detectInitialLanguage } from '@/i18n/locale';
+import { formatCurrency } from '@/i18n/format';
+import type { Lang } from '@/i18n/types';
+
 /**
- * Formats a number as Moroccan Dirham currency.
- * Uses space as thousands separator, comma as decimal separator.
+ * Formats a number as Moroccan Dirham currency, using the active UI locale when available.
  */
-export const formatMAD = (amount: number | null | undefined): string => {
-  if (amount === null || amount === undefined) return '—';
-  return (
-    new Intl.NumberFormat('fr-MA', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(amount) + ' MAD'
-  );
+export const formatMAD = (
+  amount: number | null | undefined,
+  lang?: Lang,
+): string => {
+  const locale = lang ?? (typeof window !== 'undefined' ? detectInitialLanguage() : 'fr');
+  return formatCurrency(amount, locale, 'MAD');
 };
 
 /** Parses backend / fr-MA formatted amounts such as "500 000,00 MAD" into a number. */

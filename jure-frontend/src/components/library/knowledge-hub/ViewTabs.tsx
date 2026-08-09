@@ -2,14 +2,7 @@ import React from 'react';
 import { LayoutGrid, Table2, GitBranch, Network, Brain } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { KnowledgeViewMode } from './types';
-
-const TABS: { id: KnowledgeViewMode; label: string; icon: React.ElementType }[] = [
-  { id: 'grid', label: 'Grid', icon: LayoutGrid },
-  { id: 'table', label: 'Table', icon: Table2 },
-  { id: 'timeline', label: 'Timeline', icon: GitBranch },
-  { id: 'graph', label: 'Knowledge Graph', icon: Network },
-  { id: 'ai', label: 'AI View', icon: Brain },
-];
+import { useAppTranslation } from '@/i18n';
 
 type Props = {
   value: KnowledgeViewMode;
@@ -18,10 +11,18 @@ type Props = {
 };
 
 const ViewTabs: React.FC<Props> = ({ value, onChange, className }) => {
+  const { t } = useAppTranslation();
+  const TABS: { id: KnowledgeViewMode; label: string; icon: React.ElementType }[] = [
+    { id: 'grid', label: t.library.views.grid, icon: LayoutGrid },
+    { id: 'table', label: t.library.views.table, icon: Table2 },
+    { id: 'timeline', label: t.library.views.timeline, icon: GitBranch },
+    { id: 'graph', label: t.library.views.graph, icon: Network },
+    { id: 'ai', label: t.library.views.ai, icon: Brain },
+  ];
   return (
     <div
       role="tablist"
-      aria-label="Workspace views"
+      aria-label={t.library.views.aria}
       className={cn(
         'inline-flex max-w-full items-center gap-0.5 overflow-x-auto rounded-lg border border-slate-200/90 bg-slate-50/80 p-1 dark:border-slate-800 dark:bg-slate-900/60',
         className

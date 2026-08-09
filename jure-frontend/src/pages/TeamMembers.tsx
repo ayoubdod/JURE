@@ -66,14 +66,15 @@ import UserAvatar, { getPersonImage } from '@/components/common/UserAvatar';
 import { getRoleDisplayName } from '@/utils/permissions';
 import { getCabinetMemberRouteId, getMemberWorkloadDisplay } from '@/utils/cabinetMemberHelpers';
 import { cn } from '@/lib/utils';
+import { formatDate, useAppTranslation } from '@/i18n';
+import type { Lang } from '@/i18n';
 import '@/styles/workspace-list.css';
 
 const JURE_PURPLE = '#6D54B5';
 
-const formatDate = (d?: string | Date) => {
+const formatJoined = (d: string | Date | undefined, lang: Lang) => {
   if (!d) return '—';
-  const dt = typeof d === 'string' ? new Date(d) : d;
-  return dt.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+  return formatDate(d, lang, { day: '2-digit', month: 'short', year: 'numeric' });
 };
 
 type ViewMode = 'list' | 'grid' | 'workload';
@@ -107,6 +108,7 @@ function workloadFillPct(assigned: number): number {
 }
 
 const TeamMembers: React.FC = () => {
+  const { t, tf, lang } = useAppTranslation();
   const [searchTerm, setSearchTerm] = useState('');
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [roleFilter, setRoleFilter] = useState<API.Role | ''>('');
@@ -217,13 +219,19 @@ const TeamMembers: React.FC = () => {
   const pendingInviteCount = teamMembers.filter((m) => !!(m as any).invitation_sent).length;
 
   const handleCall = (member: API.CabinetMember) => {
-    const name = `${member.first_name || ''} ${member.last_name || ''}`.trim();
-    toast({ title: 'Calling', description: `Calling ${name || 'member'} at ${member.phone || '—'}` });
+    const name = `${member.first_name || ''} ${member.last_name || ''}`.trim() || t.team.unnamed;
+    toast({
+      title: t.team.toasts.callingTitle,
+      description: tf(t.team.toasts.callingDesc, { name, phone: member.phone || '—' }),
+    });
     if (member.phone) window.location.href = `tel:${member.phone}`;
   };
 
   const handleEmail = (member: API.CabinetMember) => {
-    toast({ title: 'Email', description: `Composing email to ${member.email || '—'}` });
+    toast({
+      title: t.team.toasts.emailTitle,
+      description: tf(t.team.toasts.emailDesc, { email: member.email || '—' }),
+    });
     if (member.email) window.location.href = `mailto:${member.email}`;
   };
 
@@ -237,15 +245,16 @@ const TeamMembers: React.FC = () => {
     setResendLoading(true);
     try {
       await apiResendInvitation(getCabinetMemberRouteId(resendTarget));
-      toast({ title: 'Setup link sent', description: `Setup link sent to ${resendTarget.email}.` });
+      toast({
+        title: t.team.toasts.setupSentTitle,
+        description: tf(t.team.toasts.setupSentDesc, { email: resendTarget.email }),
+      });
       setResendTarget(null);
     } catch (err: unknown) {
-      const status = (err as { response?: { status?: number; data?: { detail?: string } } })
-        ?.response?.status;
       const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
       toast({
-        title: 'Error',
-        description: detail || 'Failed to send invitation.',
+        title: t.common.error,
+        description: detail || t.team.toasts.inviteFailed,
         variant: 'destructive',
       });
     } finally {
@@ -280,17 +289,19 @@ const TeamMembers: React.FC = () => {
 
   const statusBadgeText = (m: API.CabinetMember) => {
     const s = memberStatusLabel(m);
-    if (s === 'pending') return 'Pending';
-    if (s === 'active') return 'Active';
-    return 'Inactive';
+    if (s === 'pending') return t.team.status.pending;
+    if (s === 'active') return t.team.status.active;
+    return t.team.status.inactive;
   };
+
+  const roleLabel = (role: API.Role) => t.team.roles[role] || getRoleDisplayName(role);
 
   /* ─── Grid tile ─── */
   const renderTile = (member: API.CabinetMember) => {
     const fullName =
-      `${member.first_name || ''} ${member.last_name || ''}`.trim() || 'Unnamed';
+      `${member.first_name || ''} ${member.last_name || ''}`.trim() || t.team.unnamed;
     const memberRole = (member.role || 'VIEWER') as API.Role;
-    const roleDisplay = getRoleDisplayName(memberRole);
+    const roleDisplay = roleLabel(memberRole);
     const { inProgress, assignedTotal } = getMemberWorkloadDisplay(member, allCases);
     const pending = isPending(member);
     const selected = selectedMemberId === member.id && detailOpen;
@@ -344,7 +355,7 @@ const TeamMembers: React.FC = () => {
                     }}
                     className="inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-semibold text-amber-800 bg-amber-500/15 ring-1 ring-amber-500/25 dark:text-amber-200"
                   >
-                    Resend
+                    {t.team.resend}
                   </button>
                 )}
               </div>
@@ -355,14 +366,14 @@ const TeamMembers: React.FC = () => {
             <div className="rounded-md border border-slate-200/80 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/40 px-2 py-1.5">
               <div className="flex items-center gap-1 text-[10px] font-medium text-slate-500">
                 <FolderOpen className="h-3 w-3 opacity-70" aria-hidden />
-                In Progress
+                {t.team.inProgress}
               </div>
               <p className="mt-0.5 text-base font-bold tabular-nums text-slate-900 dark:text-white">{inProgress}</p>
             </div>
             <div className="rounded-md border border-slate-200/80 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/40 px-2 py-1.5">
               <div className="flex items-center gap-1 text-[10px] font-medium text-slate-500">
                 <CheckSquare className="h-3 w-3 opacity-70" aria-hidden />
-                Assigned
+                {t.team.assigned}
               </div>
               <p className="mt-0.5 text-base font-bold tabular-nums" style={{ color: JURE_PURPLE }}>
                 {assignedTotal}
@@ -372,14 +383,14 @@ const TeamMembers: React.FC = () => {
 
           <div className="mt-2.5">
             <div className="mb-1 flex items-center justify-between text-[10px] text-slate-500">
-              <span>Workload</span>
-              <span>{assignedTotal} cases</span>
+              <span>{t.team.workload}</span>
+              <span>{tf(t.team.casesCount, { count: assignedTotal })}</span>
             </div>
             <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-200 dark:bg-slate-800">
               <div
                 className={cn('h-full rounded-full transition-all', workloadBarClass(assignedTotal))}
                 style={{ width: `${workloadFillPct(assignedTotal)}%` }}
-                title={`${inProgress} active cases / ${assignedTotal} total assigned`}
+                title={tf(t.team.workloadTitle, { inProgress, assigned: assignedTotal })}
               />
             </div>
           </div>
@@ -393,7 +404,7 @@ const TeamMembers: React.FC = () => {
             onClick={() => openProfile(member)}
           >
             <Eye className="mr-1.5 h-3.5 w-3.5" />
-            View
+            {t.team.view}
           </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -401,7 +412,7 @@ const TeamMembers: React.FC = () => {
                 variant="outline"
                 size="icon"
                 className="h-8 w-8 shrink-0 border-slate-200 dark:border-slate-700"
-                aria-label="More actions"
+                aria-label={t.team.moreActions}
               >
                 <MoreHorizontal className="h-4 w-4" />
               </Button>
@@ -413,30 +424,30 @@ const TeamMembers: React.FC = () => {
                   className="focus:bg-slate-100 dark:focus:bg-slate-800"
                 >
                   <Send className="mr-2 h-3.5 w-3.5" />
-                  Resend invitation
+                  {t.team.resendInvitation}
                 </DropdownMenuItem>
               )}
               <DropdownMenuItem onClick={() => handleCall(member)} className="focus:bg-slate-100 dark:focus:bg-slate-800">
                 <Phone className="mr-2 h-3.5 w-3.5" />
-                Call
+                {t.team.call}
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => handleEmail(member)} className="focus:bg-slate-100 dark:focus:bg-slate-800">
                 <Mail className="mr-2 h-3.5 w-3.5" />
-                Email
+                {t.team.email}
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={() => cabinetMemberUpdateModalRef.current?.show(member)}
                 className="focus:bg-slate-100 dark:focus:bg-slate-800"
               >
                 <Edit className="mr-2 h-3.5 w-3.5" />
-                Edit
+                {t.common.edit}
               </DropdownMenuItem>
               <DropdownMenuItem
                 className="text-red-600 focus:bg-red-50 focus:text-red-700 dark:text-red-400 dark:focus:bg-red-950/40"
                 onClick={() => cabinetMemberDeleteModalRef.current?.show(member)}
               >
                 <Trash2 className="mr-2 h-3.5 w-3.5" />
-                Delete
+                {t.common.delete}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -448,7 +459,7 @@ const TeamMembers: React.FC = () => {
   /* ─── Dense mobile card ─── */
   const renderMobileCard = (member: API.CabinetMember) => {
     const fullName =
-      `${member.first_name || ''} ${member.last_name || ''}`.trim() || 'Unnamed';
+      `${member.first_name || ''} ${member.last_name || ''}`.trim() || t.team.unnamed;
     const memberRole = (member.role || 'VIEWER') as API.Role;
     const { inProgress, assignedTotal } = getMemberWorkloadDisplay(member, allCases);
 
@@ -461,7 +472,7 @@ const TeamMembers: React.FC = () => {
           type="button"
           className="w-full text-left px-3 py-2.5 min-h-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-inset rounded-lg"
           onClick={() => openProfile(member)}
-          aria-label={`Open ${fullName}`}
+          aria-label={tf(t.team.aria.openMember, { name: fullName })}
         >
           <div className="flex items-start gap-2.5">
             <div className="relative shrink-0">
@@ -498,10 +509,10 @@ const TeamMembers: React.FC = () => {
                     rolePillClass[memberRole]
                   )}
                 >
-                  {getRoleDisplayName(memberRole)}
+                  {roleLabel(memberRole)}
                 </span>
                 <span className="text-[11px] tabular-nums text-slate-500">
-                  {inProgress} active · {assignedTotal} assigned
+                  {tf(t.team.activeAssigned, { inProgress, assigned: assignedTotal })}
                 </span>
               </div>
               {member.email ? (
@@ -518,7 +529,7 @@ const TeamMembers: React.FC = () => {
             onClick={() => openProfile(member)}
           >
             <Eye className="mr-1 h-3.5 w-3.5" />
-            View
+            {t.team.view}
           </Button>
           <Button
             variant="ghost"
@@ -527,7 +538,7 @@ const TeamMembers: React.FC = () => {
             onClick={() => cabinetMemberUpdateModalRef.current?.show(member)}
           >
             <Edit className="mr-1 h-3.5 w-3.5" />
-            Edit
+            {t.common.edit}
           </Button>
           {showResendForMember(member) && (
             <Button
@@ -547,7 +558,7 @@ const TeamMembers: React.FC = () => {
   /* ─── List row ─── */
   const renderListRow = (member: API.CabinetMember) => {
     const fullName =
-      `${member.first_name || ''} ${member.last_name || ''}`.trim() || 'Unnamed';
+      `${member.first_name || ''} ${member.last_name || ''}`.trim() || t.team.unnamed;
     const memberRole = (member.role || 'VIEWER') as API.Role;
     const { inProgress, assignedTotal } = getMemberWorkloadDisplay(member, allCases);
     const selected = selectedMemberId === member.id && detailOpen;
@@ -601,7 +612,7 @@ const TeamMembers: React.FC = () => {
               rolePillClass[memberRole]
             )}
           >
-            {getRoleDisplayName(memberRole)}
+            {roleLabel(memberRole)}
           </span>
         </td>
         <td className="px-3 py-2 align-middle">
@@ -623,7 +634,7 @@ const TeamMembers: React.FC = () => {
         <td className="px-3 py-2 align-middle text-right">
           <div
             className="ml-auto h-3.5 w-20 max-w-full overflow-hidden rounded-full bg-slate-200 dark:bg-slate-800"
-            title={`${inProgress} active cases / ${assignedTotal} total assigned`}
+            title={tf(t.team.workloadTitle, { inProgress, assigned: assignedTotal })}
           >
             <div
               className={cn('h-full rounded-full', workloadBarClass(assignedTotal))}
@@ -632,7 +643,7 @@ const TeamMembers: React.FC = () => {
           </div>
         </td>
         <td className="px-3 py-2 align-middle whitespace-nowrap text-[11px] text-slate-600 dark:text-slate-400">
-          {formatDate(member.date_joined as string)}
+          {formatJoined(member.date_joined as string, lang)}
         </td>
         <td className="px-2 py-2 align-middle text-right" onClick={(e) => e.stopPropagation()}>
           <div className="flex items-center justify-end gap-0.5">
@@ -642,16 +653,16 @@ const TeamMembers: React.FC = () => {
                 onClick={() => setResendTarget(member)}
                 className="mr-1 rounded px-1.5 py-0.5 text-[10px] font-semibold text-amber-800 bg-amber-500/15 ring-1 ring-amber-500/25 dark:text-amber-200"
               >
-                Resend
+                {t.team.resend}
               </button>
             )}
             <Button variant="ghost" size="sm" className="h-7 px-2 text-[12px]" onClick={() => openProfile(member)}>
               <Eye className="mr-1 h-3.5 w-3.5" />
-              View
+              {t.team.view}
             </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-7 w-7" aria-label="More actions">
+                <Button variant="ghost" size="icon" className="h-7 w-7" aria-label={t.team.moreActions}>
                   <MoreHorizontal className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
@@ -659,27 +670,27 @@ const TeamMembers: React.FC = () => {
                 {showResendForMember(member) && (
                   <DropdownMenuItem onClick={() => setResendTarget(member)}>
                     <Send className="mr-2 h-3.5 w-3.5" />
-                    Resend invitation
+                    {t.team.resendInvitation}
                   </DropdownMenuItem>
                 )}
                 <DropdownMenuItem onClick={() => handleCall(member)}>
                   <Phone className="mr-2 h-3.5 w-3.5" />
-                  Call
+                  {t.team.call}
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => handleEmail(member)}>
                   <Mail className="mr-2 h-3.5 w-3.5" />
-                  Email
+                  {t.team.email}
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => cabinetMemberUpdateModalRef.current?.show(member)}>
                   <Edit className="mr-2 h-3.5 w-3.5" />
-                  Edit
+                  {t.common.edit}
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   className="text-red-600 focus:text-red-600 dark:text-red-400"
                   onClick={() => cabinetMemberDeleteModalRef.current?.show(member)}
                 >
                   <Trash2 className="mr-2 h-3.5 w-3.5" />
-                  Delete
+                  {t.common.delete}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -703,7 +714,7 @@ const TeamMembers: React.FC = () => {
           {sorted.map((member) => {
             const { inProgress, assignedTotal: total } = getMemberWorkloadDisplay(member, allCases);
             const fullName =
-              `${member.first_name || ''} ${member.last_name || ''}`.trim() || 'Unnamed';
+              `${member.first_name || ''} ${member.last_name || ''}`.trim() || t.team.unnamed;
             const memberRole = (member.role || 'VIEWER') as API.Role;
 
             return (
@@ -727,7 +738,7 @@ const TeamMembers: React.FC = () => {
                         rolePillClass[memberRole]
                       )}
                     >
-                      {getRoleDisplayName(memberRole)}
+                      {roleLabel(memberRole)}
                     </span>
                   </div>
                 </div>
@@ -735,12 +746,12 @@ const TeamMembers: React.FC = () => {
                   {total === 0 ? (
                     <div
                       className="h-6 w-full rounded-md border border-dashed border-slate-300 dark:border-slate-600 bg-slate-50/50 dark:bg-slate-900/30"
-                      title={`${inProgress} active cases / ${total} total assigned`}
+                      title={tf(t.team.workloadTitle, { inProgress, assigned: total })}
                     />
                   ) : (
                     <div
                       className="h-6 w-full overflow-hidden rounded-md bg-slate-100 dark:bg-slate-800"
-                      title={`${inProgress} active cases / ${total} total assigned`}
+                      title={tf(t.team.workloadTitle, { inProgress, assigned: total })}
                     >
                       <div
                         className={cn('h-full rounded-md transition-all', workloadBarClass(total))}
@@ -750,9 +761,9 @@ const TeamMembers: React.FC = () => {
                   )}
                 </div>
                 <div className="flex shrink-0 items-center justify-between gap-2 sm:w-48 sm:justify-end">
-                  <span className="text-[13px] font-semibold tabular-nums text-slate-700 dark:text-slate-200">{total} cases</span>
+                  <span className="text-[13px] font-semibold tabular-nums text-slate-700 dark:text-slate-200">{tf(t.team.casesCount, { count: total })}</span>
                   <Button variant="outline" size="sm" className="h-8" onClick={() => openProfile(member)}>
-                    View
+                    {t.team.view}
                   </Button>
                 </div>
               </div>
@@ -762,15 +773,15 @@ const TeamMembers: React.FC = () => {
         <div className="flex flex-wrap items-center gap-4 rounded-lg border border-slate-200/80 dark:border-slate-800 bg-slate-50/80 px-4 py-3 text-[12px] text-slate-600 dark:text-slate-400">
           <span className="inline-flex items-center gap-1.5">
             <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" aria-hidden />
-            Low (0–3)
+            {t.team.workloadLegend.low}
           </span>
           <span className="inline-flex items-center gap-1.5">
             <span className="h-2.5 w-2.5 rounded-full bg-amber-500" aria-hidden />
-            Medium (4–6)
+            {t.team.workloadLegend.medium}
           </span>
           <span className="inline-flex items-center gap-1.5">
             <span className="h-2.5 w-2.5 rounded-full bg-red-500" aria-hidden />
-            High (7+)
+            {t.team.workloadLegend.high}
           </span>
         </div>
       </div>
@@ -800,10 +811,10 @@ const TeamMembers: React.FC = () => {
   }, []);
 
   const kpiItems = [
-    { key: 'total', label: 'Total', value: totalMembers, accent: 'border-l-slate-400' },
-    { key: 'active', label: 'Active', value: activeCount, accent: 'border-l-emerald-500' },
-    { key: 'lawyers', label: 'Lawyers', value: lawyersCount, accent: 'border-l-indigo-500' },
-    { key: 'pending', label: 'Pending', value: pendingInviteCount, accent: 'border-l-amber-500' },
+    { key: 'total', label: t.team.stats.total, value: totalMembers, accent: 'border-l-slate-400' },
+    { key: 'active', label: t.team.stats.active, value: activeCount, accent: 'border-l-emerald-500' },
+    { key: 'lawyers', label: t.team.stats.lawyers, value: lawyersCount, accent: 'border-l-indigo-500' },
+    { key: 'pending', label: t.team.stats.pending, value: pendingInviteCount, accent: 'border-l-amber-500' },
   ] as const;
 
   return (
@@ -821,7 +832,7 @@ const TeamMembers: React.FC = () => {
         <div
           className="ws-kpi-strip flex gap-2 overflow-x-auto snap-x snap-mandatory py-2"
           role="region"
-          aria-label="Team statistics"
+          aria-label={t.team.aria.stats}
         >
           {kpiItems.map((item) => (
             <div
@@ -856,7 +867,7 @@ const TeamMembers: React.FC = () => {
                 <input
                   ref={searchInputRef}
                   type="search"
-                  placeholder="Search members… (press /)"
+                  placeholder={t.team.searchPlaceholder}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   onKeyDown={(e) => {
@@ -871,14 +882,14 @@ const TeamMembers: React.FC = () => {
                     'focus:border-[#6D54B5] focus:outline-none focus:ring-2 focus:ring-[#6D54B5]/25',
                     searchTerm.trim() && 'ring-1 ring-[#6D54B5]/25 border-[#6D54B5]/40'
                   )}
-                  aria-label="Search team members"
+                  aria-label={t.team.searchAria}
                 />
                 {searchTerm.trim() ? (
                   <button
                     type="button"
                     className="absolute right-1.5 top-1/2 -translate-y-1/2 rounded p-1 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 min-h-[28px] min-w-[28px] flex items-center justify-center"
                     onClick={() => setSearchTerm('')}
-                    aria-label="Clear search"
+                    aria-label={t.team.clearSearch}
                   >
                     <X className="h-3.5 w-3.5" />
                   </button>
@@ -895,13 +906,13 @@ const TeamMembers: React.FC = () => {
                     roleFilter && 'ring-1 ring-[#6D54B5]/25 border-[#6D54B5]/40'
                   )}
                 >
-                  <SelectValue placeholder="Role" />
+                  <SelectValue placeholder={t.team.filters.role} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All roles</SelectItem>
+                  <SelectItem value="all">{t.team.filters.allRoles}</SelectItem>
                   {ROLE_OPTIONS.filter(Boolean).map((r) => (
                     <SelectItem key={r} value={r}>
-                      {r === 'OWNER' ? 'Owner' : r === 'ADMIN' ? 'Admin' : getRoleDisplayName(r as API.Role)}
+                      {roleLabel(r as API.Role)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -917,13 +928,17 @@ const TeamMembers: React.FC = () => {
                     statusFilter && 'ring-1 ring-[#6D54B5]/25 border-[#6D54B5]/40'
                   )}
                 >
-                  <SelectValue placeholder="Status" />
+                  <SelectValue placeholder={t.team.filters.status} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All statuses</SelectItem>
+                  <SelectItem value="all">{t.team.filters.allStatuses}</SelectItem>
                   {STATUS_OPTIONS.filter(Boolean).map((s) => (
                     <SelectItem key={s} value={s}>
-                      {s.charAt(0).toUpperCase() + s.slice(1)}
+                      {s === 'active'
+                        ? t.team.status.active
+                        : s === 'offline'
+                          ? t.team.status.offline
+                          : t.team.status.pending}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -931,14 +946,14 @@ const TeamMembers: React.FC = () => {
 
               {hasActiveFilters && (
                 <Button variant="ghost" size="sm" className="h-9 text-[12px] px-2" onClick={resetFilters}>
-                  Reset
+                  {t.team.reset}
                 </Button>
               )}
 
               <div
                 className="inline-flex md:hidden items-center rounded-md border border-slate-200 dark:border-slate-700 bg-slate-100/80 p-0.5 ml-auto"
                 role="group"
-                aria-label="View mode"
+                aria-label={t.team.views.aria}
               >
                 <button
                   type="button"
@@ -971,7 +986,7 @@ const TeamMembers: React.FC = () => {
               <div
                 className="hidden md:inline-flex items-center rounded-md border border-slate-200 dark:border-slate-700 bg-slate-100/80 dark:bg-slate-900/50 p-0.5 ml-auto"
                 role="group"
-                aria-label="View mode"
+                aria-label={t.team.views.aria}
               >
                 {(['list', 'grid', 'workload'] as const).map((mode) => (
                   <button
@@ -989,7 +1004,7 @@ const TeamMembers: React.FC = () => {
                     {mode === 'grid' && <LayoutGrid className="h-3.5 w-3.5" />}
                     {mode === 'list' && <List className="h-3.5 w-3.5" />}
                     {mode === 'workload' && <BarChart3 className="h-3.5 w-3.5" />}
-                    <span className="hidden lg:inline">{mode.charAt(0).toUpperCase() + mode.slice(1)}</span>
+                    <span className="hidden lg:inline">{t.team.views[mode]}</span>
                   </button>
                 ))}
               </div>
@@ -1001,11 +1016,11 @@ const TeamMembers: React.FC = () => {
                 onClick={openCreate}
               >
                 <Plus className="mr-1.5 h-4 w-4" strokeWidth={2.5} />
-                Add Member
+                {t.team.addMember}
               </Button>
             </div>
             <p className="mt-1.5 text-[11px] text-slate-500 tabular-nums">
-              {loading ? 'Loading…' : `${displayedMembers.length} of ${teamMembers.length} members`}
+              {loading ? t.team.loading : tf(t.team.countSummary, { shown: displayedMembers.length, total: teamMembers.length })}
             </p>
           </div>
         </div>
@@ -1026,15 +1041,15 @@ const TeamMembers: React.FC = () => {
               <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800/80">
                 <Users className="h-6 w-6 text-slate-400" aria-hidden />
               </div>
-              <p className="text-sm font-semibold text-slate-900 dark:text-white">No team members found</p>
+              <p className="text-sm font-semibold text-slate-900 dark:text-white">{t.team.empty.title}</p>
               <p className="mt-1 max-w-sm text-[12px] text-slate-500">
                 {hasActiveFilters
-                  ? 'Try adjusting your search or filters.'
-                  : 'Add your first colleague to collaborate on cases.'}
+                  ? t.team.empty.filteredHint
+                  : t.team.empty.emptyHint}
               </p>
               {hasActiveFilters ? (
                 <Button variant="outline" size="sm" className="mt-4 h-8 text-[12px]" onClick={resetFilters}>
-                  Reset Filters
+                  {t.team.empty.resetFilters}
                 </Button>
               ) : (
                 <Button
@@ -1043,7 +1058,7 @@ const TeamMembers: React.FC = () => {
                   onClick={openCreate}
                 >
                   <Plus className="mr-1.5 h-3.5 w-3.5" />
-                  Add Member
+                  {t.team.addMember}
                 </Button>
               )}
             </div>
@@ -1065,18 +1080,18 @@ const TeamMembers: React.FC = () => {
                   </div>
                 ) : viewMode === 'list' ? (
                   <div className="overflow-x-auto rounded-lg border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-950 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
-                    <table className="w-full min-w-[880px] border-collapse text-left" aria-label="Team members">
+                    <table className="w-full min-w-[880px] border-collapse text-left" aria-label={t.team.aria.list}>
                       <thead>
                         <tr className="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/90">
                           {[
-                            'Name',
-                            'Role',
-                            'Status',
-                            'In Progress',
-                            'Assigned',
-                            'Workload',
-                            'Joined',
-                            'Actions',
+                            t.team.columns.name,
+                            t.team.columns.role,
+                            t.team.columns.status,
+                            t.team.columns.inProgress,
+                            t.team.columns.assigned,
+                            t.team.columns.workload,
+                            t.team.columns.joined,
+                            t.team.columns.actions,
                           ].map((h, i) => (
                             <th
                               key={h}
@@ -1108,15 +1123,15 @@ const TeamMembers: React.FC = () => {
         className="md:hidden fixed z-40 bottom-[max(1.25rem,env(safe-area-inset-bottom))] right-4 h-12 w-12 rounded-full shadow-lg"
         style={{ backgroundColor: JURE_PURPLE }}
         onClick={openCreate}
-        aria-label="Add Member"
+        aria-label={t.team.addMember}
       >
         <Plus className="w-5 h-5" strokeWidth={2.5} />
       </Button>
 
       <p className="sr-only" aria-live="polite">
         {loading
-          ? 'Loading team members'
-          : `${displayedMembers.length} members. Press slash to search, N to add.`}
+          ? t.team.loadingAria
+          : tf(t.team.countAria, { count: displayedMembers.length })}
       </p>
 
       <CabinetMemberCreateModal
@@ -1150,15 +1165,15 @@ const TeamMembers: React.FC = () => {
       <AlertDialog open={!!resendTarget} onOpenChange={(open) => !open && setResendTarget(null)}>
         <AlertDialogContent className="rounded-lg border border-slate-200 dark:border-slate-800">
           <AlertDialogHeader>
-            <AlertDialogTitle>Resend invitation</AlertDialogTitle>
+            <AlertDialogTitle>{t.team.resendDialog.title}</AlertDialogTitle>
             <AlertDialogDescription>
               {resendTarget
-                ? `Send a new setup link to ${resendTarget.email}? The previous link will stop working.`
+                ? tf(t.team.resendDialog.description, { email: resendTarget.email })
                 : ''}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={resendLoading}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={resendLoading}>{t.common.cancel}</AlertDialogCancel>
             <AlertDialogAction
               onClick={(e) => {
                 e.preventDefault();
@@ -1171,10 +1186,10 @@ const TeamMembers: React.FC = () => {
               {resendLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Sending…
+                  {t.team.resendDialog.sending}
                 </>
               ) : (
-                'Send setup link'
+                t.team.resendDialog.sendLink
               )}
             </AlertDialogAction>
           </AlertDialogFooter>

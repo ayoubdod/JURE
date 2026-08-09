@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import React, { useMemo, useRef, useState } from 'react';
+import { Resolver, useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import PersonalInfoStep from '@/components/signup/PersonalInfoStep';
 import ProfessionalInfoStep from '@/components/signup/ProfessionalInfoStep';
@@ -7,25 +7,26 @@ import QualificationsStep from '@/components/signup/FirmInfoStep';
 import OrganizationDetailsStep from '@/components/signup/DocumentUploadStep';
 import ConsentStep from '@/components/signup/ConsentStep';
 import VerificationPending from '@/components/signup/VerificationPending';
-import { signupValidationSchema } from '@/schemas/signupValidation';
-import * as yup from 'yup';
+import { createSignupStepSchemas, type SignUpData } from '@/schemas/signupValidation';
 import { cn } from '@/lib/utils';
 import AuthShell from '@/components/landing/AuthShell';
 import { Check } from 'lucide-react';
 import { useAppTranslation } from '@/i18n';
 
-// Type for the complete signup form
-export type SignUpData = yup.InferType<typeof signupValidationSchema>;
+export type { SignUpData };
 
 const SignUp = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const { t } = useAppTranslation();
 
-  // Centralized form using react-hook-form
+  const schemas = useMemo(() => createSignupStepSchemas(t.auth.signup), [t]);
+  const schemaRef = useRef(schemas.signupValidationSchema);
+  schemaRef.current = schemas.signupValidationSchema;
+
   const mainForm = useForm<SignUpData>({
-    resolver: yupResolver(signupValidationSchema),
+    resolver: ((values, context, options) =>
+      yupResolver(schemaRef.current)(values, context, options)) as unknown as Resolver<SignUpData>,
     defaultValues: {
-      // Step 1: Personal Info
       first_name: '',
       last_name: '',
       country: '',
@@ -33,20 +34,12 @@ const SignUp = () => {
       email: '',
       password1: '',
       password2: '',
-
-      // Step 2: Profile
       trade_name: '',
       logo: null,
-
-      // Step 3: Structure & Address
       structure_type: '',
       business_address: '',
-
-      // Step 4: Organization Details
       team_size: '',
       website: '',
-
-      // Step 5: Consent
       accept_terms: false,
       accept_data_processing: false,
     },
@@ -73,26 +66,24 @@ const SignUp = () => {
   };
 
   const handleConsentComplete = () => {
-    nextStep(); // Go to verification pending
+    nextStep();
   };
 
   const steps = [
-    { number: 1, title: 'Détails personnels', description: 'Vos informations de base' },
-    { number: 2, title: 'Profil', description: 'Nom commercial et identité visuelle' },
-    { number: 3, title: 'Qualifications professionnelles', description: 'Type de structure et adresse' },
-    { number: 4, title: 'Organisation', description: 'Équipe et présence en ligne' },
-    { number: 5, title: 'Consentement', description: "Conditions d'utilisation et confidentialité" },
+    { number: 1, ...t.auth.signup.steps.personal },
+    { number: 2, ...t.auth.signup.steps.profile },
+    { number: 3, ...t.auth.signup.steps.qualifications },
+    { number: 4, ...t.auth.signup.steps.organization },
+    { number: 5, ...t.auth.signup.steps.consent },
   ];
 
   const renderStep = () => {
     return (
       <>
-        {/* Step 1: Personal Info */}
         <div className={cn(currentStep === 1 ? '' : 'hidden')}>
           <PersonalInfoStep onNext={handleStep1Complete} form={mainForm} />
         </div>
 
-        {/* Step 2: Profile */}
         <div className={cn(currentStep === 2 ? '' : 'hidden')}>
           <ProfessionalInfoStep
             onNext={handleStep2Complete}
@@ -101,7 +92,6 @@ const SignUp = () => {
           />
         </div>
 
-        {/* Step 3: Qualifications & Address */}
         <div className={cn(currentStep === 3 ? '' : 'hidden')}>
           <QualificationsStep
             onNext={handleStep3Complete}
@@ -110,7 +100,6 @@ const SignUp = () => {
           />
         </div>
 
-        {/* Step 4: Organization Details */}
         <div className={cn(currentStep === 4 ? '' : 'hidden')}>
           <OrganizationDetailsStep
             onNext={handleStep4Complete}
@@ -119,7 +108,6 @@ const SignUp = () => {
           />
         </div>
 
-        {/* Step 5: Consent */}
         <div className={cn(currentStep === 5 ? '' : 'hidden')}>
           <ConsentStep
             onNext={handleConsentComplete}
@@ -129,7 +117,6 @@ const SignUp = () => {
           />
         </div>
 
-        {/* Step 6: Verification Pending */}
         <div className={cn(currentStep === 6 ? '' : 'hidden')}>
           <VerificationPending />
         </div>
@@ -139,7 +126,6 @@ const SignUp = () => {
 
   return (
     <AuthShell wide homeLabel={t.auth.backToHome}>
-      {/* Progress Steps */}
       {currentStep <= 5 && (
         <div className="mb-8">
           <div className="landing-glass rounded-2xl px-4 sm:px-6 py-5">
@@ -189,7 +175,6 @@ const SignUp = () => {
         </div>
       )}
 
-      {/* Step Content */}
       <div className="w-full">{renderStep()}</div>
     </AuthShell>
   );

@@ -18,6 +18,7 @@ import {
 } from '@/services/finance/api';
 import { useToast } from '@/hooks/use-toast';
 import { isAxiosError } from 'axios';
+import { useAppTranslation } from '@/i18n';
 
 const STATUS_OPTS: API.FinanceInvoiceStatus[] = [
   'DRAFT',
@@ -37,6 +38,7 @@ type Props = {
 
 export const FinanceInvoicesTab: React.FC<Props> = ({ onOpenInvoice, onEditInvoice, listEpoch = 0 }) => {
   const { toast } = useToast();
+  const { t, tf } = useAppTranslation();
   const [rows, setRows] = useState<API.FinanceInvoiceListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
@@ -80,13 +82,13 @@ export const FinanceInvoicesTab: React.FC<Props> = ({ onOpenInvoice, onEditInvoi
 
   const handleDelete = async (row: API.FinanceInvoiceListItem) => {
     if (row.status !== 'DRAFT') return;
-    if (!window.confirm('Supprimer définitivement ce brouillon de facture ?')) return;
+    if (!window.confirm(t.finance.toasts.deleteConfirm)) return;
     try {
       await deleteInvoiceFinance(row.id);
-      toast({ title: 'Facture supprimée' });
+      toast({ title: t.finance.toasts.deleted });
       load();
     } catch (err) {
-      let msg = 'Suppression impossible.';
+      let msg = t.finance.toasts.deleteFailed;
       if (isAxiosError(err)) {
         const d = err.response?.data;
         if (typeof d === 'string') msg = d;
@@ -94,7 +96,7 @@ export const FinanceInvoicesTab: React.FC<Props> = ({ onOpenInvoice, onEditInvoi
           msg = (d as { detail: string }).detail;
         }
       }
-      toast({ title: 'Erreur', description: msg, variant: 'destructive' });
+      toast({ title: t.finance.toasts.errorTitle, description: msg, variant: 'destructive' });
     }
   };
 
@@ -102,13 +104,13 @@ export const FinanceInvoicesTab: React.FC<Props> = ({ onOpenInvoice, onEditInvoi
     try {
       await downloadInvoicePdfFile(row.id, row.case_id);
     } catch (err) {
-      let msg = 'Impossible de télécharger le PDF.';
+      let msg = t.finance.toasts.pdfDownloadFailed;
       if (isAxiosError(err)) {
         const st = err.response?.status;
-        if (st === 403) msg = 'Accès refusé (rôle requis).';
-        else if (st === 404) msg = 'Facture introuvable.';
+        if (st === 403) msg = t.finance.toasts.accessDenied;
+        else if (st === 404) msg = t.finance.toasts.invoiceNotFound;
       }
-      toast({ title: 'Erreur', description: msg, variant: 'destructive' });
+      toast({ title: t.finance.toasts.errorTitle, description: msg, variant: 'destructive' });
     }
   };
 
@@ -116,13 +118,13 @@ export const FinanceInvoicesTab: React.FC<Props> = ({ onOpenInvoice, onEditInvoi
     try {
       await previewInvoicePdfInNewTab(row.id, row.case_id);
     } catch (err) {
-      let msg = 'Impossible d’ouvrir l’aperçu.';
+      let msg = t.finance.toasts.pdfPreviewFailed;
       if (isAxiosError(err)) {
         const st = err.response?.status;
-        if (st === 403) msg = 'Accès refusé (rôle requis).';
-        else if (st === 404) msg = 'Facture introuvable.';
+        if (st === 403) msg = t.finance.toasts.accessDenied;
+        else if (st === 404) msg = t.finance.toasts.invoiceNotFound;
       }
-      toast({ title: 'Erreur', description: msg, variant: 'destructive' });
+      toast({ title: t.finance.toasts.errorTitle, description: msg, variant: 'destructive' });
     }
   };
 
@@ -142,13 +144,13 @@ export const FinanceInvoicesTab: React.FC<Props> = ({ onOpenInvoice, onEditInvoi
         <div className="min-w-[140px]">
           <Select value={status || 'all'} onValueChange={(v) => setStatus(v === 'all' ? '' : v)}>
             <SelectTrigger className="h-10">
-              <SelectValue placeholder="Statut" />
+              <SelectValue placeholder={t.finance.filters.status} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Tous statuts</SelectItem>
+              <SelectItem value="all">{t.finance.filters.allStatuses}</SelectItem>
               {STATUS_OPTS.map((s) => (
                 <SelectItem key={s} value={s}>
-                  {s.replace(/_/g, ' ')}
+                  {t.finance.invoiceStatuses[s]}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -156,7 +158,7 @@ export const FinanceInvoicesTab: React.FC<Props> = ({ onOpenInvoice, onEditInvoi
         </div>
         <Input
           className="h-10 max-w-[160px]"
-          placeholder="Client"
+          placeholder={t.finance.filters.client}
           value={client}
           onChange={(e) => setClient(e.target.value)}
         />
@@ -166,13 +168,13 @@ export const FinanceInvoicesTab: React.FC<Props> = ({ onOpenInvoice, onEditInvoi
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
           <Input
             className="h-10 pl-9"
-            placeholder="Recherche"
+            placeholder={t.finance.filters.search}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
         <Button type="button" className="h-10 bg-jure-600 hover:bg-jure-700" onClick={() => load()}>
-          Filtrer
+          {t.finance.filters.filter}
         </Button>
         {hasFilters ? (
           <Button
@@ -189,7 +191,7 @@ export const FinanceInvoicesTab: React.FC<Props> = ({ onOpenInvoice, onEditInvoi
             }}
           >
             <RotateCcw className="mr-1.5 h-4 w-4" />
-            Reset
+            {t.finance.filters.reset}
           </Button>
         ) : null}
       </div>
@@ -208,7 +210,7 @@ export const FinanceInvoicesTab: React.FC<Props> = ({ onOpenInvoice, onEditInvoi
       {!loading && totalCount > 0 ? (
         <div className="flex flex-col items-center justify-between gap-3 border-t border-slate-200 pt-3 text-sm text-slate-600 dark:border-slate-800 dark:text-slate-400 sm:flex-row">
           <p className="tabular-nums">
-            {start}–{end} sur {totalCount}
+            {tf(t.finance.pagination.range, { start, end, total: totalCount })}
           </p>
           <div className="flex gap-2">
             <Button
@@ -219,7 +221,7 @@ export const FinanceInvoicesTab: React.FC<Props> = ({ onOpenInvoice, onEditInvoi
               disabled={page <= 1}
               onClick={() => setPage((p) => Math.max(1, p - 1))}
             >
-              Précédent
+              {t.finance.pagination.previous}
             </Button>
             <Button
               type="button"
@@ -229,7 +231,7 @@ export const FinanceInvoicesTab: React.FC<Props> = ({ onOpenInvoice, onEditInvoi
               disabled={page >= totalPages}
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
             >
-              Suivant
+              {t.finance.pagination.next}
             </Button>
           </div>
         </div>

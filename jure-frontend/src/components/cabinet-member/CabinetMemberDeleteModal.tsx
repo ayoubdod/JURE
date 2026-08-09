@@ -9,10 +9,10 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import useUserStore from '@/stores/userStore';
 import { Loader2, X, Trash2, AlertTriangle } from 'lucide-react';
 import { apiDeleteCabinetMember } from '@/services/cabinet-member/api';
 import { getCabinetMemberRouteId } from '@/utils/cabinetMemberHelpers';
+import { useAppTranslation } from '@/i18n';
 
 export interface CabinetMemberDeleteModalRef {
   show: (member: API.CabinetMember) => void;
@@ -24,10 +24,10 @@ export interface CabinetMemberDeleteModalProps {
 }
 
 const CabinetMemberDeleteModal = forwardRef<CabinetMemberDeleteModalRef, CabinetMemberDeleteModalProps>(({ onSuccess }, ref) => {
+  const { t, tf } = useAppTranslation();
   const [instance, setInstance] = useState<API.CabinetMember | null>(null);
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const userStore = useUserStore();
 
   useImperativeHandle(ref, () => ({
     show: (member: API.CabinetMember) => {
@@ -83,10 +83,10 @@ const CabinetMemberDeleteModal = forwardRef<CabinetMemberDeleteModalRef, Cabinet
               </div>
               <div>
                 <DialogTitle className="text-2xl font-bold text-white">
-                  Delete Cabinet Member
+                  {t.team.modal.deleteTitle}
                 </DialogTitle>
                 <DialogDescription className="text-white/90 mt-1">
-                  This action cannot be undone
+                  {t.team.modal.deleteDescription}
                 </DialogDescription>
               </div>
             </div>
@@ -98,10 +98,10 @@ const CabinetMemberDeleteModal = forwardRef<CabinetMemberDeleteModalRef, Cabinet
             <AlertTriangle className="w-5 h-5 text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0" />
             <div>
               <p className="text-sm font-medium text-red-900 dark:text-red-100 mb-1">
-                Are you sure you want to remove {instance?.first_name} {instance?.last_name} from the team?
+                {tf(t.team.modal.deleteConfirm, { name: `${instance?.first_name ?? ''} ${instance?.last_name ?? ''}`.trim() })}
               </p>
               <p className="text-sm text-red-700 dark:text-red-300">
-                This will permanently remove the member and all associated data. This action cannot be undone.
+                {t.team.modal.deleteWarning}
               </p>
             </div>
           </div>
@@ -113,7 +113,7 @@ const CabinetMemberDeleteModal = forwardRef<CabinetMemberDeleteModalRef, Cabinet
             onClick={() => setIsOpen(false)}
             disabled={isLoading}
           >
-            Cancel
+            {t.common.cancel}
           </Button>
           <Button
             variant="destructive"
@@ -124,12 +124,12 @@ const CabinetMemberDeleteModal = forwardRef<CabinetMemberDeleteModalRef, Cabinet
             {isLoading ? (
               <>
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Deleting...
+                {t.team.modal.deleting}
               </>
             ) : (
               <>
                 <Trash2 className="w-4 h-4 mr-2" />
-                Delete Member
+                {t.team.modal.deleteMember}
               </>
             )}
           </Button>

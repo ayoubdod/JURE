@@ -56,6 +56,7 @@ import {
   getCountdownStyle,
 } from '@/utils/caseCardHelpers';
 import ServerSelect from '@/components/common/ServerSelect';
+import { useAppTranslation } from '@/i18n';
 
 /* =========================
    Helpers & Mini Components
@@ -63,16 +64,16 @@ import ServerSelect from '@/components/common/ServerSelect';
 const getClientName = (c?: API.Case['client']) =>
   c ? [c.first_name, c.last_name].filter(Boolean).join(' ') || '—' : '—';
 
-const getCaseTitle = (caseItem: API.Case) =>
+const getCaseTitle = (caseItem: API.Case, untitled: string) =>
   (caseItem as API.Case & { title?: string }).title ||
   caseItem.reference ||
   CaseCategory.getLabel(caseItem.category) ||
-  'Untitled case';
+  untitled;
 
 const getCaseTypeKey = (c: API.Case): string => {
-  const t = c.caseType ?? c.case_type;
-  if (t === 'ADMINISTRATIVE_DUTY' || t === 'ADMINISTRATIVE') return 'ADMINISTRATIVE';
-  return t ?? 'UNKNOWN';
+  const type = c.caseType ?? c.case_type;
+  if (type === 'ADMINISTRATIVE_DUTY' || type === 'ADMINISTRATIVE') return 'ADMINISTRATIVE';
+  return type ?? 'UNKNOWN';
 };
 
 const typeBadgeStyles: Record<string, string> = {
@@ -83,8 +84,18 @@ const typeBadgeStyles: Record<string, string> = {
 };
 
 const TypeBadge: React.FC<{ caseItem: API.Case }> = ({ caseItem }) => {
+  const { t } = useAppTranslation();
   const k = getCaseTypeKey(caseItem);
-  const label = k === 'ADMINISTRATIVE' ? 'ADMIN' : k === 'UNKNOWN' ? '—' : k;
+  const label =
+    k === 'ADMINISTRATIVE'
+      ? t.cases.typeLabels.admin
+      : k === 'CONSULTATION'
+        ? t.cases.typeLabels.consultation
+        : k === 'LITIGATION'
+          ? t.cases.typeLabels.litigation
+          : k === 'UNKNOWN'
+            ? '—'
+            : k;
   return (
     <span
       className={cn(
@@ -106,6 +117,7 @@ const getAssignedName = (c: API.Case): string => {
 };
 
 const ListDeadlineCell: React.FC<{ caseItem: API.Case }> = ({ caseItem }) => {
+  const { t, tf } = useAppTranslation();
   const dateStr = getCaseDateForFilter(caseItem);
   if (!dateStr) {
     return <span className="text-[12px] text-slate-500 dark:text-slate-400">—</span>;
@@ -116,7 +128,12 @@ const ListDeadlineCell: React.FC<{ caseItem: API.Case }> = ({ caseItem }) => {
   }
   const style = days < 0 ? 'critical' : getCountdownStyle(days);
   const label = formatDate(dateStr);
-  const sub = days < 0 ? `${Math.abs(days)}d overdue` : days === 0 ? 'Today' : `in ${days}d`;
+  const sub =
+    days < 0
+      ? tf(t.cases.deadline.overdue, { days: Math.abs(days) })
+      : days === 0
+        ? t.cases.deadline.today
+        : tf(t.cases.deadline.inDays, { days });
   return (
     <div
       className={cn(
@@ -239,6 +256,8 @@ const CaseTableRow = memo(function CaseTableRow({
   onOpen,
   onFocusRow,
 }: CaseTableRowProps) {
+  const { t, tf } = useAppTranslation();
+  const title = getCaseTitle(caseItem, t.cases.untitledCase);
   return (
     <tr
       tabIndex={0}
@@ -258,7 +277,7 @@ const CaseTableRow = memo(function CaseTableRow({
           onOpen(caseItem);
         }
       }}
-      aria-label={`Open ${getCaseTitle(caseItem)}`}
+      aria-label={tf(t.cases.aria.openMatter, { title })}
     >
       <td className="px-3 py-2 align-middle">
         <TypeBadge caseItem={caseItem} />
@@ -270,7 +289,7 @@ const CaseTableRow = memo(function CaseTableRow({
       </td>
       <td className="px-3 py-2 align-middle">
         <span className="text-[13px] font-semibold text-slate-900 dark:text-white line-clamp-1 max-w-[min(320px,30vw)]">
-          {getCaseTitle(caseItem)}
+          {title}
         </span>
       </td>
       <td className="px-3 py-2 align-middle text-[12px] text-slate-700 dark:text-slate-300 truncate max-w-[160px]">
@@ -299,6 +318,7 @@ const CaseTableRow = memo(function CaseTableRow({
    Main Component
    ============== */
 const Cases = () => {
+  const { t, tf } = useAppTranslation();
   const [casesHolderEl, setCasesHolderEl] = useState<HTMLDivElement | null>(null);
   const [searchParams, setSearchParams] = useSearchParams();
   const { user: currentUser } = useUserStore();
@@ -334,10 +354,10 @@ const Cases = () => {
     });
   };
 
-  const setActiveTab = (t: CasesTab) => {
+  const setActiveTab = (tab: CasesTab) => {
     setSearchParams((prev) => {
       const next = new URLSearchParams(prev);
-      next.set(Q.tab, t);
+      next.set(Q.tab, tab);
       return next;
     });
     setCurrentPage(1);
@@ -389,11 +409,15 @@ const Cases = () => {
         setFullFilteredCases(raw);
       })
       .catch(() => {
-        toast({ title: 'Error', description: 'Failed to fetch cases.', variant: 'destructive' });
+        toast({
+          title: t.common.error,
+          description: t.cases.errors.fetchFailed,
+          variant: 'destructive',
+        });
         setFullFilteredCases([]);
       })
       .finally(() => setCasesIsLoading(false));
-  }, [debouncedSearchTerm, caseTypeFilter, clientIdFilter, statusParam, refreshTrigger]);
+  }, [debouncedSearchTerm, caseTypeFilter, clientIdFilter, statusParam, refreshTrigger, t, toast]);
 
   useEffect(() => {
     fetchAllCasesForStats();
@@ -549,17 +573,17 @@ const Cases = () => {
       </div>
       <p className="text-sm font-semibold text-slate-900 dark:text-white">
         {hasActiveFilters
-          ? 'No cases match your filters'
+          ? t.cases.empty.noMatch
           : activeTab === 'my'
-            ? 'No cases assigned to you yet'
-            : 'No cases found'}
+            ? t.cases.empty.noAssigned
+            : t.cases.empty.none}
       </p>
       <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-sm text-center">
         {hasActiveFilters
-          ? 'Try broadening your search or clearing filters.'
+          ? t.cases.empty.noMatchHint
           : activeTab === 'my'
-            ? 'When matters are assigned to you, they will appear here.'
-            : 'Create a case or adjust filters to get started.'}
+            ? t.cases.empty.noAssignedHint
+            : t.cases.empty.noneHint}
       </p>
       {hasActiveFilters ? (
         <Button
@@ -568,7 +592,7 @@ const Cases = () => {
           className="mt-4 h-8 rounded-md text-[12px]"
           onClick={resetFilters}
         >
-          Reset Filters
+          {t.cases.empty.resetFilters}
         </Button>
       ) : null}
     </div>
@@ -577,7 +601,7 @@ const Cases = () => {
   const renderListView = () => (
     <div className="rounded-lg border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-950 shadow-[0_1px_2px_rgba(0,0,0,0.04)] overflow-hidden">
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[960px]" role="grid" aria-label="Matters list">
+        <table className="w-full min-w-[960px]" role="grid" aria-label={t.cases.aria.mattersList}>
           <thead className="sticky top-0 z-[1]">
             <tr className="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/90">
               <th className="text-left py-2 px-3 text-[10px] uppercase tracking-[0.08em] font-semibold text-slate-500 dark:text-slate-400">
@@ -676,7 +700,7 @@ const Cases = () => {
   );
 
   const renderMobileCards = () => (
-    <div className="flex flex-col gap-2 pb-16 md:pb-0" role="list" aria-label="Matters">
+    <div className="flex flex-col gap-2 pb-16 md:pb-0" role="list" aria-label={t.cases.aria.mattersGrid}>
       {casesIsLoading ? (
         Array.from({ length: 8 }).map((_, i) => (
           <div
@@ -700,10 +724,10 @@ const Cases = () => {
   );
 
   const kpiItems = [
-    { key: 'total', label: 'Total', value: stats.total },
-    { key: 'active', label: 'Active', value: stats.active },
-    { key: 'urgent', label: 'Urgent', value: stats.urgent },
-    { key: 'closed', label: 'Closed', value: stats.closed },
+    { key: 'total', label: t.cases.stats.total, value: stats.total },
+    { key: 'active', label: t.cases.stats.active, value: stats.active },
+    { key: 'urgent', label: t.cases.stats.urgent, value: stats.urgent },
+    { key: 'closed', label: t.cases.stats.closed, value: stats.closed },
   ] as const;
 
   return (
@@ -716,7 +740,7 @@ const Cases = () => {
         <div
           className="cases-kpi-strip flex gap-2 overflow-x-auto snap-x snap-mandatory px-1 sm:px-0 py-2"
           role="region"
-          aria-label="Matter statistics"
+          aria-label={t.cases.aria.matterStats}
         >
           {kpiItems.map((item) => (
             <div
@@ -759,7 +783,7 @@ const Cases = () => {
                 <Input
                   ref={searchInputRef}
                   type="search"
-                  placeholder="Search matters… (press /)"
+                  placeholder={t.cases.searchPlaceholder}
                   className={cn(
                     'h-9 pl-8 pr-8 text-[13px] rounded-md border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950',
                     'focus-visible:ring-2 focus-visible:ring-primary/25',
@@ -773,14 +797,14 @@ const Cases = () => {
                       (e.target as HTMLInputElement).blur();
                     }
                   }}
-                  aria-label="Search cases"
+                  aria-label={t.cases.searchAria}
                 />
                 {searchTerm.trim() !== '' && (
                   <button
                     type="button"
                     className="absolute right-1.5 top-1/2 -translate-y-1/2 rounded p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 min-h-[28px] min-w-[28px] flex items-center justify-center"
                     onClick={() => updateUrlFilters({ [Q.search]: null })}
-                    aria-label="Clear search"
+                    aria-label={t.cases.clearSearch}
                   >
                     <X className="w-3.5 h-3.5" />
                   </button>
@@ -800,13 +824,13 @@ const Cases = () => {
                     caseTypeFilter !== 'ALL' && 'ring-1 ring-primary/30 border-primary/40 bg-primary/[0.04]'
                   )}
                 >
-                  <SelectValue placeholder="Matter Type" />
+                  <SelectValue placeholder={t.cases.filters.matterType} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="ALL">All Types</SelectItem>
-                  <SelectItem value="CONSULTATION">Consultation</SelectItem>
-                  <SelectItem value="LITIGATION">Litigation</SelectItem>
-                  <SelectItem value="ADMINISTRATIVE">Administrative Duty</SelectItem>
+                  <SelectItem value="ALL">{t.cases.filters.allTypes}</SelectItem>
+                  <SelectItem value="CONSULTATION">{t.cases.filters.consultation}</SelectItem>
+                  <SelectItem value="LITIGATION">{t.cases.filters.litigation}</SelectItem>
+                  <SelectItem value="ADMINISTRATIVE">{t.cases.filters.administrative}</SelectItem>
                 </SelectContent>
               </Select>
 
@@ -844,7 +868,7 @@ const Cases = () => {
                     {caseTypeFilter === 'CONSULTATION' && (
                       <div>
                         <p className="text-[10px] uppercase tracking-wider text-slate-500 mb-1">
-                          Consultation
+                          {t.cases.filters.consultation}
                         </p>
                         <div className="flex flex-wrap gap-1">
                           {CONSULTATION_STATUSES.map((s) => (
@@ -863,7 +887,7 @@ const Cases = () => {
                     )}
                     <div>
                       <p className="text-[10px] uppercase tracking-wider text-slate-500 mb-1">
-                        Litigation / Admin
+                        {t.cases.filters.litigation} / {t.cases.typeLabels.admin}
                       </p>
                       <div className="flex flex-wrap gap-1">
                         {LITIGATION_ADMIN_STATUSES.map((s) => (
@@ -891,10 +915,10 @@ const Cases = () => {
                     updateUrlFilters({ [Q.clientId]: v != null ? String(v) : null });
                     setCurrentPage(1);
                   }}
-                  placeholder="Client..."
-                  searchPlaceholder="Search client..."
+                  placeholder={t.cases.clientPlaceholder}
+                  searchPlaceholder={t.cases.searchClient}
                   labelKey={(c: { first_name?: string; last_name?: string; email?: string }) =>
-                    `${c.first_name || ''} ${c.last_name || ''}`.trim() || c.email || 'Unnamed'
+                    `${c.first_name || ''} ${c.last_name || ''}`.trim() || c.email || t.cases.unnamed
                   }
                   valueKey="id"
                   cleanable
@@ -912,14 +936,14 @@ const Cases = () => {
                   className="h-9 text-[12px] text-slate-600 px-2"
                   onClick={resetFilters}
                 >
-                  Reset
+                  {t.cases.reset}
                 </Button>
               )}
 
               <div
                 className="hidden md:flex items-center gap-0.5 ml-auto p-0.5 rounded-md border border-slate-200 dark:border-slate-700 bg-slate-100/80 dark:bg-slate-900/50"
                 role="group"
-                aria-label="View mode"
+                aria-label={t.cases.aria.viewMode}
               >
                 <Button
                   type="button"
@@ -932,7 +956,7 @@ const Cases = () => {
                   )}
                   onClick={() => setViewMode('list')}
                   aria-pressed={viewMode === 'list'}
-                  aria-label="List view"
+                  aria-label={t.cases.aria.listView}
                 >
                   <List className="w-4 h-4" />
                 </Button>
@@ -947,7 +971,7 @@ const Cases = () => {
                   )}
                   onClick={() => setViewMode('grid')}
                   aria-pressed={viewMode === 'grid'}
-                  aria-label="Grid view"
+                  aria-label={t.cases.aria.gridView}
                 >
                   <Grid3x3 className="w-4 h-4" />
                 </Button>
@@ -959,7 +983,7 @@ const Cases = () => {
                 onClick={openCreateCase}
               >
                 <Plus className="w-4 h-4 mr-1.5" strokeWidth={2.5} />
-                Add New Case
+                {t.cases.addNewCase}
               </Button>
             </div>
 
@@ -974,7 +998,7 @@ const Cases = () => {
                   className="relative rounded-none border-0 bg-transparent px-1 pb-2 mr-5 text-[13px] font-medium text-slate-500 dark:text-slate-400 shadow-none data-[state=active]:bg-transparent data-[state=active]:text-slate-900 dark:data-[state=active]:text-white data-[state=active]:shadow-none data-[state=active]:font-semibold after:absolute after:left-0 after:right-0 after:bottom-0 after:h-0.5 after:rounded-full after:bg-primary after:opacity-0 after:content-[''] data-[state=active]:after:opacity-100"
                 >
                   <span className="inline-flex items-center gap-1.5">
-                    My Cases
+                    {t.cases.myCases}
                     <span className="inline-flex min-w-[1.15rem] justify-center rounded-full bg-slate-200/90 dark:bg-slate-800 px-1.5 py-0 text-[10px] font-semibold tabular-nums text-slate-700 dark:text-slate-300">
                       {activeTab === 'my' ? totalCount : myCasesCount}
                     </span>
@@ -985,7 +1009,7 @@ const Cases = () => {
                   className="relative rounded-none border-0 bg-transparent px-1 pb-2 text-[13px] font-medium text-slate-500 dark:text-slate-400 shadow-none data-[state=active]:bg-transparent data-[state=active]:text-slate-900 dark:data-[state=active]:text-white data-[state=active]:shadow-none data-[state=active]:font-semibold after:absolute after:left-0 after:right-0 after:bottom-0 after:h-0.5 after:rounded-full after:bg-primary after:opacity-0 after:content-[''] data-[state=active]:after:opacity-100"
                 >
                   <span className="inline-flex items-center gap-1.5">
-                    All Cases
+                    {t.cases.allCases}
                     <span className="inline-flex min-w-[1.15rem] justify-center rounded-full bg-slate-200/90 dark:bg-slate-800 px-1.5 py-0 text-[10px] font-semibold tabular-nums text-slate-700 dark:text-slate-300">
                       {activeTab === 'all' ? totalCount : allCasesCount}
                     </span>
@@ -1034,15 +1058,15 @@ const Cases = () => {
         size="icon"
         className="md:hidden fixed z-40 bottom-[max(4.75rem,calc(env(safe-area-inset-bottom)+3.75rem))] right-4 h-12 w-12 rounded-full shadow-lg shadow-primary/30"
         onClick={openCreateCase}
-        aria-label="Add New Case"
+        aria-label={t.cases.aria.addNewCase}
       >
         <Plus className="w-5 h-5" strokeWidth={2.5} />
       </Button>
 
       <p className="sr-only" aria-live="polite">
         {casesIsLoading
-          ? 'Loading matters'
-          : `${totalCount} matters. Press slash to search, N to create, J and K to move between rows.`}
+          ? t.cases.loadingMatters
+          : tf(t.cases.aria.loadingSummary, { count: totalCount })}
       </p>
 
       <CaseModal ref={caseModalRef} onSuccess={refresh} />

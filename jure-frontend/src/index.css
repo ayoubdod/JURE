@@ -52,6 +52,9 @@
     --sidebar-accent-foreground: var(--jure-primary);
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: var(--jure-primary);
+
+    /* Latin UI; Arabic overrides via html[lang="ar"] */
+    --font-sans: 'Space Grotesk', system-ui, sans-serif;
   }
 
   .dark {
@@ -100,6 +103,10 @@
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: var(--jure-primary);
   }
+
+  html[lang="ar"] {
+    --font-sans: 'Cairo', system-ui, sans-serif;
+  }
 }
 
 @layer base {
@@ -108,7 +115,7 @@
   }
 
   html {
-    font-family: 'Space Grotesk', 'Noto Sans Arabic', system-ui, sans-serif;
+    font-family: var(--font-sans);
   }
 
   body {

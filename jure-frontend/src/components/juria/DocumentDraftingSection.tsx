@@ -6,6 +6,7 @@ import { DOCUMENT_DRAFT_TYPES, type DocumentDraftTypeId } from '@/components/jur
 import useJuriaStore from '@/stores/juriaStore';
 import { useToast } from '@/hooks/use-toast';
 import { getJuriaErrorMessage } from '@/utils/juriaErrors';
+import { useAppTranslation } from '@/i18n';
 
 const EXTRA_FIELDS: Record<DocumentDraftTypeId, { key: string; label: string; placeholder?: string }[]> = {
   bail: [
@@ -58,6 +59,7 @@ export function DocumentDraftingSection({
   compact?: boolean;
   linkedCaseId?: number | null;
 }) {
+  const { t } = useAppTranslation();
   const [selected, setSelected] = useState<DocumentDraftTypeId | null>(null);
   const [values, setValues] = useState<Record<string, string>>({});
   const requestDraft = useJuriaStore((s) => s.requestDraft);
@@ -88,22 +90,24 @@ export function DocumentDraftingSection({
         Quel type de document souhaitez-vous rédiger ?
       </p>
       <div className="grid grid-cols-2 gap-2">
-        {DOCUMENT_DRAFT_TYPES.map((t) => (
+        {DOCUMENT_DRAFT_TYPES.map((def) => (
           <button
-            key={t.id}
+            key={def.id}
             type="button"
             onClick={() => {
-              setSelected(t.id);
+              setSelected(def.id);
               setValues({});
             }}
             className={`rounded-xl border p-3 text-left text-xs transition ${
-              selected === t.id
+              selected === def.id
                 ? 'border-indigo-500 bg-indigo-50 dark:border-indigo-500 dark:bg-indigo-950/40'
                 : 'border-slate-200 bg-white hover:border-slate-300 dark:border-slate-800 dark:bg-slate-900'
             }`}
           >
-            <span className="text-lg">{t.icon}</span>
-            <span className="mt-1 block font-medium text-slate-900 dark:text-slate-100">{t.title}</span>
+            <span className="text-lg">{def.icon}</span>
+            <span className="mt-1 block font-medium text-slate-900 dark:text-slate-100">
+              {t.juria.draftTypes[def.id]}
+            </span>
           </button>
         ))}
       </div>
