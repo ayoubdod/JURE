@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { BookOpen, Shield, Code2, PlugZap, FileText, GitBranch, ArrowRight } from "lucide-react";
 import MarketingShell from "@/components/landing/MarketingShell";
 import Reveal from "@/components/landing/Reveal";
+import { RouteSeo } from "@/marketing/Seo";
 
 type Lang = "fr" | "en" | "ar";
 
@@ -101,6 +102,7 @@ const Docs: React.FC = () => {
       dir={t.dir}
       activeNav="none"
     >
+      <RouteSeo routeKey="docs" lang={lang} />
       <section className="max-w-7xl mx-auto px-4 sm:px-6 pt-8 sm:pt-12 pb-16 sm:pb-20 md:pt-20">
         <Reveal className="text-center max-w-3xl mx-auto min-w-0">
           <h1 className="font-display text-[2rem] leading-[1.15] sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight break-words">

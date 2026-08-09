@@ -1,344 +1,447 @@
-// src/pages/Features.tsx
-import React, { useEffect, useState } from "react";
+// src/pages/Features.tsx — platform overview limited to shipped capabilities.
+import React from "react";
 import { useNavigate } from "react-router";
 import { Button } from "@/components/ui/button";
 import {
-  Zap,
-  Shield,
-  Users,
+  Sparkles,
+  Briefcase,
   BookOpen,
-  FileText,
+  CalendarClock,
   MessageSquare,
-  BarChart,
-  Database,
+  Landmark,
+  KeyRound,
+  Globe,
+  FileText,
+  Users,
   Check,
+  Clock,
   ArrowRight,
 } from "lucide-react";
 import MarketingShell from "@/components/landing/MarketingShell";
 import Reveal from "@/components/landing/Reveal";
 import FeatureTile from "@/components/landing/FeatureTile";
+import { useMarketingLang } from "@/marketing/MarketingLocale";
+import { RouteSeo } from "@/marketing/Seo";
 
 /**
  * Features Page
  * - Shared MarketingShell (nav / lang / theme / footer)
  * - Visual language aligned with Landing (glass, reveal, brand #64499D)
+ * - Only shipped capabilities are presented as available; planned work lives
+ *   under an explicit "Coming soon" section.
  */
 
 type Lang = "fr" | "en" | "ar";
 
-const STRINGS: Record<Lang, any> = {
-  fr: {
-    htmlLang: "fr",
-    dir: "ltr",
-    nav: { features: "Fonctionnalités", pricing: "Tarifs", about: "À propos", contact: "Contact" },
-    auth: { signin: "Se connecter" },
-    themeToggle: { label: "Basculer le thème", title: "Basculer le thème" },
+type FeatureItem = { title: string; desc: string };
 
+type DeepCard = { title: string; desc: string; bullets: string[]; badge?: string };
+
+type FeaturesStrings = {
+  hero: {
+    titleA: string;
+    titleB: string;
+    subtitle: string;
+    ctaPrimary: string;
+    ctaSecondary: string;
+    trust: string;
+  };
+  highlights: { items: FeatureItem[] };
+  deep: { ai: DeepCard; matters: DeepCard; documents: DeepCard; collab: DeepCard };
+  comingSoon: { title: string; note: string; items: string[] };
+  cta: { title: string; subtitle: string; primary: string; secondary: string };
+};
+
+const STRINGS: Record<Lang, FeaturesStrings> = {
+  fr: {
     hero: {
-      titleA: "Des fonctionnalités puissantes,",
-      titleB: "conçues pour le métier juridique.",
+      titleA: "Le travail juridique,",
+      titleB: "réuni sur une seule plateforme.",
       subtitle:
-        "IA responsable, gestion des dossiers, sécurité de niveau entreprise et collaboration fluide — le tout dans une seule plateforme.",
-      ctaPrimary: "Essayer la démo",
+        "Gestion des dossiers, bibliothèque documentaire, collaboration d'équipe, finance du cabinet et une IA juridique en accès anticipé — en français, anglais et arabe.",
+      ctaPrimary: "Voir la démo",
       ctaSecondary: "Nous contacter",
-      trust: "Privacy-by-design • Contrôle d’accès • Traçabilité",
+      trust: "Isolation par cabinet • Accès par rôles • FR / EN / AR",
     },
 
     highlights: {
       items: [
-        { title: "IA juridique", desc: "Recherche, analyse contractuelle et rédaction assistée avec citations." },
-        { title: "Gestion de dossiers", desc: "Workflow, tâches, échéances et pièces jointes centralisées." },
-        { title: "Collaboration", desc: "Commentaires, mentions, salons d’équipe et partage sécurisé." },
-        { title: "Bibliothèque", desc: "Base documentaire, tags, recherche sémantique, versions & références." },
-        { title: "Portail clients", desc: "Accès sécurisé aux documents, messages et suivis." },
-        { title: "Automations", desc: "Génération de modèles, checklists, validations, et rappels." },
-        { title: "Analytique", desc: "Tableaux de bord, KPI par dossier, performance et charge équipe." },
-        { title: "Intégrations", desc: "Drive, e-signature, suites bureautiques, SSO et API." },
+        {
+          title: "IA juridique — Accès anticipé",
+          desc: "Juria : chat, analyse de contrats, questions-réponses de type recherche et aide à la rédaction — avec relecture par l'avocat.",
+        },
+        {
+          title: "Gestion des dossiers",
+          desc: "Chaque dossier relié à son client, ses documents, ses tâches et son équipe.",
+        },
+        {
+          title: "Bibliothèque documentaire",
+          desc: "Import, catégories, tags, recherche sur titre et description, aperçu PDF/DOCX.",
+        },
+        {
+          title: "Tâches, échéances & agenda",
+          desc: "Tâches assignées, dates limites et calendrier partagé du cabinet.",
+        },
+        {
+          title: "Chat & appels d'équipe",
+          desc: "Messagerie en temps réel, appels audio/vidéo et notifications.",
+        },
+        {
+          title: "Finance du cabinet",
+          desc: "Suivi financier de la pratique, réservé aux rôles Propriétaire et Admin.",
+        },
+        {
+          title: "Rôles & permissions",
+          desc: "Six rôles avec des codes de permission granulaires par cabinet.",
+        },
+        {
+          title: "Trilingue & RTL",
+          desc: "Interface complète en français, anglais et arabe, avec prise en charge RTL.",
+        },
       ],
     },
 
     deep: {
       ai: {
-        title: "IA juridique responsable",
+        title: "Juria — IA juridique",
+        badge: "Accès anticipé",
         desc:
-          "Accélérez vos recherches et vos drafts en gardant le contrôle: sources citées, paramètres de confidentialité, et validation par l’humain.",
+          "Un assistant IA intégré à vos dossiers, conçu pour que chaque résultat soit relu et validé par un avocat.",
         bullets: [
-          "Analyse de clauses et repérage de risques",
-          "Rédaction assistée (mémos, contrats, emails)",
-          "Repérage de références et jurisprudence",
-          "Paramètres de confidentialité & journaux",
-        ],
-      },
-      security: {
-        title: "Sécurité & conformité",
-        desc:
-          "Conçue pour les environnements sensibles: chiffrement, rôles, audit, et bonnes pratiques de conformité.",
-        bullets: [
-          "Chiffrement en transit & au repos",
-          "Contrôle d’accès granulaire par rôle",
-          "Journaux d’audit détaillés",
-          "Rétention et politiques de données",
+          "Chat avec l'assistant",
+          "Analyse de contrats",
+          "Questions-réponses de type recherche",
+          "Aide à la rédaction — avec relecture par l'avocat",
         ],
       },
       matters: {
         title: "Gestion des dossiers",
         desc:
-          "Structurez vos dossiers, tâches, échéances, documents et responsabilités dans un flux clair.",
+          "Structurez dossiers, clients, documents, tâches et échéances dans un flux clair.",
         bullets: [
-          "Chronologies, tâches et rappels",
-          "Assignations & SLA internes",
-          "Modèles et checklists réutilisables",
-          "Pièces jointes, notes & versions",
+          "Dossiers reliés aux clients et aux documents",
+          "Tâches et échéances par dossier",
+          "Calendrier du cabinet",
+          "Assignation des membres de l'équipe",
+        ],
+      },
+      documents: {
+        title: "Bibliothèque documentaire",
+        desc:
+          "Centralisez les documents du cabinet et retrouvez-les rapidement.",
+        bullets: [
+          "Import de documents",
+          "Catégories et tags",
+          "Recherche sur titre et description",
+          "Aperçu PDF et DOCX dans le navigateur",
         ],
       },
       collab: {
-        title: "Collaboration d’équipe",
+        title: "Collaboration d'équipe",
         desc:
-          "Travaillez en temps réel sur des documents, messages et notes — avec un partage maîtrisé.",
+          "Échangez en temps réel avec votre équipe, sans quitter la plateforme.",
         bullets: [
-          "Commentaires avec mentions",
-          "Fils de discussion par dossier",
-          "Partage interne/externe",
-          "Notifications intelligentes",
+          "Messagerie d'équipe en temps réel",
+          "Appels audio et vidéo",
+          "Notifications",
+          "Accès encadré par les rôles",
         ],
       },
     },
 
-    cta: {
-      title: "Passez à la pratique augmentée",
-      subtitle: "Démonstration guidée en quelques minutes — sans carte bancaire.",
-      primary: "Voir la démo",
-      secondary: "Parler à l’équipe",
+    comingSoon: {
+      title: "Bientôt",
+      note:
+        "Ces fonctionnalités sont en préparation et ne sont pas encore disponibles. Nous les annoncerons quand elles seront livrées.",
+      items: [
+        "Portail clients",
+        "Intégrations (Drive, e-signature, API)",
+        "SSO",
+        "Automatisations et checklists",
+        "Recherche sémantique",
+        "Versions de documents",
+        "Journaux d'audit",
+        "Chiffrement au repos",
+        "Commentaires avec mentions",
+        "Partage externe",
+      ],
     },
 
-    footer: { privacy: "Confidentialité", terms: "Conditions", status: "Statut", rights: "Tous droits réservés." },
+    cta: {
+      title: "Découvrez JURE en pratique",
+      subtitle: "Démonstration guidée en quelques minutes — sans carte bancaire.",
+      primary: "Voir la démo",
+      secondary: "Parler à l'équipe",
+    },
   },
 
   en: {
-    htmlLang: "en",
-    dir: "ltr",
-    nav: { features: "Features", pricing: "Pricing", about: "About", contact: "Contact" },
-    auth: { signin: "Sign in" },
-    themeToggle: { label: "Toggle theme", title: "Toggle theme" },
-
     hero: {
-      titleA: "Powerful features,",
-      titleB: "built for legal work.",
+      titleA: "Legal work,",
+      titleB: "brought together in one platform.",
       subtitle:
-        "Responsible AI, matter management, enterprise-grade security, and seamless collaboration — all in one platform.",
-      ctaPrimary: "Try the demo",
-      ctaSecondary: "Talk to sales",
-      trust: "Privacy-by-design • Access control • Auditability",
+        "Matter management, a document library, team collaboration, practice finance, and a legal AI in early access — in French, English and Arabic.",
+      ctaPrimary: "View demo",
+      ctaSecondary: "Contact us",
+      trust: "Per-firm isolation • Role-based access • FR / EN / AR",
     },
 
     highlights: {
       items: [
-        { title: "Legal AI", desc: "Research, contract analysis, and assisted drafting with citations." },
-        { title: "Matter Management", desc: "Workflows, tasks, deadlines, and centralized attachments." },
-        { title: "Collaboration", desc: "Comments, mentions, team rooms, and secure sharing." },
-        { title: "Knowledge Library", desc: "KB, tags, semantic search, versioning & references." },
-        { title: "Client Portal", desc: "Secure access to documents, messages, and status." },
-        { title: "Automations", desc: "Templates, checklists, validations, and reminders." },
-        { title: "Analytics", desc: "Dashboards, matter KPIs, performance & workload." },
-        { title: "Integrations", desc: "Drive, e-signature, office suites, SSO, and API." },
+        {
+          title: "Legal AI — Early access",
+          desc: "Juria: chat, contract analysis, research-style Q&A and drafting assistance — with lawyer review.",
+        },
+        {
+          title: "Matter management",
+          desc: "Every case connected to its client, documents, tasks and team.",
+        },
+        {
+          title: "Document library",
+          desc: "Upload, categories, tags, search on title and description, PDF/DOCX preview.",
+        },
+        {
+          title: "Tasks, deadlines & calendar",
+          desc: "Assigned tasks, due dates and a shared firm calendar.",
+        },
+        {
+          title: "Team chat & calls",
+          desc: "Real-time messaging, voice/video calls and notifications.",
+        },
+        {
+          title: "Practice finance",
+          desc: "Financial tracking for the practice, restricted to Owner and Admin roles.",
+        },
+        {
+          title: "Roles & permissions",
+          desc: "Six roles with granular permission codes per firm.",
+        },
+        {
+          title: "Trilingual & RTL",
+          desc: "Full interface in French, English and Arabic, with RTL support.",
+        },
       ],
     },
 
     deep: {
       ai: {
-        title: "Responsible Legal AI",
+        title: "Juria — Legal AI",
+        badge: "Early access",
         desc:
-          "Accelerate research and drafting with transparent sources, privacy controls, and human validation.",
+          "An AI assistant embedded in your matters, built so every output is reviewed and validated by a lawyer.",
         bullets: [
-          "Clause analysis & risk spotting",
-          "Assisted drafting (memos, contracts, emails)",
-          "Reference & case-law surfacing",
-          "Privacy controls & audit logs",
-        ],
-      },
-      security: {
-        title: "Security & compliance",
-        desc:
-          "Built for sensitive environments: encryption, roles, audit, and sound compliance practices.",
-        bullets: [
-          "Encryption at rest & in transit",
-          "Granular role-based access",
-          "Detailed audit trails",
-          "Retention & data policies",
+          "Chat with the assistant",
+          "Contract analysis",
+          "Research-style Q&A",
+          "Drafting assistance — with lawyer review",
         ],
       },
       matters: {
         title: "Matter management",
         desc:
-          "Bring structure to matters, tasks, deadlines, documents, and responsibilities.",
+          "Bring structure to cases, clients, documents, tasks and deadlines.",
         bullets: [
-          "Timelines, tasks & reminders",
-          "Assignments & internal SLAs",
-          "Reusable templates & checklists",
-          "Attachments, notes & versions",
+          "Cases linked to clients and documents",
+          "Tasks and deadlines per case",
+          "Firm calendar",
+          "Team member assignment",
+        ],
+      },
+      documents: {
+        title: "Document library",
+        desc:
+          "Centralize the firm's documents and find them fast.",
+        bullets: [
+          "Document upload",
+          "Categories and tags",
+          "Search on title and description",
+          "PDF and DOCX preview in the browser",
         ],
       },
       collab: {
         title: "Team collaboration",
         desc:
-          "Work in real time across docs, messages, and notes — with controlled sharing.",
+          "Talk to your team in real time without leaving the platform.",
         bullets: [
-          "Comments with mentions",
-          "Threaded conversations per matter",
-          "Internal/external sharing",
-          "Smart notifications",
+          "Real-time team chat",
+          "Voice and video calls",
+          "Notifications",
+          "Access governed by roles",
         ],
       },
     },
 
+    comingSoon: {
+      title: "Coming soon",
+      note:
+        "These capabilities are in the works and not available yet. We'll announce them when they ship.",
+      items: [
+        "Client portal",
+        "Integrations (Drive, e-signature, API)",
+        "SSO",
+        "Automations and checklists",
+        "Semantic search",
+        "Document versioning",
+        "Audit trails",
+        "Encryption at rest",
+        "Comments with mentions",
+        "External sharing",
+      ],
+    },
+
     cta: {
-      title: "Move to augmented practice",
+      title: "See JURE in practice",
       subtitle: "Guided demo in minutes — no credit card required.",
       primary: "View demo",
       secondary: "Talk to the team",
     },
-
-    footer: { privacy: "Privacy", terms: "Terms", status: "Status", rights: "All rights reserved." },
   },
 
   ar: {
-    htmlLang: "ar",
-    dir: "rtl",
-    nav: { features: "الميزات", pricing: "الأسعار", about: "حول", contact: "اتصل بنا" },
-    auth: { signin: "تسجيل الدخول" },
-    themeToggle: { label: "تبديل السمة", title: "تبديل السمة" },
-
     hero: {
-      titleA: "ميزات قوية،",
-      titleB: "مصمّمة لعمل القانون.",
+      titleA: "العمل القانوني،",
+      titleB: "مجموعًا في منصة واحدة.",
       subtitle:
-        "ذكاء اصطناعي مسؤول، إدارة القضايا، أمان بمستوى المؤسسات، وتعاون سلس — كل ذلك في منصة واحدة.",
-      ctaPrimary: "جرّب العرض",
-      ctaSecondary: "تحدث إلى الفريق",
-      trust: "الخصوصية بالتصميم • التحكم بالصلاحيات • سجلات تدقيق",
+        "إدارة القضايا، مكتبة المستندات، تعاون الفريق، مالية المكتب، وذكاء اصطناعي قانوني في مرحلة الوصول المبكر — بالفرنسية والإنجليزية والعربية.",
+      ctaPrimary: "شاهد العرض",
+      ctaSecondary: "تواصل معنا",
+      trust: "عزل بيانات كل مكتب • وصول حسب الأدوار • FR / EN / AR",
     },
 
     highlights: {
       items: [
-        { title: "ذكاء قانوني", desc: "بحث، تحليل العقود، وصياغة مدعومة بالاستشهادات." },
-        { title: "إدارة القضايا", desc: "سير العمل، المهام، المواعيد النهائية، والمرفقات." },
-        { title: "تعاون", desc: "تعليقات، إشارات، غرف فرق، ومشاركة آمنة." },
-        { title: "مكتبة المعرفة", desc: "قاعدة معرفية، وسوم، بحث دلالي، نسخ ومراجع." },
-        { title: "بوابة العملاء", desc: "وصول آمن للوثائق والرسائل والمتابعة." },
-        { title: "أتمتة", desc: "قوالب، قوائم تحقق، اعتماد، وتذكيرات." },
-        { title: "تحليلات", desc: "لوحات معلومات، مؤشرات القضايا، الأداء والحمولة." },
-        { title: "تكاملات", desc: "درايف، توقيع إلكتروني، أجنحة مكتبية، SSO وواجهة برمجة." },
+        {
+          title: "الذكاء الاصطناعي القانوني — الوصول المبكر",
+          desc: "جوريا: محادثة، تحليل العقود، أسئلة وأجوبة بأسلوب البحث، ومساعدة في الصياغة — مع مراجعة المحامي.",
+        },
+        {
+          title: "إدارة القضايا",
+          desc: "كل قضية مرتبطة بموكلها ومستنداتها ومهامها وفريقها.",
+        },
+        {
+          title: "مكتبة المستندات",
+          desc: "رفع، تصنيفات، وسوم، بحث في العنوان والوصف، ومعاينة PDF/DOCX.",
+        },
+        {
+          title: "المهام والمواعيد والمفكرة",
+          desc: "مهام مُسندة، مواعيد نهائية، ومفكرة مشتركة للمكتب.",
+        },
+        {
+          title: "دردشة ومكالمات الفريق",
+          desc: "مراسلة فورية، مكالمات صوتية ومرئية، وإشعارات.",
+        },
+        {
+          title: "مالية المكتب",
+          desc: "متابعة مالية للممارسة، مقصورة على دوري المالك ومدير النظام.",
+        },
+        {
+          title: "الأدوار والصلاحيات",
+          desc: "ستة أدوار مع صلاحيات دقيقة لكل مكتب.",
+        },
+        {
+          title: "ثلاثي اللغات مع RTL",
+          desc: "واجهة كاملة بالفرنسية والإنجليزية والعربية، مع دعم الكتابة من اليمين إلى اليسار.",
+        },
       ],
     },
 
     deep: {
       ai: {
-        title: "ذكاء قانوني مسؤول",
+        title: "جوريا — الذكاء الاصطناعي القانوني",
+        badge: "الوصول المبكر",
         desc:
-          "سرّع البحث والصياغة مع مصادر واضحة، وضوابط خصوصية، وتحقق بشري.",
+          "مساعد ذكاء اصطناعي مدمج في قضاياكم، مصمم بحيث تُراجَع كل نتيجة ويعتمدها محامٍ.",
         bullets: [
-          "تحليل بنود ورصد المخاطر",
-          "صياغة مدعومة (مذكرات، عقود، رسائل)",
-          "استخراج مراجع وقضاء",
-          "ضوابط خصوصية وسجلات تدقيق",
-        ],
-      },
-      security: {
-        title: "الأمن والامتثال",
-        desc:
-          "مصمم للبيئات الحسّاسة: تشفير، أدوار، تدقيق، وممارسات امتثال راسخة.",
-        bullets: [
-          "تشفير أثناء النقل وفي التخزين",
-          "تحكم دقيق في الصلاحيات حسب الأدوار",
-          "سجلات تدقيق مفصلة",
-          "سياسات بيانات واحتفاظ",
+          "محادثة مع المساعد",
+          "تحليل العقود",
+          "أسئلة وأجوبة بأسلوب البحث",
+          "مساعدة في الصياغة — مع مراجعة المحامي",
         ],
       },
       matters: {
         title: "إدارة القضايا",
         desc:
-          "نظّم القضايا والمهام والمواعيد والمستندات والمسؤوليات في سير واضح.",
+          "نظّموا القضايا والموكلين والمستندات والمهام والمواعيد في سير عمل واضح.",
         bullets: [
-          "جداول زمنية ومهام وتذكيرات",
-          "إسناد وسقوف زمنية داخلية",
-          "قوالب وقوائم تحقق قابلة لإعادة الاستخدام",
-          "مرفقات وملاحظات ونسخ",
+          "قضايا مرتبطة بالموكلين والمستندات",
+          "مهام ومواعيد نهائية لكل قضية",
+          "مفكرة المكتب",
+          "إسناد أعضاء الفريق",
+        ],
+      },
+      documents: {
+        title: "مكتبة المستندات",
+        desc:
+          "اجمعوا مستندات المكتب في مكان واحد واعثروا عليها بسرعة.",
+        bullets: [
+          "رفع المستندات",
+          "تصنيفات ووسوم",
+          "بحث في العنوان والوصف",
+          "معاينة PDF وDOCX في المتصفح",
         ],
       },
       collab: {
         title: "تعاون الفريق",
         desc:
-          "اعملوا في الوقت الحقيقي عبر المستندات والرسائل والملاحظات — مع مشاركة مضبوطة.",
+          "تواصلوا مع فريقكم في الوقت الحقيقي دون مغادرة المنصة.",
         bullets: [
-          "تعليقات مع إشارات",
-          "محادثات متسلسلة لكل قضية",
-          "مشاركة داخلية/خارجية",
-          "إشعارات ذكية",
+          "دردشة فريق فورية",
+          "مكالمات صوتية ومرئية",
+          "إشعارات",
+          "وصول محكوم بالأدوار",
         ],
       },
     },
 
-    cta: {
-      title: "انتقل إلى ممارسة معززة",
-      subtitle: "عرض إرشادي خلال دقائق — دون بطاقة بنكية.",
-      primary: "شاهد العرض",
-      secondary: "تواصل معنا",
+    comingSoon: {
+      title: "قريبًا",
+      note:
+        "هذه الإمكانات قيد الإعداد وغير متاحة بعد. سنعلن عنها عند إطلاقها.",
+      items: [
+        "بوابة الموكلين",
+        "تكاملات (درايف، توقيع إلكتروني، واجهة برمجية)",
+        "SSO",
+        "أتمتة وقوائم تحقق",
+        "بحث دلالي",
+        "نسخ المستندات",
+        "سجلات التدقيق",
+        "التشفير في التخزين",
+        "تعليقات مع إشارات",
+        "مشاركة خارجية",
+      ],
     },
 
-    footer: { privacy: "الخصوصية", terms: "الشروط", status: "الحالة", rights: "جميع الحقوق محفوظة." },
+    cta: {
+      title: "شاهدوا JURE عمليًا",
+      subtitle: "عرض إرشادي خلال دقائق — دون بطاقة بنكية.",
+      primary: "شاهد العرض",
+      secondary: "تحدث إلى الفريق",
+    },
   },
 };
 
-const useI18n = () => {
-  const [lang, setLang] = useState<Lang>(() => {
-    const stored = localStorage.getItem("lang") as Lang | null;
-    if (stored === "fr" || stored === "en" || stored === "ar") return stored;
-    const nav = (navigator.language || "en").toLowerCase();
-    if (nav.startsWith("fr")) return "fr";
-    if (nav.startsWith("ar")) return "ar";
-    return "en";
-  });
-
-  useEffect(() => {
-    const pack = STRINGS[lang];
-    document.documentElement.setAttribute("lang", pack.htmlLang);
-    document.documentElement.setAttribute("dir", pack.dir);
-    localStorage.setItem("lang", lang);
-  }, [lang]);
-
-  return { lang, setLang, t: STRINGS[lang] };
-};
-
-const HIGHLIGHT_ICONS = [Zap, FileText, Users, BookOpen, MessageSquare, Database, BarChart, Shield];
+const HIGHLIGHT_ICONS = [Sparkles, Briefcase, BookOpen, CalendarClock, MessageSquare, Landmark, KeyRound, Globe];
 const HIGHLIGHT_ACCENTS = ["#64499D", "#4D3680", "#3E2D71", "#8B6FD1", "#6D5AB6", "#64499D", "#4D3680", "#3E2D71"];
 
 const Features: React.FC = () => {
   const navigate = useNavigate();
-  const { lang, setLang, t } = useI18n();
-  const isRtl = t.dir === "rtl";
+  const { lang, dir, path } = useMarketingLang();
+  const t = STRINGS[lang];
+  const isRtl = dir === "rtl";
 
   const go = (to: string) => navigate(to);
 
   const deepCards = [
-    { key: "ai", icon: Zap, accent: "#64499D", data: t.deep.ai },
-    { key: "security", icon: Shield, accent: "#4D3680", data: t.deep.security },
-    { key: "matters", icon: FileText, accent: "#3E2D71", data: t.deep.matters },
+    { key: "ai", icon: Sparkles, accent: "#64499D", data: t.deep.ai },
+    { key: "matters", icon: FileText, accent: "#4D3680", data: t.deep.matters },
+    { key: "documents", icon: BookOpen, accent: "#3E2D71", data: t.deep.documents },
     { key: "collab", icon: Users, accent: "#8B6FD1", data: t.deep.collab },
   ];
 
   return (
-    <MarketingShell
-      lang={lang}
-      onLangChange={setLang}
-      labels={{
-        nav: { features: t.nav.features, about: t.nav.about, contact: t.nav.contact },
-        auth: t.auth,
-        themeToggle: t.themeToggle,
-        footer: t.footer,
-      }}
-      dir={t.dir}
-      activeNav="features"
-    >
+    <MarketingShell lang={lang} onLangChange={() => {}} dir={dir} activeNav="features">
+      <RouteSeo routeKey="features" lang={lang} />
+
       {/* Hero */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 pt-8 sm:pt-14 pb-10 sm:pb-12 md:pt-24 md:pb-16">
         <Reveal className="text-center max-w-4xl mx-auto min-w-0">
@@ -367,7 +470,7 @@ const Features: React.FC = () => {
             }`}
           >
             <Button
-              onClick={() => go("/demo")}
+              onClick={() => go(path("demo"))}
               size="lg"
               className="w-full sm:w-auto px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg font-medium shadow-lg hover:shadow-[0_0_32px_-6px_rgba(100,73,157,0.55)] transition-shadow bg-gradient-to-r from-[#64499D] to-[#4D3680] hover:from-[#4D3680] hover:to-[#3E2D71] text-white"
             >
@@ -375,7 +478,7 @@ const Features: React.FC = () => {
               <ArrowRight className={`ms-2 h-5 w-5 ${isRtl ? "rotate-180" : ""}`} />
             </Button>
             <Button
-              onClick={() => go("/contact")}
+              onClick={() => go(path("contact"))}
               variant="outline"
               size="lg"
               className="w-full sm:w-auto px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg border-[#64499D]/25 dark:border-[#8B6FD1]/30 text-slate-800 dark:text-slate-100 hover:bg-[#F4F1FF]/80 dark:hover:bg-[#64499D]/15 backdrop-blur-sm"
@@ -391,8 +494,8 @@ const Features: React.FC = () => {
       {/* Highlights grid */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 pb-14 sm:pb-16 md:pb-20">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 md:gap-6">
-          {t.highlights.items.map((it: { title: string; desc: string }, idx: number) => {
-            const Icon = HIGHLIGHT_ICONS[idx] || Shield;
+          {t.highlights.items.map((it, idx) => {
+            const Icon = HIGHLIGHT_ICONS[idx] || Sparkles;
             return (
               <FeatureTile
                 key={idx}
@@ -423,10 +526,19 @@ const Features: React.FC = () => {
                   >
                     <Icon className="w-6 h-6" />
                   </div>
-                  <h3 className="font-display text-xl sm:text-2xl font-bold tracking-tight mb-2 break-words">{card.data.title}</h3>
+                  <div className="flex flex-wrap items-center gap-2 mb-2">
+                    <h3 className="font-display text-xl sm:text-2xl font-bold tracking-tight break-words">
+                      {card.data.title}
+                    </h3>
+                    {card.data.badge && (
+                      <span className="px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400 uppercase tracking-wide text-[10px] font-semibold">
+                        {card.data.badge}
+                      </span>
+                    )}
+                  </div>
                   <p className="text-slate-600 dark:text-slate-400 mb-5 leading-relaxed break-words">{card.data.desc}</p>
                   <ul className="space-y-2.5 text-slate-700 dark:text-slate-300">
-                    {card.data.bullets.map((b: string, bi: number) => (
+                    {card.data.bullets.map((b, bi) => (
                       <li key={bi} className="flex items-start gap-2">
                         <Check className="w-5 h-5 text-[#64499D] dark:text-[#8B6FD1] shrink-0 mt-0.5" />
                         <span>{b}</span>
@@ -438,6 +550,33 @@ const Features: React.FC = () => {
             );
           })}
         </div>
+      </section>
+
+      {/* Coming soon */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 pb-14 sm:pb-16 md:pb-20">
+        <Reveal>
+          <div className={`landing-glass rounded-2xl sm:rounded-3xl p-6 sm:p-8 md:p-10 min-w-0 ${isRtl ? "text-right" : "text-start"}`}>
+            <div className="flex items-center gap-3 mb-3 min-w-0">
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#64499D] to-[#4D3680] flex items-center justify-center text-white shrink-0">
+                <Clock className="w-6 h-6" />
+              </div>
+              <h2 className="font-display text-xl sm:text-2xl font-bold break-words">{t.comingSoon.title}</h2>
+            </div>
+            <p className="text-sm sm:text-base text-slate-600 dark:text-slate-300 mb-6 break-words">
+              {t.comingSoon.note}
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {t.comingSoon.items.map((item) => (
+                <span
+                  key={item}
+                  className="px-3 py-1.5 rounded-full border border-dashed border-[#64499D]/30 dark:border-[#8B6FD1]/30 text-sm text-slate-600 dark:text-slate-300"
+                >
+                  {item}
+                </span>
+              ))}
+            </div>
+          </div>
+        </Reveal>
       </section>
 
       {/* CTA */}
@@ -468,7 +607,7 @@ const Features: React.FC = () => {
                 <Button
                   size="lg"
                   className="w-full sm:w-auto px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg font-medium bg-white text-slate-900 hover:bg-slate-100 shadow-lg"
-                  onClick={() => go("/demo")}
+                  onClick={() => go(path("demo"))}
                 >
                   {t.cta.primary}
                 </Button>
@@ -476,7 +615,7 @@ const Features: React.FC = () => {
                   size="lg"
                   variant="outline"
                   className="w-full sm:w-auto px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg font-medium border-white/70 text-white hover:bg-white/10"
-                  onClick={() => go("/contact")}
+                  onClick={() => go(path("contact"))}
                 >
                   {t.cta.secondary}
                 </Button>

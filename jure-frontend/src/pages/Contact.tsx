@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Mail, Send, Phone, MapPin, ArrowRight } from "lucide-react";
 import MarketingShell from "@/components/landing/MarketingShell";
 import Reveal from "@/components/landing/Reveal";
+import { RouteSeo } from "@/marketing/Seo";
 import { devLog } from "@/utils/devLog";
 
 type Lang = "fr" | "en" | "ar";
@@ -165,6 +166,7 @@ const Contact: React.FC = () => {
       dir={t.dir}
       activeNav="contact"
     >
+      <RouteSeo routeKey="contact" lang={lang} />
       <section className="max-w-7xl mx-auto px-4 sm:px-6 pt-8 sm:pt-12 pb-14 sm:pb-16 md:pt-20 md:pb-20">
         <Reveal className="text-center max-w-3xl mx-auto min-w-0">
           <h1 className="font-display text-[2rem] leading-[1.15] sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight break-words">

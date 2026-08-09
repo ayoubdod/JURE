@@ -1,25 +1,42 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router";
+import { useLocation, useNavigate, useParams } from "react-router";
 import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ThemeToggle from "@/components/ThemeToggle";
 import MeshBackdrop from "@/components/landing/MeshBackdrop";
+import { isMarketingLocale, localePath, type MarketingLocale } from "@/marketing/site";
+import { getMarketingDict } from "@/marketing/i18n";
+import { getRoute } from "@/marketing/routes";
+import { swapLocaleInPath } from "@/marketing/MarketingLocale";
+import { track, MarketingEvents } from "@/lib/analytics";
 import "@/components/landing/landing.css";
 
-export type MarketingLang = "fr" | "en" | "ar";
-export type MarketingNavKey = "features" | "about" | "contact" | "none";
+export type MarketingLang = MarketingLocale;
+export type MarketingNavKey =
+  | "features"
+  | "pricing"
+  | "security"
+  | "insights"
+  | "about"
+  | "contact"
+  | "none";
 
+/**
+ * Legacy prop shape kept so existing pages keep compiling. The shell now
+ * sources nav/footer labels from the central marketing dictionaries, which
+ * guarantees consistent trilingual chrome everywhere.
+ */
 export type MarketingLabels = {
-  nav: { features: string; about: string; contact: string };
-  auth: { signin: string };
+  nav?: Partial<Record<string, string>>;
+  auth?: { signin: string };
   themeToggle?: { label: string; title: string };
-  footer: { privacy: string; terms: string; status: string; rights: string };
+  footer?: Partial<Record<string, string>>;
 };
 
 type MarketingShellProps = {
   lang: MarketingLang;
   onLangChange: (l: MarketingLang) => void;
-  labels: MarketingLabels;
+  labels?: MarketingLabels;
   dir?: "ltr" | "rtl";
   activeNav?: MarketingNavKey;
   children: React.ReactNode;
@@ -47,19 +64,46 @@ const LangSwitcher: React.FC<{
   </div>
 );
 
+const NAV_ITEMS: Array<{ key: Exclude<MarketingNavKey, "none">; slug: string }> = [
+  { key: "features", slug: "features" },
+  { key: "pricing", slug: "pricing" },
+  { key: "security", slug: "security" },
+  { key: "insights", slug: "insights" },
+  { key: "about", slug: "about" },
+  { key: "contact", slug: "contact" },
+];
+
+const FOOTER_PLATFORM_SLUGS = ["features", "pricing", "security", "demo", "docs"];
+const FOOTER_SOLUTION_KEYS = [
+  "legalAi",
+  "legalCaseManagement",
+  "legalPracticeManagement",
+  "legalResearch",
+  "legalDocumentManagement",
+  "legalOperations",
+  "legalKnowledgeManagement",
+  "responsibleLegalAi",
+];
+const FOOTER_COMPANY_KEYS = ["about", "contact", "community", "insights"];
+
 const MarketingShell: React.FC<MarketingShellProps> = ({
-  lang,
+  lang: langProp,
   onLangChange,
-  labels,
-  dir = "ltr",
+  dir,
   activeNav = "none",
   children,
 }) => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const params = useParams<{ lang?: string }>();
   const [mobileOpen, setMobileOpen] = useState(false);
   const year = new Date().getFullYear();
-  const isRtl = dir === "rtl";
-  const t = labels;
+
+  // URL is the source of truth for the locale; fall back to the page prop
+  // for any context still rendered outside the locale-prefixed tree.
+  const lang: MarketingLang = isMarketingLocale(params.lang) ? params.lang : langProp;
+  const dict = getMarketingDict(lang);
+  const isRtl = (dir ?? (lang === "ar" ? "rtl" : "ltr")) === "rtl";
 
   useEffect(() => {
     document.body.style.overflow = mobileOpen ? "hidden" : "";
@@ -73,10 +117,33 @@ const MarketingShell: React.FC<MarketingShellProps> = ({
     navigate(to);
   };
 
+  const goSlug = (slug: string) => go(localePath(lang, slug));
+
+  const handleLangChange = (next: MarketingLang) => {
+    if (next === lang) return;
+    track(MarketingEvents.LanguageSwitch, { from: lang, to: next });
+    onLangChange(next);
+    // Keep the visitor on the same page in the new locale.
+    go(swapLocaleInPath(location.pathname, next));
+  };
+
   const navCls = (key: MarketingNavKey) =>
     activeNav === key
       ? "text-[#64499D] dark:text-[#CFC2FF] font-semibold"
       : "hover:text-[#64499D] dark:hover:text-[#8B6FD1] transition-colors";
+
+  const navLabel = (key: Exclude<MarketingNavKey, "none">) => dict.nav[key];
+
+  const footerLink = (label: string, slug: string) => (
+    <button
+      key={slug}
+      type="button"
+      onClick={() => goSlug(slug)}
+      className="block text-sm text-slate-400 hover:text-white transition-colors text-start"
+    >
+      {label}
+    </button>
+  );
 
   return (
     <div className="landing-root min-h-screen relative overflow-x-hidden text-slate-900 dark:text-slate-100 bg-gradient-to-br from-white via-[#FBF9FF] to-slate-50 dark:from-slate-950 dark:via-[#0c0a14] dark:to-slate-900">
@@ -88,7 +155,7 @@ const MarketingShell: React.FC<MarketingShellProps> = ({
             className="landing-glass rounded-2xl px-3 sm:px-6 py-2.5 sm:py-3 flex items-center justify-between gap-2 sm:gap-3"
             aria-label="main navigation"
           >
-            <button type="button" onClick={() => go("/")} className="shrink-0 min-w-0">
+            <button type="button" onClick={() => go(localePath(lang))} className="shrink-0 min-w-0">
               <img
                 src="/images/Jure logo.png"
                 alt="JURE"
@@ -98,37 +165,35 @@ const MarketingShell: React.FC<MarketingShellProps> = ({
               />
             </button>
 
-            <div className="hidden md:flex items-center gap-6 text-sm font-medium">
-              <button type="button" onClick={() => go("/features")} className={navCls("features")}>
-                {t.nav.features}
-              </button>
-              <button type="button" onClick={() => go("/about")} className={navCls("about")}>
-                {t.nav.about}
-              </button>
-              <button type="button" onClick={() => go("/contact")} className={navCls("contact")}>
-                {t.nav.contact}
-              </button>
+            <div className="hidden lg:flex items-center gap-5 text-sm font-medium">
+              {NAV_ITEMS.map((item) => (
+                <button
+                  key={item.key}
+                  type="button"
+                  onClick={() => goSlug(item.slug)}
+                  className={navCls(item.key)}
+                >
+                  {navLabel(item.key)}
+                </button>
+              ))}
             </div>
 
             <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-              <LangSwitcher lang={lang} onChange={onLangChange} />
-              <ThemeToggle
-                label={t.themeToggle?.label}
-                title={t.themeToggle?.title}
-              />
+              <LangSwitcher lang={lang} onChange={handleLangChange} />
+              <ThemeToggle label={dict.themeToggle.label} title={dict.themeToggle.title} />
               <Button
                 onClick={() => go("/signin")}
                 variant="outline"
                 size="sm"
                 className="border-[#64499D]/30 text-[#64499D] hover:bg-[#64499D]/10 dark:text-[#CFC2FF] dark:hover:bg-[#64499D]/20 hidden sm:inline-flex"
               >
-                {t.auth.signin}
+                {dict.auth.signin}
               </Button>
               <Button
                 type="button"
                 variant="outline"
                 size="icon"
-                className="md:hidden h-9 w-9 border-[#64499D]/30 text-[#64499D] dark:text-[#CFC2FF]"
+                className="lg:hidden h-9 w-9 border-[#64499D]/30 text-[#64499D] dark:text-[#CFC2FF]"
                 aria-expanded={mobileOpen}
                 aria-controls="marketing-mobile-menu"
                 aria-label={mobileOpen ? "Close menu" : "Open menu"}
@@ -142,29 +207,25 @@ const MarketingShell: React.FC<MarketingShellProps> = ({
           {mobileOpen && (
             <div
               id="marketing-mobile-menu"
-              className="md:hidden mt-2 landing-glass rounded-2xl p-3 flex flex-col gap-1"
+              className="lg:hidden mt-2 landing-glass rounded-2xl p-3 flex flex-col gap-1"
             >
-              {[
-                { to: "/features", label: t.nav.features, key: "features" as const },
-                { to: "/about", label: t.nav.about, key: "about" as const },
-                { to: "/contact", label: t.nav.contact, key: "contact" as const },
-              ].map((item) => (
+              {NAV_ITEMS.map((item) => (
                 <button
-                  key={item.to}
+                  key={item.key}
                   type="button"
-                  onClick={() => go(item.to)}
+                  onClick={() => goSlug(item.slug)}
                   className={`w-full text-start px-3 py-3 rounded-xl text-sm font-medium hover:bg-[#64499D]/10 dark:hover:bg-[#64499D]/20 transition-colors ${
                     activeNav === item.key ? "text-[#64499D] dark:text-[#CFC2FF]" : ""
                   }`}
                 >
-                  {item.label}
+                  {navLabel(item.key)}
                 </button>
               ))}
               <Button
                 onClick={() => go("/signin")}
                 className="mt-2 w-full bg-gradient-to-r from-[#64499D] to-[#4D3680] text-white"
               >
-                {t.auth.signin}
+                {dict.auth.signin}
               </Button>
             </div>
           )}
@@ -173,34 +234,69 @@ const MarketingShell: React.FC<MarketingShellProps> = ({
 
       <main className="relative z-10 min-w-0">{children}</main>
 
-      <footer className="relative z-10 border-t border-[#64499D]/15 dark:border-[#8B6FD1]/20 bg-slate-950/95 dark:bg-black text-white py-8 sm:py-10 backdrop-blur-md mt-8">
+      <footer className="relative z-10 border-t border-[#64499D]/15 dark:border-[#8B6FD1]/20 bg-slate-950/95 dark:bg-black text-white py-10 sm:py-14 backdrop-blur-md mt-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <div
-            className={`flex flex-col md:flex-row justify-between items-center gap-5 sm:gap-6 text-center md:text-start ${
-              isRtl ? "md:flex-row-reverse" : ""
-            }`}
-          >
-            <img
-              src="/images/Jure logo.png"
-              alt="JURE"
-              className="w-[120px] h-8 object-contain"
-              loading="lazy"
-              decoding="async"
-            />
-            <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 text-sm text-slate-300">
-              <button type="button" onClick={() => go("/privacy")} className="hover:text-white transition-colors">
-                {t.footer.privacy}
-              </button>
-              <button type="button" onClick={() => go("/terms")} className="hover:text-white transition-colors">
-                {t.footer.terms}
-              </button>
-              <button type="button" onClick={() => go("/status")} className="hover:text-white transition-colors">
-                {t.footer.status}
-              </button>
+          <div className={`grid grid-cols-2 md:grid-cols-5 gap-8 ${isRtl ? "text-right" : ""}`}>
+            <div className="col-span-2 md:col-span-1">
+              <img
+                src="/images/Jure logo.png"
+                alt="JURE"
+                className="w-[120px] h-8 object-contain mb-3"
+                loading="lazy"
+                decoding="async"
+              />
+              <p className="text-sm text-slate-400">{dict.footer.tagline}</p>
             </div>
-            <div className="text-slate-400 text-sm">
-              © {year} JURE. {t.footer.rights}
+
+            <div>
+              <div className="text-sm font-semibold text-slate-200 mb-3">
+                {dict.footer.platformHeading}
+              </div>
+              <div className="space-y-2">
+                {FOOTER_PLATFORM_SLUGS.map((slug) =>
+                  footerLink(getRoute(slug === "features" ? "features" : slug).label[lang], slug)
+                )}
+              </div>
             </div>
+
+            <div>
+              <div className="text-sm font-semibold text-slate-200 mb-3">
+                {dict.footer.solutionsHeading}
+              </div>
+              <div className="space-y-2">
+                {FOOTER_SOLUTION_KEYS.map((key) => {
+                  const route = getRoute(key);
+                  return footerLink(route.label[lang], route.slug);
+                })}
+              </div>
+            </div>
+
+            <div>
+              <div className="text-sm font-semibold text-slate-200 mb-3">
+                {dict.footer.companyHeading}
+              </div>
+              <div className="space-y-2">
+                {FOOTER_COMPANY_KEYS.map((key) => {
+                  const route = getRoute(key);
+                  return footerLink(route.label[lang], route.slug);
+                })}
+              </div>
+            </div>
+
+            <div>
+              <div className="text-sm font-semibold text-slate-200 mb-3">
+                {dict.footer.legalHeading}
+              </div>
+              <div className="space-y-2">
+                {footerLink(dict.footer.privacy, "privacy")}
+                {footerLink(dict.footer.terms, "terms")}
+                {footerLink(dict.footer.status, "status")}
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-10 pt-6 border-t border-white/10 text-slate-400 text-sm text-center md:text-start">
+            © {year} JURE. {dict.footer.rights}
           </div>
         </div>
       </footer>

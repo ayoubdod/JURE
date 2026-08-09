@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { FileText, Shield, Scale, CreditCard, Ban, ArrowRight } from "lucide-react";
 import MarketingShell from "@/components/landing/MarketingShell";
 import Reveal from "@/components/landing/Reveal";
+import { RouteSeo } from "@/marketing/Seo";
 
 type Lang = "fr" | "en" | "ar";
 
@@ -359,6 +360,7 @@ const Terms: React.FC = () => {
       dir={t.dir}
       activeNav="none"
     >
+      <RouteSeo routeKey="terms" lang={lang} />
       <section className="max-w-7xl mx-auto px-4 sm:px-6 pt-8 sm:pt-14 pb-10 md:pt-24 md:pb-12">
         <Reveal className="max-w-4xl mx-auto text-center min-w-0">
           <h1 className="font-display text-[2rem] leading-[1.15] sm:text-4xl md:text-5xl font-bold tracking-tight break-words">

@@ -16,6 +16,7 @@ import {
 import MarketingShell from "@/components/landing/MarketingShell";
 import Reveal from "@/components/landing/Reveal";
 import FeatureTile from "@/components/landing/FeatureTile";
+import { RouteSeo } from "@/marketing/Seo";
 
 /**
  * About Page
@@ -272,6 +273,7 @@ const About: React.FC = () => {
       dir={t.dir}
       activeNav="about"
     >
+      <RouteSeo routeKey="about" lang={lang} />
       {/* Hero */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 pt-8 sm:pt-14 pb-10 sm:pb-12 md:pt-24 md:pb-20">
         <Reveal className="text-center max-w-4xl mx-auto min-w-0">

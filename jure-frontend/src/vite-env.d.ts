@@ -1,5 +1,10 @@
 /// <reference types="vite/client" />
 
+declare module "*.md?raw" {
+  const content: string;
+  export default content;
+}
+
 interface ImportMetaEnv {
   readonly VITE_API_URL?: string;
   readonly VITE_API_BASE_URL?: string;
@@ -8,6 +13,8 @@ interface ImportMetaEnv {
   readonly VITE_JURIA_ENABLED?: string;
   readonly REACT_APP_API_URL?: string;
   readonly NEXT_PUBLIC_API_URL?: string;
+  /** Canonical site origin for SEO (defaults to https://jure.ma) */
+  readonly VITE_SITE_URL?: string;
 }
 
 interface ImportMeta {

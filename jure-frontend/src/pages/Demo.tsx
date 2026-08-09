@@ -29,6 +29,7 @@ import {
 } from "lucide-react";
 import MeshBackdrop from "@/components/landing/MeshBackdrop";
 import Reveal from "@/components/landing/Reveal";
+import { RouteSeo } from "@/marketing/Seo";
 import "@/components/landing/landing.css";
 
 type Lang = "fr" | "en" | "ar";
@@ -919,6 +920,7 @@ const Demo: React.FC = () => {
 
   return (
     <div className="landing-root min-h-screen relative overflow-x-hidden text-slate-900 dark:text-slate-100 bg-gradient-to-br from-white via-[#FBF9FF] to-slate-50 dark:from-slate-950 dark:via-[#0c0a14] dark:to-slate-900">
+      <RouteSeo routeKey="demo" lang={lang} />
       <MeshBackdrop />
 
       <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 py-5 sm:py-8 overflow-x-hidden">
@@ -926,7 +928,7 @@ const Demo: React.FC = () => {
         <header className="landing-glass rounded-2xl px-3 sm:px-5 py-2.5 sm:py-3 mb-6 sm:mb-8 flex flex-col min-[480px]:flex-row flex-wrap items-stretch min-[480px]:items-center justify-between gap-2.5 sm:gap-3 min-w-0">
           <div className="flex items-center justify-between gap-2 min-w-0">
             <Button
-              onClick={() => navigate("/")}
+              onClick={() => navigate(`/${lang}`)}
               variant="outline"
               size="sm"
               className="border-[#64499D]/25 text-[#64499D] dark:text-[#CFC2FF] hover:bg-[#64499D]/10 shrink-0 px-2.5 sm:px-3"
