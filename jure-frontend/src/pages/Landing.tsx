@@ -434,13 +434,15 @@ const Landing: React.FC = () => {
         <SectionHeading title={t.audiences.title} />
         <div className="grid md:grid-cols-3 gap-5">
           {[
-            { icon: Landmark, ...t.audiences.firms },
-            { icon: Building2, ...t.audiences.departments },
-            { icon: Scale, ...t.audiences.lawyers },
-          ].map(({ icon: Icon, title, body }, i) => (
+            { icon: Landmark, href: "solutions/law-firms", ...t.audiences.firms },
+            { icon: Building2, href: "solutions/legal-departments", ...t.audiences.departments },
+            { icon: Scale, href: "features", ...t.audiences.lawyers },
+          ].map(({ icon: Icon, title, body, href }, i) => (
             <Reveal key={title} delay={i * 0.08} subtle>
-              <div
-                className={`landing-glass landing-glass-glow rounded-2xl p-6 h-full ${
+              <button
+                type="button"
+                onClick={() => navigate(path(href))}
+                className={`landing-glass landing-glass-glow rounded-2xl p-6 h-full w-full text-start hover:ring-1 hover:ring-[#64499D]/30 transition ${
                   dir === "rtl" ? "text-right" : ""
                 }`}
               >
@@ -451,7 +453,7 @@ const Landing: React.FC = () => {
                 <p className="mt-2 text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
                   {body}
                 </p>
-              </div>
+              </button>
             </Reveal>
           ))}
         </div>
@@ -463,7 +465,7 @@ const Landing: React.FC = () => {
       <section className="max-w-6xl mx-auto px-4 sm:px-6 py-14 sm:py-20">
         <SectionHeading title={t.insights.title} subtitle={t.insights.subtitle} />
         <div className="grid md:grid-cols-3 gap-5">
-          {INSIGHT_ARTICLES.map((article, i) => (
+          {INSIGHT_ARTICLES.slice(0, 3).map((article, i) => (
             <Reveal key={article.slug} delay={i * 0.08} subtle>
               <button
                 type="button"

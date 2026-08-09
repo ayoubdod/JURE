@@ -4,7 +4,8 @@
  *  - 301-redirects legacy unprefixed marketing URLs to locale-prefixed ones
  *  - injects per-URL SEO head tags (title/meta/canonical/hreflang/JSON-LD)
  *    from dist/seo-manifest.json so crawlers get correct metadata without
- *    executing JavaScript.
+ *    executing JavaScript
+ *  - injects a crawlable H1 + lead into #root (replaced when React hydrates)
  */
 import express from 'express';
 import fs from 'fs';
@@ -67,6 +68,8 @@ const LEGACY_MARKETING_SLUGS = new Set([
   'legal-operations',
   'legal-knowledge-management',
   'responsible-legal-ai',
+  'solutions/law-firms',
+  'solutions/legal-departments',
 ]);
 
 function preferredLocale(req) {
@@ -126,6 +129,25 @@ function buildHead(entry, canonicalBase) {
   ].join('\n');
 }
 
+/** Static body for crawlers; React replaces #root children on hydrate. */
+function buildBodySnippet(entry) {
+  if (!entry?.h1) return '<div id="root"></div>';
+  const h1 = escapeHtml(entry.h1);
+  const lead = escapeHtml(entry.lead || entry.description || '');
+  const dir = entry.locale === 'ar' ? 'rtl' : 'ltr';
+  return [
+    '<div id="root">',
+    `  <div id="jure-seo-body" data-seo-static dir="${dir}" style="max-width:48rem;margin:2rem auto;padding:0 1rem;font-family:system-ui,sans-serif;line-height:1.5;color:#0f172a">`,
+    `    <p style="font-size:0.875rem;font-weight:600;color:#64499D;margin:0 0 0.75rem">JURE</p>`,
+    `    <h1 style="font-size:1.75rem;line-height:1.2;margin:0 0 1rem">${h1}</h1>`,
+    lead ? `    <p style="font-size:1rem;color:#334155;margin:0">${lead}</p>` : '',
+    '  </div>',
+    '</div>',
+  ]
+    .filter(Boolean)
+    .join('\n');
+}
+
 const SEO_START = '<!-- seo:start -->';
 const SEO_END = '<!-- seo:end -->';
 const htmlCache = new Map();
@@ -147,11 +169,13 @@ function htmlForPath(reqPath) {
         buildHead(entry, canonicalBase) +
         '\n    ' +
         indexTemplate.slice(endIdx);
-      // Align the html lang attribute with the page locale.
       html = html.replace('<html lang="en"', `<html lang="${entry.locale}"`);
       if (entry.locale === 'ar') {
         html = html.replace(`<html lang="ar"`, `<html lang="ar" dir="rtl"`);
       }
+    }
+    if (html.includes('<div id="root"></div>')) {
+      html = html.replace('<div id="root"></div>', buildBodySnippet(entry));
     }
   }
   htmlCache.set(normalized, html);
@@ -164,12 +188,11 @@ app.get('/health', (_req, res) => {
   res.status(200).type('text/plain').send('ok');
 });
 
-// Legacy unprefixed marketing URLs → locale-prefixed (real 301s for crawlers).
 app.use((req, res, next) => {
   if (req.method !== 'GET' && req.method !== 'HEAD') return next();
   const trimmed = req.path.replace(/^\/+|\/+$/g, '');
   const [head] = trimmed.split('/');
-  if (LOCALES.includes(head)) return next(); // already locale-prefixed
+  if (LOCALES.includes(head)) return next();
   if (!LEGACY_MARKETING_SLUGS.has(trimmed)) return next();
   const locale = preferredLocale(req);
   res.redirect(301, `/${locale}${trimmed ? `/${trimmed}` : ''}`);
@@ -183,7 +206,6 @@ app.use(
   })
 );
 
-// SPA fallback with SEO head injection (middleware, not a path pattern — Express 5 safe)
 app.use((req, res) => {
   if (req.method !== 'GET' && req.method !== 'HEAD') {
     res.status(405).type('text/plain').send('Method Not Allowed');

@@ -34,6 +34,7 @@ const Community = lazy(() => import("./pages/Community"));
 const Security = lazy(() => import("./pages/Security"));
 const Demo = lazy(() => import("./pages/Demo"));
 const JuriaPage = lazy(() => import("./pages/Juria"));
+const SolutionPage = lazy(() => import("./pages/solutions/SolutionPage"));
 const IntentPage = lazy(() => import("./pages/intent/IntentPage"));
 const InsightsIndex = lazy(() => import("./pages/insights/InsightsIndex"));
 const InsightArticle = lazy(() => import("./pages/insights/InsightArticle"));
@@ -92,6 +93,11 @@ const INTENT_ROUTES: Array<{ slug: string; routeKey: string }> = [
   { slug: "responsible-legal-ai", routeKey: "responsibleLegalAi" },
 ];
 
+const SOLUTION_ROUTES: Array<{ slug: string; routeKey: string }> = [
+  { slug: "solutions/law-firms", routeKey: "solutionsLawFirms" },
+  { slug: "solutions/legal-departments", routeKey: "solutionsLegalDepartments" },
+];
+
 /** Legacy unprefixed marketing URLs → locale-prefixed equivalents. */
 const LEGACY_MARKETING_SLUGS = [
   "about",
@@ -107,6 +113,8 @@ const LEGACY_MARKETING_SLUGS = [
   "security",
   "demo",
   "juria",
+  "solutions/law-firms",
+  "solutions/legal-departments",
 ];
 
 const router = createBrowserRouter([
@@ -129,6 +137,10 @@ const router = createBrowserRouter([
       { path: "terms", element: pub(<Terms />) },
       { path: "status", element: pub(<Status />) },
       { path: "status/subscribe", element: pub(<StatusSubscribe />) },
+      ...SOLUTION_ROUTES.map(({ slug, routeKey }) => ({
+        path: slug,
+        element: pub(<SolutionPage routeKey={routeKey} />),
+      })),
       ...INTENT_ROUTES.map(({ slug, routeKey }) => ({
         path: slug,
         element: pub(<IntentPage routeKey={routeKey} />),

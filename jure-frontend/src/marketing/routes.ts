@@ -70,6 +70,40 @@ export const MARKETING_ROUTES: MarketingRoute[] = [
     },
   },
   {
+    key: "solutionsLawFirms",
+    slug: "solutions/law-firms",
+    priority: 0.85,
+    changefreq: "monthly",
+    label: { en: "For law firms", fr: "Pour les cabinets", ar: "لمكاتب المحاماة" },
+    title: {
+      en: "Legal Software for Law Firms | JURE",
+      fr: "Logiciel juridique pour cabinets d'avocats | JURE",
+      ar: "برمجيات قانونية لمكاتب المحاماة | JURE",
+    },
+    description: {
+      en: "JURE is a LegalTech platform for law firms: matter management, documents, deadlines, team collaboration and Juria AI assistance in one secure workspace.",
+      fr: "JURE est une plateforme LegalTech pour cabinets d'avocats : gestion de dossiers, documents, échéances, collaboration d'équipe et assistance IA Juria dans un espace sécurisé.",
+      ar: "JURE منصة LegalTech لمكاتب المحاماة: إدارة الملفات والمستندات والمواعيد وتعاون الفريق ومساعدة جوريا بالذكاء الاصطناعي في مساحة آمنة واحدة.",
+    },
+  },
+  {
+    key: "solutionsLegalDepartments",
+    slug: "solutions/legal-departments",
+    priority: 0.85,
+    changefreq: "monthly",
+    label: { en: "For legal departments", fr: "Pour les directions juridiques", ar: "للإدارات القانونية" },
+    title: {
+      en: "LegalTech for Legal Departments | JURE",
+      fr: "LegalTech pour directions juridiques | JURE",
+      ar: "LegalTech للإدارات القانونية | JURE",
+    },
+    description: {
+      en: "Give in-house legal teams shared visibility over matters, documents and deadlines — with secure collaboration and responsible AI assistance from JURE.",
+      fr: "Donnez aux équipes juridiques internes une visibilité partagée sur dossiers, documents et échéances — avec collaboration sécurisée et assistance IA responsable de JURE.",
+      ar: "امنح فرق الشؤون القانونية الداخلية رؤية مشتركة للملفات والمستندات والمواعيد — مع تعاون آمن ومساعدة ذكاء اصطناعي مسؤولة من JURE.",
+    },
+  },
+  {
     key: "features",
     slug: "features",
     priority: 0.9,
@@ -447,6 +481,54 @@ export const INSIGHT_ARTICLES: InsightArticleMeta[] = [
       en: "A practical introduction to LegalTech: what it covers, how it evolved, what it changes for law firms and legal departments, and why emerging and multilingual markets matter.",
       fr: "Une introduction pratique à la LegalTech : ce qu'elle recouvre, son évolution, ce qu'elle change pour les cabinets et directions juridiques, et pourquoi les marchés émergents et multilingues comptent.",
       ar: "مقدمة عملية للتقنية القانونية: ما الذي تشمله، كيف تطورت، ماذا تغيّر لمكاتب المحاماة والإدارات القانونية، ولماذا تهم الأسواق الناشئة ومتعددة اللغات.",
+    },
+  },
+  {
+    slug: "legaltech-in-morocco",
+    datePublished: "2026-08-09",
+    dateModified: "2026-08-09",
+    label: { en: "LegalTech in Morocco", fr: "LegalTech au Maroc", ar: "التقنية القانونية في المغرب" },
+    title: {
+      en: "LegalTech in Morocco: What Modern Legal Teams Actually Need",
+      fr: "LegalTech au Maroc : de quoi les équipes juridiques modernes ont vraiment besoin",
+      ar: "التقنية القانونية في المغرب: ما تحتاجه الفرق القانونية الحديثة فعليًا",
+    },
+    description: {
+      en: "A practical map of LegalTech in Morocco: multilingual practice, civil-law workflows, what firms need before AI, and a responsible path to adoption.",
+      fr: "Une carte pratique de la LegalTech au Maroc : pratique multilingue, flux de droit civil, ce dont les cabinets ont besoin avant l'IA, et un parcours d'adoption responsable.",
+      ar: "خريطة عملية للتقنية القانونية في المغرب: الممارسة متعددة اللغات، مسارات القانون المدني، ما تحتاجه المكاتب قبل الذكاء الاصطناعي، ومسار تبنٍّ مسؤول.",
+    },
+  },
+  {
+    slug: "legal-ai-in-mena",
+    datePublished: "2026-08-09",
+    dateModified: "2026-08-09",
+    label: { en: "Legal AI in MENA", fr: "IA juridique au Moyen-Orient et en Afrique du Nord", ar: "الذكاء الاصطناعي القانوني في الشرق الأوسط وشمال أفريقيا" },
+    title: {
+      en: "Legal AI in MENA: Multilingual Work, Confidentiality and Human Review",
+      fr: "IA juridique au Moyen-Orient et en Afrique du Nord : multilinguisme, confidentialité et relecture humaine",
+      ar: "الذكاء الاصطناعي القانوني في الشرق الأوسط وشمال أفريقيا: تعدد اللغات والسرية والمراجعة البشرية",
+    },
+    description: {
+      en: "What legal AI means across MENA: multilingual constraints, confidentiality risks, a responsible adoption checklist, and why AI must serve lawyers — not replace them.",
+      fr: "Ce que signifie l'IA juridique dans la région : contraintes multilingues, risques de confidentialité, checklist d'adoption responsable, et pourquoi l'IA doit servir les avocats — non les remplacer.",
+      ar: "ماذا يعني الذكاء الاصطناعي القانوني في المنطقة: قيود تعدد اللغات ومخاطر السرية وقائمة تحقق للتبنّي المسؤول، ولماذا يجب أن يخدم الذكاء الاصطناعي المحامين لا أن يحل محلهم.",
+    },
+  },
+  {
+    slug: "legal-technology-african-law-firms",
+    datePublished: "2026-08-09",
+    dateModified: "2026-08-09",
+    label: { en: "Legal technology for African law firms", fr: "Technologie juridique pour cabinets africains", ar: "التقنية القانونية لمكاتب المحاماة الأفريقية" },
+    title: {
+      en: "Legal Technology for African Law Firms: Leapfrogging Without Skipping Foundations",
+      fr: "Technologie juridique pour cabinets africains : leapfrog sans sauter les fondations",
+      ar: "التقنية القانونية لمكاتب المحاماة الأفريقية: قفز تكنولوجي دون تخطّي الأسس",
+    },
+    description: {
+      en: "How African law firms can adopt modern LegalTech: matter hygiene first, then collaboration, then responsible AI — built for multilingual and civil-law practice.",
+      fr: "Comment les cabinets africains peuvent adopter une LegalTech moderne : hygiène des dossiers d'abord, puis collaboration, puis IA responsable — pour une pratique multilingue et de droit civil.",
+      ar: "كيف يمكن لمكاتب المحاماة الأفريقية تبنّي LegalTech حديثة: نظافة الملفات أولًا ثم التعاون ثم الذكاء الاصطناعي المسؤول — للممارسة متعددة اللغات والقانون المدني.",
     },
   },
   {

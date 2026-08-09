@@ -10,6 +10,21 @@ const ARTICLE_BODIES: Record<string, Record<MarketingLocale, () => Promise<strin
     fr: () => import("./what-is-legaltech.fr.md?raw").then((m) => m.default),
     ar: () => import("./what-is-legaltech.ar.md?raw").then((m) => m.default),
   },
+  "legaltech-in-morocco": {
+    en: () => import("./legaltech-in-morocco.en.md?raw").then((m) => m.default),
+    fr: () => import("./legaltech-in-morocco.fr.md?raw").then((m) => m.default),
+    ar: () => import("./legaltech-in-morocco.ar.md?raw").then((m) => m.default),
+  },
+  "legal-ai-in-mena": {
+    en: () => import("./legal-ai-in-mena.en.md?raw").then((m) => m.default),
+    fr: () => import("./legal-ai-in-mena.fr.md?raw").then((m) => m.default),
+    ar: () => import("./legal-ai-in-mena.ar.md?raw").then((m) => m.default),
+  },
+  "legal-technology-african-law-firms": {
+    en: () => import("./legal-technology-african-law-firms.en.md?raw").then((m) => m.default),
+    fr: () => import("./legal-technology-african-law-firms.fr.md?raw").then((m) => m.default),
+    ar: () => import("./legal-technology-african-law-firms.ar.md?raw").then((m) => m.default),
+  },
   "responsible-ai-for-lawyers": {
     en: () => import("./responsible-ai-for-lawyers.en.md?raw").then((m) => m.default),
     fr: () => import("./responsible-ai-for-lawyers.fr.md?raw").then((m) => m.default),

@@ -1,8 +1,8 @@
 /**
  * Vite build plugin: emits dist/sitemap.xml and dist/seo-manifest.json from
  * the marketing route registry. The Express server (server.mjs) uses the
- * manifest to inject per-URL head tags so crawlers get correct metadata
- * without executing JavaScript.
+ * manifest to inject per-URL head tags and a crawlable H1/lead body snippet
+ * so crawlers get correct metadata and visible content without executing JS.
  */
 import fs from "node:fs";
 import path from "node:path";
@@ -14,7 +14,9 @@ import {
   webSiteJsonLd,
   softwareApplicationJsonLd,
   articleJsonLd,
+  faqPageJsonLd,
 } from "../src/marketing/structuredData";
+import { crawlSnippetForRoute, crawlSnippetForArticle } from "../src/marketing/crawlContent";
 
 interface SitemapEntry {
   slug: string;
@@ -30,6 +32,9 @@ interface ManifestEntry {
   ogType: "website" | "article";
   locale: string;
   jsonLd: unknown[];
+  /** Crawlable body snippet injected into #root for non-JS crawlers. */
+  h1?: string;
+  lead?: string;
 }
 
 function collectEntries(): SitemapEntry[] {
@@ -87,12 +92,14 @@ function buildManifest(): Record<string, ManifestEntry> {
 
   for (const route of MARKETING_ROUTES) {
     for (const locale of LOCALES) {
+      const snippet = crawlSnippetForRoute(route.key, locale);
       const sitewide = [
         organizationJsonLd(locale),
         webSiteJsonLd(locale),
         ...(route.key === "home" || route.key === "features"
           ? [softwareApplicationJsonLd(locale)]
           : []),
+        ...(snippet?.faqs?.length ? [faqPageJsonLd(snippet.faqs)] : []),
       ];
       manifest[localePath(locale, route.slug)] = {
         title: route.title[locale],
@@ -101,6 +108,7 @@ function buildManifest(): Record<string, ManifestEntry> {
         ogType: "website",
         locale,
         jsonLd: sitewide,
+        ...(snippet ? { h1: snippet.h1, lead: snippet.lead } : {}),
       };
     }
   }
@@ -108,6 +116,7 @@ function buildManifest(): Record<string, ManifestEntry> {
   for (const article of INSIGHT_ARTICLES) {
     for (const locale of LOCALES) {
       const slug = `insights/${article.slug}`;
+      const snippet = crawlSnippetForArticle(article.slug, locale);
       manifest[localePath(locale, slug)] = {
         title: article.title[locale],
         description: article.description[locale],
@@ -115,6 +124,7 @@ function buildManifest(): Record<string, ManifestEntry> {
         ogType: "article",
         locale,
         jsonLd: [organizationJsonLd(locale), webSiteJsonLd(locale), articleJsonLd(article, locale)],
+        ...(snippet ? { h1: snippet.h1, lead: snippet.lead } : {}),
       };
     }
   }

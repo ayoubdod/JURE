@@ -84,6 +84,8 @@ const NAV_ITEMS: Array<{ key: Exclude<MarketingNavKey, "none">; slug: string }> 
 
 const FOOTER_PLATFORM_SLUGS = ["features", "pricing", "security", "demo", "docs"];
 const FOOTER_SOLUTION_KEYS = [
+  "solutionsLawFirms",
+  "solutionsLegalDepartments",
   "juria",
   "legalAi",
   "legalCaseManagement",
