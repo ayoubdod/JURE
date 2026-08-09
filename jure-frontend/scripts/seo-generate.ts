@@ -38,17 +38,20 @@ interface ManifestEntry {
 }
 
 function collectEntries(): SitemapEntry[] {
+  const today = new Date().toISOString().slice(0, 10);
   const entries: SitemapEntry[] = MARKETING_ROUTES.map((route) => ({
     slug: route.slug,
     priority: route.priority,
     changefreq: route.changefreq,
+    // Build-date lastmod encourages recrawl after SEO/content deploys.
+    lastmod: today,
   }));
   for (const article of INSIGHT_ARTICLES) {
     entries.push({
       slug: `insights/${article.slug}`,
       priority: 0.7,
       changefreq: "monthly",
-      lastmod: article.dateModified,
+      lastmod: article.dateModified || today,
     });
   }
   return entries;
