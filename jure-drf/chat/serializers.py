@@ -141,9 +141,20 @@ class UserThinSerializer(serializers.ModelSerializer):
         fields = ("id", "first_name", "last_name", "email", "full_name", "image")
 
     def get_full_name(self, obj):
-        if getattr(obj, "first_name", "") and getattr(obj, "last_name", ""):
-            return f"{obj.first_name} {obj.last_name}"
-        return obj.email
+        fn = (getattr(obj, "first_name", None) or "").strip()
+        ln = (getattr(obj, "last_name", None) or "").strip()
+        combined = f"{fn} {ln}".strip()
+        if combined:
+            return combined
+        full = (obj.get_full_name() or "").strip() if hasattr(obj, "get_full_name") else ""
+        if full:
+            return full
+        email = (getattr(obj, "email", None) or "").strip()
+        if "@" in email:
+            return email.split("@", 1)[0]
+        if email:
+            return email
+        return f"Member {obj.pk}"
 
 
 class ConversationSerializer(serializers.ModelSerializer):

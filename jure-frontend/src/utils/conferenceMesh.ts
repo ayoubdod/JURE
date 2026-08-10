@@ -28,9 +28,10 @@ export function createPeerSlot(
   userId: number,
   meta?: Partial<Pick<ConferencePeer, 'name' | 'avatar' | 'firstName' | 'lastName'>>
 ): ConferencePeer {
+  const name = meta?.name?.trim();
   return {
     userId,
-    name: meta?.name ?? `User ${userId}`,
+    name: name || `User ${userId}`,
     avatar: meta?.avatar ?? null,
     firstName: meta?.firstName,
     lastName: meta?.lastName,
@@ -41,6 +42,44 @@ export function createPeerSlot(
     cameraOff: false,
     isSpeaking: false,
   };
+}
+
+export function rememberPeerMeta(
+  peers: Map<number, ConferencePeer>,
+  peerId: number,
+  meta: Partial<Pick<ConferencePeer, 'name' | 'avatar' | 'firstName' | 'lastName'>>
+): boolean {
+  if (!Number.isFinite(peerId)) return false;
+  let slot = peers.get(peerId);
+  const name = meta.name?.trim();
+  if (!slot) {
+    if (!name) return false;
+    slot = createPeerSlot(peerId, meta);
+    peers.set(peerId, slot);
+    return true;
+  }
+  let changed = false;
+  if (name && (/^User\s+\d+$/i.test(slot.name) || /^Member\s+\d+$/i.test(slot.name) || slot.name === `User ${peerId}`)) {
+    slot.name = name;
+    changed = true;
+  } else if (name && name !== slot.name && !/^User\s+\d+$/i.test(name) && !/^Member\s+\d+$/i.test(name)) {
+    slot.name = name;
+    changed = true;
+  }
+  if (meta.avatar != null && meta.avatar !== slot.avatar) {
+    slot.avatar = meta.avatar;
+    changed = true;
+  }
+  if (meta.firstName != null && meta.firstName !== slot.firstName) {
+    slot.firstName = meta.firstName;
+    changed = true;
+  }
+  if (meta.lastName != null && meta.lastName !== slot.lastName) {
+    slot.lastName = meta.lastName;
+    changed = true;
+  }
+  if (changed) peers.set(peerId, slot);
+  return changed;
 }
 
 export async function ensurePeerConnection(
@@ -59,9 +98,16 @@ export async function ensurePeerConnection(
     slot = createPeerSlot(peerId, meta);
     peers.set(peerId, slot);
   } else if (meta) {
+    const nextName = meta.name?.trim();
+    const useName =
+      nextName && !/^User\s+\d+$/i.test(nextName)
+        ? nextName
+        : slot.name && !/^User\s+\d+$/i.test(slot.name)
+          ? slot.name
+          : nextName || slot.name;
     slot = {
       ...slot,
-      name: meta.name ?? slot.name,
+      name: useName,
       avatar: meta.avatar ?? slot.avatar,
       firstName: meta.firstName ?? slot.firstName,
       lastName: meta.lastName ?? slot.lastName,
@@ -94,6 +140,8 @@ export async function ensurePeerConnection(
       slot!.remoteStream = stream;
     }
     peers.set(peerId, slot!);
+    stream.onaddtrack = () => onTrack(peerId, stream!);
+    stream.onremovetrack = () => onTrack(peerId, stream!);
     // Per-peer media is rendered in the conference UI — do not overwrite the global 1:1 remote element.
     onTrack(peerId, stream);
   };
@@ -154,7 +202,8 @@ export async function answerFromPeer(
   groupName: string,
   send: SignalFn,
   onTrack: (peerId: number, stream: MediaStream) => void,
-  onState: (peerId: number, state: string) => void
+  onState: (peerId: number, state: string) => void,
+  meta?: Partial<Pick<ConferencePeer, 'name' | 'avatar' | 'firstName' | 'lastName'>>
 ): Promise<void> {
   const slot = await ensurePeerConnection(
     peers,
@@ -164,12 +213,22 @@ export async function answerFromPeer(
     groupName,
     send,
     onTrack,
-    onState
+    onState,
+    meta
   );
   if (!slot.pc) return;
   try {
-    if (slot.pc.signalingState !== 'stable' && slot.pc.remoteDescription) {
-      devWarn('[conference] skip duplicate answer', peerId, slot.pc.signalingState);
+    // Renegotiation (screen share): accept offer while stable. Skip only if mid-flight.
+    if (slot.pc.signalingState === 'have-local-offer') {
+      // Glare — roll back local offer and accept remote
+      try {
+        await slot.pc.setLocalDescription({ type: 'rollback' } as RTCSessionDescriptionInit);
+      } catch {
+        devWarn('[conference] rollback failed', peerId, slot.pc.signalingState);
+        return;
+      }
+    } else if (slot.pc.signalingState !== 'stable' && slot.pc.signalingState !== 'have-remote-offer') {
+      devWarn('[conference] skip answer — signaling busy', peerId, slot.pc.signalingState);
       return;
     }
     const answer = await createAnswer(slot.pc, offer);

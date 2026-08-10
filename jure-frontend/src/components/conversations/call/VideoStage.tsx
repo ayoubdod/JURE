@@ -94,7 +94,8 @@ const VideoStage: React.FC<{
 
   const live = status === 'active' || status === 'reconnecting' || status === 'connecting';
   const isConference = mode === 'conference';
-  const showStage = kind === 'video' || isScreenSharing;
+  const showStage =
+    kind === 'video' || isScreenSharing || hasRemoteVideo || peers.some((p) => p.hasVideo);
 
   useEffect(() => {
     const local = localRef.current;

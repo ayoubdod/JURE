@@ -410,9 +410,78 @@ class CallSignalingMixin:
         return count == len(ids)
 
     async def _display_name(self) -> str:
-        return await database_sync_to_async(
-            lambda u: u.get_full_name() or u.get_username()
-        )(self.user)
+        def _name(u):
+            full = (u.get_full_name() or "").strip()
+            if full:
+                return full
+            fn = (getattr(u, "first_name", None) or "").strip()
+            ln = (getattr(u, "last_name", None) or "").strip()
+            combined = f"{fn} {ln}".strip()
+            if combined:
+                return combined
+            email = (getattr(u, "email", None) or "").strip()
+            if "@" in email:
+                return email.split("@", 1)[0]
+            if email:
+                return email
+            return f"Member {u.pk}"
+
+        return await database_sync_to_async(_name)(self.user)
+
+    async def _participant_profiles(self, user_ids) -> list[dict]:
+        """Display names/avatars for conference UI (avoid 'User N' placeholders)."""
+        ids = []
+        for raw in user_ids or []:
+            try:
+                ids.append(int(raw))
+            except (TypeError, ValueError):
+                continue
+        if not ids:
+            return []
+
+        def _rows(pk_list):
+            from django.contrib.auth import get_user_model
+
+            User = get_user_model()
+            out = []
+            # Custom User uses email as USERNAME_FIELD (no username column).
+            qs = User.objects.filter(pk__in=pk_list).only("id", "first_name", "last_name", "email")
+            for u in qs:
+                full = (u.get_full_name() or "").strip()
+                fn = (u.first_name or "").strip()
+                ln = (u.last_name or "").strip()
+                combined = f"{fn} {ln}".strip()
+                name = full or combined
+                if not name:
+                    email = (u.email or "").strip()
+                    if "@" in email:
+                        name = email.split("@", 1)[0]
+                    elif email:
+                        name = email
+                    else:
+                        name = f"Member {u.pk}"
+                image = None
+                try:
+                    img = getattr(u, "image", None)
+                    if img:
+                        image = getattr(img, "url", None) or str(img)
+                except Exception:
+                    image = None
+                out.append(
+                    {
+                        "id": u.pk,
+                        "name": name,
+                        "firstName": fn or None,
+                        "lastName": ln or None,
+                        "avatar": image,
+                    }
+                )
+            return out
+
+        try:
+            return await database_sync_to_async(_rows)(ids)
+        except Exception:
+            return []
 
     async def _broadcast_room_active(self, conv_id: int, state: dict, group_name: str) -> None:
         caller_id = state.get("callerId")
@@ -659,6 +728,7 @@ class CallSignalingMixin:
         recv_name = await self._display_name()
         await self._broadcast_room_active(int(state["conversationId"]), state, group_name)
 
+        profiles = await self._participant_profiles(_participant_ids(state))
         await self.channel_layer.group_send(
             group_name,
             {
@@ -669,6 +739,7 @@ class CallSignalingMixin:
                 "group_name": group_name,
                 "joined_ids": _joined_ids(state),
                 "participant_ids": _participant_ids(state),
+                "participants": profiles,
                 "mode": mode,
             },
         )
@@ -790,6 +861,7 @@ class CallSignalingMixin:
                 "type": "call.offer",
                 "sdp": sdp,
                 "sender_id": self.user.id,
+                "sender_name": await self._display_name(),
                 "target_user_id": target_user_id,
                 "sender_channel": self.channel_name,
                 "group_name": group_name,
@@ -819,6 +891,7 @@ class CallSignalingMixin:
                 "type": "call.answer",
                 "sdp": sdp,
                 "sender_id": self.user.id,
+                "sender_name": await self._display_name(),
                 "target_user_id": target_user_id,
                 "sender_channel": self.channel_name,
                 "group_name": group_name,
@@ -878,6 +951,7 @@ class CallSignalingMixin:
 
         joined = _joined_ids(state)
         if uid in joined:
+            profiles = await self._participant_profiles(participants)
             await self.send_json(
                 {
                     "type": "call.accepted",
@@ -886,6 +960,7 @@ class CallSignalingMixin:
                     "groupName": group_name,
                     "joinedIds": joined,
                     "participantIds": participants,
+                    "participants": profiles,
                     "mode": state.get("mode", "direct"),
                 }
             )
@@ -904,6 +979,7 @@ class CallSignalingMixin:
         await self.channel_layer.group_add(group_name, self.channel_name)
         self.call_groups_joined.add(group_name)
         recv_name = await self._display_name()
+        profiles = await self._participant_profiles(participants)
         await self._broadcast_room_active(int(conv_id), state, group_name)
         await self.channel_layer.group_send(
             group_name,
@@ -915,8 +991,22 @@ class CallSignalingMixin:
                 "group_name": group_name,
                 "joined_ids": joined,
                 "participant_ids": participants,
+                "participants": profiles,
                 "mode": state.get("mode", "conference"),
             },
+        )
+        # Late joiner also needs the roster of names immediately (they skip own group_send).
+        await self.send_json(
+            {
+                "type": "call.accepted",
+                "receiverId": uid,
+                "receiverName": recv_name,
+                "groupName": group_name,
+                "joinedIds": joined,
+                "participantIds": participants,
+                "participants": profiles,
+                "mode": state.get("mode", "conference"),
+            }
         )
 
     async def _handle_leave(self, content: dict):
@@ -1044,6 +1134,7 @@ class CallSignalingMixin:
                 "groupName": event.get("group_name"),
                 "joinedIds": event.get("joined_ids") or [],
                 "participantIds": event.get("participant_ids") or [],
+                "participants": event.get("participants") or [],
                 "mode": event.get("mode") or "direct",
             }
         )
@@ -1073,6 +1164,7 @@ class CallSignalingMixin:
                 "type": "call.offer",
                 "sdp": event["sdp"],
                 "senderId": event["sender_id"],
+                "senderName": event.get("sender_name"),
                 "targetUserId": target,
                 "groupName": event.get("group_name"),
             }
@@ -1089,6 +1181,7 @@ class CallSignalingMixin:
                 "type": "call.answer",
                 "sdp": event["sdp"],
                 "senderId": event["sender_id"],
+                "senderName": event.get("sender_name"),
                 "targetUserId": target,
                 "groupName": event.get("group_name"),
             }

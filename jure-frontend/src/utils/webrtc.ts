@@ -49,13 +49,19 @@ export async function createAnswer(
   pc: RTCPeerConnection,
   offerSdp: RTCSessionDescriptionInit
 ): Promise<RTCSessionDescriptionInit> {
-  await pc.setRemoteDescription(new RTCSessionDescription(offerSdp));
+  if (pc.signalingState !== 'have-remote-offer') {
+    await pc.setRemoteDescription(new RTCSessionDescription(offerSdp));
+  }
   const answer = await pc.createAnswer();
   await pc.setLocalDescription(answer);
   return answer;
 }
 
 export async function setRemoteAnswer(pc: RTCPeerConnection, answerSdp: RTCSessionDescriptionInit) {
+  if (pc.signalingState !== 'have-local-offer') {
+    // Already applied or not expecting an answer (duplicate / late renegotiation).
+    return;
+  }
   await pc.setRemoteDescription(new RTCSessionDescription(answerSdp));
 }
 

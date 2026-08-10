@@ -363,7 +363,10 @@ const ConversationsPage: React.FC = () => {
       if (seen.has(u.id)) continue;
       seen.add(u.id);
       const name =
-        `${u.first_name ?? ''} ${u.last_name ?? ''}`.trim() || u.email || t.conversations.contact;
+        (u as { full_name?: string }).full_name?.trim() ||
+        `${u.first_name ?? ''} ${u.last_name ?? ''}`.trim() ||
+        (u.email ? u.email.split('@')[0] : '') ||
+        t.conversations.contact;
       out.push({
         id: u.id,
         name,
@@ -487,6 +490,12 @@ const ConversationsPage: React.FC = () => {
       kind: active.kind,
       mode: active.mode,
       remoteUser: remote ?? null,
+      remoteUsers:
+        activeConversation?.type === 'group'
+          ? groupCallCandidates
+          : remote
+            ? [remote]
+            : [],
       displayTitle:
         activeConversation?.display_name?.trim() ||
         activeConversation?.title?.trim() ||

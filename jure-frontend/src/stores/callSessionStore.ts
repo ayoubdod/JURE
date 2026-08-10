@@ -43,6 +43,7 @@ import {
   closeAllPeers,
   offerToPeer,
   peerListSnapshot,
+  rememberPeerMeta,
   setPeerSpeaking,
   updatePeerVideoFlags,
   type ConferencePeer,
@@ -212,6 +213,85 @@ const speakingAnalysers = new Map<number, { analyser: AnalyserNode; source: Medi
 /** Camera track kept while screen-sharing so we can restore it. */
 let savedCameraTrack: MediaStreamTrack | null = null;
 let screenShareTrack: MediaStreamTrack | null = null;
+
+function isPlaceholderPeerName(name: string | undefined | null): boolean {
+  if (!name) return true;
+  const n = name.trim();
+  return /^user\s*\d+$/i.test(n) || /^member\s*\d+$/i.test(n);
+}
+
+function rememberRemoteUser(user: CallRemoteUser) {
+  if (!Number.isFinite(user.id)) return;
+  const prev = knownRemoteUsers.get(user.id);
+  const merged: CallRemoteUser = {
+    id: user.id,
+    name:
+      user.name && !isPlaceholderPeerName(user.name)
+        ? user.name
+        : prev?.name && !isPlaceholderPeerName(prev.name)
+          ? prev.name
+          : user.name || prev?.name || `User ${user.id}`,
+    avatar: user.avatar ?? prev?.avatar ?? null,
+    firstName: user.firstName ?? prev?.firstName,
+    lastName: user.lastName ?? prev?.lastName,
+  };
+  knownRemoteUsers.set(user.id, merged);
+  const slot = conferencePeers.get(user.id);
+  if (slot) {
+    const better =
+      merged.name &&
+      !isPlaceholderPeerName(merged.name) &&
+      (isPlaceholderPeerName(slot.name) || slot.name !== merged.name);
+    if (better || (merged.avatar && merged.avatar !== slot.avatar)) {
+      slot.name = merged.name;
+      slot.avatar = merged.avatar;
+      slot.firstName = merged.firstName;
+      slot.lastName = merged.lastName;
+      conferencePeers.set(user.id, slot);
+      syncPeersUi();
+    }
+  }
+}
+
+function ingestParticipantProfiles(raw: unknown) {
+  if (!Array.isArray(raw)) return;
+  for (const row of raw) {
+    if (!row || typeof row !== 'object') continue;
+    const o = row as Record<string, unknown>;
+    const id = Number(o.id ?? o.userId ?? o.user_id);
+    if (!Number.isFinite(id)) continue;
+    const name = String(o.name ?? o.full_name ?? o.fullName ?? '').trim();
+    if (!name) continue;
+    rememberRemoteUser({
+      id,
+      name,
+      avatar: (o.avatar ?? o.image ?? null) as string | null,
+      firstName:
+        typeof o.firstName === 'string'
+          ? o.firstName
+          : typeof o.first_name === 'string'
+            ? o.first_name
+            : undefined,
+      lastName:
+        typeof o.lastName === 'string'
+          ? o.lastName
+          : typeof o.last_name === 'string'
+            ? o.last_name
+            : undefined,
+    });
+  }
+}
+
+function peerMetaFromKnown(peerId: number): Partial<Pick<ConferencePeer, 'name' | 'avatar' | 'firstName' | 'lastName'>> | undefined {
+  const known = knownRemoteUsers.get(peerId);
+  if (!known) return undefined;
+  return {
+    name: known.name,
+    avatar: known.avatar,
+    firstName: known.firstName,
+    lastName: known.lastName,
+  };
+}
 
 function collectOutboundPcs(): RTCPeerConnection[] {
   const pcs: RTCPeerConnection[] = [];
@@ -472,6 +552,7 @@ interface CallSessionStore {
     kind?: CallKind;
     mode?: 'direct' | 'conference';
     remoteUser?: CallRemoteUser | null;
+    remoteUsers?: CallRemoteUser[];
     displayTitle?: string | null;
   }) => boolean;
   acceptIncoming: () => void;
@@ -609,7 +690,10 @@ function markCallActive() {
 function updateRemoteVideoFlags(stream: MediaStream) {
   const vtracks = stream.getVideoTracks();
   const hasVideo = vtracks.length > 0;
-  const remoteCameraOff = hasVideo ? vtracks.every((t) => !t.enabled || t.muted || t.readyState === 'ended') : !hasVideo;
+  // Do not use track.muted — remotes (esp. screen share) often start muted until the first frame.
+  const remoteCameraOff = hasVideo
+    ? vtracks.every((t) => !t.enabled || t.readyState === 'ended')
+    : !hasVideo;
   setUiState({
     hasRemoteVideo: hasVideo && !remoteCameraOff,
     remoteCameraOff: useCallSessionStore.getState().ui.kind === 'video' ? remoteCameraOff || !hasVideo : false,
@@ -646,6 +730,8 @@ function setupPcCommon(pc: RTCPeerConnection) {
     }
     attachRemoteMedia(stream);
     updateRemoteVideoFlags(stream);
+    stream.onaddtrack = () => updateRemoteVideoFlags(stream);
+    stream.onremovetrack = () => updateRemoteVideoFlags(stream);
     if (getStatus() === 'connecting') markCallActive();
   };
   pc.onconnectionstatechange = () => {
@@ -690,13 +776,30 @@ function setupPcCommon(pc: RTCPeerConnection) {
 async function processCalleeOffer(offerSdp: RTCSessionDescriptionInit) {
   const pc = mediaRef.pc;
   if (!pc || !groupName) return;
+  const live =
+    getStatus() === 'active' ||
+    getStatus() === 'connecting' ||
+    getStatus() === 'reconnecting';
   try {
+    if (pc.signalingState === 'have-local-offer') {
+      try {
+        await pc.setLocalDescription({ type: 'rollback' } as RTCSessionDescriptionInit);
+      } catch {
+        devWarn('[call] renegotiation rollback failed', pc.signalingState);
+        return;
+      }
+    } else if (pc.signalingState !== 'stable' && pc.signalingState !== 'have-remote-offer') {
+      devWarn('[call] skip answer — signaling busy', pc.signalingState);
+      return;
+    }
     const answer = await createAnswer(pc, offerSdp);
     sendCallSignal({ type: 'call.answer', sdp: answer, groupName }, conversationId);
     markCallActive();
     void flushRemoteIce(pc);
   } catch (e) {
     devError('[call] answer failed', e);
+    // Renegotiation failures (screen share) must not tear down an active call.
+    if (live) return;
     sendCallSignal({ type: 'call.end', groupName }, conversationId);
     teardownMedia();
     setUiState((prev) => ({
@@ -879,7 +982,8 @@ async function flushPendingConferenceOffers() {
       groupName,
       conferenceSend,
       onConferenceTrack,
-      onConferencePcState
+      onConferencePcState,
+      peerMetaFromKnown(item.peerId)
     );
   }
   syncPeersUi();
@@ -949,6 +1053,7 @@ function onWsMessage(data: WebSocketMessage | CallsWsMessage) {
     role = 'callee';
     callMode = String(m.mode ?? '').toLowerCase() === 'conference' ? 'conference' : 'direct';
     knownRemoteUsers.set(callerId, { id: callerId, name, avatar, firstName, lastName });
+    rememberRemoteUser({ id: callerId, name, avatar, firstName, lastName });
     setUiState({
       ...initialUi(),
       status: 'ringing',
@@ -964,7 +1069,12 @@ function onWsMessage(data: WebSocketMessage | CallsWsMessage) {
 
   if (type === 'call.accepted') {
     const receiverId = Number(m.receiverId ?? m.receiver_id);
-    const receiverName = typeof m.receiverName === 'string' ? m.receiverName : undefined;
+    const receiverName =
+      typeof m.receiverName === 'string'
+        ? m.receiverName
+        : typeof m.receiver_name === 'string'
+          ? m.receiver_name
+          : undefined;
     let gn = String(m.groupName ?? m.group_name ?? groupName ?? '');
     if (!gn) {
       if (myId != null && Number.isFinite(receiverId)) gn = pairCallGroup(myId, receiverId);
@@ -975,11 +1085,12 @@ function onWsMessage(data: WebSocketMessage | CallsWsMessage) {
     }
     groupName = gn;
     setUiState((prev) => ({ ...prev, groupName: gn }));
+    ingestParticipantProfiles(m.participants ?? m.participantProfiles);
 
     if (callMode === 'conference') {
       if (Number.isFinite(receiverId) && receiverId !== myId) {
         if (receiverName) {
-          knownRemoteUsers.set(receiverId, {
+          rememberRemoteUser({
             id: receiverId,
             name: receiverName,
             avatar: knownRemoteUsers.get(receiverId)?.avatar ?? null,
@@ -995,6 +1106,11 @@ function onWsMessage(data: WebSocketMessage | CallsWsMessage) {
 
     if (role !== 'caller') return;
     if (receiverName) {
+      rememberRemoteUser({
+        id: receiverId,
+        name: receiverName,
+        avatar: knownRemoteUsers.get(receiverId)?.avatar ?? null,
+      });
       setUiState((prev) =>
         prev.remoteUser ? { ...prev, remoteUser: { ...prev.remoteUser, name: receiverName } } : prev
       );
@@ -1029,6 +1145,15 @@ function onWsMessage(data: WebSocketMessage | CallsWsMessage) {
 
     if (callMode === 'conference') {
       if (!Number.isFinite(offerSid)) return;
+      const senderName =
+        typeof m.senderName === 'string'
+          ? m.senderName
+          : typeof m.sender_name === 'string'
+            ? m.sender_name
+            : undefined;
+      if (senderName) {
+        rememberRemoteUser({ id: offerSid, name: senderName });
+      }
       if (!mediaRef.localStream) {
         pendingConferenceOffers.push({ peerId: offerSid, sdp });
         void (async () => {
@@ -1049,7 +1174,8 @@ function onWsMessage(data: WebSocketMessage | CallsWsMessage) {
           groupName!,
           conferenceSend,
           onConferenceTrack,
-          onConferencePcState
+          onConferencePcState,
+          peerMetaFromKnown(offerSid) ?? (senderName ? { name: senderName } : undefined)
         );
         syncPeersUi();
         markCallActive();
@@ -1057,8 +1183,17 @@ function onWsMessage(data: WebSocketMessage | CallsWsMessage) {
       return;
     }
 
-    if (role !== 'callee') return;
-    if (!calleeReady || !mediaRef.pc) {
+    // Accept initial callee offers and mid-call renegotiation (screen share) from either side.
+    const live =
+      getStatus() === 'active' ||
+      getStatus() === 'connecting' ||
+      getStatus() === 'reconnecting';
+    if (role !== 'callee' && !live) return;
+    if (!mediaRef.pc) {
+      if (role === 'callee') offerPending = sdp;
+      return;
+    }
+    if (role === 'callee' && !calleeReady) {
       offerPending = sdp;
       return;
     }
@@ -1074,6 +1209,15 @@ function onWsMessage(data: WebSocketMessage | CallsWsMessage) {
 
     if (callMode === 'conference') {
       if (!Number.isFinite(answerSid)) return;
+      const senderName =
+        typeof m.senderName === 'string'
+          ? m.senderName
+          : typeof m.sender_name === 'string'
+            ? m.sender_name
+            : undefined;
+      if (senderName) {
+        rememberRemoteUser({ id: answerSid, name: senderName });
+      }
       void applyPeerAnswer(conferencePeers, answerSid, sdp).then(() => {
         markCallActive();
         syncPeersUi();
@@ -1081,7 +1225,12 @@ function onWsMessage(data: WebSocketMessage | CallsWsMessage) {
       return;
     }
 
-    if (role !== 'caller') return;
+    const live =
+      getStatus() === 'active' ||
+      getStatus() === 'connecting' ||
+      getStatus() === 'reconnecting';
+    // Caller takes the initial answer; either side may take renegotiation answers (screen share).
+    if (role !== 'caller' && !live) return;
     const pc = mediaRef.pc;
     if (!pc) return;
     void (async () => {
@@ -1285,8 +1434,8 @@ export const useCallSessionStore = create<CallSessionStore>((set, get) => ({
       resolvedMode === 'direct' && myId != null ? pairCallGroup(myId, targets[0]) : null;
     callingDeadline = Date.now() + CALLING_TIMEOUT_MS;
     knownRemoteUsers.clear();
-    knownRemoteUsers.set(remoteUser.id, remoteUser);
-    (remoteUsers ?? []).forEach((u) => knownRemoteUsers.set(u.id, u));
+    rememberRemoteUser(remoteUser);
+    (remoteUsers ?? []).forEach((u) => rememberRemoteUser(u));
 
     setUiState({
       ...initialUi(),
@@ -1332,6 +1481,7 @@ export const useCallSessionStore = create<CallSessionStore>((set, get) => ({
     kind = 'voice',
     mode = 'conference',
     remoteUser = null,
+    remoteUsers,
     displayTitle = null,
   }) => {
     if (get().ui.status !== 'idle') return false;
@@ -1340,7 +1490,9 @@ export const useCallSessionStore = create<CallSessionStore>((set, get) => ({
     role = 'callee';
     conversationId = convId;
     groupName = gn;
-    if (remoteUser) knownRemoteUsers.set(remoteUser.id, remoteUser);
+    knownRemoteUsers.clear();
+    if (remoteUser) rememberRemoteUser(remoteUser);
+    (remoteUsers ?? []).forEach((u) => rememberRemoteUser(u));
     setUiState({
       ...initialUi(),
       status: 'connecting',
@@ -1517,6 +1669,11 @@ export const useCallSessionStore = create<CallSessionStore>((set, get) => ({
       });
 
       screenShareTrack = track;
+      try {
+        (track as MediaStreamTrack & { contentHint?: string }).contentHint = 'detail';
+      } catch {
+        /* ignore */
+      }
       track.onended = () => {
         void stopScreenShareInternal(true);
       };
@@ -1529,17 +1686,17 @@ export const useCallSessionStore = create<CallSessionStore>((set, get) => ({
         if (sender) await sender.replaceTrack(track);
         else pc.addTrack(track, stream);
       }
-      if (!hadVideoSender) {
-        await renegotiateAfterTrackChange();
-        if (callMode === 'direct' && mediaRef.pc && groupName) {
-          try {
-            const offer = await createOffer(mediaRef.pc);
-            sendCallSignal({ type: 'call.offer', sdp: offer, groupName }, conversationId);
-          } catch (e) {
-            devWarn('[call] renegotiate 1:1 screen share', e);
-          }
+      // Always renegotiate so remotes pick up screen share (resolution / new m-line).
+      await renegotiateAfterTrackChange();
+      if (callMode === 'direct' && mediaRef.pc && groupName) {
+        try {
+          const offer = await createOffer(mediaRef.pc);
+          sendCallSignal({ type: 'call.offer', sdp: offer, groupName }, conversationId);
+        } catch (e) {
+          devWarn('[call] renegotiate 1:1 screen share', e);
         }
       }
+      void hadVideoSender;
       setUiState({ isScreenSharing: true, isCameraOff: false, hasRemoteVideo: get().ui.hasRemoteVideo });
       attachLocalVideo(stream);
     } catch (e) {

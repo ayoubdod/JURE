@@ -151,7 +151,11 @@ const CallModal: React.FC<{
   const qualityLabel = qualityLabelMap[connectionQuality];
   const qualityClass = QUALITY_CLASS[connectionQuality];
   const isVideo = kind === 'video';
-  const videoLive = (isVideo || isScreenSharing) && (showActive || showConnecting);
+  const peersHaveVideo = useCallSessionStore((s) => s.ui.peers.some((p) => p.hasVideo));
+  const hasRemoteVideo = useCallSessionStore((s) => s.ui.hasRemoteVideo);
+  const videoLive =
+    (isVideo || isScreenSharing || peersHaveVideo || hasRemoteVideo) &&
+    (showActive || showConnecting);
 
   const terminalDetail = () => {
     if (status === 'ended' && endedDurationSec != null && endedDurationSec >= 0) {

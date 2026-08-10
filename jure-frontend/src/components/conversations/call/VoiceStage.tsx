@@ -47,10 +47,11 @@ const VoicePeerCard: React.FC<{
       </div>
       <p
         className={cn(
-          'max-w-[7rem] truncate text-center font-medium',
+          'max-w-[10rem] truncate text-center font-medium',
           large ? 'text-sm' : 'text-xs',
           peer.isSpeaking ? 'text-emerald-700 dark:text-emerald-300' : 'text-slate-700 dark:text-slate-200'
         )}
+        title={peer.name}
       >
         {peer.name}
       </p>
