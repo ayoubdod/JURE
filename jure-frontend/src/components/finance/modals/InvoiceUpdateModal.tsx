@@ -16,6 +16,7 @@ import { getInvoiceDetail, updateInvoice, type UpdateInvoiceBody } from '@/servi
 import { useToast } from '@/hooks/use-toast';
 import { isAxiosError } from 'axios';
 import { devError } from '@/utils/devLog';
+import { useAppTranslation } from '@/i18n';
 
 type Props = {
   open: boolean;
@@ -26,27 +27,14 @@ type Props = {
   onSuccess?: () => void;
 };
 
-function apiErrorMessage(err: unknown): string {
-  if (!isAxiosError(err)) return 'Une erreur est survenue.';
-  const d = err.response?.data;
-  if (d && typeof d === 'object' && !Array.isArray(d)) {
-    const detail = (d as { detail?: unknown }).detail;
-    if (typeof detail === 'string' && detail.trim()) return detail;
-    const first = Object.entries(d).find(([, v]) => v != null);
-    if (first) {
-      const v = first[1];
-      return `${first[0]}: ${Array.isArray(v) ? String(v[0]) : String(v)}`;
-    }
-  }
-  return 'Impossible d’enregistrer.';
-}
-
 export const InvoiceUpdateModal: React.FC<Props> = ({
   open,
   onOpenChange,
   invoiceId,
   onSuccess,
 }) => {
+  const { t } = useAppTranslation();
+  const m = t.finance.modals.updateInvoice;
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [loadDetail, setLoadDetail] = useState(false);
@@ -55,6 +43,21 @@ export const InvoiceUpdateModal: React.FC<Props> = ({
   const [dueDate, setDueDate] = useState('');
   const [notes, setNotes] = useState('');
   const [status, setStatus] = useState<API.FinanceInvoiceStatus | null>(null);
+
+  const apiErrorMessage = (err: unknown): string => {
+    if (!isAxiosError(err)) return m.genericError;
+    const d = err.response?.data;
+    if (d && typeof d === 'object' && !Array.isArray(d)) {
+      const detail = (d as { detail?: unknown }).detail;
+      if (typeof detail === 'string' && detail.trim()) return detail;
+      const first = Object.entries(d).find(([, v]) => v != null);
+      if (first) {
+        const v = first[1];
+        return `${first[0]}: ${Array.isArray(v) ? String(v[0]) : String(v)}`;
+      }
+    }
+    return m.saveFailed;
+  };
 
   useEffect(() => {
     if (!open || invoiceId == null) {
@@ -73,11 +76,11 @@ export const InvoiceUpdateModal: React.FC<Props> = ({
         setNotes(d.notes ?? '');
       })
       .catch(() => {
-        toast({ title: 'Erreur', description: 'Impossible de charger la facture.', variant: 'destructive' });
+        toast({ title: t.common.error, description: m.loadFailed, variant: 'destructive' });
         onOpenChange(false);
       })
       .finally(() => setLoadDetail(false));
-  }, [open, invoiceId, onOpenChange, toast]);
+  }, [open, invoiceId, onOpenChange, toast, t.common.error, m.loadFailed]);
 
   const isDraft = status === 'DRAFT';
 
@@ -93,7 +96,7 @@ export const InvoiceUpdateModal: React.FC<Props> = ({
       if (isDraft) {
         const ht = parseFloat(amountHt.replace(',', '.'));
         if (Number.isNaN(ht) || ht < 0) {
-          toast({ title: 'Montant invalide', variant: 'destructive' });
+          toast({ title: m.invalidAmount, variant: 'destructive' });
           setLoading(false);
           return;
         }
@@ -104,12 +107,12 @@ export const InvoiceUpdateModal: React.FC<Props> = ({
         }
       }
       await updateInvoice(invoiceId, body);
-      toast({ title: 'Facture mise à jour' });
+      toast({ title: m.success });
       onSuccess?.();
       onOpenChange(false);
     } catch (err) {
       devError('updateInvoice', err);
-      toast({ title: 'Erreur', description: apiErrorMessage(err), variant: 'destructive' });
+      toast({ title: t.common.error, description: apiErrorMessage(err), variant: 'destructive' });
     } finally {
       setLoading(false);
     }
@@ -128,10 +131,10 @@ export const InvoiceUpdateModal: React.FC<Props> = ({
           <Button
             variant="ghost"
             size="icon"
-            className="absolute right-3 top-3 z-10 h-9 w-9 rounded-full bg-white/15 text-white hover:bg-white/25"
+            className="absolute end-3 top-3 z-10 h-9 w-9 rounded-full bg-white/15 text-white hover:bg-white/25"
             onClick={() => onOpenChange(false)}
             disabled={loading}
-            aria-label="Fermer"
+            aria-label={t.common.close}
           >
             <X className="h-4 w-4" />
           </Button>
@@ -140,11 +143,9 @@ export const InvoiceUpdateModal: React.FC<Props> = ({
               <FileText className="h-5 w-5 text-white" />
             </div>
             <div>
-              <DialogTitle className="text-xl font-bold tracking-tight text-white">Modifier la facture</DialogTitle>
+              <DialogTitle className="text-xl font-bold tracking-tight text-white">{m.title}</DialogTitle>
               <DialogDescription className="text-sm text-white/90 mt-1">
-                {isDraft
-                  ? 'Brouillon : montants, TVA, échéance et notes'
-                  : 'Facture émise : échéance et notes uniquement'}
+                {isDraft ? m.descriptionDraft : m.descriptionIssued}
               </DialogDescription>
             </div>
           </div>
@@ -159,13 +160,12 @@ export const InvoiceUpdateModal: React.FC<Props> = ({
             <>
               {!isDraft ? (
                 <p className="mb-4 rounded-lg border border-amber-200/80 bg-amber-50/90 px-3 py-2 text-[12px] text-amber-950 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-100">
-                  Les montants et le taux de TVA ne sont plus modifiables hors brouillon. Utilisez le workflow
-                  d’annulation côté cabinet si nécessaire.
+                  {m.lockedHint}
                 </p>
               ) : null}
 
               <div className="mb-4 space-y-2">
-                <Label htmlFor="inv-ht">Montant HT (MAD)</Label>
+                <Label htmlFor="inv-ht">{m.amountHt}</Label>
                 <Input
                   id="inv-ht"
                   className="h-10"
@@ -178,7 +178,7 @@ export const InvoiceUpdateModal: React.FC<Props> = ({
               </div>
 
               <div className="mb-4 space-y-2">
-                <Label htmlFor="inv-tva">Taux TVA (ex. 0,2 pour 20 %)</Label>
+                <Label htmlFor="inv-tva">{m.tvaRate}</Label>
                 <Input
                   id="inv-tva"
                   className="h-10"
@@ -191,7 +191,7 @@ export const InvoiceUpdateModal: React.FC<Props> = ({
               </div>
 
               <div className="mb-4 space-y-2">
-                <Label htmlFor="inv-due">Date d&apos;échéance</Label>
+                <Label htmlFor="inv-due">{m.dueDate}</Label>
                 <Input
                   id="inv-due"
                   type="date"
@@ -202,13 +202,13 @@ export const InvoiceUpdateModal: React.FC<Props> = ({
               </div>
 
               <div className="mb-4 space-y-2">
-                <Label htmlFor="inv-notes">Notes</Label>
+                <Label htmlFor="inv-notes">{m.notes}</Label>
                 <Textarea
                   id="inv-notes"
                   className="min-h-[88px] resize-none"
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
-                  placeholder="Optionnel"
+                  placeholder={t.common.optional}
                 />
               </div>
             </>
@@ -216,10 +216,10 @@ export const InvoiceUpdateModal: React.FC<Props> = ({
 
           <DialogFooter className="mt-6 gap-2 sm:gap-0">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={loading || loadDetail}>
-              Annuler
+              {t.common.cancel}
             </Button>
             <Button type="submit" className="bg-jure-600 hover:bg-jure-700" disabled={loading || loadDetail}>
-              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Enregistrer'}
+              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : t.common.save}
             </Button>
           </DialogFooter>
         </form>

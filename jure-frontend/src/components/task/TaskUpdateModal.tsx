@@ -127,7 +127,7 @@ const TaskUpdateModal = forwardRef<TaskUpdateModalRef, TaskUpdateModalProps>(({ 
           <Button
             variant="ghost"
             size="icon"
-            className="absolute top-4 right-4 h-9 w-9 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white border border-white/30"
+            className="absolute top-4 end-4 h-9 w-9 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white border border-white/30"
             onClick={hide}
             disabled={isLoading}
           >
@@ -153,21 +153,21 @@ const TaskUpdateModal = forwardRef<TaskUpdateModalRef, TaskUpdateModalProps>(({ 
         </div>
 
         <form onSubmit={mainForm.handleSubmit(handleSubmit)} className="px-8 py-6 space-y-6">
-          {/* Task Information */}
+          {/* {t.tasks.modal.taskInformation} */}
           <div className="space-y-4">
             <div className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-3">
               <FileText className="w-4 h-4 text-jure-600" />
-              Task Information
+              {t.tasks.modal.taskInformation}
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="text-sm font-medium">
-                  <span>Title</span>
+                  <span>{t.tasks.modal.title}</span>
                 </label>
                 <Input
                   {...mainForm.register('title')}
                   className="transition-all duration-200 focus:ring-2 focus:ring-jure-600/20 focus:border-jure-600"
-                  placeholder="Enter task title"
+                  placeholder={t.tasks.modal.titlePlaceholder}
                 />
                 {mainForm.formState.errors.title && (
                   <p className="text-red-500 text-xs p-1 pb-0">
@@ -178,18 +178,18 @@ const TaskUpdateModal = forwardRef<TaskUpdateModalRef, TaskUpdateModalProps>(({ 
 
               <div>
                 <label className="text-sm font-medium">
-                  <span>Priority</span>
+                  <span>{t.tasks.modal.priority}</span>
                 </label>
                 <Select value={mainForm.watch('priority')} onValueChange={(value) => mainForm.setValue('priority', value as API.TaskPriority)}>
                   <SelectTrigger className="transition-all duration-200 focus:ring-2 focus:ring-jure-600/20 focus:border-jure-600">
-                    <SelectValue placeholder="Select priority" />
+                    <SelectValue placeholder={t.tasks.modal.selectPriority} />
                   </SelectTrigger>
                   <SelectContent>
                     {TaskPriority.options.map((option) => (
                       <SelectItem key={option.value} value={option.value}>
                         <div className="flex items-center gap-2">
                           <Flag className="w-4 h-4" />
-                          {option.label}
+                          {t.enums.taskPriority[option.value] ?? option.label}
                         </div>
                       </SelectItem>
                     ))}
@@ -205,12 +205,12 @@ const TaskUpdateModal = forwardRef<TaskUpdateModalRef, TaskUpdateModalProps>(({ 
 
             <div>
               <label className="text-sm font-medium">
-                <span>Description</span>
+                <span>{t.tasks.modal.description}</span>
               </label>
               <Textarea
                 {...mainForm.register('description')}
                 className="transition-all duration-200 focus:ring-2 focus:ring-jure-600/20 focus:border-jure-600"
-                placeholder="Enter task description"
+                placeholder={t.tasks.modal.descriptionPlaceholder}
                 rows={3}
               />
               {mainForm.formState.errors.description && (
@@ -221,25 +221,25 @@ const TaskUpdateModal = forwardRef<TaskUpdateModalRef, TaskUpdateModalProps>(({ 
             </div>
           </div>
 
-          {/* Task Details */}
+          {/* {t.tasks.modal.taskDetails} */}
           <div className="space-y-4">
             <div className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-3">
               <Calendar className="w-4 h-4 text-jure-600" />
-              Task Details
+              {t.tasks.modal.taskDetails}
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="text-sm font-medium">
-                  <span>Status</span>
+                  <span>{t.tasks.modal.status}</span>
                 </label>
                 <Select value={mainForm.watch('status')} onValueChange={(value) => mainForm.setValue('status', value as API.TaskStatus)}>
                   <SelectTrigger className="transition-all duration-200 focus:ring-2 focus:ring-jure-600/20 focus:border-jure-600">
-                    <SelectValue placeholder="Select status" />
+                    <SelectValue placeholder={t.tasks.modal.selectStatus} />
                   </SelectTrigger>
                   <SelectContent>
                     {TaskStatus.options.map((option) => (
                       <SelectItem key={option.value} value={option.value}>
-                        {option.label}
+                        {t.enums.taskStatus[option.value] ?? option.label}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -253,7 +253,7 @@ const TaskUpdateModal = forwardRef<TaskUpdateModalRef, TaskUpdateModalProps>(({ 
 
               <div>
                 <label className="text-sm font-medium">
-                  <span>Due Date</span>
+                  <span>{t.tasks.modal.dueDate}</span>
                 </label>
                 <Input
                   {...mainForm.register('due_date')}
@@ -271,7 +271,7 @@ const TaskUpdateModal = forwardRef<TaskUpdateModalRef, TaskUpdateModalProps>(({ 
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="text-sm font-medium">
-                  <span>Estimated Hours</span>
+                  <span>{t.tasks.modal.estimatedHours}</span>
                 </label>
                 <Input
                   {...mainForm.register('estimated_hours')}
@@ -288,14 +288,14 @@ const TaskUpdateModal = forwardRef<TaskUpdateModalRef, TaskUpdateModalProps>(({ 
 
               <div>
                 <label className="text-sm font-medium">
-                  <span>Assigned To</span>
+                  <span>{t.tasks.modal.assignedTo}</span>
                 </label>
                 <ServerSelect
                   link="/cabinets/members/select_list/"
                   labelKey="email"
                   value={mainForm.watch('assigned_to')}
                   onChange={(value) => mainForm.setValue('assigned_to', value)}
-                  placeholder="Select assignee"
+                  placeholder={t.tasks.modal.selectAssignee}
                   className="transition-all duration-200 focus:ring-2 focus:ring-jure-600/20 focus:border-jure-600"
                   showAvatar
                 />
@@ -310,14 +310,14 @@ const TaskUpdateModal = forwardRef<TaskUpdateModalRef, TaskUpdateModalProps>(({ 
 <div className="mt-2">
   <label className="text-sm font-medium flex items-center gap-2">
     <Gavel className="w-4 h-4 text-jure-600" />
-    <span>Related Case (optional)</span>
+    <span>{t.tasks.modal.relatedCaseOptional}</span>
   </label>
 
   <ServerSelect
     link="/cases/"
     value={mainForm.watch('case')}
     onChange={(value) => mainForm.setValue('case', value)}
-    placeholder="Select case"
+    placeholder={t.tasks.modal.selectCase}
     className="transition-all duration-200 focus:ring-2 focus:ring-jure-600/20 focus:border-jure-600"
   />
 
@@ -330,14 +330,14 @@ const TaskUpdateModal = forwardRef<TaskUpdateModalRef, TaskUpdateModalProps>(({ 
 
             <div>
               <label className="text-sm font-medium">
-                <span>Client (Optional)</span>
+                <span>{t.tasks.modal.clientOptional}</span>
               </label>
               <ServerSelect
                 link="/clients/clients/"
                 value={mainForm.watch('client')}
                 onChange={(value) => mainForm.setValue('client', value)}
                 labelKey={(client) => `${client.first_name} ${client.last_name}`}
-                placeholder="Select client"
+                placeholder={t.tasks.modal.selectClient}
                 className="transition-all duration-200 focus:ring-2 focus:ring-jure-600/20 focus:border-jure-600"
               />
               {mainForm.formState.errors.client && (

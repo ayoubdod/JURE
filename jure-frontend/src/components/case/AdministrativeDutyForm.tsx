@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
@@ -16,69 +16,34 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import ServerSelect from '@/components/common/ServerSelect';
-import { FileText, Users, FileCheck, Calendar } from 'lucide-react';
+import { FileText, Users, FileCheck, Calendar, Plus, Trash2 } from 'lucide-react';
 import { useCaseForm } from '@/hooks/useCaseForm';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Trash2 } from 'lucide-react';
+import { useAppTranslation } from '@/i18n';
 
-const DUTY_TYPE_OPTIONS = [
-  { label: 'Corporate Filing', value: 'CORPORATE_FILING' },
-  { label: 'Property Registration', value: 'PROPERTY_REGISTRATION' },
-  { label: 'Notarial Act', value: 'NOTARIAL_ACT' },
-  { label: 'Permit', value: 'PERMIT' },
-  { label: 'Compliance', value: 'COMPLIANCE' },
-  { label: 'Inheritance', value: 'INHERITANCE' },
-  { label: 'Other', value: 'OTHER' },
-];
-
-const PRIORITY_OPTIONS = [
-  { label: 'Low', value: 'LOW' },
-  { label: 'Medium', value: 'MEDIUM' },
-  { label: 'High', value: 'HIGH' },
-  { label: 'Urgent', value: 'URGENT' },
-];
-
-const STATUS_OPTIONS = [
-  { label: 'Pending', value: 'PENDING' },
-  { label: 'In Progress', value: 'IN_PROGRESS' },
-  { label: 'Submitted', value: 'SUBMITTED' },
-  { label: 'Approved', value: 'APPROVED' },
-  { label: 'Rejected', value: 'REJECTED' },
-  { label: 'Closed', value: 'CLOSED' },
-];
-
-const schema = yup.object({
-  reference: yup.string().optional().default(''),
-  title: yup.string().required('Title is required'),
-  duty_type: yup
-    .string()
-    .oneOf([
-      'CORPORATE_FILING',
-      'PROPERTY_REGISTRATION',
-      'NOTARIAL_ACT',
-      'PERMIT',
-      'COMPLIANCE',
-      'INHERITANCE',
-      'OTHER',
-    ])
-    .required(),
-  priority: yup.string().oneOf(['LOW', 'MEDIUM', 'HIGH', 'URGENT']).required(),
-  client: yup.number().nullable().optional().transform((_, orig) => (orig === '' || orig == null || orig === undefined ? null : Number(orig))),
-  assigned_to: yup.number().nullable().optional().transform((_, orig) => (orig === '' || orig == null || orig === undefined ? null : Number(orig))),
-  description: yup.string().required('Description / Purpose is required'),
-  institution_authority: yup.string().optional(),
-  institution_reference_number: yup.string().optional(),
-  start_date: yup.string().required('Start date is required'),
-  due_date: yup.string().required('Due date / Legal deadline is required'),
-  completion_date: yup.string().nullable().optional(),
-  status: yup
-    .string()
-    .oneOf(['PENDING', 'IN_PROGRESS', 'SUBMITTED', 'APPROVED', 'REJECTED', 'CLOSED'])
-    .required(),
-});
-
-export type AdministrativeDutyFormValues = yup.InferType<typeof schema> & {
+export type AdministrativeDutyFormValues = {
+  reference: string;
+  title: string;
+  duty_type:
+    | 'CORPORATE_FILING'
+    | 'PROPERTY_REGISTRATION'
+    | 'NOTARIAL_ACT'
+    | 'PERMIT'
+    | 'COMPLIANCE'
+    | 'INHERITANCE'
+    | 'OTHER';
+  priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
+  client?: number | null;
+  assigned_to?: number | null;
+  description: string;
+  institution_authority?: string;
+  institution_reference_number?: string;
+  start_date: string;
+  due_date: string;
+  completion_date?: string | null;
+  status: 'PENDING' | 'IN_PROGRESS' | 'SUBMITTED' | 'APPROVED' | 'REJECTED' | 'CLOSED';
   case_type: 'ADMINISTRATIVE_DUTY';
+  required_documents?: { label: string; completed: boolean }[];
 };
 
 export interface AdministrativeDutyFormProps {
@@ -110,10 +75,101 @@ const AdministrativeDutyForm: React.FC<AdministrativeDutyFormProps> = ({
   onSubmitSuccess,
   onBack,
 }) => {
-  const [requiredDocuments, setRequiredDocuments] = useState<{ label: string; completed: boolean }[]>(
+  const { t } = useAppTranslation();
+  const modal = t.cases.modal;
+  const { toast } = useToast();
+
+  const [requiredDocuments, setRequiredDocuments] = useState<
+    { label: string; completed: boolean }[]
+  >(
     initialValues?.required_documents?.length
       ? [...initialValues.required_documents]
       : [{ label: '', completed: false }]
+  );
+
+  const dutyTypeOptions = useMemo(
+    () =>
+      (
+        [
+          'CORPORATE_FILING',
+          'PROPERTY_REGISTRATION',
+          'NOTARIAL_ACT',
+          'PERMIT',
+          'COMPLIANCE',
+          'INHERITANCE',
+          'OTHER',
+        ] as const
+      ).map((value) => ({
+        value,
+        label: modal.options.dutyType[value],
+      })),
+    [modal.options.dutyType]
+  );
+
+  const priorityOptions = useMemo(
+    () =>
+      (['LOW', 'MEDIUM', 'HIGH', 'URGENT'] as const).map((value) => ({
+        value,
+        label: modal.options.priority[value],
+      })),
+    [modal.options.priority]
+  );
+
+  const statusOptions = useMemo(
+    () =>
+      (['PENDING', 'IN_PROGRESS', 'SUBMITTED', 'APPROVED', 'REJECTED', 'CLOSED'] as const).map(
+        (value) => ({
+          value,
+          label: modal.options.dutyStatus[value],
+        })
+      ),
+    [modal.options.dutyStatus]
+  );
+
+  const schema = useMemo(
+    () =>
+      yup.object({
+        reference: yup.string().optional().default(''),
+        title: yup.string().required(modal.validation.titleRequired),
+        duty_type: yup
+          .string()
+          .oneOf([
+            'CORPORATE_FILING',
+            'PROPERTY_REGISTRATION',
+            'NOTARIAL_ACT',
+            'PERMIT',
+            'COMPLIANCE',
+            'INHERITANCE',
+            'OTHER',
+          ])
+          .required(),
+        priority: yup.string().oneOf(['LOW', 'MEDIUM', 'HIGH', 'URGENT']).required(),
+        client: yup
+          .number()
+          .nullable()
+          .optional()
+          .transform((_, orig) =>
+            orig === '' || orig == null || orig === undefined ? null : Number(orig)
+          ),
+        assigned_to: yup
+          .number()
+          .nullable()
+          .optional()
+          .transform((_, orig) =>
+            orig === '' || orig == null || orig === undefined ? null : Number(orig)
+          ),
+        description: yup.string().required(modal.validation.descriptionPurposeRequired),
+        institution_authority: yup.string().optional(),
+        institution_reference_number: yup.string().optional(),
+        start_date: yup.string().required(modal.validation.startDateRequired),
+        due_date: yup.string().required(modal.validation.dueDateRequired),
+        completion_date: yup.string().nullable().optional(),
+        status: yup
+          .string()
+          .oneOf(['PENDING', 'IN_PROGRESS', 'SUBMITTED', 'APPROVED', 'REJECTED', 'CLOSED'])
+          .required(),
+      }),
+    [modal.validation]
   );
 
   const form = useForm<AdministrativeDutyFormValues>({
@@ -146,47 +202,50 @@ const AdministrativeDutyForm: React.FC<AdministrativeDutyFormProps> = ({
     setRequiredDocuments((d) =>
       d.length > 1 ? d.filter((_, j) => j !== i) : [{ label: '', completed: false }]
     );
-  const updateDocument = (
-    i: number,
-    field: 'label' | 'completed',
-    value: string | boolean
-  ) =>
+  const updateDocument = (i: number, field: 'label' | 'completed', value: string | boolean) =>
     setRequiredDocuments((d) => {
       const next = [...d];
       next[i] = { ...next[i], [field]: value };
       return next;
     });
 
-  const handleSubmit = form.handleSubmit((data) => {
-    const payload: API.AdministrativeDutyFormData = {
-      case_type: 'ADMINISTRATIVE_DUTY',
-      reference: data.reference,
-      title: data.title,
-      duty_type: data.duty_type as API.AdministrativeDutyFormData['duty_type'],
-      priority: data.priority as API.AdministrativeDutyFormData['priority'],
-      client: data.client ?? null,
-      assigned_to: data.assigned_to ?? null,
-      description: data.description,
-      institution_authority: data.institution_authority || undefined,
-      institution_reference_number: data.institution_reference_number || undefined,
-      start_date: data.start_date,
-      due_date: data.due_date,
-      completion_date: data.completion_date || null,
-      required_documents:
-        requiredDocuments.filter((d) => d.label.trim()).length > 0
-          ? requiredDocuments.filter((d) => d.label.trim())
-          : undefined,
-      status: data.status as API.AdministrativeDutyFormData['status'],
-    };
-    if (mode === 'edit' && caseId) {
-      handleUpdate({ ...payload, id: caseId });
-    } else {
-      handleCreate(payload);
-    }
-  },
+  const handleSubmit = form.handleSubmit(
+    (data) => {
+      const payload: API.AdministrativeDutyFormData = {
+        case_type: 'ADMINISTRATIVE_DUTY',
+        reference: data.reference,
+        title: data.title,
+        duty_type: data.duty_type,
+        priority: data.priority,
+        client: data.client ?? null,
+        assigned_to: data.assigned_to ?? null,
+        description: data.description,
+        institution_authority: data.institution_authority || undefined,
+        institution_reference_number: data.institution_reference_number || undefined,
+        start_date: data.start_date,
+        due_date: data.due_date,
+        completion_date: data.completion_date || null,
+        required_documents:
+          requiredDocuments.filter((d) => d.label.trim()).length > 0
+            ? requiredDocuments.filter((d) => d.label.trim())
+            : undefined,
+        status: data.status,
+      };
+      if (mode === 'edit' && caseId) {
+        handleUpdate({ ...payload, id: caseId });
+      } else {
+        handleCreate(payload);
+      }
+    },
     (errors) => {
-      const msg = Object.values(errors).map((e) => e?.message).filter(Boolean)[0];
-      toast({ title: 'Please fix the form', description: msg || 'Some required fields are missing.', variant: 'destructive' });
+      const msg = Object.values(errors)
+        .map((e) => e?.message)
+        .filter(Boolean)[0];
+      toast({
+        title: modal.toasts.fixFormTitle,
+        description: msg || modal.toasts.fixFormDescription,
+        variant: 'destructive',
+      });
     }
   );
 
@@ -197,15 +256,15 @@ const AdministrativeDutyForm: React.FC<AdministrativeDutyFormProps> = ({
           {form.formState.errors.case_specific_data.message}
         </div>
       )}
-      <FormSection title="Basic Info" icon={FileText}>
+      <FormSection title={modal.sections.basicInfo} icon={FileText}>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Reference <span className="text-red-500">*</span>
+              {modal.fields.reference} <span className="text-red-500">*</span>
             </label>
             <Input
               {...form.register('reference')}
-              placeholder="Auto-generated or enter reference"
+              placeholder={modal.placeholders.referenceAuto}
               className="h-10"
             />
             {form.formState.errors.reference && (
@@ -214,26 +273,32 @@ const AdministrativeDutyForm: React.FC<AdministrativeDutyFormProps> = ({
           </div>
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Title <span className="text-red-500">*</span>
+              {modal.fields.title} <span className="text-red-500">*</span>
             </label>
-            <Input {...form.register('title')} placeholder="Duty title" className="h-10" />
+            <Input
+              {...form.register('title')}
+              placeholder={modal.placeholders.dutyTitle}
+              className="h-10"
+            />
             {form.formState.errors.title && (
               <p className="text-red-500 text-xs">{form.formState.errors.title.message}</p>
             )}
           </div>
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Duty Type <span className="text-red-500">*</span>
+              {modal.fields.dutyType} <span className="text-red-500">*</span>
             </label>
             <Select
               value={form.watch('duty_type')}
-              onValueChange={(v) => form.setValue('duty_type', v)}
+              onValueChange={(v) =>
+                form.setValue('duty_type', v as AdministrativeDutyFormValues['duty_type'])
+              }
             >
               <SelectTrigger className="h-10">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {DUTY_TYPE_OPTIONS.map((opt) => (
+                {dutyTypeOptions.map((opt) => (
                   <SelectItem key={opt.value} value={opt.value}>
                     {opt.label}
                   </SelectItem>
@@ -242,13 +307,20 @@ const AdministrativeDutyForm: React.FC<AdministrativeDutyFormProps> = ({
             </Select>
           </div>
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Priority</label>
-            <Select value={form.watch('priority')} onValueChange={(v) => form.setValue('priority', v)}>
+            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              {modal.fields.priority}
+            </label>
+            <Select
+              value={form.watch('priority')}
+              onValueChange={(v) =>
+                form.setValue('priority', v as AdministrativeDutyFormValues['priority'])
+              }
+            >
               <SelectTrigger className="h-10">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {PRIORITY_OPTIONS.map((opt) => (
+                {priorityOptions.map((opt) => (
                   <SelectItem key={opt.value} value={opt.value}>
                     {opt.label}
                   </SelectItem>
@@ -259,26 +331,26 @@ const AdministrativeDutyForm: React.FC<AdministrativeDutyFormProps> = ({
         </div>
       </FormSection>
 
-      <FormSection title="Client & Responsible" icon={Users}>
+      <FormSection title={modal.sections.clientResponsible} icon={Users}>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Related Client
+              {modal.fields.relatedClient}
             </label>
             <ServerSelect
               link="/clients/clients/"
               value={form.watch('client')}
               onChange={(v) => form.setValue('client', v ?? null)}
               labelKey={(c: { first_name?: string; last_name?: string; email?: string }) =>
-                `${c.first_name || ''} ${c.last_name || ''}`.trim() || c.email || 'Unnamed'
+                `${c.first_name || ''} ${c.last_name || ''}`.trim() || c.email || t.cases.unnamed
               }
               cleanable
-              placeholder="Select a client"
+              placeholder={modal.placeholders.client}
             />
           </div>
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Assigned To
+              {modal.fields.assignedTo}
             </label>
             <ServerSelect
               link="/cabinets/members/select_list"
@@ -291,15 +363,15 @@ const AdministrativeDutyForm: React.FC<AdministrativeDutyFormProps> = ({
         </div>
       </FormSection>
 
-      <FormSection title="Task Details" icon={FileCheck}>
+      <FormSection title={modal.sections.taskDetails} icon={FileCheck}>
         <div className="space-y-4">
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Description / Purpose <span className="text-red-500">*</span>
+              {modal.fields.descriptionPurpose} <span className="text-red-500">*</span>
             </label>
             <Textarea
               {...form.register('description')}
-              placeholder="Describe the task purpose"
+              placeholder={modal.placeholders.descriptionPurpose}
               className="min-h-[80px] resize-none"
             />
             {form.formState.errors.description && (
@@ -309,21 +381,22 @@ const AdministrativeDutyForm: React.FC<AdministrativeDutyFormProps> = ({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                Institution / Authority
+                {modal.fields.institutionAuthority}
               </label>
               <Input
                 {...form.register('institution_authority')}
-                placeholder="e.g. Ministry of Justice, Land Registry"
+                placeholder={modal.placeholders.institutionExample}
                 className="h-10"
               />
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                Institution Reference Number <span className="text-slate-400 text-xs">(optional)</span>
+                {modal.fields.institutionReferenceNumber}{' '}
+                <span className="text-slate-400 text-xs">({t.common.optional})</span>
               </label>
               <Input
                 {...form.register('institution_reference_number')}
-                placeholder="Reference number"
+                placeholder={modal.placeholders.referenceNumber}
                 className="h-10"
               />
             </div>
@@ -331,11 +404,11 @@ const AdministrativeDutyForm: React.FC<AdministrativeDutyFormProps> = ({
         </div>
       </FormSection>
 
-      <FormSection title="Dates" icon={Calendar}>
+      <FormSection title={modal.sections.dates} icon={Calendar}>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Start Date <span className="text-red-500">*</span>
+              {modal.fields.startDate} <span className="text-red-500">*</span>
             </label>
             <Input type="date" {...form.register('start_date')} className="h-10" />
             {form.formState.errors.start_date && (
@@ -344,7 +417,7 @@ const AdministrativeDutyForm: React.FC<AdministrativeDutyFormProps> = ({
           </div>
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Due Date / Legal Deadline <span className="text-red-500">*</span>
+              {modal.fields.dueDateLegalDeadline} <span className="text-red-500">*</span>
             </label>
             <Input type="date" {...form.register('due_date')} className="h-10" />
             {form.formState.errors.due_date && (
@@ -353,18 +426,19 @@ const AdministrativeDutyForm: React.FC<AdministrativeDutyFormProps> = ({
           </div>
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Completion Date <span className="text-slate-400 text-xs">(optional — fill when closing)</span>
+              {modal.fields.completionDate}{' '}
+              <span className="text-slate-400 text-xs">{modal.hints.completionDateOptional}</span>
             </label>
             <Input type="date" {...form.register('completion_date')} className="h-10" />
           </div>
         </div>
       </FormSection>
 
-      <FormSection title="Documents Checklist" icon={FileCheck}>
+      <FormSection title={modal.sections.documentsChecklist} icon={FileCheck}>
         <div className="space-y-4">
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Required Documents
+              {modal.fields.requiredDocuments}
             </label>
             <div className="space-y-2">
               {requiredDocuments.map((item, i) => (
@@ -372,7 +446,7 @@ const AdministrativeDutyForm: React.FC<AdministrativeDutyFormProps> = ({
                   <Input
                     value={item.label}
                     onChange={(e) => updateDocument(i, 'label', e.target.value)}
-                    placeholder="Document name"
+                    placeholder={modal.placeholders.documentName}
                     className="h-10 flex-1"
                   />
                   <div className="flex items-center gap-2 shrink-0">
@@ -382,28 +456,40 @@ const AdministrativeDutyForm: React.FC<AdministrativeDutyFormProps> = ({
                       onCheckedChange={(c) => updateDocument(i, 'completed', !!c)}
                     />
                     <label htmlFor={`doc-${i}`} className="text-[13px] whitespace-nowrap">
-                      Done
+                      {modal.actions.done}
                     </label>
                   </div>
-                  <Button type="button" variant="outline" size="icon" onClick={() => removeDocument(i)}>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={() => removeDocument(i)}
+                  >
                     <Trash2 className="w-4 h-4" />
                   </Button>
                 </div>
               ))}
               <Button type="button" variant="outline" size="sm" onClick={addDocument}>
                 <Plus className="w-4 h-4 mr-1" />
-                Add document
+                {modal.actions.addDocument}
               </Button>
             </div>
           </div>
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Status</label>
-            <Select value={form.watch('status')} onValueChange={(v) => form.setValue('status', v)}>
+            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              {modal.fields.status}
+            </label>
+            <Select
+              value={form.watch('status')}
+              onValueChange={(v) =>
+                form.setValue('status', v as AdministrativeDutyFormValues['status'])
+              }
+            >
               <SelectTrigger className="h-10">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {STATUS_OPTIONS.map((opt) => (
+                {statusOptions.map((opt) => (
                   <SelectItem key={opt.value} value={opt.value}>
                     {opt.label}
                   </SelectItem>
@@ -417,12 +503,16 @@ const AdministrativeDutyForm: React.FC<AdministrativeDutyFormProps> = ({
       <div className="flex items-center justify-between pt-4 border-t border-gray-100 dark:border-gray-800 gap-3">
         {onBack && (
           <Button type="button" variant="outline" onClick={onBack} disabled={isLoading}>
-            Back
+            {modal.back}
           </Button>
         )}
         {!onBack && <div />}
         <Button type="submit" disabled={isLoading} className="bg-purple-600 hover:bg-purple-700">
-          {isLoading ? 'Submitting...' : mode === 'edit' ? 'Update Case' : 'Create Case'}
+          {isLoading
+            ? modal.submitting
+            : mode === 'edit'
+              ? modal.updateCase
+              : modal.createCase}
         </Button>
       </div>
     </form>

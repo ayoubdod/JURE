@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { clearDismissedAnnouncements } from '@/utils/announcementDismiss';
 
 interface UserStore {
     user: API.User | null;
@@ -17,6 +18,7 @@ const useUserStore = create<UserStore>()(persist(
         refreshToken: null,
         isLoggedIn: false,
         logout: () => {
+            clearDismissedAnnouncements();
             set({
                 user: null,
                 isLoggedIn: false,

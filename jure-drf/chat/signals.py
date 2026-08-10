@@ -32,12 +32,14 @@ def _broadcast_message(instance: Message, event_type: str = "message.new"):
     async_to_sync(channel_layer.group_send)(room_name, conv_event)
 
     if event_type == "message.new":
-        notification_data = MessageNotificationSerializer(instance, user=instance.sender).data
-        for participant in instance.conversation.participants.exclude(id=instance.sender.id):
-            async_to_sync(channel_layer.group_send)(
-                f"user-{participant.id}",
-                {"type": "notification.new", "payload": notification_data},
-            )
+        # Call history rows are system events — skip noisy inbox toasts (missed already notifies).
+        if instance.message_type not in Message.call_message_types():
+            notification_data = MessageNotificationSerializer(instance, user=instance.sender).data
+            for participant in instance.conversation.participants.exclude(id=instance.sender.id):
+                async_to_sync(channel_layer.group_send)(
+                    f"user-{participant.id}",
+                    {"type": "notification.new", "payload": notification_data},
+                )
 
     # Full message on each participant's personal group so /ws/chat/ sees thread updates
     # without /ws/conversation/<id>/ (dedupe by message id if also subscribed to conv-*).

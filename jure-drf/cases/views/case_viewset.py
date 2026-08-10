@@ -14,13 +14,14 @@ from users.models import User
 from ..models import Case
 from ..serializers import CaseSerializer
 from ..utils import batch_counts_tasks_appointments, fetch_case_related_payload
+from .close_mixin import CloseCaseMixin
 from .consultation_convert_mixin import ConsultationConvertMixin
 from .filters import CaseFilter
 
 logger = logging.getLogger(__name__)
 
 
-class CaseViewSet(ConsultationConvertMixin, viewsets.ModelViewSet):
+class CaseViewSet(CloseCaseMixin, ConsultationConvertMixin, viewsets.ModelViewSet):
     """
     RESTful case management. Supports caseType filter and type-specific sub-fields.
 
@@ -29,6 +30,7 @@ class CaseViewSet(ConsultationConvertMixin, viewsets.ModelViewSet):
     GET /api/v1/cases/:id/ — retrieve single case with all sub-fields
     PUT/PATCH /api/v1/cases/:id/ — update any field including sub-fields
     DELETE /api/v1/cases/:id/ — delete case
+    POST /api/v1/cases/:id/close/ — close matter (status=CLOSED + audit)
     """
 
     queryset = Case.objects.all().order_by("id")

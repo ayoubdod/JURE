@@ -15,6 +15,7 @@ import LitigationForm, { type LitigationFormValues } from './LitigationForm';
 import AdministrativeDutyForm, {
   type AdministrativeDutyFormValues,
 } from './AdministrativeDutyForm';
+import { useAppTranslation } from '@/i18n';
 
 export interface CaseModalRef {
   show: (instance?: API.Case) => void;
@@ -103,6 +104,7 @@ function caseToAdministrativeDutyInitial(c: API.Case): Partial<AdministrativeDut
 }
 
 const CaseModal = forwardRef<CaseModalRef, CaseModalProps>(({ onSuccess }, ref) => {
+  const { t } = useAppTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const [step, setStep] = useState<'type' | 'form'>('type');
   const [caseType, setCaseType] = useState<CaseTypeChoice | null>(null);
@@ -149,6 +151,13 @@ const CaseModal = forwardRef<CaseModalRef, CaseModalProps>(({ onSuccess }, ref) 
     [onSuccess, hide]
   );
 
+  const formDescription =
+    caseType === 'CONSULTATION'
+      ? t.cases.modal.consultationDetails
+      : caseType === 'LITIGATION'
+        ? t.cases.modal.litigationDetails
+        : t.cases.modal.adminDetails;
+
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && hide()}>
       <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto p-0 [&>button]:hidden">
@@ -166,7 +175,7 @@ const CaseModal = forwardRef<CaseModalRef, CaseModalProps>(({ onSuccess }, ref) 
           <Button
             variant="ghost"
             size="icon"
-            className="absolute top-4 right-4 h-9 w-9 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white border border-white/30"
+            className="absolute top-4 end-4 h-9 w-9 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white border border-white/30"
             onClick={hide}
           >
             <X className="w-4 h-4" />
@@ -178,16 +187,10 @@ const CaseModal = forwardRef<CaseModalRef, CaseModalProps>(({ onSuccess }, ref) 
               </div>
               <div>
                 <DialogTitle className="text-2xl font-bold text-white">
-                  {editingCase ? 'Edit Case' : 'Create New Case'}
+                  {editingCase ? t.cases.modal.editTitle : t.cases.modal.createTitle}
                 </DialogTitle>
                 <DialogDescription className="text-white/90 mt-1">
-                  {step === 'type'
-                    ? 'Choose the type of matter'
-                    : caseType === 'CONSULTATION'
-                      ? 'Consultation details'
-                      : caseType === 'LITIGATION'
-                        ? 'Litigation case details'
-                        : 'Administrative duty details'}
+                  {step === 'type' ? t.cases.modal.chooseType : formDescription}
                 </DialogDescription>
               </div>
             </div>

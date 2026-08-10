@@ -189,15 +189,15 @@ const Header = () => {
     'legal-ai': t.sidebar.legalAi,
     juria: t.sidebar.legalAi,
     library: t.sidebar.library,
-    tasks: t.sidebar.calendar,
+    tasks: t.sidebar.tasks,
     calendar: t.sidebar.calendar,
     settings: t.sidebar.settings,
     conversations: t.sidebar.conversations,
     me: t.sidebar.myProfile,
-    documents: 'Documents',
-    reports: 'Reports',
-    finance: 'Finance',
-    notifications: 'Notifications',
+    documents: t.sidebar.library,
+    reports: t.sidebar.dashboard,
+    finance: t.sidebar.finance,
+    notifications: t.sidebar.notifications,
   };
 
   const formatSegment = (segment: string, index: number, segments: string[]) => {
@@ -457,8 +457,8 @@ const Header = () => {
                   'text-jure-600 dark:text-jure-400 bg-jure-50 dark:bg-jure-950/40'
               )}
               onClick={() => navigate('/dashboard/finance')}
-              aria-label="Finance"
-              title="Finance"
+              aria-label={t.sidebar.finance}
+              title={t.sidebar.finance}
             >
               <Coins size={18} />
             </Button>
@@ -469,21 +469,21 @@ const Header = () => {
               <div className={`flex items-center transition-all duration-300 ${searchExpanded ? 'w-[min(100vw-8rem,16rem)] sm:w-64' : 'w-10'}`}>
                 {searchExpanded ? (
                   <div className="relative w-full">
-                    <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground z-10" />
+                    <Search size={16} className="absolute start-3 top-1/2 -translate-y-1/2 text-muted-foreground z-10" />
                     <Input
                       value={searchValue}
                       onChange={(e) => setSearchValue(e.target.value)}
                       placeholder={t.header.searchPlaceholder}
-                      className="pl-10 pr-10 py-2 text-sm rounded-lg focus-visible:ring-primary h-10"
+                      className="ps-10 pe-10 py-2 text-sm rounded-lg focus-visible:ring-primary h-10"
                       autoFocus
                     />
                     {isSearching && (
-                      <Loader2 size={16} className="absolute right-10 top-1/2 -translate-y-1/2 text-muted-foreground animate-spin" />
+                      <Loader2 size={16} className="absolute end-10 top-1/2 -translate-y-1/2 text-muted-foreground animate-spin" />
                     )}
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 text-muted-foreground hover:text-foreground"
+                      className="absolute end-1 top-1/2 -translate-y-1/2 h-8 w-8 text-muted-foreground hover:text-foreground"
                       onClick={handleSearchToggle}
                     >
                       <X size={16} />
@@ -511,7 +511,7 @@ const Header = () => {
                 {isSearching ? (
                   <div className="flex items-center justify-center py-8">
                     <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-                    <span className="ml-2 text-sm text-muted-foreground">{t.header.searchSearching}</span>
+                    <span className="ms-2 text-sm text-muted-foreground">{t.header.searchSearching}</span>
                   </div>
                 ) : searchValue.trim().length < 2 ? (
                   <div className="py-8 text-center">
@@ -627,7 +627,7 @@ const Header = () => {
               >
                 <Mail size={18} />
                 {unreadMessagesCount > 0 && (
-                  <Badge className="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center bg-blue-500 text-white">
+                  <Badge className="absolute -top-1 -end-1 h-5 w-5 p-0 flex items-center justify-center bg-blue-500 text-white">
                     {unreadMessagesCount}
                   </Badge>
                 )}
@@ -757,7 +757,7 @@ const Header = () => {
                 onClick={() => setTheme(themeChoice === 'dark' ? 'light' : 'dark')}
                 className="min-h-11"
               >
-                {themeChoice === 'dark' ? <Sun size={16} className="mr-2" /> : <Moon size={16} className="mr-2" />}
+                {themeChoice === 'dark' ? <Sun size={16} className="me-2" /> : <Moon size={16} className="me-2" />}
                 {themeChoice === 'dark' ? 'Light mode' : 'Dark mode'}
               </DropdownMenuItem>
               {canAccessFinance && (
@@ -765,18 +765,18 @@ const Header = () => {
                   onClick={() => navigate('/dashboard/finance')}
                   className="min-h-11"
                 >
-                  <Coins size={16} className="mr-2" />
-                  Finance
+                  <Coins size={16} className="me-2" />
+                  {t.sidebar.finance}
                 </DropdownMenuItem>
               )}
               <DropdownMenuItem
                 onClick={() => navigate('/dashboard/conversations')}
                 className="min-h-11"
               >
-                <Mail size={16} className="mr-2" />
-                Messages
+                <Mail size={16} className="me-2" />
+                {t.header.messagesTitle}
                 {unreadMessagesCount > 0 && (
-                  <Badge className="ml-auto h-5 min-w-5 px-1.5 bg-blue-500 text-white">
+                  <Badge className="ms-auto h-5 min-w-5 px-1.5 bg-blue-500 text-white">
                     {unreadMessagesCount}
                   </Badge>
                 )}
@@ -785,16 +785,16 @@ const Header = () => {
                 onClick={() => navigate('/dashboard/calendar')}
                 className="min-h-11"
               >
-                <Calendar size={16} className="mr-2" />
-                Calendar
+                <Calendar size={16} className="me-2" />
+                {t.sidebar.calendar}
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 onClick={() => navigate('/dashboard/settings')}
                 className="min-h-11"
               >
-                <Settings size={16} className="mr-2" />
-                Settings
+                <Settings size={16} className="me-2" />
+                {t.sidebar.settings}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -803,7 +803,7 @@ const Header = () => {
           <Popover open={profileOpen} onOpenChange={setProfileOpen}>
             <PopoverTrigger asChild>
               <Button variant="ghost" className="h-11 w-11 sm:h-10 sm:w-auto sm:px-2 rounded-full hover:bg-muted p-0 sm:p-2">
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center gap-x-2">
                   <Avatar className="h-8 w-8">
                     <AvatarImage src={user?.image} className='object-cover' />
                     <AvatarFallback className="bg-gradient-to-br from-primary to-primary/80 text-white font-medium">
@@ -820,16 +820,19 @@ const Header = () => {
             </PopoverTrigger>
             <PopoverContent className="w-64 p-2 rounded-xl shadow-lg border" align="end">
               <div className="p-4 border-b">
-                <div className="flex items-center space-x-3">
+                <div className="flex items-center gap-x-3">
                   <Avatar className="h-10 w-10">
                     <AvatarImage src={user?.image} className='object-cover' />
-                    <AvatarFallback className="bg-gradient-to-br from-primary to-primary/80 text-white font-medium">MA</AvatarFallback>
+                    <AvatarFallback className="bg-gradient-to-br from-primary to-primary/80 text-white font-medium">
+                      {user?.first_name?.charAt(0)}
+                      {user?.last_name?.charAt(0)}
+                    </AvatarFallback>
                   </Avatar>
                   <div>
                     <h3 className="font-semibold text-foreground">
                       {user?.first_name} {user?.last_name}
                     </h3>
-                    <p className="text-xs text-muted-foreground">Partner Attorney</p>
+                    <p className="text-xs text-muted-foreground">{t.sidebar.account}</p>
                   </div>
                 </div>
               </div>
@@ -839,32 +842,32 @@ const Header = () => {
                   className="w-full justify-start px-4 py-2 text-sm font-medium min-h-11"
                   onClick={() => navigateTo('/dashboard/profile')}
                 >
-                  <User size={16} className="mr-3 text-muted-foreground" />
-                  My Profile
+                  <User size={16} className="me-3 text-muted-foreground" />
+                  {t.sidebar.myProfile}
                 </Button>
                 <Button
                   variant="ghost"
                   className="w-full justify-start px-4 py-2 text-sm font-medium min-h-11"
                   onClick={() => navigateTo('/dashboard/conversations')}
                 >
-                  <Mail size={16} className="mr-3 text-muted-foreground" />
-                  Messages
+                  <Mail size={16} className="me-3 text-muted-foreground" />
+                  {t.header.messagesTitle}
                 </Button>
                 <Button
                   variant="ghost"
                   className="w-full justify-start px-4 py-2 text-sm font-medium min-h-11"
                   onClick={() => navigateTo('/dashboard/calendar')}
                 >
-                  <Calendar size={16} className="mr-3 text-muted-foreground" />
-                  My Calendar
+                  <Calendar size={16} className="me-3 text-muted-foreground" />
+                  {t.sidebar.calendar}
                 </Button>
                 <Button
                   variant="ghost"
                   className="w-full justify-start px-4 py-2 text-sm font-medium min-h-11"
                   onClick={() => navigateTo('/dashboard/settings')}
                 >
-                  <Settings size={16} className="mr-3 text-muted-foreground" />
-                  Settings
+                  <Settings size={16} className="me-3 text-muted-foreground" />
+                  {t.sidebar.settings}
                 </Button>
               </div>
               <div className="p-2 border-t">
@@ -875,8 +878,8 @@ const Header = () => {
                     logoutModalRef.current?.show();
                   }}
                 >
-                  <LogOut size={16} className="mr-3 text-destructive" />
-                  Sign Out
+                  <LogOut size={16} className="me-3 text-destructive" />
+                  {t.sidebar.logout}
                 </Button>
               </div>
             </PopoverContent>

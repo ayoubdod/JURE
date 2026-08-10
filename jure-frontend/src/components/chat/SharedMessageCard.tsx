@@ -191,6 +191,7 @@ export function coerceMessageSharedItem(
 export function sharedItemToMessageKind(item: API.SharedItem): SharedMessageKind {
   if (item.type === 'CASE') return 'SHARED_CASE';
   if (item.type === 'TASK') return 'SHARED_TASK';
+  if (item.type === 'APPOINTMENT') return 'SHARED_APPOINTMENT';
   return 'SHARED_APPOINTMENT';
 }
 
@@ -303,7 +304,17 @@ export function SharedMessageCard({ item, onOpenCase, onOpenTask, onOpenAppointm
 
 export function getMessageType(msg: API.Message): API.MessageType {
   const t = (msg as API.Message).message_type ?? (msg as API.Message).messageType;
-  if (t === 'SHARED_CASE' || t === 'SHARED_TASK' || t === 'SHARED_APPOINTMENT') return t;
+  if (
+    t === 'SHARED_CASE' ||
+    t === 'SHARED_TASK' ||
+    t === 'SHARED_APPOINTMENT' ||
+    t === 'CALL_VOICE' ||
+    t === 'CALL_VIDEO' ||
+    t === 'CALL_MISSED_VOICE' ||
+    t === 'CALL_MISSED_VIDEO'
+  ) {
+    return t;
+  }
   return 'TEXT';
 }
 
@@ -339,6 +350,19 @@ export function getSharedMessagePreviewText(msg: API.Message | undefined): strin
   if (!msg) return null;
   const mt = getMessageType(msg);
   if (mt === 'TEXT') return null;
+  if (
+    mt === 'CALL_VOICE' ||
+    mt === 'CALL_VIDEO' ||
+    mt === 'CALL_MISSED_VOICE' ||
+    mt === 'CALL_MISSED_VIDEO'
+  ) {
+    const body = (msg.body ?? '').trim();
+    if (body) return body;
+    if (mt === 'CALL_MISSED_VIDEO') return 'Missed video call';
+    if (mt === 'CALL_MISSED_VOICE') return 'Missed voice call';
+    if (mt === 'CALL_VIDEO') return 'Video call';
+    return 'Voice call';
+  }
   const ids = getSharedIds(msg);
   const coerced = coerceMessageSharedItem(msg, mt, ids);
   if (coerced === 'deleted') {

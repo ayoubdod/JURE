@@ -17,12 +17,12 @@ import { Input } from '../ui/input';
 import { getRemoteFieldsValidation, getFileType } from '@/utils/functions';
 import { isAxiosError } from 'axios';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
-import { DocumentCategory } from '@/utils/constants';
 import { DialogDescription } from '@radix-ui/react-dialog';
 import { Textarea } from '../ui/textarea';
 import TagsInput from '../TagsInput';
 import { useToast } from '@/hooks/use-toast';
 import { devError, devWarn } from '@/utils/devLog';
+import { useAppTranslation } from '@/i18n';
 
 export interface DocumentUpdateModalRef {
   show: (instance: API.Document) => void;
@@ -42,6 +42,8 @@ const schema = yup.object({
 });
 
 const DocumentUpdateModal = forwardRef<DocumentUpdateModalRef, DocumentUpdateModalProps>(({ onSuccess }, ref) => {
+  const { t, tf, enumOptions } = useAppTranslation();
+  const m = t.document.update;
   const [instance, setInstance] = useState<API.Document | null>(null);
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -76,8 +78,8 @@ const DocumentUpdateModal = forwardRef<DocumentUpdateModalRef, DocumentUpdateMod
   const handleSubmit = async (data: API.DocumentUpdateForm) => {
     if (!instance) {
       toast({
-        title: "Error",
-        description: "Document instance not found. Please try again.",
+        title: t.common.error,
+        description: m.instanceMissing,
         variant: "destructive",
       });
       return;
@@ -149,8 +151,8 @@ const DocumentUpdateModal = forwardRef<DocumentUpdateModalRef, DocumentUpdateMod
       // Validate that at least one field is being updated
       if (!hasChanges) {
         toast({
-          title: "No Changes",
-          description: "Please make at least one change before updating.",
+          title: m.noChangesTitle,
+          description: m.noChangesDesc,
           variant: "default",
         });
         setIsLoading(false);
@@ -236,14 +238,14 @@ const DocumentUpdateModal = forwardRef<DocumentUpdateModalRef, DocumentUpdateMod
 
         // Still show success but warn user
         toast({
-          title: "Update Completed",
-          description: "Update request completed, but values may not have changed. Please verify.",
+          title: m.updateCompletedTitle,
+          description: m.updateCompletedDesc,
           variant: "default",
         });
       } else {
         toast({
-          title: "Success",
-          description: `Document "${updatedDocument.title || instance.title}" updated successfully.`,
+          title: m.successTitle,
+          description: tf(m.successDesc, { title: updatedDocument.title || instance.title }),
         });
       }
       
@@ -281,8 +283,8 @@ const DocumentUpdateModal = forwardRef<DocumentUpdateModalRef, DocumentUpdateMod
             mainForm.setError(key as keyof API.DocumentUpdateForm, { message: remoteValidation[key] });
           });
           toast({
-            title: "Validation Error",
-            description: "Please check the form fields for errors.",
+            title: m.validationErrorTitle,
+            description: m.validationErrorDesc,
             variant: "destructive",
           });
         } else {
@@ -291,10 +293,10 @@ const DocumentUpdateModal = forwardRef<DocumentUpdateModalRef, DocumentUpdateMod
           const statusText = err.response?.statusText;
           const errorData = err.response?.data;
           
-          let errorMessage = 'Failed to update document.';
+          let errorMessage = m.updateFailedTitle;
           let backendIssue = '';
           
-          // Diagnose backend issues
+          // Diagnose backend issues (dev diagnostics — not user chrome)
           if (status === 400) {
             backendIssue = 'Bad Request - The backend rejected the data format.';
           } else if (status === 404) {
@@ -350,7 +352,7 @@ const DocumentUpdateModal = forwardRef<DocumentUpdateModalRef, DocumentUpdateMod
           });
 
           toast({
-            title: "Update Failed",
+            title: m.updateFailedTitle,
             description: fullErrorMessage,
             variant: "destructive",
           });
@@ -367,7 +369,7 @@ const DocumentUpdateModal = forwardRef<DocumentUpdateModalRef, DocumentUpdateMod
         }
       } else {
         // Safer error message extraction
-        let errorMessage = 'An unexpected error occurred. Please try again.';
+        let errorMessage = m.unexpectedError;
         if (err && typeof err === 'object') {
           if ('message' in err && typeof err.message === 'string') {
             errorMessage = err.message;
@@ -377,7 +379,7 @@ const DocumentUpdateModal = forwardRef<DocumentUpdateModalRef, DocumentUpdateMod
         }
         devError('Non-Axios error:', err);
         toast({
-          title: "Error",
+          title: t.common.error,
           description: errorMessage,
           variant: "destructive",
         });
@@ -425,9 +427,10 @@ const DocumentUpdateModal = forwardRef<DocumentUpdateModalRef, DocumentUpdateMod
           <Button
             variant="ghost"
             size="icon"
-            className="absolute top-4 right-4 h-9 w-9 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white border border-white/30"
+            className="absolute top-4 end-4 h-9 w-9 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white border border-white/30"
             onClick={hide}
             disabled={isLoading}
+            aria-label={t.common.close}
           >
             <X className="w-4 h-4" />
           </Button>
@@ -440,10 +443,10 @@ const DocumentUpdateModal = forwardRef<DocumentUpdateModalRef, DocumentUpdateMod
               </div>
               <div>
                 <DialogTitle className="text-2xl font-bold text-white">
-                  Update Document
+                  {m.title}
                 </DialogTitle>
                 <DialogDescription className="text-white/90 mt-1">
-                  Modify the document details below
+                  {m.description}
                 </DialogDescription>
               </div>
             </div>
@@ -458,7 +461,7 @@ const DocumentUpdateModal = forwardRef<DocumentUpdateModalRef, DocumentUpdateMod
                 <FileText className="w-4 h-4 text-[#64499D] dark:text-[#E9E0FF]" />
               </div>
               <h3 className="text-base font-semibold text-slate-900 dark:text-white">
-                Document Information
+                {m.sectionInfo}
               </h3>
             </div>
             
@@ -466,13 +469,13 @@ const DocumentUpdateModal = forwardRef<DocumentUpdateModalRef, DocumentUpdateMod
               <div className="space-y-2">
                 <label className="text-sm font-medium text-slate-700 dark:text-slate-300 flex items-center gap-2">
                   <Type className="w-4 h-4" />
-                  Title
+                  {m.titleLabel}
                 </label>
                 <div className="relative">
                   <Type className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                   <Input 
                     {...mainForm.register('title')} 
-                    placeholder="Enter document title"
+                    placeholder={m.titlePlaceholder}
                     className="pl-10 h-11 border-slate-300 dark:border-slate-700 focus:border-[#64499D] focus:ring-[#64499D]"
                   />
                 </div>
@@ -486,7 +489,7 @@ const DocumentUpdateModal = forwardRef<DocumentUpdateModalRef, DocumentUpdateMod
               <div className="space-y-2">
                 <label className="text-sm font-medium text-slate-700 dark:text-slate-300 flex items-center gap-2">
                   <Tags className="w-4 h-4" />
-                  Category
+                  {m.categoryLabel}
                 </label>
                 <div className="relative">
                   <Tags className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 z-10" />
@@ -495,11 +498,11 @@ const DocumentUpdateModal = forwardRef<DocumentUpdateModalRef, DocumentUpdateMod
                     onValueChange={(val: API.DocumentCategory) => mainForm.setValue('category', val)}
                   >
                     <SelectTrigger className="pl-10 h-11 border-slate-300 dark:border-slate-700 focus:border-[#64499D] focus:ring-[#64499D]">
-                      <SelectValue placeholder="Select a category" />
+                      <SelectValue placeholder={m.categoryPlaceholder} />
                     </SelectTrigger>
                     <SelectContent>
-                      {DocumentCategory.options.map((category, index) => (
-                        <SelectItem key={index} value={category.value}>
+                      {enumOptions('documentCategory').map((category) => (
+                        <SelectItem key={category.value} value={category.value}>
                           {category.label}
                         </SelectItem>
                       ))}
@@ -517,11 +520,11 @@ const DocumentUpdateModal = forwardRef<DocumentUpdateModalRef, DocumentUpdateMod
             <div className="space-y-2">
               <label className="text-sm font-medium text-slate-700 dark:text-slate-300 flex items-center gap-2">
                 <AlignJustify className="w-4 h-4" />
-                Description
+                {m.descriptionLabel}
               </label>
               <Textarea 
                 {...mainForm.register('description')} 
-                placeholder="Enter document description"
+                placeholder={m.descriptionPlaceholder}
                 className="min-h-[100px] border-slate-300 dark:border-slate-700 focus:border-[#64499D] focus:ring-[#64499D]"
               />
               {mainForm.formState.errors.description && (
@@ -536,7 +539,7 @@ const DocumentUpdateModal = forwardRef<DocumentUpdateModalRef, DocumentUpdateMod
               <div className="space-y-2">
                 <label className="text-sm font-medium text-slate-700 dark:text-slate-300 flex items-center gap-2">
                   <FileText className="w-4 h-4" />
-                  Current File
+                  {m.currentFile}
                 </label>
                 <div className="flex items-center gap-3 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700">
                   <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center">
@@ -559,7 +562,7 @@ const DocumentUpdateModal = forwardRef<DocumentUpdateModalRef, DocumentUpdateMod
                       onClick={() => window.open(instance.file, '_blank')}
                     >
                       <Eye size={14} className="mr-1" />
-                      View
+                      {m.view}
                     </Button>
                     <Button
                       type="button"
@@ -574,7 +577,7 @@ const DocumentUpdateModal = forwardRef<DocumentUpdateModalRef, DocumentUpdateMod
                       }}
                     >
                       <Download size={14} className="mr-1" />
-                      Download
+                      {t.document.download}
                     </Button>
                   </div>
                 </div>
@@ -585,7 +588,7 @@ const DocumentUpdateModal = forwardRef<DocumentUpdateModalRef, DocumentUpdateMod
             <div className="space-y-2">
               <label className="text-sm font-medium text-slate-700 dark:text-slate-300 flex items-center gap-2">
                 <FileText className="w-4 h-4" />
-                Replace File <span className="text-slate-400 dark:text-slate-500 text-xs font-normal">(Optional)</span>
+                {m.replaceFile} <span className="text-slate-400 dark:text-slate-500 text-xs font-normal">{m.replaceFileOptional}</span>
               </label>
               <div className="relative">
                 <FileText className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
@@ -596,7 +599,7 @@ const DocumentUpdateModal = forwardRef<DocumentUpdateModalRef, DocumentUpdateMod
                 />
               </div>
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                Leave empty to keep the current file. Upload a new file to replace it.
+                {m.replaceFileHint}
               </p>
               {mainForm.formState.errors.file && (
                 <p className="text-red-500 text-xs mt-1">
@@ -609,7 +612,7 @@ const DocumentUpdateModal = forwardRef<DocumentUpdateModalRef, DocumentUpdateMod
             <div className="space-y-2">
               <label className="text-sm font-medium text-slate-700 dark:text-slate-300 flex items-center gap-2">
                 <Tags className="w-4 h-4" />
-                Tags
+                {m.tagsLabel}
               </label>
               <TagsInput
                 value={mainForm.watch('tags') || []} 
@@ -635,7 +638,7 @@ const DocumentUpdateModal = forwardRef<DocumentUpdateModalRef, DocumentUpdateMod
               disabled={isLoading}
               className="min-w-[100px]"
             >
-              Cancel
+              {t.common.cancel}
             </Button>
             <Button
               type="submit"
@@ -645,10 +648,10 @@ const DocumentUpdateModal = forwardRef<DocumentUpdateModalRef, DocumentUpdateMod
               {isLoading ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Updating...
+                  {m.updating}
                 </>
               ) : (
-                'Update Document'
+                m.submit
               )}
             </Button>
           </DialogFooter>

@@ -13,6 +13,7 @@ import {
   CarouselPrevious,
 } from '@/components/ui/carousel';
 import { BACKEND_BASE_URL, MessageAttachmentKind } from '@/utils/constants';
+import { useAppTranslation } from '@/i18n';
 
 interface MediaGalleryDialogProps {
   isOpen: boolean;
@@ -27,15 +28,16 @@ const MediaGalleryDialog: React.FC<MediaGalleryDialogProps> = ({
   attachments,
   initialIndex = 0,
 }) => {
+  const { t, tf } = useAppTranslation();
+  const m = t.conversations.mediaGallery;
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
 
-  // Filter only images and videos
   const mediaAttachments = attachments
     .map(attachment => ({
       ...attachment,
       file: BACKEND_BASE_URL + attachment.file,
     }))
-    .filter(attachment => 
+    .filter(attachment =>
       [MessageAttachmentKind.IMAGE, MessageAttachmentKind.VIDEO].includes(attachment.kind)
     );
 
@@ -53,10 +55,10 @@ const MediaGalleryDialog: React.FC<MediaGalleryDialogProps> = ({
       <DialogContent className="max-w-4xl w-full h-[90vh] p-0">
         <DialogHeader className="p-6 pb-0">
           <DialogTitle>
-            Media Gallery ({currentIndex + 1} of {mediaAttachments.length})
+            {tf(m.title, { current: currentIndex + 1, total: mediaAttachments.length })}
           </DialogTitle>
         </DialogHeader>
-        
+
         <div className="flex-1 p-6 pt-0">
           <Carousel
             className="w-full h-full"
@@ -78,7 +80,7 @@ const MediaGalleryDialog: React.FC<MediaGalleryDialogProps> = ({
                     {attachment.kind === MessageAttachmentKind.IMAGE ? (
                       <img
                         src={attachment.file}
-                        alt={`Media ${index + 1}`}
+                        alt={tf(m.mediaAlt, { index: index + 1 })}
                         className="max-w-full max-h-full object-contain"
                         onError={(e) => {
                           const target = e.target as HTMLImageElement;
@@ -100,7 +102,7 @@ const MediaGalleryDialog: React.FC<MediaGalleryDialogProps> = ({
                 </CarouselItem>
               ))}
             </CarouselContent>
-            
+
             {mediaAttachments.length > 1 && (
               <>
                 <CarouselPrevious className="-left-4" />

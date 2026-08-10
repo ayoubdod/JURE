@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Loader2 } from 'lucide-react';
 import { apiDeleteConversation } from '@/services/conversations/api';
 import { useToast } from '@/hooks/use-toast';
+import { useAppTranslation } from '@/i18n';
 
 export interface DeleteChatModalRef {
   show: (conversation: API.Conversation) => void;
@@ -22,6 +23,8 @@ export interface DeleteChatModalProps {
 }
 
 const DeleteChatModal = forwardRef<DeleteChatModalRef, DeleteChatModalProps>(({ onSuccess }, ref) => {
+  const { t, tf } = useAppTranslation();
+  const m = t.conversations.deleteChat;
   const [instance, setInstance] = useState<API.Conversation | null>(null);
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -46,17 +49,25 @@ const DeleteChatModal = forwardRef<DeleteChatModalRef, DeleteChatModalProps>(({ 
       if (isAxiosError(error)) {
         const status = error.response?.status;
         if (status === 403) {
-          toast({ title: 'Access denied', description: 'You are not a member of this conversation.', variant: 'destructive' });
+          toast({
+            title: t.conversations.toasts.accessDenied,
+            description: t.conversations.toasts.accessDeniedMember,
+            variant: 'destructive',
+          });
           return;
         }
         if (status === 404) {
-          toast({ title: 'Not found', description: 'Conversation not found. It may have been deleted.', variant: 'destructive' });
+          toast({
+            title: t.conversations.toasts.notFoundTitle,
+            description: m.notFoundDesc,
+            variant: 'destructive',
+          });
           onSuccess?.(instance);
           setIsOpen(false);
           return;
         }
       }
-      toast({ title: 'Error', description: 'Could not complete the action. Please try again.', variant: 'destructive' });
+      toast({ title: t.common.error, description: m.errorDesc, variant: 'destructive' });
     } finally {
       setIsLoading(false);
     }
@@ -69,15 +80,15 @@ const DeleteChatModal = forwardRef<DeleteChatModalRef, DeleteChatModalProps>(({ 
       <DialogContent>
         <DialogHeader>
           <DialogTitle>
-            {instance.type === 'group' ? 'Leave conversation?' : 'Delete conversation'}
+            {instance.type === 'group' ? m.leaveTitle : m.deleteTitle}
           </DialogTitle>
         </DialogHeader>
 
         <div className="py-4">
           <p className="text-sm text-muted-foreground">
             {instance.type === 'group'
-              ? `Are you sure you want to leave "${instance.title}"? You will no longer receive messages in this conversation.`
-              : 'Are you sure you want to delete this conversation? This action cannot be undone.'}
+              ? tf(m.leaveConfirm, { title: instance.title ?? '' })
+              : m.deleteConfirm}
           </p>
         </div>
 
@@ -87,14 +98,20 @@ const DeleteChatModal = forwardRef<DeleteChatModalRef, DeleteChatModalProps>(({ 
             onClick={() => setIsOpen(false)}
             disabled={isLoading}
           >
-            Cancel
+            {t.common.cancel}
           </Button>
           <Button
             variant="destructive"
             onClick={handleSubmit}
             disabled={isLoading}
           >
-            {isLoading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : instance.type === 'group' ? 'Leave' : 'Delete'}
+            {isLoading ? (
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            ) : instance.type === 'group' ? (
+              m.leave
+            ) : (
+              t.common.delete
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>

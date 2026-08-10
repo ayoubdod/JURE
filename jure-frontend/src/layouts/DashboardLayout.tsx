@@ -11,7 +11,6 @@ import { NotificationToastStack } from '@/components/notifications/NotificationT
 import { JuriaFloatingAssistant } from '@/components/juria/JuriaFloatingAssistant'
 import CallShell from '@/components/conversations/call/CallShell'
 import { JURIA_ENABLED } from '@/config/features'
-import { useAppTranslation } from '@/i18n'
 
 const isDashboardIndex = (path: string) =>
   path === '/dashboard' || path === '/dashboard/'
@@ -43,8 +42,6 @@ const isLibraryPage = (path: string) =>
 const DashboardLayout = () => {
     const [activeTab, setActiveTab] = useState('')
     const location = useLocation()
-    const { dir } = useAppTranslation()
-    const isRTL = dir === 'rtl'
     const isCockpit = isDashboardIndex(location.pathname)
     const isConversations = isConversationsPage(location.pathname)
     const isWorkspace = isWorkspacePage(location.pathname)
@@ -72,7 +69,7 @@ const DashboardLayout = () => {
         <div className={fillViewport ? 'h-screen overflow-hidden bg-slate-50 dark:bg-slate-950 flex' : 'min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col'}>
             <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
 
-            <div className={`flex-1 flex flex-col min-w-0 ${isRTL ? 'lg:mr-16' : 'lg:ml-16'} ${isCockpit || isConversations || isTeam || isCases || isClients || isFinance || isJuria || isLibrary ? 'min-h-0 overflow-hidden' : ''}`}>
+            <div className={`flex-1 flex flex-col min-w-0 lg:ms-16 ${isCockpit || isConversations || isTeam || isCases || isClients || isFinance || isJuria || isLibrary ? 'min-h-0 overflow-hidden' : ''}`}>
                 <Header />
 
                 <TVAThresholdNotification />

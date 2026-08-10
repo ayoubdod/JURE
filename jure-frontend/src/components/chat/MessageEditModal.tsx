@@ -9,6 +9,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Loader2 } from 'lucide-react';
+import { useAppTranslation } from '@/i18n';
 
 interface MessageEditModalProps {
   open: boolean;
@@ -23,12 +24,14 @@ const MessageEditModal: React.FC<MessageEditModalProps> = ({
   message,
   onSave,
 }) => {
+  const { t } = useAppTranslation();
+  const m = t.conversations.messageEdit;
   const [body, setBody] = useState('');
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (message) {
-      const text = message.body ?? (message as any).content ?? '';
+      const text = message.body ?? (message as { content?: string }).content ?? '';
       setBody(text);
     } else {
       setBody('');
@@ -53,12 +56,12 @@ const MessageEditModal: React.FC<MessageEditModalProps> = ({
     <Dialog open={open} onOpenChange={saving ? undefined : onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Edit message</DialogTitle>
+          <DialogTitle>{m.title}</DialogTitle>
         </DialogHeader>
         <Textarea
           value={body}
           onChange={(e) => setBody(e.target.value)}
-          placeholder="Message text"
+          placeholder={m.placeholder}
           className="min-h-[100px] resize-none"
           disabled={saving}
           onKeyDown={(e) => {
@@ -70,11 +73,11 @@ const MessageEditModal: React.FC<MessageEditModalProps> = ({
         />
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>
-            Cancel
+            {t.common.cancel}
           </Button>
           <Button onClick={handleSubmit} disabled={saving || !body.trim()}>
             {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-            Save
+            {t.common.save}
           </Button>
         </DialogFooter>
       </DialogContent>

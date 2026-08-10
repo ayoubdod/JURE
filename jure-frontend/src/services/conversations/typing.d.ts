@@ -11,14 +11,18 @@ declare namespace API {
     | 'TEXT'
     | 'SHARED_CASE'
     | 'SHARED_TASK'
-    | 'SHARED_APPOINTMENT';
+    | 'SHARED_APPOINTMENT'
+    | 'CALL_VOICE'
+    | 'CALL_VIDEO'
+    | 'CALL_MISSED_VOICE'
+    | 'CALL_MISSED_VIDEO';
 
   /**
    * Server-computed embed on shared messages (GET list/history/WS).
    * `id` is string in API schema; parse for numeric routes when needed.
    */
   type SharedItem = {
-    type: 'CASE' | 'TASK' | 'APPOINTMENT';
+    type: 'CASE' | 'TASK' | 'APPOINTMENT' | 'CALL';
     id: string;
     title: string;
     status: string;
@@ -30,6 +34,12 @@ declare namespace API {
     /** Optional extras (e.g. appointments) when backend includes them */
     date?: string | null;
     duration?: number | null;
+    /** Call history extras */
+    kind?: 'voice' | 'video' | string;
+    outcome?: 'missed' | 'completed' | 'declined' | string;
+    durationSeconds?: number | null;
+    startedAt?: string | null;
+    endedAt?: string | null;
   };
 
   /** Group conversation linked case (list/detail). */

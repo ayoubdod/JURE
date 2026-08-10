@@ -66,6 +66,16 @@ class ConversationConsumer(AsyncJsonWebsocketConsumer):
         if payload:
             await self.send_json(payload)
 
+    async def call_room_active(self, event):
+        payload = event.get("payload")
+        if payload:
+            await self.send_json(payload)
+
+    async def call_room_ended(self, event):
+        payload = event.get("payload")
+        if payload:
+            await self.send_json(payload)
+
     @database_sync_to_async
     def get_last_messages_payload(self):
         """Fetch + serialize in a sync thread (ORM cannot run in the async event loop)."""

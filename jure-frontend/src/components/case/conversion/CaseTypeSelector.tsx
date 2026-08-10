@@ -59,7 +59,7 @@ export function CaseTypeSelector({ open, onOpenChange, onSelectType }: Props) {
             type="button"
             variant="ghost"
             size="icon"
-            className="absolute right-4 top-4 z-10 h-9 w-9 border border-white/30 bg-white/20 text-white backdrop-blur-sm hover:bg-white/30"
+            className="absolute end-4 top-4 z-10 h-9 w-9 border border-white/30 bg-white/20 text-white backdrop-blur-sm hover:bg-white/30"
             onClick={() => onOpenChange(false)}
             aria-label="Close"
           >

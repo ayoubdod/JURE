@@ -48,6 +48,7 @@ import {
 } from '@/components/ui/popover';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
+import { eventBus } from '@/utils/eventBus';
 import {
   getCaseData,
   getCaseDateForFilter,
@@ -368,6 +369,7 @@ const Cases = () => {
   const [pageSize, setPageSize] = useState(50);
   const [cases, setCases] = useState<API.Case[]>([]);
   const [casesIsLoading, setCasesIsLoading] = useState(false);
+  const [casesLoadError, setCasesLoadError] = useState(false);
   const [fullFilteredCases, setFullFilteredCases] = useState<API.Case[]>([]);
   const [allCases, setAllCases] = useState<API.Case[]>([]);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
@@ -390,11 +392,15 @@ const Cases = () => {
   const fetchAllCasesForStats = () => {
     apiGetCases({ page_size: 1000 })
       .then((res) => setAllCases(res.data?.results ?? []))
-      .catch(() => setAllCases([]));
+      .catch(() => {
+        // Stats are secondary; do not invent sample matters on failure.
+        setAllCases([]);
+      });
   };
 
   useEffect(() => {
     setCasesIsLoading(true);
+    setCasesLoadError(false);
     const params: GetCasesParams = { page: 1, page_size: 1000 };
     if (debouncedSearchTerm.trim()) params.search = debouncedSearchTerm.trim();
     if (caseTypeFilter !== 'ALL') {
@@ -407,6 +413,7 @@ const Cases = () => {
       .then((res) => {
         const raw = res.data?.results ?? [];
         setFullFilteredCases(raw);
+        setCasesLoadError(false);
       })
       .catch(() => {
         toast({
@@ -414,6 +421,8 @@ const Cases = () => {
           description: t.cases.errors.fetchFailed,
           variant: 'destructive',
         });
+        setCasesLoadError(true);
+        // Keep previous list only briefly cleared — do not pretend empty success.
         setFullFilteredCases([]);
       })
       .finally(() => setCasesIsLoading(false));
@@ -503,6 +512,12 @@ const Cases = () => {
     setRefreshTrigger((t) => t + 1);
     fetchAllCasesForStats();
   };
+
+  useEffect(() => {
+    const onCaseUpdated = () => refresh();
+    eventBus.on('case-updated', onCaseUpdated);
+    return () => eventBus.off('case-updated', onCaseUpdated);
+  }, []);
 
   const patchCaseInList = useCallback((caseId: number, patch: Partial<API.Case>) => {
     setFullFilteredCases((prev) =>
@@ -594,7 +609,35 @@ const Cases = () => {
         >
           {t.cases.empty.resetFilters}
         </Button>
+      ) : activeTab !== 'my' ? (
+        <Button
+          variant="outline"
+          size="sm"
+          className="mt-4 h-8 rounded-md text-[12px]"
+          onClick={openCreateCase}
+        >
+          {t.cases.empty.createCta}
+        </Button>
       ) : null}
+    </div>
+  );
+
+  const errorState = (
+    <div className="flex flex-col items-center justify-center py-12 px-6">
+      <div className="h-12 w-12 rounded-xl bg-rose-50 dark:bg-rose-950/40 flex items-center justify-center mb-3">
+        <Scale className="w-6 h-6 text-rose-600 dark:text-rose-400" aria-hidden />
+      </div>
+      <p className="text-sm font-semibold text-slate-900 dark:text-white">
+        {t.cases.errors.fetchFailed}
+      </p>
+      <Button
+        variant="outline"
+        size="sm"
+        className="mt-4 h-8 rounded-md text-[12px]"
+        onClick={() => setRefreshTrigger((n) => n + 1)}
+      >
+        {t.cases.errors.retry}
+      </Button>
     </div>
   );
 
@@ -656,6 +699,12 @@ const Cases = () => {
                   <td className="h-10 px-1" />
                 </tr>
               ))
+            ) : casesLoadError ? (
+              <tr>
+                <td colSpan={8} className="align-middle">
+                  {errorState}
+                </td>
+              </tr>
             ) : cases.length === 0 ? (
               <tr>
                 <td colSpan={8} className="align-middle">
@@ -689,6 +738,8 @@ const Cases = () => {
             className="h-[160px] rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 animate-pulse"
           />
         ))
+      ) : casesLoadError ? (
+        <div className="col-span-full">{errorState}</div>
       ) : cases.length === 0 ? (
         <div className="col-span-full">{emptyState}</div>
       ) : (
@@ -708,6 +759,8 @@ const Cases = () => {
             className="h-[108px] rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 animate-pulse"
           />
         ))
+      ) : casesLoadError ? (
+        errorState
       ) : cases.length === 0 ? (
         emptyState
       ) : (

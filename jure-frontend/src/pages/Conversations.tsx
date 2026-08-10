@@ -40,6 +40,12 @@ import { useWebRtcCall } from '@/hooks/useWebRtcCall';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { useAppTranslation } from '@/i18n';
+import {
+  GroupCallParticipantPicker,
+  type GroupCallKind,
+} from '@/components/conversations/call/GroupCallParticipantPicker';
+import type { CallRemoteUser } from '@/stores/callSessionStore';
+import { useConversationCallPresenceStore } from '@/stores/conversationCallPresenceStore';
 const ConversationsPage: React.FC = () => {
   const { t, tf } = useAppTranslation();
   const toastMsgs = t.conversations.toasts;
@@ -55,7 +61,11 @@ const ConversationsPage: React.FC = () => {
   const { toast } = useToast();
 
   // Call UI lives in DashboardLayout <CallShell />; this page only initiates calls.
-  const { callState, initiateCall } = useWebRtcCall();
+  const { callState, initiateCall, joinActiveCall } = useWebRtcCall();
+  const [groupCallPicker, setGroupCallPicker] = useState<{
+    open: boolean;
+    kind: GroupCallKind;
+  }>({ open: false, kind: 'voice' });
 
   const user = useUserStore((s) => s.user);
 
@@ -336,59 +346,156 @@ const ConversationsPage: React.FC = () => {
       avatar: (u as { image?: string }).image ?? null,
       firstName: u.first_name ?? undefined,
       lastName: u.last_name ?? undefined,
-    };
+    } satisfies CallRemoteUser;
   }, [activeConversation, user?.email, t.conversations.contact]);
+
+  const groupCallCandidates = useMemo((): CallRemoteUser[] => {
+    if (!activeConversation || activeConversation.type !== 'group') return [];
+    const myId = user?.id;
+    const myEmail = (user?.email ?? '').toLowerCase();
+    const seen = new Set<number>();
+    const out: CallRemoteUser[] = [];
+    for (const m of activeConversation.memberships ?? []) {
+      const u = m.user;
+      if (!u?.id) continue;
+      if (myId != null && u.id === myId) continue;
+      if (myEmail && (u.email ?? '').toLowerCase() === myEmail) continue;
+      if (seen.has(u.id)) continue;
+      seen.add(u.id);
+      const name =
+        `${u.first_name ?? ''} ${u.last_name ?? ''}`.trim() || u.email || t.conversations.contact;
+      out.push({
+        id: u.id,
+        name,
+        avatar: (u as { image?: string }).image ?? null,
+        firstName: u.first_name ?? undefined,
+        lastName: u.last_name ?? undefined,
+      });
+    }
+    return out.sort((a, b) => a.name.localeCompare(b.name));
+  }, [activeConversation, user?.id, user?.email, t.conversations.contact]);
+
+  const startCallWith = useCallback(
+    (remoteUser: CallRemoteUser, kind: GroupCallKind) => {
+      if (!activeId) return;
+      initiateCall({
+        conversationId: activeId,
+        targetUserId: remoteUser.id,
+        remoteUser,
+        kind,
+        mode: 'direct',
+      });
+    },
+    [activeId, initiateCall]
+  );
+
+  const startConference = useCallback(
+    (participants: CallRemoteUser[], kind: GroupCallKind) => {
+      if (!activeId || participants.length === 0) return;
+      const capped = participants.slice(0, 5);
+      initiateCall({
+        conversationId: activeId,
+        targetUserIds: capped.map((p) => p.id),
+        remoteUser: capped[0],
+        remoteUsers: capped,
+        kind,
+        mode: 'conference',
+      });
+    },
+    [activeId, initiateCall]
+  );
 
   const handleStartVoiceCall = () => {
     if (!activeId || !activeConversation) return;
-    if (activeConversation.type !== 'direct') {
-      toast({
-        title: toastMsgs.voiceCallsUnavailable,
-        description: toastMsgs.voiceCallsDirectOnly,
-        variant: 'destructive',
-      });
+    if (activeConversation.type === 'direct') {
+      if (!remoteUserForActiveDirect) {
+        toast({
+          title: toastMsgs.cannotStartCall,
+          description: toastMsgs.cannotResolveParticipant,
+          variant: 'destructive',
+        });
+        return;
+      }
+      startCallWith(remoteUserForActiveDirect, 'voice');
       return;
     }
-    if (!remoteUserForActiveDirect) {
+    if (groupCallCandidates.length === 0) {
       toast({
         title: toastMsgs.cannotStartCall,
-        description: toastMsgs.cannotResolveParticipant,
+        description: toastMsgs.noOtherParticipants,
         variant: 'destructive',
       });
       return;
     }
-    initiateCall({
-      conversationId: activeId,
-      targetUserId: remoteUserForActiveDirect.id,
-      remoteUser: remoteUserForActiveDirect,
-      kind: 'voice',
-    });
+    // Conference: ring all members (cap 5 others). Picker only if over cap.
+    if (groupCallCandidates.length <= 5) {
+      startConference(groupCallCandidates, 'voice');
+      return;
+    }
+    setGroupCallPicker({ open: true, kind: 'voice' });
   };
 
   const handleStartVideoCall = () => {
     if (!activeId || !activeConversation) return;
-    if (activeConversation.type !== 'direct') {
-      toast({
-        title: toastMsgs.videoCallsUnavailable,
-        description: toastMsgs.videoCallsDirectOnly,
-        variant: 'destructive',
-      });
+    if (activeConversation.type === 'direct') {
+      if (!remoteUserForActiveDirect) {
+        toast({
+          title: toastMsgs.cannotStartCall,
+          description: toastMsgs.cannotResolveParticipant,
+          variant: 'destructive',
+        });
+        return;
+      }
+      startCallWith(remoteUserForActiveDirect, 'video');
       return;
     }
-    if (!remoteUserForActiveDirect) {
+    if (groupCallCandidates.length === 0) {
       toast({
         title: toastMsgs.cannotStartCall,
-        description: toastMsgs.cannotResolveParticipant,
+        description: toastMsgs.noOtherParticipants,
         variant: 'destructive',
       });
       return;
     }
-    initiateCall({
+    if (groupCallCandidates.length <= 5) {
+      startConference(groupCallCandidates, 'video');
+      return;
+    }
+    setGroupCallPicker({ open: true, kind: 'video' });
+  };
+
+  const handleJoinActiveCall = () => {
+    if (!activeId) return;
+    const active = useConversationCallPresenceStore.getState().activeByConversation[activeId];
+    if (!active) return;
+    const remote =
+      active.callerId != null
+        ? groupCallCandidates.find((p) => p.id === active.callerId) ??
+          remoteUserForActiveDirect ?? {
+            id: active.callerId,
+            name: active.callerName || t.conversations.contact,
+          }
+        : remoteUserForActiveDirect;
+    joinActiveCall({
       conversationId: activeId,
-      targetUserId: remoteUserForActiveDirect.id,
-      remoteUser: remoteUserForActiveDirect,
-      kind: 'video',
+      groupName: active.groupName,
+      kind: active.kind,
+      mode: active.mode,
+      remoteUser: remote ?? null,
     });
+  };
+
+  const handleRecallMissedCall = (kind?: 'voice' | 'video') => {
+    if (!activeId || !activeConversation) return;
+    const missed = useConversationCallPresenceStore.getState().missedByConversation[activeId];
+    const callKind = kind ?? missed?.kind ?? 'voice';
+    if (activeConversation.type === 'direct') {
+      if (callKind === 'video') handleStartVideoCall();
+      else handleStartVoiceCall();
+      return;
+    }
+    if (groupCallCandidates.length === 0) return;
+    startConference(groupCallCandidates.slice(0, 5), callKind);
   };
 
   const callInProgress = callState.status !== 'idle';
@@ -637,6 +744,8 @@ const ConversationsPage: React.FC = () => {
           onCallVoice={handleStartVoiceCall}
           onCallVideo={handleStartVideoCall}
           callInProgress={callInProgress}
+          onJoinActiveCall={handleJoinActiveCall}
+          onRecallMissedCall={handleRecallMissedCall}
           onOpenSettings={() => {}}
           onStartNewChat={() => newChatModalRef.current?.show()}
           onDeleteConversation={(conv) => deleteChatModalRef.current?.show(conv)}
@@ -817,6 +926,31 @@ const ConversationsPage: React.FC = () => {
               : c;
           setConversations((prev) => prev.map(merge));
           setArchivedConversations((prev) => prev.map(merge));
+        }}
+      />
+
+      <GroupCallParticipantPicker
+        open={groupCallPicker.open}
+        onOpenChange={(open) => setGroupCallPicker((prev) => ({ ...prev, open }))}
+        kind={groupCallPicker.kind}
+        participants={groupCallCandidates}
+        title={toastMsgs.selectCallParticipant}
+        description={
+          groupCallPicker.kind === 'video'
+            ? toastMsgs.selectVideoParticipantHint
+            : toastMsgs.selectVoiceParticipantHint
+        }
+        searchPlaceholder={toastMsgs.searchParticipants}
+        emptyLabel={
+          groupCallCandidates.length === 0
+            ? toastMsgs.noOtherParticipants
+            : toastMsgs.noMatchingParticipants
+        }
+        onSelect={(remoteUser) => {
+          // Over-cap groups: picking one starts a conference that can grow as others join later;
+          // for now start conference with selected + up to 4 more from list.
+          const rest = groupCallCandidates.filter((p) => p.id !== remoteUser.id).slice(0, 4);
+          startConference([remoteUser, ...rest], groupCallPicker.kind);
         }}
       />
     </div>

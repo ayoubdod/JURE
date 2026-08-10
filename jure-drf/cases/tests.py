@@ -12,14 +12,14 @@ from .utils import is_consultation_ready_to_convert
 User = get_user_model()
 
 
-def _create_cabinet_user(email="lawyer@test.com"):
+def _create_cabinet_user(email="lawyer@test.com", phone=None):
     """Create a user who owns a cabinet (for case permissions)."""
     user = User.objects.create_user(
         email=email,
         password="testpass123",
         first_name="Test",
         last_name="Lawyer",
-        phone="+33612345678",
+        phone=phone or f"+336{uuid.uuid4().int % 10**8:08d}",
         country="FR",
     )
     cabinet = Cabinet.objects.create(
@@ -256,3 +256,141 @@ class CaseConvertAPITest(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         data = response.json()
         self.assertEqual(data["code"], "invalid_target_type")
+
+
+def _create_member(email, cabinet, role="LAWYER"):
+    user = User.objects.create_user(
+        email=email,
+        password="testpass123",
+        first_name="Member",
+        last_name=role,
+        phone=f"+336{uuid.uuid4().int % 10**8:08d}",
+        country="FR",
+    )
+    user.cabinet = cabinet
+    user.is_cabinet_member = True
+    user.role = role
+    user.save(update_fields=["cabinet", "is_cabinet_member", "role"])
+    return user
+
+
+class CaseCloseAPITest(APITestCase):
+    """Test POST /api/v1/cases/:id/close/ — real persisted closure."""
+
+    def setUp(self):
+        self.client = APIClient()
+        self.user, self.cabinet = _create_cabinet_user("closer@test.com")
+        from rest_framework_simplejwt.tokens import RefreshToken
+
+        refresh = RefreshToken.for_user(self.user)
+        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}")
+
+    def _auth_as(self, user):
+        from rest_framework_simplejwt.tokens import RefreshToken
+
+        refresh = RefreshToken.for_user(user)
+        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}")
+
+    def test_authorized_user_can_close_matter(self):
+        matter = _create_consultation(
+            self.cabinet,
+            self.user,
+            case_type=Case.CaseType.LITIGATION,
+            status=Case.CaseStatus.OPEN,
+            title="Close me",
+        )
+        url = reverse("case-close", kwargs={"pk": matter.pk})
+        response = self.client.post(
+            url,
+            {"outcome": "Settled", "lessons": "Negotiate early"},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.json()
+        self.assertTrue(data["success"])
+        self.assertFalse(data["already_closed"])
+        self.assertEqual(data["previous_status"], Case.CaseStatus.OPEN)
+        self.assertEqual(data["case"]["status"], Case.CaseStatus.CLOSED)
+
+        matter.refresh_from_db()
+        self.assertEqual(matter.status, Case.CaseStatus.CLOSED)
+        self.assertEqual(matter.updated_by_id, self.user.id)
+        summary = (matter.case_specific_data or {}).get("close_summary") or {}
+        self.assertEqual(summary.get("outcome"), "Settled")
+        self.assertEqual(summary.get("lessons"), "Negotiate early")
+        self.assertEqual(summary.get("previous_status"), Case.CaseStatus.OPEN)
+
+        from dashboard.models import ActivityLog
+
+        logs = ActivityLog.objects.filter(cabinet=self.cabinet, kind="matter_closed")
+        self.assertEqual(logs.count(), 1)
+        self.assertIn(matter.reference, logs.first().message)
+
+    def test_already_closed_is_idempotent(self):
+        matter = _create_consultation(
+            self.cabinet,
+            self.user,
+            case_type=Case.CaseType.LITIGATION,
+            status=Case.CaseStatus.CLOSED,
+        )
+        url = reverse("case-close", kwargs={"pk": matter.pk})
+        response = self.client.post(url, {}, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.json()
+        self.assertTrue(data["already_closed"])
+        self.assertEqual(data["case"]["status"], Case.CaseStatus.CLOSED)
+
+        from dashboard.models import ActivityLog
+
+        self.assertEqual(
+            ActivityLog.objects.filter(cabinet=self.cabinet, kind="matter_closed").count(),
+            0,
+        )
+
+    def test_viewer_cannot_close_matter(self):
+        viewer = _create_member("viewer@test.com", self.cabinet, role="VIEWER")
+        matter = _create_consultation(
+            self.cabinet,
+            self.user,
+            case_type=Case.CaseType.LITIGATION,
+            status=Case.CaseStatus.OPEN,
+        )
+        self._auth_as(viewer)
+        url = reverse("case-close", kwargs={"pk": matter.pk})
+        response = self.client.post(url, {}, format="json")
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        matter.refresh_from_db()
+        self.assertEqual(matter.status, Case.CaseStatus.OPEN)
+
+    def test_cannot_close_other_cabinet_matter(self):
+        other_user, other_cab = _create_cabinet_user("other-owner@test.com")
+        foreign = _create_consultation(
+            other_cab,
+            other_user,
+            case_type=Case.CaseType.LITIGATION,
+            status=Case.CaseStatus.OPEN,
+        )
+        url = reverse("case-close", kwargs={"pk": foreign.pk})
+        response = self.client.post(url, {}, format="json")
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        foreign.refresh_from_db()
+        self.assertEqual(foreign.status, Case.CaseStatus.OPEN)
+
+    def test_nonexistent_matter_404(self):
+        url = reverse("case-close", kwargs={"pk": 999999})
+        response = self.client.post(url, {}, format="json")
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_unauthenticated_401(self):
+        matter = _create_consultation(
+            self.cabinet,
+            self.user,
+            case_type=Case.CaseType.LITIGATION,
+            status=Case.CaseStatus.OPEN,
+        )
+        self.client.credentials()
+        url = reverse("case-close", kwargs={"pk": matter.pk})
+        response = self.client.post(url, {}, format="json")
+        self.assertIn(response.status_code, (status.HTTP_401_UNAUTHORIZED, status.HTTP_403_FORBIDDEN))

@@ -3,7 +3,6 @@ import { forwardRef, useImperativeHandle, useState } from 'react';
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
@@ -14,7 +13,6 @@ import {
   CheckSquare, 
   Clock, 
   FileText, 
-  Flag, 
   User, 
   Gavel, 
   Briefcase,
@@ -26,6 +24,7 @@ import { apiGetTask } from '@/services/task/api';
 import { TaskPriority, TaskStatus } from '@/utils/constants';
 import { DialogDescription } from '@radix-ui/react-dialog';
 import { devError } from '@/utils/devLog';
+import { useAppTranslation } from '@/i18n';
 
 export interface TaskViewModalRef {
   show: (taskId: number) => void;
@@ -38,6 +37,8 @@ export interface TaskViewModalProps {
 }
 
 const TaskViewModal = forwardRef<TaskViewModalRef, TaskViewModalProps>(({ onUpdate, updateModalRef }, ref) => {
+  const { t } = useAppTranslation();
+  const m = t.tasks.modal;
   const [task, setTask] = useState<API.Task | null>(null);
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -100,29 +101,25 @@ const TaskViewModal = forwardRef<TaskViewModalRef, TaskViewModalProps>(({ onUpda
   return (
     <Dialog open={isOpen} onOpenChange={hide} modal>
       <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto p-0 [&>button]:hidden">
-        {/* Header Banner */}
         <div className="relative h-32 bg-gradient-to-r from-[#4ECDC4] via-[#64499D] to-[#FF6B6B] overflow-hidden">
-          {/* Decorative Pattern Overlay */}
           <div className="absolute inset-0 opacity-10">
             <div className="absolute inset-0" style={{
               backgroundImage: `radial-gradient(circle at 2px 2px, white 1px, transparent 0)`,
               backgroundSize: '32px 32px'
             }}></div>
           </div>
-          {/* Gradient Overlay */}
           <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/10"></div>
           
-          {/* Close Button */}
           <Button
             variant="ghost"
             size="icon"
-            className="absolute top-4 right-4 h-9 w-9 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white border border-white/30"
+            className="absolute top-4 end-4 h-9 w-9 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white border border-white/30"
             onClick={hide}
+            aria-label={t.common.close}
           >
             <X className="w-4 h-4" />
           </Button>
 
-          {/* Header Content */}
           <div className="relative px-8 pt-8 pb-6">
             <div className="flex items-center gap-3">
               <div className="p-3 rounded-xl bg-white/20 backdrop-blur-sm border border-white/30">
@@ -130,10 +127,10 @@ const TaskViewModal = forwardRef<TaskViewModalRef, TaskViewModalProps>(({ onUpda
               </div>
               <div>
                 <DialogTitle className="text-2xl font-bold text-white">
-                  Task Details
+                  {m.viewTitle}
                 </DialogTitle>
                 <DialogDescription className="text-white/90 mt-1">
-                  View task information and details
+                  {m.viewDescription}
                 </DialogDescription>
               </div>
             </div>
@@ -146,35 +143,38 @@ const TaskViewModal = forwardRef<TaskViewModalRef, TaskViewModalProps>(({ onUpda
           </div>
         ) : task ? (
           <div className="px-8 py-6 space-y-6">
-            {/* Task Information */}
             <div className="space-y-4">
               <div className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-3">
                 <FileText className="w-4 h-4 text-purple-600" />
-                Task Information
+                {m.taskInformation}
               </div>
               <div className="space-y-4">
                 <div>
-                  <label className="text-sm font-medium text-gray-500">Title</label>
+                  <label className="text-sm font-medium text-gray-500">{m.title}</label>
                   <p className="text-base font-semibold text-gray-900 mt-1">{task.title}</p>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-gray-500">Description</label>
-                  <p className="text-sm text-gray-700 mt-1 whitespace-pre-wrap">{task.description || 'No description provided'}</p>
+                  <label className="text-sm font-medium text-gray-500">{m.description}</label>
+                  <p className="text-sm text-gray-700 mt-1 whitespace-pre-wrap">{task.description || m.noDescription}</p>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="text-sm font-medium text-gray-500">Priority</label>
+                    <label className="text-sm font-medium text-gray-500">{m.priority}</label>
                     <div className="mt-1">
                       <Badge className={getPriorityColor(task.priority)}>
-                        {task.priority ? TaskPriority.options.find(p => p.value === task.priority)?.label || task.priority : 'Not set'}
+                        {task.priority
+                          ? (t.enums.taskPriority[task.priority] ?? TaskPriority.options.find(p => p.value === task.priority)?.label ?? task.priority)
+                          : m.notSet}
                       </Badge>
                     </div>
                   </div>
                   <div>
-                    <label className="text-sm font-medium text-gray-500">Status</label>
+                    <label className="text-sm font-medium text-gray-500">{m.status}</label>
                     <div className="mt-1">
                       <Badge className={getStatusColor(task.status)}>
-                        {task.status ? TaskStatus.options.find(s => s.value === task.status)?.label || task.status : 'Not set'}
+                        {task.status
+                          ? (t.enums.taskStatus[task.status] ?? TaskStatus.options.find(s => s.value === task.status)?.label ?? task.status)
+                          : m.notSet}
                       </Badge>
                     </div>
                   </div>
@@ -182,56 +182,54 @@ const TaskViewModal = forwardRef<TaskViewModalRef, TaskViewModalProps>(({ onUpda
               </div>
             </div>
 
-            {/* Schedule & Assignment */}
             <div className="space-y-4">
               <div className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-3">
                 <Calendar className="w-4 h-4 text-purple-600" />
-                Schedule & Assignment
+                {m.scheduleAssignment}
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="text-sm font-medium text-gray-500 flex items-center gap-1">
                     <Clock className="w-4 h-4" />
-                    Due Date
+                    {m.dueDate}
                   </label>
                   <p className="text-sm text-gray-700 mt-1">
-                    {task.due_date ? new Date(task.due_date).toLocaleDateString() : 'Not set'}
+                    {task.due_date ? new Date(task.due_date).toLocaleDateString() : m.notSet}
                   </p>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-gray-500">Estimated Hours</label>
-                  <p className="text-sm text-gray-700 mt-1">{task.estimated_hours || 'Not set'}</p>
+                  <label className="text-sm font-medium text-gray-500">{m.estimatedHours}</label>
+                  <p className="text-sm text-gray-700 mt-1">{task.estimated_hours || m.notSet}</p>
                 </div>
                 <div>
                   <label className="text-sm font-medium text-gray-500 flex items-center gap-1">
                     <User className="w-4 h-4" />
-                    Assigned To
+                    {m.assignedTo}
                   </label>
                   <p className="text-sm text-gray-700 mt-1">
-                    {task.assigned_to ? `${task.assigned_to.first_name || ''} ${task.assigned_to.last_name || ''}`.trim() || task.assigned_to.email : 'Unassigned'}
+                    {task.assigned_to ? `${task.assigned_to.first_name || ''} ${task.assigned_to.last_name || ''}`.trim() || task.assigned_to.email : m.unassigned}
                   </p>
                 </div>
               </div>
             </div>
 
-            {/* Related Information */}
             {(task.client || task.case) && (
               <div className="space-y-4">
                 <div className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-3">
                   <Briefcase className="w-4 h-4 text-purple-600" />
-                  Related Information
+                  {m.relatedInformation}
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   {task.client && (
                     <div>
                       <label className="text-sm font-medium text-gray-500 flex items-center gap-1">
                         <User className="w-4 h-4" />
-                        Client
+                        {m.client}
                       </label>
                       <p className="text-sm text-gray-700 mt-1">
                         {typeof task.client === 'object' 
                           ? `${task.client.first_name || ''} ${task.client.last_name || ''}`.trim() || task.client.email
-                          : 'Client'}
+                          : m.client}
                       </p>
                     </div>
                   )}
@@ -239,10 +237,10 @@ const TaskViewModal = forwardRef<TaskViewModalRef, TaskViewModalProps>(({ onUpda
                     <div>
                       <label className="text-sm font-medium text-gray-500 flex items-center gap-1">
                         <Gavel className="w-4 h-4" />
-                        Case
+                        {m.case}
                       </label>
                       <p className="text-sm text-gray-700 mt-1">
-                        {typeof task.case === 'object' ? task.case.title : (task as any).case_title || 'Case'}
+                        {typeof task.case === 'object' ? task.case.title : (task as any).case_title || m.case}
                       </p>
                     </div>
                   )}
@@ -256,7 +254,7 @@ const TaskViewModal = forwardRef<TaskViewModalRef, TaskViewModalProps>(({ onUpda
                 variant="outline"
                 onClick={hide}
               >
-                Close
+                {t.common.close}
               </Button>
               <Button 
                 type="button" 
@@ -264,14 +262,14 @@ const TaskViewModal = forwardRef<TaskViewModalRef, TaskViewModalProps>(({ onUpda
                 onClick={handleUpdate}
                 className="bg-purple-600 hover:bg-purple-700"
               >
-                <Edit className="w-4 h-4 mr-2" />
-                Update Task
+                <Edit className="w-4 h-4 me-2" />
+                {m.updateTask}
               </Button>
             </DialogFooter>
           </div>
         ) : (
           <div className="px-8 py-6 text-center">
-            <p className="text-gray-500">Task not found</p>
+            <p className="text-gray-500">{m.notFound}</p>
           </div>
         )}
       </DialogContent>
@@ -282,7 +280,3 @@ const TaskViewModal = forwardRef<TaskViewModalRef, TaskViewModalProps>(({ onUpda
 TaskViewModal.displayName = 'TaskViewModal';
 
 export default TaskViewModal;
-
-
-
-

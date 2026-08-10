@@ -53,3 +53,20 @@ export const apiDeleteCase = (id: number) =>
 export const apiConvertCase = (consultationId: number, body: Record<string, unknown>) =>
     axiosInstance.post<API.ConvertCaseResponse>(`${CASES_BASE}${consultationId}/convert/`, body);
 
+export type CloseCasePayload = {
+    outcome?: string;
+    lessons?: string;
+    precedents?: string;
+};
+
+export type CloseCaseResponse = {
+    success: boolean;
+    already_closed: boolean;
+    previous_status: API.CaseStatus;
+    case: API.Case;
+};
+
+/** Persist matter closure: POST /api/v1/cases/:id/close/ */
+export const apiCloseCase = (id: number, body?: CloseCasePayload) =>
+    axiosInstance.post<CloseCaseResponse>(`${CASES_BASE}${id}/close/`, body ?? {});
+

@@ -1,14 +1,13 @@
 'use client'
-import { forwardRef, useImperativeHandle, useState } from 'react';
+import { forwardRef, useImperativeHandle, useMemo, useRef, useState } from 'react';
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { AlignJustify, FileText, Gavel, Loader2, Scale, StickyNote, Tags, Type, User, UserCheck, X, Save } from 'lucide-react';
+import { AlignJustify, FileText, Gavel, Loader2, Scale, StickyNote, Tags, Type, UserCheck, X, Save } from 'lucide-react';
 import { apiUpdateCase } from '@/services/case/api';
 import * as yup from 'yup';
 import { Resolver, useForm } from 'react-hook-form';
@@ -23,6 +22,7 @@ import { CaseCategory, CaseStatus } from '@/utils/constants';
 import { DialogDescription } from '@radix-ui/react-dialog';
 import ServerSelect from '../common/ServerSelect';
 import { Textarea } from '../ui/textarea';
+import { useAppTranslation } from '@/i18n';
 
 
 export interface CaseUpdateModalRef {
@@ -34,26 +34,31 @@ export interface CaseUpdateModalProps {
   onSuccess?: (_: API.Case) => void;
 }
 
-const schema = yup.object({
-  category: yup.string().required('Category is required'),
-  status: yup.string().required('Status is required'),
-  summary: yup.string().optional().default(''),
-  description: yup.string().required('Description is required'),
-  reference: yup.string().required('Reference is required'),
-  title: yup.string().required('Title is required'),
-  court: yup.string().required('Court is required'),
-  assigned_to: yup.number().nullable().optional(),
-  client: yup.number().nullable().optional(),
-});
-
 const CaseUpdateModal = forwardRef<CaseUpdateModalRef, CaseUpdateModalProps>(({ onSuccess }, ref) => {
+  const { t } = useAppTranslation();
   const [instance, setInstance] = useState<API.Case | null>(null);
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
+  const schema = useMemo(() => yup.object({
+    category: yup.string().required(t.cases.modal.validation.categoryRequired),
+    status: yup.string().required(t.cases.modal.validation.statusRequired),
+    summary: yup.string().optional().default(''),
+    description: yup.string().required(t.cases.modal.validation.descriptionRequired),
+    reference: yup.string().required(t.cases.modal.validation.referenceRequired),
+    title: yup.string().required(t.cases.modal.validation.titleRequired),
+    court: yup.string().required(t.cases.modal.validation.courtRequired),
+    assigned_to: yup.number().nullable().optional(),
+    client: yup.number().nullable().optional(),
+  }), [t]);
+
+  const schemaRef = useRef(schema);
+  schemaRef.current = schema;
+
   const mainForm = useForm<API.CaseUpdateForm>({
-    resolver: yupResolver(schema) as unknown as Resolver<API.CaseUpdateForm>
+    resolver: ((values, context, options) =>
+      yupResolver(schemaRef.current)(values, context, options)) as unknown as Resolver<API.CaseUpdateForm>
   });
 
   const show = (instance: API.Case) => {
@@ -90,7 +95,6 @@ const CaseUpdateModal = forwardRef<CaseUpdateModalRef, CaseUpdateModalProps>(({ 
     
     setIsLoading(true);
     
-    // Ensure assigned_to and client are properly formatted
     const submitData = {
       ...data,
       id: instance.id,
@@ -100,7 +104,7 @@ const CaseUpdateModal = forwardRef<CaseUpdateModalRef, CaseUpdateModalProps>(({ 
     
     await apiUpdateCase(submitData)
       .then((res) => {
-        toast({ title: 'Dossier mis à jour' });
+        toast({ title: t.cases.modal.toasts.updatedTitle });
         onSuccess?.(res.data);
         hide();
       })
@@ -112,7 +116,7 @@ const CaseUpdateModal = forwardRef<CaseUpdateModalRef, CaseUpdateModalProps>(({ 
             mainForm.setError(key as keyof API.CaseUpdateForm, { message: remoteValidation[key] });
           });
 
-          let msg = 'Impossible de mettre à jour le dossier.';
+          let msg = t.cases.modal.toasts.updateFailed;
           const d = err.response?.data as Record<string, unknown> | string | undefined;
           if (typeof d === 'string') msg = d;
           else if (d && typeof d === 'object' && !Array.isArray(d)) {
@@ -127,9 +131,13 @@ const CaseUpdateModal = forwardRef<CaseUpdateModalRef, CaseUpdateModalProps>(({ 
               }
             }
           }
-          toast({ title: 'Erreur', description: msg, variant: 'destructive' });
+          toast({ title: t.common.error, description: msg, variant: 'destructive' });
         } else {
-          toast({ title: 'Erreur', description: 'Impossible de mettre à jour le dossier.', variant: 'destructive' });
+          toast({
+            title: t.common.error,
+            description: t.cases.modal.toasts.updateFailed,
+            variant: 'destructive',
+          });
         }
       })
       .finally(() => {
@@ -140,30 +148,25 @@ const CaseUpdateModal = forwardRef<CaseUpdateModalRef, CaseUpdateModalProps>(({ 
   return (
     <Dialog open={isOpen} onOpenChange={isLoading ? undefined : setIsOpen}>
       <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto p-0 [&>button]:hidden">
-        {/* Header Banner */}
         <div className="relative h-32 bg-gradient-to-r from-[#64499D] via-[#4ECDC4] to-[#FF6B6B] overflow-hidden">
-          {/* Decorative Pattern Overlay */}
           <div className="absolute inset-0 opacity-10">
             <div className="absolute inset-0" style={{
               backgroundImage: `radial-gradient(circle at 2px 2px, white 1px, transparent 0)`,
               backgroundSize: '32px 32px'
             }}></div>
           </div>
-          {/* Gradient Overlay */}
           <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/10"></div>
-          
-          {/* Close Button */}
+
           <Button
             variant="ghost"
             size="icon"
-            className="absolute top-4 right-4 h-9 w-9 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white border border-white/30"
+            className="absolute top-4 end-4 h-9 w-9 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white border border-white/30"
             onClick={hide}
             disabled={isLoading}
           >
             <X className="w-4 h-4" />
           </Button>
 
-          {/* Header Content */}
           <div className="relative px-8 pt-8 pb-6">
             <div className="flex items-center gap-3">
               <div className="p-3 rounded-xl bg-white/20 backdrop-blur-sm border border-white/30">
@@ -171,10 +174,10 @@ const CaseUpdateModal = forwardRef<CaseUpdateModalRef, CaseUpdateModalProps>(({ 
               </div>
               <div>
                 <DialogTitle className="text-2xl font-bold text-white">
-                  Update Case
+                  {t.cases.modal.updateTitle}
                 </DialogTitle>
                 <DialogDescription className="text-white/90 mt-1">
-                  Modify the case details below
+                  {t.cases.modal.updateDescription}
                 </DialogDescription>
               </div>
             </div>
@@ -182,28 +185,27 @@ const CaseUpdateModal = forwardRef<CaseUpdateModalRef, CaseUpdateModalProps>(({ 
         </div>
 
         <form onSubmit={mainForm.handleSubmit(handleSubmit)} className="px-8 py-6 space-y-6">
-          {/* Basic Information Section */}
           <div className="space-y-4">
             <div className="flex items-center gap-3 pb-2 border-b border-slate-200 dark:border-slate-800">
               <div className="p-2 rounded-lg bg-[#F1ECFF] dark:bg-[#2a2240]">
                 <FileText className="w-4 h-4 text-[#64499D] dark:text-[#E9E0FF]" />
               </div>
               <h3 className="text-base font-semibold text-slate-900 dark:text-white">
-                Basic Information
+                {t.cases.modal.sections.basicInformation}
               </h3>
             </div>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                  Reference <span className="text-red-500">*</span>
+                  {t.cases.modal.fields.reference} <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
-                  <FileText className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                  <FileText className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                   <Input 
                     {...mainForm.register('reference')} 
-                    placeholder="Case reference"
-                    className="pl-10 h-11 border-slate-300 dark:border-slate-700 focus:border-[#64499D] focus:ring-[#64499D]"
+                    placeholder={t.cases.modal.placeholders.reference}
+                    className="ps-10 h-11 border-slate-300 dark:border-slate-700 focus:border-[#64499D] focus:ring-[#64499D]"
                   />
                 </div>
                 {mainForm.formState.errors.reference && (
@@ -215,14 +217,14 @@ const CaseUpdateModal = forwardRef<CaseUpdateModalRef, CaseUpdateModalProps>(({ 
 
               <div className="space-y-2">
                 <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                  Title <span className="text-red-500">*</span>
+                  {t.cases.modal.fields.title} <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
-                  <Type className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                  <Type className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                   <Input 
                     {...mainForm.register('title')} 
-                    placeholder="Case title"
-                    className="pl-10 h-11 border-slate-300 dark:border-slate-700 focus:border-[#64499D] focus:ring-[#64499D]"
+                    placeholder={t.cases.modal.placeholders.title}
+                    className="ps-10 h-11 border-slate-300 dark:border-slate-700 focus:border-[#64499D] focus:ring-[#64499D]"
                   />
                 </div>
                 {mainForm.formState.errors.title && (
@@ -234,14 +236,14 @@ const CaseUpdateModal = forwardRef<CaseUpdateModalRef, CaseUpdateModalProps>(({ 
 
               <div className="space-y-2">
                 <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                  Court Name <span className="text-red-500">*</span>
+                  {t.cases.modal.fields.courtName} <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
-                  <Gavel className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                  <Gavel className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                   <Input 
                     {...mainForm.register('court')} 
-                    placeholder="Court name"
-                    className="pl-10 h-11 border-slate-300 dark:border-slate-700 focus:border-[#64499D] focus:ring-[#64499D]"
+                    placeholder={t.cases.modal.placeholders.court}
+                    className="ps-10 h-11 border-slate-300 dark:border-slate-700 focus:border-[#64499D] focus:ring-[#64499D]"
                   />
                 </div>
                 {mainForm.formState.errors.court && (
@@ -253,19 +255,19 @@ const CaseUpdateModal = forwardRef<CaseUpdateModalRef, CaseUpdateModalProps>(({ 
 
               <div className="space-y-2">
                 <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                  Category <span className="text-red-500">*</span>
+                  {t.cases.modal.fields.category} <span className="text-red-500">*</span>
                 </label>
                 <Select 
                   value={mainForm.watch('category')} 
                   onValueChange={(val: API.CaseCategory) => mainForm.setValue('category', val)}
                 >
                   <SelectTrigger className="h-11 border-slate-300 dark:border-slate-700 focus:border-[#64499D] focus:ring-[#64499D]">
-                    <SelectValue placeholder="Select a category" />
+                    <SelectValue placeholder={t.cases.modal.placeholders.category} />
                   </SelectTrigger>
                   <SelectContent>
                     {CaseCategory.options.map((category, index) => (
                       <SelectItem key={index} value={category.value}>
-                        {category.label}
+                        {t.enums.caseCategory[category.value] ?? category.label}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -280,14 +282,14 @@ const CaseUpdateModal = forwardRef<CaseUpdateModalRef, CaseUpdateModalProps>(({ 
 
             <div className="space-y-2">
               <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                Description <span className="text-red-500">*</span>
+                {t.cases.modal.fields.description} <span className="text-red-500">*</span>
               </label>
               <div className="relative">
-                <AlignJustify className="absolute left-3 top-3 w-4 h-4 text-slate-400" />
+                <AlignJustify className="absolute start-3 top-3 w-4 h-4 text-slate-400" />
                 <Textarea 
                   {...mainForm.register('description')} 
-                  placeholder="Provide a detailed description of the case..."
-                  className="pl-10 min-h-[100px] resize-none border-slate-300 dark:border-slate-700 focus:border-[#64499D] focus:ring-[#64499D]"
+                  placeholder={t.cases.modal.placeholders.descriptionDetailed}
+                  className="ps-10 min-h-[100px] resize-none border-slate-300 dark:border-slate-700 focus:border-[#64499D] focus:ring-[#64499D]"
                 />
               </div>
               {mainForm.formState.errors.description && (
@@ -298,33 +300,32 @@ const CaseUpdateModal = forwardRef<CaseUpdateModalRef, CaseUpdateModalProps>(({ 
             </div>
           </div>
 
-          {/* Case Details Section */}
           <div className="space-y-4">
             <div className="flex items-center gap-3 pb-2 border-b border-slate-200 dark:border-slate-800">
               <div className="p-2 rounded-lg bg-[#F1ECFF] dark:bg-[#2a2240]">
                 <Tags className="w-4 h-4 text-[#64499D] dark:text-[#E9E0FF]" />
               </div>
               <h3 className="text-base font-semibold text-slate-900 dark:text-white">
-                Case Details
+                {t.cases.modal.sections.caseDetails}
               </h3>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                  Status <span className="text-red-500">*</span>
+                  {t.cases.modal.fields.status} <span className="text-red-500">*</span>
                 </label>
                 <Select 
                   value={mainForm.watch('status')} 
                   onValueChange={(val: API.CaseStatus) => mainForm.setValue('status', val)}
                 >
                   <SelectTrigger className="h-11 border-slate-300 dark:border-slate-700 focus:border-[#64499D] focus:ring-[#64499D]">
-                    <SelectValue placeholder="Select a status" />
+                    <SelectValue placeholder={t.cases.modal.placeholders.status} />
                   </SelectTrigger>
                   <SelectContent>
                     {CaseStatus.options.map((status, index) => (
                       <SelectItem key={index} value={status.value}>
-                        {status.label}
+                        {t.enums.caseStatus[status.value] ?? status.label}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -338,14 +339,14 @@ const CaseUpdateModal = forwardRef<CaseUpdateModalRef, CaseUpdateModalProps>(({ 
 
               <div className="space-y-2">
                 <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                  Summary
+                  {t.cases.modal.fields.summary}
                 </label>
                 <div className="relative">
-                  <StickyNote className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                  <StickyNote className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                   <Input 
                     {...mainForm.register('summary')} 
-                    placeholder="Brief case summary"
-                    className="pl-10 h-11 border-slate-300 dark:border-slate-700 focus:border-[#64499D] focus:ring-[#64499D]"
+                    placeholder={t.cases.modal.placeholders.summary}
+                    className="ps-10 h-11 border-slate-300 dark:border-slate-700 focus:border-[#64499D] focus:ring-[#64499D]"
                   />
                 </div>
                 {mainForm.formState.errors.summary && (
@@ -357,21 +358,21 @@ const CaseUpdateModal = forwardRef<CaseUpdateModalRef, CaseUpdateModalProps>(({ 
             </div>
           </div>
 
-          {/* Assignment Section */}
           <div className="space-y-4">
             <div className="flex items-center gap-3 pb-2 border-b border-slate-200 dark:border-slate-800">
               <div className="p-2 rounded-lg bg-[#F1ECFF] dark:bg-[#2a2240]">
                 <UserCheck className="w-4 h-4 text-[#64499D] dark:text-[#E9E0FF]" />
               </div>
               <h3 className="text-base font-semibold text-slate-900 dark:text-white">
-                Assignment & Relations
+                {t.cases.modal.sections.assignmentRelations}
               </h3>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                  Assigned To <span className="text-slate-400 text-xs">(optional)</span>
+                  {t.cases.modal.fields.assignedTo}{' '}
+                  <span className="text-slate-400 text-xs">({t.common.optional})</span>
                 </label>
                 <ServerSelect
                   link='/cabinets/members/select_list'
@@ -391,15 +392,16 @@ const CaseUpdateModal = forwardRef<CaseUpdateModalRef, CaseUpdateModalProps>(({ 
 
               <div className="space-y-2">
                 <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                  Related Client <span className="text-slate-400 text-xs">(optional)</span>
+                  {t.cases.modal.fields.relatedClient}{' '}
+                  <span className="text-slate-400 text-xs">({t.common.optional})</span>
                 </label>
                 <ServerSelect
                   link='/clients/clients/'
                   value={mainForm.watch('client')}
                   onChange={(val) => mainForm.setValue('client', val)}
-                  labelKey={(client: any) => `${client.first_name || ''} ${client.last_name || ''}`.trim() || client.email || 'Unnamed'}
+                  labelKey={(client: any) => `${client.first_name || ''} ${client.last_name || ''}`.trim() || client.email || t.cases.unnamed}
                   cleanable
-                  placeholder="Select a client"
+                  placeholder={t.cases.modal.placeholders.client}
                 />
                 {mainForm.formState.errors.client && (
                   <p className="text-red-500 text-xs mt-1">
@@ -418,7 +420,7 @@ const CaseUpdateModal = forwardRef<CaseUpdateModalRef, CaseUpdateModalProps>(({ 
               disabled={isLoading}
               className="border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800"
             >
-              Cancel
+              {t.common.cancel}
             </Button>
             <Button 
               type="submit" 
@@ -427,13 +429,13 @@ const CaseUpdateModal = forwardRef<CaseUpdateModalRef, CaseUpdateModalProps>(({ 
             >
               {isLoading ? (
                 <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Updating...
+                  <Loader2 className="w-4 h-4 me-2 animate-spin" />
+                  {t.cases.modal.updating}
                 </>
               ) : (
                 <>
-                  <Save className="w-4 h-4 mr-2" />
-                  Update Case
+                  <Save className="w-4 h-4 me-2" />
+                  {t.cases.modal.updateCase}
                 </>
               )}
             </Button>

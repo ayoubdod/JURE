@@ -150,7 +150,7 @@ const CabinetMemberCreateModal = forwardRef<CabinetMemberCreateModalRef, Cabinet
           <Button
             variant="ghost"
             size="icon"
-            className="absolute right-3 top-3 z-10 h-9 w-9 rounded-full bg-white/15 text-white hover:bg-white/25 border border-white/30"
+            className="absolute end-3 top-3 z-10 h-9 w-9 rounded-full bg-white/15 text-white hover:bg-white/25 border border-white/30"
             onClick={hide}
             disabled={isLoading}
             aria-label={t.common.close}

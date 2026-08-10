@@ -134,7 +134,7 @@ const CabinetMemberUpdateModal = forwardRef<CabinetMemberUpdateModalRef, Cabinet
           <Button
             variant="ghost"
             size="icon"
-            className="absolute top-4 right-4 h-9 w-9 rounded-full bg-black/30 hover:bg-black/40 backdrop-blur text-white border border-white/30 shadow-sm"
+            className="absolute top-4 end-4 h-9 w-9 rounded-full bg-black/30 hover:bg-black/40 backdrop-blur text-white border border-white/30 shadow-sm"
             onClick={hide}
             disabled={isLoading}
           >

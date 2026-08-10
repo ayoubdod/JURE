@@ -6,7 +6,8 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { FileText, User, Scale, Clock, AlertTriangle, FileUp, X } from 'lucide-react';
+import { FileText, User, Scale, Clock, FileUp, X } from 'lucide-react';
+import { useAppTranslation } from '@/i18n';
 
 interface CreateCaseDialogProps {
   open: boolean;
@@ -14,6 +15,9 @@ interface CreateCaseDialogProps {
 }
 
 const CreateCaseDialog = ({ open, onOpenChange }: CreateCaseDialogProps) => {
+  const { t, tf } = useAppTranslation();
+  const modal = t.cases.modal;
+  const d = modal.dialog;
   const [formData, setFormData] = useState({
     title: '',
     client: '',
@@ -31,12 +35,11 @@ const CreateCaseDialog = ({ open, onOpenChange }: CreateCaseDialogProps) => {
     e.preventDefault();
     setIsSubmitting(true);
     
-    // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 1500));
     
     toast({
-      title: "✨ Case Created Successfully",
-      description: `Case "${formData.title}" has been created and assigned.`,
+      title: modal.toasts.createdTitle,
+      description: tf(modal.toasts.createdDescription, { title: formData.title }),
     });
     
     setFormData({
@@ -64,16 +67,6 @@ const CreateCaseDialog = ({ open, onOpenChange }: CreateCaseDialogProps) => {
     setDocuments(prev => prev.filter((_, i) => i !== index));
   };
 
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'low': return 'text-green-600';
-      case 'medium': return 'text-yellow-600';
-      case 'high': return 'text-orange-600';
-      case 'critical': return 'text-red-600';
-      default: return 'text-gray-600';
-    }
-  };
-
   const formatFileSize = (bytes: number) => {
     if (bytes === 0) return '0 Bytes';
     const k = 1024;
@@ -92,38 +85,37 @@ const CreateCaseDialog = ({ open, onOpenChange }: CreateCaseDialogProps) => {
             </div>
             <div>
               <DialogTitle className="text-xl font-semibold text-gray-900">
-                Create New Case
+                {modal.createTitle}
               </DialogTitle>
               <DialogDescription className="text-gray-600 mt-1">
-                Set up a new legal case or matter for your practice.
+                {modal.createDescription}
               </DialogDescription>
             </div>
           </div>
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="space-y-6 pt-4">
-          {/* Case Information Section */}
           <div className="space-y-4">
             <div className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-3">
               <FileText className="w-4 h-4 text-purple-600" />
-              Case Information
+              {d.caseInformation}
             </div>
             <div className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="title" className="text-sm font-medium flex items-center gap-1">
-                  Case Title <span className="text-red-500">*</span>
+                  {d.caseTitle} <span className="text-red-500">*</span>
                 </Label>
                 <Input
                   id="title"
                   value={formData.title}
                   onChange={(e) => setFormData({...formData, title: e.target.value})}
-                  placeholder="e.g., Johnson vs. State"
+                  placeholder={d.caseTitlePlaceholder}
                   required
                   className="transition-all duration-200 focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="description" className="text-sm font-medium">Case Description</Label>
+                <Label htmlFor="description" className="text-sm font-medium">{d.caseDescription}</Label>
                 <div className="relative">
                   <FileText className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
                   <Textarea
@@ -131,7 +123,7 @@ const CreateCaseDialog = ({ open, onOpenChange }: CreateCaseDialogProps) => {
                     value={formData.description}
                     onChange={(e) => setFormData({...formData, description: e.target.value})}
                     rows={3}
-                    placeholder="Brief description of the case..."
+                    placeholder={d.caseDescriptionPlaceholder}
                     className="pl-10 transition-all duration-200 focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 resize-none"
                   />
                 </div>
@@ -139,15 +131,14 @@ const CreateCaseDialog = ({ open, onOpenChange }: CreateCaseDialogProps) => {
             </div>
           </div>
 
-          {/* Client Information Section */}
           <div className="space-y-4">
             <div className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-3">
               <User className="w-4 h-4 text-purple-600" />
-              Client Information hhh
+              {d.clientInformation}
             </div>
             <div className="space-y-2">
               <Label htmlFor="client" className="text-sm font-medium flex items-center gap-1">
-                Client <span className="text-red-500">*</span>
+                {d.client} <span className="text-red-500">*</span>
               </Label>
               <div className="relative">
                 <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -155,7 +146,7 @@ const CreateCaseDialog = ({ open, onOpenChange }: CreateCaseDialogProps) => {
                   id="client"
                   value={formData.client}
                   onChange={(e) => setFormData({...formData, client: e.target.value})}
-                  placeholder="Client name"
+                  placeholder={d.clientPlaceholder}
                   required
                   className="pl-10 transition-all duration-200 focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500"
                 />
@@ -163,58 +154,57 @@ const CreateCaseDialog = ({ open, onOpenChange }: CreateCaseDialogProps) => {
             </div>
           </div>
 
-          {/* Case Details Section */}
           <div className="space-y-4">
             <div className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-3">
               <Scale className="w-4 h-4 text-purple-600" />
-              Case Details
+              {modal.sections.caseDetails}
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="caseType" className="text-sm font-medium">Case Type</Label>
+                <Label htmlFor="caseType" className="text-sm font-medium">{d.caseType}</Label>
                 <Select value={formData.caseType} onValueChange={(value) => setFormData({...formData, caseType: value})}>
                   <SelectTrigger className="transition-all duration-200 focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500">
-                    <SelectValue placeholder="Select case type" />
+                    <SelectValue placeholder={d.selectCaseType} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="civil">Civil Litigation</SelectItem>
-                    <SelectItem value="criminal">Criminal Defense</SelectItem>
-                    <SelectItem value="corporate">Corporate Law</SelectItem>
-                    <SelectItem value="family">Family Law</SelectItem>
-                    <SelectItem value="real-estate">Real Estate</SelectItem>
-                    <SelectItem value="intellectual">Intellectual Property</SelectItem>
+                    <SelectItem value="civil">{d.caseTypes.civil}</SelectItem>
+                    <SelectItem value="criminal">{d.caseTypes.criminal}</SelectItem>
+                    <SelectItem value="corporate">{d.caseTypes.corporate}</SelectItem>
+                    <SelectItem value="family">{d.caseTypes.family}</SelectItem>
+                    <SelectItem value="real-estate">{d.caseTypes.realEstate}</SelectItem>
+                    <SelectItem value="intellectual">{d.caseTypes.intellectual}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="priority" className="text-sm font-medium">Priority</Label>
+                <Label htmlFor="priority" className="text-sm font-medium">{d.priority}</Label>
                 <Select value={formData.priority} onValueChange={(value) => setFormData({...formData, priority: value})}>
                   <SelectTrigger className="transition-all duration-200 focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500">
-                    <SelectValue placeholder="Select priority" />
+                    <SelectValue placeholder={d.selectPriority} />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="low">
                       <div className="flex items-center gap-2">
                         <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                        Low
+                        {d.priorities.low}
                       </div>
                     </SelectItem>
                     <SelectItem value="medium">
                       <div className="flex items-center gap-2">
                         <div className="w-2 h-2 rounded-full bg-yellow-500"></div>
-                        Medium
+                        {d.priorities.medium}
                       </div>
                     </SelectItem>
                     <SelectItem value="high">
                       <div className="flex items-center gap-2">
                         <div className="w-2 h-2 rounded-full bg-orange-500"></div>
-                        High
+                        {d.priorities.high}
                       </div>
                     </SelectItem>
                     <SelectItem value="critical">
                       <div className="flex items-center gap-2">
                         <div className="w-2 h-2 rounded-full bg-red-500"></div>
-                        Critical
+                        {d.priorities.critical}
                       </div>
                     </SelectItem>
                   </SelectContent>
@@ -223,21 +213,21 @@ const CreateCaseDialog = ({ open, onOpenChange }: CreateCaseDialogProps) => {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="status" className="text-sm font-medium">Status</Label>
+                <Label htmlFor="status" className="text-sm font-medium">{modal.fields.status}</Label>
                 <Select value={formData.status} onValueChange={(value) => setFormData({...formData, status: value})}>
                   <SelectTrigger className="transition-all duration-200 focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="active">Active</SelectItem>
-                    <SelectItem value="pending">Pending</SelectItem>
-                    <SelectItem value="review">Under Review</SelectItem>
-                    <SelectItem value="closed">Closed</SelectItem>
+                    <SelectItem value="active">{d.statuses.active}</SelectItem>
+                    <SelectItem value="pending">{d.statuses.pending}</SelectItem>
+                    <SelectItem value="review">{d.statuses.review}</SelectItem>
+                    <SelectItem value="closed">{d.statuses.closed}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="estimatedHours" className="text-sm font-medium">Estimated Hours</Label>
+                <Label htmlFor="estimatedHours" className="text-sm font-medium">{d.estimatedHours}</Label>
                 <div className="relative">
                   <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                   <Input
@@ -253,18 +243,17 @@ const CreateCaseDialog = ({ open, onOpenChange }: CreateCaseDialogProps) => {
             </div>
           </div>
 
-          {/* Documents Section */}
           <div className="space-y-4">
             <div className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-3">
               <FileUp className="w-4 h-4 text-purple-600" />
-              Documents
+              {d.documents}
             </div>
             <div className="space-y-3">
               <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-purple-400 transition-colors">
                 <FileUp className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                <p className="text-sm text-gray-600 mb-2">Drag and drop files here, or</p>
+                <p className="text-sm text-gray-600 mb-2">{d.dragDropHint}</p>
                 <label className="cursor-pointer">
-                  <span className="text-purple-600 hover:text-purple-700 font-medium">browse files</span>
+                  <span className="text-purple-600 hover:text-purple-700 font-medium">{d.browseFiles}</span>
                   <input
                     type="file"
                     multiple
@@ -273,12 +262,12 @@ const CreateCaseDialog = ({ open, onOpenChange }: CreateCaseDialogProps) => {
                     accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png"
                   />
                 </label>
-                <p className="text-xs text-gray-500 mt-1">PDF, DOC, DOCX, TXT, JPG, PNG up to 10MB</p>
+                <p className="text-xs text-gray-500 mt-1">{d.fileTypesHint}</p>
               </div>
               
               {documents.length > 0 && (
                 <div className="space-y-2">
-                  <p className="text-sm font-medium text-gray-700">Uploaded Documents ({documents.length})</p>
+                  <p className="text-sm font-medium text-gray-700">{tf(d.uploadedDocuments, { count: documents.length })}</p>
                   <div className="space-y-2 max-h-32 overflow-y-auto">
                     {documents.map((file, index) => (
                       <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
@@ -295,6 +284,7 @@ const CreateCaseDialog = ({ open, onOpenChange }: CreateCaseDialogProps) => {
                           size="sm"
                           onClick={() => removeDocument(index)}
                           className="h-8 w-8 p-0 hover:bg-red-100"
+                          aria-label={t.common.delete}
                         >
                           <X className="w-4 h-4 text-red-500" />
                         </Button>
@@ -314,7 +304,7 @@ const CreateCaseDialog = ({ open, onOpenChange }: CreateCaseDialogProps) => {
               className="transition-all duration-200 hover:bg-gray-50"
               disabled={isSubmitting}
             >
-              Cancel
+              {t.common.cancel}
             </Button>
             <Button 
               type="submit" 
@@ -323,11 +313,11 @@ const CreateCaseDialog = ({ open, onOpenChange }: CreateCaseDialogProps) => {
             >
               {isSubmitting ? (
                 <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2" />
-                  Creating Case...
+                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent me-2" />
+                  {modal.creating}
                 </>
               ) : (
-                'Create Case'
+                modal.createCase
               )}
             </Button>
           </DialogFooter>

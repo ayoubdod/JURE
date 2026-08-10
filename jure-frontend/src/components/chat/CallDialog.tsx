@@ -7,6 +7,7 @@ import CallTimer from '@/components/conversations/call/CallTimer';
 import UserAvatar from '@/components/common/UserAvatar';
 import type { CallUiState } from '@/hooks/useWebRtcCall';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useAppTranslation } from '@/i18n';
 import { cn } from '@/lib/utils';
 
 type Presentation = 'expanded' | 'compact' | 'fullscreen';
@@ -48,6 +49,7 @@ const CallDialog: React.FC<CallDialogProps> = ({
   onSelectVideoInput,
   onSelectAudioOutput,
 }) => {
+  const { t, tf } = useAppTranslation();
   const isMobile = useIsMobile();
   const status = callState.status as CallModalStatus;
   const isLive =
@@ -118,8 +120,8 @@ const CallDialog: React.FC<CallDialogProps> = ({
             <button
               type="button"
               onClick={expand}
-              className="flex min-w-0 flex-1 items-center gap-3 rounded-xl text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
-              aria-label="Expand call"
+              aria-label={t.conversations.call.expandAria}
+              className="flex min-w-0 flex-1 items-center gap-3 rounded-xl text-start focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
             >
               <div className="relative shrink-0">
                 <UserAvatar
@@ -130,7 +132,7 @@ const CallDialog: React.FC<CallDialogProps> = ({
                   className="h-10 w-10 ring-2 ring-emerald-400/50 ring-offset-2 ring-offset-white dark:ring-offset-slate-900"
                 />
                 <span
-                  className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-white bg-emerald-500 dark:border-slate-900"
+                  className="absolute bottom-0 end-0 h-2.5 w-2.5 rounded-full border-2 border-white bg-emerald-500 dark:border-slate-900"
                   aria-hidden
                 />
               </div>
@@ -227,7 +229,10 @@ const CallDialog: React.FC<CallDialogProps> = ({
               aria-describedby={undefined}
             >
               <DialogPrimitive.Title className="sr-only">
-                {isVideo ? 'Video' : 'Voice'} call with {remoteName}
+                {tf(
+                  isVideo ? t.conversations.call.videoCallWith : t.conversations.call.voiceCallWith,
+                  { name: remoteName },
+                )}
               </DialogPrimitive.Title>
               <CallModal
                 status={status}

@@ -175,9 +175,10 @@ const ClientUpdateModal = forwardRef<ClientUpdateModalRef, ClientUpdateModalProp
             <Button
               variant="ghost"
               size="icon"
-              className="absolute top-4 right-4 h-9 w-9 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white border border-white/30"
+              className="absolute top-4 end-4 h-9 w-9 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white border border-white/30"
               onClick={hide}
               disabled={isLoading}
+              aria-label={t.common.close}
             >
               <X className="w-4 h-4" />
             </Button>
@@ -208,19 +209,19 @@ const ClientUpdateModal = forwardRef<ClientUpdateModalRef, ClientUpdateModalProp
                   <User className="w-4 h-4 text-[#64499D] dark:text-[#E9E0FF]" />
                 </div>
                 <h3 className="text-base font-semibold text-slate-900 dark:text-white">
-                  Personal Information
+                  {t.clients.modal.personalInfo}
                 </h3>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                    First Name <span className="text-red-500">*</span>
+                    {t.clients.modal.firstName} <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
                     <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                     <Input
                       {...mainForm.register('first_name')}
-                      placeholder="Enter first name"
+                      placeholder={t.clients.modal.firstNamePlaceholder}
                       disabled={readOnly || isLoading}
                       className="pl-10 h-11 border-slate-300 dark:border-slate-700 focus:border-[#64499D] focus:ring-[#64499D]"
                     />
@@ -233,13 +234,13 @@ const ClientUpdateModal = forwardRef<ClientUpdateModalRef, ClientUpdateModalProp
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                    Last Name <span className="text-red-500">*</span>
+                    {t.clients.modal.lastName} <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
                     <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                     <Input
                       {...mainForm.register('last_name')}
-                      placeholder="Enter last name"
+                      placeholder={t.clients.modal.lastNamePlaceholder}
                       disabled={readOnly || isLoading}
                       className="pl-10 h-11 border-slate-300 dark:border-slate-700 focus:border-[#64499D] focus:ring-[#64499D]"
                     />
@@ -260,20 +261,20 @@ const ClientUpdateModal = forwardRef<ClientUpdateModalRef, ClientUpdateModalProp
                   <Mail className="w-4 h-4 text-[#64499D] dark:text-[#E9E0FF]" />
                 </div>
                 <h3 className="text-base font-semibold text-slate-900 dark:text-white">
-                  Contact Information
+                  {t.clients.modal.contactInfo}
                 </h3>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                    Email Address <span className="text-red-500">*</span>
+                    {t.clients.modal.emailAddress} <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
                     <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                     <Input
                       {...mainForm.register('email')}
                       type="email"
-                      placeholder="client@example.com"
+                      placeholder={t.clients.modal.emailPlaceholder}
                       disabled={readOnly || isLoading}
                       className="pl-10 h-11 border-slate-300 dark:border-slate-700 focus:border-[#64499D] focus:ring-[#64499D]"
                     />
@@ -286,13 +287,13 @@ const ClientUpdateModal = forwardRef<ClientUpdateModalRef, ClientUpdateModalProp
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                    Phone Number <span className="text-red-500">*</span>
+                    {t.clients.modal.phoneNumber} <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
                     <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                     <Input
                       {...mainForm.register('phone')}
-                      placeholder="+1 (555) 000-0000"
+                      placeholder={t.clients.modal.phonePlaceholder}
                       disabled={readOnly || isLoading}
                       className="pl-10 h-11 border-slate-300 dark:border-slate-700 focus:border-[#64499D] focus:ring-[#64499D]"
                     />
@@ -313,18 +314,18 @@ const ClientUpdateModal = forwardRef<ClientUpdateModalRef, ClientUpdateModalProp
                   <MapPin className="w-4 h-4 text-[#64499D] dark:text-[#E9E0FF]" />
                 </div>
                 <h3 className="text-base font-semibold text-slate-900 dark:text-white">
-                  Address Information
+                  {t.clients.modal.addressInfo}
                 </h3>
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                  Address <span className="text-red-500">*</span>
+                  {t.clients.modal.address} <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
                   <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                   <Input
                     {...mainForm.register('address')}
-                    placeholder="Enter full address"
+                    placeholder={t.clients.modal.addressPlaceholder}
                     disabled={readOnly || isLoading}
                     className="pl-10 h-11 border-slate-300 dark:border-slate-700 focus:border-[#64499D] focus:ring-[#64499D]"
                   />
@@ -345,28 +346,28 @@ const ClientUpdateModal = forwardRef<ClientUpdateModalRef, ClientUpdateModalProp
                 </div>
                 <div>
                   <h3 className="text-base font-semibold text-slate-900 dark:text-white">
-                    Fiscal (B2B)
+                    {t.clients.modal.fiscalInfo}
                   </h3>
                   <p className="text-xs text-slate-500 dark:text-slate-400">
-                    ICE et IF — utilisés sur les factures et dossiers professionnels
+                    {t.clients.modal.fiscalInfoHint}
                   </p>
                 </div>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-700 dark:text-slate-300">ICE</label>
+                  <label className="text-sm font-medium text-slate-700 dark:text-slate-300">{t.clients.modal.ice}</label>
                   <Input
                     {...mainForm.register('ice')}
-                    placeholder="Identifiant Commun de l’Entreprise"
+                    placeholder={t.clients.modal.icePlaceholder}
                     disabled={readOnly || isLoading}
                     className="h-11 border-slate-300 dark:border-slate-700"
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-700 dark:text-slate-300">IF</label>
+                  <label className="text-sm font-medium text-slate-700 dark:text-slate-300">{t.clients.modal.fiscalIf}</label>
                   <Input
                     {...mainForm.register('fiscal_if')}
-                    placeholder="Identifiant fiscal"
+                    placeholder={t.clients.modal.fiscalIfPlaceholder}
                     disabled={readOnly || isLoading}
                     className="h-11 border-slate-300 dark:border-slate-700"
                   />

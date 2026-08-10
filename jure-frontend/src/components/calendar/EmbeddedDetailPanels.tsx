@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
-import { Clock, Edit, Loader2, MapPin, X } from 'lucide-react';
+import { CheckSquare, Clock, Edit, Loader2, MapPin, X } from 'lucide-react';
 import { apiGetTask } from '@/services/task/api';
 import { apiGetAppointment, Appointment } from '@/services/appointment/api';
 import { TaskPriority, TaskStatus } from '@/utils/constants';
@@ -77,6 +77,7 @@ export function TaskDetailPanel({
   onOpenCase,
   /** When set (e.g. case drawer open), hide the related-case row if it is this case — avoids redundant navigation. */
   contextCaseId = null,
+  onComplete,
 }: {
   taskId: number | null;
   open: boolean;
@@ -85,10 +86,13 @@ export function TaskDetailPanel({
   portalContainer: HTMLElement | null;
   onOpenCase: (id: number) => void;
   contextCaseId?: number | null;
+  /** Optional quick-complete handler (e.g. dashboard). Hidden when task is already done. */
+  onComplete?: (task: API.Task) => void | Promise<void>;
 }) {
   const lookupCabinet = useCabinetMemberDirectory();
   const [task, setTask] = useState<API.Task | null>(null);
   const [loading, setLoading] = useState(false);
+  const [completing, setCompleting] = useState(false);
 
   useEffect(() => {
     if (open && taskId) {
@@ -258,14 +262,39 @@ export function TaskDetailPanel({
           )}
         </div>
 
-        <footer className="sticky bottom-0 z-20 flex shrink-0 items-center justify-between gap-2 border-t border-slate-200 dark:border-slate-800 bg-slate-50/95 dark:bg-slate-950/95 backdrop-blur-sm px-4 py-3">
+        <footer className="sticky bottom-0 z-20 flex shrink-0 flex-wrap items-center justify-between gap-2 border-t border-slate-200 dark:border-slate-800 bg-slate-50/95 dark:bg-slate-950/95 backdrop-blur-sm px-4 py-3">
           <span className="text-xs text-slate-500 dark:text-slate-400">
             {task?.due_date ? `Due: ${formatDayMonthYear(task.due_date)}` : ''}
           </span>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center justify-end gap-2">
             <Button type="button" variant="ghost" size="sm" onClick={() => onOpenChange(false)}>
               Close
             </Button>
+            {task && onComplete && task.status !== TaskStatus.DONE && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="rounded-lg"
+                disabled={completing}
+                onClick={async () => {
+                  setCompleting(true);
+                  try {
+                    await onComplete(task);
+                    setTask({ ...task, status: TaskStatus.DONE });
+                  } finally {
+                    setCompleting(false);
+                  }
+                }}
+              >
+                {completing ? (
+                  <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
+                ) : (
+                  <CheckSquare className="h-4 w-4 mr-1.5" />
+                )}
+                Mark done
+              </Button>
+            )}
             {task && (
               <Button
                 size="sm"

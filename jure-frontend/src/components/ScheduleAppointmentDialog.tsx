@@ -1,9 +1,8 @@
 'use client'
-import { forwardRef, useImperativeHandle, useState } from 'react';
+import { forwardRef, useImperativeHandle, useMemo, useRef, useState } from 'react';
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
@@ -38,16 +37,6 @@ export interface ScheduleAppointmentDialogProps {
   onSuccess?: () => void;
 }
 
-const schema = yup.object({
-  title: yup.string().required('Title is required'),
-  description: yup.string().optional(),
-  start_at: yup.string().required('Start date and time is required'),
-  end_at: yup.string().required('End date and time is required'),
-  location: yup.string().optional(),
-  client: yup.number().nullable().optional(),
-  case: yup.number().nullable().optional(),
-});
-
 const ScheduleAppointmentDialog = forwardRef<ScheduleAppointmentDialogRef, ScheduleAppointmentDialogProps>(({ onSuccess }, ref) => {
   const { t } = useAppTranslation();
   const dialog = t.calendar.scheduleDialog;
@@ -58,8 +47,22 @@ const ScheduleAppointmentDialog = forwardRef<ScheduleAppointmentDialogRef, Sched
   const [duration, setDuration] = useState('60');
   const [lockedCase, setLockedCase] = useState<{ id: number; label: string } | null>(null);
 
+  const schema = useMemo(() => yup.object({
+    title: yup.string().required(dialog.validation.titleRequired),
+    description: yup.string().optional(),
+    start_at: yup.string().required(dialog.validation.startRequired),
+    end_at: yup.string().required(dialog.validation.endRequired),
+    location: yup.string().optional(),
+    client: yup.number().nullable().optional(),
+    case: yup.number().nullable().optional(),
+  }), [dialog.validation]);
+
+  const schemaRef = useRef(schema);
+  schemaRef.current = schema;
+
   const mainForm = useForm<AppointmentCreateForm & { date: string; time: string; duration: string }>({
-    resolver: yupResolver(schema) as Resolver<AppointmentCreateForm & { date: string; time: string; duration: string }>
+    resolver: ((values, context, options) =>
+      yupResolver(schemaRef.current)(values, context, options)) as unknown as Resolver<AppointmentCreateForm & { date: string; time: string; duration: string }>,
   });
 
   const show = (opts?: ScheduleAppointmentOpenOptions) => {
@@ -96,7 +99,6 @@ const ScheduleAppointmentDialog = forwardRef<ScheduleAppointmentDialogRef, Sched
     setIsLoading(true);
     
     try {
-      // Transform form data to match backend API format
       const startDateTime = new Date(`${date}T${time}`);
       const endDateTime = new Date(startDateTime.getTime() + parseInt(duration) * 60000);
       
@@ -112,7 +114,7 @@ const ScheduleAppointmentDialog = forwardRef<ScheduleAppointmentDialogRef, Sched
       };
       
       await apiCreateAppointment(appointmentData)
-        .then((res) => {
+        .then(() => {
           onSuccess?.();
           eventBus.emit('appointment-created');
           hide();
@@ -134,33 +136,37 @@ const ScheduleAppointmentDialog = forwardRef<ScheduleAppointmentDialogRef, Sched
     }
   };
 
+  const durationOptions = [
+    { v: '30', l: dialog.duration30 },
+    { v: '60', l: dialog.duration60 },
+    { v: '90', l: dialog.duration90 },
+    { v: '120', l: dialog.duration120 },
+    { v: '180', l: dialog.duration180 },
+  ];
+
   return (
     <Dialog open={isOpen} onOpenChange={isLoading ? undefined : setIsOpen} modal>
       <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto p-0 [&>button]:hidden">
-        {/* Header Banner */}
         <div className="relative h-32 bg-gradient-to-br from-slate-900 via-primary to-indigo-900 overflow-hidden">
-          {/* Decorative Pattern Overlay */}
           <div className="absolute inset-0 opacity-10">
             <div className="absolute inset-0" style={{
               backgroundImage: `radial-gradient(circle at 2px 2px, white 1px, transparent 0)`,
               backgroundSize: '32px 32px'
             }}></div>
           </div>
-          {/* Gradient Overlay */}
           <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/10"></div>
           
-          {/* Close Button */}
           <Button
             variant="ghost"
             size="icon"
-            className="absolute top-4 right-4 h-9 w-9 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white border border-white/30"
+            className="absolute top-4 end-4 h-9 w-9 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white border border-white/30"
             onClick={hide}
             disabled={isLoading}
+            aria-label={t.common.close}
           >
             <X className="w-4 h-4" />
           </Button>
 
-          {/* Header Content */}
           <div className="relative px-8 pt-8 pb-6">
             <div className="flex items-center gap-3">
               <div className="p-3 rounded-xl bg-white/20 backdrop-blur-sm border border-white/30">
@@ -179,21 +185,20 @@ const ScheduleAppointmentDialog = forwardRef<ScheduleAppointmentDialogRef, Sched
         </div>
 
         <form onSubmit={mainForm.handleSubmit(handleSubmit)} className="px-8 py-6 space-y-6">
-          {/* Appointment Information Section */}
           <div className="space-y-4">
             <div className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-3">
               <FileText className="w-4 h-4 text-purple-600" />
-              Appointment Information
+              {dialog.appointmentInfo}
             </div>
             <div className="space-y-4">
               <div className="space-y-2">
                 <label className="text-sm font-medium flex items-center gap-1">
-                  <span>Appointment Title </span>
+                  <span>{dialog.appointmentTitle} </span>
                   <span className="text-red-500">*</span>
                 </label>
                 <Input
                   {...mainForm.register('title')}
-                  placeholder="e.g., Client Consultation - Johnson Case"
+                  placeholder={dialog.titlePlaceholder}
                   className="h-10 rounded-lg transition-all duration-200 focus-visible:ring-2 focus-visible:ring-primary/25"
                 />
                 {mainForm.formState.errors.title && (
@@ -205,18 +210,17 @@ const ScheduleAppointmentDialog = forwardRef<ScheduleAppointmentDialogRef, Sched
             </div>
           </div>
 
-          {/* Schedule Details Section */}
           <div className="space-y-4">
             <div className="flex items-center gap-2 pb-2 mb-1 border-b border-slate-200 dark:border-slate-700">
               <Clock className="w-4 h-4 text-primary shrink-0" />
               <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">
-                Schedule Details
+                {dialog.scheduleDetails}
               </span>
             </div>
             <div className="grid grid-cols-3 gap-4">
               <div className="space-y-2">
                 <label className="text-sm font-medium flex items-center gap-1">
-                  <span>Date </span>
+                  <span>{dialog.date} </span>
                   <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
@@ -226,7 +230,7 @@ const ScheduleAppointmentDialog = forwardRef<ScheduleAppointmentDialogRef, Sched
                     value={date}
                     onChange={(e) => {
                       setDate(e.target.value);
-                      if (date && time) {
+                      if (e.target.value && time) {
                         const startDateTime = new Date(`${e.target.value}T${time}`);
                         const endDateTime = new Date(startDateTime.getTime() + parseInt(duration) * 60000);
                         mainForm.setValue('start_at', startDateTime.toISOString());
@@ -239,7 +243,7 @@ const ScheduleAppointmentDialog = forwardRef<ScheduleAppointmentDialogRef, Sched
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium flex items-center gap-1">
-                  <span>Time </span>
+                  <span>{dialog.time} </span>
                   <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
@@ -261,7 +265,7 @@ const ScheduleAppointmentDialog = forwardRef<ScheduleAppointmentDialogRef, Sched
                 </div>
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium">Duration</label>
+                <label className="text-sm font-medium">{dialog.duration}</label>
                 <Select value={duration} onValueChange={(value) => {
                   setDuration(value);
                   if (date && time) {
@@ -275,13 +279,7 @@ const ScheduleAppointmentDialog = forwardRef<ScheduleAppointmentDialogRef, Sched
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {[
-                      { v: '30', l: '30 minutes' },
-                      { v: '60', l: '1 hour' },
-                      { v: '90', l: '1.5 hours' },
-                      { v: '120', l: '2 hours' },
-                      { v: '180', l: '3 hours' },
-                    ].map(({ v, l }) => (
+                    {durationOptions.map(({ v, l }) => (
                       <SelectItem key={v} value={v}>
                         <span className="flex items-center gap-2">
                           <Clock className="h-3.5 w-3.5 text-slate-400 shrink-0" />
@@ -300,22 +298,21 @@ const ScheduleAppointmentDialog = forwardRef<ScheduleAppointmentDialogRef, Sched
             )}
           </div>
 
-          {/* Client & Case Section */}
           <div className="space-y-4">
             <div className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-3">
               <User className="w-4 h-4 text-purple-600" />
-              Client & Case
+              {dialog.clientAndCase}
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium">Client (optional)</label>
+                <label className="text-sm font-medium">{dialog.clientOptional}</label>
                 <ServerSelect
                   link="/clients/clients/"
                   value={mainForm.watch('client')}
                   onChange={(val) => mainForm.setValue('client', val ? Number(val) : null)}
-                  labelKey={(client: any) => `${client.first_name || ''} ${client.last_name || ''}`.trim() || client.email || 'Unnamed'}
+                  labelKey={(client: any) => `${client.first_name || ''} ${client.last_name || ''}`.trim() || client.email || t.clients.unnamed}
                   cleanable
-                  placeholder="Select a client"
+                  placeholder={dialog.selectClient}
                 />
                 {mainForm.formState.errors.client && (
                   <p className="text-red-500 text-xs p-1">
@@ -324,7 +321,7 @@ const ScheduleAppointmentDialog = forwardRef<ScheduleAppointmentDialogRef, Sched
                 )}
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium">Related case</label>
+                <label className="text-sm font-medium">{dialog.relatedCase}</label>
                 {lockedCase ? (
                   <Input
                     readOnly
@@ -340,7 +337,7 @@ const ScheduleAppointmentDialog = forwardRef<ScheduleAppointmentDialogRef, Sched
                     onChange={(val) => mainForm.setValue('case', val ? Number(val) : null)}
                     labelKey="title"
                     cleanable
-                    placeholder="Select a case"
+                    placeholder={dialog.selectCase}
                   />
                 )}
                 {mainForm.formState.errors.case && (
@@ -352,22 +349,21 @@ const ScheduleAppointmentDialog = forwardRef<ScheduleAppointmentDialogRef, Sched
             </div>
           </div>
 
-          {/* Location & Additional Details Section */}
           <div className="space-y-4">
             <div className="flex items-center gap-2 pb-2 mb-1 border-b border-slate-200 dark:border-slate-700">
               <MapPin className="w-4 h-4 text-primary shrink-0" />
               <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">
-                Location & Additional Details
+                {dialog.locationDetails}
               </span>
             </div>
             <div className="space-y-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium">Location</label>
+                <label className="text-sm font-medium">{dialog.location}</label>
                 <div className="relative">
                   <Building className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                   <Input
                     {...mainForm.register('location')}
-                    placeholder="Office, Video Call, Court, etc."
+                    placeholder={dialog.locationPlaceholder}
                     className="pl-10 transition-all duration-200 focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500"
                   />
                 </div>
@@ -378,13 +374,13 @@ const ScheduleAppointmentDialog = forwardRef<ScheduleAppointmentDialogRef, Sched
                 )}
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium">Notes</label>
+                <label className="text-sm font-medium">{dialog.notes}</label>
                 <div className="relative">
                   <FileText className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
                   <Textarea
                     {...mainForm.register('description')}
                     rows={3}
-                    placeholder="Additional notes about the appointment..."
+                    placeholder={dialog.notesPlaceholder}
                     className="min-h-[80px] pl-10 rounded-lg bg-slate-50/80 dark:bg-slate-900/40 transition-all duration-200 focus-visible:ring-2 focus-visible:ring-primary/25 resize-none"
                   />
                 </div>
@@ -409,7 +405,7 @@ const ScheduleAppointmentDialog = forwardRef<ScheduleAppointmentDialogRef, Sched
             <Button type="submit" variant="default" disabled={isLoading} className="rounded-lg">
               {isLoading ? (
                 <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  <Loader2 className="w-4 h-4 me-2 animate-spin" />
                   {dialog.scheduling}
                 </>
               ) : (

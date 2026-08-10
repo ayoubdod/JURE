@@ -1,5 +1,5 @@
 'use client'
-import { forwardRef, useImperativeHandle, useState } from 'react';
+import { forwardRef, useImperativeHandle, useMemo, useRef, useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -8,7 +8,6 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { 
   AlignJustify, 
   Calendar, 
@@ -17,13 +16,10 @@ import {
   Gavel, 
   Loader2, 
   Mail, 
-  MapPin, 
   Phone, 
-  Plus, 
   Scale, 
   Tags, 
   Type, 
-  UserCheck, 
   Users, 
   X,
   Save,
@@ -38,12 +34,13 @@ import { Input } from '../ui/input';
 import { getRemoteFieldsValidation } from '@/utils/functions';
 import { isAxiosError } from 'axios';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
-import { CaseCategory, CaseStatus } from '@/utils/constants';
+import { CaseStatus } from '@/utils/constants';
 import { DialogDescription } from '@radix-ui/react-dialog';
 import ServerSelect from '../common/ServerSelect';
 import { Textarea } from '../ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import UserAvatar, { getPersonImage } from '@/components/common/UserAvatar';
+import { formatDate, useAppTranslation } from '@/i18n';
 
 export interface CaseViewModalRef {
   show: (instance: API.Case) => void;
@@ -56,19 +53,9 @@ export interface CaseViewModalProps {
   deleteModalRef?: React.RefObject<{ show: (caseItem: API.Case) => void }>;
 }
 
-const schema = yup.object({
-  category: yup.string().required('Category is required'),
-  status: yup.string().required('Status is required'),
-  summary: yup.string().optional().default(''),
-  description: yup.string().required('Description is required'),
-  reference: yup.string().required('Reference is required'),
-  title: yup.string().required('Title is required'),
-  court: yup.string().required('Court is required'),
-  assigned_to: yup.number().nullable().optional(),
-  client: yup.number().nullable().optional(),
-});
-
 const CaseViewModal = forwardRef<CaseViewModalRef, CaseViewModalProps>(({ onSuccess, onDelete, deleteModalRef }, ref) => {
+  const { t, tf, lang, enumLabel, enumOptions } = useAppTranslation();
+  const modal = t.cases.modal;
   const [instance, setInstance] = useState<API.Case | null>(null);
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -76,8 +63,24 @@ const CaseViewModal = forwardRef<CaseViewModalRef, CaseViewModalProps>(({ onSucc
   const [additionalAssignees, setAdditionalAssignees] = useState<API.CabinetMember[]>([]);
   const { toast } = useToast();
 
+  const schema = useMemo(() => yup.object({
+    category: yup.string().required(modal.validation.categoryRequired),
+    status: yup.string().required(modal.validation.statusRequired),
+    summary: yup.string().optional().default(''),
+    description: yup.string().required(modal.validation.descriptionRequired),
+    reference: yup.string().required(modal.validation.referenceRequired),
+    title: yup.string().required(modal.validation.titleRequired),
+    court: yup.string().required(modal.validation.courtRequired),
+    assigned_to: yup.number().nullable().optional(),
+    client: yup.number().nullable().optional(),
+  }), [modal.validation]);
+
+  const schemaRef = useRef(schema);
+  schemaRef.current = schema;
+
   const mainForm = useForm<API.CaseUpdateForm>({
-    resolver: yupResolver(schema) as unknown as Resolver<API.CaseUpdateForm>
+    resolver: ((values, context, options) =>
+      yupResolver(schemaRef.current)(values, context, options)) as unknown as Resolver<API.CaseUpdateForm>
   });
 
   const show = (instance: API.Case) => {
@@ -128,8 +131,8 @@ const CaseViewModal = forwardRef<CaseViewModalRef, CaseViewModalProps>(({ onSucc
         onSuccess?.(res.data);
         setIsEditing(false);
         toast({
-          title: "Success",
-          description: "Case updated successfully",
+          title: t.common.success,
+          description: modal.toasts.updatedTitle,
         });
       })
       .catch((err) => {
@@ -145,23 +148,10 @@ const CaseViewModal = forwardRef<CaseViewModalRef, CaseViewModalProps>(({ onSucc
       });
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case CaseStatus.OPEN: return 'bg-green-100 text-green-800';
-      case CaseStatus.IN_PROGRESS: return 'bg-blue-100 text-blue-800';
-      case CaseStatus.CLOSED: return 'bg-gray-100 text-gray-800';
-      case CaseStatus.CANCELLED: return 'bg-red-100 text-red-800';
-      case CaseStatus.PENDING: return 'bg-yellow-100 text-yellow-800';
-      case CaseStatus.ARCHIVED: return 'bg-gray-100 text-gray-600';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
-
   const addAssignee = () => {
-    // This would typically open a modal to select a team member
     toast({
-      title: "Add Assignee",
-      description: "Feature to add additional assignees coming soon",
+      title: modal.addAssigneeTitle,
+      description: modal.addAssigneeDescription,
     });
   };
 
@@ -206,7 +196,7 @@ const CaseViewModal = forwardRef<CaseViewModalRef, CaseViewModalProps>(({ onSucc
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="absolute top-4 right-4 h-9 w-9 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white border border-white/30 z-10"
+                  className="absolute top-4 end-4 h-9 w-9 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white border border-white/30 z-10"
                   onClick={hide}
                   disabled={isLoading}
                 >
@@ -227,10 +217,10 @@ const CaseViewModal = forwardRef<CaseViewModalRef, CaseViewModalProps>(({ onSucc
                           {instance.reference}
                         </span>
                         <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium ring-1 ring-inset ${getStatusBadgeColor(instance.status)}`}>
-                          {instance.status}
+                          {enumLabel('caseStatus', instance.status)}
                         </span>
                         <span className="inline-flex items-center rounded-full px-3 py-1 text-xs font-medium ring-1 ring-inset bg-white/20 backdrop-blur-sm text-white border border-white/30">
-                          {CaseCategory.getLabel(instance.category)}
+                          {enumLabel('caseCategory', instance.category)}
                         </span>
                       </div>
                     </div>
@@ -243,7 +233,7 @@ const CaseViewModal = forwardRef<CaseViewModalRef, CaseViewModalProps>(({ onSucc
                       className="h-9 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white border border-white/30"
                     >
                       <Edit className="w-4 h-4 mr-2" />
-                      Edit
+                      {t.common.edit}
                     </Button>
                     {(deleteModalRef || onDelete) && instance && (
                       <Button
@@ -259,7 +249,7 @@ const CaseViewModal = forwardRef<CaseViewModalRef, CaseViewModalProps>(({ onSucc
                         className="h-9 bg-white/20 hover:bg-red-500/30 backdrop-blur-sm text-white border border-white/30 hover:border-red-300"
                       >
                         <Trash2 className="w-4 h-4 mr-2" />
-                        Delete
+                        {t.common.delete}
                       </Button>
                     )}
                   </div>
@@ -276,10 +266,10 @@ const CaseViewModal = forwardRef<CaseViewModalRef, CaseViewModalProps>(({ onSucc
                 </div>
                 <div>
                   <DialogTitle className="text-xl font-bold text-slate-900 dark:text-white">
-                    Edit Case
+                    {modal.editTitle}
                   </DialogTitle>
                   <DialogDescription className="text-sm text-slate-600 dark:text-slate-400 mt-1">
-                    Update case information
+                    {modal.viewEditDescription}
                   </DialogDescription>
                 </div>
               </div>
@@ -299,27 +289,27 @@ const CaseViewModal = forwardRef<CaseViewModalRef, CaseViewModalProps>(({ onSucc
         {isEditing ? (
           // Edit Form
           <form onSubmit={mainForm.handleSubmit(handleSubmit)} className="px-8 py-6 space-y-6">
-            {/* Basic Information Section */}
+            {/* {modal.sections.basicInformation} Section */}
             <div className="space-y-4">
               <div className="flex items-center gap-3 pb-2 border-b border-slate-200 dark:border-slate-800">
                 <div className="p-2 rounded-lg bg-[#F1ECFF] dark:bg-[#2a2240]">
                   <FileText className="w-4 h-4 text-[#64499D] dark:text-[#E9E0FF]" />
                 </div>
                 <h3 className="text-base font-semibold text-slate-900 dark:text-white">
-                  Basic Information
+                  {modal.sections.basicInformation}
                 </h3>
               </div>
               
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                    Reference <span className="text-red-500">*</span>
+                    {modal.fields.reference} <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
                     <FileText className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                     <Input 
                       {...mainForm.register('reference')}
-                      placeholder="Case reference"
+                      placeholder={modal.placeholders.reference}
                       className="pl-10 h-11 border-slate-300 dark:border-slate-700 focus:border-[#64499D] focus:ring-[#64499D]"
                     />
                   </div>
@@ -332,13 +322,13 @@ const CaseViewModal = forwardRef<CaseViewModalRef, CaseViewModalProps>(({ onSucc
 
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                    Title <span className="text-red-500">*</span>
+                    {modal.fields.title} <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
                     <Type className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                     <Input 
                       {...mainForm.register('title')} 
-                      placeholder="Case title"
+                      placeholder={modal.placeholders.title}
                       className="pl-10 h-11 border-slate-300 dark:border-slate-700 focus:border-[#64499D] focus:ring-[#64499D]"
                     />
                   </div>
@@ -351,13 +341,13 @@ const CaseViewModal = forwardRef<CaseViewModalRef, CaseViewModalProps>(({ onSucc
 
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                    Court Name <span className="text-red-500">*</span>
+                    {modal.fields.courtName} <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
                     <Gavel className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                     <Input
                       {...mainForm.register('court')}
-                      placeholder="Court name"
+                      placeholder={modal.placeholders.court}
                       className="pl-10 h-11 border-slate-300 dark:border-slate-700 focus:border-[#64499D] focus:ring-[#64499D]"
                     />
                   </div>
@@ -370,18 +360,18 @@ const CaseViewModal = forwardRef<CaseViewModalRef, CaseViewModalProps>(({ onSucc
 
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                    Category <span className="text-red-500">*</span>
+                    {modal.fields.category} <span className="text-red-500">*</span>
                   </label>
                   <Select
                     value={mainForm.watch('category')}
                     onValueChange={(val: API.CaseCategory) => mainForm.setValue('category', val)}
                   >
                     <SelectTrigger className="h-11 border-slate-300 dark:border-slate-700 focus:border-[#64499D] focus:ring-[#64499D]">
-                      <SelectValue placeholder="Select a category" />
+                      <SelectValue placeholder={modal.placeholders.category} />
                     </SelectTrigger>
                     <SelectContent>
-                      {CaseCategory.options.map((category, index) => (
-                        <SelectItem key={index} value={category.value}>
+                      {enumOptions('caseCategory').map((category) => (
+                        <SelectItem key={category.value} value={category.value}>
                           {category.label}
                         </SelectItem>
                       ))}
@@ -397,13 +387,13 @@ const CaseViewModal = forwardRef<CaseViewModalRef, CaseViewModalProps>(({ onSucc
 
               <div className="space-y-2">
                 <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                  Description <span className="text-red-500">*</span>
+                  {modal.fields.description} <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
                   <AlignJustify className="absolute left-3 top-3 w-4 h-4 text-slate-400" />
                   <Textarea 
                     {...mainForm.register('description')} 
-                    placeholder="Provide a detailed description of the case..."
+                    placeholder={modal.placeholders.descriptionDetailed}
                     className="pl-10 min-h-[100px] resize-none border-slate-300 dark:border-slate-700 focus:border-[#64499D] focus:ring-[#64499D]"
                   />
                 </div>
@@ -415,32 +405,32 @@ const CaseViewModal = forwardRef<CaseViewModalRef, CaseViewModalProps>(({ onSucc
               </div>
             </div>
 
-            {/* Case Details Section */}
+            {/* {modal.sections.caseDetails} Section */}
             <div className="space-y-4">
               <div className="flex items-center gap-3 pb-2 border-b border-slate-200 dark:border-slate-800">
                 <div className="p-2 rounded-lg bg-[#F1ECFF] dark:bg-[#2a2240]">
                   <Tags className="w-4 h-4 text-[#64499D] dark:text-[#E9E0FF]" />
                 </div>
                 <h3 className="text-base font-semibold text-slate-900 dark:text-white">
-                  Case Details
+                  {modal.sections.caseDetails}
                 </h3>
               </div>
               
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                    Status <span className="text-red-500">*</span>
+                    {modal.fields.status} <span className="text-red-500">*</span>
                   </label>
                   <Select 
                     value={mainForm.watch('status')} 
                     onValueChange={(val: API.CaseStatus) => mainForm.setValue('status', val)}
                   >
                     <SelectTrigger className="h-11 border-slate-300 dark:border-slate-700 focus:border-[#64499D] focus:ring-[#64499D]">
-                      <SelectValue placeholder="Select a status" />
+                      <SelectValue placeholder={modal.placeholders.status} />
                     </SelectTrigger>
                     <SelectContent>
-                      {CaseStatus.options.map((status, index) => (
-                        <SelectItem key={index} value={status.value}>
+                      {enumOptions('caseStatus').map((status) => (
+                        <SelectItem key={status.value} value={status.value}>
                           {status.label}
                         </SelectItem>
                       ))}
@@ -455,7 +445,7 @@ const CaseViewModal = forwardRef<CaseViewModalRef, CaseViewModalProps>(({ onSucc
 
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                    Primary Assignee <span className="text-slate-400 text-xs">(optional)</span>
+                    {modal.primaryAssignee} <span className="text-slate-400 text-xs">{modal.optionalHint}</span>
                   </label>
                   <ServerSelect
                     link='/cabinets/members/select_list'
@@ -475,15 +465,15 @@ const CaseViewModal = forwardRef<CaseViewModalRef, CaseViewModalProps>(({ onSucc
 
               <div className="space-y-2">
                 <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                  Related Client <span className="text-slate-400 text-xs">(optional)</span>
+                  {modal.fields.relatedClient} <span className="text-slate-400 text-xs">{modal.optionalHint}</span>
                 </label>
                 <ServerSelect
                   link='/clients/clients/'
                   value={mainForm.watch('client')}
                   onChange={(val) => mainForm.setValue('client', val)}
-                  labelKey={(client: any) => `${client.first_name || ''} ${client.last_name || ''}`.trim() || client.email || 'Unnamed'}
+                  labelKey={(client: any) => `${client.first_name || ''} ${client.last_name || ''}`.trim() || client.email || t.cases.unnamed}
                   cleanable
-                  placeholder="Select a client"
+                  placeholder={modal.placeholders.client}
                 />
                 {mainForm.formState.errors.client && (
                   <p className="text-red-500 text-xs mt-1">
@@ -494,13 +484,13 @@ const CaseViewModal = forwardRef<CaseViewModalRef, CaseViewModalProps>(({ onSucc
 
               <div className="space-y-2">
                 <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                  Summary
+                  {modal.fields.summary}
                 </label>
                 <div className="relative">
                   <FileText className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                   <Input 
                     {...mainForm.register('summary')} 
-                    placeholder="Brief case summary"
+                    placeholder={modal.placeholders.summary}
                     className="pl-10 h-11 border-slate-300 dark:border-slate-700 focus:border-[#64499D] focus:ring-[#64499D]"
                   />
                 </div>
@@ -520,7 +510,7 @@ const CaseViewModal = forwardRef<CaseViewModalRef, CaseViewModalProps>(({ onSucc
                 disabled={isLoading}
                 className="border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800"
               >
-                Cancel
+                {t.common.cancel}
               </Button>
               <Button
                 type="submit"
@@ -530,12 +520,12 @@ const CaseViewModal = forwardRef<CaseViewModalRef, CaseViewModalProps>(({ onSucc
                 {isLoading ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Saving...
+                    {t.common.saving}
                   </>
                 ) : (
                   <>
                     <Save className="w-4 h-4 mr-2" />
-                    Save Changes
+                    {modal.saveChanges}
                   </>
                 )}
               </Button>
@@ -546,14 +536,14 @@ const CaseViewModal = forwardRef<CaseViewModalRef, CaseViewModalProps>(({ onSucc
           <div className="px-8 py-6 space-y-6">
             {/* Case Information Cards */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Case Details Section */}
+              {/* {modal.sections.caseDetails} Section */}
               <div className="space-y-4">
                 <div className="flex items-center gap-3 pb-2 border-b border-slate-200 dark:border-slate-800">
                   <div className="p-2 rounded-lg bg-[#F1ECFF] dark:bg-[#2a2240]">
                     <FileText className="w-4 h-4 text-[#64499D] dark:text-[#E9E0FF]" />
                   </div>
                   <h3 className="text-base font-semibold text-slate-900 dark:text-white">
-                    Case Details
+                    {modal.sections.caseDetails}
                   </h3>
                 </div>
                 
@@ -561,7 +551,7 @@ const CaseViewModal = forwardRef<CaseViewModalRef, CaseViewModalProps>(({ onSucc
                   <div className="flex items-start gap-3 p-3 rounded-lg bg-slate-50 dark:bg-slate-800/30 border border-slate-200 dark:border-slate-700">
                     <Gavel className="w-5 h-5 text-[#64499D] dark:text-[#E9E0FF] mt-0.5 flex-shrink-0" />
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Court</p>
+                      <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">{modal.fields.court}</p>
                       <p className="text-sm font-semibold text-slate-900 dark:text-white">{instance.court}</p>
                     </div>
                   </div>
@@ -569,7 +559,7 @@ const CaseViewModal = forwardRef<CaseViewModalRef, CaseViewModalProps>(({ onSucc
                   <div className="flex items-start gap-3 p-3 rounded-lg bg-slate-50 dark:bg-slate-800/30 border border-slate-200 dark:border-slate-700">
                     <AlignJustify className="w-5 h-5 text-[#64499D] dark:text-[#E9E0FF] mt-0.5 flex-shrink-0" />
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Description</p>
+                      <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">{modal.fields.description}</p>
                       <p className="text-sm text-slate-900 dark:text-white leading-relaxed">{instance.description}</p>
                     </div>
                   </div>
@@ -578,7 +568,7 @@ const CaseViewModal = forwardRef<CaseViewModalRef, CaseViewModalProps>(({ onSucc
                     <div className="flex items-start gap-3 p-3 rounded-lg bg-slate-50 dark:bg-slate-800/30 border border-slate-200 dark:border-slate-700">
                       <FileText className="w-5 h-5 text-[#64499D] dark:text-[#E9E0FF] mt-0.5 flex-shrink-0" />
                       <div className="flex-1 min-w-0">
-                        <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Summary</p>
+                        <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">{modal.fields.summary}</p>
                         <p className="text-sm text-slate-900 dark:text-white">{instance.summary}</p>
                       </div>
                     </div>
@@ -587,17 +577,13 @@ const CaseViewModal = forwardRef<CaseViewModalRef, CaseViewModalProps>(({ onSucc
                   <div className="flex items-start gap-3 p-3 rounded-lg bg-slate-50 dark:bg-slate-800/30 border border-slate-200 dark:border-slate-700">
                     <Calendar className="w-5 h-5 text-[#64499D] dark:text-[#E9E0FF] mt-0.5 flex-shrink-0" />
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Created</p>
+                      <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">{modal.created}</p>
                       <p className="text-sm text-slate-900 dark:text-white">
-                        {new Date(instance.created).toLocaleDateString('en-US', { 
-                          year: 'numeric', 
-                          month: 'long', 
-                          day: 'numeric' 
-                        })}
+                        {formatDate(instance.created, lang, { year: 'numeric', month: 'long', day: 'numeric' })}
                       </p>
                       {instance.created_by && (
                         <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                          By: {instance.created_by.first_name} {instance.created_by.last_name || ""}
+                          {tf(modal.createdBy, { name: `${instance.created_by.first_name} ${instance.created_by.last_name || ''}`.trim() })}
                         </p>
                       )}
                     </div>
@@ -605,21 +591,21 @@ const CaseViewModal = forwardRef<CaseViewModalRef, CaseViewModalProps>(({ onSucc
                 </div>
               </div>
 
-              {/* Assignment & Team Section */}
+              {/* {modal.assignmentTeam} Section */}
               <div className="space-y-4">
                 <div className="flex items-center gap-3 pb-2 border-b border-slate-200 dark:border-slate-800">
                   <div className="p-2 rounded-lg bg-[#F1ECFF] dark:bg-[#2a2240]">
                     <Users className="w-4 h-4 text-[#64499D] dark:text-[#E9E0FF]" />
                   </div>
                   <h3 className="text-base font-semibold text-slate-900 dark:text-white">
-                    Assignment & Team
+                    {modal.assignmentTeam}
                   </h3>
                 </div>
 
-                {/* Primary Assignee */}
+                {/* {modal.primaryAssignee} */}
                 <div className="space-y-4">
                   <div>
-                    <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-2">Primary Assignee</p>
+                    <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-2">{modal.primaryAssignee}</p>
                     {instance.assigned_to ? (
                       <div className="bg-slate-50 dark:bg-slate-800/30 border border-slate-200 dark:border-slate-700 rounded-lg p-4">
                         <div className="flex items-center gap-3">
@@ -640,15 +626,15 @@ const CaseViewModal = forwardRef<CaseViewModalRef, CaseViewModalProps>(({ onSucc
                       </div>
                     ) : (
                       <div className="bg-slate-50 dark:bg-slate-800/30 border border-slate-200 dark:border-slate-700 rounded-lg p-4 text-center">
-                        <p className="text-sm text-slate-500 dark:text-slate-400">Not assigned</p>
+                        <p className="text-sm text-slate-500 dark:text-slate-400">{modal.notAssigned}</p>
                       </div>
                     )}
                   </div>
 
-                  {/* Additional Assignees */}
+                  {/* {modal.additionalAssignees} */}
                   <div>
                     <div className="flex items-center justify-between mb-2">
-                      <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Additional Assignees</p>
+                      <p className="text-xs font-medium text-slate-500 dark:text-slate-400">{modal.additionalAssignees}</p>
                       <Button
                         size="sm"
                         variant="outline"
@@ -656,13 +642,13 @@ const CaseViewModal = forwardRef<CaseViewModalRef, CaseViewModalProps>(({ onSucc
                         className="h-8 px-3 text-xs border-slate-300 dark:border-slate-700"
                       >
                         <UserPlus className="w-3 h-3 mr-1" />
-                        Add
+                        {t.common.add}
                       </Button>
                     </div>
                     
                     {additionalAssignees.length === 0 ? (
                       <div className="bg-slate-50 dark:bg-slate-800/30 border border-slate-200 dark:border-slate-700 rounded-lg p-4 text-center">
-                        <p className="text-sm text-slate-500 dark:text-slate-400">No additional assignees</p>
+                        <p className="text-sm text-slate-500 dark:text-slate-400">{modal.noAdditionalAssignees}</p>
                       </div>
                     ) : (
                       <div className="space-y-2">
@@ -708,7 +694,7 @@ const CaseViewModal = forwardRef<CaseViewModalRef, CaseViewModalProps>(({ onSucc
                     <Users className="w-4 h-4 text-[#64499D] dark:text-[#E9E0FF]" />
                   </div>
                   <h3 className="text-base font-semibold text-slate-900 dark:text-white">
-                    Related Client
+                    {modal.fields.relatedClient}
                   </h3>
                 </div>
                 

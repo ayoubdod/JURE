@@ -11,6 +11,7 @@ from .feed_case_dates import (
     append_litigation_deadlines,
 )
 from .feed_helpers import _range_bounds, _sort_key_from_iso
+from .feed_legal_deadlines import append_legal_deadlines
 from .feed_tasks_appointments import append_appointment_events, append_task_events
 
 
@@ -58,6 +59,7 @@ def fetch_unified_calendar_events(
     append_consultation_dates(cabinet, events, start, end, want)
     append_administrative_due_dates(cabinet, events, start, end, want)
     append_litigation_deadlines(cabinet, events, start, end, want)
+    append_legal_deadlines(cabinet, events, start, end, want)
 
     events.sort(key=lambda e: _sort_key_from_iso(e["date"]))
     return events

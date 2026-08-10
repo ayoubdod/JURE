@@ -150,13 +150,13 @@ const Sidebar = ({ activeTab, setActiveTab }: SidebarProps) => {
           side={isRTL ? 'right' : 'left'}
           className="flex w-[min(100vw,20rem)] flex-col gap-0 p-0 sm:max-w-sm"
         >
-          <SheetHeader className="shrink-0 border-b border-border px-4 py-4 text-left">
-            <div className="flex items-center gap-3 pr-8">
+          <SheetHeader className="shrink-0 border-b border-border px-4 py-4 text-start">
+            <div className="flex items-center gap-3 pe-8">
               <img src="/images/Jure logo.png" alt="JURE" className="h-9 w-auto" />
             </div>
-            <SheetTitle className="sr-only">Navigation</SheetTitle>
+            <SheetTitle className="sr-only">{t.sidebar.dashboard}</SheetTitle>
             <SheetDescription className="sr-only">
-              Main application navigation
+              {t.sidebar.account}
             </SheetDescription>
           </SheetHeader>
 
@@ -179,7 +179,7 @@ const Sidebar = ({ activeTab, setActiveTab }: SidebarProps) => {
                     aria-current={active ? 'page' : undefined}
                   >
                     <Icon size={18} className="shrink-0" />
-                    <span className="flex-1 text-left">{item.label}</span>
+                    <span className="flex-1 text-start">{item.label}</span>
                     {item.badge != null && (
                       <span
                         className={cn(
@@ -255,17 +255,9 @@ const Sidebar = ({ activeTab, setActiveTab }: SidebarProps) => {
         </SheetContent>
       </Sheet>
 
-      {/* Desktop Sidebar - Fixed side with Hover Expansion (right in RTL, left otherwise) */}
-      <div
-        className={`hidden lg:block fixed top-0 h-full z-50 group ${
-          isRTL ? 'right-0' : 'left-0'
-        }`}
-      >
-        <div
-          className={`w-14 hover:w-56 bg-background shadow-lg flex flex-col py-4 h-full transition-all duration-300 ease-in-out overflow-hidden border-border ${
-            isRTL ? 'border-l' : 'border-r'
-          }`}
-        >
+      {/* Desktop Sidebar - Fixed start edge with hover expansion (logical inset for RTL) */}
+      <div className="hidden lg:block fixed top-0 start-0 h-full z-50 group">
+        <div className="w-14 hover:w-56 bg-background shadow-lg flex flex-col py-4 h-full transition-all duration-300 ease-in-out overflow-hidden border-border border-e">
           {/* Logo */}
           <div className="flex items-center justify-center px-3 mb-6">
             <img
@@ -297,12 +289,12 @@ const Sidebar = ({ activeTab, setActiveTab }: SidebarProps) => {
                   title={item.label}
                 >
                   <Icon size={16} className="flex-shrink-0" />
-                  <span className="ml-2.5 hidden group-hover:block opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap text-xs font-medium">
+                  <span className="ms-2.5 hidden group-hover:block opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap text-xs font-medium text-start">
                     {item.label}
                   </span>
                   {item.badge && (
                     <span
-                      className={`ml-auto opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-xs px-1.5 py-0.5 rounded-full ${
+                      className={`ms-auto opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-xs px-1.5 py-0.5 rounded-full ${
                         item.badge.toString() === 'Beta'
                           ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400'
                           : 'bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400'
@@ -327,7 +319,7 @@ const Sidebar = ({ activeTab, setActiveTab }: SidebarProps) => {
                 className="flex items-center p-2.5 rounded-lg transition-all duration-200 text-muted-foreground hover:text-jure-600 dark:hover:text-jure-400 hover:bg-jure-50 dark:hover:bg-jure-600/10 w-full"
               >
                 <User size={16} className="flex-shrink-0" />
-                <span className="ml-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap text-xs font-medium flex-1 text-left">
+                <span className="ms-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap text-xs font-medium flex-1 text-start">
                   {t.sidebar.profile}
                 </span>
                 <ChevronUp
@@ -346,7 +338,7 @@ const Sidebar = ({ activeTab, setActiveTab }: SidebarProps) => {
                       }}
                       className="flex items-center w-full px-3 py-2 text-xs text-foreground hover:bg-muted hover:text-jure-600 dark:hover:text-jure-400"
                     >
-                      <UserCog size={14} className="mr-2" />
+                      <UserCog size={14} className="me-2" />
                       {t.sidebar.myProfile}
                     </button>
                     <button
@@ -356,7 +348,7 @@ const Sidebar = ({ activeTab, setActiveTab }: SidebarProps) => {
                       }}
                       className="flex items-center w-full px-3 py-2 text-xs text-foreground hover:bg-muted hover:text-jure-600 dark:hover:text-jure-400"
                     >
-                      <Bell size={14} className="mr-2" />
+                      <Bell size={14} className="me-2" />
                       {t.sidebar.notifications}
                     </button>
                     <button
@@ -366,7 +358,7 @@ const Sidebar = ({ activeTab, setActiveTab }: SidebarProps) => {
                       }}
                       className="flex items-center w-full px-3 py-2 text-xs text-foreground hover:bg-muted hover:text-jure-600 dark:hover:text-jure-400"
                     >
-                      <HelpCircle size={14} className="mr-2" />
+                      <HelpCircle size={14} className="me-2" />
                       {t.sidebar.help}
                     </button>
                     <hr className="my-1 border-border" />
@@ -376,7 +368,7 @@ const Sidebar = ({ activeTab, setActiveTab }: SidebarProps) => {
                       }}
                       className="flex items-center w-full px-3 py-2 text-xs text-destructive hover:bg-destructive/10"
                     >
-                      <LogOut size={14} className="mr-2" />
+                      <LogOut size={14} className="me-2" />
                       {t.sidebar.logout}
                     </button>
                   </div>
@@ -386,7 +378,7 @@ const Sidebar = ({ activeTab, setActiveTab }: SidebarProps) => {
 
             <button className="flex items-center p-2.5 rounded-lg transition-all duration-200 text-muted-foreground hover:text-jure-600 dark:hover:text-jure-400 hover:bg-jure-50 dark:hover:bg-jure-600/10 w-full">
               <Headphones size={16} className="flex-shrink-0" />
-              <span className="ml-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap text-xs font-medium">
+              <span className="ms-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap text-xs font-medium text-start">
                 {t.sidebar.contactSupport}
               </span>
             </button>

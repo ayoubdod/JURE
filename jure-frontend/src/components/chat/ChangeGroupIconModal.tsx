@@ -15,6 +15,7 @@ import {
   apiUploadConversationIcon,
 } from '@/services/conversations/api';
 import { useToast } from '@/hooks/use-toast';
+import { useAppTranslation } from '@/i18n';
 
 export interface ChangeGroupIconModalRef {
   show: (conversation: API.Conversation) => void;
@@ -36,6 +37,8 @@ const DEFAULT_ICONS: API.SuggestedIcon[] = [
 
 const ChangeGroupIconModal = forwardRef<ChangeGroupIconModalRef, ChangeGroupIconModalProps>(
   ({ onSuccess }, ref) => {
+    const { t } = useAppTranslation();
+    const m = t.conversations.changeIcon;
     const [instance, setInstance] = useState<API.Conversation | null>(null);
     const [isOpen, setIsOpen] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
@@ -70,12 +73,12 @@ const ChangeGroupIconModal = forwardRef<ChangeGroupIconModalRef, ChangeGroupIcon
         const { data } = await apiSetConversationIconPreset(instance.id, presetId);
         const updated = { ...instance, ...data };
         onSuccess?.(updated);
-        toast({ title: 'Icon updated' });
+        toast({ title: m.updated });
       } catch (err) {
         if (isAxiosError(err)) {
           toast({
-            title: 'Error',
-            description: err.response?.data?.detail ?? 'Could not update icon.',
+            title: t.common.error,
+            description: err.response?.data?.detail ?? m.updateFailed,
             variant: 'destructive',
           });
         }
@@ -89,11 +92,11 @@ const ChangeGroupIconModal = forwardRef<ChangeGroupIconModalRef, ChangeGroupIcon
       if (!file || !instance) return;
       const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
       if (!validTypes.includes(file.type)) {
-        toast({ title: 'Invalid file', description: 'Please select a JPEG, PNG, GIF, or WebP image.', variant: 'destructive' });
+        toast({ title: m.invalidFile, description: m.invalidFileDesc, variant: 'destructive' });
         return;
       }
       if (file.size > 5 * 1024 * 1024) {
-        toast({ title: 'File too large', description: 'Image must be under 5MB.', variant: 'destructive' });
+        toast({ title: m.tooLarge, description: m.tooLargeDesc, variant: 'destructive' });
         return;
       }
       setIsLoading(true);
@@ -101,14 +104,14 @@ const ChangeGroupIconModal = forwardRef<ChangeGroupIconModalRef, ChangeGroupIcon
         .then(({ data }) => {
           const updated = { ...instance, ...data };
           onSuccess?.(updated);
-          toast({ title: 'Icon updated' });
+          toast({ title: m.updated });
           e.target.value = '';
         })
         .catch((err) => {
           if (isAxiosError(err)) {
             toast({
-              title: 'Error',
-              description: err.response?.data?.detail ?? 'Could not upload icon.',
+              title: t.common.error,
+              description: err.response?.data?.detail ?? m.uploadFailed,
               variant: 'destructive',
             });
           }
@@ -123,16 +126,13 @@ const ChangeGroupIconModal = forwardRef<ChangeGroupIconModalRef, ChangeGroupIcon
       <Dialog open={isOpen} onOpenChange={isLoading ? undefined : setIsOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Change group icon</DialogTitle>
-            <DialogDescription>
-              Choose a preset emoji or upload a custom image.
-            </DialogDescription>
+            <DialogTitle>{m.title}</DialogTitle>
+            <DialogDescription>{m.description}</DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 py-2">
-            {/* Presets */}
             <div>
-              <p className="text-[12px] font-medium text-slate-600 dark:text-slate-400 mb-2">Presets</p>
+              <p className="text-[12px] font-medium text-slate-600 dark:text-slate-400 mb-2">{m.presets}</p>
               {iconsLoading ? (
                 <div className="flex justify-center py-6">
                   <Loader2 className="w-5 h-5 animate-spin text-slate-400" />
@@ -155,9 +155,8 @@ const ChangeGroupIconModal = forwardRef<ChangeGroupIconModalRef, ChangeGroupIcon
               )}
             </div>
 
-            {/* Upload */}
             <div>
-              <p className="text-[12px] font-medium text-slate-600 dark:text-slate-400 mb-2">Custom image</p>
+              <p className="text-[12px] font-medium text-slate-600 dark:text-slate-400 mb-2">{m.customImage}</p>
               <input
                 ref={fileInputRef}
                 type="file"
@@ -173,7 +172,7 @@ const ChangeGroupIconModal = forwardRef<ChangeGroupIconModalRef, ChangeGroupIcon
                 className="w-full"
               >
                 <Upload className="h-4 w-4 mr-2" />
-                Upload image
+                {m.uploadImage}
               </Button>
             </div>
           </div>

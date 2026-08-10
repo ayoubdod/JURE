@@ -68,7 +68,7 @@ const CabinetMemberDeleteModal = forwardRef<CabinetMemberDeleteModalRef, Cabinet
           <Button
             variant="ghost"
             size="icon"
-            className="absolute top-4 right-4 h-9 w-9 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white border border-white/30"
+            className="absolute top-4 end-4 h-9 w-9 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white border border-white/30"
             onClick={() => setIsOpen(false)}
             disabled={isLoading}
           >

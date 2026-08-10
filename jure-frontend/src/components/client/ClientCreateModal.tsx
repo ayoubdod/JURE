@@ -120,9 +120,10 @@ const ClientCreateModal = forwardRef<ClientCreateModalRef, ClientCreateModalProp
           <Button
             variant="ghost"
             size="icon"
-            className="absolute top-4 right-4 h-9 w-9 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white border border-white/30"
+            className="absolute top-4 end-4 h-9 w-9 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white border border-white/30"
             onClick={hide}
             disabled={isLoading}
+            aria-label={t.common.close}
           >
             <X className="w-4 h-4" />
           </Button>
@@ -151,16 +152,16 @@ const ClientCreateModal = forwardRef<ClientCreateModalRef, ClientCreateModalProp
           <div className="space-y-4">
             <div className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-3">
               <User className="w-4 h-4 text-purple-600" />
-              Personal Information
+              {t.clients.modal.personalInfo}
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="text-sm font-medium">
-                  <span>First Name</span>
+                  <span>{t.clients.modal.firstName}</span>
                   <Input
                     {...mainForm.register('first_name')}
                     className="transition-all duration-200 focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500"
-                    placeholder="Enter first name"
+                    placeholder={t.clients.modal.firstNamePlaceholder}
                   />
                 </label>
                 {mainForm.formState.errors.first_name && (
@@ -172,11 +173,11 @@ const ClientCreateModal = forwardRef<ClientCreateModalRef, ClientCreateModalProp
 
               <div>
                 <label className="text-sm font-medium">
-                  <span>Last Name</span>
+                  <span>{t.clients.modal.lastName}</span>
                   <Input
                     {...mainForm.register('last_name')}
                     className="transition-all duration-200 focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500"
-                    placeholder="Enter last name"
+                    placeholder={t.clients.modal.lastNamePlaceholder}
                   />
                 </label>
                 {mainForm.formState.errors.last_name && (
@@ -192,17 +193,17 @@ const ClientCreateModal = forwardRef<ClientCreateModalRef, ClientCreateModalProp
           <div className="space-y-4">
             <div className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-3">
               <Mail className="w-4 h-4 text-purple-600" />
-              Contact Information
+              {t.clients.modal.contactInfo}
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="text-sm font-medium flex items-center gap-1">
-                  <span>Email</span>
+                  <span>{t.clients.modal.email}</span>
                 </label>
                 <Input
                   {...mainForm.register('email')}
                   className="pl-0 transition-all duration-200 focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500"
-                  placeholder="client@example.com"
+                  placeholder={t.clients.modal.emailPlaceholder}
                 />
                 {mainForm.formState.errors.email && (
                   <p className="text-red-500 text-xs p-1 pb-0">
@@ -213,15 +214,14 @@ const ClientCreateModal = forwardRef<ClientCreateModalRef, ClientCreateModalProp
 
               <div>
                 <label className="text-sm font-medium flex items-center gap-1">
-                  <span>Phone Number</span>
+                  <span>{t.clients.modal.phoneNumber}</span>
                 </label>
 
-                {/* Removed the stray {mainForm.watch('phone')} line */}
                 <PhoneInput
                   value={mainForm.watch('phone') || ''}
                   onChange={(value) => mainForm.setValue('phone', value)}
                   className="transition-all duration-200 focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500"
-                  placeholder="+21234567890"
+                  placeholder={t.clients.modal.phonePlaceholder}
                 />
                 {mainForm.formState.errors.phone && (
                   <p className="text-red-500 text-xs p-1 pb-0">
@@ -236,17 +236,17 @@ const ClientCreateModal = forwardRef<ClientCreateModalRef, ClientCreateModalProp
           <div className="space-y-4">
             <div className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-3">
               <Building2 className="w-4 h-4 text-purple-600" />
-              Other Information
+              {t.clients.modal.otherInfo}
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="text-sm font-medium">
-                  <span>Address</span>
+                  <span>{t.clients.modal.address}</span>
                 </label>
                 <Input
                   {...mainForm.register('address')}
                   className="transition-all duration-200 focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500"
-                  placeholder="Enter full address"
+                  placeholder={t.clients.modal.addressPlaceholder}
                 />
                 {mainForm.formState.errors.address && (
                   <p className="text-red-500 text-xs p-1 pb-0">
@@ -263,23 +263,23 @@ const ClientCreateModal = forwardRef<ClientCreateModalRef, ClientCreateModalProp
           <div className="space-y-4">
             <div className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-3">
               <FileSpreadsheet className="w-4 h-4 text-purple-600" />
-              Fiscal (B2B) — optionnel
+              {t.clients.modal.fiscalInfoOptional}
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-sm font-medium">ICE</label>
+                <label className="text-sm font-medium">{t.clients.modal.ice}</label>
                 <Input
                   {...mainForm.register('ice')}
                   className="transition-all duration-200 focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500"
-                  placeholder="Identifiant Commun de l’Entreprise"
+                  placeholder={t.clients.modal.icePlaceholder}
                 />
               </div>
               <div>
-                <label className="text-sm font-medium">IF</label>
+                <label className="text-sm font-medium">{t.clients.modal.fiscalIf}</label>
                 <Input
                   {...mainForm.register('fiscal_if')}
                   className="transition-all duration-200 focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500"
-                  placeholder="Identifiant fiscal"
+                  placeholder={t.clients.modal.fiscalIfPlaceholder}
                 />
               </div>
             </div>

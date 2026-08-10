@@ -14,6 +14,7 @@ import { Label } from '@/components/ui/label';
 import { Loader2 } from 'lucide-react';
 import { apiRenameConversation } from '@/services/conversations/api';
 import { useToast } from '@/hooks/use-toast';
+import { useAppTranslation } from '@/i18n';
 
 export interface RenameGroupModalRef {
   show: (conversation: API.Conversation) => void;
@@ -25,10 +26,12 @@ export interface RenameGroupModalProps {
 }
 
 const getDisplayTitle = (c: API.Conversation) =>
-  (c as any).display_name ?? c.title ?? '';
+  (c as { display_name?: string }).display_name ?? c.title ?? '';
 
 const RenameGroupModal = forwardRef<RenameGroupModalRef, RenameGroupModalProps>(
   ({ onSuccess }, ref) => {
+    const { t, tf } = useAppTranslation();
+    const m = t.conversations.renameGroup;
     const [instance, setInstance] = useState<API.Conversation | null>(null);
     const [isOpen, setIsOpen] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
@@ -55,34 +58,50 @@ const RenameGroupModal = forwardRef<RenameGroupModalRef, RenameGroupModalProps>(
       if (!instance) return;
       const trimmed = title.trim();
       if (!trimmed) {
-        toast({ title: 'Enter a name', description: 'Group name cannot be empty.', variant: 'destructive' });
+        toast({ title: m.emptyTitle, description: m.emptyDesc, variant: 'destructive' });
         return;
       }
       setIsLoading(true);
       try {
         const { data } = await apiRenameConversation(instance.id, trimmed);
-        const updated = { ...instance, ...data, title: trimmed, display_name: (data as any).display_name ?? trimmed };
+        const updated = {
+          ...instance,
+          ...data,
+          title: trimmed,
+          display_name: (data as { display_name?: string }).display_name ?? trimmed,
+        };
         setIsOpen(false);
         onSuccess?.(updated);
-        toast({ title: 'Group renamed', description: `Renamed to "${trimmed}".` });
+        toast({ title: m.successTitle, description: tf(m.successDesc, { name: trimmed }) });
       } catch (error) {
         if (isAxiosError(error)) {
           const status = error.response?.status;
           if (status === 400) {
-            const msg = (error.response?.data as any)?.title?.[0] ?? (error.response?.data as any)?.detail ?? 'Only group conversations can be renamed.';
-            toast({ title: 'Cannot rename', description: msg, variant: 'destructive' });
+            const msg =
+              (error.response?.data as { title?: string[]; detail?: string })?.title?.[0] ??
+              (error.response?.data as { detail?: string })?.detail ??
+              m.onlyGroups;
+            toast({ title: m.cannotRename, description: msg, variant: 'destructive' });
             return;
           }
           if (status === 403) {
-            toast({ title: 'Access denied', description: 'You are not allowed to rename this conversation.', variant: 'destructive' });
+            toast({
+              title: t.conversations.toasts.accessDenied,
+              description: m.accessDeniedDesc,
+              variant: 'destructive',
+            });
             return;
           }
           if (status === 404) {
-            toast({ title: 'Not found', description: 'Conversation not found.', variant: 'destructive' });
+            toast({
+              title: t.conversations.toasts.notFoundTitle,
+              description: t.conversations.toasts.notFoundConversation,
+              variant: 'destructive',
+            });
             return;
           }
         }
-        toast({ title: 'Error', description: 'Could not rename group. Please try again.', variant: 'destructive' });
+        toast({ title: t.common.error, description: m.errorDesc, variant: 'destructive' });
       } finally {
         setIsLoading(false);
       }
@@ -94,19 +113,17 @@ const RenameGroupModal = forwardRef<RenameGroupModalRef, RenameGroupModalProps>(
       <Dialog open={isOpen} onOpenChange={isLoading ? undefined : setIsOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Rename group</DialogTitle>
-            <DialogDescription>
-              Enter a new name for this group conversation.
-            </DialogDescription>
+            <DialogTitle>{m.title}</DialogTitle>
+            <DialogDescription>{m.description}</DialogDescription>
           </DialogHeader>
 
           <div className="grid gap-2 py-2">
-            <Label htmlFor="rename-group-input">Group name</Label>
+            <Label htmlFor="rename-group-input">{m.label}</Label>
             <Input
               id="rename-group-input"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="Group name"
+              placeholder={m.placeholder}
               disabled={isLoading}
               onKeyDown={(e) => {
                 if (e.key === 'Enter') handleSubmit();
@@ -120,11 +137,11 @@ const RenameGroupModal = forwardRef<RenameGroupModalRef, RenameGroupModalProps>(
               onClick={() => setIsOpen(false)}
               disabled={isLoading}
             >
-              Cancel
+              {t.common.cancel}
             </Button>
             <Button onClick={handleSubmit} disabled={isLoading}>
               {isLoading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
-              Rename
+              {m.rename}
             </Button>
           </DialogFooter>
         </DialogContent>

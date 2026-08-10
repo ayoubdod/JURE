@@ -34,6 +34,18 @@ import {
   type ConnectionQuality,
   type MediaErrorKind,
 } from '@/utils/webrtc';
+import {
+  answerFromPeer,
+  applyPeerAnswer,
+  applyPeerIce,
+  closeAllPeers,
+  offerToPeer,
+  peerListSnapshot,
+  updatePeerVideoFlags,
+  type ConferencePeer,
+  type ConferencePeerSnapshot,
+} from '@/utils/conferenceMesh';
+import { useConversationCallPresenceStore } from '@/stores/conversationCallPresenceStore';
 
 export type CallStatus =
   | 'idle'
@@ -59,6 +71,9 @@ export interface CallUiState {
   status: CallStatus;
   groupName: string | null;
   remoteUser: CallRemoteUser | null;
+  /** Conference remote peers (mesh). Empty for classic 1:1. */
+  peers: ConferencePeerSnapshot[];
+  mode: 'direct' | 'conference';
   startTime: Date | null;
   endedDurationSec: number | null;
   isMuted: boolean;
@@ -86,6 +101,8 @@ const initialUi = (): CallUiState => ({
   status: 'idle',
   groupName: null,
   remoteUser: null,
+  peers: [],
+  mode: 'direct',
   startTime: null,
   endedDurationSec: null,
   isMuted: false,
@@ -159,11 +176,14 @@ function normalizeKind(raw: unknown): CallKind {
 
 /** Module-level media/session refs — survive React route remounts. */
 const mediaRef: CallMediaRefs = { pc: null, localStream: null, remoteStream: null };
+const conferencePeers: Map<number, ConferencePeer> = new Map();
+let callMode: 'direct' | 'conference' = 'direct';
 let role: 'caller' | 'callee' | null = null;
 let groupName: string | null = null;
 let conversationId: number | null = null;
 let pendingRemoteIce: RTCIceCandidateInit[] = [];
 let offerPending: RTCSessionDescriptionInit | null = null;
+let pendingConferenceOffers: { peerId: number; sdp: RTCSessionDescriptionInit }[] = [];
 let calleeReady = false;
 let callStartMs: number | null = null;
 let callingDeadline: number | null = null;
@@ -177,6 +197,48 @@ let bootstrapped = false;
 let unsubChat: (() => void) | null = null;
 let unsubCalls: (() => void) | null = null;
 let unsubConv: (() => void) | null = null;
+let knownRemoteUsers: Map<number, CallRemoteUser> = new Map();
+
+function syncPeersUi() {
+  const peers = peerListSnapshot(conferencePeers);
+  const primary = peers[0];
+  setUiState({
+    peers,
+    remoteUser: primary
+      ? {
+          id: primary.id,
+          name: primary.name,
+          avatar: primary.avatar,
+          firstName: primary.firstName,
+          lastName: primary.lastName,
+        }
+      : useCallSessionStore.getState().ui.remoteUser,
+    hasRemoteVideo: peers.some((p) => p.hasVideo),
+    remoteCameraOff: peers.length > 0 ? peers.every((p) => p.cameraOff) : false,
+  });
+}
+
+function conferenceSend(obj: Record<string, unknown>): boolean {
+  return sendCallSignal(obj, conversationId);
+}
+
+function onConferenceTrack(peerId: number, stream: MediaStream) {
+  mediaRef.remoteStream = stream;
+  updatePeerVideoFlags(conferencePeers, peerId, useCallSessionStore.getState().ui.kind);
+  syncPeersUi();
+  if (getStatus() === 'connecting' || getStatus() === 'calling') markCallActive();
+}
+
+function onConferencePcState(peerId: number, state: string) {
+  if (state === 'connected' || state === 'completed') {
+    if (getStatus() === 'connecting' || getStatus() === 'reconnecting' || getStatus() === 'calling') {
+      markCallActive();
+    }
+  }
+  if (state === 'failed') {
+    devWarn('[conference] peer connection failed', peerId);
+  }
+}
 
 interface CallSessionStore {
   ui: CallUiState;
@@ -184,9 +246,19 @@ interface CallSessionStore {
   bootstrap: () => void;
   initiateCall: (opts: {
     conversationId: number;
-    targetUserId: number;
+    targetUserId?: number;
+    targetUserIds?: number[];
     remoteUser: CallRemoteUser;
+    remoteUsers?: CallRemoteUser[];
     kind?: CallKind;
+    mode?: 'direct' | 'conference';
+  }) => boolean;
+  joinActiveCall: (opts: {
+    conversationId: number;
+    groupName: string;
+    kind?: CallKind;
+    mode?: 'direct' | 'conference';
+    remoteUser?: CallRemoteUser | null;
   }) => boolean;
   acceptIncoming: () => void;
   rejectIncoming: () => void;
@@ -200,6 +272,7 @@ interface CallSessionStore {
   switchAudioOutput: (deviceId: string) => Promise<void>;
   getLocalStream: () => MediaStream | null;
   getRemoteStream: () => MediaStream | null;
+  getPeerStream: (peerId: number) => MediaStream | null;
 }
 
 function getStatus(): CallStatus {
@@ -251,9 +324,11 @@ function teardownMedia() {
     callingAnim = null;
   }
   stopStatsPoll();
+  closeAllPeers(conferencePeers);
   cleanupCall(mediaRef);
   pendingRemoteIce = [];
   offerPending = null;
+  pendingConferenceOffers = [];
   calleeReady = false;
   connecting = false;
   clearRemoteMediaElements();
@@ -267,6 +342,8 @@ function resetIdle() {
   conversationId = null;
   callStartMs = null;
   callingDeadline = null;
+  callMode = 'direct';
+  knownRemoteUsers.clear();
   void stopCallSounds();
   soundStatus = null;
   setUiState(initialUi());
@@ -505,6 +582,80 @@ async function startCallerPipeline() {
   }
 }
 
+async function ensureConferenceLocalMedia(): Promise<MediaStream | null> {
+  if (mediaRef.localStream) return mediaRef.localStream;
+  const kind = useCallSessionStore.getState().ui.kind;
+  try {
+    clearIceServersCache();
+    const stream = await getCallUserMedia(kind, {
+      audioId: useCallSessionStore.getState().ui.selectedAudioInputId ?? undefined,
+      videoId: useCallSessionStore.getState().ui.selectedVideoInputId ?? undefined,
+    });
+    applyLocalStream(stream);
+    setUiState({ micDenied: false, mediaErrorKind: null, mediaErrorMessage: null });
+    return stream;
+  } catch (e) {
+    devError('[conference] local media', e);
+    const errKind = classifyMediaError(e);
+    setUiState({
+      status: 'error',
+      micDenied: errKind === 'permission',
+      mediaErrorKind: errKind,
+      mediaErrorMessage: mediaErrorMessage(errKind, kind),
+    });
+    scheduleTerminalReset();
+    return null;
+  }
+}
+
+async function conferenceOfferTo(peerId: number, meta?: CallRemoteUser) {
+  if (!groupName) return;
+  const local = await ensureConferenceLocalMedia();
+  if (!local) return;
+  const ice = await fetchIceServers();
+  const known = meta ?? knownRemoteUsers.get(peerId);
+  await offerToPeer(
+    conferencePeers,
+    peerId,
+    ice,
+    local,
+    groupName,
+    conferenceSend,
+    onConferenceTrack,
+    onConferencePcState,
+    known
+      ? {
+          name: known.name,
+          avatar: known.avatar,
+          firstName: known.firstName,
+          lastName: known.lastName,
+        }
+      : undefined
+  );
+  syncPeersUi();
+}
+
+async function flushPendingConferenceOffers() {
+  if (!mediaRef.localStream || !groupName) return;
+  const queue = pendingConferenceOffers;
+  pendingConferenceOffers = [];
+  const ice = await fetchIceServers();
+  for (const item of queue) {
+    await answerFromPeer(
+      conferencePeers,
+      item.peerId,
+      item.sdp,
+      ice,
+      mediaRef.localStream,
+      groupName,
+      conferenceSend,
+      onConferenceTrack,
+      onConferencePcState
+    );
+  }
+  syncPeersUi();
+}
+
 async function handleRemoteIce(candidate: RTCIceCandidateInit) {
   const pc = mediaRef.pc;
   if (!pc || !pc.remoteDescription) {
@@ -567,23 +718,26 @@ function onWsMessage(data: WebSocketMessage | CallsWsMessage) {
     conversationId = convId;
     groupName = gn;
     role = 'callee';
+    callMode = String(m.mode ?? '').toLowerCase() === 'conference' ? 'conference' : 'direct';
+    knownRemoteUsers.set(callerId, { id: callerId, name, avatar, firstName, lastName });
     setUiState({
       ...initialUi(),
       status: 'ringing',
       groupName: gn,
       conversationId: convId,
       kind: normalizeKind(m.kind),
+      mode: callMode,
       remoteUser: { id: callerId, name, avatar, firstName, lastName },
     });
     return;
   }
 
   if (type === 'call.accepted') {
-    if (role !== 'caller') return;
+    const receiverId = Number(m.receiverId ?? m.receiver_id);
+    const receiverName = typeof m.receiverName === 'string' ? m.receiverName : undefined;
     let gn = String(m.groupName ?? m.group_name ?? groupName ?? '');
     if (!gn) {
-      const peerId = Number(m.receiverId ?? m.receiver_id);
-      if (myId != null && Number.isFinite(peerId)) gn = pairCallGroup(myId, peerId);
+      if (myId != null && Number.isFinite(receiverId)) gn = pairCallGroup(myId, receiverId);
       else {
         devWarn('[call] call.accepted missing groupName');
         return;
@@ -591,7 +745,25 @@ function onWsMessage(data: WebSocketMessage | CallsWsMessage) {
     }
     groupName = gn;
     setUiState((prev) => ({ ...prev, groupName: gn }));
-    const receiverName = typeof m.receiverName === 'string' ? m.receiverName : undefined;
+
+    if (callMode === 'conference') {
+      if (Number.isFinite(receiverId) && receiverId !== myId) {
+        if (receiverName) {
+          knownRemoteUsers.set(receiverId, {
+            id: receiverId,
+            name: receiverName,
+            avatar: knownRemoteUsers.get(receiverId)?.avatar ?? null,
+          });
+        }
+        // Existing participants offer to the newly joined peer
+        if (getStatus() === 'calling' || getStatus() === 'connecting' || getStatus() === 'active') {
+          void conferenceOfferTo(receiverId, knownRemoteUsers.get(receiverId));
+        }
+      }
+      return;
+    }
+
+    if (role !== 'caller') return;
     if (receiverName) {
       setUiState((prev) =>
         prev.remoteUser ? { ...prev, remoteUser: { ...prev.remoteUser, name: receiverName } } : prev
@@ -606,9 +778,11 @@ function onWsMessage(data: WebSocketMessage | CallsWsMessage) {
     const gn = String(m.groupName ?? m.group_name ?? '');
     if (gn) {
       groupName = gn;
+      if (String(m.mode ?? '').toLowerCase() === 'conference') callMode = 'conference';
       setUiState((prev) => ({
         ...prev,
         groupName: gn,
+        mode: callMode,
         kind: m.kind != null ? normalizeKind(m.kind) : prev.kind,
       }));
     }
@@ -619,9 +793,41 @@ function onWsMessage(data: WebSocketMessage | CallsWsMessage) {
     const offerSid = Number(m.senderId ?? m.sender_id);
     if (Number.isFinite(offerSid) && myId != null && offerSid === myId) return;
     const sdp = parseSdp(m.sdp ?? m.offer, 'offer');
-    if (!sdp || role !== 'callee') return;
+    if (!sdp) return;
     const gn = String(m.groupName ?? m.group_name ?? '');
     if (gn) groupName = gn;
+
+    if (callMode === 'conference') {
+      if (!Number.isFinite(offerSid)) return;
+      if (!mediaRef.localStream) {
+        pendingConferenceOffers.push({ peerId: offerSid, sdp });
+        void (async () => {
+          await ensureConferenceLocalMedia();
+          await flushPendingConferenceOffers();
+          markCallActive();
+        })();
+        return;
+      }
+      void (async () => {
+        const ice = await fetchIceServers();
+        await answerFromPeer(
+          conferencePeers,
+          offerSid,
+          sdp,
+          ice,
+          mediaRef.localStream!,
+          groupName!,
+          conferenceSend,
+          onConferenceTrack,
+          onConferencePcState
+        );
+        syncPeersUi();
+        markCallActive();
+      })();
+      return;
+    }
+
+    if (role !== 'callee') return;
     if (!calleeReady || !mediaRef.pc) {
       offerPending = sdp;
       return;
@@ -631,12 +837,23 @@ function onWsMessage(data: WebSocketMessage | CallsWsMessage) {
   }
 
   if (type === 'call.answer') {
-    if (role !== 'caller') return;
     const answerSid = Number(m.senderId ?? m.sender_id);
     if (Number.isFinite(answerSid) && myId != null && answerSid === myId) return;
     const sdp = parseSdp(m.sdp ?? m.answer, 'answer');
+    if (!sdp) return;
+
+    if (callMode === 'conference') {
+      if (!Number.isFinite(answerSid)) return;
+      void applyPeerAnswer(conferencePeers, answerSid, sdp).then(() => {
+        markCallActive();
+        syncPeersUi();
+      });
+      return;
+    }
+
+    if (role !== 'caller') return;
     const pc = mediaRef.pc;
-    if (!sdp || !pc) return;
+    if (!pc) return;
     void (async () => {
       try {
         await setRemoteAnswer(pc, sdp);
@@ -654,11 +871,34 @@ function onWsMessage(data: WebSocketMessage | CallsWsMessage) {
     if (Number.isFinite(senderId) && myId != null && senderId === myId) return;
     const c = m.candidate as RTCIceCandidateInit | undefined;
     if (!c || typeof c !== 'object' || !('candidate' in c)) return;
+    if (callMode === 'conference') {
+      if (!Number.isFinite(senderId)) return;
+      void applyPeerIce(conferencePeers, senderId, c);
+      return;
+    }
     void handleRemoteIce(c);
     return;
   }
 
+  if (type === 'call.participant_left') {
+    const leftId = Number(m.userId ?? m.user_id);
+    if (!Number.isFinite(leftId)) return;
+    const slot = conferencePeers.get(leftId);
+    try {
+      slot?.pc?.close();
+    } catch {
+      /* ignore */
+    }
+    conferencePeers.delete(leftId);
+    syncPeersUi();
+    return;
+  }
+
   if (type === 'call.rejected') {
+    if (callMode === 'conference') {
+      // One invitee declined — keep ringing/active for others
+      return;
+    }
     if (role !== 'caller') return;
     teardownMedia();
     setUiState((prev) => ({ ...prev, status: 'declined', startTime: null }));
@@ -683,6 +923,21 @@ function onWsMessage(data: WebSocketMessage | CallsWsMessage) {
   }
 
   if (type === 'call.missed') {
+    const convId = conversationId ?? Number(m.conversationId ?? m.conversation_id);
+    const gn = String(m.groupName ?? m.group_name ?? groupName ?? '');
+    // Callee: persist in-conversation missed banner (Call back).
+    if (role === 'callee' && Number.isFinite(convId) && convId > 0) {
+      const ui = useCallSessionStore.getState().ui;
+      const store = useConversationCallPresenceStore.getState();
+      store.clearActive(convId, gn || undefined);
+      store.setMissed({
+        conversationId: convId,
+        kind: ui.kind === 'video' ? 'video' : 'voice',
+        callerId: ui.remoteUser?.id ?? null,
+        callerName: ui.remoteUser?.name ?? null,
+        at: Date.now(),
+      });
+    }
     if (role !== 'caller') return;
     teardownMedia();
     setUiState((prev) => ({ ...prev, status: 'missed', startTime: null }));
@@ -771,33 +1026,110 @@ export const useCallSessionStore = create<CallSessionStore>((set, get) => ({
     }
   },
 
-  initiateCall: ({ conversationId: convId, targetUserId, remoteUser, kind = 'voice' }) => {
+  initiateCall: ({
+    conversationId: convId,
+    targetUserId,
+    targetUserIds,
+    remoteUser,
+    remoteUsers,
+    kind = 'voice',
+    mode,
+  }) => {
     if (get().ui.status !== 'idle') return false;
     const myId = useUserStore.getState().user?.id;
+    const targets =
+      targetUserIds && targetUserIds.length > 0
+        ? [...new Set(targetUserIds.filter((id) => id !== myId))]
+        : targetUserId != null
+          ? [targetUserId]
+          : [];
+    if (targets.length === 0) return false;
+
+    const resolvedMode: 'direct' | 'conference' =
+      mode === 'conference' || targets.length > 1 ? 'conference' : 'direct';
+    callMode = resolvedMode;
     role = 'caller';
     conversationId = convId;
-    groupName = myId != null ? pairCallGroup(myId, targetUserId) : null;
+    groupName =
+      resolvedMode === 'direct' && myId != null ? pairCallGroup(myId, targets[0]) : null;
     callingDeadline = Date.now() + CALLING_TIMEOUT_MS;
+    knownRemoteUsers.clear();
+    knownRemoteUsers.set(remoteUser.id, remoteUser);
+    (remoteUsers ?? []).forEach((u) => knownRemoteUsers.set(u.id, u));
+
     setUiState({
       ...initialUi(),
       status: 'calling',
       conversationId: convId,
       groupName,
       kind,
+      mode: resolvedMode,
       remoteUser,
+      peers: [],
       callingProgress: 0,
     });
     void (async () => {
       await useCallsWsStore.getState().connect().catch(() => {});
       useChatStore.getState().connect().catch(() => {});
-      const ok = sendCallSignal(
-        { type: 'call.initiate', targetUserId, conversationId: convId, kind },
-        convId
-      );
+      const payload: Record<string, unknown> = {
+        type: 'call.initiate',
+        conversationId: convId,
+        kind,
+        mode: resolvedMode,
+      };
+      if (resolvedMode === 'conference') {
+        payload.targetUserIds = targets;
+      } else {
+        payload.targetUserId = targets[0];
+      }
+      const ok = sendCallSignal(payload, convId);
       if (!ok) {
         devError('[call] call.initiate not sent');
         setUiState(initialUi());
       }
+    })();
+    return true;
+  },
+
+  joinActiveCall: ({
+    conversationId: convId,
+    groupName: gn,
+    kind = 'voice',
+    mode = 'conference',
+    remoteUser = null,
+  }) => {
+    if (get().ui.status !== 'idle') return false;
+    if (!gn) return false;
+    callMode = mode;
+    role = 'callee';
+    conversationId = convId;
+    groupName = gn;
+    if (remoteUser) knownRemoteUsers.set(remoteUser.id, remoteUser);
+    setUiState({
+      ...initialUi(),
+      status: 'connecting',
+      conversationId: convId,
+      groupName: gn,
+      kind,
+      mode,
+      remoteUser,
+      peers: [],
+    });
+    void (async () => {
+      await useCallsWsStore.getState().connect().catch(() => {});
+      useChatStore.getState().connect().catch(() => {});
+      const ok = sendCallSignal({ type: 'call.join', groupName: gn }, convId);
+      if (!ok) {
+        devError('[call] call.join not sent');
+        setUiState(initialUi());
+        return;
+      }
+      if (callMode === 'conference') {
+        await ensureConferenceLocalMedia();
+        await flushPendingConferenceOffers();
+        return;
+      }
+      void startCalleeMedia();
     })();
     return true;
   },
@@ -814,6 +1146,11 @@ export const useCallSessionStore = create<CallSessionStore>((set, get) => ({
         return;
       }
       setUiState({ status: 'connecting' });
+      if (callMode === 'conference') {
+        await ensureConferenceLocalMedia();
+        await flushPendingConferenceOffers();
+        return;
+      }
       void startCalleeMedia();
     })();
   },
@@ -837,10 +1174,34 @@ export const useCallSessionStore = create<CallSessionStore>((set, get) => ({
   endCall: () => {
     const gn = groupName;
     const startMs = callStartMs;
+    const mode = callMode;
+    const convId = conversationId;
+    const myId = useUserStore.getState().user?.id;
     if (gn) {
       void useCallsWsStore.getState().connect().catch(() => {});
       useChatStore.getState().connect().catch(() => {});
-      sendCallSignal({ type: 'call.end', groupName: gn }, conversationId);
+      // Conference: leave without ending for others; direct: end for both
+      sendCallSignal(
+        { type: mode === 'conference' ? 'call.leave' : 'call.end', groupName: gn },
+        conversationId
+      );
+    }
+    // Drop sticky "call in progress" when this client leaves / ends.
+    if (convId != null) {
+      const presence = useConversationCallPresenceStore.getState();
+      if (mode !== 'conference') {
+        presence.clearActive(convId, gn || undefined);
+      } else {
+        const cur = presence.activeByConversation[convId];
+        if (cur) {
+          const remaining = cur.joinedIds.filter((id) => id !== myId);
+          if (remaining.length === 0) {
+            presence.clearActive(convId, gn || undefined);
+          } else {
+            presence.setActive({ ...cur, joinedIds: remaining });
+          }
+        }
+      }
     }
     let durSec: number | null = null;
     if (startMs != null) {
@@ -945,11 +1306,13 @@ export const useCallSessionStore = create<CallSessionStore>((set, get) => ({
 
   getLocalStream: () => mediaRef.localStream,
   getRemoteStream: () => mediaRef.remoteStream,
+  getPeerStream: (peerId: number) => conferencePeers.get(peerId)?.remoteStream ?? null,
 }));
 
 export function useWebRtcCall() {
   const ui = useCallSessionStore((s) => s.ui);
   const initiateCall = useCallSessionStore((s) => s.initiateCall);
+  const joinActiveCall = useCallSessionStore((s) => s.joinActiveCall);
   const acceptIncoming = useCallSessionStore((s) => s.acceptIncoming);
   const rejectIncoming = useCallSessionStore((s) => s.rejectIncoming);
   const endCall = useCallSessionStore((s) => s.endCall);
@@ -964,6 +1327,7 @@ export function useWebRtcCall() {
   return {
     callState: ui,
     initiateCall,
+    joinActiveCall,
     acceptIncoming,
     rejectIncoming,
     endCall,

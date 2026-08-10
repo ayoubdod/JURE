@@ -3,7 +3,6 @@ import { forwardRef, useImperativeHandle, useState } from 'react';
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
   DialogTitle,
   DialogDescription,
   DialogFooter,
@@ -13,6 +12,7 @@ import { Loader2, X, Trash2, AlertTriangle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { apiDeleteCase } from '@/services/case/api';
 import { isAxiosError } from 'axios';
+import { useAppTranslation } from '@/i18n';
 
 export interface CaseDeleteModalRef {
   show: (member: API.Case) => void;
@@ -24,6 +24,7 @@ export interface CaseDeleteModalProps {
 }
 
 const CaseDeleteModal = forwardRef<CaseDeleteModalRef, CaseDeleteModalProps>(({ onSuccess }, ref) => {
+  const { t } = useAppTranslation();
   const [instance, setInstance] = useState<API.Case | null>(null);
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -45,20 +46,39 @@ const CaseDeleteModal = forwardRef<CaseDeleteModalRef, CaseDeleteModalProps>(({ 
       setIsOpen(false);
       setInstance(null);
       onSuccess?.(instance);
-      toast({ title: 'Case deleted', description: 'The case has been permanently removed.' });
+      toast({
+        title: t.cases.modal.toasts.deletedTitle,
+        description: t.cases.modal.toasts.deletedDescription,
+      });
     } catch (err) {
       if (isAxiosError(err)) {
         const status = err.response?.status;
         const msg = (err.response?.data as { detail?: string })?.detail ?? err.message;
         if (status === 403) {
-          toast({ title: 'Access denied', description: 'You do not have permission to delete this case.', variant: 'destructive' });
+          toast({
+            title: t.cases.modal.toasts.accessDenied,
+            description: t.cases.modal.toasts.accessDeniedDescription,
+            variant: 'destructive',
+          });
         } else if (status === 404) {
-          toast({ title: 'Not found', description: 'This case may have already been deleted.', variant: 'destructive' });
+          toast({
+            title: t.cases.modal.toasts.notFound,
+            description: t.cases.modal.toasts.notFoundDescription,
+            variant: 'destructive',
+          });
         } else {
-          toast({ title: 'Failed to delete', description: msg || 'Please try again.', variant: 'destructive' });
+          toast({
+            title: t.cases.modal.toasts.deleteFailed,
+            description: msg || t.cases.modal.toasts.deleteFailedDescription,
+            variant: 'destructive',
+          });
         }
       } else {
-        toast({ title: 'Error', description: 'Could not delete the case. Please try again.', variant: 'destructive' });
+        toast({
+          title: t.common.error,
+          description: t.cases.modal.toasts.deleteErrorDescription,
+          variant: 'destructive',
+        });
       }
     } finally {
       setIsLoading(false);
@@ -68,30 +88,25 @@ const CaseDeleteModal = forwardRef<CaseDeleteModalRef, CaseDeleteModalProps>(({ 
   return (
     <Dialog open={isOpen} onOpenChange={isLoading ? undefined : setIsOpen}>
       <DialogContent className="sm:max-w-[500px] p-0 [&>button]:hidden">
-        {/* Header Banner */}
         <div className="relative h-32 bg-gradient-to-r from-[#FF6B6B] via-[#FF8E8E] to-[#FFB3B3] overflow-hidden">
-          {/* Decorative Pattern Overlay */}
           <div className="absolute inset-0 opacity-10">
             <div className="absolute inset-0" style={{
               backgroundImage: `radial-gradient(circle at 2px 2px, white 1px, transparent 0)`,
               backgroundSize: '32px 32px'
             }}></div>
           </div>
-          {/* Gradient Overlay */}
           <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/10"></div>
-          
-          {/* Close Button */}
+
           <Button
             variant="ghost"
             size="icon"
-            className="absolute top-4 right-4 h-9 w-9 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white border border-white/30"
+            className="absolute top-4 end-4 h-9 w-9 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white border border-white/30"
             onClick={() => setIsOpen(false)}
             disabled={isLoading}
           >
             <X className="w-4 h-4" />
           </Button>
 
-          {/* Header Content */}
           <div className="relative px-8 pt-8 pb-6">
             <div className="flex items-center gap-3">
               <div className="p-3 rounded-xl bg-white/20 backdrop-blur-sm border border-white/30">
@@ -99,10 +114,10 @@ const CaseDeleteModal = forwardRef<CaseDeleteModalRef, CaseDeleteModalProps>(({ 
               </div>
               <div>
                 <DialogTitle className="text-2xl font-bold text-white">
-                  Delete Case
+                  {t.cases.modal.deleteTitle}
                 </DialogTitle>
                 <DialogDescription className="text-white/90 mt-1">
-                  This action cannot be undone
+                  {t.cases.modal.deleteSubtitle}
                 </DialogDescription>
               </div>
             </div>
@@ -114,10 +129,10 @@ const CaseDeleteModal = forwardRef<CaseDeleteModalRef, CaseDeleteModalProps>(({ 
             <AlertTriangle className="w-5 h-5 text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0" />
             <div>
               <p className="text-sm font-medium text-red-900 dark:text-red-100 mb-1">
-                Are you sure you want to delete this case?
+                {t.cases.modal.deleteConfirm}
               </p>
               <p className="text-sm text-red-700 dark:text-red-300">
-                This will permanently remove the case and all associated data. This action cannot be undone.
+                {t.cases.modal.deleteWarning}
               </p>
             </div>
           </div>
@@ -129,7 +144,7 @@ const CaseDeleteModal = forwardRef<CaseDeleteModalRef, CaseDeleteModalProps>(({ 
             onClick={() => setIsOpen(false)}
             disabled={isLoading}
           >
-            Cancel
+            {t.common.cancel}
           </Button>
           <Button
             variant="destructive"
@@ -139,13 +154,13 @@ const CaseDeleteModal = forwardRef<CaseDeleteModalRef, CaseDeleteModalProps>(({ 
           >
             {isLoading ? (
               <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Deleting...
+                <Loader2 className="w-4 h-4 me-2 animate-spin" />
+                {t.cases.modal.deleting}
               </>
             ) : (
               <>
-                <Trash2 className="w-4 h-4 mr-2" />
-                Delete Case
+                <Trash2 className="w-4 h-4 me-2" />
+                {t.cases.modal.deleteCase}
               </>
             )}
           </Button>

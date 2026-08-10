@@ -3,7 +3,7 @@
 import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
-import { Trash2, X, Coins, Sparkles } from 'lucide-react';
+import { Trash2, X, Coins, Sparkles, Flag } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { apiGetCase } from '@/services/case/api';
 import { getCaseData, getStatusColor } from '@/utils/caseCardHelpers';
@@ -36,7 +36,11 @@ import { getTVAStatus, isCabinetTvaExonerated, type TVAStatus } from '@/services
 import { JuriaCasePanel } from '@/components/juria/JuriaCasePanel';
 import useJuriaStore from '@/stores/juriaStore';
 import { JURIA_ENABLED } from '@/config/features';
-
+import DeadlinesCard from '@/components/dashboard/DeadlinesCard';
+import ResearchNotebookCard from '@/components/dashboard/ResearchNotebookCard';
+import MatterCloseModal from '@/components/dashboard/MatterCloseModal';
+import { useAppTranslation } from '@/i18n';
+import { CaseStatus } from '@/utils/constants';
 export interface CaseDetailDrawerRef {
   open: (instance: API.Case) => void;
   close: () => void;
@@ -153,9 +157,11 @@ const CaseDetailDrawer = forwardRef<CaseDetailDrawerRef, CaseDetailDrawerProps>(
     const [drawerMobile, setDrawerMobile] = useState(false);
     const openRef = useRef(false);
     const { toast } = useToast();
+    const { t } = useAppTranslation();
     const [typeSelectorOpen, setTypeSelectorOpen] = useState(false);
     const [conversionFormOpen, setConversionFormOpen] = useState(false);
     const [conversionTarget, setConversionTarget] = useState<ConversionTargetType | null>(null);
+    const [matterCloseOpen, setMatterCloseOpen] = useState(false);
 
     const taskCreateRef = useRef<TaskCreateModalRef>(null);
     const scheduleAppointmentRef = useRef<ScheduleAppointmentDialogRef>(null);
@@ -475,6 +481,18 @@ const CaseDetailDrawer = forwardRef<CaseDetailDrawerRef, CaseDetailDrawerProps>(
                     onOpenTask={(taskId) => setDetailTaskId(taskId)}
                     onOpenAppointment={(appointmentId) => setDetailAppointmentId(appointmentId)}
                   />
+                  <div className="mt-6 space-y-3">
+                    <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                      Legal deadlines
+                    </h3>
+                    <DeadlinesCard caseId={fetched.id} />
+                  </div>
+                  <div className="mt-6 space-y-3">
+                    <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                      Research notebook
+                    </h3>
+                    <ResearchNotebookCard caseId={fetched.id} />
+                  </div>
                 </TabsContent>
                 {showFinanceTab ?
                   <TabsContent
@@ -505,6 +523,18 @@ const CaseDetailDrawer = forwardRef<CaseDetailDrawerRef, CaseDetailDrawerProps>(
                   onClick={() => setTypeSelectorOpen(true)}
                 >
                   Convert to Case →
+                </Button>
+              )}
+              {fetched.status !== CaseStatus.CLOSED && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="h-9"
+                  onClick={() => setMatterCloseOpen(true)}
+                >
+                  <Flag className="mr-1.5 h-3.5 w-3.5" />
+                  {t.dashboard.matterClose.confirmClose}
                 </Button>
               )}
               {onEdit && (
@@ -556,6 +586,21 @@ const CaseDetailDrawer = forwardRef<CaseDetailDrawerRef, CaseDetailDrawerProps>(
                       : 'Case created successfully',
                   });
                   openCaseById(newCase.id);
+                }}
+              />
+            )}
+            {fetched != null && (
+              <MatterCloseModal
+                open={matterCloseOpen}
+                onOpenChange={setMatterCloseOpen}
+                caseId={fetched.id}
+                caseLabel={
+                  [fetched.reference, fetched.title].filter(Boolean).join(' — ') ||
+                  `Case #${fetched.id}`
+                }
+                onSuccess={(closedCase) => {
+                  setFetched(closedCase);
+                  patchListFromCase(closedCase);
                 }}
               />
             )}

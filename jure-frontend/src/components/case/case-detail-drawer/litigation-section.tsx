@@ -3,6 +3,7 @@ import { getCaseData } from '@/utils/caseCardHelpers';
 import { ConvertedCaseLink, getConvertedFromCase } from '@/components/case/conversion/ConvertedCaseLink';
 import { em, formatDrawerDate } from './format';
 import { Field, LongText, SectionTitle, TagList, TimelineRow } from './primitives';
+import CaseLegalDeadlinesList from '@/components/case/CaseLegalDeadlinesList';
 
 const LIT_TYPE: Record<string, string> = {
   CIVIL: 'Civil',
@@ -144,6 +145,12 @@ export function LitigationSection({
               dateIso={kd?.date as string}
             />
           ))}
+        </div>
+        <div className="mt-3 space-y-2">
+          <p className="text-[11px] font-medium uppercase tracking-[0.08em] text-slate-500">
+            Calculated legal deadlines
+          </p>
+          <CaseLegalDeadlinesList caseId={c.id} />
         </div>
       </section>
 

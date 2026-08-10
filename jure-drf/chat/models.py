@@ -61,6 +61,10 @@ class Message(TimeStampedModel):
         SHARED_CASE = "SHARED_CASE", "SHARED_CASE"
         SHARED_TASK = "SHARED_TASK", "SHARED_TASK"
         SHARED_APPOINTMENT = "SHARED_APPOINTMENT", "SHARED_APPOINTMENT"
+        CALL_VOICE = "CALL_VOICE", "CALL_VOICE"
+        CALL_VIDEO = "CALL_VIDEO", "CALL_VIDEO"
+        CALL_MISSED_VOICE = "CALL_MISSED_VOICE", "CALL_MISSED_VOICE"
+        CALL_MISSED_VIDEO = "CALL_MISSED_VIDEO", "CALL_MISSED_VIDEO"
 
     conversation: models.ForeignKey[Conversation] = models.ForeignKey(
         Conversation, on_delete=models.CASCADE, related_name="messages"
@@ -94,6 +98,13 @@ class Message(TimeStampedModel):
         on_delete=models.SET_NULL,
         related_name="shared_in_messages",
     )
+    shared_call = models.ForeignKey(
+        "Call",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="history_messages",
+    )
     reply_to = models.ForeignKey("self", null=True, blank=True, on_delete=models.SET_NULL)  # reply
     forwarded_from = models.ForeignKey(
         "self", null=True, blank=True, on_delete=models.SET_NULL, related_name="forwards"
@@ -121,13 +132,29 @@ class Message(TimeStampedModel):
             models.Index(fields=["conversation", "-id"]),
         ]
 
+    @classmethod
+    def call_message_types(cls) -> frozenset[str]:
+        return frozenset(
+            {
+                cls.MessageType.CALL_VOICE,
+                cls.MessageType.CALL_VIDEO,
+                cls.MessageType.CALL_MISSED_VOICE,
+                cls.MessageType.CALL_MISSED_VIDEO,
+            }
+        )
+
     def clean(self):
         from django.core.exceptions import ValidationError
 
         super().clean()
         fk_count = sum(
             1
-            for x in (self.shared_case_id, self.shared_task_id, self.shared_appointment_id)
+            for x in (
+                self.shared_case_id,
+                self.shared_task_id,
+                self.shared_appointment_id,
+                self.shared_call_id,
+            )
             if x
         )
         if fk_count > 1:
@@ -138,6 +165,8 @@ class Message(TimeStampedModel):
             raise ValidationError("shared_task is required when message_type is SHARED_TASK.")
         if self.message_type == self.MessageType.SHARED_APPOINTMENT and not self.shared_appointment_id:
             raise ValidationError("shared_appointment is required when message_type is SHARED_APPOINTMENT.")
+        if self.message_type in self.call_message_types() and not self.shared_call_id:
+            raise ValidationError("shared_call is required for call history messages.")
         if self.message_type == self.MessageType.TEXT and fk_count:
             raise ValidationError("Text messages cannot reference a shared item.")
 

@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/button';
 import { apiSearchShareable, type ShareableSearchCaseHit } from '@/services/search/api';
 import { normalizeShareableResults } from './sharePickerTypes';
 import { cn } from '@/lib/utils';
+import { useAppTranslation } from '@/i18n';
 
 function caseDotClass(row: ShareableSearchCaseHit): string {
   const t = row.caseType;
@@ -64,6 +65,8 @@ export function LinkCaseModal({
   onConfirm: (caseId: number, row: ShareableSearchCaseHit) => void;
   confirming?: boolean;
 }) {
+  const { t } = useAppTranslation();
+  const m = t.conversations.linkCase;
   const [query, setQuery] = useState('');
   const [loading, setLoading] = useState(false);
   const [rows, setRows] = useState<ShareableSearchCaseHit[]>([]);
@@ -101,22 +104,22 @@ export function LinkCaseModal({
       abortRef.current?.abort();
       return;
     }
-    const t = setTimeout(() => runSearch(query), 300);
-    return () => clearTimeout(t);
+    const timer = setTimeout(() => runSearch(query), 300);
+    return () => clearTimeout(timer);
   }, [open, query, runSearch]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="text-[15px]">Link a Case to this conversation</DialogTitle>
+          <DialogTitle className="text-[15px]">{m.title}</DialogTitle>
         </DialogHeader>
         <div className="relative">
           <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
           <Input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search cases…"
+            placeholder={m.searchPlaceholder}
             className="h-9 pl-8 text-[13px]"
           />
         </div>
@@ -128,9 +131,9 @@ export function LinkCaseModal({
               ))}
             </div>
           ) : query.trim().length < 2 ? (
-            <p className="text-[12px] text-slate-500 text-center py-6">Type at least 2 characters</p>
+            <p className="text-[12px] text-slate-500 text-center py-6">{m.typeMinChars}</p>
           ) : rows.length === 0 ? (
-            <p className="text-[12px] text-slate-500 text-center py-6">No cases found</p>
+            <p className="text-[12px] text-slate-500 text-center py-6">{m.noCases}</p>
           ) : (
             rows.map((row) => (
               <CaseRow
@@ -144,7 +147,7 @@ export function LinkCaseModal({
         </div>
         <DialogFooter className="gap-2 sm:gap-0">
           <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={!!confirming}>
-            Cancel
+            {t.common.cancel}
           </Button>
           <Button
             type="button"
@@ -155,7 +158,7 @@ export function LinkCaseModal({
               if (row) onConfirm(selectedId, row);
             }}
           >
-            {confirming ? 'Linking…' : 'Link Case'}
+            {confirming ? m.linking : m.linkCase}
           </Button>
         </DialogFooter>
       </DialogContent>

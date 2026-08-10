@@ -25,6 +25,7 @@ import { addFee } from '@/services/finance/api';
 import { useToast } from '@/hooks/use-toast';
 import { isAxiosError } from 'axios';
 import { devError } from '@/utils/devLog';
+import { useAppTranslation } from '@/i18n';
 
 type Props = {
   open: boolean;
@@ -34,6 +35,8 @@ type Props = {
 };
 
 export const AddFeeModal: React.FC<Props> = ({ open, onOpenChange, caseId, onSuccess }) => {
+  const { t, tf } = useAppTranslation();
+  const m = t.finance.modals.addFee;
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [members, setMembers] = useState<API.CabinetMember[]>([]);
@@ -45,11 +48,11 @@ export const AddFeeModal: React.FC<Props> = ({ open, onOpenChange, caseId, onSuc
   useEffect(() => {
     if (!open) return;
     apiGetCabinetMembers({ expand: 'user' })
-      .then((res) => setMembers(res.data.filter((m) => m.is_active !== false)))
+      .then((res) => setMembers(res.data.filter((mem) => mem.is_active !== false)))
       .catch(() => setMembers([]));
   }, [open]);
 
-  const selectedMember = members.find((m) => String(m.id) === lawyerId);
+  const selectedMember = members.find((mem) => String(mem.id) === lawyerId);
   const hourlyRate = (selectedMember as { hourly_rate?: number } | undefined)?.hourly_rate;
 
   const reset = () => {
@@ -63,7 +66,7 @@ export const AddFeeModal: React.FC<Props> = ({ open, onOpenChange, caseId, onSuc
     e.preventDefault();
     const amt = parseFloat(planned.replace(',', '.'));
     if (Number.isNaN(amt)) {
-      toast({ title: 'Champs requis', description: 'Indiquez un montant prévu.', variant: 'destructive' });
+      toast({ title: m.requiredFields, description: m.plannedRequired, variant: 'destructive' });
       return;
     }
     const lid = lawyerId ? parseInt(lawyerId, 10) : NaN;
@@ -76,13 +79,13 @@ export const AddFeeModal: React.FC<Props> = ({ open, onOpenChange, caseId, onSuc
         ...(lawyer_id != null && { lawyer_id }),
         notes: notes.trim() || undefined,
       });
-      toast({ title: 'Honoraire ajouté' });
+      toast({ title: m.success });
       onSuccess?.();
       reset();
       onOpenChange(false);
     } catch (err) {
       devError('addFee', err);
-      let msg = 'Impossible d’ajouter l’honoraire.';
+      let msg = m.saveFailed;
       if (isAxiosError(err)) {
         const d = err.response?.data;
         if (typeof d?.detail === 'string') msg = d.detail;
@@ -91,7 +94,7 @@ export const AddFeeModal: React.FC<Props> = ({ open, onOpenChange, caseId, onSuc
           if (first) msg = `${first[0]}: ${Array.isArray(first[1]) ? first[1][0] : String(first[1])}`;
         }
       }
-      toast({ title: 'Erreur', description: msg, variant: 'destructive' });
+      toast({ title: t.common.error, description: msg, variant: 'destructive' });
     } finally {
       setLoading(false);
     }
@@ -110,10 +113,10 @@ export const AddFeeModal: React.FC<Props> = ({ open, onOpenChange, caseId, onSuc
           <Button
             variant="ghost"
             size="icon"
-            className="absolute right-3 top-3 z-10 h-9 w-9 rounded-full bg-white/15 text-white hover:bg-white/25"
+            className="absolute end-3 top-3 z-10 h-9 w-9 rounded-full bg-white/15 text-white hover:bg-white/25"
             onClick={() => onOpenChange(false)}
             disabled={loading}
-            aria-label="Fermer"
+            aria-label={t.common.close}
           >
             <X className="h-4 w-4" />
           </Button>
@@ -122,9 +125,9 @@ export const AddFeeModal: React.FC<Props> = ({ open, onOpenChange, caseId, onSuc
               <Coins className="h-5 w-5 text-white" />
             </div>
             <div>
-              <DialogTitle className="text-xl font-bold tracking-tight text-white">Ajouter un honoraire</DialogTitle>
+              <DialogTitle className="text-xl font-bold tracking-tight text-white">{m.title}</DialogTitle>
               <DialogDescription className="text-sm text-white/90 mt-1">
-                Définir le type et le montant prévu
+                {m.description}
               </DialogDescription>
             </div>
           </div>
@@ -133,7 +136,7 @@ export const AddFeeModal: React.FC<Props> = ({ open, onOpenChange, caseId, onSuc
         <form onSubmit={handleSubmit} className="flex max-h-[calc(85vh-100px)] flex-col overflow-y-auto px-6 py-5">
           <div className="mb-4">
             <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-zinc-400">
-              Type
+              {m.type}
             </p>
             <div className="mt-2 h-px w-full bg-slate-200 dark:bg-zinc-800" />
           </div>
@@ -144,32 +147,32 @@ export const AddFeeModal: React.FC<Props> = ({ open, onOpenChange, caseId, onSuc
             className="mb-6 grid w-full grid-cols-3 gap-2"
           >
             <ToggleGroupItem value="FIXED" className="h-10 text-xs">
-              Forfait
+              {t.finance.feeTypes.FIXED}
             </ToggleGroupItem>
             <ToggleGroupItem value="HOURLY" className="h-10 text-xs">
-              Horaire
+              {t.finance.feeTypes.HOURLY}
             </ToggleGroupItem>
             <ToggleGroupItem value="SUCCESS_FEE" className="h-10 text-xs">
-              Résultat
+              {t.finance.feeTypes.SUCCESS_FEE}
             </ToggleGroupItem>
           </ToggleGroup>
 
           <div className="mb-4">
             <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-zinc-400">
-              Avocat
+              {m.lawyer}
             </p>
             <div className="mt-2 h-px w-full bg-slate-200 dark:bg-zinc-800" />
           </div>
           <div className="mb-4">
-            <Label className="sr-only">Avocat</Label>
+            <Label className="sr-only">{m.lawyer}</Label>
             <Select value={lawyerId || undefined} onValueChange={setLawyerId}>
               <SelectTrigger className="h-10">
-                <SelectValue placeholder="Avocat (optionnel)" />
+                <SelectValue placeholder={m.lawyerOptional} />
               </SelectTrigger>
               <SelectContent>
-                {members.map((m) => (
-                  <SelectItem key={m.id} value={String(m.id)}>
-                    {m.first_name} {m.last_name}
+                {members.map((mem) => (
+                  <SelectItem key={mem.id} value={String(mem.id)}>
+                    {mem.first_name} {mem.last_name}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -178,32 +181,32 @@ export const AddFeeModal: React.FC<Props> = ({ open, onOpenChange, caseId, onSuc
 
           {feeType === 'HOURLY' && hourlyRate != null && (
             <p className="mb-3 text-[13px] text-slate-600 dark:text-slate-400">
-              Taux horaire: {hourlyRate} MAD/h
+              {tf(m.hourlyRate, { rate: hourlyRate })}
             </p>
           )}
 
           <div className="mb-4">
             <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-zinc-400">
-              Montant prévu
+              {m.plannedAmount}
             </p>
             <div className="mt-2 h-px w-full bg-slate-200 dark:bg-zinc-800" />
           </div>
           <div className="relative mb-4">
             <Input
-              className="h-10 pr-14"
+              className="h-10 pe-14"
               value={planned}
               onChange={(e) => setPlanned(e.target.value)}
               inputMode="decimal"
-              placeholder="0,00"
+              placeholder={m.amountPlaceholder}
             />
-            <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[13px] text-slate-500">
+            <span className="pointer-events-none absolute end-3 top-1/2 -translate-y-1/2 text-[13px] text-slate-500">
               MAD
             </span>
           </div>
 
           <div className="mb-4">
             <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-zinc-400">
-              Notes
+              {m.notes}
             </p>
             <div className="mt-2 h-px w-full bg-slate-200 dark:bg-zinc-800" />
           </div>
@@ -211,15 +214,15 @@ export const AddFeeModal: React.FC<Props> = ({ open, onOpenChange, caseId, onSuc
             className="min-h-[80px] resize-none"
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
-            placeholder="Optionnel"
+            placeholder={t.common.optional}
           />
 
           <DialogFooter className="mt-6 gap-2 sm:gap-0">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
-              Annuler
+              {t.common.cancel}
             </Button>
             <Button type="submit" className="bg-jure-600 hover:bg-jure-700" disabled={loading}>
-              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Ajouter'}
+              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : t.common.add}
             </Button>
           </DialogFooter>
         </form>

@@ -125,6 +125,9 @@ INSTALLED_APPS = [
     "finance",
     "notifications",
     "juria",
+    "legal_deadlines",
+    "conflict_checks",
+    "research_notes",
 ]
 
 SITE_ID = 1

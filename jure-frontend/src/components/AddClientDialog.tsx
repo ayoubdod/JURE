@@ -8,7 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { User, Building2, Mail, Phone, MapPin, FileText, Users, Briefcase, Heart } from 'lucide-react';
 import { apiCreateClient } from '@/services/client/api';
-import { devError } from '@/utils/devLog'; 
+import { devError } from '@/utils/devLog';
+import { useAppTranslation } from '@/i18n';
 
 interface AddClientDialogProps {
   open: boolean;
@@ -16,6 +17,8 @@ interface AddClientDialogProps {
 }
 
 const AddClientDialog = ({ open, onOpenChange }: AddClientDialogProps) => {
+  const { t, tf } = useAppTranslation();
+  const m = t.clients.modal;
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -44,8 +47,10 @@ const AddClientDialog = ({ open, onOpenChange }: AddClientDialogProps) => {
       await apiCreateClient(payload);
 
       toast({
-        title: "✨ Client Added Successfully",
-        description: `${formData.firstName} ${formData.lastName} has been added to your client list.`,
+        title: m.toastSuccessTitle,
+        description: tf(m.toastSuccessDescription, {
+          name: `${formData.firstName} ${formData.lastName}`.trim(),
+        }),
       });
       
       setFormData({
@@ -61,21 +66,12 @@ const AddClientDialog = ({ open, onOpenChange }: AddClientDialogProps) => {
     } catch (error) {
       devError('Error adding client:', error);
       toast({
-        title: "❌ Error Adding Client",
-        description: "Failed to add client. Please try again.",
+        title: m.toastErrorTitle,
+        description: m.toastErrorDescription,
         variant: "destructive",
       });
     } finally {
       setIsSubmitting(false);
-    }
-  };
-
-  const getClientTypeIcon = (type: string) => {
-    switch (type) {
-      case 'individual': return <User className="w-4 h-4" />;
-      case 'business': return <Briefcase className="w-4 h-4" />;
-      case 'nonprofit': return <Heart className="w-4 h-4" />;
-      default: return null;
     }
   };
 
@@ -89,26 +85,25 @@ const AddClientDialog = ({ open, onOpenChange }: AddClientDialogProps) => {
             </div>
             <div>
               <DialogTitle className="text-xl font-semibold text-gray-900">
-                Add New Client
+                {m.createTitle}
               </DialogTitle>
               <DialogDescription className="text-gray-600 mt-1">
-                Fill in the client information below to add them to your practice.
+                {m.createDescription}
               </DialogDescription>
             </div>
           </div>
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="space-y-6 pt-4">
-          {/* Personal Information Section */}
           <div className="space-y-4">
             <div className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-3">
-                              <User className="w-4 h-4 text-jure-600" />
-              Personal Information
+              <User className="w-4 h-4 text-jure-600" />
+              {m.personalInfo}
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="firstName" className="text-sm font-medium flex items-center gap-1">
-                  First Name <span className="text-red-500">*</span>
+                  {m.firstName} <span className="text-red-500">*</span>
                 </Label>
                 <Input
                   id="firstName"
@@ -116,12 +111,12 @@ const AddClientDialog = ({ open, onOpenChange }: AddClientDialogProps) => {
                   onChange={(e) => setFormData({...formData, firstName: e.target.value})}
                   required
                   className="transition-all duration-200 focus:ring-2 focus:ring-jure-600/20 focus:border-jure-600"
-                  placeholder="Enter first name"
+                  placeholder={m.firstNamePlaceholder}
                 />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="lastName" className="text-sm font-medium flex items-center gap-1">
-                  Last Name <span className="text-red-500">*</span>
+                  {m.lastName} <span className="text-red-500">*</span>
                 </Label>
                 <Input
                   id="lastName"
@@ -129,22 +124,21 @@ const AddClientDialog = ({ open, onOpenChange }: AddClientDialogProps) => {
                   onChange={(e) => setFormData({...formData, lastName: e.target.value})}
                   required
                   className="transition-all duration-200 focus:ring-2 focus:ring-jure-600/20 focus:border-jure-600"
-                  placeholder="Enter last name"
+                  placeholder={m.lastNamePlaceholder}
                 />
               </div>
             </div>
           </div>
 
-          {/* Contact Information Section */}
           <div className="space-y-4">
             <div className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-3">
               <Mail className="w-4 h-4 text-jure-600" />
-              Contact Information
+              {m.contactInfo}
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="email" className="text-sm font-medium flex items-center gap-1">
-                  Email <span className="text-red-500">*</span>
+                  {m.email} <span className="text-red-500">*</span>
                 </Label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -155,12 +149,12 @@ const AddClientDialog = ({ open, onOpenChange }: AddClientDialogProps) => {
                     onChange={(e) => setFormData({...formData, email: e.target.value})}
                     required
                     className="pl-10 transition-all duration-200 focus:ring-2 focus:ring-jure-600/20 focus:border-jure-600"
-                    placeholder="client@example.com"
+                    placeholder={m.emailPlaceholder}
                   />
                 </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="phone" className="text-sm font-medium">Phone</Label>
+                <Label htmlFor="phone" className="text-sm font-medium">{m.phone}</Label>
                 <div className="relative">
                   <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                   <Input
@@ -168,43 +162,42 @@ const AddClientDialog = ({ open, onOpenChange }: AddClientDialogProps) => {
                     value={formData.phone}
                     onChange={(e) => setFormData({...formData, phone: e.target.value})}
                     className="pl-10 transition-all duration-200 focus:ring-2 focus:ring-jure-600/20 focus:border-jure-600"
-                    placeholder="+1 (555) 123-4567"
+                    placeholder={m.phonePlaceholder}
                   />
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Business Information Section */}
           <div className="space-y-4">
             <div className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-3">
               <Building2 className="w-4 h-4 text-jure-600" />
-              other Information
+              {m.otherInfo}
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="clientType" className="text-sm font-medium">Client Type</Label>
+                <Label htmlFor="clientType" className="text-sm font-medium">{m.clientType}</Label>
                 <Select value={formData.clientType} onValueChange={(value) => setFormData({...formData, clientType: value})}>
                   <SelectTrigger className="transition-all duration-200 focus:ring-2 focus:ring-jure-600/20 focus:border-jure-600">
-                    <SelectValue placeholder="Select client type" />
+                    <SelectValue placeholder={m.selectClientType} />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="individual" className="flex items-center gap-2">
                       <div className="flex items-center gap-2">
                         <User className="w-4 h-4" />
-                        Individual
+                        {m.individual}
                       </div>
                     </SelectItem>
                     <SelectItem value="business" className="flex items-center gap-2">
                       <div className="flex items-center gap-2">
                         <Briefcase className="w-4 h-4" />
-                        Business
+                        {m.business}
                       </div>
                     </SelectItem>
                     <SelectItem value="nonprofit" className="flex items-center gap-2">
                       <div className="flex items-center gap-2">
                         <Heart className="w-4 h-4" />
-                        Non-profit
+                        {m.nonprofit}
                       </div>
                     </SelectItem>
                   </SelectContent>
@@ -213,15 +206,14 @@ const AddClientDialog = ({ open, onOpenChange }: AddClientDialogProps) => {
             </div>
           </div>
 
-          {/* Additional Information Section */}
           <div className="space-y-4">
             <div className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-3">
               <MapPin className="w-4 h-4 text-jure-600" />
-              Additional Information
+              {m.additionalInfo}
             </div>
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="address" className="text-sm font-medium">Address</Label>
+                <Label htmlFor="address" className="text-sm font-medium">{m.address}</Label>
                 <div className="relative">
                   <MapPin className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
                   <Textarea
@@ -230,12 +222,12 @@ const AddClientDialog = ({ open, onOpenChange }: AddClientDialogProps) => {
                     onChange={(e) => setFormData({...formData, address: e.target.value})}
                     rows={2}
                     className="pl-10 transition-all duration-200 focus:ring-2 focus:ring-jure-600/20 focus:border-jure-600 resize-none"
-                    placeholder="Enter full address"
+                    placeholder={m.addressPlaceholder}
                   />
                 </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="notes" className="text-sm font-medium">Notes</Label>
+                <Label htmlFor="notes" className="text-sm font-medium">{m.notes}</Label>
                 <div className="relative">
                   <FileText className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
                   <Textarea
@@ -244,7 +236,7 @@ const AddClientDialog = ({ open, onOpenChange }: AddClientDialogProps) => {
                     onChange={(e) => setFormData({...formData, notes: e.target.value})}
                     rows={3}
                     className="pl-10 transition-all duration-200 focus:ring-2 focus:ring-jure-600/20 focus:border-jure-600 resize-none"
-                    placeholder="Add any additional notes about the client..."
+                    placeholder={m.notesPlaceholder}
                   />
                 </div>
               </div>
@@ -259,7 +251,7 @@ const AddClientDialog = ({ open, onOpenChange }: AddClientDialogProps) => {
               className="transition-all duration-200 hover:bg-gray-50"
               disabled={isSubmitting}
             >
-              Cancel
+              {t.common.cancel}
             </Button>
             <Button 
               type="submit" 
@@ -268,11 +260,11 @@ const AddClientDialog = ({ open, onOpenChange }: AddClientDialogProps) => {
             >
               {isSubmitting ? (
                 <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2" />
-                  Adding Client...
+                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent me-2" />
+                  {m.addingClient}
                 </>
               ) : (
-                'Add Client'
+                m.addClient
               )}
             </Button>
           </DialogFooter>

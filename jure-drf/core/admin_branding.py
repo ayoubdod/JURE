@@ -130,6 +130,13 @@ def get_unfold_settings(*, frontend_url: str = "/") -> dict:
                     "collapsible": True,
                     "items": [
                         {
+                            "title": _("Announcements"),
+                            "icon": "campaign",
+                            "link": reverse_lazy(
+                                "admin:dashboard_announcement_changelist"
+                            ),
+                        },
+                        {
                             "title": _("Cases"),
                             "icon": "folder_open",
                             "link": reverse_lazy("admin:cases_case_changelist"),

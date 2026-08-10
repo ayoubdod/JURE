@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
@@ -19,63 +19,24 @@ import ServerSelect from '@/components/common/ServerSelect';
 import { FileText, Loader2, MessageCircle, Calendar, Scale } from 'lucide-react';
 import { useCaseForm } from '@/hooks/useCaseForm';
 import { useToast } from '@/hooks/use-toast';
+import { useAppTranslation } from '@/i18n';
 
-const CONSULTATION_TYPE_OPTIONS = [
-  { label: 'Initial', value: 'INITIAL' },
-  { label: 'Follow-up', value: 'FOLLOW_UP' },
-  { label: 'Urgent', value: 'URGENT' },
-];
-
-const DURATION_OPTIONS = [
-  { label: '30 minutes', value: '30min' },
-  { label: '1 hour', value: '1h' },
-  { label: '2 hours', value: '2h' },
-  { label: 'Custom', value: 'CUSTOM' },
-];
-
-const FORMAT_OPTIONS = [
-  { label: 'In Person', value: 'IN_PERSON' },
-  { label: 'Phone', value: 'PHONE' },
-  { label: 'Video', value: 'VIDEO' },
-];
-
-const LEGAL_DOMAIN_OPTIONS = [
-  { label: 'Family', value: 'FAMILY' },
-  { label: 'Criminal', value: 'CRIMINAL' },
-  { label: 'Corporate', value: 'CORPORATE' },
-  { label: 'Labor', value: 'LABOR' },
-  { label: 'Real Estate', value: 'REAL_ESTATE' },
-  { label: 'Other', value: 'OTHER' },
-];
-
-const STATUS_OPTIONS = [
-  { label: 'Scheduled', value: 'SCHEDULED' },
-  { label: 'Completed', value: 'COMPLETED' },
-  { label: 'No Show', value: 'NO_SHOW' },
-  { label: 'Converted to Case', value: 'CONVERTED_TO_CASE' },
-];
-
-const schema = yup.object({
-  reference: yup.string().optional().default(''),
-  title: yup.string().required('Title is required'),
-  consultation_type: yup.string().oneOf(['INITIAL', 'FOLLOW_UP', 'URGENT']).required(),
-  client: yup.number().nullable().optional().transform((v, orig) => (orig === '' || orig == null || orig === undefined ? null : Number(orig))),
-  assigned_to: yup.number().nullable().optional().transform((v, orig) => (orig === '' || orig == null || orig === undefined ? null : Number(orig))),
-  consultation_date: yup.string().required('Consultation date and time is required'),
-  duration: yup.string().oneOf(['30min', '1h', '2h', 'CUSTOM']).required(),
-  format: yup.string().oneOf(['IN_PERSON', 'PHONE', 'VIDEO']).required(),
-  legal_domain: yup.string().oneOf(['FAMILY', 'CRIMINAL', 'CORPORATE', 'LABOR', 'REAL_ESTATE', 'OTHER']).required(),
-  legal_question: yup.string().required('Legal question / subject is required'),
-  status: yup.string().oneOf(['SCHEDULED', 'COMPLETED', 'NO_SHOW', 'CONVERTED_TO_CASE']).required(),
-  advice_summary: yup.string().optional(),
-  follow_up_required: yup.boolean().optional(),
-  follow_up_date: yup.string().nullable().optional(),
-});
-
-export type ConsultationFormValues = yup.InferType<typeof schema> & {
-  case_type: 'CONSULTATION';
-  assigned_to?: number | null;
+export type ConsultationFormValues = {
+  reference: string;
+  title: string;
+  consultation_type: 'INITIAL' | 'FOLLOW_UP' | 'URGENT';
   client?: number | null;
+  assigned_to?: number | null;
+  consultation_date: string;
+  duration: '30min' | '1h' | '2h' | 'CUSTOM';
+  format: 'IN_PERSON' | 'PHONE' | 'VIDEO';
+  legal_domain: 'FAMILY' | 'CRIMINAL' | 'CORPORATE' | 'LABOR' | 'REAL_ESTATE' | 'OTHER';
+  legal_question: string;
+  status: 'SCHEDULED' | 'COMPLETED' | 'NO_SHOW' | 'CONVERTED_TO_CASE';
+  advice_summary?: string;
+  follow_up_required?: boolean;
+  follow_up_date?: string | null;
+  case_type: 'CONSULTATION';
 };
 
 export interface ConsultationFormProps {
@@ -107,6 +68,97 @@ const ConsultationForm: React.FC<ConsultationFormProps> = ({
   onSubmitSuccess,
   onBack,
 }) => {
+  const { t } = useAppTranslation();
+  const modal = t.cases.modal;
+
+  const consultationTypeOptions = useMemo(
+    () =>
+      (['INITIAL', 'FOLLOW_UP', 'URGENT'] as const).map((value) => ({
+        value,
+        label: modal.options.consultationType[value],
+      })),
+    [modal.options.consultationType]
+  );
+
+  const durationOptions = useMemo(
+    () =>
+      [
+        { value: '30min' as const, label: modal.options.duration.min30 },
+        { value: '1h' as const, label: modal.options.duration.h1 },
+        { value: '2h' as const, label: modal.options.duration.h2 },
+        { value: 'CUSTOM' as const, label: modal.options.duration.CUSTOM },
+      ],
+    [modal.options.duration]
+  );
+
+  const formatOptions = useMemo(
+    () =>
+      (['IN_PERSON', 'PHONE', 'VIDEO'] as const).map((value) => ({
+        value,
+        label: modal.options.format[value],
+      })),
+    [modal.options.format]
+  );
+
+  const legalDomainOptions = useMemo(
+    () =>
+      (['FAMILY', 'CRIMINAL', 'CORPORATE', 'LABOR', 'REAL_ESTATE', 'OTHER'] as const).map(
+        (value) => ({
+          value,
+          label: modal.options.legalDomain[value],
+        })
+      ),
+    [modal.options.legalDomain]
+  );
+
+  const statusOptions = useMemo(
+    () =>
+      (['SCHEDULED', 'COMPLETED', 'NO_SHOW', 'CONVERTED_TO_CASE'] as const).map((value) => ({
+        value,
+        label: modal.options.consultationStatus[value],
+      })),
+    [modal.options.consultationStatus]
+  );
+
+  const schema = useMemo(
+    () =>
+      yup.object({
+        reference: yup.string().optional().default(''),
+        title: yup.string().required(modal.validation.titleRequired),
+        consultation_type: yup.string().oneOf(['INITIAL', 'FOLLOW_UP', 'URGENT']).required(),
+        client: yup
+          .number()
+          .nullable()
+          .optional()
+          .transform((v, orig) =>
+            orig === '' || orig == null || orig === undefined ? null : Number(orig)
+          ),
+        assigned_to: yup
+          .number()
+          .nullable()
+          .optional()
+          .transform((v, orig) =>
+            orig === '' || orig == null || orig === undefined ? null : Number(orig)
+          ),
+        consultation_date: yup.string().required(modal.validation.consultationDateRequired),
+        duration: yup.string().oneOf(['30min', '1h', '2h', 'CUSTOM']).required(),
+        format: yup.string().oneOf(['IN_PERSON', 'PHONE', 'VIDEO']).required(),
+        legal_domain: yup
+          .string()
+          .oneOf(['FAMILY', 'CRIMINAL', 'CORPORATE', 'LABOR', 'REAL_ESTATE', 'OTHER'])
+          .required(),
+        legal_question: yup.string().required(modal.validation.legalQuestionRequired),
+        status: yup
+          .string()
+          .oneOf(['SCHEDULED', 'COMPLETED', 'NO_SHOW', 'CONVERTED_TO_CASE'])
+          .required(),
+        advice_summary: yup.string().optional(),
+        follow_up_required: yup.boolean().optional(),
+        follow_up_date: yup.string().nullable().optional(),
+      }),
+    [modal.validation]
+  );
+
   const form = useForm<ConsultationFormValues>({
     resolver: yupResolver(schema) as never,
     defaultValues: {
@@ -138,36 +190,42 @@ const ConsultationForm: React.FC<ConsultationFormProps> = ({
 
   const handleSubmit = form.handleSubmit(
     (data) => {
-    const consultationDateIso =
-      data.consultation_date && data.consultation_date.includes('T')
-        ? new Date(data.consultation_date).toISOString()
-        : data.consultation_date;
-    const payload: API.ConsultationFormData = {
-      case_type: 'CONSULTATION',
-      reference: data.reference,
-      title: data.title,
-      consultation_type: data.consultation_type as 'INITIAL' | 'FOLLOW_UP' | 'URGENT',
-      client: data.client ?? null,
-      assigned_to: data.assigned_to ?? null,
-      consultation_date: consultationDateIso,
-      duration: data.duration as '30min' | '1h' | '2h' | 'CUSTOM',
-      format: data.format as 'IN_PERSON' | 'PHONE' | 'VIDEO',
-      legal_domain: data.legal_domain as 'FAMILY' | 'CRIMINAL' | 'CORPORATE' | 'LABOR' | 'REAL_ESTATE' | 'OTHER',
-      legal_question: data.legal_question,
-      status: data.status as 'SCHEDULED' | 'COMPLETED' | 'NO_SHOW' | 'CONVERTED_TO_CASE',
-      advice_summary: data.advice_summary || undefined,
-      follow_up_required: data.follow_up_required ?? false,
-      follow_up_date: data.follow_up_required ? (data.follow_up_date || null) : null,
-    };
-    if (mode === 'edit' && caseId) {
-      handleUpdate({ ...payload, id: caseId });
-    } else {
-      handleCreate(payload);
-    }
-  },
+      const consultationDateIso =
+        data.consultation_date && data.consultation_date.includes('T')
+          ? new Date(data.consultation_date).toISOString()
+          : data.consultation_date;
+      const payload: API.ConsultationFormData = {
+        case_type: 'CONSULTATION',
+        reference: data.reference,
+        title: data.title,
+        consultation_type: data.consultation_type,
+        client: data.client ?? null,
+        assigned_to: data.assigned_to ?? null,
+        consultation_date: consultationDateIso,
+        duration: data.duration,
+        format: data.format,
+        legal_domain: data.legal_domain,
+        legal_question: data.legal_question,
+        status: data.status,
+        advice_summary: data.advice_summary || undefined,
+        follow_up_required: data.follow_up_required ?? false,
+        follow_up_date: data.follow_up_required ? data.follow_up_date || null : null,
+      };
+      if (mode === 'edit' && caseId) {
+        handleUpdate({ ...payload, id: caseId });
+      } else {
+        handleCreate(payload);
+      }
+    },
     (errors) => {
-      const msg = Object.values(errors).map((e) => e?.message).filter(Boolean)[0];
-      toast({ title: 'Please fix the form', description: msg || 'Some required fields are missing.', variant: 'destructive' });
+      const msg = Object.values(errors)
+        .map((e) => e?.message)
+        .filter(Boolean)[0];
+      toast({
+        title: modal.toasts.fixFormTitle,
+        description: msg || modal.toasts.fixFormDescription,
+        variant: 'destructive',
+      });
     }
   );
 
@@ -178,15 +236,16 @@ const ConsultationForm: React.FC<ConsultationFormProps> = ({
           {form.formState.errors.case_specific_data.message}
         </div>
       )}
-      <FormSection title="Basic Info" icon={FileText}>
+      <FormSection title={modal.sections.basicInfo} icon={FileText}>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Reference <span className="text-slate-400 text-xs">(optional, auto-generated if empty)</span>
+              {modal.fields.reference}{' '}
+              <span className="text-slate-400 text-xs">{modal.hints.referenceOptionalAuto}</span>
             </label>
             <Input
               {...form.register('reference')}
-              placeholder="Auto-generated or enter reference"
+              placeholder={modal.placeholders.referenceAuto}
               className="h-10"
             />
             {form.formState.errors.reference && (
@@ -195,26 +254,32 @@ const ConsultationForm: React.FC<ConsultationFormProps> = ({
           </div>
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Title <span className="text-red-500">*</span>
+              {modal.fields.title} <span className="text-red-500">*</span>
             </label>
-            <Input {...form.register('title')} placeholder="Consultation title" className="h-10" />
+            <Input
+              {...form.register('title')}
+              placeholder={modal.placeholders.consultationTitle}
+              className="h-10"
+            />
             {form.formState.errors.title && (
               <p className="text-red-500 text-xs">{form.formState.errors.title.message}</p>
             )}
           </div>
           <div className="sm:col-span-2 space-y-2">
             <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Consultation Type <span className="text-red-500">*</span>
+              {modal.fields.consultationType} <span className="text-red-500">*</span>
             </label>
             <Select
               value={form.watch('consultation_type')}
-              onValueChange={(v) => form.setValue('consultation_type', v)}
+              onValueChange={(v) =>
+                form.setValue('consultation_type', v as ConsultationFormValues['consultation_type'])
+              }
             >
               <SelectTrigger className="h-10">
-                <SelectValue placeholder="Select type" />
+                <SelectValue placeholder={modal.placeholders.selectType} />
               </SelectTrigger>
               <SelectContent>
-                {CONSULTATION_TYPE_OPTIONS.map((opt) => (
+                {consultationTypeOptions.map((opt) => (
                   <SelectItem key={opt.value} value={opt.value}>
                     {opt.label}
                   </SelectItem>
@@ -230,26 +295,28 @@ const ConsultationForm: React.FC<ConsultationFormProps> = ({
         </div>
       </FormSection>
 
-      <FormSection title="Client & Scheduling" icon={MessageCircle}>
+      <FormSection title={modal.sections.clientScheduling} icon={MessageCircle}>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Related Client <span className="text-slate-400 text-xs">(optional)</span>
+              {modal.fields.relatedClient}{' '}
+              <span className="text-slate-400 text-xs">({t.common.optional})</span>
             </label>
             <ServerSelect
               link="/clients/clients/"
               value={form.watch('client')}
               onChange={(v) => form.setValue('client', v ?? null)}
               labelKey={(c: { first_name?: string; last_name?: string; email?: string }) =>
-                `${c.first_name || ''} ${c.last_name || ''}`.trim() || c.email || 'Unnamed'
+                `${c.first_name || ''} ${c.last_name || ''}`.trim() || c.email || t.cases.unnamed
               }
               cleanable
-              placeholder="Select a client"
+              placeholder={modal.placeholders.client}
             />
           </div>
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Assigned Attorney <span className="text-slate-400 text-xs">(optional)</span>
+              {modal.fields.assignedAttorney}{' '}
+              <span className="text-slate-400 text-xs">({t.common.optional})</span>
             </label>
             <ServerSelect
               link="/cabinets/members/select_list"
@@ -261,7 +328,7 @@ const ConsultationForm: React.FC<ConsultationFormProps> = ({
           </div>
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Consultation Date & Time <span className="text-red-500">*</span>
+              {modal.fields.consultationDateTime} <span className="text-red-500">*</span>
             </label>
             <Input
               type="datetime-local"
@@ -276,14 +343,17 @@ const ConsultationForm: React.FC<ConsultationFormProps> = ({
           </div>
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Duration <span className="text-red-500">*</span>
+              {modal.fields.duration} <span className="text-red-500">*</span>
             </label>
-            <Select value={form.watch('duration')} onValueChange={(v) => form.setValue('duration', v)}>
+            <Select
+              value={form.watch('duration')}
+              onValueChange={(v) => form.setValue('duration', v as ConsultationFormValues['duration'])}
+            >
               <SelectTrigger className="h-10">
-                <SelectValue placeholder="Select duration" />
+                <SelectValue placeholder={modal.placeholders.selectDuration} />
               </SelectTrigger>
               <SelectContent>
-                {DURATION_OPTIONS.map((opt) => (
+                {durationOptions.map((opt) => (
                   <SelectItem key={opt.value} value={opt.value}>
                     {opt.label}
                   </SelectItem>
@@ -293,14 +363,17 @@ const ConsultationForm: React.FC<ConsultationFormProps> = ({
           </div>
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Format <span className="text-red-500">*</span>
+              {modal.fields.format} <span className="text-red-500">*</span>
             </label>
-            <Select value={form.watch('format')} onValueChange={(v) => form.setValue('format', v)}>
+            <Select
+              value={form.watch('format')}
+              onValueChange={(v) => form.setValue('format', v as ConsultationFormValues['format'])}
+            >
               <SelectTrigger className="h-10">
-                <SelectValue placeholder="Select format" />
+                <SelectValue placeholder={modal.placeholders.selectFormat} />
               </SelectTrigger>
               <SelectContent>
-                {FORMAT_OPTIONS.map((opt) => (
+                {formatOptions.map((opt) => (
                   <SelectItem key={opt.value} value={opt.value}>
                     {opt.label}
                   </SelectItem>
@@ -314,21 +387,23 @@ const ConsultationForm: React.FC<ConsultationFormProps> = ({
         </div>
       </FormSection>
 
-      <FormSection title="Legal Context" icon={Scale}>
+      <FormSection title={modal.sections.legalContext} icon={Scale}>
         <div className="space-y-4">
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Legal Domain <span className="text-red-500">*</span>
+              {modal.fields.legalDomain} <span className="text-red-500">*</span>
             </label>
             <Select
               value={form.watch('legal_domain')}
-              onValueChange={(v) => form.setValue('legal_domain', v)}
+              onValueChange={(v) =>
+                form.setValue('legal_domain', v as ConsultationFormValues['legal_domain'])
+              }
             >
               <SelectTrigger className="h-10">
-                <SelectValue placeholder="Select domain" />
+                <SelectValue placeholder={modal.placeholders.selectDomain} />
               </SelectTrigger>
               <SelectContent>
-                {LEGAL_DOMAIN_OPTIONS.map((opt) => (
+                {legalDomainOptions.map((opt) => (
                   <SelectItem key={opt.value} value={opt.value}>
                     {opt.label}
                   </SelectItem>
@@ -338,11 +413,11 @@ const ConsultationForm: React.FC<ConsultationFormProps> = ({
           </div>
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Legal Question / Subject <span className="text-red-500">*</span>
+              {modal.fields.legalQuestion} <span className="text-red-500">*</span>
             </label>
             <Textarea
               {...form.register('legal_question')}
-              placeholder="Describe the legal question or subject"
+              placeholder={modal.placeholders.legalQuestion}
               className="min-h-[80px] resize-none"
             />
             {form.formState.errors.legal_question && (
@@ -352,16 +427,21 @@ const ConsultationForm: React.FC<ConsultationFormProps> = ({
         </div>
       </FormSection>
 
-      <FormSection title="Outcome" icon={Calendar}>
+      <FormSection title={modal.sections.outcome} icon={Calendar}>
         <div className="space-y-4">
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Status</label>
-            <Select value={form.watch('status')} onValueChange={(v) => form.setValue('status', v)}>
+            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              {modal.fields.status}
+            </label>
+            <Select
+              value={form.watch('status')}
+              onValueChange={(v) => form.setValue('status', v as ConsultationFormValues['status'])}
+            >
               <SelectTrigger className="h-10">
-                <SelectValue placeholder="Select status" />
+                <SelectValue placeholder={modal.placeholders.status} />
               </SelectTrigger>
               <SelectContent>
-                {STATUS_OPTIONS.map((opt) => (
+                {statusOptions.map((opt) => (
                   <SelectItem key={opt.value} value={opt.value}>
                     {opt.label}
                   </SelectItem>
@@ -371,11 +451,11 @@ const ConsultationForm: React.FC<ConsultationFormProps> = ({
           </div>
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Advice Summary / Notes
+              {modal.fields.adviceSummary}
             </label>
             <Textarea
               {...form.register('advice_summary')}
-              placeholder="Summary of advice given"
+              placeholder={modal.placeholders.adviceSummary}
               className="min-h-[60px] resize-none"
             />
           </div>
@@ -386,19 +466,15 @@ const ConsultationForm: React.FC<ConsultationFormProps> = ({
               onCheckedChange={(c) => form.setValue('follow_up_required', !!c)}
             />
             <label htmlFor="follow_up_required" className="text-sm font-medium cursor-pointer">
-              Follow-up Required
+              {modal.fields.followUpRequired}
             </label>
           </div>
           {followUpRequired && (
             <div className="space-y-2">
               <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                Follow-up Date
+                {modal.fields.followUpDate}
               </label>
-              <Input
-                type="date"
-                {...form.register('follow_up_date')}
-                className="h-10"
-              />
+              <Input type="date" {...form.register('follow_up_date')} className="h-10" />
             </div>
           )}
         </div>
@@ -407,18 +483,20 @@ const ConsultationForm: React.FC<ConsultationFormProps> = ({
       <div className="flex items-center justify-between pt-4 border-t border-gray-100 dark:border-gray-800 gap-3">
         {onBack && (
           <Button type="button" variant="outline" onClick={onBack} disabled={isLoading}>
-            Back
+            {modal.back}
           </Button>
         )}
         {!onBack && <div />}
         <Button type="submit" disabled={isLoading} className="bg-purple-600 hover:bg-purple-700">
           {isLoading ? (
             <>
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              Submitting...
+              <Loader2 className="w-4 h-4 me-2 animate-spin" />
+              {modal.submitting}
             </>
+          ) : mode === 'edit' ? (
+            modal.updateCase
           ) : (
-            mode === 'edit' ? 'Update Case' : 'Create Case'
+            modal.createCase
           )}
         </Button>
       </div>

@@ -35,6 +35,13 @@ import {
   getSharedIds,
   SharedMessageCard,
 } from './SharedMessageCard';
+import {
+  CallHistoryMessage,
+  callHistoryTitle,
+  callMetaFromMessage,
+  isCallMessageType,
+} from '@/components/conversations/call/CallHistoryMessage';
+import { useAppTranslation } from '@/i18n';
 
 interface MessageItemProps {
   conversation: API.Conversation;
@@ -46,6 +53,7 @@ interface MessageItemProps {
   onOpenSharedCase?: (caseId: number) => void;
   onOpenSharedTask?: (taskId: number) => void;
   onOpenSharedAppointment?: (appointmentId: number) => void;
+  onRecallCall?: (kind: 'voice' | 'video') => void;
 }
 
 const MessageItem: React.FC<MessageItemProps> = ({
@@ -58,8 +66,11 @@ const MessageItem: React.FC<MessageItemProps> = ({
   onOpenSharedCase,
   onOpenSharedTask,
   onOpenSharedAppointment,
+  onRecallCall,
 }) => {
   const currentUser = useUserStore((s) => s.user);
+  const { t } = useAppTranslation();
+  const callCopy = t.conversations.call;
 
   // Helper: get person object from membership (backend may use user or cabinet_member)
   const getMemberPerson = (m: API.ConversationMembership) =>
@@ -119,21 +130,45 @@ const MessageItem: React.FC<MessageItemProps> = ({
   const body = msg.body ?? (msg as any).content ?? (msg as any).text ?? (msg as any).message ?? '';
   const hasAttachments = (msg.attachments ?? []).length > 0;
   const messageType = getMessageType(msg);
+  const isCallHistory = isCallMessageType(messageType);
   const isShared =
     messageType === 'SHARED_CASE' || messageType === 'SHARED_TASK' || messageType === 'SHARED_APPOINTMENT';
   const sharedIds = isShared ? getSharedIds(msg) : null;
   const coercedShared = isShared && sharedIds ? coerceMessageSharedItem(msg, messageType, sharedIds) : null;
-  const showPlaceholder = isDeleted || (!isShared && !body && !hasAttachments);
+  const showPlaceholder = isDeleted || (!isShared && !isCallHistory && !body && !hasAttachments);
   const editedAt = (msg as any).edited_at;
   const isPinned =
     (msg as { is_pinned?: boolean }).is_pinned === true ||
     (msg as { isPinned?: boolean }).isPinned === true;
   const forwardedDetail = (msg as any).forwarded_from_detail as API.ForwardedFromDetail | undefined;
 
-  const canEdit = isOwn && !isDeleted && !isShared && (body || hasAttachments);
-  const canDelete = isOwn;
-  const canForward = !isDeleted;
-  const canPin = true;
+  const canEdit = isOwn && !isDeleted && !isShared && !isCallHistory && (body || hasAttachments);
+  const canDelete = isOwn && !isCallHistory;
+  const canForward = !isDeleted && !isCallHistory;
+  const canPin = !isCallHistory;
+
+  if (isCallHistory && !isDeleted) {
+    const { kind, outcome } = callMetaFromMessage(msg);
+    const missed = outcome === 'missed' || outcome === 'declined';
+    return (
+      <CallHistoryMessage
+        msg={msg}
+        title={callHistoryTitle(msg, {
+          missedVoice: callCopy.missedCallTitle,
+          missedVideo: callCopy.missedVideoCallTitle,
+          voice: callCopy.historyVoiceCall,
+          video: callCopy.historyVideoCall,
+        })}
+        subtitle={missed ? callCopy.missedCallSubtitle : undefined}
+        recallLabel={callCopy.missedCallRecall}
+        onRecall={
+          missed && onRecallCall
+            ? () => onRecallCall(kind)
+            : undefined
+        }
+      />
+    );
+  }
 
   const handleGalleryOpen = (index: number) => {
     setGalleryInitialIndex(index);

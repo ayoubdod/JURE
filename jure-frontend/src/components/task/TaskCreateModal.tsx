@@ -145,7 +145,7 @@ const TaskCreateModal = forwardRef<TaskCreateModalRef, TaskCreateModalProps>(({ 
           <Button
             variant="ghost"
             size="icon"
-            className="absolute top-4 right-4 h-9 w-9 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white border border-white/30"
+            className="absolute top-4 end-4 h-9 w-9 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white border border-white/30"
             onClick={hide}
             disabled={isLoading}
           >
@@ -174,23 +174,23 @@ const TaskCreateModal = forwardRef<TaskCreateModalRef, TaskCreateModalProps>(({ 
 
         <form onSubmit={mainForm.handleSubmit(handleSubmit)} className="px-8 py-6 space-y-6">
 
-          {/* Task Information Section */}
+          {/* {t.tasks.modal.taskInformation} Section */}
           <div className="space-y-4">
             <div className="flex items-center gap-2 pb-2 mb-1 border-b border-slate-200 dark:border-slate-700">
               <FileText className="w-4 h-4 text-primary shrink-0" />
               <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">
-                Task Information
+                {t.tasks.modal.taskInformation}
               </span>
             </div>
             <div className="space-y-4">
               <div className=" ">
                 <label className="text-sm font-medium flex items-center gap-1">
-                  Task Title <span className="text-red-500">*</span>
+                  {t.tasks.modal.taskTitle} <span className="text-red-500">*</span>
                 </label>
                 <Input
                   id="title"
                   {...mainForm.register('title')}
-                  placeholder="e.g., Review contract documents"
+                  placeholder={t.tasks.modal.titlePlaceholder}
 
                   className="h-10 rounded-lg transition-all duration-200 focus-visible:ring-2 focus-visible:ring-primary/25"
                 />
@@ -201,11 +201,11 @@ const TaskCreateModal = forwardRef<TaskCreateModalRef, TaskCreateModalProps>(({ 
                 )}
               </div>
               <div className=" ">
-                <label className="text-sm font-medium">Task Description</label>
+                <label className="text-sm font-medium">{t.tasks.modal.description}</label>
                 <div className="relative">
                   <FileText className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
                   <Textarea
-                    id="description" {...mainForm.register('description')} placeholder="Detailed description of the task..."
+                    id="description" {...mainForm.register('description')} placeholder={t.tasks.modal.descriptionPlaceholder}
                     className="min-h-[100px] pl-10 rounded-lg transition-all duration-200 focus-visible:ring-2 focus-visible:ring-primary/25 resize-none"
                   /> {mainForm.formState.errors.description && (
                     <p className="text-red-500 text-xs p-1 pb-0">
@@ -217,20 +217,20 @@ const TaskCreateModal = forwardRef<TaskCreateModalRef, TaskCreateModalProps>(({ 
             </div>
           </div>
 
-          {/* Task Details Section */}
+          {/* {t.tasks.modal.taskDetails} Section */}
           <div className="space-y-4">
             <div className="flex items-center gap-2 pb-2 mb-1 border-b border-slate-200 dark:border-slate-700">
               <AlertTriangle className="w-4 h-4 text-primary shrink-0" />
               <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">
-                Task Details
+                {t.tasks.modal.taskDetails}
               </span>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="">
-                <label className="text-sm font-medium">Priority</label>
+                <label className="text-sm font-medium">{t.tasks.modal.priority}</label>
                 <Select value={mainForm.watch('priority')} onValueChange={(val: API.TaskPriority) => mainForm.setValue('priority', val)} >
                   <SelectTrigger className="h-10 rounded-lg">
-                    <SelectValue placeholder="Select a priority" />
+                    <SelectValue placeholder={t.tasks.modal.selectPriority} />
                   </SelectTrigger>
                   <SelectContent>
                     {
@@ -238,7 +238,7 @@ const TaskCreateModal = forwardRef<TaskCreateModalRef, TaskCreateModalProps>(({ 
                         <SelectItem key={index} value={priority.value}>
                           <span className="flex items-center gap-2">
                             <span className={cn('h-2 w-2 shrink-0 rounded-full', priorityDotClass(priority.value))} />
-                            {priority.label}
+                            {t.enums.taskPriority[priority.value] ?? priority.label}
                           </span>
                         </SelectItem>
                       ))
@@ -253,10 +253,10 @@ const TaskCreateModal = forwardRef<TaskCreateModalRef, TaskCreateModalProps>(({ 
               </div>
 
               <div className="">
-                <label className="text-sm font-medium">Status</label>
+                <label className="text-sm font-medium">{t.tasks.modal.status}</label>
                 <Select value={mainForm.watch('status')} onValueChange={(val: API.TaskStatus) => mainForm.setValue('status', val)} >
                   <SelectTrigger className="h-10 rounded-lg">
-                    <SelectValue placeholder="Select a status" />
+                    <SelectValue placeholder={t.tasks.modal.selectStatus} />
                   </SelectTrigger>
                   <SelectContent>
                     {
@@ -264,7 +264,7 @@ const TaskCreateModal = forwardRef<TaskCreateModalRef, TaskCreateModalProps>(({ 
                         <SelectItem key={index} value={status.value}>
                           <span className="flex items-center gap-2">
                             <span className={cn('h-2 w-2 shrink-0 rounded-full', statusDotClass(status.value))} />
-                            {status.label}
+                            {t.enums.taskStatus[status.value] ?? status.label}
                           </span>
                         </SelectItem>
                       ))
@@ -280,14 +280,14 @@ const TaskCreateModal = forwardRef<TaskCreateModalRef, TaskCreateModalProps>(({ 
 
             </div>
             <div className="">
-              <label className="text-sm font-medium">Estimated Hours</label>
+              <label className="text-sm font-medium">{t.tasks.modal.estimatedHours}</label>
               <Input
                 id="estimated_hours"
                 type="number"
                 step="0.5"
                 min="0"
                 {...mainForm.register('estimated_hours')}
-                placeholder="e.g., 2.5"
+                placeholder={t.tasks.modal.estimatedHoursPlaceholder}
                 className="transition-all duration-200 focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500"
               />
               {mainForm.formState.errors.estimated_hours && (
@@ -298,17 +298,17 @@ const TaskCreateModal = forwardRef<TaskCreateModalRef, TaskCreateModalProps>(({ 
             </div>
           </div>
 
-          {/* Assignment & Timeline Section */}
+          {/* {t.tasks.modal.assignmentTimeline} Section */}
           <div className="space-y-4">
             <div className="flex items-center gap-2 pb-2 mb-1 border-b border-slate-200 dark:border-slate-700">
               <Users className="w-4 h-4 text-primary shrink-0" />
               <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">
-                Assignment & Timeline
+                {t.tasks.modal.assignmentTimeline}
               </span>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className=" ">
-                <label className="text-sm font-medium">Assign To</label>
+                <label className="text-sm font-medium">{t.tasks.modal.assignTo}</label>
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
   
@@ -329,7 +329,7 @@ const TaskCreateModal = forwardRef<TaskCreateModalRef, TaskCreateModalProps>(({ 
                 </div>
               </div>
               <div className=" ">
-                <label className="text-sm font-medium">Due Date</label>
+                <label className="text-sm font-medium">{t.tasks.modal.dueDate}</label>
                 <div className="relative">
                   <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                   <Input
@@ -351,10 +351,10 @@ const TaskCreateModal = forwardRef<TaskCreateModalRef, TaskCreateModalProps>(({ 
 <div className="space-y-4">
   <div className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-3">
     <Gavel className="w-4 h-4 text-purple-600" />
-    Related Case
+    {t.tasks.modal.relatedCase}
   </div>
   <div className="">
-    <label className="text-sm font-medium">Related case</label>
+    <label className="text-sm font-medium">{t.tasks.modal.relatedCase}</label>
     {lockedCase ? (
       <Input
         readOnly
@@ -385,11 +385,11 @@ const TaskCreateModal = forwardRef<TaskCreateModalRef, TaskCreateModalProps>(({ 
             <div className="flex items-center gap-2 pb-2 mb-1 border-b border-slate-200 dark:border-slate-700">
               <Briefcase className="w-4 h-4 text-primary shrink-0" />
               <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">
-                Client Information
+                {t.tasks.modal.clientInformation}
               </span>
             </div>
             <div className=" ">
-              <label className="text-sm font-medium">Related Client (optional)</label>
+              <label className="text-sm font-medium">{t.tasks.modal.relatedClientOptional}</label>
               <ServerSelect
                 link="/clients/clients/"
                 value={mainForm.watch('client')}

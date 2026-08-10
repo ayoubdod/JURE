@@ -1,11 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <testsuites>
-	<testsuite name="core.tests.HealthEndpointTests-20260730225308" tests="2" file="core/tests.py" time="0.120" timestamp="2026-07-30T22:53:08" failures="0" errors="0" skipped="0">
-		<testcase classname="core.tests.HealthEndpointTests" name="test_health_rejects_non_get" time="0.059" timestamp="2026-07-30T22:53:08" file="core\tests.py" line="34"/>
-		<testcase classname="core.tests.HealthEndpointTests" name="test_health_returns_healthy" time="0.061" timestamp="2026-07-30T22:53:08" file="core\tests.py" line="29"/>
-	</testsuite>
-	<testsuite name="core.tests.RootEndpointTests-20260730225308" tests="2" file="core/tests.py" time="0.097" timestamp="2026-07-30T22:53:09" failures="0" errors="0" skipped="0">
-		<testcase classname="core.tests.RootEndpointTests" name="test_root_rejects_non_get" time="0.054" timestamp="2026-07-30T22:53:08" file="core\tests.py" line="22"/>
-		<testcase classname="core.tests.RootEndpointTests" name="test_root_returns_service_discovery_payload" time="0.042" timestamp="2026-07-30T22:53:09" file="core\tests.py" line="6"/>
+	<testsuite name="research_notes.tests.test_api.ResearchNoteAPITests-20260810215015" tests="14" file="research_notes/tests/test_api.py" time="68.805" timestamp="2026-08-10T21:51:24" failures="0" errors="0" skipped="0">
+		<testcase classname="research_notes.tests.test_api.ResearchNoteAPITests" name="test_cannot_delete_other_cabinet_note" time="5.476" timestamp="2026-08-10T21:50:20" file="research_notes\tests\test_api.py" line="178"/>
+		<testcase classname="research_notes.tests.test_api.ResearchNoteAPITests" name="test_cannot_retrieve_other_cabinet_note" time="4.093" timestamp="2026-08-10T21:50:24" file="research_notes\tests\test_api.py" line="154"/>
+		<testcase classname="research_notes.tests.test_api.ResearchNoteAPITests" name="test_cannot_update_other_cabinet_note" time="2.502" timestamp="2026-08-10T21:50:27" file="research_notes\tests\test_api.py" line="163"/>
+		<testcase classname="research_notes.tests.test_api.ResearchNoteAPITests" name="test_create_persists_in_database_with_cabinet_and_author" time="2.480" timestamp="2026-08-10T21:50:29" file="research_notes\tests\test_api.py" line="68"/>
+		<testcase classname="research_notes.tests.test_api.ResearchNoteAPITests" name="test_cross_cabinet_isolation_list" time="1.911" timestamp="2026-08-10T21:50:31" file="research_notes\tests\test_api.py" line="141"/>
+		<testcase classname="research_notes.tests.test_api.ResearchNoteAPITests" name="test_delete_persists" time="2.351" timestamp="2026-08-10T21:50:34" file="research_notes\tests\test_api.py" line="126"/>
+		<testcase classname="research_notes.tests.test_api.ResearchNoteAPITests" name="test_filter_by_matter" time="5.910" timestamp="2026-08-10T21:50:40" file="research_notes\tests\test_api.py" line="203"/>
+		<testcase classname="research_notes.tests.test_api.ResearchNoteAPITests" name="test_ignores_client_supplied_cabinet_id" time="5.370" timestamp="2026-08-10T21:50:45" file="research_notes\tests\test_api.py" line="256">
+			<!--Cabinet must come from the authenticated user, not the request body.-->
+		</testcase>
+		<testcase classname="research_notes.tests.test_api.ResearchNoteAPITests" name="test_invalid_matter_from_other_cabinet_rejected" time="5.673" timestamp="2026-08-10T21:50:51" file="research_notes\tests\test_api.py" line="224"/>
+		<testcase classname="research_notes.tests.test_api.ResearchNoteAPITests" name="test_list_retrieves_after_create" time="5.380" timestamp="2026-08-10T21:50:56" file="research_notes\tests\test_api.py" line="91"/>
+		<testcase classname="research_notes.tests.test_api.ResearchNoteAPITests" name="test_matter_association" time="6.760" timestamp="2026-08-10T21:51:03" file="research_notes\tests\test_api.py" line="188"/>
+		<testcase classname="research_notes.tests.test_api.ResearchNoteAPITests" name="test_unauthenticated_rejected" time="6.048" timestamp="2026-08-10T21:51:09" file="research_notes\tests\test_api.py" line="248"/>
+		<testcase classname="research_notes.tests.test_api.ResearchNoteAPITests" name="test_update_persists" time="5.969" timestamp="2026-08-10T21:51:15" file="research_notes\tests\test_api.py" line="104"/>
+		<testcase classname="research_notes.tests.test_api.ResearchNoteAPITests" name="test_viewer_cannot_create" time="8.882" timestamp="2026-08-10T21:51:24" file="research_notes\tests\test_api.py" line="238"/>
 	</testsuite>
 </testsuites>

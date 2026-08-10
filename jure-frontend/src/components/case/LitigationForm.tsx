@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
@@ -17,66 +17,34 @@ import {
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import ServerSelect from '@/components/common/ServerSelect';
-import { FileText, Loader2, Users, Gavel, UserCheck, Calendar, AlignJustify } from 'lucide-react';
+import { FileText, Loader2, Users, Gavel, UserCheck, Calendar, AlignJustify, Plus, Trash2, ShieldAlert } from 'lucide-react';
 import { useCaseForm } from '@/hooks/useCaseForm';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Trash2 } from 'lucide-react';
+import { useAppTranslation } from '@/i18n';
+import ConflictCheckDialog from '@/components/dashboard/ConflictCheckDialog';
 
-const LITIGATION_TYPE_OPTIONS = [
-  { label: 'Civil', value: 'CIVIL' },
-  { label: 'Criminal', value: 'CRIMINAL' },
-  { label: 'Commercial', value: 'COMMERCIAL' },
-  { label: 'Administrative', value: 'ADMINISTRATIVE' },
-  { label: 'Labor', value: 'LABOR' },
-  { label: 'Family', value: 'FAMILY' },
-];
-
-const PRIORITY_OPTIONS = [
-  { label: 'Low', value: 'LOW' },
-  { label: 'Medium', value: 'MEDIUM' },
-  { label: 'High', value: 'HIGH' },
-  { label: 'Urgent', value: 'URGENT' },
-];
-
-const STATUS_OPTIONS = [
-  { label: 'Open', value: 'OPEN' },
-  { label: 'In Progress', value: 'IN_PROGRESS' },
-  { label: 'Pending', value: 'PENDING' },
-  { label: 'Closed', value: 'CLOSED' },
-  { label: 'Archived', value: 'ARCHIVED' },
-];
-
-const schema = yup.object({
-  reference: yup.string().optional().default(''),
-  title: yup.string().required('Title / Case Name is required'),
-  litigation_type: yup
-    .string()
-    .oneOf(['CIVIL', 'CRIMINAL', 'COMMERCIAL', 'ADMINISTRATIVE', 'LABOR', 'FAMILY'])
-    .required(),
-  priority: yup.string().oneOf(['LOW', 'MEDIUM', 'HIGH', 'URGENT']).required(),
-  client: yup.number().nullable().optional().transform((_, orig) => (orig === '' || orig == null || orig === undefined ? null : Number(orig))),
-  client_role: yup.string().oneOf(['PLAINTIFF', 'DEFENDANT']).nullable().optional(),
-  opposing_party_name: yup.string().optional(),
-  opposing_counsel: yup.string().optional(),
-  court_name: yup.string().required('Court name is required'),
-  jurisdiction: yup.string().optional(),
-  chamber_division: yup.string().optional(),
-  judge_name: yup.string().optional(),
-  court_case_number: yup.string().optional(),
-  lead_attorney: yup.number().nullable().optional(),
-  filing_date: yup.string().nullable().optional(),
-  first_hearing_date: yup.string().nullable().optional(),
-  next_hearing_date: yup.string().nullable().optional(),
-  statute_of_limitations_date: yup.string().nullable().optional(),
-  description: yup.string().required('Description / Facts is required'),
-  legal_arguments: yup.string().optional(),
-  status: yup
-    .string()
-    .oneOf(['OPEN', 'IN_PROGRESS', 'PENDING', 'CLOSED', 'ARCHIVED'])
-    .required(),
-});
-
-export type LitigationFormValues = yup.InferType<typeof schema> & {
+export type LitigationFormValues = {
+  reference: string;
+  title: string;
+  litigation_type: 'CIVIL' | 'CRIMINAL' | 'COMMERCIAL' | 'ADMINISTRATIVE' | 'LABOR' | 'FAMILY';
+  priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
+  client?: number | null;
+  client_role?: 'PLAINTIFF' | 'DEFENDANT' | null;
+  opposing_party_name?: string;
+  opposing_counsel?: string;
+  court_name: string;
+  jurisdiction?: string;
+  chamber_division?: string;
+  judge_name?: string;
+  court_case_number?: string;
+  lead_attorney?: number | null;
+  filing_date?: string | null;
+  first_hearing_date?: string | null;
+  next_hearing_date?: string | null;
+  statute_of_limitations_date?: string | null;
+  description: string;
+  legal_arguments?: string;
+  status: 'OPEN' | 'IN_PROGRESS' | 'PENDING' | 'CLOSED' | 'ARCHIVED';
   case_type: 'LITIGATION';
   third_parties?: string[];
   key_deadlines?: { label: string; date: string }[];
@@ -112,11 +80,87 @@ const LitigationForm: React.FC<LitigationFormProps> = ({
   onSubmitSuccess,
   onBack,
 }) => {
+  const { t } = useAppTranslation();
+  const modal = t.cases.modal;
+
   const [thirdParties, setThirdParties] = useState<string[]>(
     initialValues?.third_parties?.length ? [...initialValues.third_parties] : ['']
   );
   const [keyDeadlines, setKeyDeadlines] = useState<{ label: string; date: string }[]>(
-    initialValues?.key_deadlines?.length ? [...initialValues.key_deadlines] : [{ label: '', date: '' }]
+    initialValues?.key_deadlines?.length
+      ? [...initialValues.key_deadlines]
+      : [{ label: '', date: '' }]
+  );
+  const [conflictOpen, setConflictOpen] = useState(false);
+  const [conflictQuery, setConflictQuery] = useState('');
+
+  const litigationTypeOptions = useMemo(
+    () =>
+      (['CIVIL', 'CRIMINAL', 'COMMERCIAL', 'ADMINISTRATIVE', 'LABOR', 'FAMILY'] as const).map(
+        (value) => ({
+          value,
+          label: modal.options.litigationType[value],
+        })
+      ),
+    [modal.options.litigationType]
+  );
+
+  const priorityOptions = useMemo(
+    () =>
+      (['LOW', 'MEDIUM', 'HIGH', 'URGENT'] as const).map((value) => ({
+        value,
+        label: modal.options.priority[value],
+      })),
+    [modal.options.priority]
+  );
+
+  const statusOptions = useMemo(
+    () =>
+      (['OPEN', 'IN_PROGRESS', 'PENDING', 'CLOSED', 'ARCHIVED'] as const).map((value) => ({
+        value,
+        label: modal.options.litigationStatus[value],
+      })),
+    [modal.options.litigationStatus]
+  );
+
+  const schema = useMemo(
+    () =>
+      yup.object({
+        reference: yup.string().optional().default(''),
+        title: yup.string().required(modal.validation.titleCaseNameRequired),
+        litigation_type: yup
+          .string()
+          .oneOf(['CIVIL', 'CRIMINAL', 'COMMERCIAL', 'ADMINISTRATIVE', 'LABOR', 'FAMILY'])
+          .required(),
+        priority: yup.string().oneOf(['LOW', 'MEDIUM', 'HIGH', 'URGENT']).required(),
+        client: yup
+          .number()
+          .nullable()
+          .optional()
+          .transform((_, orig) =>
+            orig === '' || orig == null || orig === undefined ? null : Number(orig)
+          ),
+        client_role: yup.string().oneOf(['PLAINTIFF', 'DEFENDANT']).nullable().optional(),
+        opposing_party_name: yup.string().optional(),
+        opposing_counsel: yup.string().optional(),
+        court_name: yup.string().required(modal.validation.courtNameRequired),
+        jurisdiction: yup.string().optional(),
+        chamber_division: yup.string().optional(),
+        judge_name: yup.string().optional(),
+        court_case_number: yup.string().optional(),
+        lead_attorney: yup.number().nullable().optional(),
+        filing_date: yup.string().nullable().optional(),
+        first_hearing_date: yup.string().nullable().optional(),
+        next_hearing_date: yup.string().nullable().optional(),
+        statute_of_limitations_date: yup.string().nullable().optional(),
+        description: yup.string().required(modal.validation.descriptionFactsRequired),
+        legal_arguments: yup.string().optional(),
+        status: yup
+          .string()
+          .oneOf(['OPEN', 'IN_PROGRESS', 'PENDING', 'CLOSED', 'ARCHIVED'])
+          .required(),
+      }),
+    [modal.validation]
   );
 
   const form = useForm<LitigationFormValues>({
@@ -165,78 +209,86 @@ const LitigationForm: React.FC<LitigationFormProps> = ({
 
   const addKeyDeadline = () => setKeyDeadlines((d) => [...d, { label: '', date: '' }]);
   const removeKeyDeadline = (i: number) =>
-    setKeyDeadlines((d) => (d.length > 1 ? d.filter((_, j) => j !== i) : [{ label: '', date: '' }]));
-  const updateKeyDeadline = (
-    i: number,
-    field: 'label' | 'date',
-    value: string
-  ) =>
+    setKeyDeadlines((d) =>
+      d.length > 1 ? d.filter((_, j) => j !== i) : [{ label: '', date: '' }]
+    );
+  const updateKeyDeadline = (i: number, field: 'label' | 'date', value: string) =>
     setKeyDeadlines((d) => {
       const next = [...d];
       next[i] = { ...next[i], [field]: value };
       return next;
     });
 
-  const handleSubmit = form.handleSubmit((data) => {
-    const payload: API.LitigationFormData = {
-      case_type: 'LITIGATION',
-      reference: data.reference,
-      title: data.title,
-      litigation_type: data.litigation_type as API.LitigationFormData['litigation_type'],
-      priority: data.priority as API.LitigationFormData['priority'],
-      client: data.client ?? null,
-      assigned_to: data.lead_attorney ?? null,
-      client_role: data.client_role ?? null,
-      opposing_party_name: data.opposing_party_name || undefined,
-      opposing_counsel: data.opposing_counsel || undefined,
-      third_parties: thirdParties.filter((s) => s.trim()).length ? thirdParties.filter((s) => s.trim()) : undefined,
-      court_name: data.court_name,
-      jurisdiction: data.jurisdiction || undefined,
-      chamber_division: data.chamber_division || undefined,
-      judge_name: data.judge_name || undefined,
-      court_case_number: data.court_case_number || undefined,
-      lead_attorney: data.lead_attorney ?? null,
-      co_counsel: form.watch('co_counsel') ?? [],
-      filing_date: data.filing_date || null,
-      first_hearing_date: data.first_hearing_date || null,
-      next_hearing_date: data.next_hearing_date || null,
-      statute_of_limitations_date: data.statute_of_limitations_date || null,
-      key_deadlines:
-        keyDeadlines.filter((d) => d.label.trim() || d.date).length > 0
-          ? keyDeadlines.filter((d) => d.label.trim() || d.date)
+  const handleSubmit = form.handleSubmit(
+    (data) => {
+      const payload: API.LitigationFormData = {
+        case_type: 'LITIGATION',
+        reference: data.reference,
+        title: data.title,
+        litigation_type: data.litigation_type,
+        priority: data.priority,
+        client: data.client ?? null,
+        assigned_to: data.lead_attorney ?? null,
+        client_role: data.client_role ?? null,
+        opposing_party_name: data.opposing_party_name || undefined,
+        opposing_counsel: data.opposing_counsel || undefined,
+        third_parties: thirdParties.filter((s) => s.trim()).length
+          ? thirdParties.filter((s) => s.trim())
           : undefined,
-      description: data.description,
-      legal_arguments: data.legal_arguments || undefined,
-      status: data.status as API.LitigationFormData['status'],
-    };
-    if (mode === 'edit' && caseId) {
-      handleUpdate({ ...payload, id: caseId });
-    } else {
-      handleCreate(payload);
-    }
-  },
+        court_name: data.court_name,
+        jurisdiction: data.jurisdiction || undefined,
+        chamber_division: data.chamber_division || undefined,
+        judge_name: data.judge_name || undefined,
+        court_case_number: data.court_case_number || undefined,
+        lead_attorney: data.lead_attorney ?? null,
+        co_counsel: form.watch('co_counsel') ?? [],
+        filing_date: data.filing_date || null,
+        first_hearing_date: data.first_hearing_date || null,
+        next_hearing_date: data.next_hearing_date || null,
+        statute_of_limitations_date: data.statute_of_limitations_date || null,
+        key_deadlines:
+          keyDeadlines.filter((d) => d.label.trim() || d.date).length > 0
+            ? keyDeadlines.filter((d) => d.label.trim() || d.date)
+            : undefined,
+        description: data.description,
+        legal_arguments: data.legal_arguments || undefined,
+        status: data.status,
+      };
+      if (mode === 'edit' && caseId) {
+        handleUpdate({ ...payload, id: caseId });
+      } else {
+        handleCreate(payload);
+      }
+    },
     (errors) => {
-      const msg = Object.values(errors).map((e) => e?.message).filter(Boolean)[0];
-      toast({ title: 'Please fix the form', description: msg || 'Some required fields are missing.', variant: 'destructive' });
+      const msg = Object.values(errors)
+        .map((e) => e?.message)
+        .filter(Boolean)[0];
+      toast({
+        title: modal.toasts.fixFormTitle,
+        description: msg || modal.toasts.fixFormDescription,
+        variant: 'destructive',
+      });
     }
   );
 
   return (
+    <>
     <form onSubmit={handleSubmit} className="space-y-6">
       {form.formState.errors.case_specific_data && (
         <div className="p-3 rounded border border-red-200 dark:border-red-900/50 bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-300 text-[13px]">
           {form.formState.errors.case_specific_data.message}
         </div>
       )}
-      <FormSection title="Basic Info" icon={FileText}>
+      <FormSection title={modal.sections.basicInfo} icon={FileText}>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Reference <span className="text-red-500">*</span>
+              {modal.fields.reference} <span className="text-red-500">*</span>
             </label>
             <Input
               {...form.register('reference')}
-              placeholder="Case reference"
+              placeholder={modal.placeholders.reference}
               className="h-10"
             />
             {form.formState.errors.reference && (
@@ -245,26 +297,32 @@ const LitigationForm: React.FC<LitigationFormProps> = ({
           </div>
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Title / Case Name <span className="text-red-500">*</span>
+              {modal.fields.titleCaseName} <span className="text-red-500">*</span>
             </label>
-            <Input {...form.register('title')} placeholder="Case name" className="h-10" />
+            <Input
+              {...form.register('title')}
+              placeholder={modal.placeholders.caseName}
+              className="h-10"
+            />
             {form.formState.errors.title && (
               <p className="text-red-500 text-xs">{form.formState.errors.title.message}</p>
             )}
           </div>
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Litigation Type <span className="text-red-500">*</span>
+              {modal.fields.litigationType} <span className="text-red-500">*</span>
             </label>
             <Select
               value={form.watch('litigation_type')}
-              onValueChange={(v) => form.setValue('litigation_type', v)}
+              onValueChange={(v) =>
+                form.setValue('litigation_type', v as LitigationFormValues['litigation_type'])
+              }
             >
               <SelectTrigger className="h-10">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {LITIGATION_TYPE_OPTIONS.map((opt) => (
+                {litigationTypeOptions.map((opt) => (
                   <SelectItem key={opt.value} value={opt.value}>
                     {opt.label}
                   </SelectItem>
@@ -273,13 +331,18 @@ const LitigationForm: React.FC<LitigationFormProps> = ({
             </Select>
           </div>
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Priority</label>
-            <Select value={form.watch('priority')} onValueChange={(v) => form.setValue('priority', v)}>
+            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              {modal.fields.priority}
+            </label>
+            <Select
+              value={form.watch('priority')}
+              onValueChange={(v) => form.setValue('priority', v as LitigationFormValues['priority'])}
+            >
               <SelectTrigger className="h-10">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {PRIORITY_OPTIONS.map((opt) => (
+                {priorityOptions.map((opt) => (
                   <SelectItem key={opt.value} value={opt.value}>
                     {opt.label}
                   </SelectItem>
@@ -290,57 +353,86 @@ const LitigationForm: React.FC<LitigationFormProps> = ({
         </div>
       </FormSection>
 
-      <FormSection title="Parties" icon={Users}>
+      <FormSection title={modal.sections.parties} icon={Users}>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="sm:col-span-2 space-y-2">
             <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Related Client
+              {modal.fields.relatedClient}
             </label>
             <ServerSelect
               link="/clients/clients/"
               value={form.watch('client')}
               onChange={(v) => form.setValue('client', v ?? null)}
               labelKey={(c: { first_name?: string; last_name?: string; email?: string }) =>
-                `${c.first_name || ''} ${c.last_name || ''}`.trim() || c.email || 'Unnamed'
+                `${c.first_name || ''} ${c.last_name || ''}`.trim() || c.email || t.cases.unnamed
               }
               cleanable
-              placeholder="Select a client"
+              placeholder={modal.placeholders.client}
             />
           </div>
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Client Role
+              {modal.fields.clientRole}
             </label>
             <RadioGroup
               value={form.watch('client_role') ?? ''}
-              onValueChange={(v) => form.setValue('client_role', v === '' ? null : v)}
+              onValueChange={(v) =>
+                form.setValue(
+                  'client_role',
+                  v === '' ? null : (v as LitigationFormValues['client_role'])
+                )
+              }
               className="flex gap-4"
             >
               <div className="flex items-center gap-2">
                 <RadioGroupItem value="PLAINTIFF" id="client_plaintiff" />
-                <Label htmlFor="client_plaintiff">Plaintiff</Label>
+                <Label htmlFor="client_plaintiff">{modal.options.clientRole.PLAINTIFF}</Label>
               </div>
               <div className="flex items-center gap-2">
                 <RadioGroupItem value="DEFENDANT" id="client_defendant" />
-                <Label htmlFor="client_defendant">Defendant</Label>
+                <Label htmlFor="client_defendant">{modal.options.clientRole.DEFENDANT}</Label>
               </div>
             </RadioGroup>
           </div>
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Opposing Party Name
+              {modal.fields.opposingPartyName}
             </label>
-            <Input {...form.register('opposing_party_name')} placeholder="Name" className="h-10" />
+            <div className="flex gap-2">
+              <Input
+                {...form.register('opposing_party_name')}
+                placeholder={modal.placeholders.name}
+                className="h-10 flex-1"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                className="h-10 shrink-0"
+                title={t.dashboard.conflictCheck.runFromMatter}
+                onClick={() => {
+                  const party = (form.getValues('opposing_party_name') || '').trim();
+                  setConflictQuery(party);
+                  setConflictOpen(true);
+                }}
+              >
+                <ShieldAlert className="w-4 h-4 mr-1" />
+                {t.dashboard.conflictCheck.runFromMatter}
+              </Button>
+            </div>
           </div>
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Opposing Counsel
+              {modal.fields.opposingCounsel}
             </label>
-            <Input {...form.register('opposing_counsel')} placeholder="Name / firm" className="h-10" />
+            <Input
+              {...form.register('opposing_counsel')}
+              placeholder={modal.placeholders.nameOrFirm}
+              className="h-10"
+            />
           </div>
           <div className="sm:col-span-2 space-y-2">
             <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Third Parties
+              {modal.fields.thirdParties}
             </label>
             <div className="space-y-2">
               {thirdParties.map((val, i) => (
@@ -348,66 +440,91 @@ const LitigationForm: React.FC<LitigationFormProps> = ({
                   <Input
                     value={val}
                     onChange={(e) => updateThirdParty(i, e.target.value)}
-                    placeholder="Third party name"
+                    placeholder={modal.placeholders.thirdPartyName}
                     className="h-10 flex-1"
                   />
-                  <Button type="button" variant="outline" size="icon" onClick={() => removeThirdParty(i)}>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={() => removeThirdParty(i)}
+                  >
                     <Trash2 className="w-4 h-4" />
                   </Button>
                 </div>
               ))}
               <Button type="button" variant="outline" size="sm" onClick={addThirdParty}>
                 <Plus className="w-4 h-4 mr-1" />
-                Add row
+                {modal.actions.addRow}
               </Button>
             </div>
           </div>
         </div>
       </FormSection>
 
-      <FormSection title="Court & Jurisdiction" icon={Gavel}>
+      <FormSection title={modal.sections.courtJurisdiction} icon={Gavel}>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Court Name <span className="text-red-500">*</span>
+              {modal.fields.courtName} <span className="text-red-500">*</span>
             </label>
-            <Input {...form.register('court_name')} placeholder="Court name" className="h-10" />
+            <Input
+              {...form.register('court_name')}
+              placeholder={modal.placeholders.court}
+              className="h-10"
+            />
             {form.formState.errors.court_name && (
               <p className="text-red-500 text-xs">{form.formState.errors.court_name.message}</p>
             )}
           </div>
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Jurisdiction / City
+              {modal.fields.jurisdictionCity}
             </label>
-            <Input {...form.register('jurisdiction')} placeholder="City" className="h-10" />
+            <Input
+              {...form.register('jurisdiction')}
+              placeholder={modal.placeholders.city}
+              className="h-10"
+            />
           </div>
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Chamber / Division
+              {modal.fields.chamberDivision}
             </label>
-            <Input {...form.register('chamber_division')} placeholder="Division" className="h-10" />
+            <Input
+              {...form.register('chamber_division')}
+              placeholder={modal.placeholders.division}
+              className="h-10"
+            />
           </div>
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Judge Name
+              {modal.fields.judgeName}
             </label>
-            <Input {...form.register('judge_name')} placeholder="Judge" className="h-10" />
+            <Input
+              {...form.register('judge_name')}
+              placeholder={modal.placeholders.judge}
+              className="h-10"
+            />
           </div>
           <div className="sm:col-span-2 space-y-2">
             <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Court Case Number
+              {modal.fields.courtCaseNumber}
             </label>
-            <Input {...form.register('court_case_number')} placeholder="Number" className="h-10" />
+            <Input
+              {...form.register('court_case_number')}
+              placeholder={modal.placeholders.number}
+              className="h-10"
+            />
           </div>
         </div>
       </FormSection>
 
-      <FormSection title="Assigned Team" icon={UserCheck}>
+      <FormSection title={modal.sections.assignedTeam} icon={UserCheck}>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Lead Attorney
+              {modal.fields.leadAttorney}
             </label>
             <ServerSelect
               link="/cabinets/members/select_list"
@@ -419,44 +536,49 @@ const LitigationForm: React.FC<LitigationFormProps> = ({
           </div>
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Co-counsel <span className="text-slate-400 text-xs">(multi-select via add)</span>
+              {modal.fields.coCounsel}{' '}
+              <span className="text-slate-400 text-xs">{modal.hints.coCounselMulti}</span>
             </label>
             <p className="text-[12px] text-slate-500 dark:text-slate-400">
-              Multiple attorneys can be assigned; use Lead Attorney for primary.
+              {modal.hints.coCounselHint}
             </p>
           </div>
         </div>
       </FormSection>
 
-      <FormSection title="Timeline & Deadlines" icon={Calendar}>
+      <FormSection title={modal.sections.timelineDeadlines} icon={Calendar}>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Filing Date
+              {modal.fields.filingDate}
             </label>
             <Input type="date" {...form.register('filing_date')} className="h-10" />
           </div>
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              First Hearing Date
+              {modal.fields.firstHearingDate}
             </label>
             <Input type="date" {...form.register('first_hearing_date')} className="h-10" />
           </div>
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Next Hearing Date
+              {modal.fields.nextHearingDate}
             </label>
             <Input type="date" {...form.register('next_hearing_date')} className="h-10" />
           </div>
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Statute of Limitations Date
+              {modal.fields.statuteOfLimitationsDate}
             </label>
-            <Input type="date" {...form.register('statute_of_limitations_date')} className="h-10" />
+            <Input
+              type="date"
+              {...form.register('statute_of_limitations_date')}
+              className="h-10"
+            />
           </div>
           <div className="sm:col-span-2 space-y-2">
             <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Key Deadlines
+              {modal.fields.keyDeadlines}
             </label>
             <div className="space-y-2">
               {keyDeadlines.map((item, i) => (
@@ -464,7 +586,7 @@ const LitigationForm: React.FC<LitigationFormProps> = ({
                   <Input
                     value={item.label}
                     onChange={(e) => updateKeyDeadline(i, 'label', e.target.value)}
-                    placeholder="Label"
+                    placeholder={modal.placeholders.label}
                     className="h-10 flex-1"
                   />
                   <Input
@@ -473,29 +595,34 @@ const LitigationForm: React.FC<LitigationFormProps> = ({
                     onChange={(e) => updateKeyDeadline(i, 'date', e.target.value)}
                     className="h-10 w-[140px]"
                   />
-                  <Button type="button" variant="outline" size="icon" onClick={() => removeKeyDeadline(i)}>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={() => removeKeyDeadline(i)}
+                  >
                     <Trash2 className="w-4 h-4" />
                   </Button>
                 </div>
               ))}
               <Button type="button" variant="outline" size="sm" onClick={addKeyDeadline}>
                 <Plus className="w-4 h-4 mr-1" />
-                Add deadline
+                {modal.actions.addDeadline}
               </Button>
             </div>
           </div>
         </div>
       </FormSection>
 
-      <FormSection title="Case Details" icon={AlignJustify}>
+      <FormSection title={modal.sections.caseDetails} icon={AlignJustify}>
         <div className="space-y-4">
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Description / Facts <span className="text-red-500">*</span>
+              {modal.fields.descriptionFacts} <span className="text-red-500">*</span>
             </label>
             <Textarea
               {...form.register('description')}
-              placeholder="Case description and facts"
+              placeholder={modal.placeholders.descriptionFacts}
               className="min-h-[100px] resize-none"
             />
             {form.formState.errors.description && (
@@ -504,22 +631,27 @@ const LitigationForm: React.FC<LitigationFormProps> = ({
           </div>
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Legal Arguments
+              {modal.fields.legalArguments}
             </label>
             <Textarea
               {...form.register('legal_arguments')}
-              placeholder="Legal arguments"
+              placeholder={modal.placeholders.legalArguments}
               className="min-h-[80px] resize-none"
             />
           </div>
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Status</label>
-            <Select value={form.watch('status')} onValueChange={(v) => form.setValue('status', v)}>
+            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              {modal.fields.status}
+            </label>
+            <Select
+              value={form.watch('status')}
+              onValueChange={(v) => form.setValue('status', v as LitigationFormValues['status'])}
+            >
               <SelectTrigger className="h-10">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {STATUS_OPTIONS.map((opt) => (
+                {statusOptions.map((opt) => (
                   <SelectItem key={opt.value} value={opt.value}>
                     {opt.label}
                   </SelectItem>
@@ -533,15 +665,27 @@ const LitigationForm: React.FC<LitigationFormProps> = ({
       <div className="flex items-center justify-between pt-4 border-t border-gray-100 dark:border-gray-800 gap-3">
         {onBack && (
           <Button type="button" variant="outline" onClick={onBack} disabled={isLoading}>
-            Back
+            {modal.back}
           </Button>
         )}
         {!onBack && <div />}
         <Button type="submit" disabled={isLoading} className="bg-purple-600 hover:bg-purple-700">
-          {isLoading ? 'Submitting...' : mode === 'edit' ? 'Update Case' : 'Create Case'}
+          {isLoading
+            ? modal.submitting
+            : mode === 'edit'
+              ? modal.updateCase
+              : modal.createCase}
         </Button>
       </div>
     </form>
+    <ConflictCheckDialog
+      open={conflictOpen}
+      onOpenChange={setConflictOpen}
+      initialQuery={conflictQuery}
+      matterId={mode === 'edit' ? caseId ?? null : null}
+      excludeMatterId={mode === 'edit' ? caseId ?? null : null}
+    />
+    </>
   );
 };
 

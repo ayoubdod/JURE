@@ -44,6 +44,11 @@ import {
   registerConversationSignalingSocket,
   unregisterConversationSignalingSocket,
 } from '@/stores/conversationCallBridge';
+import { useConversationCallPresenceStore } from '@/stores/conversationCallPresenceStore';
+import { useCallSessionStore } from '@/stores/callSessionStore';
+import {
+  ActiveCallBanner,
+} from '@/components/conversations/call/ConversationCallBanners';
 import {
   Tooltip,
   TooltipContent,
@@ -69,6 +74,8 @@ const ChatWindow = forwardRef<
   onCallVideo?: () => void;
   /** True while a voice/video call session is active (outgoing, ringing, or connected). */
   callInProgress?: boolean;
+  onJoinActiveCall?: () => void;
+  onRecallMissedCall?: (kind?: 'voice' | 'video') => void;
   onOpenSettings?: () => void;
   onStartNewChat?: () => void;
   onDeleteConversation?: (conversation: API.Conversation) => void;
@@ -97,6 +104,8 @@ const ChatWindow = forwardRef<
   onCallVoice,
   onCallVideo,
   callInProgress = false,
+  onJoinActiveCall,
+  onRecallMissedCall,
   onOpenSettings,
   onStartNewChat,
   onDeleteConversation,
@@ -115,6 +124,18 @@ const ChatWindow = forwardRef<
 }, ref) => {
   const { t } = useAppTranslation();
   const toastMsgs = t.conversations.toasts;
+  const callCopy = t.conversations.call;
+  const callSessionStatus = useCallSessionStore((s) => s.ui.status);
+  const callSessionConvId = useCallSessionStore((s) => s.ui.conversationId);
+  const activeCall = useConversationCallPresenceStore((s) =>
+    conversation?.id != null ? s.activeByConversation[conversation.id] : undefined
+  );
+  const fetchActive = useConversationCallPresenceStore((s) => s.fetchActive);
+
+  useEffect(() => {
+    if (!conversation?.id) return;
+    void fetchActive(conversation.id);
+  }, [conversation?.id, fetchActive]);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const messageRefsMap = useRef<Map<number, HTMLDivElement>>(new Map());
   const wsRef = useRef<WebSocket | null>(null);
@@ -255,6 +276,7 @@ const ChatWindow = forwardRef<
 
       if (typeof data.type === 'string' && data.type.startsWith('call.')) {
         emitConversationCallMessage(data);
+        useConversationCallPresenceStore.getState().ingestWs(data as Record<string, unknown>);
         return;
       }
 
@@ -598,6 +620,33 @@ const ChatWindow = forwardRef<
         </div>
       </div>
 
+      {activeCall &&
+      conversation?.id === activeCall.conversationId &&
+      activeCall.joinedIds.length > 0 ? (
+        <ActiveCallBanner
+          call={activeCall}
+          amInCall={
+            callSessionStatus !== 'idle' &&
+            callSessionConvId === conversation.id &&
+            (callSessionStatus === 'active' ||
+              callSessionStatus === 'connecting' ||
+              callSessionStatus === 'calling' ||
+              callSessionStatus === 'reconnecting')
+          }
+          title={
+            activeCall.mode === 'conference'
+              ? callCopy.activeGroupCallTitle
+              : callCopy.activeCallTitle
+          }
+          joinLabel={callCopy.activeCallJoin}
+          inCallLabel={callCopy.activeCallInCall}
+          groupSubtitle={callCopy.activeGroupCallSubtitle}
+          ongoingSubtitle={callCopy.activeCallOngoingSubtitle}
+          inCallCountLabel={callCopy.activeCallCount}
+          onJoin={() => onJoinActiveCall?.()}
+        />
+      ) : null}
+
       {/* Messages - stable scroll area to prevent layout shift */}
       <div
         ref={messagesContainerRef}
@@ -623,6 +672,7 @@ const ChatWindow = forwardRef<
               onOpenSharedCase={onOpenSharedCase}
               onOpenSharedTask={onOpenSharedTask}
               onOpenSharedAppointment={onOpenSharedAppointment}
+              onRecallCall={(kind) => onRecallMissedCall?.(kind)}
             />
             </div>
           ))}

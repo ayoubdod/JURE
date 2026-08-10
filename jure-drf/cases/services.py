@@ -1,10 +1,81 @@
 # cases/services.py
 """Case domain operations not tied to HTTP (e.g. consultation → litigation/administrative)."""
 from django.db import transaction
+from django.utils import timezone
 
 from .constants import ADMINISTRATIVE_CONVERSION_FIELD_KEYS, LITIGATION_CONVERSION_FIELD_KEYS
 from .models import Case
 from .utils import generate_unique_reference
+
+
+def close_case(
+    case: Case,
+    user,
+    *,
+    outcome: str = "",
+    lessons: str = "",
+    precedents: str = "",
+) -> tuple[Case, bool, str]:
+    """
+    Persist matter closure: set status=CLOSED, optional close notes, audit ActivityLog.
+
+    Idempotent when already CLOSED (no duplicate audit row).
+
+    Returns:
+        (case, already_closed, previous_status)
+    """
+    previous_status = case.status
+    already_closed = previous_status == Case.CaseStatus.CLOSED
+
+    if already_closed:
+        return case, True, previous_status
+
+    data = dict(case.case_specific_data or {})
+    notes = {
+        k: v.strip()
+        for k, v in {
+            "outcome": outcome or "",
+            "lessons": lessons or "",
+            "precedents": precedents or "",
+        }.items()
+        if (v or "").strip()
+    }
+    if notes:
+        existing = data.get("close_summary")
+        if not isinstance(existing, dict):
+            existing = {}
+        data["close_summary"] = {
+            **existing,
+            **notes,
+            "closed_at": timezone.now().isoformat(),
+            "closed_by_id": getattr(user, "id", None),
+            "previous_status": previous_status,
+        }
+
+    with transaction.atomic():
+        case.status = Case.CaseStatus.CLOSED
+        case.updated_by = user
+        update_fields = ["status", "updated_by", "modified"]
+        if notes:
+            case.case_specific_data = data
+            update_fields.append("case_specific_data")
+        case.save(update_fields=update_fields)
+
+        if case.cabinet_id:
+            from dashboard.models import ActivityLog
+
+            ref = case.reference or str(case.id)
+            title = case.title or "Untitled"
+            ActivityLog.objects.create(
+                cabinet_id=case.cabinet_id,
+                kind="matter_closed",
+                message=(
+                    f"Matter closed: {ref} — {title} "
+                    f"({previous_status} → {Case.CaseStatus.CLOSED})"
+                ),
+            )
+
+    return case, False, previous_status
 
 
 def execute_consultation_conversion(

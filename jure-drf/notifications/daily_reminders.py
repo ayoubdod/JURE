@@ -58,6 +58,7 @@ def send_daily_deadline_reminders() -> None:
     _remind_litigation_hearings(today, in_3)
     _remind_litigation_key_deadlines(today, in_3)
     _remind_administrative_due_dates(today, in_3)
+    _remind_calculated_legal_deadlines(today)
     _remind_invoices_overdue(today)
 
 
@@ -300,6 +301,63 @@ def _remind_administrative_due_dates(today, in_3) -> None:
                 action_url=f"/dashboard/cases?case={case.reference}",
                 send_email=True,
             )
+
+
+def _remind_calculated_legal_deadlines(today: date) -> None:
+    """Fire user-configured reminders for persisted CalculatedDeadline rows."""
+    try:
+        from legal_deadlines.models import CalculatedDeadline, DeadlineReminder
+    except Exception:
+        return
+
+    qs = (
+        DeadlineReminder.objects.filter(
+            deadline__status__in=[
+                CalculatedDeadline.Status.UPCOMING,
+                CalculatedDeadline.Status.DUE_SOON,
+                CalculatedDeadline.Status.DUE_TODAY,
+                CalculatedDeadline.Status.OVERDUE,
+            ],
+            notified_at__isnull=True,
+        )
+        .select_related("deadline", "deadline__case", "deadline__rule", "deadline__created_by")
+    )
+    for reminder in qs:
+        deadline = reminder.deadline
+        target = _add_days(deadline.final_deadline, -int(reminder.days_before))
+        if target != today:
+            continue
+        case = deadline.case
+        recipients = set(case_assigned_user_ids(case))
+        if deadline.created_by_id:
+            recipients.add(deadline.created_by_id)
+        ntype = (
+            NotificationType.CASE_DEADLINE_TODAY
+            if reminder.days_before == 0
+            else NotificationType.CASE_DEADLINE_3DAYS
+        )
+        label = deadline.rule.name if deadline.rule_id else "Legal deadline"
+        for uid in recipients:
+            if not uid:
+                continue
+            if _dedupe_today(uid, ntype, case=case):
+                continue
+            create_notification(
+                recipient_id=uid,
+                notification_type=ntype,
+                title="Legal deadline reminder" if reminder.days_before else "Legal deadline today",
+                message=(
+                    f"{label} for matter #{case.reference} "
+                    f"{'is due today' if reminder.days_before == 0 else f'is due in {reminder.days_before} day(s)'} "
+                    f"({deadline.final_deadline.isoformat()})."
+                ),
+                priority=NotificationPriority.URGENT if reminder.days_before == 0 else NotificationPriority.HIGH,
+                related_case_id=case.id,
+                action_url=f"/dashboard/cases?case={case.reference}",
+                send_email=True,
+            )
+        reminder.notified_at = timezone.now()
+        reminder.save(update_fields=["notified_at"])
 
 
 def _remind_invoices_overdue(today) -> None:

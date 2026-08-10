@@ -1,21 +1,18 @@
 'use client'
-import { forwardRef, useImperativeHandle, useState } from 'react';
+import { forwardRef, useImperativeHandle, useMemo, useRef, useState } from 'react';
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { AlignJustify, BookOpenText, CircleDot, FileText, Gavel, Heading, Heading1, Info, Layers, Loader2, Scale, StickyNote, Tags, Type, UserCheck, Users, X } from 'lucide-react';
+import { FileText, Info, Loader2, Scale, X } from 'lucide-react';
 import { apiCreateCase } from '@/services/case/api';
 import * as yup from 'yup';
 import { Resolver, useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
-import { Form, FormField, FormItem } from '../ui/form';
 import { Input } from '../ui/input';
-import { Checkbox } from '../ui/checkbox';
 import { getRemoteFieldsValidation } from '@/utils/functions';
 import { isAxiosError } from 'axios';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
@@ -23,6 +20,7 @@ import { CaseCategory, CaseStatus } from '@/utils/constants';
 import { DialogDescription } from '@radix-ui/react-dialog';
 import ServerSelect from '../common/ServerSelect';
 import { Textarea } from '../ui/textarea';
+import { useAppTranslation } from '@/i18n';
 
 export interface CaseCreateModalRef {
   show: () => void;
@@ -33,24 +31,29 @@ export interface CaseCreateModalProps {
   onSuccess?: (_: API.Case) => void;
 }
 
-const schema = yup.object({
-  category: yup.string().required('Category is required'),
-  status: yup.string().required('Status is required'),
-  summary: yup.string().optional().default(''),
-  description: yup.string().required('Description is required'),
-  reference: yup.string().required('Reference is required'),
-  title: yup.string().required('Title is required'),
-  court: yup.string().required('Court is required'),
-  assigned_to: yup.number().nullable().optional(),
-  client: yup.number().nullable().optional(),
-});
-
 const CaseCreateModal = forwardRef<CaseCreateModalRef, CaseCreateModalProps>(({ onSuccess }, ref) => {
+  const { t } = useAppTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
+  const schema = useMemo(() => yup.object({
+    category: yup.string().required(t.cases.modal.validation.categoryRequired),
+    status: yup.string().required(t.cases.modal.validation.statusRequired),
+    summary: yup.string().optional().default(''),
+    description: yup.string().required(t.cases.modal.validation.descriptionRequired),
+    reference: yup.string().required(t.cases.modal.validation.referenceRequired),
+    title: yup.string().required(t.cases.modal.validation.titleRequired),
+    court: yup.string().required(t.cases.modal.validation.courtRequired),
+    assigned_to: yup.number().nullable().optional(),
+    client: yup.number().nullable().optional(),
+  }), [t]);
+
+  const schemaRef = useRef(schema);
+  schemaRef.current = schema;
+
   const mainForm = useForm<API.CaseCreateForm>({
-    resolver: yupResolver(schema) as unknown as Resolver<API.CaseCreateForm>
+    resolver: ((values, context, options) =>
+      yupResolver(schemaRef.current)(values, context, options)) as unknown as Resolver<API.CaseCreateForm>
   });
 
   const show = () => {
@@ -91,30 +94,25 @@ const CaseCreateModal = forwardRef<CaseCreateModalRef, CaseCreateModalProps>(({ 
   return (
     <Dialog open={isOpen} onOpenChange={isLoading ? undefined : setIsOpen}>
       <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto p-0 [&>button]:hidden">
-        {/* Header Banner */}
         <div className="relative h-32 bg-gradient-to-r from-[#64499D] via-[#4ECDC4] to-[#FF6B6B] overflow-hidden">
-          {/* Decorative Pattern Overlay */}
           <div className="absolute inset-0 opacity-10">
             <div className="absolute inset-0" style={{
               backgroundImage: `radial-gradient(circle at 2px 2px, white 1px, transparent 0)`,
               backgroundSize: '32px 32px'
             }}></div>
           </div>
-          {/* Gradient Overlay */}
           <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/10"></div>
-          
-          {/* Close Button */}
+
           <Button
             variant="ghost"
             size="icon"
-            className="absolute top-4 right-4 h-9 w-9 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white border border-white/30"
+            className="absolute top-4 end-4 h-9 w-9 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white border border-white/30"
             onClick={hide}
             disabled={isLoading}
           >
             <X className="w-4 h-4" />
           </Button>
 
-          {/* Header Content */}
           <div className="relative px-8 pt-8 pb-6">
             <div className="flex items-center gap-3">
               <div className="p-3 rounded-xl bg-white/20 backdrop-blur-sm border border-white/30">
@@ -122,10 +120,10 @@ const CaseCreateModal = forwardRef<CaseCreateModalRef, CaseCreateModalProps>(({ 
               </div>
               <div>
                 <DialogTitle className="text-2xl font-bold text-white">
-                  Create New Case
+                  {t.cases.modal.createTitle}
                 </DialogTitle>
                 <DialogDescription className="text-white/90 mt-1">
-                  Set up a new legal case for your practice
+                  {t.cases.modal.createDescription}
                 </DialogDescription>
               </div>
             </div>
@@ -133,21 +131,20 @@ const CaseCreateModal = forwardRef<CaseCreateModalRef, CaseCreateModalProps>(({ 
         </div>
 
         <form onSubmit={mainForm.handleSubmit(handleSubmit)} className="px-8 py-6 space-y-6">
-          {/* Basic Information */}
           <div className="space-y-4">
             <div className="flex items-center gap-2 text-sm font-medium text-gray-700 pb-2 border-b border-gray-100">
               <FileText className="w-4 h-4 text-purple-600" />
-              <span>Basic Information</span>
+              <span>{t.cases.modal.sections.basicInformation}</span>
             </div>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="text-sm font-medium text-gray-700">
-                  Reference *
+                  {t.cases.modal.fields.reference} *
                 </label>
                 <Input 
                   {...mainForm.register('reference')}
-                  placeholder="Case reference"
+                  placeholder={t.cases.modal.placeholders.reference}
                   className="h-10"
                 />
                 {mainForm.formState.errors.reference && (
@@ -159,11 +156,11 @@ const CaseCreateModal = forwardRef<CaseCreateModalRef, CaseCreateModalProps>(({ 
 
               <div className="space-y-2">
                 <label className="text-sm font-medium text-gray-700">
-                  Title *
+                  {t.cases.modal.fields.title} *
                 </label>
                 <Input 
                   {...mainForm.register('title')} 
-                  placeholder="Case title"
+                  placeholder={t.cases.modal.placeholders.title}
                   className="h-10"
                 />
                 {mainForm.formState.errors.title && (
@@ -177,11 +174,11 @@ const CaseCreateModal = forwardRef<CaseCreateModalRef, CaseCreateModalProps>(({ 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="text-sm font-medium text-gray-700">
-                  Court *
+                  {t.cases.modal.fields.court} *
                 </label>
                 <Input
                   {...mainForm.register('court')}
-                  placeholder="Court name"
+                  placeholder={t.cases.modal.placeholders.court}
                   className="h-10"
                 />
                 {mainForm.formState.errors.court && (
@@ -193,19 +190,19 @@ const CaseCreateModal = forwardRef<CaseCreateModalRef, CaseCreateModalProps>(({ 
 
               <div className="space-y-2">
                 <label className="text-sm font-medium text-gray-700">
-                  Category *
+                  {t.cases.modal.fields.category} *
                 </label>
                 <Select
                   value={mainForm.watch('category')}
                   onValueChange={(val: API.CaseCategory) => mainForm.setValue('category', val)}
                 >
                   <SelectTrigger className="h-10">
-                    <SelectValue placeholder="Select category" />
+                    <SelectValue placeholder={t.cases.modal.placeholders.category} />
                   </SelectTrigger>
                   <SelectContent>
                     {CaseCategory.options.map((category, index) => (
                       <SelectItem key={index} value={category.value}>
-                        {category.label}
+                        {t.enums.caseCategory[category.value] ?? category.label}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -220,11 +217,11 @@ const CaseCreateModal = forwardRef<CaseCreateModalRef, CaseCreateModalProps>(({ 
 
             <div className="space-y-2">
               <label className="text-sm font-medium text-gray-700">
-                Description *
+                {t.cases.modal.fields.description} *
               </label>
               <Textarea 
                 {...mainForm.register('description')} 
-                placeholder="Case description"
+                placeholder={t.cases.modal.placeholders.description}
                 className="min-h-[80px] resize-none"
               />
               {mainForm.formState.errors.description && (
@@ -235,29 +232,28 @@ const CaseCreateModal = forwardRef<CaseCreateModalRef, CaseCreateModalProps>(({ 
             </div>
           </div>
 
-          {/* Case Details */}
           <div className="space-y-4">
             <div className="flex items-center gap-2 text-sm font-medium text-gray-700 pb-2 border-b border-gray-100">
               <Info className="w-4 h-4 text-purple-600" />
-              <span>Case Details</span>
+              <span>{t.cases.modal.sections.caseDetails}</span>
             </div>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="text-sm font-medium text-gray-700">
-                  Status *
+                  {t.cases.modal.fields.status} *
                 </label>
                 <Select 
                   value={mainForm.watch('status')} 
                   onValueChange={(val: API.CaseStatus) => mainForm.setValue('status', val)}
                 >
                   <SelectTrigger className="h-10">
-                    <SelectValue placeholder="Select status" />
+                    <SelectValue placeholder={t.cases.modal.placeholders.status} />
                   </SelectTrigger>
                   <SelectContent>
                     {CaseStatus.options.map((status, index) => (
                       <SelectItem key={index} value={status.value}>
-                        {status.label}
+                        {t.enums.caseStatus[status.value] ?? status.label}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -271,7 +267,8 @@ const CaseCreateModal = forwardRef<CaseCreateModalRef, CaseCreateModalProps>(({ 
 
               <div className="space-y-2">
                 <label className="text-sm font-medium text-gray-700">
-                  Assigned To <span className="text-slate-400 text-xs">(optional)</span>
+                  {t.cases.modal.fields.assignedTo}{' '}
+                  <span className="text-slate-400 text-xs">({t.common.optional})</span>
                 </label>
                 <ServerSelect
                   link='/cabinets/members/select_list'
@@ -291,15 +288,15 @@ const CaseCreateModal = forwardRef<CaseCreateModalRef, CaseCreateModalProps>(({ 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="text-sm font-medium text-gray-700">
-                  Related Client (optional)
+                  {t.cases.modal.fields.relatedClient} ({t.common.optional})
                 </label>
                 <ServerSelect
                   link='/clients/clients/'
                   value={mainForm.watch('client')}
                   onChange={(val) => mainForm.setValue('client', val)}
-                  labelKey={(client: any) => `${client.first_name || ''} ${client.last_name || ''}`.trim() || client.email || 'Unnamed'}
+                  labelKey={(client: any) => `${client.first_name || ''} ${client.last_name || ''}`.trim() || client.email || t.cases.unnamed}
                   cleanable
-                  placeholder="Select a client"
+                  placeholder={t.cases.modal.placeholders.client}
                 />
                 {mainForm.formState.errors.client && (
                   <p className="text-red-500 text-xs">
@@ -311,11 +308,11 @@ const CaseCreateModal = forwardRef<CaseCreateModalRef, CaseCreateModalProps>(({ 
 
             <div className="space-y-2">
               <label className="text-sm font-medium text-gray-700">
-                Summary
+                {t.cases.modal.fields.summary}
               </label>
               <Input 
                 {...mainForm.register('summary')} 
-                placeholder="Brief case summary"
+                placeholder={t.cases.modal.placeholders.summary}
                 className="h-10"
               />
               {mainForm.formState.errors.summary && (
@@ -333,7 +330,7 @@ const CaseCreateModal = forwardRef<CaseCreateModalRef, CaseCreateModalProps>(({ 
               onClick={hide}
               disabled={isLoading}
             >
-              Cancel
+              {t.common.cancel}
             </Button>
             <Button
               type="submit"
@@ -342,11 +339,11 @@ const CaseCreateModal = forwardRef<CaseCreateModalRef, CaseCreateModalProps>(({ 
             >
               {isLoading ? (
                 <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Creating...
+                  <Loader2 className="w-4 h-4 me-2 animate-spin" />
+                  {t.cases.modal.creating}
                 </>
               ) : (
-                'Create Case'
+                t.cases.modal.createCase
               )}
             </Button>
           </DialogFooter>

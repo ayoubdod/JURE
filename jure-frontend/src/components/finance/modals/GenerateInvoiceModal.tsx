@@ -26,8 +26,7 @@ import { TVA_LEGAL_THRESHOLD_MAD } from '@/components/finance/tva/TVAProgressBar
 import { useToast } from '@/hooks/use-toast';
 import { isAxiosError } from 'axios';
 import { devError } from '@/utils/devLog';
-import { format } from 'date-fns';
-import { fr } from 'date-fns/locale';
+import { formatDate, useAppTranslation } from '@/i18n';
 
 type Props = {
   open: boolean;
@@ -39,13 +38,6 @@ type Props = {
   tvaStatus?: TVAStatus | null;
 };
 
-function formatCrossedDate(iso: string | null | undefined): string {
-  if (!iso) return '—';
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return '—';
-  return format(d, 'd MMM yyyy', { locale: fr });
-}
-
 export const GenerateInvoiceModal: React.FC<Props> = ({
   open,
   onOpenChange,
@@ -54,12 +46,21 @@ export const GenerateInvoiceModal: React.FC<Props> = ({
   onSuccess,
   tvaStatus = null,
 }) => {
+  const { t, tf, lang } = useAppTranslation();
+  const m = t.finance.modals.generateInvoice;
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [feeId, setFeeId] = useState<string>('');
   const [amountHt, setAmountHt] = useState('');
   const [dueDate, setDueDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [notes, setNotes] = useState('');
+
+  const formatCrossedDate = (iso: string | null | undefined): string => {
+    if (!iso) return '—';
+    const d = new Date(iso);
+    if (Number.isNaN(d.getTime())) return '—';
+    return formatDate(d, lang);
+  };
 
   const htNum = parseFloat(amountHt.replace(',', '.')) || 0;
   const exonere = tvaStatus ? isCabinetTvaExonerated(tvaStatus) : false;
@@ -103,7 +104,7 @@ export const GenerateInvoiceModal: React.FC<Props> = ({
     e.preventDefault();
     const fid = parseInt(feeId, 10);
     if (!fid || htNum <= 0) {
-      toast({ title: 'Champs requis', description: 'Honoraire et montant HT requis.', variant: 'destructive' });
+      toast({ title: m.requiredFields, description: m.feeAndAmountRequired, variant: 'destructive' });
       return;
     }
     setLoading(true);
@@ -114,7 +115,7 @@ export const GenerateInvoiceModal: React.FC<Props> = ({
         due_date: dueDate,
         notes: notes.trim() || undefined,
       });
-      toast({ title: 'Facture générée' });
+      toast({ title: m.success });
       onSuccess?.();
       setFeeId('');
       setAmountHt('');
@@ -122,7 +123,7 @@ export const GenerateInvoiceModal: React.FC<Props> = ({
       onOpenChange(false);
     } catch (err) {
       devError('generateInvoice', err);
-      let msg = 'Impossible de générer la facture.';
+      let msg = m.saveFailed;
       if (isAxiosError(err)) {
         const d = err.response?.data as Record<string, unknown> | string | undefined;
         if (d && typeof d === 'object' && !Array.isArray(d)) {
@@ -140,7 +141,7 @@ export const GenerateInvoiceModal: React.FC<Props> = ({
           }
         }
       }
-      toast({ title: 'Erreur', description: msg, variant: 'destructive' });
+      toast({ title: t.common.error, description: msg, variant: 'destructive' });
     } finally {
       setLoading(false);
     }
@@ -159,10 +160,10 @@ export const GenerateInvoiceModal: React.FC<Props> = ({
           <Button
             variant="ghost"
             size="icon"
-            className="absolute right-3 top-3 z-10 h-9 w-9 rounded-full bg-white/15 text-white hover:bg-white/25"
+            className="absolute end-3 top-3 z-10 h-9 w-9 rounded-full bg-white/15 text-white hover:bg-white/25"
             onClick={() => onOpenChange(false)}
             disabled={loading}
-            aria-label="Fermer"
+            aria-label={t.common.close}
           >
             <X className="h-4 w-4" />
           </Button>
@@ -171,9 +172,9 @@ export const GenerateInvoiceModal: React.FC<Props> = ({
               <FileText className="h-5 w-5 text-white" />
             </div>
             <div>
-              <DialogTitle className="text-xl font-bold tracking-tight text-white">Générer une facture</DialogTitle>
+              <DialogTitle className="text-xl font-bold tracking-tight text-white">{m.title}</DialogTitle>
               <DialogDescription className="text-sm text-white/90 mt-1">
-                {exonere ? 'Montants HT et TTC (exonération TVA)' : 'Montants HT, TVA 20 % et TTC'}
+                {exonere ? m.descriptionExempt : m.description}
               </DialogDescription>
             </div>
           </div>
@@ -182,18 +183,18 @@ export const GenerateInvoiceModal: React.FC<Props> = ({
         <form onSubmit={handleSubmit} className="flex max-h-[calc(85vh-100px)] flex-col overflow-y-auto px-6 py-5">
           <div className="mb-4">
             <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-zinc-400">
-              Honoraire lié
+              {m.linkedFee}
             </p>
             <div className="mt-2 h-px w-full bg-slate-200 dark:bg-zinc-800" />
           </div>
           <Select value={feeId || undefined} onValueChange={setFeeId}>
             <SelectTrigger className="mb-4 h-10">
-              <SelectValue placeholder="Sélectionner" />
+              <SelectValue placeholder={m.selectFee} />
             </SelectTrigger>
             <SelectContent>
               {fees.map((f) => (
                 <SelectItem key={f.id} value={String(f.id)}>
-                  {f.fee_type} · {formatMAD(f.planned_amount)}
+                  {t.finance.feeTypes[f.fee_type as keyof typeof t.finance.feeTypes] ?? f.fee_type} · {formatMAD(f.planned_amount)}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -201,63 +202,60 @@ export const GenerateInvoiceModal: React.FC<Props> = ({
 
           <div className="mb-4">
             <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-zinc-400">
-              Montant HT
+              {m.amountHt}
             </p>
             <div className="mt-2 h-px w-full bg-slate-200 dark:bg-zinc-800" />
           </div>
           <div className="relative mb-4">
-            <Label className="sr-only">Montant HT</Label>
+            <Label className="sr-only">{m.amountHt}</Label>
             <Input
-              className="h-10 pr-14"
+              className="h-10 pe-14"
               value={amountHt}
               onChange={(e) => setAmountHt(e.target.value)}
               inputMode="decimal"
             />
-            <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[13px] text-slate-500">
+            <span className="pointer-events-none absolute end-3 top-1/2 -translate-y-1/2 text-[13px] text-slate-500">
               MAD
             </span>
           </div>
 
           <div className="mb-4 rounded-lg border border-slate-200 bg-slate-50/80 px-3 py-3 text-[13px] dark:border-slate-800 dark:bg-slate-900/40">
-            <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">TVA</p>
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">{m.tvaSection}</p>
             {exonere ? (
               <>
-                <p className="mt-1 text-slate-800 dark:text-slate-200">
-                  Exonéré (CA cumulé {'<'} 500 000 MAD)
-                </p>
-                <p className="mt-1 text-slate-600 dark:text-slate-400">Montant TVA : {formatMAD(0)}</p>
-                <p className="mt-1 font-semibold text-slate-900 dark:text-white">TTC = HT ({formatMAD(ttc)})</p>
+                <p className="mt-1 text-slate-800 dark:text-slate-200">{m.exemptLabel}</p>
+                <p className="mt-1 text-slate-600 dark:text-slate-400">{tf(m.tvaAmount, { amount: formatMAD(0) })}</p>
+                <p className="mt-1 font-semibold text-slate-900 dark:text-white">{tf(m.ttcEqualsHt, { amount: formatMAD(ttc) })}</p>
                 <p className="mt-2 text-[12px] leading-relaxed text-slate-600 dark:text-slate-400">
-                  La mention d&apos;exonération sera automatiquement ajoutée à la facture (Art. 89 CGI Maroc).
+                  {m.exemptionMention}
                 </p>
                 {showApproachWarning ? (
                   <p className="mt-3 rounded-md border border-amber-200/80 bg-amber-50/90 px-2 py-2 text-[12px] leading-snug text-amber-900 dark:border-amber-800/60 dark:bg-amber-950/40 dark:text-amber-200">
-                    Votre CA approche du seuil de 500 000 MAD cumulé. Cette facture sera exonérée, mais les
-                    prochaines pourraient déclencher l&apos;assujettissement définitif.
+                    {m.approachWarning}
                   </p>
                 ) : null}
               </>
             ) : assujetti ? (
               <>
-                <p className="mt-1 text-slate-600 dark:text-slate-400">TVA (20%) : {formatMAD(tva)}</p>
-                <p className="mt-1 font-semibold text-slate-900 dark:text-white">TTC : {formatMAD(ttc)}</p>
+                <p className="mt-1 text-slate-600 dark:text-slate-400">{tf(m.tvaRateLine, { amount: formatMAD(tva) })}</p>
+                <p className="mt-1 font-semibold text-slate-900 dark:text-white">{tf(m.ttcLine, { amount: formatMAD(ttc) })}</p>
                 <p className="mt-2 text-[12px] leading-relaxed text-slate-600 dark:text-slate-400">
-                  TVA obligatoire — seuil cumulé de 500 000 MAD franchi le{' '}
-                  {formatCrossedDate(tvaStatus?.tva_became_applicable_at ?? tvaStatus?.crossed_at)}.
-                  (Art. 89 CGI Maroc)
+                  {tf(m.liabilityNote, {
+                    date: formatCrossedDate(tvaStatus?.tva_became_applicable_at ?? tvaStatus?.crossed_at),
+                  })}
                 </p>
               </>
             ) : (
               <>
-                <p className="text-slate-600 dark:text-slate-400">TVA (20%) : {formatMAD(tva)}</p>
-                <p className="mt-1 font-semibold text-slate-900 dark:text-white">TTC : {formatMAD(ttc)}</p>
+                <p className="text-slate-600 dark:text-slate-400">{tf(m.tvaRateLine, { amount: formatMAD(tva) })}</p>
+                <p className="mt-1 font-semibold text-slate-900 dark:text-white">{tf(m.ttcLine, { amount: formatMAD(ttc) })}</p>
               </>
             )}
           </div>
 
           <div className="mb-4">
             <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-zinc-400">
-              Date d&apos;échéance
+              {m.dueDate}
             </p>
             <div className="mt-2 h-px w-full bg-slate-200 dark:bg-zinc-800" />
           </div>
@@ -265,7 +263,7 @@ export const GenerateInvoiceModal: React.FC<Props> = ({
 
           <div className="mb-4">
             <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-zinc-400">
-              Notes
+              {m.notes}
             </p>
             <div className="mt-2 h-px w-full bg-slate-200 dark:bg-zinc-800" />
           </div>
@@ -273,15 +271,15 @@ export const GenerateInvoiceModal: React.FC<Props> = ({
             className="min-h-[72px] resize-none"
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
-            placeholder="Optionnel"
+            placeholder={t.common.optional}
           />
 
           <DialogFooter className="mt-6 gap-2 sm:gap-0">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
-              Annuler
+              {t.common.cancel}
             </Button>
             <Button type="submit" className="bg-jure-600 hover:bg-jure-700" disabled={loading}>
-              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Générer la facture'}
+              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : m.generate}
             </Button>
           </DialogFooter>
         </form>

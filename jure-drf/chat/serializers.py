@@ -86,6 +86,35 @@ def build_shared_item_payload(message: Message) -> tuple[dict | None, str]:
             "assignedTo": _assigned_to_chat_preview(a.created_by),
         }, mt
 
+    if mt in Message.call_message_types():
+        call = message.shared_call
+        if not call:
+            return None, Message.MessageType.TEXT
+        kind = "video" if str(call.kind).lower() == "video" else "voice"
+        if mt in (Message.MessageType.CALL_MISSED_VOICE, Message.MessageType.CALL_MISSED_VIDEO):
+            outcome = "missed"
+        else:
+            outcome = "completed"
+        duration_seconds = None
+        if call.started_at and call.ended_at:
+            duration_seconds = max(0, int((call.ended_at - call.started_at).total_seconds()))
+        return {
+            "type": "CALL",
+            "id": str(call.id),
+            "title": message.body or "",
+            "status": outcome,
+            "priority": None,
+            "reference": None,
+            "dueDate": None,
+            "caseType": None,
+            "assignedTo": None,
+            "kind": kind,
+            "outcome": outcome,
+            "durationSeconds": duration_seconds,
+            "startedAt": call.started_at.isoformat() if call.started_at else None,
+            "endedAt": call.ended_at.isoformat() if call.ended_at else None,
+        }, mt
+
     return None, Message.MessageType.TEXT
 
 
@@ -445,6 +474,11 @@ class MessageSerializer(serializers.ModelSerializer):
             attrs["body"] = initial.get("content", "") or ""
 
         mt = attrs.get("message_type", Message.MessageType.TEXT)
+
+        if mt in Message.call_message_types():
+            raise serializers.ValidationError(
+                {"message_type": "Call history messages are created by the system only."}
+            )
 
         sc_id = attrs.pop("sharedCaseId", None)
         st_id = attrs.pop("sharedTaskId", None)
