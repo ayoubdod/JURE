@@ -82,6 +82,9 @@ def build_cors_origins(
 # --------------------------------------------------------------------------------------
 INSTALLED_APPS = [
     "modeltranslation",
+    "unfold",
+    "unfold.contrib.filters",
+    "unfold.contrib.forms",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -265,10 +268,18 @@ MODELTRANSLATION_LANGUAGES = ("fr", "en", "ar")
 # --------------------------------------------------------------------------------------
 STATIC_ROOT = BASE_DIR / "staticfiles"
 STATIC_URL = "/static/"
+STATICFILES_DIRS = [BASE_DIR / "static"]
 MEDIA_ROOT = BASE_DIR / "media"
 MEDIA_URL = "/media/"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# --------------------------------------------------------------------------------------
+# Django admin (Unfold + JURE branding)
+# --------------------------------------------------------------------------------------
+from core.admin_branding import get_unfold_settings  # noqa: E402
+
+UNFOLD = get_unfold_settings(frontend_url=FRONTEND_BASE_URL_NORMALIZED)
 
 # --------------------------------------------------------------------------------------
 # Email (SMTP when credentials are present)

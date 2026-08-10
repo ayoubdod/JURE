@@ -1,13 +1,15 @@
 from django.contrib import admin
-from modeltranslation.admin import TranslationAdmin
-from .models import Contact, Activity
-# Register your models here.
+from modeltranslation.admin import TabbedTranslationAdmin
+from unfold.admin import ModelAdmin
 
-admin.site.register(Contact)
+from .models import Activity, Contact
+
+admin.site.register(Contact, ModelAdmin)
+
 
 @admin.register(Activity)
-class ActivityAdmin(TranslationAdmin):
-    list_display = ('name', 'created', 'modified')
-    list_filter = ('created', 'modified')
-    search_fields = ('name', 'description')
-    readonly_fields = ('created', 'modified')
+class ActivityAdmin(ModelAdmin, TabbedTranslationAdmin):
+    list_display = ("name", "created", "modified")
+    list_filter = ("created", "modified")
+    search_fields = ("name", "description")
+    readonly_fields = ("created", "modified")

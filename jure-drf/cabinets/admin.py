@@ -1,6 +1,6 @@
 from django.contrib import admin
+from unfold.admin import ModelAdmin
+
 from .models import Cabinet
 
-# Register your models here.
-
-admin.site.register(Cabinet)
+admin.site.register(Cabinet, ModelAdmin)

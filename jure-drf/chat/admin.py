@@ -1,18 +1,20 @@
 from django.contrib import admin
+from unfold.admin import ModelAdmin
+
 from .models import (
+    Attachment,
     Conversation,
     ConversationMembership,
+    DeliveryReceipt,
     Message,
     MessagePin,
-    Attachment,
     ReadReceipt,
-    DeliveryReceipt,
 )
 
-admin.site.register(Conversation)
-admin.site.register(ConversationMembership)
-admin.site.register(Message)
-admin.site.register(MessagePin)
-admin.site.register(Attachment)
-admin.site.register(ReadReceipt)
-admin.site.register(DeliveryReceipt)    
+admin.site.register(Conversation, ModelAdmin)
+admin.site.register(ConversationMembership, ModelAdmin)
+admin.site.register(Message, ModelAdmin)
+admin.site.register(MessagePin, ModelAdmin)
+admin.site.register(Attachment, ModelAdmin)
+admin.site.register(ReadReceipt, ModelAdmin)
+admin.site.register(DeliveryReceipt, ModelAdmin)
