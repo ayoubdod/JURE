@@ -6,8 +6,10 @@ import CallTimer from './CallTimer';
 import AudioWave from './AudioWave';
 import CallControls from './CallControls';
 import VideoStage from './VideoStage';
+import VoiceStage from './VoiceStage';
 import type { ConnectionQuality } from '@/utils/webrtc';
 import { useAppTranslation, tFor, detectInitialLanguage } from '@/i18n';
+import { useCallSessionStore } from '@/stores/callSessionStore';
 
 export type CallModalStatus =
   | 'calling'
@@ -115,6 +117,8 @@ const CallModal: React.FC<{
 }) => {
   const { t, tf } = useAppTranslation();
   const call = t.conversations.call;
+  const mode = useCallSessionStore((s) => s.ui.mode);
+  const isConference = mode === 'conference';
   const showActive = status === 'active' || status === 'reconnecting';
   const showCalling = status === 'calling';
   const showConnecting = status === 'connecting';
@@ -268,7 +272,11 @@ const CallModal: React.FC<{
           videoLive && 'mt-3'
         )}
       >
-        {!videoLive ? (
+        {!videoLive && isConference && (showActive || showConnecting) ? (
+          <VoiceStage className="w-full px-1" />
+        ) : null}
+
+        {!videoLive && !(isConference && (showActive || showConnecting)) ? (
           <div className="relative">
             {showProgress ? (
               <svg
@@ -352,7 +360,9 @@ const CallModal: React.FC<{
           ) : null
         )}
 
-        {showActive && !videoLive ? <AudioWave active={status === 'active'} muted={isMuted} /> : null}
+        {showActive && !videoLive && !isConference ? (
+          <AudioWave active={status === 'active'} muted={isMuted} />
+        ) : null}
 
         <div className="mt-2 w-full">
           {(showCalling || showConnecting) && !videoLive && (

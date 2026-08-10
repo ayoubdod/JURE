@@ -2153,6 +2153,7 @@ export const ar: AppMessages = {
       missedCallRecall: 'أعد الاتصال',
       historyVoiceCall: 'مكالمة صوتية',
       historyVideoCall: 'مكالمة فيديو',
+      groupCallTitle: 'مكالمة جماعية',
     },
   },
 

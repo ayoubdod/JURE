@@ -2,32 +2,39 @@ import React, { useEffect, useRef } from 'react';
 import UserAvatar from '@/components/common/UserAvatar';
 import { cn } from '@/lib/utils';
 import { useCallSessionStore } from '@/stores/callSessionStore';
+import type { ConferencePeerSnapshot } from '@/utils/conferenceMesh';
 
 const PeerTile: React.FC<{
-  peerId: number;
-  name: string;
-  avatar?: string | null;
-  firstName?: string;
-  lastName?: string;
-  hasVideo: boolean;
-  cameraOff: boolean;
+  peer: ConferencePeerSnapshot;
   className?: string;
-}> = ({ peerId, name, avatar, firstName, lastName, hasVideo, cameraOff, className }) => {
-  const getPeerStream = useCallSessionStore((s) => s.getPeerStream);
-  const getRemoteStream = useCallSessionStore((s) => s.getRemoteStream);
+}> = ({ peer, className }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const showFallback = !hasVideo || cameraOff;
+  const audioRef = useRef<HTMLAudioElement>(null);
+  const stream = peer.stream ?? null;
+  const showFallback = !peer.hasVideo || peer.cameraOff || !stream;
 
   useEffect(() => {
-    const el = videoRef.current;
-    if (!el) return;
-    const stream = getPeerStream(peerId) ?? (peerId < 0 ? null : getRemoteStream());
-    el.srcObject = stream;
-    if (stream) void el.play().catch(() => {});
-  }, [getPeerStream, getRemoteStream, peerId, hasVideo, cameraOff]);
+    const video = videoRef.current;
+    const audio = audioRef.current;
+    if (video) {
+      video.srcObject = stream;
+      if (stream) void video.play().catch(() => {});
+    }
+    if (audio) {
+      audio.srcObject = stream;
+      if (stream) void audio.play().catch(() => {});
+    }
+  }, [stream, peer.hasVideo, peer.cameraOff, peer.id]);
 
   return (
-    <div className={cn('relative overflow-hidden rounded-xl bg-slate-950', className)}>
+    <div
+      className={cn(
+        'relative overflow-hidden rounded-xl bg-slate-950',
+        peer.isSpeaking && 'ring-2 ring-emerald-400 ring-offset-1 ring-offset-slate-950',
+        className
+      )}
+    >
+      <audio ref={audioRef} autoPlay playsInline className="hidden" />
       <video
         ref={videoRef}
         autoPlay
@@ -37,17 +44,17 @@ const PeerTile: React.FC<{
       {showFallback ? (
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-gradient-to-b from-slate-900 to-slate-950">
           <UserAvatar
-            image={avatar ?? undefined}
-            firstName={firstName}
-            lastName={lastName}
+            image={peer.avatar ?? undefined}
+            firstName={peer.firstName}
+            lastName={peer.lastName}
             size="lg"
             className="h-16 w-16 text-base ring-2 ring-white/10 sm:h-20 sm:w-20"
           />
-          <p className="px-2 text-center text-xs font-medium text-slate-200 sm:text-sm">{name}</p>
+          <p className="px-2 text-center text-xs font-medium text-slate-200 sm:text-sm">{peer.name}</p>
         </div>
       ) : (
         <div className="absolute bottom-2 left-2 rounded-md bg-black/50 px-2 py-0.5 text-[11px] font-medium text-white">
-          {name}
+          {peer.name}
         </div>
       )}
     </div>
@@ -105,7 +112,7 @@ const VideoStage: React.FC<{
 
   if (kind !== 'video') return null;
 
-  const gridPeers =
+  const gridPeers: ConferencePeerSnapshot[] =
     peers.length > 0
       ? peers
       : [
@@ -117,6 +124,7 @@ const VideoStage: React.FC<{
             lastName: remoteLastName,
             hasVideo: hasRemoteVideo,
             cameraOff: remoteCameraOff,
+            isSpeaking: false,
             stream: null,
           },
         ];
@@ -129,17 +137,7 @@ const VideoStage: React.FC<{
       {isConference || gridPeers.length > 1 ? (
         <div className={cn('grid h-full min-h-[220px] gap-1.5 p-1.5', cols)}>
           {gridPeers.map((p) => (
-            <PeerTile
-              key={p.id}
-              peerId={p.id}
-              name={p.name}
-              avatar={p.avatar}
-              firstName={p.firstName}
-              lastName={p.lastName}
-              hasVideo={p.hasVideo}
-              cameraOff={p.cameraOff}
-              className="min-h-[100px]"
-            />
+            <PeerTile key={p.id} peer={p} className="min-h-[100px]" />
           ))}
         </div>
       ) : (

@@ -2076,6 +2076,7 @@ export interface AppMessages {
       missedCallRecall: string;
       historyVoiceCall: string;
       historyVideoCall: string;
+      groupCallTitle: string;
     };
   };
 

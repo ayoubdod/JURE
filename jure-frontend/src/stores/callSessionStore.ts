@@ -41,6 +41,7 @@ import {
   closeAllPeers,
   offerToPeer,
   peerListSnapshot,
+  setPeerSpeaking,
   updatePeerVideoFlags,
   type ConferencePeer,
   type ConferencePeerSnapshot,
@@ -71,6 +72,8 @@ export interface CallUiState {
   status: CallStatus;
   groupName: string | null;
   remoteUser: CallRemoteUser | null;
+  /** Group / conversation title for conference header (not a single peer name). */
+  displayTitle: string | null;
   /** Conference remote peers (mesh). Empty for classic 1:1. */
   peers: ConferencePeerSnapshot[];
   mode: 'direct' | 'conference';
@@ -101,6 +104,7 @@ const initialUi = (): CallUiState => ({
   status: 'idle',
   groupName: null,
   remoteUser: null,
+  displayTitle: null,
   peers: [],
   mode: 'direct',
   startTime: null,
@@ -198,13 +202,21 @@ let unsubChat: (() => void) | null = null;
 let unsubCalls: (() => void) | null = null;
 let unsubConv: (() => void) | null = null;
 let knownRemoteUsers: Map<number, CallRemoteUser> = new Map();
+let speakingTimer: ReturnType<typeof setInterval> | null = null;
+let speakingCtx: AudioContext | null = null;
+const speakingAnalysers = new Map<number, { analyser: AnalyserNode; source: MediaStreamAudioSourceNode }>();
 
 function syncPeersUi() {
   const peers = peerListSnapshot(conferencePeers);
-  const primary = peers[0];
-  setUiState({
+  const patch: Partial<CallUiState> = {
     peers,
-    remoteUser: primary
+    hasRemoteVideo: peers.some((p) => p.hasVideo),
+    remoteCameraOff: peers.length > 0 ? peers.every((p) => p.cameraOff) : false,
+  };
+  // Keep conference header on the group title — don't replace remoteUser with peers[0].
+  if (callMode !== 'conference') {
+    const primary = peers[0];
+    patch.remoteUser = primary
       ? {
           id: primary.id,
           name: primary.name,
@@ -212,21 +224,128 @@ function syncPeersUi() {
           firstName: primary.firstName,
           lastName: primary.lastName,
         }
-      : useCallSessionStore.getState().ui.remoteUser,
-    hasRemoteVideo: peers.some((p) => p.hasVideo),
-    remoteCameraOff: peers.length > 0 ? peers.every((p) => p.cameraOff) : false,
+      : useCallSessionStore.getState().ui.remoteUser;
+  }
+  setUiState(patch);
+}
+
+function stopSpeakingMonitor() {
+  if (speakingTimer) {
+    clearInterval(speakingTimer);
+    speakingTimer = null;
+  }
+  for (const slot of speakingAnalysers.values()) {
+    try {
+      slot.source.disconnect();
+      slot.analyser.disconnect();
+    } catch {
+      /* ignore */
+    }
+  }
+  speakingAnalysers.clear();
+  if (speakingCtx) {
+    void speakingCtx.close().catch(() => {});
+    speakingCtx = null;
+  }
+}
+
+function ensureSpeakingMonitor() {
+  if (speakingTimer) return;
+  speakingTimer = setInterval(() => {
+    if (callMode !== 'conference' || conferencePeers.size === 0) return;
+    if (!speakingCtx) {
+      try {
+        speakingCtx = new AudioContext();
+      } catch {
+        return;
+      }
+    }
+    if (speakingCtx.state === 'suspended') void speakingCtx.resume().catch(() => {});
+
+    let changed = false;
+    for (const [peerId, peer] of conferencePeers) {
+      const stream = peer.remoteStream;
+      const audioTracks = stream?.getAudioTracks().filter((t) => t.readyState === 'live') ?? [];
+      if (!stream || audioTracks.length === 0) {
+        if (setPeerSpeaking(conferencePeers, peerId, false)) changed = true;
+        const old = speakingAnalysers.get(peerId);
+        if (old) {
+          try {
+            old.source.disconnect();
+            old.analyser.disconnect();
+          } catch {
+            /* ignore */
+          }
+          speakingAnalysers.delete(peerId);
+        }
+        continue;
+      }
+      let slot = speakingAnalysers.get(peerId);
+      if (!slot) {
+        try {
+          const source = speakingCtx.createMediaStreamSource(stream);
+          const analyser = speakingCtx.createAnalyser();
+          analyser.fftSize = 256;
+          analyser.smoothingTimeConstant = 0.7;
+          source.connect(analyser);
+          slot = { source, analyser };
+          speakingAnalysers.set(peerId, slot);
+        } catch {
+          continue;
+        }
+      }
+      const data = new Uint8Array(slot.analyser.frequencyBinCount);
+      slot.analyser.getByteFrequencyData(data);
+      let sum = 0;
+      for (let i = 0; i < data.length; i++) sum += data[i];
+      const avg = sum / data.length;
+      const speaking = avg > 18;
+      if (setPeerSpeaking(conferencePeers, peerId, speaking)) changed = true;
+    }
+    // Drop analysers for peers that left
+    for (const peerId of [...speakingAnalysers.keys()]) {
+      if (!conferencePeers.has(peerId)) {
+        const old = speakingAnalysers.get(peerId);
+        try {
+          old?.source.disconnect();
+          old?.analyser.disconnect();
+        } catch {
+          /* ignore */
+        }
+        speakingAnalysers.delete(peerId);
+      }
+    }
+    if (changed) syncPeersUi();
+  }, 200);
+}
+
+function bindPeerTrackListeners(peerId: number, stream: MediaStream) {
+  const kind = useCallSessionStore.getState().ui.kind;
+  const refresh = () => {
+    updatePeerVideoFlags(conferencePeers, peerId, kind);
+    syncPeersUi();
+  };
+  stream.getTracks().forEach((track) => {
+    track.onunmute = refresh;
+    track.onmute = refresh;
+    track.onended = refresh;
   });
+}
+
+function onConferenceTrack(peerId: number, stream: MediaStream) {
+  // Prefer keeping a dedicated remoteStream per peer; only use global for 1:1 fallbacks.
+  if (callMode !== 'conference') {
+    mediaRef.remoteStream = stream;
+  }
+  bindPeerTrackListeners(peerId, stream);
+  updatePeerVideoFlags(conferencePeers, peerId, useCallSessionStore.getState().ui.kind);
+  syncPeersUi();
+  ensureSpeakingMonitor();
+  if (getStatus() === 'connecting' || getStatus() === 'calling') markCallActive();
 }
 
 function conferenceSend(obj: Record<string, unknown>): boolean {
   return sendCallSignal(obj, conversationId);
-}
-
-function onConferenceTrack(peerId: number, stream: MediaStream) {
-  mediaRef.remoteStream = stream;
-  updatePeerVideoFlags(conferencePeers, peerId, useCallSessionStore.getState().ui.kind);
-  syncPeersUi();
-  if (getStatus() === 'connecting' || getStatus() === 'calling') markCallActive();
 }
 
 function onConferencePcState(peerId: number, state: string) {
@@ -252,6 +371,7 @@ interface CallSessionStore {
     remoteUsers?: CallRemoteUser[];
     kind?: CallKind;
     mode?: 'direct' | 'conference';
+    displayTitle?: string | null;
   }) => boolean;
   joinActiveCall: (opts: {
     conversationId: number;
@@ -259,6 +379,7 @@ interface CallSessionStore {
     kind?: CallKind;
     mode?: 'direct' | 'conference';
     remoteUser?: CallRemoteUser | null;
+    displayTitle?: string | null;
   }) => boolean;
   acceptIncoming: () => void;
   rejectIncoming: () => void;
@@ -324,6 +445,7 @@ function teardownMedia() {
     callingAnim = null;
   }
   stopStatsPoll();
+  stopSpeakingMonitor();
   closeAllPeers(conferencePeers);
   cleanupCall(mediaRef);
   pendingRemoteIce = [];
@@ -728,6 +850,7 @@ function onWsMessage(data: WebSocketMessage | CallsWsMessage) {
       kind: normalizeKind(m.kind),
       mode: callMode,
       remoteUser: { id: callerId, name, avatar, firstName, lastName },
+      displayTitle: callMode === 'conference' ? 'Group call' : null,
     });
     return;
   }
@@ -1034,6 +1157,7 @@ export const useCallSessionStore = create<CallSessionStore>((set, get) => ({
     remoteUsers,
     kind = 'voice',
     mode,
+    displayTitle = null,
   }) => {
     if (get().ui.status !== 'idle') return false;
     const myId = useUserStore.getState().user?.id;
@@ -1065,6 +1189,10 @@ export const useCallSessionStore = create<CallSessionStore>((set, get) => ({
       kind,
       mode: resolvedMode,
       remoteUser,
+      displayTitle:
+        resolvedMode === 'conference'
+          ? displayTitle?.trim() || 'Group call'
+          : null,
       peers: [],
       callingProgress: 0,
     });
@@ -1097,6 +1225,7 @@ export const useCallSessionStore = create<CallSessionStore>((set, get) => ({
     kind = 'voice',
     mode = 'conference',
     remoteUser = null,
+    displayTitle = null,
   }) => {
     if (get().ui.status !== 'idle') return false;
     if (!gn) return false;
@@ -1113,6 +1242,8 @@ export const useCallSessionStore = create<CallSessionStore>((set, get) => ({
       kind,
       mode,
       remoteUser,
+      displayTitle:
+        mode === 'conference' ? displayTitle?.trim() || 'Group call' : null,
       peers: [],
     });
     void (async () => {

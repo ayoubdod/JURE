@@ -393,6 +393,10 @@ const ConversationsPage: React.FC = () => {
     (participants: CallRemoteUser[], kind: GroupCallKind) => {
       if (!activeId || participants.length === 0) return;
       const capped = participants.slice(0, 5);
+      const groupTitle =
+        activeConversation?.display_name?.trim() ||
+        activeConversation?.title?.trim() ||
+        t.conversations.call.groupCallTitle;
       initiateCall({
         conversationId: activeId,
         targetUserIds: capped.map((p) => p.id),
@@ -400,9 +404,10 @@ const ConversationsPage: React.FC = () => {
         remoteUsers: capped,
         kind,
         mode: 'conference',
+        displayTitle: groupTitle,
       });
     },
-    [activeId, initiateCall]
+    [activeId, activeConversation, initiateCall, t.conversations.call.groupCallTitle]
   );
 
   const handleStartVoiceCall = () => {
@@ -482,6 +487,10 @@ const ConversationsPage: React.FC = () => {
       kind: active.kind,
       mode: active.mode,
       remoteUser: remote ?? null,
+      displayTitle:
+        activeConversation?.display_name?.trim() ||
+        activeConversation?.title?.trim() ||
+        t.conversations.call.groupCallTitle,
     });
   };
 

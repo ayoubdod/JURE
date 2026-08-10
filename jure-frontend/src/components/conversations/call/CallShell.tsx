@@ -52,17 +52,21 @@ const CallShell: React.FC = () => {
         />
       ) : null}
 
-      {showCallModal && callState.remoteUser ? (
+      {showCallModal && (callState.remoteUser || callState.displayTitle) ? (
         <CallDialog
           open
           onOpenChange={(open) => {
             if (!open) handleCallModalClose();
           }}
           callState={callState}
-          remoteName={callState.remoteUser.name}
-          remoteAvatar={callState.remoteUser.avatar}
-          remoteFirstName={callState.remoteUser.firstName}
-          remoteLastName={callState.remoteUser.lastName}
+          remoteName={
+            callState.mode === 'conference' && callState.displayTitle
+              ? callState.displayTitle
+              : callState.remoteUser?.name ?? callState.displayTitle ?? 'Call'
+          }
+          remoteAvatar={callState.remoteUser?.avatar}
+          remoteFirstName={callState.remoteUser?.firstName}
+          remoteLastName={callState.remoteUser?.lastName}
           callingProgress={callState.callingProgress}
           onEndCall={endCall}
           onClose={handleCallModalClose}

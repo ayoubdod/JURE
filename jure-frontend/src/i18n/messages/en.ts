@@ -2152,6 +2152,7 @@ export const en: AppMessages = {
       missedCallRecall: 'Call back',
       historyVoiceCall: 'Voice call',
       historyVideoCall: 'Video call',
+      groupCallTitle: 'Group call',
     },
   },
 
