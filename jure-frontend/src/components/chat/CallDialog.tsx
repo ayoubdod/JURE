@@ -60,16 +60,30 @@ const CallDialog: React.FC<CallDialogProps> = ({
     status === 'active' ||
     status === 'reconnecting';
   const isVideo = callState.kind === 'video';
+  const hasVisualMedia =
+    isVideo ||
+    callState.isScreenSharing ||
+    callState.hasRemoteVideo ||
+    callState.peers.some((p) => p.hasVideo);
+  /** Mobile video / screen share should own the viewport. */
+  const preferMobileFullscreen = isMobile && hasVisualMedia;
   const [presentation, setPresentation] = useState<Presentation>(
-    isMobile && isVideo ? 'fullscreen' : 'expanded'
+    preferMobileFullscreen ? 'fullscreen' : 'expanded'
   );
   const dragStartY = useRef<number | null>(null);
   const showCompact = open && presentation === 'compact' && isLive;
   const showExpanded = open && !showCompact;
 
   useEffect(() => {
-    if (!open) setPresentation(isMobile && isVideo ? 'fullscreen' : 'expanded');
-  }, [open, isMobile, isVideo]);
+    if (!open) {
+      setPresentation(preferMobileFullscreen ? 'fullscreen' : 'expanded');
+      return;
+    }
+    // Promote to fullscreen when screen share / remote video starts (keep compact if minimized).
+    if (preferMobileFullscreen) {
+      setPresentation((p) => (p === 'compact' ? p : 'fullscreen'));
+    }
+  }, [open, preferMobileFullscreen]);
 
   useEffect(() => {
     if (!isLive && presentation === 'compact') setPresentation('expanded');
@@ -80,12 +94,15 @@ const CallDialog: React.FC<CallDialogProps> = ({
   }, [isLive]);
 
   const expand = useCallback(() => {
-    setPresentation(isMobile && isVideo ? 'fullscreen' : 'expanded');
-  }, [isMobile, isVideo]);
+    setPresentation(preferMobileFullscreen ? 'fullscreen' : 'expanded');
+  }, [preferMobileFullscreen]);
 
   const toggleFullscreen = useCallback(() => {
-    setPresentation((p) => (p === 'fullscreen' ? 'expanded' : 'fullscreen'));
-  }, []);
+    setPresentation((p) => {
+      if (p === 'fullscreen') return preferMobileFullscreen ? 'fullscreen' : 'expanded';
+      return 'fullscreen';
+    });
+  }, [preferMobileFullscreen]);
 
   const onTouchStart = (e: React.TouchEvent) => {
     if (!isMobile || presentation === 'fullscreen') return;
@@ -103,7 +120,13 @@ const CallDialog: React.FC<CallDialogProps> = ({
   if (!open) return null;
 
   const layout =
-    presentation === 'fullscreen' ? 'fullscreen' : isMobile ? (isVideo ? 'fullscreen' : 'sheet') : 'card';
+    presentation === 'fullscreen'
+      ? 'fullscreen'
+      : isMobile
+        ? preferMobileFullscreen
+          ? 'fullscreen'
+          : 'sheet'
+        : 'card';
 
   return (
     <>
@@ -167,19 +190,29 @@ const CallDialog: React.FC<CallDialogProps> = ({
               onExpand={expand}
             />
           </div>
-          {isVideo ? (
+          {hasVisualMedia ? (
             <button type="button" onClick={expand} className="relative h-28 w-full overflow-hidden rounded-xl bg-slate-900">
               <video
                 autoPlay
                 playsInline
                 muted
-                className="h-full w-full object-cover opacity-90"
+                className={cn(
+                  'h-full w-full opacity-90',
+                  callState.isScreenSharing || (!isVideo && callState.hasRemoteVideo)
+                    ? 'object-contain'
+                    : 'object-cover'
+                )}
                 ref={(el) => {
                   if (!el) return;
                   const remote = document.getElementById('remote-video') as HTMLVideoElement | null;
                   if (remote?.srcObject) el.srcObject = remote.srcObject;
                 }}
               />
+              {callState.isScreenSharing ? (
+                <span className="absolute bottom-1 start-1 rounded bg-indigo-600/90 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-white">
+                  {t.conversations.call.sharingScreen}
+                </span>
+              ) : null}
             </button>
           ) : null}
         </div>
@@ -216,8 +249,9 @@ const CallDialog: React.FC<CallDialogProps> = ({
                 layout === 'card' &&
                   'left-1/2 top-1/2 w-auto max-w-[calc(100vw-2rem)] -translate-x-1/2 -translate-y-1/2 data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95',
                 layout === 'sheet' &&
-                  'inset-x-0 bottom-0 max-h-[78dvh] data-[state=open]:slide-in-from-bottom data-[state=closed]:slide-out-to-bottom',
-                layout === 'fullscreen' && 'inset-0 data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95'
+                  'inset-x-0 bottom-0 max-h-[78dvh] overflow-y-auto data-[state=open]:slide-in-from-bottom data-[state=closed]:slide-out-to-bottom',
+                layout === 'fullscreen' &&
+                  'inset-0 flex h-[100dvh] max-h-[100dvh] flex-col data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95'
               )}
               onPointerDownOutside={(e) => {
                 e.preventDefault();

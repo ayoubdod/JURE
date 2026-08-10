@@ -154,7 +154,7 @@ const CallControls: React.FC<{
   return (
     <TooltipProvider delayDuration={200}>
       <div className={cn('relative flex w-full flex-col items-center gap-3', className)}>
-        <div className="flex items-center justify-center gap-3">
+        <div className="flex max-w-full flex-wrap items-center justify-center gap-2 sm:gap-3">
           {onToggleMute ? (
             <Tooltip>
               <TooltipTrigger asChild>
@@ -165,6 +165,7 @@ const CallControls: React.FC<{
                   aria-label={isMuted ? call.unmuteAria : call.muteAria}
                   className={cn(
                     btn,
+                    'h-12 w-12 sm:h-11 sm:w-11',
                     isMuted
                       ? 'bg-rose-600 text-white hover:bg-rose-700'
                       : 'bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-100'
@@ -187,6 +188,7 @@ const CallControls: React.FC<{
                   aria-label={isCameraOff ? call.cameraOnAria : call.cameraOffAria}
                   className={cn(
                     btn,
+                    'h-12 w-12 sm:h-11 sm:w-11',
                     isCameraOff
                       ? 'bg-rose-600 text-white hover:bg-rose-700'
                       : 'bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-100'
@@ -213,6 +215,7 @@ const CallControls: React.FC<{
                   aria-label={isScreenSharing ? call.stopShareScreenAria : call.shareScreenAria}
                   className={cn(
                     btn,
+                    'h-12 w-12 sm:h-11 sm:w-11',
                     isScreenSharing
                       ? 'bg-indigo-600 text-white hover:bg-indigo-700'
                       : 'bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-100'
@@ -236,7 +239,7 @@ const CallControls: React.FC<{
                   type="button"
                   disabled
                   aria-label={call.speaker}
-                  className={cn(btn, 'bg-slate-100 text-slate-500 dark:bg-slate-800')}
+                  className={cn(btn, 'h-12 w-12 bg-slate-100 text-slate-500 dark:bg-slate-800 sm:h-11 sm:w-11')}
                 >
                   <Volume2 className="h-[18px] w-[18px]" />
                 </button>
@@ -256,7 +259,7 @@ const CallControls: React.FC<{
               }}
               className={cn(
                 btn,
-                'bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-100'
+                'h-12 w-12 bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-100 sm:h-11 sm:w-11'
               )}
             >
               <MoreHorizontal className="h-[18px] w-[18px]" />
@@ -328,13 +331,27 @@ const CallControls: React.FC<{
               />
             ) : null}
           </div>
+
+          {onEndCall ? (
+            <button
+              type="button"
+              onClick={onEndCall}
+              aria-label={call.endCallAria}
+              className={cn(
+                btn,
+                'h-12 w-12 bg-rose-600 text-white hover:bg-rose-700 sm:hidden'
+              )}
+            >
+              <PhoneOff className="h-[18px] w-[18px]" />
+            </button>
+          ) : null}
         </div>
         {onEndCall ? (
           <button
             type="button"
             onClick={onEndCall}
             aria-label={call.endCallAria}
-            className="inline-flex h-11 min-w-[148px] items-center justify-center gap-2 rounded-full bg-rose-600 px-6 text-sm font-medium text-white shadow-sm transition hover:bg-rose-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400"
+            className="hidden h-11 min-w-[148px] items-center justify-center gap-2 rounded-full bg-rose-600 px-6 text-sm font-medium text-white shadow-sm transition hover:bg-rose-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400 sm:inline-flex"
           >
             <PhoneOff className="h-4 w-4" /> {call.endCall}
           </button>

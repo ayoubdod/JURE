@@ -8,7 +8,9 @@ import { useAppTranslation } from '@/i18n';
 const PeerTile: React.FC<{
   peer: ConferencePeerSnapshot;
   className?: string;
-}> = ({ peer, className }) => {
+  /** Prefer letterboxing (screen share) over cropping faces. */
+  contain?: boolean;
+}> = ({ peer, className, contain = false }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
   const stream = peer.stream ?? null;
@@ -40,7 +42,11 @@ const PeerTile: React.FC<{
         ref={videoRef}
         autoPlay
         playsInline
-        className={cn('h-full w-full object-cover', showFallback && 'opacity-0 absolute inset-0')}
+        className={cn(
+          'h-full w-full',
+          contain ? 'object-contain bg-black' : 'object-cover',
+          showFallback && 'absolute inset-0 opacity-0'
+        )}
       />
       {showFallback ? (
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-gradient-to-b from-slate-900 to-slate-950">
@@ -49,12 +55,14 @@ const PeerTile: React.FC<{
             firstName={peer.firstName}
             lastName={peer.lastName}
             size="lg"
-            className="h-16 w-16 text-base ring-2 ring-white/10 sm:h-20 sm:w-20"
+            className="h-14 w-14 text-sm ring-2 ring-white/10 sm:h-20 sm:w-20 sm:text-base"
           />
-          <p className="px-2 text-center text-xs font-medium text-slate-200 sm:text-sm">{peer.name}</p>
+          <p className="max-w-full truncate px-2 text-center text-xs font-medium text-slate-200 sm:text-sm">
+            {peer.name}
+          </p>
         </div>
       ) : (
-        <div className="absolute bottom-2 left-2 rounded-md bg-black/50 px-2 py-0.5 text-[11px] font-medium text-white">
+        <div className="absolute bottom-2 left-2 max-w-[70%] truncate rounded-md bg-black/55 px-2 py-0.5 text-[11px] font-medium text-white">
           {peer.name}
         </div>
       )}
@@ -97,6 +105,10 @@ const VideoStage: React.FC<{
   const showStage =
     kind === 'video' || isScreenSharing || hasRemoteVideo || peers.some((p) => p.hasVideo);
 
+  // Voice + remote video ≈ screen share; prefer contain so content isn't cropped on phones.
+  const remoteIsScreenLike = kind === 'voice' || peers.some((p) => p.hasVideo && kind === 'voice');
+  const useContainRemote = isScreenSharing || remoteIsScreenLike || (kind === 'voice' && hasRemoteVideo);
+
   useEffect(() => {
     const local = localRef.current;
     const localStream = getLocalStream();
@@ -114,7 +126,7 @@ const VideoStage: React.FC<{
       remote.srcObject = remoteStream;
       if (remoteStream) void remote.play().catch(() => {});
     }
-  }, [getRemoteStream, live, kind, hasRemoteVideo, isConference]);
+  }, [getRemoteStream, live, kind, hasRemoteVideo, isConference, isScreenSharing]);
 
   if (!showStage) return null;
 
@@ -135,15 +147,44 @@ const VideoStage: React.FC<{
           },
         ];
 
+  const n = gridPeers.length;
   const cols =
-    gridPeers.length <= 1 ? 'grid-cols-1' : gridPeers.length === 2 ? 'grid-cols-2' : 'grid-cols-2';
+    n <= 1
+      ? 'grid-cols-1'
+      : n === 2
+        ? 'grid-cols-1 sm:grid-cols-2'
+        : n === 3
+          ? 'grid-cols-2'
+          : 'grid-cols-2';
 
   return (
-    <div className={cn('relative w-full overflow-hidden rounded-2xl bg-slate-950', className)}>
+    <div
+      className={cn(
+        'relative w-full overflow-hidden bg-slate-950',
+        'rounded-none sm:rounded-2xl',
+        className
+      )}
+    >
       {isConference || gridPeers.length > 1 ? (
-        <div className={cn('grid h-full min-h-[220px] gap-1.5 p-1.5', cols)}>
-          {gridPeers.map((p) => (
-            <PeerTile key={p.id} peer={p} className="min-h-[100px]" />
+        <div
+          className={cn(
+            'grid h-full min-h-0 gap-1 p-1 sm:gap-1.5 sm:p-1.5',
+            cols,
+            n === 1 && 'min-h-[40dvh]',
+            n >= 2 && 'auto-rows-fr'
+          )}
+        >
+          {gridPeers.map((p, idx) => (
+            <PeerTile
+              key={p.id}
+              peer={p}
+              contain={useContainRemote || (kind === 'voice' && p.hasVideo)}
+              className={cn(
+                'min-h-[120px]',
+                n === 1 && 'min-h-[40dvh] sm:min-h-[220px]',
+                n === 3 && idx === 0 && 'col-span-2 sm:col-span-1'
+              )}
+            />
           ))}
         </div>
       ) : (
@@ -154,7 +195,8 @@ const VideoStage: React.FC<{
             autoPlay
             playsInline
             className={cn(
-              'h-full w-full object-cover',
+              'h-full w-full',
+              useContainRemote ? 'object-contain bg-black' : 'object-cover',
               !hasRemoteVideo || remoteCameraOff ? 'absolute inset-0 opacity-0' : 'opacity-100'
             )}
           />
@@ -165,10 +207,10 @@ const VideoStage: React.FC<{
                 firstName={remoteFirstName}
                 lastName={remoteLastName}
                 size="lg"
-                className="h-24 w-24 text-xl ring-2 ring-white/10"
+                className="h-20 w-20 text-lg ring-2 ring-white/10 sm:h-24 sm:w-24 sm:text-xl"
               />
-              <p className="text-sm font-medium text-slate-200">{remoteName}</p>
-              <p className="text-xs text-slate-400">Camera off</p>
+              <p className="px-4 text-center text-sm font-medium text-slate-200">{remoteName}</p>
+              <p className="text-xs text-slate-400">{call.cameraOff}</p>
             </div>
           ) : null}
         </>
@@ -176,8 +218,13 @@ const VideoStage: React.FC<{
 
       <div
         className={cn(
-          'absolute bottom-3 right-3 overflow-hidden rounded-xl border border-white/20 bg-slate-900 shadow-lg',
-          'h-28 w-20 sm:h-36 sm:w-28',
+          'absolute overflow-hidden rounded-xl border border-white/20 bg-slate-900 shadow-lg',
+          // Keep PIP clear of home indicator + controls on phones
+          'bottom-[max(0.75rem,env(safe-area-inset-bottom))] end-[max(0.75rem,env(safe-area-inset-right))]',
+          'sm:bottom-3 sm:end-3',
+          isScreenSharing
+            ? 'h-20 w-28 sm:h-28 sm:w-40'
+            : 'h-24 w-[4.5rem] sm:h-36 sm:w-28',
           localPipClassName
         )}
       >
@@ -187,7 +234,11 @@ const VideoStage: React.FC<{
           autoPlay
           muted
           playsInline
-          className={cn('h-full w-full object-cover', isCameraOff && !isScreenSharing && 'opacity-0')}
+          className={cn(
+            'h-full w-full',
+            isScreenSharing ? 'object-contain bg-black' : 'object-cover',
+            isCameraOff && !isScreenSharing && 'opacity-0'
+          )}
         />
         {isScreenSharing ? (
           <div className="absolute inset-x-0 bottom-0 bg-indigo-600/90 px-1 py-0.5 text-center text-[9px] font-semibold uppercase tracking-wide text-white">

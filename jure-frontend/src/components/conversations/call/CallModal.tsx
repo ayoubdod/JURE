@@ -172,8 +172,13 @@ const CallModal: React.FC<{
     'shadow-[0_8px_40px_-12px_rgba(15,23,42,0.28),0_0_0_1px_rgba(15,23,42,0.06)]',
     layout === 'card' && !videoLive && 'w-[min(100%,400px)] rounded-2xl p-6',
     layout === 'card' && videoLive && 'w-[min(100%,720px)] rounded-2xl p-4',
-    layout === 'sheet' && 'w-full rounded-t-2xl px-5 pb-6 pt-2',
-    layout === 'fullscreen' && 'h-full min-h-[100dvh] w-full justify-between rounded-none bg-slate-950 p-4 text-white'
+    layout === 'sheet' && 'w-full rounded-t-2xl px-5 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-2',
+    layout === 'fullscreen' &&
+      cn(
+        'h-[100dvh] max-h-[100dvh] w-full justify-between overflow-hidden rounded-none bg-slate-950 text-white',
+        'pt-[max(0.75rem,env(safe-area-inset-top))] px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]',
+        'sm:p-4'
+      )
   );
 
   if (micDenied || showError) {
@@ -232,10 +237,10 @@ const CallModal: React.FC<{
         </div>
       ) : null}
 
-      {layout === 'fullscreen' && isVideo ? (
-        <div className="mb-3 flex items-center justify-between gap-3">
+      {layout === 'fullscreen' && videoLive ? (
+        <div className="mb-2 flex shrink-0 items-center justify-between gap-3 sm:mb-3">
           <div className="min-w-0">
-            <h2 className="truncate text-base font-semibold">{remoteName}</h2>
+            <h2 className="truncate text-sm font-semibold sm:text-base">{remoteName}</h2>
             <p className={cn('text-xs font-medium', statusClass)} aria-live="polite">
               {statusLabel}
               {showActive ? (
@@ -243,6 +248,11 @@ const CallModal: React.FC<{
                   {' '}
                   <CallTimer active={status === 'active'} startTime={callStartTime} className="tabular-nums" />
                 </>
+              ) : null}
+              {isScreenSharing ? (
+                <span className="ms-2 inline-flex items-center rounded-full bg-indigo-500/90 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white">
+                  {call.sharingScreen}
+                </span>
               ) : null}
             </p>
           </div>
@@ -267,17 +277,19 @@ const CallModal: React.FC<{
           remoteFirstName={remoteFirstName}
           remoteLastName={remoteLastName}
           className={cn(
-            layout === 'fullscreen' ? 'min-h-0 flex-1' : 'aspect-video min-h-[240px]',
-            layout === 'sheet' && 'min-h-[42dvh]'
+            layout === 'fullscreen'
+              ? 'min-h-0 flex-1 rounded-xl sm:rounded-2xl'
+              : 'aspect-video min-h-[200px] sm:min-h-[240px]',
+            layout === 'sheet' && 'min-h-[min(52dvh,420px)] max-h-[58dvh]'
           )}
         />
       ) : null}
 
       <div
         className={cn(
-          'flex flex-col items-center',
-          layout === 'fullscreen' ? 'gap-4 pt-4' : 'gap-4',
-          videoLive && 'mt-3'
+          'flex shrink-0 flex-col items-center',
+          layout === 'fullscreen' ? 'gap-2 pt-2 sm:gap-4 sm:pt-4' : 'gap-4',
+          videoLive && layout !== 'fullscreen' && 'mt-3'
         )}
       >
         {!videoLive && isConference && (showActive || showConnecting) ? (
@@ -340,7 +352,7 @@ const CallModal: React.FC<{
           </div>
         ) : null}
 
-        {layout !== 'fullscreen' || !isVideo ? (
+        {layout !== 'fullscreen' || !videoLive ? (
           <div className="w-full min-w-0 text-center">
             <h2 className="truncate text-xl font-semibold tracking-tight">{remoteName}</h2>
             <p className={cn('mt-1.5 text-sm font-medium', statusClass)} aria-live="polite">
@@ -372,7 +384,7 @@ const CallModal: React.FC<{
           <AudioWave active={status === 'active'} muted={isMuted} />
         ) : null}
 
-        <div className="mt-2 w-full">
+        <div className={cn('w-full', layout === 'fullscreen' && videoLive ? 'mt-1' : 'mt-2')}>
           {(showCalling || showConnecting) && !videoLive && (
             <div className="flex justify-center">
               <button
@@ -405,6 +417,7 @@ const CallModal: React.FC<{
               onSelectAudioInput={onSelectAudioInput}
               onSelectVideoInput={onSelectVideoInput}
               onSelectAudioOutput={onSelectAudioOutput}
+              className={layout === 'fullscreen' && videoLive ? 'gap-2' : undefined}
             />
           )}
           {showTerminal ? (
