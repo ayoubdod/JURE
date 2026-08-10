@@ -25,6 +25,7 @@ interface CallDialogProps {
   onClose: () => void;
   onToggleMute: () => void;
   onToggleCamera?: () => void;
+  onToggleScreenShare?: () => void;
   onRetryMic: () => void;
   onSelectAudioInput?: (id: string) => void;
   onSelectVideoInput?: (id: string) => void;
@@ -44,6 +45,7 @@ const CallDialog: React.FC<CallDialogProps> = ({
   onClose,
   onToggleMute,
   onToggleCamera,
+  onToggleScreenShare,
   onRetryMic,
   onSelectAudioInput,
   onSelectVideoInput,
@@ -156,8 +158,10 @@ const CallDialog: React.FC<CallDialogProps> = ({
               kind={callState.kind}
               isMuted={callState.isMuted}
               isCameraOff={callState.isCameraOff}
+              isScreenSharing={callState.isScreenSharing}
               onToggleMute={onToggleMute}
               onToggleCamera={onToggleCamera}
+              onToggleScreenShare={onToggleScreenShare}
               onEndCall={onEndCall}
               canExpand
               onExpand={expand}
@@ -243,6 +247,7 @@ const CallDialog: React.FC<CallDialogProps> = ({
                 remoteLastName={remoteLastName}
                 isMuted={callState.isMuted}
                 isCameraOff={callState.isCameraOff}
+                isScreenSharing={callState.isScreenSharing}
                 callStartTime={callState.startTime}
                 endedDurationSec={callState.endedDurationSec}
                 micDenied={callState.micDenied}
@@ -251,6 +256,7 @@ const CallDialog: React.FC<CallDialogProps> = ({
                 layout={layout}
                 onToggleMute={onToggleMute}
                 onToggleCamera={onToggleCamera}
+                onToggleScreenShare={onToggleScreenShare}
                 onEndCall={onEndCall}
                 onClose={onClose}
                 onRetryMic={onRetryMic}

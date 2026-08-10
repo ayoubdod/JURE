@@ -10,6 +10,8 @@ import {
   Minimize2,
   Maximize2,
   Settings2,
+  ScreenShare,
+  ScreenShareOff,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -24,6 +26,7 @@ const CallControls: React.FC<{
   kind?: 'voice' | 'video';
   isMuted: boolean;
   isCameraOff?: boolean;
+  isScreenSharing?: boolean;
   canMinimize?: boolean;
   canExpand?: boolean;
   isFullscreen?: boolean;
@@ -32,6 +35,7 @@ const CallControls: React.FC<{
   selectedAudioOutputId?: string | null;
   onToggleMute?: () => void;
   onToggleCamera?: () => void;
+  onToggleScreenShare?: () => void;
   onEndCall?: () => void;
   onMinimize?: () => void;
   onExpand?: () => void;
@@ -44,6 +48,7 @@ const CallControls: React.FC<{
   kind = 'voice',
   isMuted,
   isCameraOff = false,
+  isScreenSharing = false,
   canMinimize,
   canExpand,
   isFullscreen,
@@ -52,6 +57,7 @@ const CallControls: React.FC<{
   selectedAudioOutputId = null,
   onToggleMute,
   onToggleCamera,
+  onToggleScreenShare,
   onEndCall,
   onMinimize,
   onExpand,
@@ -64,7 +70,8 @@ const CallControls: React.FC<{
   const call = t.conversations.call;
   const [moreOpen, setMoreOpen] = useState(false);
   const [devicesOpen, setDevicesOpen] = useState(false);
-  const showCamera = kind === 'video' && Boolean(onToggleCamera);
+  const showCamera = kind === 'video' && Boolean(onToggleCamera) && !isScreenSharing;
+  const showScreenShare = Boolean(onToggleScreenShare);
 
   if (variant === 'compact') {
     return (
@@ -101,6 +108,23 @@ const CallControls: React.FC<{
             )}
           >
             {isCameraOff ? <VideoOff className="h-4 w-4" /> : <Video className="h-4 w-4" />}
+          </button>
+        ) : null}
+        {showScreenShare ? (
+          <button
+            type="button"
+            onClick={onToggleScreenShare}
+            aria-pressed={isScreenSharing}
+            aria-label={isScreenSharing ? call.stopShareScreenAria : call.shareScreenAria}
+            className={cn(
+              btn,
+              'h-10 w-10',
+              isScreenSharing
+                ? 'bg-indigo-600 text-white hover:bg-indigo-700'
+                : 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-100'
+            )}
+          >
+            {isScreenSharing ? <ScreenShareOff className="h-4 w-4" /> : <ScreenShare className="h-4 w-4" />}
           </button>
         ) : null}
         {canExpand && onExpand ? (
@@ -177,7 +201,35 @@ const CallControls: React.FC<{
               </TooltipTrigger>
               <TooltipContent>{isCameraOff ? call.cameraOn : call.cameraOff}</TooltipContent>
             </Tooltip>
-          ) : (
+          ) : null}
+
+          {showScreenShare ? (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  type="button"
+                  onClick={onToggleScreenShare}
+                  aria-pressed={isScreenSharing}
+                  aria-label={isScreenSharing ? call.stopShareScreenAria : call.shareScreenAria}
+                  className={cn(
+                    btn,
+                    isScreenSharing
+                      ? 'bg-indigo-600 text-white hover:bg-indigo-700'
+                      : 'bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-100'
+                  )}
+                >
+                  {isScreenSharing ? (
+                    <ScreenShareOff className="h-[18px] w-[18px]" />
+                  ) : (
+                    <ScreenShare className="h-[18px] w-[18px]" />
+                  )}
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>
+                {isScreenSharing ? call.stopShareScreen : call.shareScreen}
+              </TooltipContent>
+            </Tooltip>
+          ) : kind !== 'video' ? (
             <Tooltip>
               <TooltipTrigger asChild>
                 <button
@@ -191,7 +243,7 @@ const CallControls: React.FC<{
               </TooltipTrigger>
               <TooltipContent>{call.speakerHint}</TooltipContent>
             </Tooltip>
-          )}
+          ) : null}
 
           <div className="relative">
             <button

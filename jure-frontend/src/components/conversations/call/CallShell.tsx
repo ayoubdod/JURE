@@ -19,6 +19,7 @@ const CallShell: React.FC = () => {
     endCall,
     toggleMute,
     toggleCamera,
+    toggleScreenShare,
     retryMic,
     closeUi,
     switchAudioInput,
@@ -72,6 +73,7 @@ const CallShell: React.FC = () => {
           onClose={handleCallModalClose}
           onToggleMute={toggleMute}
           onToggleCamera={toggleCamera}
+          onToggleScreenShare={() => void toggleScreenShare()}
           onRetryMic={retryMic}
           onSelectAudioInput={(id) => void switchAudioInput(id)}
           onSelectVideoInput={(id) => void switchVideoInput(id)}

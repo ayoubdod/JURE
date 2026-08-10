@@ -23,6 +23,8 @@ import {
   createOffer,
   fetchIceServers,
   getCallUserMedia,
+  getScreenShareStream,
+  applyOutboundVideoTrack,
   initPeerConnection,
   mediaErrorMessage,
   replaceInputTrack,
@@ -81,6 +83,7 @@ export interface CallUiState {
   endedDurationSec: number | null;
   isMuted: boolean;
   isCameraOff: boolean;
+  isScreenSharing: boolean;
   remoteCameraOff: boolean;
   hasRemoteVideo: boolean;
   micDenied: boolean;
@@ -111,6 +114,7 @@ const initialUi = (): CallUiState => ({
   endedDurationSec: null,
   isMuted: false,
   isCameraOff: false,
+  isScreenSharing: false,
   remoteCameraOff: false,
   hasRemoteVideo: false,
   micDenied: false,
@@ -205,6 +209,95 @@ let knownRemoteUsers: Map<number, CallRemoteUser> = new Map();
 let speakingTimer: ReturnType<typeof setInterval> | null = null;
 let speakingCtx: AudioContext | null = null;
 const speakingAnalysers = new Map<number, { analyser: AnalyserNode; source: MediaStreamAudioSourceNode }>();
+/** Camera track kept while screen-sharing so we can restore it. */
+let savedCameraTrack: MediaStreamTrack | null = null;
+let screenShareTrack: MediaStreamTrack | null = null;
+
+function collectOutboundPcs(): RTCPeerConnection[] {
+  const pcs: RTCPeerConnection[] = [];
+  if (mediaRef.pc) pcs.push(mediaRef.pc);
+  for (const peer of conferencePeers.values()) {
+    if (peer.pc) pcs.push(peer.pc);
+  }
+  return pcs;
+}
+
+async function renegotiateAfterTrackChange() {
+  if (callMode !== 'conference' || !groupName || !mediaRef.localStream) return;
+  for (const [peerId, slot] of conferencePeers) {
+    if (!slot.pc || slot.pc.signalingState !== 'stable') continue;
+    try {
+      const offer = await createOffer(slot.pc);
+      conferenceSend({ type: 'call.offer', sdp: offer, groupName, targetUserId: peerId });
+    } catch (e) {
+      devWarn('[call] renegotiate after screen share', peerId, e);
+    }
+  }
+}
+
+async function stopScreenShareInternal(restoreCamera: boolean) {
+  const stream = mediaRef.localStream;
+  const pcs = collectOutboundPcs();
+  if (screenShareTrack) {
+    try {
+      screenShareTrack.onended = null;
+    } catch {
+      /* ignore */
+    }
+    screenShareTrack.stop();
+    screenShareTrack = null;
+  }
+  if (!stream) {
+    savedCameraTrack = null;
+    setUiState({ isScreenSharing: false });
+    return;
+  }
+
+  let nextTrack: MediaStreamTrack | null = null;
+  const kind = useCallSessionStore.getState().ui.kind;
+  if (restoreCamera && kind === 'video') {
+    if (savedCameraTrack && savedCameraTrack.readyState === 'live') {
+      nextTrack = savedCameraTrack;
+    } else {
+      try {
+        const cam = await navigator.mediaDevices.getUserMedia({
+          audio: false,
+          video: useCallSessionStore.getState().ui.selectedVideoInputId
+            ? { deviceId: { exact: useCallSessionStore.getState().ui.selectedVideoInputId! } }
+            : true,
+        });
+        nextTrack = cam.getVideoTracks()[0] ?? null;
+        cam.getTracks().forEach((t) => {
+          if (t !== nextTrack) t.stop();
+        });
+      } catch (e) {
+        devWarn('[call] restore camera after screen share', e);
+      }
+    }
+  } else if (savedCameraTrack) {
+    savedCameraTrack.stop();
+  }
+  savedCameraTrack = null;
+
+  const hadVideoSender = pcs.some((pc) => pc.getSenders().some((s) => s.track?.kind === 'video'));
+  await applyOutboundVideoTrack(pcs, stream, nextTrack, { stopRemoved: true });
+  if (nextTrack && useCallSessionStore.getState().ui.isCameraOff) {
+    nextTrack.enabled = false;
+  }
+  if (!hadVideoSender || (callMode === 'conference' && !nextTrack && kind === 'voice')) {
+    await renegotiateAfterTrackChange();
+  }
+  if (!hadVideoSender && nextTrack && callMode === 'direct' && mediaRef.pc && groupName) {
+    try {
+      const offer = await createOffer(mediaRef.pc);
+      sendCallSignal({ type: 'call.offer', sdp: offer, groupName }, conversationId);
+    } catch (e) {
+      devWarn('[call] renegotiate 1:1 after screen share', e);
+    }
+  }
+  setUiState({ isScreenSharing: false });
+  attachLocalVideo(stream);
+}
 
 function syncPeersUi() {
   const peers = peerListSnapshot(conferencePeers);
@@ -386,6 +479,7 @@ interface CallSessionStore {
   endCall: () => void;
   toggleMute: () => void;
   toggleCamera: () => void;
+  toggleScreenShare: () => Promise<void>;
   retryMedia: () => void;
   closeUi: () => void;
   switchAudioInput: (deviceId: string) => Promise<void>;
@@ -446,6 +540,19 @@ function teardownMedia() {
   }
   stopStatsPoll();
   stopSpeakingMonitor();
+  if (screenShareTrack) {
+    try {
+      screenShareTrack.onended = null;
+    } catch {
+      /* ignore */
+    }
+    screenShareTrack.stop();
+    screenShareTrack = null;
+  }
+  if (savedCameraTrack) {
+    savedCameraTrack.stop();
+    savedCameraTrack = null;
+  }
   closeAllPeers(conferencePeers);
   cleanupCall(mediaRef);
   pendingRemoteIce = [];
@@ -1362,6 +1469,7 @@ export const useCallSessionStore = create<CallSessionStore>((set, get) => ({
   },
 
   toggleCamera: () => {
+    if (get().ui.isScreenSharing) return;
     const stream = mediaRef.localStream;
     if (!stream || get().ui.kind !== 'video') return;
     const nextOff = !get().ui.isCameraOff;
@@ -1370,6 +1478,77 @@ export const useCallSessionStore = create<CallSessionStore>((set, get) => ({
     });
     setUiState({ isCameraOff: nextOff });
     attachLocalVideo(stream);
+  },
+
+  toggleScreenShare: async () => {
+    const status = get().ui.status;
+    if (status !== 'active' && status !== 'connecting' && status !== 'reconnecting') return;
+    if (get().ui.isScreenSharing) {
+      await stopScreenShareInternal(true);
+      return;
+    }
+    let stream = mediaRef.localStream;
+    if (!stream) {
+      // Voice call may not have media until connected — ensure local stream
+      if (callMode === 'conference') {
+        stream = (await ensureConferenceLocalMedia()) ?? null;
+      }
+      if (!stream) return;
+    }
+    try {
+      const display = await getScreenShareStream();
+      const track = display.getVideoTracks()[0];
+      if (!track) {
+        display.getTracks().forEach((t) => t.stop());
+        return;
+      }
+      display.getTracks().forEach((t) => {
+        if (t !== track) t.stop();
+      });
+
+      const existingVideo = stream.getVideoTracks();
+      if (!savedCameraTrack && existingVideo[0] && existingVideo[0] !== track) {
+        savedCameraTrack = existingVideo[0];
+      }
+      existingVideo.forEach((t) => {
+        stream!.removeTrack(t);
+        // Keep saved camera alive; stop others
+        if (t !== savedCameraTrack) t.stop();
+      });
+
+      screenShareTrack = track;
+      track.onended = () => {
+        void stopScreenShareInternal(true);
+      };
+
+      const pcs = collectOutboundPcs();
+      const hadVideoSender = pcs.some((pc) => pc.getSenders().some((s) => s.track?.kind === 'video'));
+      stream.addTrack(track);
+      for (const pc of pcs) {
+        const sender = pc.getSenders().find((s) => s.track?.kind === 'video');
+        if (sender) await sender.replaceTrack(track);
+        else pc.addTrack(track, stream);
+      }
+      if (!hadVideoSender) {
+        await renegotiateAfterTrackChange();
+        if (callMode === 'direct' && mediaRef.pc && groupName) {
+          try {
+            const offer = await createOffer(mediaRef.pc);
+            sendCallSignal({ type: 'call.offer', sdp: offer, groupName }, conversationId);
+          } catch (e) {
+            devWarn('[call] renegotiate 1:1 screen share', e);
+          }
+        }
+      }
+      setUiState({ isScreenSharing: true, isCameraOff: false, hasRemoteVideo: get().ui.hasRemoteVideo });
+      attachLocalVideo(stream);
+    } catch (e) {
+      // User cancelled the picker — not an error state for the call
+      const name = e instanceof DOMException ? e.name : '';
+      if (name !== 'NotAllowedError' && name !== 'AbortError') {
+        devError('[call] screen share failed', e);
+      }
+    }
   },
 
   retryMedia: () => {
@@ -1411,7 +1590,7 @@ export const useCallSessionStore = create<CallSessionStore>((set, get) => ({
   },
 
   switchVideoInput: async (deviceId: string) => {
-    if (!deviceId) return;
+    if (!deviceId || get().ui.isScreenSharing) return;
     const pc = mediaRef.pc;
     const stream = mediaRef.localStream;
     if (!pc || !stream || get().ui.kind !== 'video') return;
@@ -1449,6 +1628,7 @@ export function useWebRtcCall() {
   const endCall = useCallSessionStore((s) => s.endCall);
   const toggleMute = useCallSessionStore((s) => s.toggleMute);
   const toggleCamera = useCallSessionStore((s) => s.toggleCamera);
+  const toggleScreenShare = useCallSessionStore((s) => s.toggleScreenShare);
   const retryMedia = useCallSessionStore((s) => s.retryMedia);
   const closeUi = useCallSessionStore((s) => s.closeUi);
   const switchAudioInput = useCallSessionStore((s) => s.switchAudioInput);
@@ -1464,6 +1644,7 @@ export function useWebRtcCall() {
     endCall,
     toggleMute,
     toggleCamera,
+    toggleScreenShare,
     retryMic: retryMedia,
     retryMedia,
     closeUi,

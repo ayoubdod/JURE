@@ -3,6 +3,7 @@ import UserAvatar from '@/components/common/UserAvatar';
 import { cn } from '@/lib/utils';
 import { useCallSessionStore } from '@/stores/callSessionStore';
 import type { ConferencePeerSnapshot } from '@/utils/conferenceMesh';
+import { useAppTranslation } from '@/i18n';
 
 const PeerTile: React.FC<{
   peer: ConferencePeerSnapshot;
@@ -80,16 +81,20 @@ const VideoStage: React.FC<{
   const mode = useCallSessionStore((s) => s.ui.mode);
   const peers = useCallSessionStore((s) => s.ui.peers);
   const isCameraOff = useCallSessionStore((s) => s.ui.isCameraOff);
+  const isScreenSharing = useCallSessionStore((s) => s.ui.isScreenSharing);
   const remoteCameraOff = useCallSessionStore((s) => s.ui.remoteCameraOff);
   const hasRemoteVideo = useCallSessionStore((s) => s.ui.hasRemoteVideo);
   const status = useCallSessionStore((s) => s.ui.status);
   const getLocalStream = useCallSessionStore((s) => s.getLocalStream);
   const getRemoteStream = useCallSessionStore((s) => s.getRemoteStream);
+  const { t } = useAppTranslation();
+  const call = t.conversations.call;
   const localRef = useRef<HTMLVideoElement>(null);
   const remoteRef = useRef<HTMLVideoElement>(null);
 
   const live = status === 'active' || status === 'reconnecting' || status === 'connecting';
   const isConference = mode === 'conference';
+  const showStage = kind === 'video' || isScreenSharing;
 
   useEffect(() => {
     const local = localRef.current;
@@ -98,7 +103,7 @@ const VideoStage: React.FC<{
       local.srcObject = localStream;
       if (localStream) void local.play().catch(() => {});
     }
-  }, [getLocalStream, live, kind, isCameraOff]);
+  }, [getLocalStream, live, kind, isCameraOff, isScreenSharing]);
 
   useEffect(() => {
     if (isConference) return;
@@ -110,7 +115,7 @@ const VideoStage: React.FC<{
     }
   }, [getRemoteStream, live, kind, hasRemoteVideo, isConference]);
 
-  if (kind !== 'video') return null;
+  if (!showStage) return null;
 
   const gridPeers: ConferencePeerSnapshot[] =
     peers.length > 0
@@ -181,9 +186,13 @@ const VideoStage: React.FC<{
           autoPlay
           muted
           playsInline
-          className={cn('h-full w-full object-cover', isCameraOff && 'opacity-0')}
+          className={cn('h-full w-full object-cover', isCameraOff && !isScreenSharing && 'opacity-0')}
         />
-        {isCameraOff ? (
+        {isScreenSharing ? (
+          <div className="absolute inset-x-0 bottom-0 bg-indigo-600/90 px-1 py-0.5 text-center text-[9px] font-semibold uppercase tracking-wide text-white">
+            {call.sharingScreen}
+          </div>
+        ) : isCameraOff ? (
           <div className="absolute inset-0 flex items-center justify-center bg-slate-800 text-[10px] font-medium uppercase tracking-wide text-slate-300">
             You
           </div>

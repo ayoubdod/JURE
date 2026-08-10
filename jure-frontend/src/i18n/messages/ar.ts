@@ -2154,6 +2154,11 @@ export const ar: AppMessages = {
       historyVoiceCall: 'مكالمة صوتية',
       historyVideoCall: 'مكالمة فيديو',
       groupCallTitle: 'مكالمة جماعية',
+      shareScreen: 'مشاركة الشاشة',
+      stopShareScreen: 'إيقاف المشاركة',
+      shareScreenAria: 'شارك شاشتك',
+      stopShareScreenAria: 'أوقف مشاركة الشاشة',
+      sharingScreen: 'جاري مشاركة الشاشة',
     },
   },
 

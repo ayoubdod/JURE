@@ -270,6 +270,43 @@ export async function replaceInputTrack(
   return newTrack;
 }
 
+/** Capture the JURE tab / a window / the full screen for collaboration. */
+export async function getScreenShareStream(): Promise<MediaStream> {
+  return navigator.mediaDevices.getDisplayMedia({
+    video: {
+      displaySurface: 'monitor',
+      frameRate: { ideal: 15, max: 30 },
+    } as MediaTrackConstraints,
+    audio: false,
+  });
+}
+
+/** Replace or add the outbound video track on every peer connection. */
+export async function applyOutboundVideoTrack(
+  pcs: RTCPeerConnection[],
+  localStream: MediaStream,
+  track: MediaStreamTrack | null,
+  opts?: { stopRemoved?: boolean }
+): Promise<void> {
+  const stopRemoved = opts?.stopRemoved !== false;
+  const oldVideo = localStream.getVideoTracks();
+  oldVideo.forEach((t) => {
+    localStream.removeTrack(t);
+    if (stopRemoved && t !== track) t.stop();
+  });
+  if (track) localStream.addTrack(track);
+
+  for (const pc of pcs) {
+    const sender = pc.getSenders().find((s) => s.track?.kind === 'video');
+    if (sender) {
+      await sender.replaceTrack(track);
+    } else if (track) {
+      pc.addTrack(track, localStream);
+    }
+  }
+  attachLocalVideo(localStream);
+}
+
 export async function setAudioOutputDevice(deviceId: string): Promise<boolean> {
   const audio = document.getElementById('remote-audio') as HTMLAudioElement & {
     setSinkId?: (id: string) => Promise<void>;

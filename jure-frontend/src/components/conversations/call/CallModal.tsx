@@ -65,6 +65,7 @@ const CallModal: React.FC<{
   remoteLastName?: string;
   isMuted: boolean;
   isCameraOff?: boolean;
+  isScreenSharing?: boolean;
   callStartTime: Date | null;
   endedDurationSec?: number | null;
   micDenied?: boolean;
@@ -76,6 +77,7 @@ const CallModal: React.FC<{
   selectedAudioOutputId?: string | null;
   onToggleMute: () => void;
   onToggleCamera?: () => void;
+  onToggleScreenShare?: () => void;
   onEndCall: () => void;
   onClose: () => void;
   onRetryMic?: () => void;
@@ -94,6 +96,7 @@ const CallModal: React.FC<{
   remoteLastName,
   isMuted,
   isCameraOff = false,
+  isScreenSharing = false,
   callStartTime,
   endedDurationSec,
   micDenied = false,
@@ -105,6 +108,7 @@ const CallModal: React.FC<{
   selectedAudioOutputId,
   onToggleMute,
   onToggleCamera,
+  onToggleScreenShare,
   onEndCall,
   onClose,
   onRetryMic,
@@ -147,7 +151,7 @@ const CallModal: React.FC<{
   const qualityLabel = qualityLabelMap[connectionQuality];
   const qualityClass = QUALITY_CLASS[connectionQuality];
   const isVideo = kind === 'video';
-  const videoLive = isVideo && (showActive || showConnecting);
+  const videoLive = (isVideo || isScreenSharing) && (showActive || showConnecting);
 
   const terminalDetail = () => {
     if (status === 'ended' && endedDurationSec != null && endedDurationSec >= 0) {
@@ -381,8 +385,10 @@ const CallModal: React.FC<{
               kind={kind}
               isMuted={isMuted}
               isCameraOff={isCameraOff}
+              isScreenSharing={isScreenSharing}
               onToggleMute={onToggleMute}
               onToggleCamera={onToggleCamera}
+              onToggleScreenShare={onToggleScreenShare}
               onEndCall={onEndCall}
               canMinimize={Boolean(onMinimize)}
               canExpand={Boolean(onToggleFullscreen)}

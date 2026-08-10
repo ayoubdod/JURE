@@ -2077,6 +2077,11 @@ export interface AppMessages {
       historyVoiceCall: string;
       historyVideoCall: string;
       groupCallTitle: string;
+      shareScreen: string;
+      stopShareScreen: string;
+      shareScreenAria: string;
+      stopShareScreenAria: string;
+      sharingScreen: string;
     };
   };
 

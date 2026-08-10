@@ -2173,6 +2173,11 @@ export const fr: AppMessages = {
       historyVoiceCall: 'Appel vocal',
       historyVideoCall: 'Appel vidéo',
       groupCallTitle: 'Appel de groupe',
+      shareScreen: 'Partager l’écran',
+      stopShareScreen: 'Arrêter le partage',
+      shareScreenAria: 'Partager votre écran',
+      stopShareScreenAria: 'Arrêter le partage d’écran',
+      sharingScreen: 'Partage d’écran',
     },
   },
 
