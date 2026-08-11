@@ -2158,6 +2158,9 @@ export const en: AppMessages = {
       shareScreenAria: 'Share your screen',
       stopShareScreenAria: 'Stop sharing your screen',
       sharingScreen: 'Sharing screen',
+      youAreSharing: 'You are sharing',
+      isSharingScreen: '{name} is sharing',
+      showControlsAria: 'Show call controls',
     },
   },
 

@@ -8,7 +8,6 @@ import { useAppTranslation } from '@/i18n';
 const PeerTile: React.FC<{
   peer: ConferencePeerSnapshot;
   className?: string;
-  /** Prefer letterboxing (screen share) over cropping faces. */
   contain?: boolean;
 }> = ({ peer, className, contain = false }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -32,8 +31,8 @@ const PeerTile: React.FC<{
   return (
     <div
       className={cn(
-        'relative overflow-hidden rounded-xl bg-slate-950',
-        peer.isSpeaking && 'ring-2 ring-emerald-400 ring-offset-1 ring-offset-slate-950',
+        'relative overflow-hidden rounded-2xl bg-slate-950',
+        peer.isSpeaking && 'ring-2 ring-emerald-400/90 shadow-[0_0_0_1px_rgba(52,211,153,0.35)]',
         className
       )}
     >
@@ -77,6 +76,10 @@ const VideoStage: React.FC<{
   remoteLastName?: string;
   className?: string;
   localPipClassName?: string;
+  /** Edge-to-edge immersive stage (fullscreen call). */
+  immersive?: boolean;
+  /** Shared screen takes over; hide peer grid. */
+  screenShareMode?: boolean;
 }> = ({
   remoteName,
   remoteAvatar,
@@ -84,6 +87,8 @@ const VideoStage: React.FC<{
   remoteLastName,
   className,
   localPipClassName,
+  immersive = false,
+  screenShareMode = false,
 }) => {
   const kind = useCallSessionStore((s) => s.ui.kind);
   const mode = useCallSessionStore((s) => s.ui.mode);
@@ -99,15 +104,14 @@ const VideoStage: React.FC<{
   const call = t.conversations.call;
   const localRef = useRef<HTMLVideoElement>(null);
   const remoteRef = useRef<HTMLVideoElement>(null);
+  const sharePeerRef = useRef<HTMLVideoElement>(null);
 
   const live = status === 'active' || status === 'reconnecting' || status === 'connecting';
   const isConference = mode === 'conference';
   const showStage =
     kind === 'video' || isScreenSharing || hasRemoteVideo || peers.some((p) => p.hasVideo);
 
-  // Voice + remote video ≈ screen share; prefer contain so content isn't cropped on phones.
-  const remoteIsScreenLike = kind === 'voice' || peers.some((p) => p.hasVideo && kind === 'voice');
-  const useContainRemote = isScreenSharing || remoteIsScreenLike || (kind === 'voice' && hasRemoteVideo);
+  const useContainRemote = screenShareMode || isScreenSharing || (kind === 'voice' && hasRemoteVideo);
 
   useEffect(() => {
     const local = localRef.current;
@@ -119,14 +123,26 @@ const VideoStage: React.FC<{
   }, [getLocalStream, live, kind, isCameraOff, isScreenSharing]);
 
   useEffect(() => {
-    if (isConference) return;
+    if (isConference && !screenShareMode) return;
     const remote = remoteRef.current;
     const remoteStream = getRemoteStream();
     if (remote) {
       remote.srcObject = remoteStream;
       if (remoteStream) void remote.play().catch(() => {});
     }
-  }, [getRemoteStream, live, kind, hasRemoteVideo, isConference, isScreenSharing]);
+  }, [getRemoteStream, live, kind, hasRemoteVideo, isConference, isScreenSharing, screenShareMode]);
+
+  // Conference screen share: pin the peer who has video (shared content).
+  const sharePeer = screenShareMode
+    ? peers.find((p) => p.hasVideo) ?? null
+    : null;
+
+  useEffect(() => {
+    const el = sharePeerRef.current;
+    if (!el || !sharePeer?.stream) return;
+    el.srcObject = sharePeer.stream;
+    void el.play().catch(() => {});
+  }, [sharePeer?.stream, sharePeer?.id, screenShareMode]);
 
   if (!showStage) return null;
 
@@ -148,41 +164,79 @@ const VideoStage: React.FC<{
         ];
 
   const n = gridPeers.length;
-  const cols =
+  // Spec: 1 full, 2 split, 3 = hero + 2, 4 = 2×2
+  const gridClass =
     n <= 1
-      ? 'grid-cols-1'
+      ? 'grid-cols-1 grid-rows-1'
       : n === 2
-        ? 'grid-cols-1 sm:grid-cols-2'
+        ? 'grid-cols-1 grid-rows-2 sm:grid-cols-2 sm:grid-rows-1'
         : n === 3
-          ? 'grid-cols-2'
-          : 'grid-cols-2';
+          ? 'grid-cols-2 grid-rows-[1.35fr_1fr]'
+          : 'grid-cols-2 grid-rows-2';
+
+  const showPeerGrid = (isConference || gridPeers.length > 1) && !screenShareMode;
 
   return (
     <div
       className={cn(
-        'relative w-full overflow-hidden bg-slate-950',
-        'rounded-none sm:rounded-2xl',
+        'relative w-full overflow-hidden bg-black',
+        !immersive && 'rounded-none sm:rounded-2xl bg-slate-950',
         className
       )}
     >
-      {isConference || gridPeers.length > 1 ? (
-        <div
-          className={cn(
-            'grid h-full min-h-0 gap-1 p-1 sm:gap-1.5 sm:p-1.5',
-            cols,
-            n === 1 && 'min-h-[40dvh]',
-            n >= 2 && 'auto-rows-fr'
+      {screenShareMode ? (
+        <div className="absolute inset-0 bg-black">
+          {/* Keep peer audio alive while video tiles are hidden */}
+          {peers.map((p) => (
+            <audio
+              key={`a-${p.id}`}
+              autoPlay
+              playsInline
+              className="hidden"
+              ref={(el) => {
+                if (!el) return;
+                el.srcObject = p.stream ?? null;
+                if (p.stream) void el.play().catch(() => {});
+              }}
+            />
+          ))}
+          {isScreenSharing ? (
+            <video
+              id="local-video"
+              ref={localRef}
+              autoPlay
+              muted
+              playsInline
+              className="h-full w-full object-contain"
+            />
+          ) : sharePeer ? (
+            <video
+              ref={sharePeerRef}
+              autoPlay
+              playsInline
+              className="h-full w-full object-contain"
+            />
+          ) : (
+            <video
+              id="remote-video"
+              ref={remoteRef}
+              autoPlay
+              playsInline
+              className="h-full w-full object-contain"
+            />
           )}
-        >
+        </div>
+      ) : showPeerGrid ? (
+        <div className={cn('grid h-full min-h-0 gap-1.5 p-1.5', gridClass, immersive && 'gap-1 p-1')}>
           {gridPeers.map((p, idx) => (
             <PeerTile
               key={p.id}
               peer={p}
-              contain={useContainRemote || (kind === 'voice' && p.hasVideo)}
+              contain={kind === 'voice' && p.hasVideo}
               className={cn(
-                'min-h-[120px]',
-                n === 1 && 'min-h-[40dvh] sm:min-h-[220px]',
-                n === 3 && idx === 0 && 'col-span-2 sm:col-span-1'
+                'min-h-0',
+                n === 3 && idx === 0 && 'col-span-2',
+                immersive && n === 1 && 'rounded-none'
               )}
             />
           ))}
@@ -216,40 +270,31 @@ const VideoStage: React.FC<{
         </>
       )}
 
-      <div
-        className={cn(
-          'absolute overflow-hidden rounded-xl border border-white/20 bg-slate-900 shadow-lg',
-          // Keep PIP clear of home indicator + controls on phones
-          'bottom-[max(0.75rem,env(safe-area-inset-bottom))] end-[max(0.75rem,env(safe-area-inset-right))]',
-          'sm:bottom-3 sm:end-3',
-          isScreenSharing
-            ? 'h-20 w-28 sm:h-28 sm:w-40'
-            : 'h-24 w-[4.5rem] sm:h-36 sm:w-28',
-          localPipClassName
-        )}
-      >
-        <video
-          id="local-video"
-          ref={localRef}
-          autoPlay
-          muted
-          playsInline
+      {!screenShareMode ? (
+        <div
           className={cn(
-            'h-full w-full',
-            isScreenSharing ? 'object-contain bg-black' : 'object-cover',
-            isCameraOff && !isScreenSharing && 'opacity-0'
+            'absolute z-10 overflow-hidden rounded-xl border border-white/25 bg-slate-900 shadow-lg',
+            'bottom-[max(0.75rem,env(safe-area-inset-bottom))] end-[max(0.75rem,env(safe-area-inset-right))]',
+            'sm:bottom-3 sm:end-3',
+            'h-24 w-[4.5rem] sm:h-36 sm:w-28',
+            localPipClassName
           )}
-        />
-        {isScreenSharing ? (
-          <div className="absolute inset-x-0 bottom-0 bg-indigo-600/90 px-1 py-0.5 text-center text-[9px] font-semibold uppercase tracking-wide text-white">
-            {call.sharingScreen}
-          </div>
-        ) : isCameraOff ? (
-          <div className="absolute inset-0 flex items-center justify-center bg-slate-800 text-[10px] font-medium uppercase tracking-wide text-slate-300">
-            You
-          </div>
-        ) : null}
-      </div>
+        >
+          <video
+            id={isScreenSharing ? undefined : 'local-video'}
+            ref={isScreenSharing ? undefined : localRef}
+            autoPlay
+            muted
+            playsInline
+            className={cn('h-full w-full object-cover', isCameraOff && 'opacity-0')}
+          />
+          {isCameraOff ? (
+            <div className="absolute inset-0 flex items-center justify-center bg-slate-800 text-[10px] font-medium uppercase tracking-wide text-slate-300">
+              You
+            </div>
+          ) : null}
+        </div>
+      ) : null}
     </div>
   );
 };

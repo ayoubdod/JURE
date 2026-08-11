@@ -22,7 +22,7 @@ const btn =
   'inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-45';
 
 const CallControls: React.FC<{
-  variant?: 'full' | 'compact';
+  variant?: 'full' | 'compact' | 'floating';
   kind?: 'voice' | 'video';
   isMuted: boolean;
   isCameraOff?: boolean;
@@ -72,6 +72,124 @@ const CallControls: React.FC<{
   const [devicesOpen, setDevicesOpen] = useState(false);
   const showCamera = kind === 'video' && Boolean(onToggleCamera) && !isScreenSharing;
   const showScreenShare = Boolean(onToggleScreenShare);
+
+  const glassBtn =
+    'inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-white/15 text-white backdrop-blur-md ring-1 ring-white/20 transition hover:bg-white/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50';
+
+  if (variant === 'floating') {
+    return (
+      <div className={cn('mx-auto flex w-full max-w-md flex-col items-center gap-2', className)}>
+        <div className="flex items-center justify-center gap-2.5 rounded-full bg-black/45 px-3 py-2.5 shadow-lg backdrop-blur-xl ring-1 ring-white/10 sm:gap-3 sm:px-4">
+          {onToggleMute ? (
+            <button
+              type="button"
+              onClick={onToggleMute}
+              aria-pressed={isMuted}
+              aria-label={isMuted ? call.unmuteAria : call.muteAria}
+              className={cn(glassBtn, isMuted && 'bg-rose-600/90 ring-rose-400/40 hover:bg-rose-500')}
+            >
+              {isMuted ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
+            </button>
+          ) : null}
+          {showCamera ? (
+            <button
+              type="button"
+              onClick={onToggleCamera}
+              aria-pressed={isCameraOff}
+              aria-label={isCameraOff ? call.cameraOnAria : call.cameraOffAria}
+              className={cn(glassBtn, isCameraOff && 'bg-rose-600/90 ring-rose-400/40 hover:bg-rose-500')}
+            >
+              {isCameraOff ? <VideoOff className="h-5 w-5" /> : <Video className="h-5 w-5" />}
+            </button>
+          ) : null}
+          {showScreenShare ? (
+            <button
+              type="button"
+              onClick={onToggleScreenShare}
+              aria-pressed={isScreenSharing}
+              aria-label={isScreenSharing ? call.stopShareScreenAria : call.shareScreenAria}
+              className={cn(
+                glassBtn,
+                isScreenSharing && 'bg-indigo-600/90 ring-indigo-300/40 hover:bg-indigo-500'
+              )}
+            >
+              {isScreenSharing ? <ScreenShareOff className="h-5 w-5" /> : <ScreenShare className="h-5 w-5" />}
+            </button>
+          ) : null}
+          <div className="relative">
+            <button
+              type="button"
+              aria-expanded={moreOpen}
+              aria-label={call.moreOptionsAria}
+              onClick={() => {
+                setMoreOpen((v) => !v);
+                setDevicesOpen(false);
+              }}
+              className={glassBtn}
+            >
+              <MoreHorizontal className="h-5 w-5" />
+            </button>
+            {moreOpen ? (
+              <div
+                role="menu"
+                className="absolute bottom-full left-1/2 z-30 mb-2 w-44 -translate-x-1/2 rounded-xl border border-white/10 bg-slate-950/95 py-1 text-white shadow-xl backdrop-blur-xl"
+              >
+                {canMinimize && onMinimize ? (
+                  <button
+                    type="button"
+                    role="menuitem"
+                    className="flex w-full items-center gap-2 px-3 py-2.5 text-left text-sm hover:bg-white/10"
+                    onClick={() => {
+                      setMoreOpen(false);
+                      onMinimize();
+                    }}
+                  >
+                    <Minimize2 className="h-3.5 w-3.5" /> {call.minimize}
+                  </button>
+                ) : null}
+                {onSelectAudioInput ? (
+                  <button
+                    type="button"
+                    role="menuitem"
+                    className="flex w-full items-center gap-2 px-3 py-2.5 text-left text-sm hover:bg-white/10"
+                    onClick={() => {
+                      setMoreOpen(false);
+                      setDevicesOpen(true);
+                    }}
+                  >
+                    <Settings2 className="h-3.5 w-3.5" /> {call.deviceSettings}
+                  </button>
+                ) : null}
+              </div>
+            ) : null}
+            {devicesOpen && onSelectAudioInput && onSelectVideoInput && onSelectAudioOutput ? (
+              <CallDeviceSettings
+                open={devicesOpen}
+                onClose={() => setDevicesOpen(false)}
+                kind={kind}
+                selectedAudioInputId={selectedAudioInputId}
+                selectedVideoInputId={selectedVideoInputId}
+                selectedAudioOutputId={selectedAudioOutputId}
+                onSelectAudioInput={onSelectAudioInput}
+                onSelectVideoInput={onSelectVideoInput}
+                onSelectAudioOutput={onSelectAudioOutput}
+              />
+            ) : null}
+          </div>
+          {onEndCall ? (
+            <button
+              type="button"
+              onClick={onEndCall}
+              aria-label={call.endCallAria}
+              className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-rose-600 text-white shadow-md hover:bg-rose-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-300"
+            >
+              <PhoneOff className="h-5 w-5" />
+            </button>
+          ) : null}
+        </div>
+      </div>
+    );
+  }
 
   if (variant === 'compact') {
     return (

@@ -2159,6 +2159,9 @@ export const ar: AppMessages = {
       shareScreenAria: 'شارك شاشتك',
       stopShareScreenAria: 'أوقف مشاركة الشاشة',
       sharingScreen: 'جاري مشاركة الشاشة',
+      youAreSharing: 'أنت تشارك شاشتك',
+      isSharingScreen: '{name} يشارك الشاشة',
+      showControlsAria: 'إظهار عناصر التحكم بالمكالمة',
     },
   },
 

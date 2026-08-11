@@ -2082,6 +2082,9 @@ export interface AppMessages {
       shareScreenAria: string;
       stopShareScreenAria: string;
       sharingScreen: string;
+      youAreSharing: string;
+      isSharingScreen: string;
+      showControlsAria: string;
     };
   };
 
