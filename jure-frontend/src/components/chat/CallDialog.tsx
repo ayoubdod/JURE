@@ -94,15 +94,13 @@ const CallDialog: React.FC<CallDialogProps> = ({
   }, [isLive]);
 
   const expand = useCallback(() => {
+    // Expanding the mini bar: video → immersive fullscreen; voice → light sheet
     setPresentation(preferMobileFullscreen ? 'fullscreen' : 'expanded');
   }, [preferMobileFullscreen]);
 
   const toggleFullscreen = useCallback(() => {
-    setPresentation((p) => {
-      if (p === 'fullscreen') return preferMobileFullscreen ? 'fullscreen' : 'expanded';
-      return 'fullscreen';
-    });
-  }, [preferMobileFullscreen]);
+    setPresentation((p) => (p === 'fullscreen' ? 'expanded' : 'fullscreen'));
+  }, []);
 
   const onTouchStart = (e: React.TouchEvent) => {
     if (!isMobile || presentation === 'fullscreen') return;
@@ -114,19 +112,27 @@ const CallDialog: React.FC<CallDialogProps> = ({
     const endY = e.changedTouches[0]?.clientY ?? dragStartY.current;
     const delta = endY - dragStartY.current;
     dragStartY.current = null;
-    if (delta > 56 && isLive) minimize();
+    // Swipe down → minimize; swipe up on voice sheet → light fullscreen
+    if (delta > 56 && isLive) {
+      minimize();
+      return;
+    }
+    if (delta < -56 && isLive && !hasVisualMedia && presentation !== 'fullscreen') {
+      setPresentation('fullscreen');
+    }
   };
 
   if (!open) return null;
 
-  const layout =
-    presentation === 'fullscreen'
-      ? 'fullscreen'
-      : isMobile
-        ? preferMobileFullscreen
-          ? 'fullscreen'
-          : 'sheet'
-        : 'card';
+  // Sheet by default on mobile voice; fullscreen when requested (same light style) or for video/share.
+  const layout: 'card' | 'sheet' | 'fullscreen' = (() => {
+    if (presentation === 'fullscreen') return 'fullscreen';
+    if (isMobile) {
+      if (preferMobileFullscreen) return 'fullscreen';
+      return 'sheet';
+    }
+    return 'card';
+  })();
 
   return (
     <>
@@ -249,7 +255,7 @@ const CallDialog: React.FC<CallDialogProps> = ({
                 layout === 'card' &&
                   'left-1/2 top-1/2 w-auto max-w-[calc(100vw-2rem)] -translate-x-1/2 -translate-y-1/2 data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95',
                 layout === 'sheet' &&
-                  'inset-x-0 bottom-0 max-h-[78dvh] overflow-y-auto data-[state=open]:slide-in-from-bottom data-[state=closed]:slide-out-to-bottom',
+                  'inset-x-0 bottom-0 max-h-[min(85dvh,640px)] overflow-y-auto data-[state=open]:slide-in-from-bottom data-[state=closed]:slide-out-to-bottom',
                 layout === 'fullscreen' &&
                   'inset-0 flex h-[100dvh] max-h-[100dvh] flex-col data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95'
               )}

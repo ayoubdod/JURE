@@ -173,14 +173,22 @@ const CallModal: React.FC<{
     'shadow-[0_8px_40px_-12px_rgba(15,23,42,0.28),0_0_0_1px_rgba(15,23,42,0.06)]',
     layout === 'card' && !videoLive && 'w-[min(100%,400px)] rounded-2xl p-6',
     layout === 'card' && videoLive && 'w-[min(100%,720px)] rounded-2xl p-4',
-    layout === 'sheet' && 'w-full rounded-t-2xl px-5 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-2',
+    // Mobile voice sheet — match the reduced call card (light, roomy, centered)
+    layout === 'sheet' &&
+      cn(
+        'w-full rounded-t-[1.75rem] bg-white px-5 pt-2',
+        'pb-[max(1.25rem,env(safe-area-inset-bottom))]',
+        'dark:bg-slate-900',
+        !videoLive && 'min-h-[min(72dvh,560px)] justify-between gap-6'
+      ),
     layout === 'fullscreen' && videoLive && 'h-[100dvh] max-h-[100dvh] w-full overflow-hidden rounded-none bg-black p-0 text-white shadow-none',
     layout === 'fullscreen' &&
       !videoLive &&
       cn(
-        'h-[100dvh] max-h-[100dvh] w-full justify-between overflow-hidden rounded-none bg-slate-950 text-white',
-        'pt-[max(0.75rem,env(safe-area-inset-top))] px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]',
-        'sm:p-4'
+        'flex h-[100dvh] max-h-[100dvh] w-full flex-col justify-between overflow-hidden rounded-none shadow-none',
+        'bg-gradient-to-b from-slate-50 via-white to-slate-100',
+        'px-6 pt-[max(1rem,env(safe-area-inset-top))] pb-[max(1.35rem,env(safe-area-inset-bottom))]',
+        'text-slate-900 dark:from-slate-950 dark:via-slate-950 dark:to-slate-900 dark:text-slate-50'
       )
   );
 
@@ -263,8 +271,48 @@ const CallModal: React.FC<{
   return (
     <div className={shellClass}>
       {layout === 'sheet' ? (
-        <div className="mb-3 flex justify-center" aria-hidden>
-          <span className="h-1 w-10 rounded-full bg-slate-300 dark:bg-slate-600" />
+        <button
+          type="button"
+          className="mb-2 flex w-full flex-col items-center gap-1 sm:mb-3"
+          aria-label={onToggleFullscreen && !videoLive ? call.fullScreen : undefined}
+          onClick={() => {
+            if (onToggleFullscreen && !videoLive) onToggleFullscreen();
+          }}
+        >
+          <span className="h-1 w-10 rounded-full bg-slate-300 dark:bg-slate-600" aria-hidden />
+          {!videoLive && onToggleFullscreen ? (
+            <span className="text-[10px] font-medium uppercase tracking-wide text-slate-400">
+              {call.fullScreen}
+            </span>
+          ) : null}
+        </button>
+      ) : null}
+
+      {layout === 'fullscreen' && !videoLive ? (
+        <div className="mb-2 flex w-full items-center justify-between gap-2">
+          {onMinimize ? (
+            <button
+              type="button"
+              onClick={onMinimize}
+              className="inline-flex h-10 items-center gap-1.5 rounded-full bg-white/90 px-3 text-xs font-medium text-slate-600 shadow-sm ring-1 ring-slate-200/80 dark:bg-slate-900/90 dark:text-slate-300 dark:ring-slate-700"
+              aria-label={call.minimize}
+            >
+              <span className="h-1 w-6 rounded-full bg-slate-300 dark:bg-slate-600" aria-hidden />
+              {call.minimize}
+            </button>
+          ) : (
+            <span />
+          )}
+          {onToggleFullscreen ? (
+            <button
+              type="button"
+              onClick={onToggleFullscreen}
+              className="inline-flex h-10 items-center rounded-full bg-white/90 px-3 text-xs font-medium text-slate-600 shadow-sm ring-1 ring-slate-200/80 dark:bg-slate-900/90 dark:text-slate-300 dark:ring-slate-700"
+              aria-label={call.exitFullScreen}
+            >
+              {call.exitFullScreen}
+            </button>
+          ) : null}
         </div>
       ) : null}
 
@@ -272,7 +320,7 @@ const CallModal: React.FC<{
         <button
           type="button"
           onClick={onClose}
-          className="absolute end-3 top-3 rounded-lg p-2 text-slate-400 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
+          className="absolute end-3 top-3 rounded-lg p-2 text-slate-400 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 dark:hover:bg-slate-800"
           aria-label={t.common.close}
         >
           <X className="h-4 w-4" />
@@ -294,8 +342,12 @@ const CallModal: React.FC<{
 
       <div
         className={cn(
-          'flex shrink-0 flex-col items-center gap-4',
-          videoLive && 'mt-3'
+          'flex min-h-0 flex-1 flex-col items-center',
+          !videoLive && (layout === 'sheet' || layout === 'fullscreen')
+            ? 'justify-center gap-5 py-2'
+            : 'gap-4',
+          layout === 'fullscreen' && !videoLive && 'gap-6 py-6',
+          videoLive && 'mt-3 shrink-0 flex-none'
         )}
       >
         {!videoLive && isConference && (showActive || showConnecting) ? (
@@ -306,7 +358,12 @@ const CallModal: React.FC<{
           <div className="relative">
             {showProgress ? (
               <svg
-                className="absolute -inset-3 h-[104px] w-[104px] -rotate-90"
+                className={cn(
+                  'absolute -rotate-90',
+                  layout === 'fullscreen' && !videoLive
+                    ? '-inset-6 h-[168px] w-[168px]'
+                    : '-inset-4 h-[120px] w-[120px] sm:-inset-5 sm:h-[136px] sm:w-[136px]'
+                )}
                 viewBox="0 0 100 100"
                 aria-hidden
               >
@@ -335,9 +392,13 @@ const CallModal: React.FC<{
             ) : null}
             <div
               className={cn(
-                'relative flex h-20 w-20 items-center justify-center overflow-hidden rounded-full',
-                showActive && 'ring-2 ring-emerald-400/60 ring-offset-2 ring-offset-white dark:ring-offset-slate-900',
-                showActive && 'shadow-[0_0_24px_-4px_rgba(16,185,129,0.45)]',
+                'relative flex items-center justify-center overflow-hidden rounded-full',
+                layout === 'fullscreen' && !videoLive
+                  ? 'h-32 w-32 sm:h-36 sm:w-36'
+                  : 'h-24 w-24 sm:h-28 sm:w-28',
+                showActive &&
+                  'ring-[3px] ring-emerald-400/80 ring-offset-[3px] ring-offset-white dark:ring-offset-slate-950',
+                showActive && 'shadow-[0_0_28px_-4px_rgba(52,211,153,0.55)]',
                 showTerminal && 'opacity-50 grayscale'
               )}
             >
@@ -346,97 +407,126 @@ const CallModal: React.FC<{
                 firstName={remoteFirstName}
                 lastName={remoteLastName}
                 size="lg"
-                className="h-20 w-20 text-base"
+                className={cn(
+                  'h-full w-full',
+                  layout === 'fullscreen' && !videoLive ? 'text-3xl' : 'text-xl sm:text-2xl'
+                )}
               />
             </div>
             {status === 'active' ? (
               <span
-                className="absolute bottom-1 right-1 h-3.5 w-3.5 rounded-full border-2 border-white bg-emerald-500 dark:border-slate-900"
+                className="absolute bottom-1 end-1 h-3.5 w-3.5 rounded-full border-2 border-white bg-emerald-500 dark:border-slate-900"
                 aria-hidden
               />
             ) : null}
           </div>
         ) : null}
 
-        {layout !== 'fullscreen' ? (
-          <div className="w-full min-w-0 text-center">
-            <h2 className="truncate text-xl font-semibold tracking-tight">{remoteName}</h2>
-            <p className={cn('mt-1.5 text-sm font-medium', statusClass)} aria-live="polite">
-              {showTerminal && status === 'ended' && terminalDetail()
-                ? tf(call.endedWithDuration, { duration: terminalDetail()! })
-                : statusLabel}
-            </p>
-            {showActive && qualityLabel && qualityClass ? (
-              <p className={cn('mt-1 text-xs', qualityClass)}>● {qualityLabel}</p>
-            ) : null}
-            {showActive && !videoLive ? (
-              <div className="mt-2 font-mono text-2xl font-medium tabular-nums tracking-tight text-slate-800 dark:text-slate-100">
-                <CallTimer active={status === 'active'} startTime={callStartTime} />
-              </div>
-            ) : null}
-            {showActive && videoLive ? (
-              <div className="mt-1 font-mono text-sm tabular-nums text-slate-600 dark:text-slate-300">
-                <CallTimer active={status === 'active'} startTime={callStartTime} />
-              </div>
-            ) : null}
-          </div>
-        ) : (
-          showActive && qualityLabel && qualityClass ? (
-            <p className={cn('text-xs', qualityClass)}>● {qualityLabel}</p>
-          ) : null
-        )}
-
-        {showActive && !videoLive && !isConference ? (
-          <AudioWave active={status === 'active'} muted={isMuted} />
-        ) : null}
-
-        <div className="mt-2 w-full">
-          {(showCalling || showConnecting) && !videoLive && (
-            <div className="flex justify-center">
-              <button
-                type="button"
-                onClick={onEndCall}
-                className="inline-flex h-11 min-w-[148px] items-center justify-center rounded-full bg-rose-600 px-6 text-sm font-medium text-white hover:bg-rose-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400"
-              >
-                {showCalling ? call.endCall : t.common.cancel}
-              </button>
+        <div className="w-full min-w-0 text-center">
+          <h2
+            className={cn(
+              'truncate font-semibold tracking-tight text-slate-900 dark:text-slate-50',
+              layout === 'fullscreen' && !videoLive
+                ? 'text-2xl sm:text-3xl'
+                : !videoLive && layout === 'sheet'
+                  ? 'text-[1.35rem] sm:text-2xl'
+                  : 'text-xl'
+            )}
+          >
+            {remoteName}
+          </h2>
+          <p className={cn('mt-1.5 text-sm font-medium sm:text-base', statusClass)} aria-live="polite">
+            {showTerminal && status === 'ended' && terminalDetail()
+              ? tf(call.endedWithDuration, { duration: terminalDetail()! })
+              : statusLabel}
+          </p>
+          {showActive && qualityLabel && qualityClass ? (
+            <p className={cn('mt-1 text-xs font-medium sm:text-sm', qualityClass)}>● {qualityLabel}</p>
+          ) : null}
+          {showActive && !videoLive ? (
+            <div
+              className={cn(
+                'mt-4 font-mono font-semibold leading-none tracking-tight tabular-nums text-slate-900 dark:text-slate-50',
+                layout === 'fullscreen' && !videoLive
+                  ? 'text-[2.75rem] sm:text-5xl'
+                  : 'text-[2rem] sm:text-[2.25rem]'
+              )}
+            >
+              <CallTimer active={status === 'active'} startTime={callStartTime} />
             </div>
-          )}
-          {(showActive || (videoLive && showConnecting)) && (
-            <CallControls
-              kind={kind}
-              isMuted={isMuted}
-              isCameraOff={isCameraOff}
-              isScreenSharing={isScreenSharing}
-              onToggleMute={onToggleMute}
-              onToggleCamera={onToggleCamera}
-              onToggleScreenShare={onToggleScreenShare}
-              onEndCall={onEndCall}
-              canMinimize={Boolean(onMinimize)}
-              canExpand={Boolean(onToggleFullscreen)}
-              isFullscreen={layout === 'fullscreen'}
-              onMinimize={onMinimize}
-              onExpand={onToggleFullscreen}
-              selectedAudioInputId={selectedAudioInputId}
-              selectedVideoInputId={selectedVideoInputId}
-              selectedAudioOutputId={selectedAudioOutputId}
-              onSelectAudioInput={onSelectAudioInput}
-              onSelectVideoInput={onSelectVideoInput}
-              onSelectAudioOutput={onSelectAudioOutput}
-            />
-          )}
-          {showTerminal ? (
-            <div className="flex justify-center">
-              <button
-                type="button"
-                onClick={onClose}
-                className="inline-flex h-11 min-w-[120px] items-center justify-center rounded-full border border-slate-200 bg-white px-6 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
-              >
-                Close
-              </button>
+          ) : null}
+          {showActive && videoLive ? (
+            <div className="mt-1 font-mono text-sm tabular-nums text-slate-600 dark:text-slate-300">
+              <CallTimer active={status === 'active'} startTime={callStartTime} />
             </div>
           ) : null}
         </div>
+
+        {showActive && !videoLive && !isConference ? (
+          <AudioWave
+            active={status === 'active'}
+            muted={isMuted}
+            className={cn(
+              'mt-1 text-sky-400',
+              layout === 'fullscreen' && !videoLive && 'h-8 scale-110'
+            )}
+          />
+        ) : null}
+      </div>
+
+      <div
+        className={cn(
+          'mt-auto w-full shrink-0',
+          !videoLive && (layout === 'sheet' || layout === 'fullscreen') && 'pt-4',
+          layout === 'fullscreen' && !videoLive && 'pt-6'
+        )}
+      >
+        {(showCalling || showConnecting) && !videoLive && (
+          <div className="flex justify-center">
+            <button
+              type="button"
+              onClick={onEndCall}
+              className="inline-flex h-11 min-w-[148px] items-center justify-center rounded-full bg-rose-600 px-6 text-sm font-medium text-white hover:bg-rose-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400"
+            >
+              {showCalling ? call.endCall : t.common.cancel}
+            </button>
+          </div>
+        )}
+        {(showActive || (videoLive && showConnecting)) && (
+          <CallControls
+            variant={!videoLive ? 'sheet' : 'full'}
+            kind={kind}
+            isMuted={isMuted}
+            isCameraOff={isCameraOff}
+            isScreenSharing={isScreenSharing}
+            onToggleMute={onToggleMute}
+            onToggleCamera={onToggleCamera}
+            onToggleScreenShare={onToggleScreenShare}
+            onEndCall={onEndCall}
+            canMinimize={Boolean(onMinimize)}
+            canExpand={Boolean(onToggleFullscreen)}
+            isFullscreen={layout === 'fullscreen'}
+            onMinimize={onMinimize}
+            onExpand={onToggleFullscreen}
+            selectedAudioInputId={selectedAudioInputId}
+            selectedVideoInputId={selectedVideoInputId}
+            selectedAudioOutputId={selectedAudioOutputId}
+            onSelectAudioInput={onSelectAudioInput}
+            onSelectVideoInput={onSelectVideoInput}
+            onSelectAudioOutput={onSelectAudioOutput}
+          />
+        )}
+        {showTerminal ? (
+          <div className="flex justify-center">
+            <button
+              type="button"
+              onClick={onClose}
+              className="inline-flex h-11 min-w-[120px] items-center justify-center rounded-full border border-slate-200 bg-white px-6 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+            >
+              Close
+            </button>
+          </div>
+        ) : null}
       </div>
     </div>
   );

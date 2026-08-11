@@ -11,7 +11,7 @@ const AudioWave: React.FC<{ active: boolean; muted: boolean; className?: string 
   const animate = active && !muted;
   return (
     <div
-      className={cn('flex h-8 items-center justify-center gap-[3px]', className)}
+      className={cn('flex h-8 items-center justify-center gap-[4px]', className)}
       role="img"
       aria-label={muted ? 'Microphone muted' : active ? 'Live audio' : 'Audio idle'}
     >
@@ -19,15 +19,15 @@ const AudioWave: React.FC<{ active: boolean; muted: boolean; className?: string 
         <span
           key={i}
           className={cn(
-            'w-[2.5px] rounded-full bg-emerald-500/80 transition-all duration-200',
-            !animate && 'h-[3px] opacity-40'
+            'w-[3px] rounded-full bg-sky-400/90 transition-all duration-200',
+            !animate && 'h-[3px] opacity-35'
           )}
           style={
             animate
               ? {
                   animation: `call-wave-smooth ${0.85 + (i % 4) * 0.08}s ease-in-out infinite`,
                   animationDelay: `${i * 0.05}s`,
-                  ['--wave-peak' as string]: `${Math.round(4 + peak * 24)}px`,
+                  ['--wave-peak' as string]: `${Math.round(4 + peak * 18)}px`,
                 }
               : undefined
           }
@@ -35,8 +35,8 @@ const AudioWave: React.FC<{ active: boolean; muted: boolean; className?: string 
       ))}
       <style>{`
         @keyframes call-wave-smooth {
-          0%, 100% { height: 3px; opacity: 0.45; }
-          50% { height: var(--wave-peak, 20px); opacity: 0.95; }
+          0%, 100% { height: 3px; opacity: 0.4; }
+          50% { height: var(--wave-peak, 16px); opacity: 0.95; }
         }
       `}</style>
     </div>
