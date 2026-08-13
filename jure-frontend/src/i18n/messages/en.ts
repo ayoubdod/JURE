@@ -2240,7 +2240,9 @@ export const en: AppMessages = {
     paymentMethods: {
       CASH: 'Cash',
       VIREMENT_BANCAIRE: 'Bank transfer',
+      BANK_TRANSFER: 'Bank transfer',
       CHEQUE: 'Check',
+      OTHER: 'Other',
     },
     txKinds: {
       PAIEMENT: 'Payment',

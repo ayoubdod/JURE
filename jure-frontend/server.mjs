@@ -96,6 +96,11 @@ function buildHead(entry, canonicalBase) {
   const slugPath = entry.canonical.replace(canonicalBase, ''); // e.g. /en/legal-ai
   const slug = slugPath.split('/').filter(Boolean).slice(1).join('/');
   const ogImage = `${canonicalBase}/og/og-default.jpg`;
+  const ogLocaleTags = { en: 'en_US', fr: 'fr_FR', ar: 'ar_MA' };
+  const primaryOgLocale = ogLocaleTags[entry.locale] || ogLocaleTags.en;
+  const alternateOgLocales = LOCALES.filter((locale) => locale !== entry.locale)
+    .map((locale) => `    <meta property="og:locale:alternate" content="${ogLocaleTags[locale] || locale}" />`)
+    .join('\n');
 
   const hreflangs = LOCALES.map((locale) => {
     const href = `${canonicalBase}/${locale}${slug ? `/${slug}` : ''}`;
@@ -107,10 +112,16 @@ function buildHead(entry, canonicalBase) {
     .map((block) => `    <script type="application/ld+json">${JSON.stringify(block)}</script>`)
     .join('\n');
 
+  const verification = process.env.GOOGLE_SITE_VERIFICATION || process.env.VITE_GOOGLE_SITE_VERIFICATION || '';
+  const verificationMeta = verification
+    ? `    <meta name="google-site-verification" content="${escapeHtml(verification)}" />`
+    : '';
+
   return [
     `    <title>${title}</title>`,
     `    <meta name="description" content="${description}" />`,
     `    <meta name="author" content="JURE" />`,
+    verificationMeta,
     `    <link rel="canonical" href="${canonical}" />`,
     hreflangs,
     xDefault,
@@ -120,13 +131,18 @@ function buildHead(entry, canonicalBase) {
     `    <meta property="og:description" content="${description}" />`,
     `    <meta property="og:url" content="${canonical}" />`,
     `    <meta property="og:image" content="${ogImage}" />`,
-    `    <meta property="og:locale" content="${entry.locale}" />`,
+    `    <meta property="og:image:width" content="1200" />`,
+    `    <meta property="og:image:height" content="630" />`,
+    `    <meta property="og:image:alt" content="JURE — LegalTech platform for modern legal teams" />`,
+    `    <meta property="og:locale" content="${primaryOgLocale}" />`,
+    alternateOgLocales,
     `    <meta name="twitter:card" content="summary_large_image" />`,
     `    <meta name="twitter:title" content="${title}" />`,
     `    <meta name="twitter:description" content="${description}" />`,
     `    <meta name="twitter:image" content="${ogImage}" />`,
+    `    <meta name="twitter:image:alt" content="JURE — LegalTech platform for modern legal teams" />`,
     jsonLd,
-  ].join('\n');
+  ].filter(Boolean).join('\n');
 }
 
 /** Static body for crawlers; React replaces #root children on hydrate. */

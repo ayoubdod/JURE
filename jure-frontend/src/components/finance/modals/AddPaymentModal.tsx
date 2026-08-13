@@ -20,6 +20,7 @@ import {
 import { Loader2, X, Wallet } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { addPayment, getCaseFinance } from '@/services/finance/api';
+import { normalizeCaseFinancePayload } from '@/utils/normalizeCaseFinance';
 import { useToast } from '@/hooks/use-toast';
 import { isAxiosError } from 'axios';
 import { devError } from '@/utils/devLog';
@@ -33,12 +34,16 @@ type Props = {
   onSuccess?: () => void;
 };
 
+const PAYABLE = new Set(['SENT', 'PARTIALLY_PAID', 'OVERDUE']);
+
 export const AddPaymentModal: React.FC<Props> = ({ open, onOpenChange, caseId, invoices, onSuccess }) => {
   const { t, tf } = useAppTranslation();
   const m = t.finance.modals.addPayment;
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
-  const [invoiceRows, setInvoiceRows] = useState<API.FinanceCaseInvoice[]>(invoices);
+  const [invoiceRows, setInvoiceRows] = useState<API.FinanceCaseInvoice[]>(
+    () => invoices.filter((i) => PAYABLE.has(i.status))
+  );
   const [invoicesLoading, setInvoicesLoading] = useState(false);
   const [amount, setAmount] = useState('');
   const [method, setMethod] = useState<API.FinancePaymentMethod>('VIREMENT_BANCAIRE');
@@ -53,7 +58,7 @@ export const AddPaymentModal: React.FC<Props> = ({ open, onOpenChange, caseId, i
   };
 
   useEffect(() => {
-    setInvoiceRows(invoices);
+    setInvoiceRows(invoices.filter((i) => PAYABLE.has(i.status)));
   }, [invoices]);
 
   useEffect(() => {
@@ -62,7 +67,9 @@ export const AddPaymentModal: React.FC<Props> = ({ open, onOpenChange, caseId, i
     setInvoicesLoading(true);
     getCaseFinance(caseId)
       .then((res) => {
-        if (!cancelled) setInvoiceRows(res.data?.invoices ?? []);
+        if (cancelled) return;
+        const normalized = normalizeCaseFinancePayload(res.data);
+        setInvoiceRows((normalized.invoices ?? []).filter((i) => PAYABLE.has(i.status)));
       })
       .catch(() => {
         /* keep invoiceRows from parent sync */

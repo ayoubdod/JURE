@@ -58,33 +58,45 @@ function resolveAnnouncementMediaUrl(url: string | null | undefined): string | n
   const base = BACKEND_BASE_URL.replace(/\/$/, '');
   return `${base}${u.startsWith('/') ? '' : '/'}${u}`;
 }
+const ANNOUNCEMENT_GLASS =
+  'relative overflow-hidden rounded-2xl border border-white/25 dark:border-white/15 ' +
+  'bg-gradient-to-br from-[#7B5CB8]/80 via-[#64499D]/70 to-[#4ECDC4]/40 ' +
+  'dark:from-[#7B5CB8]/60 dark:via-[#64499D]/55 dark:to-[#4ECDC4]/30 ' +
+  'backdrop-blur-xl shadow-[0_8px_32px_rgba(100,73,157,0.28)] ' +
+  'before:pointer-events-none before:absolute before:inset-0 before:bg-gradient-to-br ' +
+  'before:from-white/30 before:via-white/5 before:to-transparent';
+
 const ANNOUNCEMENT_STYLES: Record<
   DashboardAnnouncement['type'],
   { card: string; iconWrap: string; title: string; body: string }
 > = {
   INFO: {
-    card: 'border border-sky-100/80 rounded-2xl shadow-sm bg-gradient-to-r from-sky-50 to-slate-50',
-    iconWrap: 'w-10 h-10 rounded-xl bg-sky-600 flex items-center justify-center shrink-0 shadow-sm',
-    title: 'text-sm font-semibold text-sky-950',
-    body: 'text-sm text-sky-950/80 leading-relaxed mt-1',
+    card: ANNOUNCEMENT_GLASS,
+    iconWrap:
+      'w-10 h-10 rounded-xl bg-white/20 border border-white/30 backdrop-blur-md flex items-center justify-center shrink-0 shadow-sm',
+    title: 'text-sm font-semibold text-white drop-shadow-sm',
+    body: 'text-sm text-white/85 leading-relaxed mt-1',
   },
   SUCCESS: {
-    card: 'border border-emerald-100/80 rounded-2xl shadow-sm bg-gradient-to-r from-emerald-50 to-teal-50/60',
-    iconWrap: 'w-10 h-10 rounded-xl bg-emerald-600 flex items-center justify-center shrink-0 shadow-sm',
-    title: 'text-sm font-semibold text-emerald-950',
-    body: 'text-sm text-emerald-950/80 leading-relaxed mt-1',
+    card: ANNOUNCEMENT_GLASS,
+    iconWrap:
+      'w-10 h-10 rounded-xl bg-emerald-400/25 border border-white/30 backdrop-blur-md flex items-center justify-center shrink-0 shadow-sm',
+    title: 'text-sm font-semibold text-white drop-shadow-sm',
+    body: 'text-sm text-white/85 leading-relaxed mt-1',
   },
   WARNING: {
-    card: 'border border-amber-100/80 rounded-2xl shadow-sm bg-gradient-to-r from-amber-50 to-orange-50/50',
-    iconWrap: 'w-10 h-10 rounded-xl bg-amber-600 flex items-center justify-center shrink-0 shadow-sm',
-    title: 'text-sm font-semibold text-amber-950',
-    body: 'text-sm text-amber-950/80 leading-relaxed mt-1',
+    card: ANNOUNCEMENT_GLASS,
+    iconWrap:
+      'w-10 h-10 rounded-xl bg-amber-400/25 border border-white/30 backdrop-blur-md flex items-center justify-center shrink-0 shadow-sm',
+    title: 'text-sm font-semibold text-white drop-shadow-sm',
+    body: 'text-sm text-white/85 leading-relaxed mt-1',
   },
   IMPORTANT: {
-    card: 'border border-rose-100/80 rounded-2xl shadow-sm bg-gradient-to-r from-rose-50 to-orange-50/40',
-    iconWrap: 'w-10 h-10 rounded-xl bg-rose-700 flex items-center justify-center shrink-0 shadow-sm',
-    title: 'text-sm font-semibold text-rose-950',
-    body: 'text-sm text-rose-950/80 leading-relaxed mt-1',
+    card: ANNOUNCEMENT_GLASS,
+    iconWrap:
+      'w-10 h-10 rounded-xl bg-rose-400/30 border border-white/30 backdrop-blur-md flex items-center justify-center shrink-0 shadow-sm',
+    title: 'text-sm font-semibold text-white drop-shadow-sm',
+    body: 'text-sm text-white/85 leading-relaxed mt-1',
   },
 };
 
@@ -221,8 +233,8 @@ const Dashboard = () => {
               : 'up'
       );
       const changeTone =
-        changeState === 'down' ? 'text-rose-600'
-          : changeState === 'up' ? 'text-emerald-600'
+        changeState === 'down' ? 'text-rose-600 dark:text-rose-400'
+          : changeState === 'up' ? 'text-emerald-600 dark:text-emerald-400'
             : 'text-muted-foreground';
       const iconBg = s.icon === 'Users' ? 'bg-blue-500' : s.icon === 'Briefcase' ? 'bg-emerald-500' : 'bg-amber-500';
       const localizedTitle =
@@ -389,7 +401,7 @@ const Dashboard = () => {
         {/* Welcome */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
           <div>
-            <h1 className="text-2xl font-semibold text-gray-900 tracking-tight">
+            <h1 className="text-2xl font-semibold text-slate-900 dark:text-white tracking-tight">
               {tf(d.greeting, { name: user?.first_name ?? '' })}
             </h1>
             <p className="text-sm text-muted-foreground mt-1">
@@ -404,8 +416,8 @@ const Dashboard = () => {
           const mediaUrl = resolveAnnouncementMediaUrl(displayAnnouncement.media_url);
           const hasMedia = Boolean(mediaUrl && displayAnnouncement.media_kind);
           return (
-            <Card className={style.card}>
-              <CardContent className="p-3 sm:p-4">
+            <div className={style.card}>
+              <div className="relative z-10 p-3 sm:p-4">
                 <div className="flex items-start gap-2.5">
                   <div className={style.iconWrap}>
                     <Megaphone size={18} className="text-white" />
@@ -426,7 +438,7 @@ const Dashboard = () => {
                         href={mediaUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="shrink-0 overflow-hidden rounded-md border border-black/5 bg-white/60"
+                        className="shrink-0 overflow-hidden rounded-md border border-white/25 bg-white/15 backdrop-blur-sm shadow-sm"
                         title={displayAnnouncement.title}
                       >
                         <img
@@ -438,7 +450,7 @@ const Dashboard = () => {
                       </a>
                     )}
                     {hasMedia && mediaUrl && displayAnnouncement.media_kind === 'VIDEO' && (
-                      <div className="shrink-0 overflow-hidden rounded-md border border-black/5 bg-black/5">
+                      <div className="shrink-0 overflow-hidden rounded-md border border-white/25 bg-black/20 backdrop-blur-sm">
                         <video
                           src={mediaUrl}
                           controls
@@ -454,7 +466,7 @@ const Dashboard = () => {
                     type="button"
                     variant="ghost"
                     size="icon"
-                    className="shrink-0 h-7 w-7 text-muted-foreground hover:text-foreground"
+                    className="shrink-0 h-7 w-7 text-white/70 hover:text-white hover:bg-white/15"
                     onClick={handleHideAnnouncement}
                     aria-label={d.hideAnnouncement}
                     title={d.hideAnnouncement}
@@ -462,8 +474,8 @@ const Dashboard = () => {
                     <X size={15} />
                   </Button>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           );
         })()}
 
@@ -484,13 +496,13 @@ const Dashboard = () => {
             return (
               <Card
                 key={i}
-                className="rounded-2xl border border-gray-100 hover:shadow-md transition-shadow"
+                className="rounded-2xl border border-slate-200/90 dark:border-slate-800 hover:shadow-md transition-shadow"
               >
                 <CardContent className="p-5">
                   <div className="flex items-center justify-between">
                     <div className="space-y-1.5">
                       <p className="text-xs font-medium text-muted-foreground">{title}</p>
-                      <div className="text-2xl font-semibold text-gray-900">
+                      <div className="text-2xl font-semibold text-slate-900 dark:text-white">
                         {loading ? '—' : value}
                       </div>
                       <p className={`text-xs ${changeTone}`}>
@@ -508,7 +520,7 @@ const Dashboard = () => {
         </div>
 
         {/* Quick Actions */}
-        <Card className="rounded-2xl border border-gray-100">
+        <Card className="rounded-2xl border border-slate-200/90 dark:border-slate-800">
           <CardHeader className="pb-3">
             <CardTitle className="text-base">{d.quickActions.title}</CardTitle>
             <CardDescription className="text-xs">{d.quickActions.description}</CardDescription>
@@ -521,14 +533,14 @@ const Dashboard = () => {
                   <button
                     key={i}
                     onClick={() => handleQuickAction(qa)}
-                    className="group rounded-xl border border-gray-100 bg-white p-3 text-start hover:border-purple-200 hover:bg-purple-50/60 transition-colors"
+                    className="group rounded-xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-950 p-3 text-start hover:border-purple-200 dark:hover:border-purple-700/60 hover:bg-purple-50/60 dark:hover:bg-purple-950/40 transition-colors"
                     aria-label={qa.title}
                   >
                     <div className="flex items-center gap-2">
                       <span className="inline-flex w-8 h-8 items-center justify-center rounded-lg bg-purple-600 text-white shadow-sm">
                         <Icon size={16} />
                       </span>
-                      <span className="text-[13px] font-medium text-gray-900">{qa.title}</span>
+                      <span className="text-[13px] font-medium text-slate-900 dark:text-white">{qa.title}</span>
                     </div>
                     <p className="text-xs text-muted-foreground mt-1.5">{qa.description}</p>
                   </button>
@@ -560,7 +572,7 @@ const Dashboard = () => {
         {/* Recent Cases + Today’s Tasks */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           {/* Recent Cases */}
-          <Card className="lg:col-span-2 rounded-2xl border border-gray-100">
+          <Card className="lg:col-span-2 rounded-2xl border border-slate-200/90 dark:border-slate-800">
             <CardHeader className="flex flex-row items-center justify-between pb-3">
               <div>
                 <CardTitle className="text-base">{d.recentCases.title}</CardTitle>
@@ -578,13 +590,13 @@ const Dashboard = () => {
                     {[0, 1, 2].map((i) => (
                       <div
                         key={i}
-                        className="h-[52px] animate-pulse rounded-xl border border-gray-100 bg-gray-50/80"
+                        className="h-[52px] animate-pulse rounded-xl border border-slate-200/90 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/50"
                       />
                     ))}
                   </div>
                 ) : loadError ? (
-                  <div className="rounded-xl border border-dashed border-rose-200 bg-rose-50/40 px-4 py-6 text-center">
-                    <p className="text-sm text-rose-700">{d.recentCases.loadError}</p>
+                  <div className="rounded-xl border border-dashed border-rose-200 dark:border-rose-800/60 bg-rose-50/40 dark:bg-rose-950/30 px-4 py-6 text-center">
+                    <p className="text-sm text-rose-700 dark:text-rose-300">{d.recentCases.loadError}</p>
                     <Button
                       type="button"
                       variant="outline"
@@ -601,11 +613,11 @@ const Dashboard = () => {
                       key={c.id}
                       type="button"
                       onClick={() => handleViewCase(c)}
-                      className="flex w-full min-h-[44px] items-center justify-between gap-2 rounded-xl border border-gray-100 bg-gray-50/60 p-3 text-start hover:bg-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500/40"
+                      className="flex w-full min-h-[44px] items-center justify-between gap-2 rounded-xl border border-slate-200/90 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-900/40 p-3 text-start hover:bg-white dark:hover:bg-slate-900/70 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500/40"
                       aria-label={tf(d.recentCases.openAria, { title: c.title })}
                     >
                       <div className="min-w-0 flex-1">
-                        <h4 className="truncate text-sm font-medium text-gray-900">{c.title}</h4>
+                        <h4 className="truncate text-sm font-medium text-slate-900 dark:text-white">{c.title}</h4>
                         <p className="truncate text-xs text-muted-foreground">{c.client}</p>
                       </div>
                       <div className="flex shrink-0 items-center gap-2">
@@ -613,12 +625,12 @@ const Dashboard = () => {
                           className={[
                             'px-2 py-1 rounded-full text-[10px] font-medium',
                             c.priority === 'Critical'
-                              ? 'bg-rose-100 text-rose-700'
+                              ? 'bg-rose-500/15 text-rose-700 dark:text-rose-400'
                               : c.priority === 'High'
-                              ? 'bg-rose-100 text-rose-700'
+                              ? 'bg-rose-500/15 text-rose-700 dark:text-rose-400'
                               : c.priority === 'Medium'
-                              ? 'bg-amber-100 text-amber-700'
-                              : 'bg-emerald-100 text-emerald-700',
+                              ? 'bg-amber-500/15 text-amber-700 dark:text-amber-400'
+                              : 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400',
                           ].join(' ')}
                         >
                           {priorityLabel(c.priority)}
@@ -633,8 +645,8 @@ const Dashboard = () => {
                     </button>
                   ))
                 ) : (
-                  <div className="rounded-xl border border-dashed border-gray-200 bg-gray-50/40 px-4 py-6 text-center">
-                    <p className="text-sm font-medium text-gray-900">{d.recentCases.empty}</p>
+                  <div className="rounded-xl border border-dashed border-slate-200 dark:border-slate-700 bg-slate-50/40 dark:bg-slate-900/30 px-4 py-6 text-center">
+                    <p className="text-sm font-medium text-slate-900 dark:text-white">{d.recentCases.empty}</p>
                     <p className="mt-1 text-xs text-muted-foreground">{d.recentCases.emptyHint}</p>
                     <Button
                       type="button"
@@ -653,7 +665,7 @@ const Dashboard = () => {
           </Card>
 
           {/* Today's Tasks */}
-          <Card className="rounded-2xl border border-gray-100">
+          <Card className="rounded-2xl border border-slate-200/90 dark:border-slate-800">
             <CardHeader className="flex flex-row items-center justify-between pb-3">
               <div>
                 <CardTitle className="text-base">{d.todayTasks.title}</CardTitle>
@@ -671,13 +683,13 @@ const Dashboard = () => {
                     {[0, 1, 2].map((i) => (
                       <div
                         key={i}
-                        className="h-[52px] animate-pulse rounded-xl border border-gray-100 bg-gray-50/80"
+                        className="h-[52px] animate-pulse rounded-xl border border-slate-200/90 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/50"
                       />
                     ))}
                   </div>
                 ) : loadError ? (
-                  <div className="rounded-xl border border-dashed border-rose-200 bg-rose-50/40 px-4 py-6 text-center">
-                    <p className="text-sm text-rose-700">{d.todayTasks.loadError}</p>
+                  <div className="rounded-xl border border-dashed border-rose-200 dark:border-rose-800/60 bg-rose-50/40 dark:bg-rose-950/30 px-4 py-6 text-center">
+                    <p className="text-sm text-rose-700 dark:text-rose-300">{d.todayTasks.loadError}</p>
                     <Button
                       type="button"
                       variant="outline"
@@ -697,7 +709,7 @@ const Dashboard = () => {
                         key={taskItem.id}
                         type="button"
                         onClick={() => handleViewTask(taskItem)}
-                        className="flex w-full min-h-[44px] items-center gap-3 rounded-xl border border-gray-100 bg-white p-3 text-start hover:bg-gray-50/80 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500/40"
+                        className="flex w-full min-h-[44px] items-center gap-3 rounded-xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-950 p-3 text-start hover:bg-slate-50/80 dark:hover:bg-slate-900/50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500/40"
                         aria-label={tf(d.todayTasks.openAria, { title: taskItem.title })}
                       >
                         <div
@@ -707,7 +719,7 @@ const Dashboard = () => {
                           ].join(' ')}
                         />
                         <div className="min-w-0 flex-1">
-                          <h4 className="truncate text-sm font-medium text-gray-900">{taskItem.title}</h4>
+                          <h4 className="truncate text-sm font-medium text-slate-900 dark:text-white">{taskItem.title}</h4>
                           {taskItem.time ? (
                             <p className="text-xs text-muted-foreground flex items-center gap-1">
                               <Clock size={10} />
@@ -719,10 +731,10 @@ const Dashboard = () => {
                           className={[
                             'shrink-0 px-2 py-1 rounded-full text-[10px] font-medium',
                             pKey === 'critical'
-                              ? 'bg-rose-100 text-rose-700'
+                              ? 'bg-rose-500/15 text-rose-700 dark:text-rose-400'
                               : isHigh
-                              ? 'bg-amber-100 text-amber-700'
-                              : 'bg-blue-100 text-blue-700',
+                              ? 'bg-amber-500/15 text-amber-700 dark:text-amber-400'
+                              : 'bg-blue-500/15 text-blue-700 dark:text-blue-400',
                           ].join(' ')}
                         >
                           {priorityLabel(taskItem.priority)}
@@ -737,7 +749,7 @@ const Dashboard = () => {
                     );
                   })
                 ) : (
-                  <div className="rounded-xl border border-dashed border-gray-200 bg-gray-50/40 px-4 py-6 text-center">
+                  <div className="rounded-xl border border-dashed border-slate-200 dark:border-slate-700 bg-slate-50/40 dark:bg-slate-900/30 px-4 py-6 text-center">
                     <p className="text-sm text-muted-foreground">{d.todayTasks.empty}</p>
                     <Button
                       type="button"
@@ -757,7 +769,7 @@ const Dashboard = () => {
         </div>
 
         {/* Recent Activity */}
-        <Card className="rounded-2xl border border-gray-100">
+        <Card className="rounded-2xl border border-slate-200/90 dark:border-slate-800">
           <CardHeader className="pb-3">
             <CardTitle className="text-base">{d.recentActivity.title}</CardTitle>
             <CardDescription className="text-xs">{d.recentActivity.description}</CardDescription>
@@ -768,17 +780,17 @@ const Dashboard = () => {
                 <div className="space-y-3" aria-busy="true" aria-label={d.recentActivity.loading}>
                   {[0, 1, 2].map((i) => (
                     <div key={i} className="flex items-start gap-3">
-                      <div className="h-7 w-7 animate-pulse rounded-full bg-gray-100" />
+                      <div className="h-7 w-7 animate-pulse rounded-full bg-slate-100 dark:bg-slate-800" />
                       <div className="flex-1 space-y-2">
-                        <div className="h-3 w-48 max-w-full animate-pulse rounded bg-gray-100" />
-                        <div className="h-2.5 w-20 animate-pulse rounded bg-gray-100" />
+                        <div className="h-3 w-48 max-w-full animate-pulse rounded bg-slate-100 dark:bg-slate-800" />
+                        <div className="h-2.5 w-20 animate-pulse rounded bg-slate-100 dark:bg-slate-800" />
                       </div>
                     </div>
                   ))}
                 </div>
               ) : loadError ? (
-                <div className="rounded-xl border border-dashed border-rose-200 bg-rose-50/40 px-4 py-6 text-center">
-                  <p className="text-sm text-rose-700">{d.recentActivity.loadError}</p>
+                <div className="rounded-xl border border-dashed border-rose-200 dark:border-rose-800/60 bg-rose-50/40 dark:bg-rose-950/30 px-4 py-6 text-center">
+                  <p className="text-sm text-rose-700 dark:text-rose-300">{d.recentActivity.loadError}</p>
                   <Button
                     type="button"
                     variant="outline"
@@ -794,16 +806,16 @@ const Dashboard = () => {
                   const AIcon = ICONS[a.icon] ?? ClipboardList;
                   const badgeClass =
                     a.icon === 'CheckSquare'
-                      ? 'bg-emerald-100'
+                      ? 'bg-emerald-500/15 dark:bg-emerald-500/20'
                       : a.icon === 'Users'
-                      ? 'bg-blue-100'
-                      : 'bg-purple-100';
+                      ? 'bg-blue-500/15 dark:bg-blue-500/20'
+                      : 'bg-purple-500/15 dark:bg-purple-500/20';
                   const iconClass =
                     a.icon === 'CheckSquare'
-                      ? 'text-emerald-600'
+                      ? 'text-emerald-600 dark:text-emerald-400'
                       : a.icon === 'Users'
-                      ? 'text-blue-600'
-                      : 'text-purple-600';
+                      ? 'text-blue-600 dark:text-blue-400'
+                      : 'text-purple-600 dark:text-purple-400';
 
                   return (
                     <div key={idx} className="flex items-start gap-3">
@@ -811,14 +823,14 @@ const Dashboard = () => {
                         <AIcon size={12} className={iconClass} />
                       </div>
                       <div className="flex-1">
-                        <p className="text-sm text-gray-900">{a.message}</p>
+                        <p className="text-sm text-slate-900 dark:text-white">{a.message}</p>
                         <p className="text-xs text-muted-foreground">{a.ago}</p>
                       </div>
                     </div>
                   );
                 })
               ) : (
-                <div className="rounded-xl border border-dashed border-gray-200 bg-gray-50/40 px-4 py-6 text-center">
+                <div className="rounded-xl border border-dashed border-slate-200 dark:border-slate-700 bg-slate-50/40 dark:bg-slate-900/30 px-4 py-6 text-center">
                   <p className="text-sm text-muted-foreground">{d.recentActivity.empty}</p>
                 </div>
               )}

@@ -227,7 +227,7 @@ const CalendarPage: React.FC = () => {
                   <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-900 via-purple-800 to-purple-600 bg-clip-text text-transparent">
                     Calendar
                   </h1>
-                  <p className="text-gray-600 font-medium">Manage your schedule, tasks, and appointments</p>
+                  <p className="text-slate-600 dark:text-slate-400 font-medium">Manage your schedule, tasks, and appointments</p>
                 </div>
               </div>
             </div>
@@ -242,21 +242,21 @@ const CalendarPage: React.FC = () => {
                   <ChevronDown className="h-4 w-4" />
                 </Button>
                 {showAddDropdown && (
-                  <div className="absolute right-0 top-full mt-2 w-56 bg-white/95 backdrop-blur-sm border border-gray-200/50 rounded-2xl shadow-2xl z-50 overflow-hidden">
+                  <div className="absolute right-0 top-full mt-2 w-56 bg-white/95 backdrop-blur-sm border border-slate-200 dark:border-slate-700/50 rounded-2xl shadow-2xl z-50 overflow-hidden">
                     <div className="py-2">
                       <button
                         onClick={() => {
                           setShowAddDropdown(false);
                           taskCreateRef.current?.show();
                         }}
-                        className="w-full px-4 py-3 text-left text-sm text-gray-700 hover:bg-gradient-to-r hover:from-purple-50 hover:to-purple-100 hover:text-purple-700 flex items-center gap-3 transition-all duration-200 font-medium"
+                        className="w-full px-4 py-3 text-left text-sm text-slate-700 dark:text-slate-300 hover:bg-gradient-to-r hover:from-purple-50 hover:to-purple-100 hover:text-purple-700 flex items-center gap-3 transition-all duration-200 font-medium"
                       >
                         <div className="p-2 bg-purple-100 rounded-lg">
                           <CheckSquare className="h-4 w-4 text-purple-600" />
                         </div>
                         <div>
                           <div className="font-semibold">Add Task</div>
-                          <div className="text-xs text-gray-500">Create a new task</div>
+                          <div className="text-xs text-slate-500 dark:text-slate-400">Create a new task</div>
                         </div>
                       </button>
                       <button
@@ -264,14 +264,14 @@ const CalendarPage: React.FC = () => {
                           setShowAddDropdown(false);
                           appointmentCreateRef.current?.show();
                         }}
-                        className="w-full px-4 py-3 text-left text-sm text-gray-700 hover:bg-gradient-to-r hover:from-purple-50 hover:to-purple-100 hover:text-purple-700 flex items-center gap-3 transition-all duration-200 font-medium"
+                        className="w-full px-4 py-3 text-left text-sm text-slate-700 dark:text-slate-300 hover:bg-gradient-to-r hover:from-purple-50 hover:to-purple-100 hover:text-purple-700 flex items-center gap-3 transition-all duration-200 font-medium"
                       >
                         <div className="p-2 bg-green-100 rounded-lg">
                           <CalendarIcon className="h-4 w-4 text-green-600" />
                         </div>
                         <div>
                           <div className="font-semibold">Add Appointment</div>
-                          <div className="text-xs text-gray-500">Schedule a meeting</div>
+                          <div className="text-xs text-slate-500 dark:text-slate-400">Schedule a meeting</div>
                         </div>
                       </button>
                     </div>
@@ -285,7 +285,7 @@ const CalendarPage: React.FC = () => {
         {/* Modern Layout Switcher */}
         <Tabs value={activeLayout} onValueChange={(value: any) => setActiveLayout(value)} className="w-full">
           <div className="mb-8">
-            <TabsList className="grid w-full grid-cols-3 bg-white/80 backdrop-blur-sm p-2 rounded-2xl shadow-lg border border-gray-200/50">
+            <TabsList className="grid w-full grid-cols-3 bg-white/80 backdrop-blur-sm p-2 rounded-2xl shadow-lg border border-slate-200 dark:border-slate-700/50">
               <TabsTrigger 
                 value="dashboard" 
                 className="flex items-center gap-3 data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-xl py-3 px-6 font-semibold transition-all duration-300"
@@ -321,8 +321,8 @@ const CalendarPage: React.FC = () => {
                       <CheckSquare className="h-6 w-6 text-white" />
                     </div>
                     <div>
-                      <p className="text-sm font-semibold text-gray-600 uppercase tracking-wide">Total Tasks</p>
-                      <p className="text-3xl font-bold text-gray-900 mt-1">{stats.totalTasks}</p>
+                      <p className="text-sm font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide">Total Tasks</p>
+                      <p className="text-3xl font-bold text-slate-900 dark:text-white mt-1">{stats.totalTasks}</p>
                     </div>
                   </div>
                 </CardContent>
@@ -335,8 +335,8 @@ const CalendarPage: React.FC = () => {
                       <CalendarIcon className="h-6 w-6 text-white" />
                     </div>
                     <div>
-                      <p className="text-sm font-semibold text-gray-600 uppercase tracking-wide">Appointments</p>
-                      <p className="text-3xl font-bold text-gray-900 mt-1">{stats.totalAppointments}</p>
+                      <p className="text-sm font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide">Appointments</p>
+                      <p className="text-3xl font-bold text-slate-900 dark:text-white mt-1">{stats.totalAppointments}</p>
                     </div>
                   </div>
                 </CardContent>
@@ -349,8 +349,8 @@ const CalendarPage: React.FC = () => {
                       <Clock className="h-6 w-6 text-white" />
                     </div>
                     <div>
-                      <p className="text-sm font-semibold text-gray-600 uppercase tracking-wide">Today's Events</p>
-                      <p className="text-3xl font-bold text-gray-900 mt-1">{stats.todayEvents}</p>
+                      <p className="text-sm font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide">Today's Events</p>
+                      <p className="text-3xl font-bold text-slate-900 dark:text-white mt-1">{stats.todayEvents}</p>
                     </div>
                   </div>
                 </CardContent>
@@ -363,8 +363,8 @@ const CalendarPage: React.FC = () => {
                       <AlertCircle className="h-6 w-6 text-white" />
                     </div>
                     <div>
-                      <p className="text-sm font-semibold text-gray-600 uppercase tracking-wide">Overdue Tasks</p>
-                      <p className="text-3xl font-bold text-gray-900 mt-1">{stats.overdueTasks}</p>
+                      <p className="text-sm font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide">Overdue Tasks</p>
+                      <p className="text-3xl font-bold text-slate-900 dark:text-white mt-1">{stats.overdueTasks}</p>
                     </div>
                   </div>
                 </CardContent>
@@ -375,7 +375,7 @@ const CalendarPage: React.FC = () => {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg rounded-2xl overflow-hidden">
                 <CardHeader className="bg-gradient-to-r from-purple-50 to-purple-100/50 p-6">
-                  <CardTitle className="flex items-center gap-3 text-xl font-bold text-gray-900">
+                  <CardTitle className="flex items-center gap-3 text-xl font-bold text-slate-900 dark:text-white">
                     <div className="p-2 bg-purple-600 rounded-xl">
                       <CheckSquare className="h-5 w-5 text-white" />
                     </div>
@@ -387,37 +387,37 @@ const CalendarPage: React.FC = () => {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                        <span className="text-sm font-semibold text-gray-700">Completed</span>
+                        <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">Completed</span>
                       </div>
                       <div className="flex items-center gap-3">
-                        <div className="w-24 bg-gray-200 rounded-full h-3 overflow-hidden">
+                        <div className="w-24 bg-slate-200 dark:bg-slate-700 rounded-full h-3 overflow-hidden">
                           <div className="bg-gradient-to-r from-green-500 to-green-600 h-3 rounded-full transition-all duration-500" style={{ width: `${stats.totalTasks > 0 ? (stats.completedTasks / stats.totalTasks) * 100 : 0}%` }}></div>
                         </div>
-                        <span className="text-sm font-bold text-gray-900 min-w-[2rem]">{stats.completedTasks}</span>
+                        <span className="text-sm font-bold text-slate-900 dark:text-white min-w-[2rem]">{stats.completedTasks}</span>
                       </div>
                     </div>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
-                        <span className="text-sm font-semibold text-gray-700">In Progress</span>
+                        <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">In Progress</span>
                       </div>
                       <div className="flex items-center gap-3">
-                        <div className="w-24 bg-gray-200 rounded-full h-3 overflow-hidden">
+                        <div className="w-24 bg-slate-200 dark:bg-slate-700 rounded-full h-3 overflow-hidden">
                           <div className="bg-gradient-to-r from-yellow-500 to-yellow-600 h-3 rounded-full transition-all duration-500" style={{ width: `${stats.totalTasks > 0 ? (stats.inProgressTasks / stats.totalTasks) * 100 : 0}%` }}></div>
                         </div>
-                        <span className="text-sm font-bold text-gray-900 min-w-[2rem]">{stats.inProgressTasks}</span>
+                        <span className="text-sm font-bold text-slate-900 dark:text-white min-w-[2rem]">{stats.inProgressTasks}</span>
                       </div>
                     </div>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <div className="w-3 h-3 bg-gray-400 rounded-full"></div>
-                        <span className="text-sm font-semibold text-gray-700">To Do</span>
+                        <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">To Do</span>
                       </div>
                       <div className="flex items-center gap-3">
-                        <div className="w-24 bg-gray-200 rounded-full h-3 overflow-hidden">
+                        <div className="w-24 bg-slate-200 dark:bg-slate-700 rounded-full h-3 overflow-hidden">
                           <div className="bg-gradient-to-r from-gray-400 to-gray-500 h-3 rounded-full transition-all duration-500" style={{ width: `${stats.totalTasks > 0 ? ((stats.totalTasks - stats.completedTasks - stats.inProgressTasks) / stats.totalTasks) * 100 : 0}%` }}></div>
                         </div>
-                        <span className="text-sm font-bold text-gray-900 min-w-[2rem]">{stats.totalTasks - stats.completedTasks - stats.inProgressTasks}</span>
+                        <span className="text-sm font-bold text-slate-900 dark:text-white min-w-[2rem]">{stats.totalTasks - stats.completedTasks - stats.inProgressTasks}</span>
                       </div>
                     </div>
                   </div>
@@ -426,7 +426,7 @@ const CalendarPage: React.FC = () => {
 
               <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg rounded-2xl overflow-hidden">
                 <CardHeader className="bg-gradient-to-r from-green-50 to-green-100/50 p-6">
-                  <CardTitle className="flex items-center gap-3 text-xl font-bold text-gray-900">
+                  <CardTitle className="flex items-center gap-3 text-xl font-bold text-slate-900 dark:text-white">
                     <div className="p-2 bg-green-600 rounded-xl">
                       <CalendarIcon className="h-5 w-5 text-white" />
                     </div>
@@ -441,8 +441,8 @@ const CalendarPage: React.FC = () => {
                           <CalendarIcon className="h-4 w-4 text-white" />
                         </div>
                         <div className="flex-1">
-                          <p className="text-sm font-semibold text-gray-900 group-hover:text-green-700 transition-colors duration-200">{appointment.title}</p>
-                          <p className="text-xs text-gray-600 mt-1">
+                          <p className="text-sm font-semibold text-slate-900 dark:text-white group-hover:text-green-700 transition-colors duration-200">{appointment.title}</p>
+                          <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
                             {new Date(appointment.start).toLocaleDateString()} at {appointment.start.includes('T') && new Date(appointment.start).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                           </p>
                         </div>
@@ -450,10 +450,10 @@ const CalendarPage: React.FC = () => {
                     ))}
                     {stats.upcomingAppointments === 0 && (
                       <div className="text-center py-8">
-                        <div className="p-4 bg-gray-100 rounded-2xl inline-block mb-3">
-                          <CalendarIcon className="h-8 w-8 text-gray-400" />
+                        <div className="p-4 bg-slate-100 dark:bg-slate-800 rounded-2xl inline-block mb-3">
+                          <CalendarIcon className="h-8 w-8 text-slate-400 dark:text-slate-500" />
                         </div>
-                        <p className="text-sm text-gray-500 font-medium">No upcoming appointments</p>
+                        <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">No upcoming appointments</p>
                       </div>
                     )}
                   </div>
@@ -464,7 +464,7 @@ const CalendarPage: React.FC = () => {
             {/* Recent Activity */}
             <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg rounded-2xl overflow-hidden">
               <CardHeader className="bg-gradient-to-r from-blue-50 to-blue-100/50 p-6">
-                <CardTitle className="flex items-center gap-3 text-xl font-bold text-gray-900">
+                <CardTitle className="flex items-center gap-3 text-xl font-bold text-slate-900 dark:text-white">
                   <div className="p-2 bg-blue-600 rounded-xl">
                     <Clock className="h-5 w-5 text-white" />
                   </div>
@@ -479,8 +479,8 @@ const CalendarPage: React.FC = () => {
                         {event.type === 'task' ? <CheckSquare className="h-4 w-4 text-white" /> : <CalendarIcon className="h-4 w-4 text-white" />}
                       </div>
                       <div className="flex-1">
-                        <p className="text-sm font-semibold text-gray-900 group-hover:text-blue-700 transition-colors duration-200">{event.title}</p>
-                        <p className="text-xs text-gray-600 mt-1">
+                        <p className="text-sm font-semibold text-slate-900 dark:text-white group-hover:text-blue-700 transition-colors duration-200">{event.title}</p>
+                        <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
                           {event.type === 'task' ? 'Task' : 'Appointment'} • {new Date(event.start).toLocaleDateString()}
                         </p>
                       </div>
@@ -491,10 +491,10 @@ const CalendarPage: React.FC = () => {
                   ))}
                   {events.length === 0 && (
                     <div className="text-center py-8">
-                      <div className="p-4 bg-gray-100 rounded-2xl inline-block mb-3">
-                        <Clock className="h-8 w-8 text-gray-400" />
+                      <div className="p-4 bg-slate-100 dark:bg-slate-800 rounded-2xl inline-block mb-3">
+                        <Clock className="h-8 w-8 text-slate-400 dark:text-slate-500" />
                       </div>
-                      <p className="text-sm text-gray-500 font-medium">No recent activity</p>
+                      <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">No recent activity</p>
                     </div>
                   )}
                 </div>
@@ -508,7 +508,7 @@ const CalendarPage: React.FC = () => {
             <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg rounded-2xl overflow-hidden">
               <CardContent className="p-6">
                 <div className="flex flex-col lg:flex-row gap-6 items-start lg:items-center">
-                  <div className="flex items-center gap-3 text-sm font-semibold text-gray-700">
+                  <div className="flex items-center gap-3 text-sm font-semibold text-slate-700 dark:text-slate-300">
                     <div className="p-2 bg-purple-100 rounded-lg">
                       <Filter className="w-4 h-4 text-purple-600" />
                     </div>
@@ -516,7 +516,7 @@ const CalendarPage: React.FC = () => {
                   </div>
                   <div className="flex flex-wrap gap-4 items-center">
                     <Select value={types} onValueChange={(v: any) => setTypes(v)}>
-                      <SelectTrigger className="w-[160px] bg-white border-gray-200 rounded-xl shadow-sm hover:shadow-md transition-all duration-200">
+                      <SelectTrigger className="w-[160px] bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-700 rounded-xl shadow-sm hover:shadow-md transition-all duration-200">
                         <SelectValue placeholder="Type" />
                       </SelectTrigger>
                       <SelectContent className="rounded-xl border-0 shadow-xl">
@@ -527,7 +527,7 @@ const CalendarPage: React.FC = () => {
                     </Select>
 
                     <Select value={status} onValueChange={setStatus}>
-                      <SelectTrigger className="w-[140px] bg-white border-gray-200 rounded-xl shadow-sm hover:shadow-md transition-all duration-200">
+                      <SelectTrigger className="w-[140px] bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-700 rounded-xl shadow-sm hover:shadow-md transition-all duration-200">
                         <SelectValue placeholder="Status" />
                       </SelectTrigger>
                       <SelectContent className="rounded-xl border-0 shadow-xl">
@@ -541,7 +541,7 @@ const CalendarPage: React.FC = () => {
                     </Select>
 
                     <Select value={priority} onValueChange={setPriority}>
-                      <SelectTrigger className="w-[120px] bg-white border-gray-200 rounded-xl shadow-sm hover:shadow-md transition-all duration-200">
+                      <SelectTrigger className="w-[120px] bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-700 rounded-xl shadow-sm hover:shadow-md transition-all duration-200">
                         <SelectValue placeholder="Priority" />
                       </SelectTrigger>
                       <SelectContent className="rounded-xl border-0 shadow-xl">
@@ -553,21 +553,21 @@ const CalendarPage: React.FC = () => {
                     </Select>
 
                     <Input 
-                      className="w-[180px] bg-white border-gray-200 rounded-xl shadow-sm hover:shadow-md focus:shadow-lg transition-all duration-200" 
+                      className="w-[180px] bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-700 rounded-xl shadow-sm hover:shadow-md focus:shadow-lg transition-all duration-200" 
                       placeholder="Search by client..." 
                       value={client} 
                       onChange={(e) => setClient(e.target.value)} 
                     />
 
                     <Input 
-                      className="w-[120px] bg-white border-gray-200 rounded-xl shadow-sm hover:shadow-md focus:shadow-lg transition-all duration-200" 
+                      className="w-[120px] bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-700 rounded-xl shadow-sm hover:shadow-md focus:shadow-lg transition-all duration-200" 
                       placeholder="Assignee ID" 
                       value={assignedTo} 
                       onChange={(e) => setAssignedTo(e.target.value || 'all')} 
                     />
 
                     <Input 
-                      className="w-[120px] bg-white border-gray-200 rounded-xl shadow-sm hover:shadow-md focus:shadow-lg transition-all duration-200" 
+                      className="w-[120px] bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-700 rounded-xl shadow-sm hover:shadow-md focus:shadow-lg transition-all duration-200" 
                       placeholder="Case ID" 
                       value={caseId} 
                       onChange={(e) => setCaseId(e.target.value || 'all')} 
@@ -584,7 +584,7 @@ const CalendarPage: React.FC = () => {
                         }
                       }}
                       disabled={loading}
-                      className="bg-white border-gray-200 rounded-xl shadow-sm hover:shadow-md transition-all duration-200 font-semibold"
+                      className="bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-700 rounded-xl shadow-sm hover:shadow-md transition-all duration-200 font-semibold"
                     >
                       <RefreshCw className="mr-2 h-4 w-4" />
                       Refresh
@@ -669,7 +669,7 @@ const CalendarPage: React.FC = () => {
             {/* Filters */}
             <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg rounded-2xl overflow-hidden">
               <CardHeader className="bg-gradient-to-r from-purple-50 to-purple-100/50 p-6">
-                <CardTitle className="flex items-center gap-3 text-xl font-bold text-gray-900">
+                <CardTitle className="flex items-center gap-3 text-xl font-bold text-slate-900 dark:text-white">
                   <div className="p-2 bg-purple-600 rounded-xl">
                     <Filter className="h-5 w-5 text-white" />
                   </div>
@@ -679,7 +679,7 @@ const CalendarPage: React.FC = () => {
               <CardContent className="p-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                   <Select value={types} onValueChange={(v: any) => setTypes(v)}>
-                    <SelectTrigger className="bg-white border-gray-200 rounded-xl shadow-sm hover:shadow-md transition-all duration-200"><SelectValue placeholder="Type" /></SelectTrigger>
+                    <SelectTrigger className="bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-700 rounded-xl shadow-sm hover:shadow-md transition-all duration-200"><SelectValue placeholder="Type" /></SelectTrigger>
                     <SelectContent className="rounded-xl border-0 shadow-xl">
                       <SelectItem value="both">Tasks + Appointments</SelectItem>
                       <SelectItem value="tasks">Tasks Only</SelectItem>
@@ -688,7 +688,7 @@ const CalendarPage: React.FC = () => {
                   </Select>
 
                   <Select value={status} onValueChange={setStatus}>
-                    <SelectTrigger className="bg-white border-gray-200 rounded-xl shadow-sm hover:shadow-md transition-all duration-200"><SelectValue placeholder="Status" /></SelectTrigger>
+                    <SelectTrigger className="bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-700 rounded-xl shadow-sm hover:shadow-md transition-all duration-200"><SelectValue placeholder="Status" /></SelectTrigger>
                     <SelectContent className="rounded-xl border-0 shadow-xl">
                       <SelectItem value="all">All Statuses</SelectItem>
                       <SelectItem value="todo">To Do</SelectItem>
@@ -699,7 +699,7 @@ const CalendarPage: React.FC = () => {
                   </Select>
 
                   <Select value={priority} onValueChange={setPriority}>
-                    <SelectTrigger className="bg-white border-gray-200 rounded-xl shadow-sm hover:shadow-md transition-all duration-200"><SelectValue placeholder="Priority" /></SelectTrigger>
+                    <SelectTrigger className="bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-700 rounded-xl shadow-sm hover:shadow-md transition-all duration-200"><SelectValue placeholder="Priority" /></SelectTrigger>
                     <SelectContent className="rounded-xl border-0 shadow-xl">
                       <SelectItem value="all">All Priorities</SelectItem>
                       <SelectItem value="low">Low</SelectItem>
@@ -708,7 +708,7 @@ const CalendarPage: React.FC = () => {
                     </SelectContent>
                   </Select>
 
-                  <Input placeholder="Search by client..." value={client} onChange={(e) => setClient(e.target.value)} className="bg-white border-gray-200 rounded-xl shadow-sm hover:shadow-md focus:shadow-lg transition-all duration-200" />
+                  <Input placeholder="Search by client..." value={client} onChange={(e) => setClient(e.target.value)} className="bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-700 rounded-xl shadow-sm hover:shadow-md focus:shadow-lg transition-all duration-200" />
                 </div>
               </CardContent>
             </Card>
@@ -718,11 +718,11 @@ const CalendarPage: React.FC = () => {
               {filteredEvents.length === 0 ? (
                 <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg rounded-2xl overflow-hidden">
                   <CardContent className="p-12 text-center">
-                    <div className="p-6 bg-gray-100 rounded-2xl inline-block mb-6">
-                      <CalendarDays className="h-16 w-16 text-gray-400" />
+                    <div className="p-6 bg-slate-100 dark:bg-slate-800 rounded-2xl inline-block mb-6">
+                      <CalendarDays className="h-16 w-16 text-slate-400 dark:text-slate-500" />
                     </div>
-                    <h3 className="text-xl font-bold text-gray-900 mb-3">No events found</h3>
-                    <p className="text-gray-600 font-medium">Try adjusting your filters or create a new task.</p>
+                    <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-3">No events found</h3>
+                    <p className="text-slate-600 dark:text-slate-400 font-medium">Try adjusting your filters or create a new task.</p>
                   </CardContent>
                 </Card>
               ) : (
@@ -735,8 +735,8 @@ const CalendarPage: React.FC = () => {
                             {event.type === 'task' ? <CheckSquare className="h-5 w-5 text-white" /> : <CalendarIcon className="h-5 w-5 text-white" />}
                           </div>
                           <div className="flex-1">
-                            <h3 className="font-bold text-gray-900 text-lg group-hover:text-purple-700 transition-colors duration-200">{event.title}</h3>
-                            <div className="flex items-center gap-6 mt-2 text-sm text-gray-600">
+                            <h3 className="font-bold text-slate-900 dark:text-white text-lg group-hover:text-purple-700 transition-colors duration-200">{event.title}</h3>
+                            <div className="flex items-center gap-6 mt-2 text-sm text-slate-600 dark:text-slate-400">
                               <span className="flex items-center gap-2 font-medium">
                                 <Clock className="h-4 w-4" />
                                 {new Date(event.start).toLocaleDateString()} {event.start.includes('T') && new Date(event.start).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -751,7 +751,7 @@ const CalendarPage: React.FC = () => {
                               )}
                             </div>
                             {event.client && (
-                              <div className="flex items-center gap-2 mt-3 text-sm text-gray-500">
+                              <div className="flex items-center gap-2 mt-3 text-sm text-slate-500 dark:text-slate-400">
                                 <Users className="h-4 w-4" />
                                 <span className="font-medium">
                                   {typeof event.client === 'string' 
@@ -764,7 +764,7 @@ const CalendarPage: React.FC = () => {
                               </div>
                             )}
                             {event.case_title && (
-                              <div className="flex items-center gap-2 mt-2 text-sm text-gray-500">
+                              <div className="flex items-center gap-2 mt-2 text-sm text-slate-500 dark:text-slate-400">
                                 <FileText className="h-4 w-4" />
                                 <span className="font-medium">{event.case_title}</span>
                               </div>

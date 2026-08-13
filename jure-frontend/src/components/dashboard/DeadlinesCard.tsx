@@ -263,18 +263,18 @@ export default function DeadlinesCard({ caseId }: Props) {
   };
 
   return (
-    <Card className="rounded-2xl border-gray-100">
+    <Card className="rounded-2xl border-slate-200/90 dark:border-slate-800">
       <CardHeader className="pb-2">
         <CardTitle className="text-base flex items-center gap-2">
-          <Scale className="h-4 w-4 text-emerald-700" />
+          <Scale className="h-4 w-4 text-emerald-700 dark:text-emerald-400" />
           {d.title}
         </CardTitle>
         <CardDescription className="text-xs">{d.description}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         {selectedCaseId ? (
-          <div className="space-y-2 rounded-xl border border-gray-100 bg-gray-50/60 p-3">
-            <p className="text-xs font-medium text-gray-900">{d.savedOnCase}</p>
+          <div className="space-y-2 rounded-xl border border-slate-200/90 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-900/40 p-3">
+            <p className="text-xs font-medium text-slate-900 dark:text-white">{d.savedOnCase}</p>
             <CaseLegalDeadlinesList
               caseId={selectedCaseId}
               items={caseDeadlines}
@@ -393,40 +393,40 @@ export default function DeadlinesCard({ caseId }: Props) {
             </Button>
 
             {error && (
-              <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
+              <div className="rounded-lg border border-amber-200 dark:border-amber-800/60 bg-amber-50 dark:bg-amber-950/40 px-3 py-2 text-xs text-amber-900 dark:text-amber-200">
                 {error}
               </div>
             )}
 
             {result && (
-              <div className="space-y-3 rounded-xl border border-emerald-100 bg-emerald-50/60 p-4">
+              <div className="space-y-3 rounded-xl border border-emerald-100 dark:border-emerald-800/60 bg-emerald-50/60 dark:bg-emerald-950/30 p-4">
                 <div>
-                  <p className="text-[11px] uppercase tracking-wide text-emerald-800/80 font-medium">
+                  <p className="text-[11px] uppercase tracking-wide text-emerald-800/80 dark:text-emerald-300/80 font-medium">
                     {d.legalDeadline}
                   </p>
-                  <p className="text-2xl font-semibold text-emerald-950 mt-1">
+                  <p className="text-2xl font-semibold text-emerald-950 dark:text-emerald-100 mt-1">
                     {formatDisplayDate(
                       useManual && manualDate ? manualDate : result.calculated_deadline
                     )}
                   </p>
-                  <p className="text-xs text-emerald-900/80 mt-1">
+                  <p className="text-xs text-emerald-900/80 dark:text-emerald-200/80 mt-1">
                     {tf(d.durationFrom, {
                       duration: result.explanation.legal_duration,
                       event: result.explanation.starting_event_type.replace(/_/g, ' '),
                     })}
                   </p>
-                  <p className="text-xs text-emerald-900/70 mt-0.5">
+                  <p className="text-xs text-emerald-900/70 dark:text-emerald-200/70 mt-0.5">
                     {tf(d.calculatedUnder, {
                       source:
                         result.explanation.legal_source || result.rule.article_reference || '',
                     })}
                   </p>
                   {useManual && (
-                    <p className="text-xs font-medium text-amber-800 mt-2">{d.manuallyVerified}</p>
+                    <p className="text-xs font-medium text-amber-800 dark:text-amber-300 mt-2">{d.manuallyVerified}</p>
                   )}
                 </div>
 
-                <dl className="grid grid-cols-1 gap-1.5 text-xs text-emerald-950/90">
+                <dl className="grid grid-cols-1 gap-1.5 text-xs text-emerald-950/90 dark:text-emerald-100/90">
                   <div className="flex justify-between gap-3">
                     <dt className="text-muted-foreground">{d.startingEvent}</dt>
                     <dd>{formatDisplayDate(result.explanation.starting_event_date)}</dd>
@@ -458,16 +458,16 @@ export default function DeadlinesCard({ caseId }: Props) {
                 </dl>
 
                 {result.explanation.uncertainty && (
-                  <p className="text-[11px] text-amber-800">
+                  <p className="text-[11px] text-amber-800 dark:text-amber-300">
                     {result.explanation.uncertainty_message || d.uncertaintyFallback}
                   </p>
                 )}
 
-                <p className="text-[11px] text-muted-foreground leading-relaxed border-t border-emerald-100 pt-2">
+                <p className="text-[11px] text-muted-foreground leading-relaxed border-t border-emerald-100 dark:border-emerald-800/60 pt-2">
                   {result.explanation.disclaimer}
                 </p>
 
-                <div className="space-y-2 border-t border-emerald-100 pt-3">
+                <div className="space-y-2 border-t border-emerald-100 dark:border-emerald-800/60 pt-3">
                   <label className="flex items-center gap-2 text-xs">
                     <Checkbox
                       checked={useManual}
@@ -510,7 +510,7 @@ export default function DeadlinesCard({ caseId }: Props) {
                         className={`text-[11px] rounded-md border px-2 py-1 transition-colors ${
                           reminders.includes(opt.value)
                             ? 'border-emerald-600 bg-emerald-600 text-white'
-                            : 'border-gray-200 bg-white text-muted-foreground'
+                            : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 text-muted-foreground'
                         }`}
                       >
                         {opt.label}
@@ -558,7 +558,7 @@ export default function DeadlinesCard({ caseId }: Props) {
                 </div>
 
                 {saved && (
-                  <p className="text-[11px] text-emerald-800">
+                  <p className="text-[11px] text-emerald-800 dark:text-emerald-300">
                     {tf(d.savedPersisted, {
                       reference: saved.case_reference || '',
                       title: saved.case_title || '',

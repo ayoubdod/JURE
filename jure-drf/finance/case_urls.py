@@ -3,6 +3,7 @@ from django.urls import path
 from finance.views.case_finance_views import (
     CaseFinanceSummaryView,
     CaseInvoicePdfView,
+    ExpenseListCreateView,
     FeeListCreateView,
     InvoiceListCreateView,
     PaymentListCreateView,
@@ -12,6 +13,7 @@ from finance.views.case_finance_views import (
 urlpatterns = [
     path('finance/', CaseFinanceSummaryView.as_view(), name='case-finance-summary'),
     path('fees/', FeeListCreateView.as_view(), name='case-fees'),
+    path('expenses/', ExpenseListCreateView.as_view(), name='case-expenses'),
     path('invoices/', InvoiceListCreateView.as_view(), name='case-invoices'),
     path(
         'invoices/<int:pk>/pdf/',

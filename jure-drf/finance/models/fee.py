@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.db import models
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 
@@ -31,14 +32,32 @@ class Fee(models.Model):
         blank=True,
         related_name='finance_fees',
     )
+    description = models.CharField(max_length=500, blank=True)
     fee_type = models.CharField(max_length=20, choices=FeeType.choices)
     amount_expected = models.DecimalField(max_digits=12, decimal_places=2)
+    currency = models.CharField(max_length=3, default='MAD')
+    fee_date = models.DateField(default=timezone.localdate)
     amount_billed = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     amount_paid = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.PENDING)
     notes = models.TextField(blank=True)
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='finance_fees_created',
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         ordering = ['-created_at']
+
+    @property
+    def firm_id(self):
+        return self.case.cabinet_id if self.case_id else None
+
+    @property
+    def client_user_id(self):
+        return self.case.client_id if self.case_id else None

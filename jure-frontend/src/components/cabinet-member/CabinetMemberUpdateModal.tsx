@@ -198,7 +198,7 @@ const CabinetMemberUpdateModal = forwardRef<CabinetMemberUpdateModalRef, Cabinet
             <div className="grid grid-cols-2 gap-4">
               <div className="">
                 <label className="text-sm font-medium  flex items-center gap-1">
-                  <Mail className="w-4 h-4 text-gray-400" />
+                  <Mail className="w-4 h-4 text-slate-400 dark:text-slate-500" />
                   <span >{t.team.modal.email} </span>
 
                 </label>
@@ -213,7 +213,7 @@ const CabinetMemberUpdateModal = forwardRef<CabinetMemberUpdateModalRef, Cabinet
               </div>
               <div className="">
                 <label className="text-sm font-medium flex items-center gap-1">
-                  <Phone className="w-4 h-4 text-gray-400" />
+                  <Phone className="w-4 h-4 text-slate-400 dark:text-slate-500" />
                   <span>{t.team.modal.phoneNumber} </span>
 
                 </label>
@@ -239,7 +239,7 @@ const CabinetMemberUpdateModal = forwardRef<CabinetMemberUpdateModalRef, Cabinet
 
             <div>
               <label className="text-sm flex font-medium">
-                <MapPin className="w-4 h-4 text-gray-400 mb-1 mr-1" />
+                <MapPin className="w-4 h-4 text-slate-400 dark:text-slate-500 mb-1 mr-1" />
                 <span> {t.team.modal.addressLabel} </span>
               </label>
             <Input className="h-10 rounded-lg" {...mainForm.register('address')} />
@@ -289,7 +289,7 @@ const CabinetMemberUpdateModal = forwardRef<CabinetMemberUpdateModalRef, Cabinet
               {t.team.modal.isActive}
             </label>
           </div>
-          <DialogFooter className="pt-4 border-t border-gray-100">
+          <DialogFooter className="pt-4 border-t border-slate-200/90 dark:border-slate-800">
             <Button
               type="button"
               variant="outline"

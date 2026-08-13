@@ -187,3 +187,14 @@ class ActivityLog(TimeStampedModel):
     cabinet = models.ForeignKey("cabinets.Cabinet", on_delete=models.CASCADE)
     kind = models.CharField(max_length=50)  # e.g., task_completed, client_added, document_uploaded
     message = models.CharField(max_length=255)
+    actor = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="activity_logs",
+    )
+    entity_type = models.CharField(max_length=64, blank=True, default="")
+    entity_id = models.CharField(max_length=64, blank=True, default="")
+    previous_value = models.JSONField(null=True, blank=True)
+    new_value = models.JSONField(null=True, blank=True)

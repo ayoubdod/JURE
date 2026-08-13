@@ -46,11 +46,11 @@ const CasesTable = ({ cases, hide_assigned_to = false }: CasesTableProps) => {
       case 'PENDING':
         return 'bg-orange-100 text-orange-800';
       case 'ARCHIVED':
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-100';
       case 'CONVERTED_TO_CASE':
         return 'bg-purple-100 text-purple-800';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-100';
     }
   };
 
@@ -164,7 +164,7 @@ const CasesTable = ({ cases, hide_assigned_to = false }: CasesTableProps) => {
   });
 
   return (
-    <div className="bg-white rounded-lg shadow-sm">
+    <div className="bg-white dark:bg-slate-950 rounded-lg shadow-sm">
       <style>
         {`
           .modal-scrollbar::-webkit-scrollbar {
@@ -184,14 +184,14 @@ const CasesTable = ({ cases, hide_assigned_to = false }: CasesTableProps) => {
         `}
       </style>
 
-      <div className="p-6 border-b border-gray-200">
+      <div className="p-6 border-b border-slate-200 dark:border-slate-700">
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-semibold text-gray-900">All Cases</h3>
+          <h3 className="text-lg font-semibold text-slate-900 dark:text-white">All Cases</h3>
           <div className="flex space-x-2">
             {/* Filter Dialog */}
             <Dialog open={filterModalOpen} onOpenChange={setFilterModalOpen}>
               <DialogTrigger asChild>
-                <button className="px-4 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50 transition-colors flex items-center space-x-2">
+                <button className="px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg text-sm hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors flex items-center space-x-2">
                   <Filter size={16} />
                   <span>Filter</span>
                 </button>
@@ -297,7 +297,7 @@ const CasesTable = ({ cases, hide_assigned_to = false }: CasesTableProps) => {
               </DialogContent>
             </Dialog>
 
-            <button onClick={handlePrint} className="px-4 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50 transition-colors flex items-center space-x-2">
+            <button onClick={handlePrint} className="px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg text-sm hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors flex items-center space-x-2">
               <FileText size={16} />
               <span>Print</span>
             </button>
@@ -305,7 +305,7 @@ const CasesTable = ({ cases, hide_assigned_to = false }: CasesTableProps) => {
         </div>
 
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 dark:text-slate-500" size={20} />
           <Input
             type="text"
             placeholder="Search by title, reference or client..."
@@ -318,36 +318,36 @@ const CasesTable = ({ cases, hide_assigned_to = false }: CasesTableProps) => {
 
       <div className="overflow-x-auto">
         <table className="w-full">
-          <thead className="bg-gray-50">
+          <thead className="bg-slate-50 dark:bg-slate-900/50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                 <input type="checkbox" className="rounded" />
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                 Case
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                 Client
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                 Category
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                 Status
               </th>
               {!hide_assigned_to && (
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                   Assigned to
                 </th>
               )}
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                 Action
               </th>
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
+          <tbody className="bg-white dark:bg-slate-950 divide-y divide-gray-200">
             {filteredCases.map((caseItem) => (
-              <tr key={caseItem.id} className="hover:bg-gray-50">
+              <tr key={caseItem.id} className="hover:bg-slate-50 dark:hover:bg-slate-900/50">
                 <td className="px-6 py-4 whitespace-nowrap">
                   <input type="checkbox" className="rounded" />
                 </td>
@@ -359,7 +359,7 @@ const CasesTable = ({ cases, hide_assigned_to = false }: CasesTableProps) => {
                     >
                       {caseItem.title}
                     </button>
-                    <div className="text-sm text-gray-500">{caseItem.reference}</div>
+                    <div className="text-sm text-slate-500 dark:text-slate-400">{caseItem.reference}</div>
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
@@ -371,18 +371,18 @@ const CasesTable = ({ cases, hide_assigned_to = false }: CasesTableProps) => {
                         </span>
                       </div>
                       <div>
-                        <div className="text-sm font-medium text-gray-900">
+                        <div className="text-sm font-medium text-slate-900 dark:text-white">
                           {caseItem.client.first_name} {caseItem.client.last_name}
                         </div>
-                        <div className="text-sm text-gray-500">{caseItem.client.email}</div>
+                        <div className="text-sm text-slate-500 dark:text-slate-400">{caseItem.client.email}</div>
                       </div>
                     </div>
                   ) : (
-                    <span className="text-sm text-gray-400">No client assigned</span>
+                    <span className="text-sm text-slate-400 dark:text-slate-500">No client assigned</span>
                   )}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <span className="text-sm text-gray-900">{getCategoryLabel(caseItem.category)}</span>
+                  <span className="text-sm text-slate-900 dark:text-white">{getCategoryLabel(caseItem.category)}</span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(caseItem.status)}`}>
@@ -402,14 +402,14 @@ const CasesTable = ({ cases, hide_assigned_to = false }: CasesTableProps) => {
                             className="h-8 w-8 shrink-0 mr-3"
                           />
                           <div>
-                            <div className="text-sm font-medium text-gray-900">
+                            <div className="text-sm font-medium text-slate-900 dark:text-white">
                               {caseItem.assigned_to.first_name} {caseItem.assigned_to.last_name}
                             </div>
-                            <div className="text-sm text-gray-500">{caseItem.assigned_to.email}</div>
+                            <div className="text-sm text-slate-500 dark:text-slate-400">{caseItem.assigned_to.email}</div>
                           </div>
                         </>
                       ) : (
-                        <span className="text-sm text-gray-500">—</span>
+                        <span className="text-sm text-slate-500 dark:text-slate-400">—</span>
                       )}
                     </div>
                   </td>
@@ -417,17 +417,17 @@ const CasesTable = ({ cases, hide_assigned_to = false }: CasesTableProps) => {
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                   <Popover>
                     <PopoverTrigger asChild>
-                      <button className="text-gray-400 hover:text-gray-600">
+                      <button className="text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:text-slate-400">
                         <MoreHorizontal size={20} />
                       </button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-48 p-2 bg-white rounded-lg shadow-lg border z-50">
+                    <PopoverContent className="w-48 p-2 bg-white dark:bg-slate-950 rounded-lg shadow-lg border z-50">
                       <div className="space-y-1">
-                        <button className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 rounded flex items-center">
+                        <button className="w-full text-left px-3 py-2 text-sm hover:bg-slate-50 dark:hover:bg-slate-900/50 rounded flex items-center">
                           <Edit size={16} className="mr-2" />
                           Edit
                         </button>
-                        <button className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 rounded flex items-center">
+                        <button className="w-full text-left px-3 py-2 text-sm hover:bg-slate-50 dark:hover:bg-slate-900/50 rounded flex items-center">
                           <UserPlus size={16} className="mr-2" />
                           Assign
                         </button>
@@ -464,7 +464,7 @@ const CasesTable = ({ cases, hide_assigned_to = false }: CasesTableProps) => {
       </div>
 
       {filteredCases.length === 0 && (
-        <div className="text-center py-8 text-gray-500">
+        <div className="text-center py-8 text-slate-500 dark:text-slate-400">
           No cases found
         </div>
       )}
@@ -479,78 +479,78 @@ const CasesTable = ({ cases, hide_assigned_to = false }: CasesTableProps) => {
             <div className="space-y-6">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
-                  <p className="text-sm text-gray-900">{selectedCase.title}</p>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Title</label>
+                  <p className="text-sm text-slate-900 dark:text-white">{selectedCase.title}</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Reference</label>
-                  <p className="text-sm text-gray-900">{selectedCase.reference}</p>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Reference</label>
+                  <p className="text-sm text-slate-900 dark:text-white">{selectedCase.reference}</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Client</label>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Client</label>
                   {selectedCase.client ? (
-                    <p className="text-sm text-gray-900">
+                    <p className="text-sm text-slate-900 dark:text-white">
                       {selectedCase.client.first_name} {selectedCase.client.last_name}
                     </p>
                   ) : (
-                    <p className="text-sm text-gray-400">No client assigned</p>
+                    <p className="text-sm text-slate-400 dark:text-slate-500">No client assigned</p>
                   )}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
-                  <p className="text-sm text-gray-900">{getCategoryLabel(selectedCase.category)}</p>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Category</label>
+                  <p className="text-sm text-slate-900 dark:text-white">{getCategoryLabel(selectedCase.category)}</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Status</label>
                   <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(selectedCase.status)}`}>
                     {getStatusLabel(selectedCase.status)}
                   </span>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Assigned to</label>
-                  <p className="text-sm text-gray-900">
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Assigned to</label>
+                  <p className="text-sm text-slate-900 dark:text-white">
                     {selectedCase.assigned_to.first_name} {selectedCase.assigned_to.last_name}
                   </p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Court</label>
-                  <p className="text-sm text-gray-900">{selectedCase.court}</p>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Court</label>
+                  <p className="text-sm text-slate-900 dark:text-white">{selectedCase.court}</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Firm</label>
-                  <p className="text-sm text-gray-900">{selectedCase.cabinet}</p>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Firm</label>
+                  <p className="text-sm text-slate-900 dark:text-white">{selectedCase.cabinet}</p>
                 </div>
                 <div className="col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Created Date</label>
-                  <p className="text-sm text-gray-900">{new Date(selectedCase.created).toLocaleDateString('en-US')}</p>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Created Date</label>
+                  <p className="text-sm text-slate-900 dark:text-white">{new Date(selectedCase.created).toLocaleDateString('en-US')}</p>
                 </div>
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Summary</label>
-                <p className="text-sm text-gray-600 bg-gray-50 p-3 rounded">
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Summary</label>
+                <p className="text-sm text-slate-600 dark:text-slate-400 bg-slate-50 dark:bg-slate-900/50 p-3 rounded">
                   {selectedCase.summary}
                 </p>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
-                <p className="text-sm text-gray-600 bg-gray-50 p-3 rounded">
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Description</label>
+                <p className="text-sm text-slate-600 dark:text-slate-400 bg-slate-50 dark:bg-slate-900/50 p-3 rounded">
                   {selectedCase.description}
                 </p>
               </div>
 
               {/* <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Associated Documents</label>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Associated Documents</label>
                 <div className="space-y-2">
-                  <div className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                  <div className="flex items-center justify-between p-2 bg-slate-50 dark:bg-slate-900/50 rounded">
                     <span className="text-sm">Main file.pdf</span>
                     <Button size="sm" variant="outline">
                       <Eye size={14} className="mr-1" />
                       View
                     </Button>
                   </div>
-                  <div className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                  <div className="flex items-center justify-between p-2 bg-slate-50 dark:bg-slate-900/50 rounded">
                     <span className="text-sm">Correspondence.docx</span>
                     <Button size="sm" variant="outline">
                       <Eye size={14} className="mr-1" />

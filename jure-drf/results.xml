@@ -1,21 +1,31 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <testsuites>
-	<testsuite name="research_notes.tests.test_api.ResearchNoteAPITests-20260810215015" tests="14" file="research_notes/tests/test_api.py" time="68.805" timestamp="2026-08-10T21:51:24" failures="0" errors="0" skipped="0">
-		<testcase classname="research_notes.tests.test_api.ResearchNoteAPITests" name="test_cannot_delete_other_cabinet_note" time="5.476" timestamp="2026-08-10T21:50:20" file="research_notes\tests\test_api.py" line="178"/>
-		<testcase classname="research_notes.tests.test_api.ResearchNoteAPITests" name="test_cannot_retrieve_other_cabinet_note" time="4.093" timestamp="2026-08-10T21:50:24" file="research_notes\tests\test_api.py" line="154"/>
-		<testcase classname="research_notes.tests.test_api.ResearchNoteAPITests" name="test_cannot_update_other_cabinet_note" time="2.502" timestamp="2026-08-10T21:50:27" file="research_notes\tests\test_api.py" line="163"/>
-		<testcase classname="research_notes.tests.test_api.ResearchNoteAPITests" name="test_create_persists_in_database_with_cabinet_and_author" time="2.480" timestamp="2026-08-10T21:50:29" file="research_notes\tests\test_api.py" line="68"/>
-		<testcase classname="research_notes.tests.test_api.ResearchNoteAPITests" name="test_cross_cabinet_isolation_list" time="1.911" timestamp="2026-08-10T21:50:31" file="research_notes\tests\test_api.py" line="141"/>
-		<testcase classname="research_notes.tests.test_api.ResearchNoteAPITests" name="test_delete_persists" time="2.351" timestamp="2026-08-10T21:50:34" file="research_notes\tests\test_api.py" line="126"/>
-		<testcase classname="research_notes.tests.test_api.ResearchNoteAPITests" name="test_filter_by_matter" time="5.910" timestamp="2026-08-10T21:50:40" file="research_notes\tests\test_api.py" line="203"/>
-		<testcase classname="research_notes.tests.test_api.ResearchNoteAPITests" name="test_ignores_client_supplied_cabinet_id" time="5.370" timestamp="2026-08-10T21:50:45" file="research_notes\tests\test_api.py" line="256">
-			<!--Cabinet must come from the authenticated user, not the request body.-->
-		</testcase>
-		<testcase classname="research_notes.tests.test_api.ResearchNoteAPITests" name="test_invalid_matter_from_other_cabinet_rejected" time="5.673" timestamp="2026-08-10T21:50:51" file="research_notes\tests\test_api.py" line="224"/>
-		<testcase classname="research_notes.tests.test_api.ResearchNoteAPITests" name="test_list_retrieves_after_create" time="5.380" timestamp="2026-08-10T21:50:56" file="research_notes\tests\test_api.py" line="91"/>
-		<testcase classname="research_notes.tests.test_api.ResearchNoteAPITests" name="test_matter_association" time="6.760" timestamp="2026-08-10T21:51:03" file="research_notes\tests\test_api.py" line="188"/>
-		<testcase classname="research_notes.tests.test_api.ResearchNoteAPITests" name="test_unauthenticated_rejected" time="6.048" timestamp="2026-08-10T21:51:09" file="research_notes\tests\test_api.py" line="248"/>
-		<testcase classname="research_notes.tests.test_api.ResearchNoteAPITests" name="test_update_persists" time="5.969" timestamp="2026-08-10T21:51:15" file="research_notes\tests\test_api.py" line="104"/>
-		<testcase classname="research_notes.tests.test_api.ResearchNoteAPITests" name="test_viewer_cannot_create" time="8.882" timestamp="2026-08-10T21:51:24" file="research_notes\tests\test_api.py" line="238"/>
+	<testsuite name="finance.tests.test_phase1.FinancePhase1Tests-20260812003921" tests="14" file="finance/tests/test_phase1.py" time="123.247" timestamp="2026-08-12T00:41:25" failures="0" errors="0" skipped="0">
+		<testcase classname="finance.tests.test_phase1.FinancePhase1Tests" name="test_cabinet_isolation_and_unauthorized" time="13.133" timestamp="2026-08-12T00:39:35" file="finance\tests\test_phase1.py" line="363"/>
+		<testcase classname="finance.tests.test_phase1.FinancePhase1Tests" name="test_cancel_payment_recalculates" time="10.354" timestamp="2026-08-12T00:39:45" file="finance\tests\test_phase1.py" line="420"/>
+		<testcase classname="finance.tests.test_phase1.FinancePhase1Tests" name="test_create_expense" time="9.541" timestamp="2026-08-12T00:39:54" file="finance\tests\test_phase1.py" line="111"/>
+		<testcase classname="finance.tests.test_phase1.FinancePhase1Tests" name="test_create_fee" time="9.601" timestamp="2026-08-12T00:40:04" file="finance\tests\test_phase1.py" line="94"/>
+		<testcase classname="finance.tests.test_phase1.FinancePhase1Tests" name="test_create_invoice_and_items" time="6.996" timestamp="2026-08-12T00:40:11" file="finance\tests\test_phase1.py" line="130"/>
+		<testcase classname="finance.tests.test_phase1.FinancePhase1Tests" name="test_duplicate_invoice_numbers_per_cabinet_prevented" time="3.825" timestamp="2026-08-12T00:40:15" file="finance\tests\test_phase1.py" line="453"/>
+		<testcase classname="finance.tests.test_phase1.FinancePhase1Tests" name="test_invoice_item_and_total_calculation" time="5.606" timestamp="2026-08-12T00:40:21" file="finance\tests\test_phase1.py" line="166"/>
+		<testcase classname="finance.tests.test_phase1.FinancePhase1Tests" name="test_matter_finance_and_dashboard" time="8.684" timestamp="2026-08-12T00:40:29" file="finance\tests\test_phase1.py" line="285"/>
+		<testcase classname="finance.tests.test_phase1.FinancePhase1Tests" name="test_negative_and_zero_amount_rejected" time="9.684" timestamp="2026-08-12T00:40:39" file="finance\tests\test_phase1.py" line="402"/>
+		<testcase classname="finance.tests.test_phase1.FinancePhase1Tests" name="test_overdue_status" time="8.348" timestamp="2026-08-12T00:40:47" file="finance\tests\test_phase1.py" line="249"/>
+		<testcase classname="finance.tests.test_phase1.FinancePhase1Tests" name="test_partial_and_full_payments" time="9.148" timestamp="2026-08-12T00:40:56" file="finance\tests\test_phase1.py" line="179"/>
+		<testcase classname="finance.tests.test_phase1.FinancePhase1Tests" name="test_pdf_generation" time="9.086" timestamp="2026-08-12T00:41:05" file="finance\tests\test_phase1.py" line="351"/>
+		<testcase classname="finance.tests.test_phase1.FinancePhase1Tests" name="test_receivables_and_empty_state" time="10.379" timestamp="2026-08-12T00:41:16" file="finance\tests\test_phase1.py" line="338"/>
+		<testcase classname="finance.tests.test_phase1.FinancePhase1Tests" name="test_tax_advance_auto_created_from_settings" time="8.863" timestamp="2026-08-12T00:41:25" file="finance\tests\test_phase1.py" line="266"/>
+	</testsuite>
+	<testsuite name="finance.tests.test_phase15_e2e.HammoudE2EScenarioTests-20260812003921" tests="10" file="finance/tests/test_phase15_e2e.py" time="54.290" timestamp="2026-08-12T00:42:19" failures="0" errors="0" skipped="0">
+		<testcase classname="finance.tests.test_phase15_e2e.HammoudE2EScenarioTests" name="test_dashboard_consistency_and_list_contract" time="5.097" timestamp="2026-08-12T00:41:30" file="finance\tests\test_phase15_e2e.py" line="314"/>
+		<testcase classname="finance.tests.test_phase15_e2e.HammoudE2EScenarioTests" name="test_decimal_money_safety" time="4.574" timestamp="2026-08-12T00:41:34" file="finance\tests\test_phase15_e2e.py" line="511"/>
+		<testcase classname="finance.tests.test_phase15_e2e.HammoudE2EScenarioTests" name="test_expenses_and_matter_net_position" time="5.362" timestamp="2026-08-12T00:41:40" file="finance\tests\test_phase15_e2e.py" line="257"/>
+		<testcase classname="finance.tests.test_phase15_e2e.HammoudE2EScenarioTests" name="test_full_lifecycle_partial_payments_and_settlement" time="4.842" timestamp="2026-08-12T00:41:45" file="finance\tests\test_phase15_e2e.py" line="138"/>
+		<testcase classname="finance.tests.test_phase15_e2e.HammoudE2EScenarioTests" name="test_invoice_status_machine" time="4.844" timestamp="2026-08-12T00:41:49" file="finance\tests\test_phase15_e2e.py" line="365"/>
+		<testcase classname="finance.tests.test_phase15_e2e.HammoudE2EScenarioTests" name="test_payment_cancellation_persists" time="3.088" timestamp="2026-08-12T00:41:53" file="finance\tests\test_phase15_e2e.py" line="228"/>
+		<testcase classname="finance.tests.test_phase15_e2e.HammoudE2EScenarioTests" name="test_pdf_uses_db_data" time="2.681" timestamp="2026-08-12T00:41:55" file="finance\tests\test_phase15_e2e.py" line="430"/>
+		<testcase classname="finance.tests.test_phase15_e2e.HammoudE2EScenarioTests" name="test_receivables_aggregation" time="3.082" timestamp="2026-08-12T00:41:58" file="finance\tests\test_phase15_e2e.py" line="284"/>
+		<testcase classname="finance.tests.test_phase15_e2e.HammoudE2EScenarioTests" name="test_tax_advance_from_firm_settings" time="4.623" timestamp="2026-08-12T00:42:03" file="finance\tests\test_phase15_e2e.py" line="416"/>
+		<testcase classname="finance.tests.test_phase15_e2e.HammoudE2EScenarioTests" name="test_tenant_isolation_and_roles" time="16.095" timestamp="2026-08-12T00:42:19" file="finance\tests\test_phase15_e2e.py" line="465"/>
 	</testsuite>
 </testsuites>

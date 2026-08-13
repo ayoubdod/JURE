@@ -132,14 +132,14 @@ const CaseCreateModal = forwardRef<CaseCreateModalRef, CaseCreateModalProps>(({ 
 
         <form onSubmit={mainForm.handleSubmit(handleSubmit)} className="px-8 py-6 space-y-6">
           <div className="space-y-4">
-            <div className="flex items-center gap-2 text-sm font-medium text-gray-700 pb-2 border-b border-gray-100">
+            <div className="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300 pb-2 border-b border-slate-200/90 dark:border-slate-800">
               <FileText className="w-4 h-4 text-purple-600" />
               <span>{t.cases.modal.sections.basicInformation}</span>
             </div>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">
+                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
                   {t.cases.modal.fields.reference} *
                 </label>
                 <Input 
@@ -155,7 +155,7 @@ const CaseCreateModal = forwardRef<CaseCreateModalRef, CaseCreateModalProps>(({ 
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">
+                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
                   {t.cases.modal.fields.title} *
                 </label>
                 <Input 
@@ -173,7 +173,7 @@ const CaseCreateModal = forwardRef<CaseCreateModalRef, CaseCreateModalProps>(({ 
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">
+                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
                   {t.cases.modal.fields.court} *
                 </label>
                 <Input
@@ -189,7 +189,7 @@ const CaseCreateModal = forwardRef<CaseCreateModalRef, CaseCreateModalProps>(({ 
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">
+                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
                   {t.cases.modal.fields.category} *
                 </label>
                 <Select
@@ -216,7 +216,7 @@ const CaseCreateModal = forwardRef<CaseCreateModalRef, CaseCreateModalProps>(({ 
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">
+              <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
                 {t.cases.modal.fields.description} *
               </label>
               <Textarea 
@@ -233,14 +233,14 @@ const CaseCreateModal = forwardRef<CaseCreateModalRef, CaseCreateModalProps>(({ 
           </div>
 
           <div className="space-y-4">
-            <div className="flex items-center gap-2 text-sm font-medium text-gray-700 pb-2 border-b border-gray-100">
+            <div className="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300 pb-2 border-b border-slate-200/90 dark:border-slate-800">
               <Info className="w-4 h-4 text-purple-600" />
               <span>{t.cases.modal.sections.caseDetails}</span>
             </div>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">
+                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
                   {t.cases.modal.fields.status} *
                 </label>
                 <Select 
@@ -266,7 +266,7 @@ const CaseCreateModal = forwardRef<CaseCreateModalRef, CaseCreateModalProps>(({ 
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">
+                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
                   {t.cases.modal.fields.assignedTo}{' '}
                   <span className="text-slate-400 text-xs">({t.common.optional})</span>
                 </label>
@@ -287,7 +287,7 @@ const CaseCreateModal = forwardRef<CaseCreateModalRef, CaseCreateModalProps>(({ 
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">
+                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
                   {t.cases.modal.fields.relatedClient} ({t.common.optional})
                 </label>
                 <ServerSelect
@@ -307,7 +307,7 @@ const CaseCreateModal = forwardRef<CaseCreateModalRef, CaseCreateModalProps>(({ 
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">
+              <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
                 {t.cases.modal.fields.summary}
               </label>
               <Input 
@@ -323,7 +323,7 @@ const CaseCreateModal = forwardRef<CaseCreateModalRef, CaseCreateModalProps>(({ 
             </div>
           </div>
 
-          <DialogFooter className="pt-4 border-t border-gray-100">
+          <DialogFooter className="pt-4 border-t border-slate-200/90 dark:border-slate-800">
             <Button
               type="button"
               variant="outline"

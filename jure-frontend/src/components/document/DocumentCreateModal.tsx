@@ -137,14 +137,14 @@ const DocumentCreateModal = forwardRef<DocumentCreateModalRef, DocumentCreateMod
 
         <form onSubmit={mainForm.handleSubmit(handleSubmit)} className="px-8 py-6 space-y-6">
           <div className="space-y-4">
-            <div className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-3">
+            <div className="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">
               <Scale className="w-4 h-4 text-purple-600" />
               {m.sectionInfo}
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-3">
                 <label className="text-sm font-medium flex items-center gap-1">
-                  <Type className="w-4 h-4 text-gray-700" />
+                  <Type className="w-4 h-4 text-slate-700 dark:text-slate-300" />
                   <span>{m.titleLabel}</span>
                 </label>
 
@@ -159,7 +159,7 @@ const DocumentCreateModal = forwardRef<DocumentCreateModalRef, DocumentCreateMod
 
               <div className="space-y-3">
                 <label className="text-sm font-medium flex items-center gap-1">
-                  <Tags className="w-4 h-4 text-gray-700" />
+                  <Tags className="w-4 h-4 text-slate-700 dark:text-slate-300" />
                   <span>{m.categoryLabel}</span>
                 </label>
 
@@ -189,7 +189,7 @@ const DocumentCreateModal = forwardRef<DocumentCreateModalRef, DocumentCreateMod
 
             <div className="space-y-3">
               <label className="text-sm font-medium flex items-center gap-1">
-                <AlignJustify className="w-4 h-4 text-gray-700" />
+                <AlignJustify className="w-4 h-4 text-slate-700 dark:text-slate-300" />
                 <span>{m.descriptionLabel}</span>
               </label>
 
@@ -202,7 +202,7 @@ const DocumentCreateModal = forwardRef<DocumentCreateModalRef, DocumentCreateMod
 
             <div className="space-y-3">
               <label className="text-sm font-medium flex items-center gap-1">
-                <FileText className="w-4 h-4 text-gray-700" />
+                <FileText className="w-4 h-4 text-slate-700 dark:text-slate-300" />
                 <span>{m.fileLabel}</span>
               </label>
 
@@ -219,7 +219,7 @@ const DocumentCreateModal = forwardRef<DocumentCreateModalRef, DocumentCreateMod
 
             <div className="space-y-3">
               <label className="text-sm font-medium flex items-center gap-1">
-                <Tags className="w-4 h-4 text-gray-700" />
+                <Tags className="w-4 h-4 text-slate-700 dark:text-slate-300" />
                 <span>{m.tagsLabel}</span>
               </label>
 
@@ -237,7 +237,7 @@ const DocumentCreateModal = forwardRef<DocumentCreateModalRef, DocumentCreateMod
             </div>
           </div>
 
-          <DialogFooter className="pt-4 border-t border-gray-100">
+          <DialogFooter className="pt-4 border-t border-slate-200/90 dark:border-slate-800">
             <Button
               type="button"
               variant="outline"

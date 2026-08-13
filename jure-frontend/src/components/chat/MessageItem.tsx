@@ -432,9 +432,9 @@ const MessageItem: React.FC<MessageItemProps> = ({
       readCount > 0 ? (
         <CheckCheck className="h-3 w-3 text-blue-500 shrink-0" aria-label="Read" />
       ) : deliveredCount > 0 ? (
-        <CheckCheck className="h-3 w-3 text-gray-400 dark:text-gray-500 shrink-0" aria-label="Delivered" />
+        <CheckCheck className="h-3 w-3 text-slate-400 dark:text-slate-500 shrink-0" aria-label="Delivered" />
       ) : (
-        <Check className="h-3 w-3 text-gray-400 dark:text-gray-500 shrink-0" aria-label="Sent" />
+        <Check className="h-3 w-3 text-slate-400 dark:text-slate-500 shrink-0" aria-label="Sent" />
       )
     ) : null;
 
@@ -487,7 +487,7 @@ const MessageItem: React.FC<MessageItemProps> = ({
                   <DropdownMenuTrigger asChild>
                     <button
                       className={cn(
-                        'shrink-0 p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 mt-0.5 transition-opacity',
+                        'shrink-0 p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 mt-0.5 transition-opacity',
                         isOwn ? 'opacity-70 hover:opacity-100' : 'opacity-0 group-hover:opacity-100'
                       )}
                       aria-label="Message options"

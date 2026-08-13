@@ -1,0 +1,21 @@
+{
+  "name": "JURE",
+  "short_name": "JURE",
+  "description": "LegalTech platform for modern legal teams",
+  "start_url": "/en",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#64499D",
+  "icons": [
+    {
+      "src": "/favicon.png",
+      "sizes": "64x64",
+      "type": "image/png"
+    },
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "64x64",
+      "type": "image/png"
+    }
+  ]
+}

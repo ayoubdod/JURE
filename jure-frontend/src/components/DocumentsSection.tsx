@@ -25,7 +25,7 @@ const DocumentsSection = ({documents,onDeleteSuccess}:{documents:API.Document[],
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-sm">
+    <div className="bg-white dark:bg-slate-950 rounded-lg shadow-sm">
       <style>
         {`
           .modal-scrollbar::-webkit-scrollbar {
@@ -45,14 +45,14 @@ const DocumentsSection = ({documents,onDeleteSuccess}:{documents:API.Document[],
         `}
       </style>
 
-      <div className="p-6 border-b border-gray-200">
+      <div className="p-6 border-b border-slate-200 dark:border-slate-700">
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-semibold text-gray-900">Documents</h3>
+          <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Documents</h3>
           <div className="flex space-x-2">
             {/* Filter Dialog */}
             <Dialog open={filterModalOpen} onOpenChange={setFilterModalOpen}>
               <DialogTrigger asChild>
-                <button className="px-4 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50 transition-colors flex items-center space-x-2">
+                <button className="px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg text-sm hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors flex items-center space-x-2">
                   <Filter size={16} />
                   <span>Filter</span>
                 </button>
@@ -109,7 +109,7 @@ const DocumentsSection = ({documents,onDeleteSuccess}:{documents:API.Document[],
               </DialogContent>
             </Dialog>
 
-            <button onClick={handlePrint} className="px-4 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50 transition-colors flex items-center space-x-2">
+            <button onClick={handlePrint} className="px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg text-sm hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors flex items-center space-x-2">
               <FileText size={16} />
               <span>Print</span>
             </button>
@@ -117,13 +117,13 @@ const DocumentsSection = ({documents,onDeleteSuccess}:{documents:API.Document[],
         </div>
 
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 dark:text-slate-500" size={20} />
           <input
             type="text"
             placeholder="Search..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+            className="w-full pl-10 pr-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
           />
         </div>
       </div>
@@ -131,26 +131,26 @@ const DocumentsSection = ({documents,onDeleteSuccess}:{documents:API.Document[],
       <div className="p-6">
         <div className="space-y-4">
           {documents.filter((doc)=>doc.title.toLowerCase().includes(searchTerm.toLowerCase())).map((doc) => (
-            <div key={doc.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+            <div key={doc.id} className="flex items-center justify-between p-4 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors">
               <div className="flex items-center space-x-4">
                 <div className="w-10 h-10 bg-slate-100 dark:bg-slate-800 rounded-lg flex items-center justify-center">
                   <FileText className="text-slate-600 dark:text-slate-400" size={20} />
                 </div>
                 <div>
-                  <h4 className="font-medium text-gray-900">{doc.title}</h4>
-                  <p className="text-sm text-gray-500">{doc.created} • {doc.size}</p>
+                  <h4 className="font-medium text-slate-900 dark:text-white">{doc.title}</h4>
+                  <p className="text-sm text-slate-500 dark:text-slate-400">{doc.created} • {doc.size}</p>
                 </div>
               </div>
               <div className="flex items-center space-x-2">
                 <button 
                   onClick={() => handlePreview(doc)}
-                  className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                  className="p-2 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:bg-slate-800 rounded-lg transition-colors"
                 >
                   <Eye size={16} />
                 </button>
                 <button 
                   onClick={() => handleDelete(doc)}
-                  className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                  className="p-2 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:bg-slate-800 rounded-lg transition-colors"
                 >
                   <Trash2 size={16} />
                 </button>

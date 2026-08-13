@@ -2164,7 +2164,9 @@ export interface AppMessages {
     paymentMethods: {
       CASH: string;
       VIREMENT_BANCAIRE: string;
+      BANK_TRANSFER: string;
       CHEQUE: string;
+      OTHER: string;
     };
     txKinds: {
       PAIEMENT: string;

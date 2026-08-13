@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router';
 import { MonthlyRevenueChart } from '@/components/finance/charts/MonthlyRevenueChart';
 import { RevenueByLawyerChart } from '@/components/finance/charts/RevenueByLawyerChart';
@@ -7,6 +7,7 @@ import { TVAStatusWidget } from '@/components/finance/tva/TVAStatusWidget';
 import { formatMAD } from '@/utils/formatMAD';
 import { cn } from '@/lib/utils';
 import type { TVAStatus } from '@/services/financeService';
+import { getReceivables } from '@/services/finance/api';
 import { useAppTranslation } from '@/i18n';
 
 type Props = {
@@ -27,6 +28,17 @@ export const FinanceDashboardTab: React.FC<Props> = ({
   tvaStatus,
 }) => {
   const { t } = useAppTranslation();
+  const [receivables, setReceivables] = useState<API.FinanceReceivables | null>(null);
+
+  useEffect(() => {
+    if (showEmpty) {
+      setReceivables(null);
+      return;
+    }
+    getReceivables()
+      .then((res) => setReceivables(res.data))
+      .catch(() => setReceivables(null));
+  }, [showEmpty, dashboard]);
 
   if (showEmpty || !dashboard) {
     return (
@@ -49,9 +61,46 @@ export const FinanceDashboardTab: React.FC<Props> = ({
   }
 
   const tx = dashboard.recent_transactions?.slice(0, 10) ?? [];
+  const aging = receivables?.aging;
 
   return (
     <div className="space-y-6">
+      {receivables ? (
+        <div className="rounded-xl border border-slate-200/90 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950">
+          <h3 className="mb-3 text-sm font-semibold text-slate-900 dark:text-white">Créances (receivables)</h3>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 text-[13px]">
+            <div>
+              <p className="text-slate-500">Facturé</p>
+              <p className="font-semibold tabular-nums">{formatMAD(receivables.total_invoiced)}</p>
+            </div>
+            <div>
+              <p className="text-slate-500">Encaissé</p>
+              <p className="font-semibold tabular-nums">{formatMAD(receivables.total_collected)}</p>
+            </div>
+            <div>
+              <p className="text-slate-500">Outstanding</p>
+              <p className="font-semibold tabular-nums">{formatMAD(receivables.total_outstanding)}</p>
+            </div>
+            <div>
+              <p className="text-slate-500">En retard</p>
+              <p className="font-semibold tabular-nums text-red-600">{formatMAD(receivables.total_overdue)}</p>
+            </div>
+          </div>
+          {aging ? (
+            <div className="mt-4 flex flex-wrap gap-2 text-[11px] text-slate-600 dark:text-slate-400">
+              <span>Current: {formatMAD(aging.CURRENT)}</span>
+              <span>1–30: {formatMAD(aging['1_30'])}</span>
+              <span>31–60: {formatMAD(aging['31_60'])}</span>
+              <span>61–90: {formatMAD(aging['61_90'])}</span>
+              <span>90+: {formatMAD(aging['90_PLUS'])}</span>
+            </div>
+          ) : null}
+          {receivables.total_outstanding === 0 ? (
+            <p className="mt-3 text-[13px] text-slate-500">No outstanding receivables.</p>
+          ) : null}
+        </div>
+      ) : null}
+
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-5">
         <div className="xl:col-span-3 min-w-0">
           <MonthlyRevenueChart data={dashboard.monthly} year={year} />

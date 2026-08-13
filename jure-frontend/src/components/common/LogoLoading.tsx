@@ -19,7 +19,7 @@ const sizeClasses = {
 
 const LogoLoading = ({
   fullScreen = true,
-  logoUrl = '/images/Jure logo.png',
+  logoUrl = '/images/jure-logo.png',
   size = 'lg',
   message,
 }: LogoLoadingProps) => {

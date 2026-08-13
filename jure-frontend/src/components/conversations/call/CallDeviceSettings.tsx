@@ -71,12 +71,12 @@ const CallDeviceSettings: React.FC<{
     >
       <div className="mb-2 flex items-center justify-between">
         <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">Device settings</p>
-        <button type="button" onClick={onClose} className="text-xs text-slate-500 hover:text-slate-800">
+        <button type="button" onClick={onClose} className="text-xs text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100">
           Close
         </button>
       </div>
 
-      <label className="block text-xs font-medium text-slate-500">
+      <label className="block text-xs font-medium text-slate-500 dark:text-slate-400">
         Microphone
         <select
           className={selectClass}
@@ -93,7 +93,7 @@ const CallDeviceSettings: React.FC<{
       </label>
 
       {kind === 'video' ? (
-        <label className={cn('mt-2 block text-xs font-medium text-slate-500')}>
+        <label className={cn('mt-2 block text-xs font-medium text-slate-500 dark:text-slate-400')}>
           Camera
           <select
             className={selectClass}
@@ -111,7 +111,7 @@ const CallDeviceSettings: React.FC<{
       ) : null}
 
       {sinkSupported ? (
-        <label className="mt-2 block text-xs font-medium text-slate-500">
+        <label className="mt-2 block text-xs font-medium text-slate-500 dark:text-slate-400">
           Speaker
           <select
             className={selectClass}

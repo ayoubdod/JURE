@@ -65,7 +65,7 @@ export function GroupCallParticipantPicker({
             )}
             {title}
           </DialogTitle>
-          <DialogDescription className="text-xs text-slate-500">{description}</DialogDescription>
+          <DialogDescription className="text-xs text-slate-500 dark:text-slate-400">{description}</DialogDescription>
         </DialogHeader>
 
         {participants.length > 4 ? (
@@ -85,7 +85,7 @@ export function GroupCallParticipantPicker({
 
         <div className="max-h-[min(360px,55dvh)] overflow-y-auto py-1">
           {filtered.length === 0 ? (
-            <p className="px-4 py-10 text-center text-sm text-slate-500">{emptyLabel}</p>
+            <p className="px-4 py-10 text-center text-sm text-slate-500 dark:text-slate-400">{emptyLabel}</p>
           ) : (
             filtered.map((p) => (
               <button
@@ -98,7 +98,7 @@ export function GroupCallParticipantPicker({
                 }}
                 className={cn(
                   'flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors',
-                  'hover:bg-slate-50 focus-visible:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-indigo-400',
+                  'hover:bg-slate-50 dark:hover:bg-slate-900/50 focus-visible:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-indigo-400',
                   'dark:hover:bg-slate-900/70 dark:focus-visible:bg-slate-900/70'
                 )}
               >

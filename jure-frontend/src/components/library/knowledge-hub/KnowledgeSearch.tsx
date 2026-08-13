@@ -74,7 +74,7 @@ const KnowledgeSearch = forwardRef<KnowledgeSearchHandle, Props>(function Knowle
             }
           }}
           className={cn(
-            'min-w-0 flex-1 bg-transparent text-[13px] text-slate-900 outline-none',
+            'min-w-0 flex-1 bg-transparent text-[13px] text-slate-900 dark:text-white outline-none',
             'placeholder:text-slate-400 dark:text-slate-100 dark:placeholder:text-slate-500',
             '[&::-webkit-search-cancel-button]:hidden'
           )}
@@ -83,7 +83,7 @@ const KnowledgeSearch = forwardRef<KnowledgeSearchHandle, Props>(function Knowle
           <button
             type="button"
             onClick={() => onChange('')}
-            className="rounded p-1 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800 min-h-[28px] min-w-[28px] flex items-center justify-center"
+            className="rounded p-1 text-slate-400 transition-colors hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-600 dark:text-slate-400 dark:hover:bg-slate-800 min-h-[28px] min-w-[28px] flex items-center justify-center"
             aria-label={t.library.clearSearch}
           >
             <X className="h-3.5 w-3.5" />

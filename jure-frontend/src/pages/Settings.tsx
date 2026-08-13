@@ -1140,7 +1140,7 @@ const Settings: React.FC = () => {
               <Button
                 variant="secondary"
                 onClick={() => navigate('/profile')}
-                className="bg-white text-jure-700 hover:bg-white/90"
+                className="bg-white text-jure-700 hover:bg-white/90 dark:bg-slate-950/90"
               >
                 {t.settings.viewProfile}
               </Button>
@@ -1199,7 +1199,7 @@ const Settings: React.FC = () => {
                 <div className="flex w-full items-center gap-2">
                   <span
                     className={cn(
-                      'flex h-8 w-8 items-center justify-center rounded-full border bg-white',
+                      'flex h-8 w-8 items-center justify-center rounded-full border bg-white dark:bg-slate-950',
                       active ? 'border-jure-200 text-jure-600' : 'border-border text-muted-foreground'
                     )}
                   >

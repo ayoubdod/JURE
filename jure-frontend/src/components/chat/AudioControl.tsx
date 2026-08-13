@@ -132,7 +132,7 @@ const AudioControl: React.FC<AudioControlProps> = ({ audioSrc, isOwn = false, cl
         className={`p-2 rounded-full transition-colors ${
           isOwn 
             ? 'bg-white/20 hover:bg-white/30 text-black' 
-            : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
+            : 'bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:bg-slate-600 text-slate-700 dark:text-slate-300'
         } ${isLoading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
       >
         {isLoading ? (
@@ -146,18 +146,18 @@ const AudioControl: React.FC<AudioControlProps> = ({ audioSrc, isOwn = false, cl
 
       {/* Audio Waveform/Progress Bar */}
       <div className="flex-1 flex items-center gap-2">
-        <Volume2 className={`w-4 h-4 ${isOwn ? 'text-black/70' : 'text-gray-500'}`} />
+        <Volume2 className={`w-4 h-4 ${isOwn ? 'text-black/70' : 'text-slate-500 dark:text-slate-400'}`} />
         
         {/* Progress bar */}
         <div className="flex-1 relative">
           <div 
             className={`h-1 rounded-full ${
-              isOwn ? 'bg-white/30' : 'bg-gray-300'
+              isOwn ? 'bg-white/30' : 'bg-slate-300 dark:bg-slate-600'
             }`}
           >
             <div
               className={`h-full rounded-full transition-all duration-100 ${
-                isOwn ? 'bg-white' : 'bg-blue-500'
+                isOwn ? 'bg-white dark:bg-slate-950' : 'bg-blue-500'
               }`}
               style={{ width: `${progressPercentage}%` }}
             />
@@ -167,7 +167,7 @@ const AudioControl: React.FC<AudioControlProps> = ({ audioSrc, isOwn = false, cl
 
       {/* Time Display */}
       <div className={`text-xs font-mono min-w-0 ${
-        isOwn ? 'text-black/80' : 'text-gray-600'
+        isOwn ? 'text-black/80' : 'text-slate-600 dark:text-slate-400'
       }`}>
         {formatTime(currentTime)} / {formatTime(duration)}
       </div>

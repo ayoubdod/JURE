@@ -140,7 +140,7 @@ const KnowledgeCard = memo(function KnowledgeCard({
         >
           {insight.riskLevel} risk
         </span>
-        <span className="rounded-md border border-slate-200/80 px-1.5 py-0.5 text-[10px] text-slate-500 dark:border-slate-700">
+        <span className="rounded-md border border-slate-200/80 px-1.5 py-0.5 text-[10px] text-slate-500 dark:text-slate-400 dark:border-slate-700">
           {insight.language}
         </span>
       </div>
@@ -175,7 +175,7 @@ const KnowledgeCard = memo(function KnowledgeCard({
           <Button
             variant="ghost"
             size="sm"
-            className="h-7 w-7 p-0 text-slate-400 hover:text-slate-800"
+            className="h-7 w-7 p-0 text-slate-400 hover:text-slate-800 dark:hover:text-slate-100"
             onClick={(e) => onEdit(e, doc)}
             aria-label="Edit"
           >
@@ -184,7 +184,7 @@ const KnowledgeCard = memo(function KnowledgeCard({
           <Button
             variant="ghost"
             size="sm"
-            className="h-7 w-7 p-0 text-slate-400 hover:text-slate-800"
+            className="h-7 w-7 p-0 text-slate-400 hover:text-slate-800 dark:hover:text-slate-100"
             onClick={(e) => onDownload(e, doc)}
             aria-label="Download"
           >

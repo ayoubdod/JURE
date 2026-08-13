@@ -143,7 +143,7 @@ const CallDialog: React.FC<CallDialogProps> = ({
           role="dialog"
           aria-label={`Call with ${remoteName}`}
           className={cn(
-            'fixed inset-x-3 bottom-3 z-[110] mx-auto flex max-w-lg flex-col gap-2 rounded-2xl border border-slate-200/80 bg-white/90 px-3 py-2.5 shadow-[0_8px_30px_-8px_rgba(15,23,42,0.25)] backdrop-blur-xl',
+            'fixed inset-x-3 bottom-3 z-[110] mx-auto flex max-w-lg flex-col gap-2 rounded-2xl border border-slate-200/80 bg-white/90 dark:bg-slate-950/90 px-3 py-2.5 shadow-[0_8px_30px_-8px_rgba(15,23,42,0.25)] backdrop-blur-xl',
             'dark:border-slate-700/80 dark:bg-slate-900/90 sm:inset-x-auto sm:bottom-6 sm:left-auto sm:right-6 sm:w-[380px]'
           )}
         >
@@ -178,7 +178,7 @@ const CallDialog: React.FC<CallDialogProps> = ({
                     className="font-medium tabular-nums"
                   />
                   <span className="text-slate-400">·</span>
-                  <span className="truncate text-slate-500">{getCallStatusLabel(status)}</span>
+                  <span className="truncate text-slate-500 dark:text-slate-400">{getCallStatusLabel(status)}</span>
                 </p>
               </div>
             </button>

@@ -93,13 +93,13 @@ export function NotificationItem({
   return (
     <div className="relative overflow-hidden border-b border-slate-100 last:border-b-0 dark:border-slate-800">
       <div
-        className="pointer-events-none absolute inset-y-0 left-0 flex w-24 items-center justify-center bg-emerald-500/15 text-emerald-700"
+        className="pointer-events-none absolute inset-y-0 left-0 flex w-24 items-center justify-center bg-emerald-500/15 text-emerald-700 dark:text-emerald-400"
         aria-hidden
       >
         <Check className="h-4 w-4" />
       </div>
       <div
-        className="pointer-events-none absolute inset-y-0 right-0 flex w-24 items-center justify-center bg-rose-500/15 text-rose-700"
+        className="pointer-events-none absolute inset-y-0 right-0 flex w-24 items-center justify-center bg-rose-500/15 text-rose-700 dark:text-rose-400"
         aria-hidden
       >
         <Archive className="h-4 w-4" />
@@ -149,7 +149,7 @@ export function NotificationItem({
                 <h4 className={cn('text-[13px] font-semibold leading-snug', titleColorClass(n.priority))}>
                   {n.title}
                 </h4>
-                <span className="shrink-0 text-[11px] tabular-nums text-slate-500">{formatTimeAgo(n.created_at)}</span>
+                <span className="shrink-0 text-[11px] tabular-nums text-slate-500 dark:text-slate-400">{formatTimeAgo(n.created_at)}</span>
               </div>
               <p className={cn('mt-0.5 text-xs leading-relaxed text-slate-600 dark:text-slate-400', variant === 'dropdown' && 'line-clamp-2')}>
                 {n.message}
@@ -164,7 +164,7 @@ export function NotificationItem({
                   <span
                     className={cn(
                       'rounded-md px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide',
-                      priority === 'Urgent' ? 'bg-rose-50 text-rose-700' : 'bg-amber-50 text-amber-700'
+                      priority === 'Urgent' ? 'bg-rose-500/15 text-rose-700 dark:text-rose-400' : 'bg-amber-500/15 text-amber-700 dark:text-amber-400'
                     )}
                   >
                     {priority}
@@ -186,7 +186,7 @@ export function NotificationItem({
                 {n.action_url ? (
                   <button
                     type="button"
-                    className="inline-flex h-7 items-center gap-1 rounded-md px-2 text-[11px] font-medium text-indigo-600 hover:bg-indigo-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
+                    className="inline-flex h-7 items-center gap-1 rounded-md px-2 text-[11px] font-medium text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
                     onClick={(e) => {
                       e.stopPropagation();
                       open();
@@ -196,14 +196,14 @@ export function NotificationItem({
                   </button>
                 ) : null}
                 {unread ? (
-                  <button type="button" className="inline-flex h-7 items-center gap-1 rounded-md px-2 text-[11px] font-medium text-slate-600 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400" onClick={markRead}>
+                  <button type="button" className="inline-flex h-7 items-center gap-1 rounded-md px-2 text-[11px] font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400" onClick={markRead}>
                     <Check className="h-3 w-3" /> Mark read
                   </button>
                 ) : null}
                 {onPin ? (
                   <button
                     type="button"
-                    className="inline-flex h-7 items-center gap-1 rounded-md px-2 text-[11px] font-medium text-slate-600 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
+                    className="inline-flex h-7 items-center gap-1 rounded-md px-2 text-[11px] font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
                     onClick={(e) => {
                       e.stopPropagation();
                       onPin(n.id);
@@ -214,11 +214,11 @@ export function NotificationItem({
                   </button>
                 ) : null}
                 {onDelete ? (
-                  <button type="button" className="inline-flex h-7 items-center gap-1 rounded-md px-2 text-[11px] font-medium text-slate-600 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400" onClick={archive}>
+                  <button type="button" className="inline-flex h-7 items-center gap-1 rounded-md px-2 text-[11px] font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400" onClick={archive}>
                     <Archive className="h-3 w-3" /> Archive
                   </button>
                 ) : (
-                  <button type="button" className="inline-flex h-7 items-center gap-1 rounded-md px-2 text-[11px] font-medium text-slate-500 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400" onClick={dismiss}>
+                  <button type="button" className="inline-flex h-7 items-center gap-1 rounded-md px-2 text-[11px] font-medium text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400" onClick={dismiss}>
                     <X className="h-3 w-3" /> Dismiss
                   </button>
                 )}

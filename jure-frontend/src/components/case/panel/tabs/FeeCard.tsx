@@ -12,11 +12,13 @@ const typeLabel: Record<API.FinanceFeeType, { label: string; className: string }
   SUCCESS_FEE: { label: 'Résultat', className: 'bg-purple-500/15 text-purple-800 dark:text-purple-300' },
 };
 
-const statusLabel: Record<API.FinanceFeeStatus, string> = {
+const statusLabel: Record<string, string> = {
   PENDING: 'En attente',
   INVOICED: 'Facturé',
   PAID: 'Payé',
   PARTIAL: 'Partiel',
+  PARTIALLY_PAID: 'Partiel',
+  CANCELLED: 'Annulé',
 };
 
 type Props = {
@@ -41,7 +43,7 @@ export const FeeCard: React.FC<Props> = ({ fee, onEdit, onDelete }) => {
             {tl.label}
           </span>
           <span className="inline-flex rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-700 dark:bg-slate-800 dark:text-slate-200">
-            {statusLabel[fee.status]}
+            {statusLabel[fee.status] ?? fee.status}
           </span>
         </div>
         <div className="flex gap-1">

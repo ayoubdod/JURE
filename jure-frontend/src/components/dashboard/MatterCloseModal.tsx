@@ -164,7 +164,7 @@ export default function MatterCloseModal({
             </div>
           ) : (
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">{m.selectCase}</label>
+              <label className="text-sm font-medium text-slate-700 dark:text-slate-300">{m.selectCase}</label>
               <ServerSelect
                 link="/cases/?page_size=100"
                 value={selectedCaseId}
@@ -183,8 +183,8 @@ export default function MatterCloseModal({
           )}
 
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700 flex items-center gap-2">
-              <Award className="w-4 h-4 text-purple-600" />
+            <label className="text-sm font-medium text-slate-700 dark:text-slate-300 flex items-center gap-2">
+              <Award className="w-4 h-4 text-purple-600 dark:text-purple-400" />
               {m.outcome}
             </label>
             <Textarea
@@ -197,8 +197,8 @@ export default function MatterCloseModal({
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700 flex items-center gap-2">
-              <BookOpen className="w-4 h-4 text-purple-600" />
+            <label className="text-sm font-medium text-slate-700 dark:text-slate-300 flex items-center gap-2">
+              <BookOpen className="w-4 h-4 text-purple-600 dark:text-purple-400" />
               {m.lessons}
             </label>
             <Textarea
@@ -211,8 +211,8 @@ export default function MatterCloseModal({
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700 flex items-center gap-2">
-              <FileText className="w-4 h-4 text-purple-600" />
+            <label className="text-sm font-medium text-slate-700 dark:text-slate-300 flex items-center gap-2">
+              <FileText className="w-4 h-4 text-purple-600 dark:text-purple-400" />
               {m.precedents}
             </label>
             <Textarea
@@ -225,13 +225,13 @@ export default function MatterCloseModal({
           </div>
 
           {formError ? (
-            <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">
+            <div className="rounded-lg border border-red-200 dark:border-red-800/60 bg-red-50 dark:bg-red-950/40 px-3 py-2 text-sm text-red-800 dark:text-red-300">
               {formError}
             </div>
           ) : null}
         </div>
 
-        <DialogFooter className="px-8 pb-6 pt-0 border-t border-gray-100">
+        <DialogFooter className="px-8 pb-6 pt-0 border-t border-slate-200/90 dark:border-slate-800">
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={submitting}>
             {t.common.cancel}
           </Button>

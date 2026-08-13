@@ -53,7 +53,7 @@ const FormSection: React.FC<{
   children: React.ReactNode;
 }> = ({ title, icon: Icon, children }) => (
   <div className="space-y-4">
-    <div className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 pb-2 border-b border-gray-100 dark:border-gray-800">
+    <div className="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300 pb-2 border-b border-slate-200/90 dark:border-slate-800">
       <Icon className="w-4 h-4 text-purple-600 dark:text-purple-400" />
       <span>{title}</span>
     </div>
@@ -239,7 +239,7 @@ const ConsultationForm: React.FC<ConsultationFormProps> = ({
       <FormSection title={modal.sections.basicInfo} icon={FileText}>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
               {modal.fields.reference}{' '}
               <span className="text-slate-400 text-xs">{modal.hints.referenceOptionalAuto}</span>
             </label>
@@ -253,7 +253,7 @@ const ConsultationForm: React.FC<ConsultationFormProps> = ({
             )}
           </div>
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
               {modal.fields.title} <span className="text-red-500">*</span>
             </label>
             <Input
@@ -266,7 +266,7 @@ const ConsultationForm: React.FC<ConsultationFormProps> = ({
             )}
           </div>
           <div className="sm:col-span-2 space-y-2">
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
               {modal.fields.consultationType} <span className="text-red-500">*</span>
             </label>
             <Select
@@ -298,7 +298,7 @@ const ConsultationForm: React.FC<ConsultationFormProps> = ({
       <FormSection title={modal.sections.clientScheduling} icon={MessageCircle}>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
               {modal.fields.relatedClient}{' '}
               <span className="text-slate-400 text-xs">({t.common.optional})</span>
             </label>
@@ -314,7 +314,7 @@ const ConsultationForm: React.FC<ConsultationFormProps> = ({
             />
           </div>
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
               {modal.fields.assignedAttorney}{' '}
               <span className="text-slate-400 text-xs">({t.common.optional})</span>
             </label>
@@ -327,7 +327,7 @@ const ConsultationForm: React.FC<ConsultationFormProps> = ({
             />
           </div>
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
               {modal.fields.consultationDateTime} <span className="text-red-500">*</span>
             </label>
             <Input
@@ -342,7 +342,7 @@ const ConsultationForm: React.FC<ConsultationFormProps> = ({
             )}
           </div>
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
               {modal.fields.duration} <span className="text-red-500">*</span>
             </label>
             <Select
@@ -362,7 +362,7 @@ const ConsultationForm: React.FC<ConsultationFormProps> = ({
             </Select>
           </div>
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
               {modal.fields.format} <span className="text-red-500">*</span>
             </label>
             <Select
@@ -390,7 +390,7 @@ const ConsultationForm: React.FC<ConsultationFormProps> = ({
       <FormSection title={modal.sections.legalContext} icon={Scale}>
         <div className="space-y-4">
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
               {modal.fields.legalDomain} <span className="text-red-500">*</span>
             </label>
             <Select
@@ -412,7 +412,7 @@ const ConsultationForm: React.FC<ConsultationFormProps> = ({
             </Select>
           </div>
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
               {modal.fields.legalQuestion} <span className="text-red-500">*</span>
             </label>
             <Textarea
@@ -430,7 +430,7 @@ const ConsultationForm: React.FC<ConsultationFormProps> = ({
       <FormSection title={modal.sections.outcome} icon={Calendar}>
         <div className="space-y-4">
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
               {modal.fields.status}
             </label>
             <Select
@@ -450,7 +450,7 @@ const ConsultationForm: React.FC<ConsultationFormProps> = ({
             </Select>
           </div>
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
               {modal.fields.adviceSummary}
             </label>
             <Textarea
@@ -471,7 +471,7 @@ const ConsultationForm: React.FC<ConsultationFormProps> = ({
           </div>
           {followUpRequired && (
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
                 {modal.fields.followUpDate}
               </label>
               <Input type="date" {...form.register('follow_up_date')} className="h-10" />
@@ -480,7 +480,7 @@ const ConsultationForm: React.FC<ConsultationFormProps> = ({
         </div>
       </FormSection>
 
-      <div className="flex items-center justify-between pt-4 border-t border-gray-100 dark:border-gray-800 gap-3">
+      <div className="flex items-center justify-between pt-4 border-t border-slate-200/90 dark:border-slate-800 gap-3">
         {onBack && (
           <Button type="button" variant="outline" onClick={onBack} disabled={isLoading}>
             {modal.back}

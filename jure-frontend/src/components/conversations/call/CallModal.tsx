@@ -29,9 +29,9 @@ const STATUS_CLASS: Record<string, string> = {
   connecting: 'text-sky-600 dark:text-sky-400',
   active: 'text-emerald-600 dark:text-emerald-400',
   reconnecting: 'text-amber-600 dark:text-amber-400',
-  ended: 'text-slate-500',
-  declined: 'text-slate-500',
-  missed: 'text-slate-500',
+  ended: 'text-slate-500 dark:text-slate-400',
+  declined: 'text-slate-500 dark:text-slate-400',
+  missed: 'text-slate-500 dark:text-slate-400',
   error: 'text-rose-600',
 };
 
@@ -176,7 +176,7 @@ const CallModal: React.FC<{
     // Mobile voice sheet — match the reduced call card (light, roomy, centered)
     layout === 'sheet' &&
       cn(
-        'w-full rounded-t-[1.75rem] bg-white px-5 pt-2',
+        'w-full rounded-t-[1.75rem] bg-white dark:bg-slate-950 px-5 pt-2',
         'pb-[max(1.25rem,env(safe-area-inset-bottom))]',
         'dark:bg-slate-900',
         !videoLive && 'min-h-[min(72dvh,560px)] justify-between gap-6'
@@ -210,7 +210,7 @@ const CallModal: React.FC<{
         <button
           type="button"
           onClick={onClose}
-          className="absolute end-3 top-3 rounded-lg p-2 text-slate-400 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
+          className="absolute end-3 top-3 rounded-lg p-2 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
           aria-label={t.common.close}
         >
           <X className="h-4 w-4" />
@@ -218,7 +218,7 @@ const CallModal: React.FC<{
         <div className="flex flex-col items-center gap-3 pt-4 text-center">
           <AlertTriangle className="h-10 w-10 text-amber-500" aria-hidden />
           <h2 className="text-lg font-semibold tracking-tight">{title}</h2>
-          <p className="max-w-sm text-sm text-slate-500">{detail}</p>
+          <p className="max-w-sm text-sm text-slate-500 dark:text-slate-400">{detail}</p>
           <div className="mt-3 flex gap-2">
             <button
               type="button"
@@ -294,7 +294,7 @@ const CallModal: React.FC<{
             <button
               type="button"
               onClick={onMinimize}
-              className="inline-flex h-10 items-center gap-1.5 rounded-full bg-white/90 px-3 text-xs font-medium text-slate-600 shadow-sm ring-1 ring-slate-200/80 dark:bg-slate-900/90 dark:text-slate-300 dark:ring-slate-700"
+              className="inline-flex h-10 items-center gap-1.5 rounded-full bg-white/90 dark:bg-slate-950/90 px-3 text-xs font-medium text-slate-600 shadow-sm ring-1 ring-slate-200/80 dark:bg-slate-900/90 dark:text-slate-300 dark:ring-slate-700"
               aria-label={call.minimize}
             >
               <span className="h-1 w-6 rounded-full bg-slate-300 dark:bg-slate-600" aria-hidden />
@@ -307,7 +307,7 @@ const CallModal: React.FC<{
             <button
               type="button"
               onClick={onToggleFullscreen}
-              className="inline-flex h-10 items-center rounded-full bg-white/90 px-3 text-xs font-medium text-slate-600 shadow-sm ring-1 ring-slate-200/80 dark:bg-slate-900/90 dark:text-slate-300 dark:ring-slate-700"
+              className="inline-flex h-10 items-center rounded-full bg-white/90 dark:bg-slate-950/90 px-3 text-xs font-medium text-slate-600 shadow-sm ring-1 ring-slate-200/80 dark:bg-slate-900/90 dark:text-slate-300 dark:ring-slate-700"
               aria-label={call.exitFullScreen}
             >
               {call.exitFullScreen}
@@ -320,7 +320,7 @@ const CallModal: React.FC<{
         <button
           type="button"
           onClick={onClose}
-          className="absolute end-3 top-3 rounded-lg p-2 text-slate-400 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 dark:hover:bg-slate-800"
+          className="absolute end-3 top-3 rounded-lg p-2 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 dark:hover:bg-slate-800"
           aria-label={t.common.close}
         >
           <X className="h-4 w-4" />
@@ -521,7 +521,7 @@ const CallModal: React.FC<{
             <button
               type="button"
               onClick={onClose}
-              className="inline-flex h-11 min-w-[120px] items-center justify-center rounded-full border border-slate-200 bg-white px-6 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+              className="inline-flex h-11 min-w-[120px] items-center justify-center rounded-full border border-slate-200 bg-white px-6 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:hover:bg-slate-900/50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
             >
               Close
             </button>

@@ -20,30 +20,30 @@ export default function EvidenceManagerCard() {
   const tagLabel = (tag: Item['tag']) => e.tags[tag];
 
   return (
-    <Card className="rounded-2xl border-gray-100">
+    <Card className="rounded-2xl border-slate-200/90 dark:border-slate-800">
       <CardHeader className="pb-2">
         <CardTitle className="text-base">{e.title}</CardTitle>
         <CardDescription className="text-xs">{e.description}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">
         <div className="flex items-center justify-between">
-          <input type="file" onChange={onUpload} className="text-xs" />
+          <input type="file" onChange={onUpload} className="text-xs text-slate-700 dark:text-slate-300" />
         </div>
         <div className="space-y-2 max-h-48 overflow-auto">
           {items.map((it) => (
             <div
               key={it.id}
-              className="flex items-center justify-between rounded-xl border border-gray-100 p-2"
+              className="flex items-center justify-between rounded-xl border border-slate-200/90 dark:border-slate-800 p-2"
             >
-              <div className="text-sm">{it.name}</div>
+              <div className="text-sm text-slate-900 dark:text-white">{it.name}</div>
               <div className="flex items-center gap-2">
                 <span
                   className={`text-[10px] px-2 py-1 rounded-full ${
                     it.tag === 'privileged'
-                      ? 'bg-rose-100 text-rose-700'
+                      ? 'bg-rose-500/15 text-rose-700 dark:text-rose-400'
                       : it.tag === 'public'
-                        ? 'bg-emerald-100 text-emerald-700'
-                        : 'bg-gray-100 text-gray-700'
+                        ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400'
+                        : 'bg-slate-500/15 text-slate-700 dark:text-slate-400'
                   }`}
                 >
                   {tagLabel(it.tag)}

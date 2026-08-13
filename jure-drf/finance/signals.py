@@ -5,7 +5,7 @@ from django.dispatch import receiver
 from django.utils import timezone
 
 from cases.models import Case
-from finance.models import Invoice, Payment, TaxAdvance
+from finance.models import FirmFinanceSettings, Invoice, Payment, TaxAdvance
 from finance.services.case_finance_service import (
     recalculate_case_financial_totals,
     recalculate_fee_amounts,
@@ -30,13 +30,30 @@ def ensure_invoice_number(sender, instance, **kwargs):
 def create_tax_advance(sender, instance, created, **kwargs):
     if not created:
         return
-    TaxAdvance.objects.get_or_create(
+    amount = FirmFinanceSettings.DEFAULT_TAX_ADVANCE
+    if instance.cabinet_id:
+        fs = FirmFinanceSettings.get_for_cabinet(instance.cabinet)
+        if fs and fs.tax_advance_default_amount is not None:
+            amount = fs.tax_advance_default_amount
+    ta, was_created = TaxAdvance.objects.get_or_create(
         case=instance,
         defaults={
-            'amount': Decimal('100.00'),
+            'amount': amount,
             'status': TaxAdvance.Status.UNPAID,
         },
     )
+    if was_created and instance.cabinet_id:
+        from finance.services.audit_service import log_finance_action
+
+        log_finance_action(
+            cabinet=instance.cabinet,
+            kind='finance_tax_advance_created',
+            message=f'Tax advance {ta.amount} created for case #{instance.id}',
+            user=None,
+            entity_type='TaxAdvance',
+            entity_id=ta.id,
+            new_value={'amount': float(ta.amount), 'status': ta.status, 'case_id': instance.id},
+        )
 
 
 @receiver(post_save, sender=Payment)

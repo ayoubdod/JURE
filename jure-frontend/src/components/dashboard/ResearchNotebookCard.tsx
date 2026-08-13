@@ -162,7 +162,7 @@ export default function ResearchNotebookCard({ caseId }: Props) {
 
   return (
     <>
-      <Card className="rounded-2xl border-gray-100">
+      <Card className="rounded-2xl border-slate-200/90 dark:border-slate-800">
         <CardHeader className="pb-2">
           <CardTitle className="text-base">{n.title}</CardTitle>
           <CardDescription className="text-xs">
@@ -227,7 +227,7 @@ export default function ResearchNotebookCard({ caseId }: Props) {
             )}
 
             {!loading && loadError && (
-              <div className="rounded-xl border border-red-100 bg-red-50/80 p-3 text-xs text-red-700">
+              <div className="rounded-xl border border-red-200 dark:border-red-800/60 bg-red-50/80 dark:bg-red-950/40 p-3 text-xs text-red-700 dark:text-red-300">
                 <p>{loadError}</p>
                 <Button
                   type="button"
@@ -242,8 +242,8 @@ export default function ResearchNotebookCard({ caseId }: Props) {
             )}
 
             {!loading && !loadError && notes.length === 0 && (
-              <div className="rounded-xl border border-dashed border-gray-200 p-3 text-center space-y-1">
-                <p className="text-sm font-medium text-slate-800">{n.emptyTitle}</p>
+              <div className="rounded-xl border border-dashed border-slate-200 dark:border-slate-700 p-3 text-center space-y-1">
+                <p className="text-sm font-medium text-slate-800 dark:text-slate-100">{n.emptyTitle}</p>
                 <p className="text-xs text-muted-foreground">{n.emptyHint}</p>
                 <Button
                   type="button"
@@ -264,12 +264,14 @@ export default function ResearchNotebookCard({ caseId }: Props) {
                 <div
                   key={note.id}
                   className={`rounded-xl border p-2 ${
-                    editingId === note.id ? 'border-slate-300 bg-slate-50/80' : 'border-gray-100'
+                    editingId === note.id
+                      ? 'border-slate-300 dark:border-slate-600 bg-slate-50/80 dark:bg-slate-900/50'
+                      : 'border-slate-200/90 dark:border-slate-800'
                   }`}
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0 flex-1">
-                      <div className="text-sm font-medium truncate">{note.title}</div>
+                      <div className="text-sm font-medium truncate text-slate-900 dark:text-white">{note.title}</div>
                       {note.citation ? (
                         <div className="text-xs text-muted-foreground truncate">{note.citation}</div>
                       ) : null}
@@ -293,7 +295,7 @@ export default function ResearchNotebookCard({ caseId }: Props) {
                         type="button"
                         variant="ghost"
                         size="icon"
-                        className="h-7 w-7 text-red-600 hover:text-red-700"
+                        className="h-7 w-7 text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300"
                         onClick={() => setDeleteTarget(note)}
                         disabled={saving || deleting}
                         aria-label={n.deleteAria}

@@ -129,7 +129,7 @@ export default function NotificationsPage() {
           <Button
             variant="ghost"
             size="sm"
-            className="text-red-600 hover:bg-red-50 hover:text-red-700"
+            className="text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40 hover:text-red-700 dark:text-red-400 dark:hover:text-red-400"
             onClick={handleDeleteRead}
           >
             {t.notifications.deleteRead}
@@ -141,7 +141,7 @@ export default function NotificationsPage() {
         <NotificationFilters variant="page" value={filter} onChange={setFilter} />
         <div className="flex flex-wrap items-end gap-3 border-t border-slate-100 pt-3 dark:border-slate-800">
           <div className="flex flex-col gap-1">
-            <span className="text-xs font-medium text-slate-600">{t.notifications.dateFrom}</span>
+            <span className="text-xs font-medium text-slate-600 dark:text-slate-400">{t.notifications.dateFrom}</span>
             <Input
               type="date"
               value={dateFrom}
@@ -150,7 +150,7 @@ export default function NotificationsPage() {
             />
           </div>
           <div className="flex flex-col gap-1">
-            <span className="text-xs font-medium text-slate-600">{t.notifications.dateTo}</span>
+            <span className="text-xs font-medium text-slate-600 dark:text-slate-400">{t.notifications.dateTo}</span>
             <Input
               type="date"
               value={dateTo}
@@ -162,19 +162,19 @@ export default function NotificationsPage() {
       </div>
 
       {loading ? (
-        <p className="text-center text-slate-500">{t.common.loading}</p>
+        <p className="text-center text-slate-500 dark:text-slate-400">{t.common.loading}</p>
       ) : items.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-slate-200 py-20 text-center dark:border-slate-800">
           <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">
             {t.notifications.emptyTitle}
           </p>
-          <p className="mt-1 text-sm text-slate-500">{t.notifications.emptySubtitle}</p>
+          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{t.notifications.emptySubtitle}</p>
         </div>
       ) : (
         <div className="space-y-8">
           {groups.map((g) => (
             <section key={g.key}>
-              <h2 className="mb-3 text-xs font-bold uppercase tracking-wider text-slate-500">
+              <h2 className="mb-3 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                 {g.label}
               </h2>
               <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950">

@@ -203,7 +203,7 @@ const TaskCreateModal = forwardRef<TaskCreateModalRef, TaskCreateModalProps>(({ 
               <div className=" ">
                 <label className="text-sm font-medium">{t.tasks.modal.description}</label>
                 <div className="relative">
-                  <FileText className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
+                  <FileText className="absolute left-3 top-3 w-4 h-4 text-slate-400 dark:text-slate-500" />
                   <Textarea
                     id="description" {...mainForm.register('description')} placeholder={t.tasks.modal.descriptionPlaceholder}
                     className="min-h-[100px] pl-10 rounded-lg transition-all duration-200 focus-visible:ring-2 focus-visible:ring-primary/25 resize-none"
@@ -310,7 +310,7 @@ const TaskCreateModal = forwardRef<TaskCreateModalRef, TaskCreateModalProps>(({ 
               <div className=" ">
                 <label className="text-sm font-medium">{t.tasks.modal.assignTo}</label>
                 <div className="relative">
-                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-500" />
   
                       <ServerSelect
                         link='/cabinets/members/select_list'
@@ -331,7 +331,7 @@ const TaskCreateModal = forwardRef<TaskCreateModalRef, TaskCreateModalProps>(({ 
               <div className=" ">
                 <label className="text-sm font-medium">{t.tasks.modal.dueDate}</label>
                 <div className="relative">
-                  <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-500" />
                   <Input
                     id="dueDate"
                     type="date"
@@ -349,7 +349,7 @@ const TaskCreateModal = forwardRef<TaskCreateModalRef, TaskCreateModalProps>(({ 
           </div>
           {/* Related Case */}
 <div className="space-y-4">
-  <div className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-3">
+  <div className="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">
     <Gavel className="w-4 h-4 text-purple-600" />
     {t.tasks.modal.relatedCase}
   </div>

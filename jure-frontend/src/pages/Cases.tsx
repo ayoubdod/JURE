@@ -266,7 +266,7 @@ const CaseTableRow = memo(function CaseTableRow({
       className={cn(
         'group border-b border-slate-100 dark:border-slate-800/60 cursor-pointer transition-colors duration-100 motion-reduce:transition-none',
         rowIdx % 2 === 0 ? 'bg-white dark:bg-slate-950' : 'bg-slate-50/40 dark:bg-slate-900/20',
-        'hover:bg-slate-100/80 dark:hover:bg-slate-900/50',
+        'hover:bg-slate-100 dark:hover:bg-slate-800/80',
         selected && 'bg-primary/[0.06] dark:bg-primary/10 ring-1 ring-inset ring-primary/25',
         'focus-visible:outline-none focus-visible:bg-primary/[0.08] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary/40'
       )}
@@ -855,7 +855,7 @@ const Cases = () => {
                 {searchTerm.trim() !== '' && (
                   <button
                     type="button"
-                    className="absolute right-1.5 top-1/2 -translate-y-1/2 rounded p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 min-h-[28px] min-w-[28px] flex items-center justify-center"
+                    className="absolute right-1.5 top-1/2 -translate-y-1/2 rounded p-1 text-slate-400 hover:text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 min-h-[28px] min-w-[28px] flex items-center justify-center"
                     onClick={() => updateUrlFilters({ [Q.search]: null })}
                     aria-label={t.cases.clearSearch}
                   >
@@ -903,7 +903,7 @@ const Cases = () => {
                 <PopoverContent className="w-64 p-2" align="start">
                   <div className="space-y-2 max-h-[280px] overflow-y-auto">
                     <div>
-                      <p className="text-[10px] uppercase tracking-wider text-slate-500 mb-1">General</p>
+                      <p className="text-[10px] uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">General</p>
                       <div className="flex flex-wrap gap-1">
                         {GENERAL_STATUSES.map((s) => (
                           <Button
@@ -920,7 +920,7 @@ const Cases = () => {
                     </div>
                     {caseTypeFilter === 'CONSULTATION' && (
                       <div>
-                        <p className="text-[10px] uppercase tracking-wider text-slate-500 mb-1">
+                        <p className="text-[10px] uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
                           {t.cases.filters.consultation}
                         </p>
                         <div className="flex flex-wrap gap-1">
@@ -939,7 +939,7 @@ const Cases = () => {
                       </div>
                     )}
                     <div>
-                      <p className="text-[10px] uppercase tracking-wider text-slate-500 mb-1">
+                      <p className="text-[10px] uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
                         {t.cases.filters.litigation} / {t.cases.typeLabels.admin}
                       </p>
                       <div className="flex flex-wrap gap-1">
@@ -986,7 +986,7 @@ const Cases = () => {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-9 text-[12px] text-slate-600 px-2"
+                  className="h-9 text-[12px] text-slate-600 dark:text-slate-400 px-2"
                   onClick={resetFilters}
                 >
                   {t.cases.reset}

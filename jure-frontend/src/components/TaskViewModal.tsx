@@ -82,8 +82,8 @@ const TaskViewModal = forwardRef<TaskViewModalRef, TaskViewModalProps>(({ onUpda
     switch (priority) {
       case TaskPriority.HIGH: return 'bg-red-100 text-red-800';
       case TaskPriority.MEDIUM: return 'bg-yellow-100 text-yellow-800';
-      case TaskPriority.LOW: return 'bg-gray-100 text-gray-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case TaskPriority.LOW: return 'bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-100';
+      default: return 'bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-100';
     }
   };
 
@@ -91,8 +91,8 @@ const TaskViewModal = forwardRef<TaskViewModalRef, TaskViewModalProps>(({ onUpda
     switch (status) {
       case TaskStatus.DONE: return 'bg-green-100 text-green-800';
       case TaskStatus.IN_PROGRESS: return 'bg-blue-100 text-blue-800';
-      case TaskStatus.TODO: return 'bg-gray-100 text-gray-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case TaskStatus.TODO: return 'bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-100';
+      default: return 'bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-100';
     }
   };
 
@@ -144,22 +144,22 @@ const TaskViewModal = forwardRef<TaskViewModalRef, TaskViewModalProps>(({ onUpda
         ) : task ? (
           <div className="px-8 py-6 space-y-6">
             <div className="space-y-4">
-              <div className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-3">
+              <div className="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">
                 <FileText className="w-4 h-4 text-purple-600" />
                 {m.taskInformation}
               </div>
               <div className="space-y-4">
                 <div>
-                  <label className="text-sm font-medium text-gray-500">{m.title}</label>
-                  <p className="text-base font-semibold text-gray-900 mt-1">{task.title}</p>
+                  <label className="text-sm font-medium text-slate-500 dark:text-slate-400">{m.title}</label>
+                  <p className="text-base font-semibold text-slate-900 dark:text-white mt-1">{task.title}</p>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-gray-500">{m.description}</label>
-                  <p className="text-sm text-gray-700 mt-1 whitespace-pre-wrap">{task.description || m.noDescription}</p>
+                  <label className="text-sm font-medium text-slate-500 dark:text-slate-400">{m.description}</label>
+                  <p className="text-sm text-slate-700 dark:text-slate-300 mt-1 whitespace-pre-wrap">{task.description || m.noDescription}</p>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="text-sm font-medium text-gray-500">{m.priority}</label>
+                    <label className="text-sm font-medium text-slate-500 dark:text-slate-400">{m.priority}</label>
                     <div className="mt-1">
                       <Badge className={getPriorityColor(task.priority)}>
                         {task.priority
@@ -169,7 +169,7 @@ const TaskViewModal = forwardRef<TaskViewModalRef, TaskViewModalProps>(({ onUpda
                     </div>
                   </div>
                   <div>
-                    <label className="text-sm font-medium text-gray-500">{m.status}</label>
+                    <label className="text-sm font-medium text-slate-500 dark:text-slate-400">{m.status}</label>
                     <div className="mt-1">
                       <Badge className={getStatusColor(task.status)}>
                         {task.status
@@ -183,30 +183,30 @@ const TaskViewModal = forwardRef<TaskViewModalRef, TaskViewModalProps>(({ onUpda
             </div>
 
             <div className="space-y-4">
-              <div className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-3">
+              <div className="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">
                 <Calendar className="w-4 h-4 text-purple-600" />
                 {m.scheduleAssignment}
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm font-medium text-gray-500 flex items-center gap-1">
+                  <label className="text-sm font-medium text-slate-500 dark:text-slate-400 flex items-center gap-1">
                     <Clock className="w-4 h-4" />
                     {m.dueDate}
                   </label>
-                  <p className="text-sm text-gray-700 mt-1">
+                  <p className="text-sm text-slate-700 dark:text-slate-300 mt-1">
                     {task.due_date ? new Date(task.due_date).toLocaleDateString() : m.notSet}
                   </p>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-gray-500">{m.estimatedHours}</label>
-                  <p className="text-sm text-gray-700 mt-1">{task.estimated_hours || m.notSet}</p>
+                  <label className="text-sm font-medium text-slate-500 dark:text-slate-400">{m.estimatedHours}</label>
+                  <p className="text-sm text-slate-700 dark:text-slate-300 mt-1">{task.estimated_hours || m.notSet}</p>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-gray-500 flex items-center gap-1">
+                  <label className="text-sm font-medium text-slate-500 dark:text-slate-400 flex items-center gap-1">
                     <User className="w-4 h-4" />
                     {m.assignedTo}
                   </label>
-                  <p className="text-sm text-gray-700 mt-1">
+                  <p className="text-sm text-slate-700 dark:text-slate-300 mt-1">
                     {task.assigned_to ? `${task.assigned_to.first_name || ''} ${task.assigned_to.last_name || ''}`.trim() || task.assigned_to.email : m.unassigned}
                   </p>
                 </div>
@@ -215,18 +215,18 @@ const TaskViewModal = forwardRef<TaskViewModalRef, TaskViewModalProps>(({ onUpda
 
             {(task.client || task.case) && (
               <div className="space-y-4">
-                <div className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-3">
+                <div className="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">
                   <Briefcase className="w-4 h-4 text-purple-600" />
                   {m.relatedInformation}
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   {task.client && (
                     <div>
-                      <label className="text-sm font-medium text-gray-500 flex items-center gap-1">
+                      <label className="text-sm font-medium text-slate-500 dark:text-slate-400 flex items-center gap-1">
                         <User className="w-4 h-4" />
                         {m.client}
                       </label>
-                      <p className="text-sm text-gray-700 mt-1">
+                      <p className="text-sm text-slate-700 dark:text-slate-300 mt-1">
                         {typeof task.client === 'object' 
                           ? `${task.client.first_name || ''} ${task.client.last_name || ''}`.trim() || task.client.email
                           : m.client}
@@ -235,11 +235,11 @@ const TaskViewModal = forwardRef<TaskViewModalRef, TaskViewModalProps>(({ onUpda
                   )}
                   {task.case && (
                     <div>
-                      <label className="text-sm font-medium text-gray-500 flex items-center gap-1">
+                      <label className="text-sm font-medium text-slate-500 dark:text-slate-400 flex items-center gap-1">
                         <Gavel className="w-4 h-4" />
                         {m.case}
                       </label>
-                      <p className="text-sm text-gray-700 mt-1">
+                      <p className="text-sm text-slate-700 dark:text-slate-300 mt-1">
                         {typeof task.case === 'object' ? task.case.title : (task as any).case_title || m.case}
                       </p>
                     </div>
@@ -248,7 +248,7 @@ const TaskViewModal = forwardRef<TaskViewModalRef, TaskViewModalProps>(({ onUpda
               </div>
             )}
 
-            <DialogFooter className="pt-4 border-t border-gray-100">
+            <DialogFooter className="pt-4 border-t border-slate-200/90 dark:border-slate-800">
               <Button
                 type="button"
                 variant="outline"
@@ -269,7 +269,7 @@ const TaskViewModal = forwardRef<TaskViewModalRef, TaskViewModalProps>(({ onUpda
           </div>
         ) : (
           <div className="px-8 py-6 text-center">
-            <p className="text-gray-500">{m.notFound}</p>
+            <p className="text-slate-500 dark:text-slate-400">{m.notFound}</p>
           </div>
         )}
       </DialogContent>

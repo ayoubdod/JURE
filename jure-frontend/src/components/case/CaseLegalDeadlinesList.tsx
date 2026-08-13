@@ -114,7 +114,7 @@ export default function CaseLegalDeadlinesList({
   }
 
   if (error) {
-    return <p className="text-xs text-amber-800 py-2">{error}</p>;
+    return <p className="text-xs text-amber-800 dark:text-amber-300 py-2">{error}</p>;
   }
 
   if (items.length === 0) {
@@ -126,23 +126,23 @@ export default function CaseLegalDeadlinesList({
       {items.map((d) => (
         <li
           key={d.id}
-          className="rounded-xl border border-emerald-100 bg-emerald-50/40 px-3 py-2.5"
+          className="rounded-xl border border-emerald-100 dark:border-emerald-800/60 bg-emerald-50/40 dark:bg-emerald-950/30 px-3 py-2.5"
         >
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
-              <div className="flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wide text-emerald-800/80">
+              <div className="flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wide text-emerald-800/80 dark:text-emerald-300/80">
                 <Scale className="h-3 w-3 shrink-0" />
                 {list.legalDeadline}
                 {d.is_manual_override ? (
-                  <span className="normal-case tracking-normal text-amber-800">
+                  <span className="normal-case tracking-normal text-amber-800 dark:text-amber-300">
                     · {list.manuallyVerified}
                   </span>
                 ) : null}
               </div>
-              <p className="text-base font-semibold text-emerald-950 mt-0.5">
+              <p className="text-base font-semibold text-emerald-950 dark:text-emerald-100 mt-0.5">
                 {formatDate(d.final_deadline, lang)}
               </p>
-              <p className="text-xs text-emerald-900/80 mt-0.5">
+              <p className="text-xs text-emerald-900/80 dark:text-emerald-200/80 mt-0.5">
                 {d.rule?.name || list.fallbackName}
                 {d.rule?.version ? ` · v${d.rule.version}` : ''}
               </p>

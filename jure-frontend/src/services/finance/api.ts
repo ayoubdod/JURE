@@ -96,7 +96,7 @@ export const getPaymentDetail = (paymentId: number) =>
   axiosInstance.get(`${FINANCE_BASE}payments/${paymentId}/`);
 
 export type PatchInvoiceStatusBody = {
-  status: API.FinanceInvoiceStatus;
+  status: 'SENT' | 'CANCELLED';
 };
 
 export const patchInvoiceStatus = (invoiceId: number, data: PatchInvoiceStatusBody) =>
@@ -144,15 +144,43 @@ export const addPayment = (caseId: number, data: AddPaymentBody) => {
   });
 };
 
-export const updateTaxAdvance = (caseId: number, data: { status: 'PAID' }) =>
+export const updateTaxAdvance = (caseId: number, data: { status: 'PAID' | 'UNPAID'; paid_date?: string }) =>
   axiosInstance.patch<API.FinanceTaxAdvance>(`${CASES_BASE}${caseId}/tax-advance/`, data);
 
-export const deleteFee = (caseId: number, feeId: number) =>
-  axiosInstance.delete(`${CASES_BASE}${caseId}/fees/${feeId}/`);
+/** DELETE /finance/fees/:id/ — canonical firm-scoped delete. */
+export const deleteFee = (_caseId: number, feeId: number) =>
+  axiosInstance.delete(`${FINANCE_BASE}fees/${feeId}/`);
 
 /** @deprecated Prefer deleteInvoiceFinance — backend canonical: DELETE /finance/invoices/:id/ */
-export const deleteInvoice = (caseId: number, invoiceId: number) =>
-  axiosInstance.delete(`${CASES_BASE}${caseId}/invoices/${invoiceId}/`);
+export const deleteInvoice = (_caseId: number, invoiceId: number) =>
+  axiosInstance.delete(`${FINANCE_BASE}invoices/${invoiceId}/`);
 
-export const deletePayment = (caseId: number, paymentId: number) =>
-  axiosInstance.delete(`${CASES_BASE}${caseId}/payments/${paymentId}/`);
+/** DELETE /finance/payments/:id/ */
+export const deletePayment = (_caseId: number, paymentId: number) =>
+  axiosInstance.delete(`${FINANCE_BASE}payments/${paymentId}/`);
+
+export type AddExpenseBody = {
+  description: string;
+  category?: 'TRAVEL' | 'COURT' | 'EXPERT' | 'ADMIN' | 'OTHER';
+  amount: number;
+  currency?: string;
+  expense_date: string;
+  billable?: boolean;
+  reimbursable?: boolean;
+  receipt_reference?: string;
+};
+
+export const getCaseExpenses = (caseId: number) =>
+  axiosInstance.get<API.FinanceExpense[]>(`${CASES_BASE}${caseId}/expenses/`);
+
+export const addExpense = (caseId: number, data: AddExpenseBody) =>
+  axiosInstance.post<API.FinanceExpense>(`${CASES_BASE}${caseId}/expenses/`, data);
+
+export const updateExpense = (expenseId: number, data: Partial<AddExpenseBody>) =>
+  axiosInstance.patch<API.FinanceExpense>(`${FINANCE_BASE}expenses/${expenseId}/`, data);
+
+export const deleteExpense = (expenseId: number) =>
+  axiosInstance.delete(`${FINANCE_BASE}expenses/${expenseId}/`);
+
+export const getReceivables = () =>
+  axiosInstance.get<API.FinanceReceivables>(`${FINANCE_BASE}receivables/`);

@@ -32,7 +32,7 @@ const AuthShell: React.FC<AuthShellProps> = ({
           >
             <Link to="/" className="flex items-center gap-2 shrink-0 min-w-0">
               <img
-                src="/images/Jure logo.png"
+                src="/images/jure-logo.png"
                 alt="JURE"
                 className="h-8 sm:h-10 w-auto max-w-[100px] sm:max-w-none object-contain"
                 loading="eager"

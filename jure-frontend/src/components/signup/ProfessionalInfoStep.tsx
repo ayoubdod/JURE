@@ -83,7 +83,7 @@ const ProfessionalInfoStep = ({ onNext, onPrev, form }: ProfessionalInfoStepProp
                   id="trade_name"
                   {...register('trade_name', { required: true })}
                   placeholder={s.tradeNamePlaceholder}
-                  className={`transition-all duration-200 focus:ring-2 focus:ring-[#64499D]/40 focus:border-[#64499D] border-gray-300 dark:border-slate-600 h-12 ${
+                  className={`transition-all duration-200 focus:ring-2 focus:ring-[#64499D]/40 focus:border-[#64499D] border-slate-300 dark:border-slate-600 dark:border-slate-600 h-12 ${
                     errors.trade_name ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''
                   }`}
                 />

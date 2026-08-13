@@ -65,7 +65,7 @@ const FormSection: React.FC<{
   children: React.ReactNode;
 }> = ({ title, icon: Icon, children }) => (
   <div className="space-y-4">
-    <div className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 pb-2 border-b border-gray-100 dark:border-gray-800">
+    <div className="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300 pb-2 border-b border-slate-200/90 dark:border-slate-800">
       <Icon className="w-4 h-4 text-purple-600 dark:text-purple-400" />
       <span>{title}</span>
     </div>
@@ -283,7 +283,7 @@ const LitigationForm: React.FC<LitigationFormProps> = ({
       <FormSection title={modal.sections.basicInfo} icon={FileText}>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
               {modal.fields.reference} <span className="text-red-500">*</span>
             </label>
             <Input
@@ -296,7 +296,7 @@ const LitigationForm: React.FC<LitigationFormProps> = ({
             )}
           </div>
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
               {modal.fields.titleCaseName} <span className="text-red-500">*</span>
             </label>
             <Input
@@ -309,7 +309,7 @@ const LitigationForm: React.FC<LitigationFormProps> = ({
             )}
           </div>
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
               {modal.fields.litigationType} <span className="text-red-500">*</span>
             </label>
             <Select
@@ -331,7 +331,7 @@ const LitigationForm: React.FC<LitigationFormProps> = ({
             </Select>
           </div>
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
               {modal.fields.priority}
             </label>
             <Select
@@ -356,7 +356,7 @@ const LitigationForm: React.FC<LitigationFormProps> = ({
       <FormSection title={modal.sections.parties} icon={Users}>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="sm:col-span-2 space-y-2">
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
               {modal.fields.relatedClient}
             </label>
             <ServerSelect
@@ -371,7 +371,7 @@ const LitigationForm: React.FC<LitigationFormProps> = ({
             />
           </div>
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
               {modal.fields.clientRole}
             </label>
             <RadioGroup
@@ -395,7 +395,7 @@ const LitigationForm: React.FC<LitigationFormProps> = ({
             </RadioGroup>
           </div>
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
               {modal.fields.opposingPartyName}
             </label>
             <div className="flex gap-2">
@@ -421,7 +421,7 @@ const LitigationForm: React.FC<LitigationFormProps> = ({
             </div>
           </div>
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
               {modal.fields.opposingCounsel}
             </label>
             <Input
@@ -431,7 +431,7 @@ const LitigationForm: React.FC<LitigationFormProps> = ({
             />
           </div>
           <div className="sm:col-span-2 space-y-2">
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
               {modal.fields.thirdParties}
             </label>
             <div className="space-y-2">
@@ -465,7 +465,7 @@ const LitigationForm: React.FC<LitigationFormProps> = ({
       <FormSection title={modal.sections.courtJurisdiction} icon={Gavel}>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
               {modal.fields.courtName} <span className="text-red-500">*</span>
             </label>
             <Input
@@ -478,7 +478,7 @@ const LitigationForm: React.FC<LitigationFormProps> = ({
             )}
           </div>
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
               {modal.fields.jurisdictionCity}
             </label>
             <Input
@@ -488,7 +488,7 @@ const LitigationForm: React.FC<LitigationFormProps> = ({
             />
           </div>
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
               {modal.fields.chamberDivision}
             </label>
             <Input
@@ -498,7 +498,7 @@ const LitigationForm: React.FC<LitigationFormProps> = ({
             />
           </div>
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
               {modal.fields.judgeName}
             </label>
             <Input
@@ -508,7 +508,7 @@ const LitigationForm: React.FC<LitigationFormProps> = ({
             />
           </div>
           <div className="sm:col-span-2 space-y-2">
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
               {modal.fields.courtCaseNumber}
             </label>
             <Input
@@ -523,7 +523,7 @@ const LitigationForm: React.FC<LitigationFormProps> = ({
       <FormSection title={modal.sections.assignedTeam} icon={UserCheck}>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
               {modal.fields.leadAttorney}
             </label>
             <ServerSelect
@@ -535,7 +535,7 @@ const LitigationForm: React.FC<LitigationFormProps> = ({
             />
           </div>
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
               {modal.fields.coCounsel}{' '}
               <span className="text-slate-400 text-xs">{modal.hints.coCounselMulti}</span>
             </label>
@@ -549,25 +549,25 @@ const LitigationForm: React.FC<LitigationFormProps> = ({
       <FormSection title={modal.sections.timelineDeadlines} icon={Calendar}>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
               {modal.fields.filingDate}
             </label>
             <Input type="date" {...form.register('filing_date')} className="h-10" />
           </div>
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
               {modal.fields.firstHearingDate}
             </label>
             <Input type="date" {...form.register('first_hearing_date')} className="h-10" />
           </div>
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
               {modal.fields.nextHearingDate}
             </label>
             <Input type="date" {...form.register('next_hearing_date')} className="h-10" />
           </div>
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
               {modal.fields.statuteOfLimitationsDate}
             </label>
             <Input
@@ -577,7 +577,7 @@ const LitigationForm: React.FC<LitigationFormProps> = ({
             />
           </div>
           <div className="sm:col-span-2 space-y-2">
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
               {modal.fields.keyDeadlines}
             </label>
             <div className="space-y-2">
@@ -617,7 +617,7 @@ const LitigationForm: React.FC<LitigationFormProps> = ({
       <FormSection title={modal.sections.caseDetails} icon={AlignJustify}>
         <div className="space-y-4">
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
               {modal.fields.descriptionFacts} <span className="text-red-500">*</span>
             </label>
             <Textarea
@@ -630,7 +630,7 @@ const LitigationForm: React.FC<LitigationFormProps> = ({
             )}
           </div>
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
               {modal.fields.legalArguments}
             </label>
             <Textarea
@@ -640,7 +640,7 @@ const LitigationForm: React.FC<LitigationFormProps> = ({
             />
           </div>
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
               {modal.fields.status}
             </label>
             <Select
@@ -662,7 +662,7 @@ const LitigationForm: React.FC<LitigationFormProps> = ({
         </div>
       </FormSection>
 
-      <div className="flex items-center justify-between pt-4 border-t border-gray-100 dark:border-gray-800 gap-3">
+      <div className="flex items-center justify-between pt-4 border-t border-slate-200/90 dark:border-slate-800 gap-3">
         {onBack && (
           <Button type="button" variant="outline" onClick={onBack} disabled={isLoading}>
             {modal.back}

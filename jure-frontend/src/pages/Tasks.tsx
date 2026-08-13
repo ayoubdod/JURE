@@ -150,7 +150,7 @@ const Tasks = () => {
                   <h1 className="text-4xl font-extrabold bg-gradient-to-r from-gray-900 via-purple-800 to-purple-600 bg-clip-text text-transparent tracking-tight">
                     {t.tasks.title}
                   </h1>
-                  <p className="text-gray-600 font-medium mt-1 flex items-center gap-2">
+                  <p className="text-slate-600 dark:text-slate-400 font-medium mt-1 flex items-center gap-2">
                     <Sparkles className="h-4 w-4 text-purple-600" />
                     {t.tasks.subtitle}
                   </p>
@@ -176,8 +176,8 @@ const Tasks = () => {
             <CardContent className="p-5 relative z-10">
               <div className="flex items-center justify-between">
                 <div className="flex-1">
-                  <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">{t.tasks.stats.total}</p>
-                  <p className="text-3xl font-extrabold text-gray-900">{stats.total}</p>
+                  <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">{t.tasks.stats.total}</p>
+                  <p className="text-3xl font-extrabold text-slate-900 dark:text-white">{stats.total}</p>
                 </div>
                 <div className="relative">
                   <div className="absolute inset-0 bg-gradient-to-br from-purple-600 to-purple-800 rounded-xl blur-md opacity-30 group-hover:opacity-50 transition-opacity"></div>
@@ -194,8 +194,8 @@ const Tasks = () => {
             <CardContent className="p-5 relative z-10">
               <div className="flex items-center justify-between">
                 <div className="flex-1">
-                  <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">{t.tasks.stats.todo}</p>
-                  <p className="text-3xl font-extrabold text-gray-900">{stats.todo}</p>
+                  <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">{t.tasks.stats.todo}</p>
+                  <p className="text-3xl font-extrabold text-slate-900 dark:text-white">{stats.todo}</p>
                 </div>
                 <div className="relative">
                   <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl blur-md opacity-30 group-hover:opacity-50 transition-opacity"></div>
@@ -212,8 +212,8 @@ const Tasks = () => {
             <CardContent className="p-5 relative z-10">
               <div className="flex items-center justify-between">
                 <div className="flex-1">
-                  <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">{t.tasks.stats.inProgress}</p>
-                  <p className="text-3xl font-extrabold text-gray-900">{stats.inProgress}</p>
+                  <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">{t.tasks.stats.inProgress}</p>
+                  <p className="text-3xl font-extrabold text-slate-900 dark:text-white">{stats.inProgress}</p>
                 </div>
                 <div className="relative">
                   <div className="absolute inset-0 bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl blur-md opacity-30 group-hover:opacity-50 transition-opacity"></div>
@@ -230,8 +230,8 @@ const Tasks = () => {
             <CardContent className="p-5 relative z-10">
               <div className="flex items-center justify-between">
                 <div className="flex-1">
-                  <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">{t.tasks.stats.done}</p>
-                  <p className="text-3xl font-extrabold text-gray-900">{stats.done}</p>
+                  <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">{t.tasks.stats.done}</p>
+                  <p className="text-3xl font-extrabold text-slate-900 dark:text-white">{stats.done}</p>
                 </div>
                 <div className="relative">
                   <div className="absolute inset-0 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl blur-md opacity-30 group-hover:opacity-50 transition-opacity"></div>
@@ -248,8 +248,8 @@ const Tasks = () => {
             <CardContent className="p-5 relative z-10">
               <div className="flex items-center justify-between">
                 <div className="flex-1">
-                  <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">{t.tasks.stats.overdue}</p>
-                  <p className="text-3xl font-extrabold text-gray-900">{stats.overdue}</p>
+                  <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">{t.tasks.stats.overdue}</p>
+                  <p className="text-3xl font-extrabold text-slate-900 dark:text-white">{stats.overdue}</p>
                 </div>
                 <div className="relative">
                   <div className="absolute inset-0 bg-gradient-to-br from-red-500 to-red-600 rounded-xl blur-md opacity-30 group-hover:opacity-50 transition-opacity"></div>
@@ -266,8 +266,8 @@ const Tasks = () => {
             <CardContent className="p-5 relative z-10">
               <div className="flex items-center justify-between">
                 <div className="flex-1">
-                  <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">{t.tasks.stats.highPriority}</p>
-                  <p className="text-3xl font-extrabold text-gray-900">{stats.highPriority}</p>
+                  <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">{t.tasks.stats.highPriority}</p>
+                  <p className="text-3xl font-extrabold text-slate-900 dark:text-white">{stats.highPriority}</p>
                 </div>
                 <div className="relative">
                   <div className="absolute inset-0 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl blur-md opacity-30 group-hover:opacity-50 transition-opacity"></div>
@@ -283,7 +283,7 @@ const Tasks = () => {
         <Card className="bg-white/90 backdrop-blur-md border border-purple-100/50 shadow-xl rounded-2xl overflow-hidden mb-6 hover:shadow-2xl transition-all duration-300">
           <CardContent className="p-5">
             <div className="flex flex-col lg:flex-row gap-5 items-start lg:items-center">
-              <div className="flex items-center gap-3 text-sm font-bold text-gray-800">
+              <div className="flex items-center gap-3 text-sm font-bold text-slate-800 dark:text-slate-100">
                 <div className="relative">
                   <div className="absolute inset-0 bg-purple-200 rounded-xl blur-sm opacity-50"></div>
                   <div className="relative p-2.5 bg-gradient-to-br from-purple-100 to-purple-200 rounded-xl">
@@ -294,17 +294,17 @@ const Tasks = () => {
               </div>
               <div className="flex flex-wrap gap-4 items-center flex-1">
                 <div className="relative flex-1 min-w-[250px]">
-                  <Search className="absolute start-4 top-1/2 -translate-y-1/2 text-gray-400 h-4 w-4 z-10" />
+                  <Search className="absolute start-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 h-4 w-4 z-10" />
                   <Input
                     type="text"
                     placeholder={t.tasks.searchPlaceholder}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full ps-11 pe-4 py-2.5 bg-white/80 border-gray-200 rounded-xl shadow-sm hover:shadow-md focus:shadow-lg focus:border-purple-300 focus:ring-2 focus:ring-purple-100 transition-all duration-200"
+                    className="w-full ps-11 pe-4 py-2.5 bg-white/80 border-slate-200 dark:border-slate-700 rounded-xl shadow-sm hover:shadow-md focus:shadow-lg focus:border-purple-300 focus:ring-2 focus:ring-purple-100 transition-all duration-200"
                   />
                 </div>
                 <Select value={filterStatus} onValueChange={setFilterStatus}>
-                  <SelectTrigger className="w-[200px] bg-white/80 border-gray-200 rounded-xl shadow-sm hover:shadow-md focus:shadow-lg transition-all duration-200 font-medium">
+                  <SelectTrigger className="w-[200px] bg-white/80 border-slate-200 dark:border-slate-700 rounded-xl shadow-sm hover:shadow-md focus:shadow-lg transition-all duration-200 font-medium">
                     <SelectValue placeholder={t.tasks.filterByStatus} />
                   </SelectTrigger>
                   <SelectContent className="rounded-xl border-0 shadow-2xl">
@@ -329,8 +329,8 @@ const Tasks = () => {
                   <CheckSquare className="h-20 w-20 text-purple-400" />
                 </div>
               </div>
-              <h3 className="text-2xl font-extrabold text-gray-900 mb-3">{t.tasks.empty.title}</h3>
-              <p className="text-gray-600 font-medium mb-8 text-lg">
+              <h3 className="text-2xl font-extrabold text-slate-900 dark:text-white mb-3">{t.tasks.empty.title}</h3>
+              <p className="text-slate-600 dark:text-slate-400 font-medium mb-8 text-lg">
                 {searchQuery || filterStatus !== 'all'
                   ? t.tasks.empty.filteredHint
                   : t.tasks.empty.emptyHint}
@@ -356,8 +356,8 @@ const Tasks = () => {
                 <div className="absolute inset-0 bg-purple-200 rounded-full blur-xl opacity-30 animate-pulse"></div>
                 <Loader2 className="h-12 w-12 animate-spin text-purple-600 mx-auto relative z-10" />
               </div>
-              <p className="text-gray-700 font-semibold text-lg">{t.tasks.loading}</p>
-              <p className="text-gray-500 text-sm mt-2">{t.tasks.loadingHint}</p>
+              <p className="text-slate-700 dark:text-slate-300 font-semibold text-lg">{t.tasks.loading}</p>
+              <p className="text-slate-500 dark:text-slate-400 text-sm mt-2">{t.tasks.loadingHint}</p>
             </CardContent>
           </Card>
         )}
@@ -369,7 +369,7 @@ const Tasks = () => {
               return (
                 <Card
                   key={task.id}
-                  className="group relative bg-white/90 backdrop-blur-md border border-gray-200/50 shadow-xl hover:shadow-2xl transition-all duration-500 cursor-pointer rounded-2xl overflow-hidden hover:-translate-y-2"
+                  className="group relative bg-white/90 backdrop-blur-md border border-slate-200 dark:border-slate-700/50 shadow-xl hover:shadow-2xl transition-all duration-500 cursor-pointer rounded-2xl overflow-hidden hover:-translate-y-2"
                 >
                   <div className="absolute inset-0 bg-gradient-to-br from-purple-50/0 via-purple-50/0 to-purple-50/0 group-hover:from-purple-50/30 group-hover:via-purple-50/20 group-hover:to-purple-50/10 transition-all duration-500 pointer-events-none"></div>
 
@@ -382,10 +382,10 @@ const Tasks = () => {
                   <CardContent className="p-6 relative z-10">
                     <div className="flex justify-between items-start mb-4">
                       <div className="flex-1 min-w-0 pe-2">
-                        <h3 className="text-lg font-extrabold text-gray-900 group-hover:text-purple-800 transition-colors duration-300 line-clamp-2 mb-2">
+                        <h3 className="text-lg font-extrabold text-slate-900 dark:text-white group-hover:text-purple-800 transition-colors duration-300 line-clamp-2 mb-2">
                           {task.title}
                         </h3>
-                        <p className="text-sm text-gray-600 line-clamp-3 leading-relaxed">{task.description}</p>
+                        <p className="text-sm text-slate-600 dark:text-slate-400 line-clamp-3 leading-relaxed">{task.description}</p>
                       </div>
                     </div>
 
@@ -411,9 +411,9 @@ const Tasks = () => {
                       )}
                     </div>
 
-                    <div className="space-y-3 mb-5 pb-5 border-b border-gray-200/50">
+                    <div className="space-y-3 mb-5 pb-5 border-b border-slate-200 dark:border-slate-700/50">
                       <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2.5 text-sm text-gray-700">
+                        <div className="flex items-center gap-2.5 text-sm text-slate-700 dark:text-slate-300">
                           <div className="p-1.5 bg-purple-100 rounded-lg">
                             <Calendar className="h-4 w-4 text-purple-700" />
                           </div>
@@ -424,7 +424,7 @@ const Tasks = () => {
                           </span>
                         </div>
                         {task.estimated_hours && (
-                          <div className="flex items-center gap-2 text-sm text-gray-700">
+                          <div className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300">
                             <div className="p-1.5 bg-purple-100 rounded-lg">
                               <Clock className="h-4 w-4 text-purple-700" />
                             </div>
@@ -433,16 +433,16 @@ const Tasks = () => {
                         )}
                       </div>
                       {(task.client_details || task.assigned_to_details) && (
-                        <div className="flex items-center justify-between text-xs text-gray-600 pt-1">
+                        <div className="flex items-center justify-between text-xs text-slate-600 dark:text-slate-400 pt-1">
                           {task.client_details && (
-                            <div className="flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-lg">
-                              <Users className="h-3.5 w-3.5 text-gray-500" />
+                            <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-900/50 px-3 py-1.5 rounded-lg">
+                              <Users className="h-3.5 w-3.5 text-slate-500 dark:text-slate-400" />
                               <span className="truncate max-w-[140px] font-medium">{task.client_details.email}</span>
                             </div>
                           )}
                           {task.assigned_to_details && (
-                            <div className="flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-lg">
-                              <Users className="h-3.5 w-3.5 text-gray-500" />
+                            <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-900/50 px-3 py-1.5 rounded-lg">
+                              <Users className="h-3.5 w-3.5 text-slate-500 dark:text-slate-400" />
                               <span className="truncate max-w-[140px] font-medium">{task.assigned_to_details.email}</span>
                             </div>
                           )}
@@ -458,7 +458,7 @@ const Tasks = () => {
                           e.stopPropagation();
                           handleView(task);
                         }}
-                        className="flex-1 text-xs font-semibold rounded-xl border-gray-300 hover:bg-purple-50 hover:border-purple-300 hover:text-purple-700 transition-all duration-200 shadow-sm hover:shadow-md"
+                        className="flex-1 text-xs font-semibold rounded-xl border-slate-300 dark:border-slate-600 hover:bg-purple-50 hover:border-purple-300 hover:text-purple-700 transition-all duration-200 shadow-sm hover:shadow-md"
                       >
                         <Eye className="h-3.5 w-3.5 me-1.5" />
                         {t.tasks.view}
@@ -484,7 +484,7 @@ const Tasks = () => {
                           e.stopPropagation();
                           handleEdit(task);
                         }}
-                        className="text-xs font-semibold rounded-xl border-gray-300 hover:bg-purple-50 hover:border-purple-300 hover:text-purple-700 transition-all duration-200 shadow-sm hover:shadow-md px-3"
+                        className="text-xs font-semibold rounded-xl border-slate-300 dark:border-slate-600 hover:bg-purple-50 hover:border-purple-300 hover:text-purple-700 transition-all duration-200 shadow-sm hover:shadow-md px-3"
                         aria-label={t.common.edit}
                       >
                         <Edit className="h-3.5 w-3.5" />

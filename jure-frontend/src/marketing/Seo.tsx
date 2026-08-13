@@ -3,13 +3,16 @@ import { Helmet } from "react-helmet-async";
 import {
   LOCALES,
   DEFAULT_LOCALE,
+  OG_IMAGE,
   OG_IMAGE_PATH,
+  OG_LOCALE_TAGS,
   ORG,
   absoluteUrl,
   canonicalUrl,
   type MarketingLocale,
 } from "./site";
 import { getRoute, getArticle } from "./routes";
+import { organizationJsonLd, softwareApplicationJsonLd, webSiteJsonLd } from "./structuredData";
 
 type JsonLd = Record<string, unknown>;
 
@@ -24,6 +27,8 @@ export interface SeoProps {
   ogType?: "website" | "article";
   /** Site-relative or absolute image URL. Defaults to the brand OG card. */
   image?: string;
+  /** robots meta. Omit for default indexing. */
+  robots?: string;
 }
 
 /**
@@ -65,9 +70,11 @@ export const Seo: React.FC<SeoProps> = ({
   jsonLd = [],
   ogType = "website",
   image = OG_IMAGE_PATH,
+  robots,
 }) => {
   const canonical = canonicalUrl(lang, slug);
   const ogImage = absoluteUrl(image);
+  const verification = import.meta.env.VITE_GOOGLE_SITE_VERIFICATION;
 
   useLayoutEffect(() => {
     clearServerSeoBlock();
@@ -78,6 +85,8 @@ export const Seo: React.FC<SeoProps> = ({
       <html lang={lang} dir={lang === "ar" ? "rtl" : "ltr"} />
       <title>{title}</title>
       <meta name="description" content={description} />
+      {robots ? <meta name="robots" content={robots} /> : null}
+      {verification ? <meta name="google-site-verification" content={verification} /> : null}
       <link rel="canonical" href={canonical} />
 
       {LOCALES.map((locale) => (
@@ -96,12 +105,19 @@ export const Seo: React.FC<SeoProps> = ({
       <meta property="og:description" content={description} />
       <meta property="og:url" content={canonical} />
       <meta property="og:image" content={ogImage} />
-      <meta property="og:locale" content={lang} />
+      <meta property="og:image:width" content={String(OG_IMAGE.width)} />
+      <meta property="og:image:height" content={String(OG_IMAGE.height)} />
+      <meta property="og:image:alt" content={OG_IMAGE.alt} />
+      <meta property="og:locale" content={OG_LOCALE_TAGS[lang]} />
+      {LOCALES.filter((locale) => locale !== lang).map((locale) => (
+        <meta key={locale} property="og:locale:alternate" content={OG_LOCALE_TAGS[locale]} />
+      ))}
 
       <meta name="twitter:card" content="summary_large_image" />
       <meta name="twitter:title" content={title} />
       <meta name="twitter:description" content={description} />
       <meta name="twitter:image" content={ogImage} />
+      <meta name="twitter:image:alt" content={OG_IMAGE.alt} />
 
       {jsonLd.map((block, i) => (
         <script key={i} type="application/ld+json">
@@ -115,14 +131,26 @@ export const Seo: React.FC<SeoProps> = ({
 /** Convenience wrapper: resolves title/description from the route registry. */
 export const RouteSeo: React.FC<
   Omit<SeoProps, "title" | "description" | "slug"> & { routeKey: string }
-> = ({ routeKey, lang, ...rest }) => {
+> = ({ routeKey, lang, jsonLd, ...rest }) => {
   const route = getRoute(routeKey);
+  // When a page omits jsonLd, re-emit org/website (and SoftwareApplication on
+  // features) so hydrate does not leave the document without structured data
+  // after clearServerSeoBlock().
+  const resolvedJsonLd =
+    jsonLd ??
+    [
+      organizationJsonLd(lang),
+      webSiteJsonLd(lang),
+      ...(routeKey === "features" ? [softwareApplicationJsonLd(lang)] : []),
+    ];
+
   return (
     <Seo
       lang={lang}
       slug={route.slug}
       title={route.title[lang]}
       description={route.description[lang]}
+      jsonLd={resolvedJsonLd}
       {...rest}
     />
   );
@@ -133,7 +161,8 @@ export const ArticleSeo: React.FC<{
   lang: MarketingLocale;
   articleSlug: string;
   jsonLd?: JsonLd[];
-}> = ({ lang, articleSlug, jsonLd }) => {
+  robots?: string;
+}> = ({ lang, articleSlug, jsonLd, robots }) => {
   const article = getArticle(articleSlug);
   if (!article) return null;
   return (
@@ -144,6 +173,7 @@ export const ArticleSeo: React.FC<{
       description={article.description[lang]}
       ogType="article"
       jsonLd={jsonLd}
+      robots={robots}
     />
   );
 };

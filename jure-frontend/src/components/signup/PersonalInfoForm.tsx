@@ -88,7 +88,7 @@ const PersonalInfoForm = ({ onNext, form }: PersonalInfoFormProps) => {
                   <Input
                     id="first_name"
                     {...register('first_name')}
-                    className={`transition-all duration-200 focus:ring-2 focus:ring-[#64499D]/40 focus:border-[#64499D] border-gray-300 dark:border-slate-600 h-12 ${
+                    className={`transition-all duration-200 focus:ring-2 focus:ring-[#64499D]/40 focus:border-[#64499D] border-slate-300 dark:border-slate-600 dark:border-slate-600 h-12 ${
                       errors.first_name ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''
                     }`}
                   />
@@ -105,7 +105,7 @@ const PersonalInfoForm = ({ onNext, form }: PersonalInfoFormProps) => {
                   <Input
                     id="last_name"
                     {...register('last_name')}
-                    className={`transition-all duration-200 focus:ring-2 focus:ring-[#64499D]/40 focus:border-[#64499D] border-gray-300 dark:border-slate-600 h-12 ${
+                    className={`transition-all duration-200 focus:ring-2 focus:ring-[#64499D]/40 focus:border-[#64499D] border-slate-300 dark:border-slate-600 dark:border-slate-600 h-12 ${
                       errors.last_name ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''
                     }`}
                   />
@@ -153,7 +153,7 @@ const PersonalInfoForm = ({ onNext, form }: PersonalInfoFormProps) => {
                       trigger('phone');
                     }}
                     defaultCountry="MA"
-                    className={`transition-all duration-200 focus:ring-2 focus:ring-[#64499D]/40 focus:border-[#64499D] border-gray-300 dark:border-slate-600 h-12 ${
+                    className={`transition-all duration-200 focus:ring-2 focus:ring-[#64499D]/40 focus:border-[#64499D] border-slate-300 dark:border-slate-600 dark:border-slate-600 h-12 ${
                       errors.phone ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''
                     }`}
                   />
@@ -172,7 +172,7 @@ const PersonalInfoForm = ({ onNext, form }: PersonalInfoFormProps) => {
                     type="email"
                     placeholder={s.emailPlaceholder}
                     {...register('email')}
-                    className={`transition-all duration-200 focus:ring-2 focus:ring-[#64499D]/40 focus:border-[#64499D] border-gray-300 dark:border-slate-600 h-12 ${
+                    className={`transition-all duration-200 focus:ring-2 focus:ring-[#64499D]/40 focus:border-[#64499D] border-slate-300 dark:border-slate-600 dark:border-slate-600 h-12 ${
                       errors.email ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''
                     }`}
                   />
@@ -201,7 +201,7 @@ const PersonalInfoForm = ({ onNext, form }: PersonalInfoFormProps) => {
                       type={showPassword ? 'text' : 'password'}
                       placeholder={s.passwordPlaceholder}
                       {...register('password1')}
-                      className={`transition-all duration-200 focus:ring-2 focus:ring-[#64499D]/40 focus:border-[#64499D] border-gray-300 dark:border-slate-600 h-12 pr-12 ${
+                      className={`transition-all duration-200 focus:ring-2 focus:ring-[#64499D]/40 focus:border-[#64499D] border-slate-300 dark:border-slate-600 dark:border-slate-600 h-12 pr-12 ${
                         errors.password1 ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''
                       }`}
                     />
@@ -230,7 +230,7 @@ const PersonalInfoForm = ({ onNext, form }: PersonalInfoFormProps) => {
                       type={showConfirmPassword ? 'text' : 'password'}
                       placeholder={s.passwordPlaceholder}
                       {...register('password2')}
-                      className={`transition-all duration-200 focus:ring-2 focus:ring-[#64499D]/40 focus:border-[#64499D] border-gray-300 dark:border-slate-600 h-12 pr-12 ${
+                      className={`transition-all duration-200 focus:ring-2 focus:ring-[#64499D]/40 focus:border-[#64499D] border-slate-300 dark:border-slate-600 dark:border-slate-600 h-12 pr-12 ${
                         errors.password2 ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''
                       }`}
                     />

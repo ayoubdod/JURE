@@ -15,6 +15,10 @@ interface ImportMetaEnv {
   readonly NEXT_PUBLIC_API_URL?: string;
   /** Canonical site origin for SEO (defaults to https://jure.ma) */
   readonly VITE_SITE_URL?: string;
+  /** Google Search Console HTML tag verification token */
+  readonly VITE_GOOGLE_SITE_VERIFICATION?: string;
+  /** GA4 measurement ID (e.g. G-XXXXXXXX). When unset, analytics stay buffered only. */
+  readonly VITE_GA_MEASUREMENT_ID?: string;
 }
 
 interface ImportMeta {

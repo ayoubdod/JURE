@@ -150,7 +150,7 @@ const ClientCreateModal = forwardRef<ClientCreateModalRef, ClientCreateModalProp
         <form onSubmit={mainForm.handleSubmit(handleSubmit)} className="px-8 py-6 space-y-6">
           {/* Personal Information */}
           <div className="space-y-4">
-            <div className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-3">
+            <div className="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">
               <User className="w-4 h-4 text-purple-600" />
               {t.clients.modal.personalInfo}
             </div>
@@ -191,7 +191,7 @@ const ClientCreateModal = forwardRef<ClientCreateModalRef, ClientCreateModalProp
 
           {/* Contact Information */}
           <div className="space-y-4">
-            <div className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-3">
+            <div className="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">
               <Mail className="w-4 h-4 text-purple-600" />
               {t.clients.modal.contactInfo}
             </div>
@@ -234,7 +234,7 @@ const ClientCreateModal = forwardRef<ClientCreateModalRef, ClientCreateModalProp
 
           {/* Other Information */}
           <div className="space-y-4">
-            <div className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-3">
+            <div className="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">
               <Building2 className="w-4 h-4 text-purple-600" />
               {t.clients.modal.otherInfo}
             </div>
@@ -261,7 +261,7 @@ const ClientCreateModal = forwardRef<ClientCreateModalRef, ClientCreateModalProp
 
           {/* B2B — fiscal (Morocco) */}
           <div className="space-y-4">
-            <div className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-3">
+            <div className="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">
               <FileSpreadsheet className="w-4 h-4 text-purple-600" />
               {t.clients.modal.fiscalInfoOptional}
             </div>
@@ -285,7 +285,7 @@ const ClientCreateModal = forwardRef<ClientCreateModalRef, ClientCreateModalProp
             </div>
           </div>
 
-          <DialogFooter className="pt-4 border-t border-gray-100">
+          <DialogFooter className="pt-4 border-t border-slate-200/90 dark:border-slate-800">
             <Button
               type="button"
               variant="outline"

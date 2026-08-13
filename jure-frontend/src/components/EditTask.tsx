@@ -130,17 +130,17 @@ const EditTask = () => {
                 Back to Tasks
               </Button>
               <div>
-                <h1 className="text-xl font-semibold text-gray-900">Edit Task</h1>
-                <p className="text-sm text-gray-600 mt-1">Modify task details and settings</p>
+                <h1 className="text-xl font-semibold text-slate-900 dark:text-white">Edit Task</h1>
+                <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">Modify task details and settings</p>
               </div>
             </div>
 
             {/* Edit Form */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div className="bg-white dark:bg-slate-950 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-6">
               <form className="space-y-6">
                 {/* Basic Information */}
                 <div className="space-y-4">
-                  <h3 className="text-lg font-medium text-gray-900 flex items-center gap-2">
+                  <h3 className="text-lg font-medium text-slate-900 dark:text-white flex items-center gap-2">
                     <Flag size={20} />
                     Basic Information
                   </h3>
@@ -180,7 +180,7 @@ const EditTask = () => {
 
                 {/* Task Details */}
                 <div className="space-y-4 border-t pt-6">
-                  <h3 className="text-lg font-medium text-gray-900 flex items-center gap-2">
+                  <h3 className="text-lg font-medium text-slate-900 dark:text-white flex items-center gap-2">
                     <Calendar size={20} />
                     Task Details
                   </h3>
@@ -188,7 +188,7 @@ const EditTask = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="">
                       <label className="text-sm font-medium flex items-center gap-1">
-                        <CircleDot className="w-2 h-2 text-gray-700" />
+                        <CircleDot className="w-2 h-2 text-slate-700 dark:text-slate-300" />
                         <span>Status </span>
                       </label>
                       <Select value={mainForm.watch('status')} onValueChange={(val: API.TaskStatus) => mainForm.setValue('status', val)} >
@@ -257,7 +257,7 @@ const EditTask = () => {
 
                 {/* Assignment */}
                 <div className="space-y-4 border-t pt-6">
-                  <h3 className="text-lg font-medium text-gray-900 flex items-center gap-2">
+                  <h3 className="text-lg font-medium text-slate-900 dark:text-white flex items-center gap-2">
                     <User size={20} />
                     Assignment
                   </h3>
@@ -266,7 +266,7 @@ const EditTask = () => {
 
                     <div className="">
                       <label className="text-sm font-medium flex items-center gap-1">
-                        <UserCheck className="w-4 h-4  text-gray-700" />
+                        <UserCheck className="w-4 h-4  text-slate-700 dark:text-slate-300" />
                         <span>Assigned To</span>
                       </label>
                       <ServerSelect

@@ -322,7 +322,7 @@ function CaseDateDetailPanel({
               <section>
                 <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400 mb-2">{cal.caseDateDetail.date}</p>
                 <p className="text-sm font-medium text-slate-900 dark:text-white">{formatDayMonthYear(ev.start, lang)}</p>
-                <p className="text-xs text-slate-500 mt-1">{sourceTypeLabel(ev.sourceType, cal)}</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{sourceTypeLabel(ev.sourceType, cal)}</p>
                 <div className="mt-2 flex flex-wrap items-center gap-2">
                   <span
                     className={cn(
@@ -333,7 +333,7 @@ function CaseDateDetailPanel({
                   >
                     {deadlineLabel}
                   </span>
-                  {overdue && <span className="rounded-md bg-red-500/15 px-1.5 py-0.5 text-[10px] font-bold uppercase text-red-700">{cal.caseDateDetail.overdue}</span>}
+                  {overdue && <span className="rounded-md bg-red-500/15 px-1.5 py-0.5 text-[10px] font-bold uppercase text-red-700 dark:text-red-400">{cal.caseDateDetail.overdue}</span>}
                 </div>
               </section>
 
@@ -755,7 +755,7 @@ const CalendarPage: React.FC = () => {
         {/* Sidebar — stacked above content on mobile, side rail on lg+ */}
         <div className="hidden sm:flex w-full sm:w-[320px] lg:w-[350px] shrink-0 flex-col border-r border-slate-200 dark:border-slate-800 overflow-hidden bg-slate-50/50 dark:bg-slate-950/50 max-h-[40vh] lg:max-h-none">
           <div className="shrink-0 p-3">
-            <div className="rounded-xl border border-slate-200/90 dark:border-slate-800 bg-white/90 dark:bg-slate-900/40 shadow-[0_1px_3px_rgba(0,0,0,0.04)] p-3">
+            <div className="rounded-xl border border-slate-200/90 dark:border-slate-800 bg-white/90 dark:bg-slate-950/90 dark:bg-slate-900/40 shadow-[0_1px_3px_rgba(0,0,0,0.04)] p-3">
               <p className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3">{cal.taskStatusHeading}</p>
               <div className="space-y-3">
                 {[
@@ -780,7 +780,7 @@ const CalendarPage: React.FC = () => {
           </div>
 
           <div className="flex-1 min-h-0 flex flex-col overflow-hidden px-3 pb-3">
-            <div className="rounded-xl border border-slate-200/90 dark:border-slate-800 bg-white/90 dark:bg-slate-900/40 shadow-[0_1px_3px_rgba(0,0,0,0.04)] flex flex-col min-h-0 flex-1">
+            <div className="rounded-xl border border-slate-200/90 dark:border-slate-800 bg-white/90 dark:bg-slate-950/90 dark:bg-slate-900/40 shadow-[0_1px_3px_rgba(0,0,0,0.04)] flex flex-col min-h-0 flex-1">
               <p className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider px-3 py-2.5 border-b border-slate-200/80 dark:border-slate-800 shrink-0">
                 {cal.activity}
               </p>
@@ -812,7 +812,7 @@ const CalendarPage: React.FC = () => {
                               {event.type === 'task' ? cal.task : cal.apptShort}
                             </span>
                           </div>
-                          <p className="text-[10px] text-slate-500 mt-0.5">
+                          <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">
                             {event.type === 'task' ? cal.task : cal.appointment} · {formatDate(event.start, lang)}
                           </p>
                         </div>
@@ -820,7 +820,7 @@ const CalendarPage: React.FC = () => {
                     </button>
                   </div>
                 ))}
-                {events.length === 0 && <p className="text-xs text-slate-500 py-6 text-center px-3">{cal.noActivity}</p>}
+                {events.length === 0 && <p className="text-xs text-slate-500 dark:text-slate-400 py-6 text-center px-3">{cal.noActivity}</p>}
               </div>
             </div>
           </div>
@@ -829,7 +829,7 @@ const CalendarPage: React.FC = () => {
         {/* Main */}
         <div className="flex-1 min-w-0 flex flex-col overflow-hidden">
           <div className="shrink-0 px-3 sm:px-4 py-3 border-b border-slate-200 dark:border-slate-800">
-            <div className="rounded-xl border border-slate-200/90 dark:border-slate-800 bg-white/90 dark:bg-slate-950/80 shadow-[0_1px_3px_rgba(0,0,0,0.04)] px-3 py-3 sm:px-4">
+            <div className="rounded-xl border border-slate-200/90 dark:border-slate-800 bg-white/90 dark:bg-slate-950/90 dark:bg-slate-950/80 shadow-[0_1px_3px_rgba(0,0,0,0.04)] px-3 py-3 sm:px-4">
               <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                 <div className="relative flex-1 min-w-[140px] max-w-md">
                   <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
@@ -845,7 +845,7 @@ const CalendarPage: React.FC = () => {
                   {client.trim() !== '' && (
                     <button
                       type="button"
-                      className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800"
+                      className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1 text-slate-400 hover:text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
                       onClick={() => setClient('')}
                       aria-label={cal.clearSearch}
                     >
@@ -935,11 +935,11 @@ const CalendarPage: React.FC = () => {
                               border
                             )}
                           >
-                            <p className="text-[11px] font-medium text-slate-500 tabular-nums">
+                            <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400 tabular-nums">
                               {formatTime(start, lang)}
                             </p>
                             <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">{a.title}</p>
-                            <div className="flex flex-wrap gap-x-2 gap-y-0.5 mt-1 text-[11px] text-slate-500">
+                            <div className="flex flex-wrap gap-x-2 gap-y-0.5 mt-1 text-[11px] text-slate-500 dark:text-slate-400">
                               {typeof a.client === 'object' && a.client && (
                                 <span>
                                   {`${(a.client as any).first_name || ''} ${(a.client as any).last_name || ''}`.trim()}
@@ -961,7 +961,7 @@ const CalendarPage: React.FC = () => {
                       <div className="flex flex-col items-center justify-center py-10 text-center">
                         <CalendarDays className="h-10 w-10 text-slate-300 dark:text-slate-600 mb-2" />
                         <p className="text-sm font-medium text-slate-700 dark:text-slate-300">{cal.noUpcomingAppointments}</p>
-                        <p className="text-xs text-slate-500 mt-1 max-w-xs">
+                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-xs">
                           {cal.noUpcomingHint}
                         </p>
                       </div>
@@ -989,18 +989,18 @@ const CalendarPage: React.FC = () => {
                               <span
                                 className={cn(
                                   'text-[9px] uppercase font-bold px-1.5 py-0 rounded-full',
-                                  e.type === 'task' ? 'bg-indigo-500/15 text-indigo-700' : 'bg-emerald-500/15 text-emerald-700'
+                                  e.type === 'task' ? 'bg-indigo-500/15 text-indigo-700 dark:text-indigo-400' : 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400'
                                 )}
                               >
                                 {e.type === 'task' ? cal.task : cal.apptShort}
                               </span>
                             </div>
-                            <p className="text-[11px] text-slate-500 mt-0.5">{formatDateTime(e.start, lang)}</p>
+                            <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">{formatDateTime(e.start, lang)}</p>
                           </div>
                         </button>
                       ))}
                     </div>
-                    {events.length === 0 && <p className="text-xs text-slate-500 py-6 text-center">{cal.noEvents}</p>}
+                    {events.length === 0 && <p className="text-xs text-slate-500 dark:text-slate-400 py-6 text-center">{cal.noEvents}</p>}
                   </div>
                 </div>
               </div>
@@ -1069,7 +1069,7 @@ const CalendarPage: React.FC = () => {
                         api.changeView('listWeek');
                       }
                     }}
-                    dayHeaderContent={(arg) => <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">{arg.text}</span>}
+                    dayHeaderContent={(arg) => <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">{arg.text}</span>}
                     dayCellClassNames={(arg) => {
                       const cls: string[] = [];
                       if (arg.isToday) cls.push('fc-day-today-jure');
@@ -1142,7 +1142,7 @@ const CalendarPage: React.FC = () => {
                   </div>
                 ) : (
                   <div className="min-w-0">
-                    <div className="hidden sm:grid grid-cols-[100px_1fr_150px_140px_100px_90px_32px] gap-2 px-4 py-2 border-b border-slate-200 dark:border-slate-800 text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-500">
+                    <div className="hidden sm:grid grid-cols-[100px_1fr_150px_140px_100px_90px_32px] gap-2 px-4 py-2 border-b border-slate-200 dark:border-slate-800 text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-500 dark:text-slate-400">
                       <span>{cal.columns.type}</span>
                       <span>{cal.columns.title}</span>
                       <span>{cal.columns.date}</span>
@@ -1192,7 +1192,7 @@ const CalendarPage: React.FC = () => {
                             else if (event.type === 'appointment') openAppointmentDetail(parseInt(String(event.id).replace('appt-', ''), 10));
                           }}
                           className={cn(
-                            'w-full grid sm:grid-cols-[100px_1fr_150px_140px_100px_90px_32px] gap-2 px-4 py-3 text-left border-b border-slate-100 dark:border-slate-800/80 items-center transition-colors hover:bg-indigo-500/[0.06]',
+                            'w-full grid sm:grid-cols-[100px_1fr_150px_140px_100px_90px_32px] gap-2 px-4 py-3 text-left border-b border-slate-100 dark:border-slate-800/80 items-center transition-colors hover:bg-indigo-50 dark:hover:bg-indigo-950/400/[0.06]',
                             i % 2 === 0 ? 'bg-white dark:bg-slate-950/20' : 'bg-slate-50/80 dark:bg-slate-900/30'
                           )}
                         >
@@ -1202,10 +1202,10 @@ const CalendarPage: React.FC = () => {
                           <div className="min-w-0">
                             <span className="text-sm font-semibold text-slate-900 dark:text-white">{event.title}</span>
                             {isCaseDate && event.relatedCase?.reference && (
-                              <span className="ml-2 font-mono text-[11px] text-slate-500">{event.relatedCase.reference}</span>
+                              <span className="ml-2 font-mono text-[11px] text-slate-500 dark:text-slate-400">{event.relatedCase.reference}</span>
                             )}
                           </div>
-                          <span className="text-xs text-slate-500 tabular-nums whitespace-nowrap">{formatListDate(event.start, lang)}</span>
+                          <span className="text-xs text-slate-500 dark:text-slate-400 tabular-nums whitespace-nowrap">{formatListDate(event.start, lang)}</span>
                           <div className="flex items-center gap-2 min-w-0">
                             {(() => {
                               const m = calendarListMember(event);
@@ -1226,7 +1226,7 @@ const CalendarPage: React.FC = () => {
                                     lastName={last}
                                     email={email}
                                   />
-                                  <span className="text-xs text-slate-500 truncate">{label || '—'}</span>
+                                  <span className="text-xs text-slate-500 dark:text-slate-400 truncate">{label || '—'}</span>
                                 </>
                               ) : (
                                 <span className="text-xs text-slate-400">—</span>

@@ -14,12 +14,22 @@ class FirmFinanceSettings(models.Model):
     """
 
     TVA_THRESHOLD = Decimal('500000.00')
+    DEFAULT_TAX_ADVANCE = Decimal('100.00')
 
     cabinet = models.OneToOneField(
         'cabinets.Cabinet',
         on_delete=models.CASCADE,
         related_name='finance_settings',
     )
+
+    tax_advance_default_amount = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        default=Decimal('100.00'),
+        help_text='Default fiscal advance (acompte) amount per new matter.',
+    )
+
+    default_currency = models.CharField(max_length=3, default='MAD')
 
     lifetime_ca = models.DecimalField(
         max_digits=14,

@@ -63,7 +63,9 @@ export function crawlSnippetForRoute(
   if (!route) return null;
   return {
     h1: route.label[locale],
-    lead: route.description[locale],
+    // Prefer the SEO description; append a short brand cue so secondary
+    // pages are not just a one-liner for non-JS crawlers.
+    lead: `${route.description[locale]} — JURE`,
   };
 }
 

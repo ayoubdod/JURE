@@ -89,7 +89,7 @@ const RoleManagement: React.FC = () => {
     MANAGER: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
     LAWYER: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
     ASSISTANT: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300',
-    VIEWER: 'bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-300',
+    VIEWER: 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300',
   };
 
   const roles: API.Role[] = ['OWNER', 'ADMIN', 'MANAGER', 'LAWYER', 'ASSISTANT', 'VIEWER'];

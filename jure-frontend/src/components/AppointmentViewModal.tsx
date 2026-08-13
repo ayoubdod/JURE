@@ -81,7 +81,7 @@ const AppointmentViewModal = forwardRef<AppointmentViewModalRef, AppointmentView
       case 'scheduled': return 'bg-blue-100 text-blue-800';
       case 'done': return 'bg-green-100 text-green-800';
       case 'cancelled': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
+      default: return 'bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-100';
     }
   };
 
@@ -161,17 +161,17 @@ const AppointmentViewModal = forwardRef<AppointmentViewModalRef, AppointmentView
         ) : appointment ? (
           <div className="px-8 py-6 space-y-6">
             <div className="space-y-4">
-              <div className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-3">
+              <div className="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">
                 <FileText className="w-4 h-4 text-purple-600" />
                 {m.appointmentInfo}
               </div>
               <div className="space-y-4">
                 <div>
-                  <label className="text-sm font-medium text-gray-500">{m.appointmentTitle}</label>
-                  <p className="text-base font-semibold text-gray-900 mt-1">{appointment.title}</p>
+                  <label className="text-sm font-medium text-slate-500 dark:text-slate-400">{m.appointmentTitle}</label>
+                  <p className="text-base font-semibold text-slate-900 dark:text-white mt-1">{appointment.title}</p>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-gray-500">{m.status}</label>
+                  <label className="text-sm font-medium text-slate-500 dark:text-slate-400">{m.status}</label>
                   <div className="mt-1">
                     <Badge className={getStatusColor(appointment.status)}>
                       {statusLabel(appointment.status)}
@@ -180,40 +180,40 @@ const AppointmentViewModal = forwardRef<AppointmentViewModalRef, AppointmentView
                 </div>
                 {appointment.description && (
                   <div>
-                    <label className="text-sm font-medium text-gray-500">{m.description}</label>
-                    <p className="text-sm text-gray-700 mt-1 whitespace-pre-wrap">{appointment.description}</p>
+                    <label className="text-sm font-medium text-slate-500 dark:text-slate-400">{m.description}</label>
+                    <p className="text-sm text-slate-700 dark:text-slate-300 mt-1 whitespace-pre-wrap">{appointment.description}</p>
                   </div>
                 )}
               </div>
             </div>
 
             <div className="space-y-4">
-              <div className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-3">
+              <div className="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">
                 <Clock className="w-4 h-4 text-purple-600" />
                 {m.scheduleDetails}
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm font-medium text-gray-500 flex items-center gap-1">
+                  <label className="text-sm font-medium text-slate-500 dark:text-slate-400 flex items-center gap-1">
                     <Calendar className="w-4 h-4" />
                     {m.startDateTime}
                   </label>
-                  <p className="text-sm text-gray-700 mt-1">
+                  <p className="text-sm text-slate-700 dark:text-slate-300 mt-1">
                     {formatDateTime(appointment.start_at).full}
                   </p>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-gray-500 flex items-center gap-1">
+                  <label className="text-sm font-medium text-slate-500 dark:text-slate-400 flex items-center gap-1">
                     <Clock className="w-4 h-4" />
                     {m.endDateTime}
                   </label>
-                  <p className="text-sm text-gray-700 mt-1">
+                  <p className="text-sm text-slate-700 dark:text-slate-300 mt-1">
                     {formatDateTime(appointment.end_at).full}
                   </p>
                 </div>
                 <div className="col-span-2">
-                  <label className="text-sm font-medium text-gray-500">{m.duration}</label>
-                  <p className="text-sm text-gray-700 mt-1">
+                  <label className="text-sm font-medium text-slate-500 dark:text-slate-400">{m.duration}</label>
+                  <p className="text-sm text-slate-700 dark:text-slate-300 mt-1">
                     {getDuration(appointment.start_at, appointment.end_at)}
                   </p>
                 </div>
@@ -222,52 +222,52 @@ const AppointmentViewModal = forwardRef<AppointmentViewModalRef, AppointmentView
 
             {appointment.location && (
               <div className="space-y-4">
-                <div className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-3">
+                <div className="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">
                   <MapPin className="w-4 h-4 text-purple-600" />
                   {m.locationDetails}
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-gray-500 flex items-center gap-1">
+                  <label className="text-sm font-medium text-slate-500 dark:text-slate-400 flex items-center gap-1">
                     <Building className="w-4 h-4" />
                     {m.location}
                   </label>
-                  <p className="text-sm text-gray-700 mt-1">{appointment.location}</p>
+                  <p className="text-sm text-slate-700 dark:text-slate-300 mt-1">{appointment.location}</p>
                 </div>
               </div>
             )}
 
             {(appointment.client_details || appointment.case_title) && (
               <div className="space-y-4">
-                <div className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-3">
+                <div className="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">
                   <User className="w-4 h-4 text-purple-600" />
                   {m.relatedInformation}
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   {appointment.client_details && (
                     <div>
-                      <label className="text-sm font-medium text-gray-500 flex items-center gap-1">
+                      <label className="text-sm font-medium text-slate-500 dark:text-slate-400 flex items-center gap-1">
                         <User className="w-4 h-4" />
                         {m.client}
                       </label>
-                      <p className="text-sm text-gray-700 mt-1">
+                      <p className="text-sm text-slate-700 dark:text-slate-300 mt-1">
                         {`${appointment.client_details.first_name || ''} ${appointment.client_details.last_name || ''}`.trim() || appointment.client_details.email}
                       </p>
                     </div>
                   )}
                   {appointment.case_title && (
                     <div>
-                      <label className="text-sm font-medium text-gray-500 flex items-center gap-1">
+                      <label className="text-sm font-medium text-slate-500 dark:text-slate-400 flex items-center gap-1">
                         <FileText className="w-4 h-4" />
                         {m.case}
                       </label>
-                      <p className="text-sm text-gray-700 mt-1">{appointment.case_title}</p>
+                      <p className="text-sm text-slate-700 dark:text-slate-300 mt-1">{appointment.case_title}</p>
                     </div>
                   )}
                 </div>
               </div>
             )}
 
-            <DialogFooter className="pt-4 border-t border-gray-100">
+            <DialogFooter className="pt-4 border-t border-slate-200/90 dark:border-slate-800">
               <Button
                 type="button"
                 variant="outline"
@@ -288,7 +288,7 @@ const AppointmentViewModal = forwardRef<AppointmentViewModalRef, AppointmentView
           </div>
         ) : (
           <div className="px-8 py-6 text-center">
-            <p className="text-gray-500">{m.notFound}</p>
+            <p className="text-slate-500 dark:text-slate-400">{m.notFound}</p>
           </div>
         )}
       </DialogContent>

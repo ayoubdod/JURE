@@ -23,12 +23,16 @@ export {
   deleteInvoice,
   deleteInvoiceFinance,
   deletePayment,
+  addExpense,
+  deleteExpense,
+  getReceivables,
 } from './finance/api';
 export type {
   InvoiceFilters,
   PaymentFilters,
   PatchInvoiceStatusBody,
   UpdateInvoiceBody,
+  AddExpenseBody,
 } from './finance/api';
 
 export type TVARegime = 'EXONÉRÉ' | 'ASSUJETTI';

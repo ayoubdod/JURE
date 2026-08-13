@@ -78,16 +78,16 @@ const CreateCaseDialog = ({ open, onOpenChange }: CreateCaseDialogProps) => {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
-        <DialogHeader className="space-y-3 pb-6 border-b border-gray-100">
+        <DialogHeader className="space-y-3 pb-6 border-b border-slate-200/90 dark:border-slate-800">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-purple-600 rounded-lg">
               <Scale className="w-5 h-5 text-white" />
             </div>
             <div>
-              <DialogTitle className="text-xl font-semibold text-gray-900">
+              <DialogTitle className="text-xl font-semibold text-slate-900 dark:text-white">
                 {modal.createTitle}
               </DialogTitle>
-              <DialogDescription className="text-gray-600 mt-1">
+              <DialogDescription className="text-slate-600 dark:text-slate-400 mt-1">
                 {modal.createDescription}
               </DialogDescription>
             </div>
@@ -96,7 +96,7 @@ const CreateCaseDialog = ({ open, onOpenChange }: CreateCaseDialogProps) => {
         
         <form onSubmit={handleSubmit} className="space-y-6 pt-4">
           <div className="space-y-4">
-            <div className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-3">
+            <div className="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">
               <FileText className="w-4 h-4 text-purple-600" />
               {d.caseInformation}
             </div>
@@ -117,7 +117,7 @@ const CreateCaseDialog = ({ open, onOpenChange }: CreateCaseDialogProps) => {
               <div className="space-y-2">
                 <Label htmlFor="description" className="text-sm font-medium">{d.caseDescription}</Label>
                 <div className="relative">
-                  <FileText className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
+                  <FileText className="absolute left-3 top-3 w-4 h-4 text-slate-400 dark:text-slate-500" />
                   <Textarea
                     id="description"
                     value={formData.description}
@@ -132,7 +132,7 @@ const CreateCaseDialog = ({ open, onOpenChange }: CreateCaseDialogProps) => {
           </div>
 
           <div className="space-y-4">
-            <div className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-3">
+            <div className="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">
               <User className="w-4 h-4 text-purple-600" />
               {d.clientInformation}
             </div>
@@ -141,7 +141,7 @@ const CreateCaseDialog = ({ open, onOpenChange }: CreateCaseDialogProps) => {
                 {d.client} <span className="text-red-500">*</span>
               </Label>
               <div className="relative">
-                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-500" />
                 <Input
                   id="client"
                   value={formData.client}
@@ -155,7 +155,7 @@ const CreateCaseDialog = ({ open, onOpenChange }: CreateCaseDialogProps) => {
           </div>
 
           <div className="space-y-4">
-            <div className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-3">
+            <div className="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">
               <Scale className="w-4 h-4 text-purple-600" />
               {modal.sections.caseDetails}
             </div>
@@ -229,7 +229,7 @@ const CreateCaseDialog = ({ open, onOpenChange }: CreateCaseDialogProps) => {
               <div className="space-y-2">
                 <Label htmlFor="estimatedHours" className="text-sm font-medium">{d.estimatedHours}</Label>
                 <div className="relative">
-                  <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-500" />
                   <Input
                     id="estimatedHours"
                     type="number"
@@ -244,14 +244,14 @@ const CreateCaseDialog = ({ open, onOpenChange }: CreateCaseDialogProps) => {
           </div>
 
           <div className="space-y-4">
-            <div className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-3">
+            <div className="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">
               <FileUp className="w-4 h-4 text-purple-600" />
               {d.documents}
             </div>
             <div className="space-y-3">
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-purple-400 transition-colors">
-                <FileUp className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                <p className="text-sm text-gray-600 mb-2">{d.dragDropHint}</p>
+              <div className="border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-lg p-6 text-center hover:border-purple-400 transition-colors">
+                <FileUp className="w-8 h-8 text-slate-400 dark:text-slate-500 mx-auto mb-2" />
+                <p className="text-sm text-slate-600 dark:text-slate-400 mb-2">{d.dragDropHint}</p>
                 <label className="cursor-pointer">
                   <span className="text-purple-600 hover:text-purple-700 font-medium">{d.browseFiles}</span>
                   <input
@@ -262,20 +262,20 @@ const CreateCaseDialog = ({ open, onOpenChange }: CreateCaseDialogProps) => {
                     accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png"
                   />
                 </label>
-                <p className="text-xs text-gray-500 mt-1">{d.fileTypesHint}</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{d.fileTypesHint}</p>
               </div>
               
               {documents.length > 0 && (
                 <div className="space-y-2">
-                  <p className="text-sm font-medium text-gray-700">{tf(d.uploadedDocuments, { count: documents.length })}</p>
+                  <p className="text-sm font-medium text-slate-700 dark:text-slate-300">{tf(d.uploadedDocuments, { count: documents.length })}</p>
                   <div className="space-y-2 max-h-32 overflow-y-auto">
                     {documents.map((file, index) => (
-                      <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
+                      <div key={index} className="flex items-center justify-between p-2 bg-slate-50 dark:bg-slate-900/50 rounded-lg">
                         <div className="flex items-center gap-2">
-                          <FileText className="w-4 h-4 text-gray-500" />
+                          <FileText className="w-4 h-4 text-slate-500 dark:text-slate-400" />
                           <div>
-                            <p className="text-sm font-medium text-gray-900 truncate max-w-48">{file.name}</p>
-                            <p className="text-xs text-gray-500">{formatFileSize(file.size)}</p>
+                            <p className="text-sm font-medium text-slate-900 dark:text-white truncate max-w-48">{file.name}</p>
+                            <p className="text-xs text-slate-500 dark:text-slate-400">{formatFileSize(file.size)}</p>
                           </div>
                         </div>
                         <Button
@@ -296,12 +296,12 @@ const CreateCaseDialog = ({ open, onOpenChange }: CreateCaseDialogProps) => {
             </div>
           </div>
 
-          <DialogFooter className="pt-6 border-t border-gray-100 flex gap-3">
+          <DialogFooter className="pt-6 border-t border-slate-200/90 dark:border-slate-800 flex gap-3">
             <Button 
               type="button" 
               variant="outline" 
               onClick={() => onOpenChange(false)}
-              className="transition-all duration-200 hover:bg-gray-50"
+              className="transition-all duration-200 hover:bg-slate-50 dark:hover:bg-slate-900/50"
               disabled={isSubmitting}
             >
               {t.common.cancel}

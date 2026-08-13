@@ -1,6 +1,6 @@
 // src/pages/Landing.tsx — homepage: category-defining narrative for JURE.
 import React from "react";
-import { useNavigate } from "react-router";
+import { Link } from "react-router";
 import { motion, useReducedMotion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import {
@@ -55,7 +55,6 @@ const SectionHeading: React.FC<{ title: string; subtitle?: string }> = ({ title,
 );
 
 const Landing: React.FC = () => {
-  const navigate = useNavigate();
   const { lang, dir, path } = useMarketingLang();
   const reduce = useReducedMotion();
   const t = HOME_CONTENT[lang];
@@ -66,15 +65,6 @@ const Landing: React.FC = () => {
     softwareApplicationJsonLd(lang),
     faqPageJsonLd(t.faq.entries),
   ];
-
-  const goPrimary = (source: string) => {
-    track(MarketingEvents.HeroPrimaryCta, { source, lang });
-    navigate(path("demo"));
-  };
-  const goSecondary = (source: string) => {
-    track(MarketingEvents.HeroSecondaryCta, { source, lang });
-    navigate(path("features"));
-  };
 
   const workflowIcons1 = [Upload, Link2, CheckCircle2, CalendarClock, Users];
   const workflowIcons2 = [Search, Sparkles, FileText, UserCheck, Scale];
@@ -112,22 +102,41 @@ const Landing: React.FC = () => {
 
           <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
             <Button
+              asChild
               size="lg"
-              onClick={() => goPrimary("hero")}
               className="w-full sm:w-auto bg-gradient-to-r from-[#64499D] to-[#4D3680] hover:from-[#4D3680] hover:to-[#3E2D71] text-white px-8 shadow-lg shadow-[#64499D]/25"
             >
-              {t.hero.ctaPrimary}
-              <ArrowRight className="w-4 h-4 ms-2 rtl:rotate-180" />
+              <Link
+                to={path("demo")}
+                onClick={() => track(MarketingEvents.HeroPrimaryCta, { source: "hero", lang })}
+              >
+                {t.hero.ctaPrimary}
+                <ArrowRight className="w-4 h-4 ms-2 rtl:rotate-180" />
+              </Link>
             </Button>
             <Button
+              asChild
               size="lg"
               variant="outline"
-              onClick={() => goSecondary("hero")}
               className="w-full sm:w-auto border-[#64499D]/30 text-[#64499D] hover:bg-[#64499D]/10 dark:text-[#CFC2FF] dark:hover:bg-[#64499D]/20 px-8"
             >
-              {t.hero.ctaSecondary}
+              <Link
+                to={path("features")}
+                onClick={() => track(MarketingEvents.HeroSecondaryCta, { source: "hero", lang })}
+              >
+                {t.hero.ctaSecondary}
+              </Link>
             </Button>
           </div>
+
+          <p className="mt-4">
+            <Link
+              to={path("pricing")}
+              className="text-sm font-semibold text-[#64499D] dark:text-[#CFC2FF] hover:underline"
+            >
+              {t.hero.ctaPricing}
+            </Link>
+          </p>
 
           <div className="mt-7 flex flex-wrap items-center justify-center gap-2">
             {t.hero.trustChips.map((chip) => (
@@ -192,7 +201,7 @@ const Landing: React.FC = () => {
               <div className="landing-glass landing-panel-glow rounded-2xl px-6 py-7 text-center">
                 <div className="flex justify-center mb-3">
                   <img
-                    src="/images/Jure logo.png"
+                    src="/images/jure-logo.png"
                     alt="JURE"
                     className="h-8 object-contain"
                     loading="lazy"
@@ -217,7 +226,6 @@ const Landing: React.FC = () => {
       <section className="max-w-7xl mx-auto px-4 sm:px-6 py-14 sm:py-20 space-y-16 sm:space-y-24">
         <SectionHeading title={t.pillars.title} subtitle={t.pillars.subtitle} />
 
-        {/* Matter management */}
         <div className="grid lg:grid-cols-2 gap-8 lg:gap-14 items-center">
           <Reveal>
             <div className={dir === "rtl" ? "text-right" : ""}>
@@ -230,13 +238,12 @@ const Landing: React.FC = () => {
               <p className="mt-3 text-sm sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed">
                 {t.pillars.matter.body}
               </p>
-              <button
-                type="button"
-                onClick={() => navigate(path("legal-case-management"))}
+              <Link
+                to={path("legal-case-management")}
                 className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-[#64499D] dark:text-[#CFC2FF] hover:underline"
               >
                 {t.pillars.matter.link} <ArrowRight className="w-4 h-4 rtl:rotate-180" />
-              </button>
+              </Link>
             </div>
           </Reveal>
           <Reveal delay={0.1}>
@@ -254,7 +261,6 @@ const Landing: React.FC = () => {
           </Reveal>
         </div>
 
-        {/* Legal AI */}
         <div className="grid lg:grid-cols-2 gap-8 lg:gap-14 items-center">
           <Reveal className="lg:order-2">
             <div className={dir === "rtl" ? "text-right" : ""}>
@@ -273,13 +279,12 @@ const Landing: React.FC = () => {
               <p className="mt-3 text-sm font-semibold text-[#64499D] dark:text-[#CFC2FF]">
                 {t.pillars.ai.disclaimer}
               </p>
-              <button
-                type="button"
-                onClick={() => navigate(path("juria"))}
+              <Link
+                to={path("juria")}
                 className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-[#64499D] dark:text-[#CFC2FF] hover:underline"
               >
                 {t.pillars.ai.link} <ArrowRight className="w-4 h-4 rtl:rotate-180" />
-              </button>
+              </Link>
             </div>
           </Reveal>
           <Reveal delay={0.1} className="lg:order-1">
@@ -287,7 +292,6 @@ const Landing: React.FC = () => {
           </Reveal>
         </div>
 
-        {/* Documents & knowledge */}
         <div className="grid lg:grid-cols-2 gap-8 lg:gap-14 items-center">
           <Reveal>
             <div className={dir === "rtl" ? "text-right" : ""}>
@@ -300,13 +304,12 @@ const Landing: React.FC = () => {
               <p className="mt-3 text-sm sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed">
                 {t.pillars.documents.body}
               </p>
-              <button
-                type="button"
-                onClick={() => navigate(path("legal-document-management"))}
+              <Link
+                to={path("legal-document-management")}
                 className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-[#64499D] dark:text-[#CFC2FF] hover:underline"
               >
                 {t.pillars.documents.link} <ArrowRight className="w-4 h-4 rtl:rotate-180" />
-              </button>
+              </Link>
             </div>
           </Reveal>
           <Reveal delay={0.1}>
@@ -314,7 +317,6 @@ const Landing: React.FC = () => {
           </Reveal>
         </div>
 
-        {/* Collaboration */}
         <div className="grid lg:grid-cols-2 gap-8 lg:gap-14 items-center">
           <Reveal className="lg:order-2">
             <div className={dir === "rtl" ? "text-right" : ""}>
@@ -327,13 +329,15 @@ const Landing: React.FC = () => {
               <p className="mt-3 text-sm sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed">
                 {t.pillars.collaboration.body}
               </p>
-              <button
-                type="button"
-                onClick={() => goSecondary("pillar_collaboration")}
+              <Link
+                to={path("features")}
+                onClick={() =>
+                  track(MarketingEvents.HeroSecondaryCta, { source: "pillar_collaboration", lang })
+                }
                 className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-[#64499D] dark:text-[#CFC2FF] hover:underline"
               >
                 {t.pillars.collaboration.link} <ArrowRight className="w-4 h-4 rtl:rotate-180" />
-              </button>
+              </Link>
             </div>
           </Reveal>
           <Reveal delay={0.1} className="lg:order-1">
@@ -372,7 +376,7 @@ const Landing: React.FC = () => {
                 steps={t.workflows.questionToResearch.steps.map((label, i) => ({
                   icon: workflowIcons2[i],
                   label,
-                  emphasis: i === 3, // lawyer review — the non-negotiable step
+                  emphasis: i === 3,
                 }))}
               />
               <p className="mt-4 text-center text-xs sm:text-sm text-slate-500 dark:text-slate-400 italic">
@@ -399,15 +403,14 @@ const Landing: React.FC = () => {
                 <p className="mt-3 text-sm sm:text-base text-slate-300 leading-relaxed">
                   {t.security.body}
                 </p>
-                <Button
-                  onClick={() => {
-                    track(MarketingEvents.SecurityCta, { source: "home_band", lang });
-                    navigate(path("security"));
-                  }}
-                  className="mt-5 bg-white text-[#3E2D71] hover:bg-slate-100"
-                >
-                  {t.security.cta}
-                  <ArrowRight className="w-4 h-4 ms-2 rtl:rotate-180" />
+                <Button asChild className="mt-5 bg-white text-[#3E2D71] hover:bg-slate-100">
+                  <Link
+                    to={path("security")}
+                    onClick={() => track(MarketingEvents.SecurityCta, { source: "home_band", lang })}
+                  >
+                    {t.security.cta}
+                    <ArrowRight className="w-4 h-4 ms-2 rtl:rotate-180" />
+                  </Link>
                 </Button>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -439,10 +442,9 @@ const Landing: React.FC = () => {
             { icon: Scale, href: "features", ...t.audiences.lawyers },
           ].map(({ icon: Icon, title, body, href }, i) => (
             <Reveal key={title} delay={i * 0.08} subtle>
-              <button
-                type="button"
-                onClick={() => navigate(path(href))}
-                className={`landing-glass landing-glass-glow rounded-2xl p-6 h-full w-full text-start hover:ring-1 hover:ring-[#64499D]/30 transition ${
+              <Link
+                to={path(href)}
+                className={`landing-glass landing-glass-glow rounded-2xl p-6 h-full w-full text-start hover:ring-1 hover:ring-[#64499D]/30 transition block ${
                   dir === "rtl" ? "text-right" : ""
                 }`}
               >
@@ -453,7 +455,7 @@ const Landing: React.FC = () => {
                 <p className="mt-2 text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
                   {body}
                 </p>
-              </button>
+              </Link>
             </Reveal>
           ))}
         </div>
@@ -467,12 +469,11 @@ const Landing: React.FC = () => {
         <div className="grid md:grid-cols-3 gap-5">
           {INSIGHT_ARTICLES.slice(0, 3).map((article, i) => (
             <Reveal key={article.slug} delay={i * 0.08} subtle>
-              <button
-                type="button"
-                onClick={() => {
-                  track(MarketingEvents.InsightOpened, { slug: article.slug, source: "home" });
-                  navigate(path(`insights/${article.slug}`));
-                }}
+              <Link
+                to={path(`insights/${article.slug}`)}
+                onClick={() =>
+                  track(MarketingEvents.InsightOpened, { slug: article.slug, source: "home" })
+                }
                 className={`landing-glass landing-glass-glow rounded-2xl p-6 h-full w-full flex flex-col ${
                   dir === "rtl" ? "text-right" : "text-start"
                 }`}
@@ -486,22 +487,20 @@ const Landing: React.FC = () => {
                 <span className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-[#64499D] dark:text-[#CFC2FF]">
                   {t.insights.readMore} <ArrowRight className="w-4 h-4 rtl:rotate-180" />
                 </span>
-              </button>
+              </Link>
             </Reveal>
           ))}
         </div>
         <div className="text-center mt-8">
-          <button
-            type="button"
-            onClick={() => navigate(path("insights"))}
+          <Link
+            to={path("insights")}
             className="text-sm font-semibold text-[#64499D] dark:text-[#CFC2FF] hover:underline"
           >
             {t.insights.viewAll}
-          </button>
+          </Link>
         </div>
       </section>
 
-      {/* ============ FAQ ============ */}
       <FaqSection title={t.faq.title} faqs={t.faq.entries} className="py-14 sm:py-20" />
 
       {/* ============ FINAL CTA ============ */}
@@ -516,24 +515,41 @@ const Landing: React.FC = () => {
             </p>
             <div className="mt-7 flex flex-col sm:flex-row items-center justify-center gap-3">
               <Button
+                asChild
                 size="lg"
-                onClick={() => {
-                  track(MarketingEvents.SignupCta, { source: "home_final", lang });
-                  navigate("/signup");
-                }}
                 className="w-full sm:w-auto bg-gradient-to-r from-[#64499D] to-[#4D3680] hover:from-[#4D3680] hover:to-[#3E2D71] text-white px-8"
               >
-                {t.finalCta.primary}
+                <Link
+                  to="/signup"
+                  onClick={() => track(MarketingEvents.SignupCta, { source: "home_final", lang })}
+                >
+                  {t.finalCta.primary}
+                </Link>
               </Button>
               <Button
+                asChild
                 size="lg"
                 variant="outline"
-                onClick={() => goPrimary("home_final")}
                 className="w-full sm:w-auto border-[#64499D]/30 text-[#64499D] hover:bg-[#64499D]/10 dark:text-[#CFC2FF] dark:hover:bg-[#64499D]/20 px-8"
               >
-                {t.finalCta.secondary}
+                <Link
+                  to={path("demo")}
+                  onClick={() =>
+                    track(MarketingEvents.HeroPrimaryCta, { source: "home_final", lang })
+                  }
+                >
+                  {t.finalCta.secondary}
+                </Link>
               </Button>
             </div>
+            <p className="mt-4">
+              <Link
+                to={path("pricing")}
+                className="text-sm font-semibold text-[#64499D] dark:text-[#CFC2FF] hover:underline"
+              >
+                {t.hero.ctaPricing}
+              </Link>
+            </p>
             <p className="mt-6 text-xs text-slate-400 dark:text-slate-500">{t.finalCta.tagline}</p>
           </div>
         </Reveal>

@@ -91,10 +91,10 @@ const AddTeamMember = ({ onMemberAdded, onCancel }) => {
 
   const FileUploadArea = ({ field, label, accept = "*/*" }) => (
     <div className="space-y-2">
-      <label className="block text-sm font-medium text-gray-700">{label}</label>
-      <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-purple-400 transition-colors">
-        <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-        <p className="text-sm text-gray-600 mb-2">{t.team.addPage.dragDrop}</p>
+      <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">{label}</label>
+      <div className="border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-lg p-6 text-center hover:border-purple-400 transition-colors">
+        <Upload className="w-8 h-8 text-slate-400 dark:text-slate-500 mx-auto mb-2" />
+        <p className="text-sm text-slate-600 dark:text-slate-400 mb-2">{t.team.addPage.dragDrop}</p>
         <input
           type="file"
           accept={accept}
@@ -118,22 +118,22 @@ const AddTeamMember = ({ onMemberAdded, onCancel }) => {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900/50 p-4">
       <div className="max-w-2xl mx-auto">
         {/* Header */}
         <div className="flex items-center space-x-4 mb-6">
           <Button
             variant="ghost"
             onClick={onCancel}
-            className="p-2 hover:bg-gray-100"
+            className="p-2 hover:bg-slate-100 dark:bg-slate-800"
           >
             <ArrowLeft className="w-5 h-5" />
           </Button>
-          <h1 className="text-2xl font-bold text-gray-900">{t.team.addPage.title}</h1>
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">{t.team.addPage.title}</h1>
           <Button
             variant="ghost"
             onClick={onCancel}
-            className="ml-auto p-2 hover:bg-gray-100"
+            className="ml-auto p-2 hover:bg-slate-100 dark:bg-slate-800"
           >
             <X className="w-5 h-5" />
           </Button>

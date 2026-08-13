@@ -6,6 +6,7 @@ from django.utils import timezone
 from cases.models import Case
 from clients.models import Client
 from finance.models import Fee, Invoice, Payment
+from finance.services.invoice_totals_service import confirmed_payments_total
 
 
 def get_or_create_firm_client(user) -> Client | None:
@@ -13,6 +14,12 @@ def get_or_create_firm_client(user) -> Client | None:
         return None
     profile, _ = Client.objects.get_or_create(user=user)
     return profile
+
+
+def _payment_amount_qs(qs):
+    if hasattr(Payment, 'Status'):
+        qs = qs.filter(status=Payment.Status.CONFIRMED)
+    return qs
 
 
 def recalculate_fee_amounts(fee: Fee) -> None:
@@ -23,8 +30,7 @@ def recalculate_fee_amounts(fee: Fee) -> None:
         or Decimal('0')
     )
     total_paid = (
-        Payment.objects.filter(invoice__fee=fee)
-        .aggregate(s=Sum('amount'))['s']
+        _payment_amount_qs(Payment.objects.filter(invoice__fee=fee)).aggregate(s=Sum('amount'))['s']
         or Decimal('0')
     )
     fee.amount_billed = total_billed
@@ -42,32 +48,38 @@ def recalculate_fee_amounts(fee: Fee) -> None:
 
 
 def sync_invoice_status_from_payments(invoice: Invoice) -> None:
+    """Authoritative payment-driven status (PAID / PARTIALLY_PAID / OVERDUE / prior)."""
     if invoice.status == Invoice.Status.CANCELLED:
         return
-    total_paid = (
-        Payment.objects.filter(invoice=invoice).aggregate(s=Sum('amount'))['s'] or Decimal('0')
-    )
+    if invoice.status == Invoice.Status.DRAFT:
+        return
+
+    total_paid = confirmed_payments_total(invoice)
     new_status = invoice.status
-    if total_paid >= invoice.amount_ttc:
+    if total_paid >= invoice.amount_ttc and invoice.amount_ttc > 0:
         new_status = Invoice.Status.PAID
     elif total_paid > 0:
         new_status = Invoice.Status.PARTIALLY_PAID
     else:
         today = timezone.now().date()
-        if (
-            invoice.due_date
-            and invoice.due_date < today
-            and invoice.status != Invoice.Status.DRAFT
-        ):
+        if invoice.due_date and invoice.due_date < today:
             new_status = Invoice.Status.OVERDUE
+        elif invoice.status in (
+            Invoice.Status.PAID,
+            Invoice.Status.PARTIALLY_PAID,
+            Invoice.Status.OVERDUE,
+        ):
+            new_status = Invoice.Status.SENT
+
     if new_status != invoice.status:
         invoice.status = new_status
         invoice.save(update_fields=['status', 'updated_at'])
 
 
 def recalculate_case_financial_totals(case: Case) -> None:
-    total_paid = Payment.objects.filter(case=case).aggregate(s=Sum('amount'))['s'] or Decimal(
-        '0'
+    total_paid = (
+        _payment_amount_qs(Payment.objects.filter(case=case)).aggregate(s=Sum('amount'))['s']
+        or Decimal('0')
     )
     total_billed = (
         Invoice.objects.filter(case=case)

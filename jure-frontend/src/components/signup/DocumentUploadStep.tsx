@@ -84,7 +84,7 @@ const OrganizationDetailsStep = ({ onNext, onPrev, form }: OrganizationDetailsSt
                 >
                   <SelectTrigger
                     className={`h-12 transition-all duration-200 focus:ring-2 focus:ring-[#64499D]/40 focus:border-[#64499D] ${
-                      errors.team_size ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 dark:border-slate-600'
+                      errors.team_size ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-slate-300 dark:border-slate-600 dark:border-slate-600'
                     }`}
                   >
                     <SelectValue placeholder={s.teamPlaceholder} />
@@ -116,7 +116,7 @@ const OrganizationDetailsStep = ({ onNext, onPrev, form }: OrganizationDetailsSt
                   id="website"
                   {...register('website')}
                   placeholder={s.websitePlaceholder}
-                  className={`transition-all duration-200 focus:ring-2 focus:ring-[#64499D]/40 focus:border-[#64499D] border-gray-300 dark:border-slate-600 h-12 ${
+                  className={`transition-all duration-200 focus:ring-2 focus:ring-[#64499D]/40 focus:border-[#64499D] border-slate-300 dark:border-slate-600 dark:border-slate-600 h-12 ${
                     errors.website ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''
                   }`}
                 />

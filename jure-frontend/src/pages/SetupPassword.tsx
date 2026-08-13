@@ -63,7 +63,7 @@ const SetupPassword = () => {
           <div className="flex items-center justify-between mb-6">
             <div className="flex-1 text-center">
               <img
-                src="/images/Jure logo.png"
+                src="/images/jure-logo.png"
                 alt="Jure logo"
                 className="w-22 h-20 mx-auto object-contain"
               />
@@ -82,7 +82,7 @@ const SetupPassword = () => {
             </CardHeader>
             <CardContent className="space-y-5">
               <div className="text-center pt-4">
-                <Link to="/" className={clsx('inline-flex items-center gap-1 text-sm hover:underline', isDarkMode ? 'text-gray-400' : 'text-gray-600')}>
+                <Link to="/" className={clsx('inline-flex items-center gap-1 text-sm hover:underline', isDarkMode ? 'text-slate-400 dark:text-slate-500' : 'text-slate-600 dark:text-slate-400')}>
                   <Home className="w-4 h-4" />
                   {t.auth.backToHome}
                 </Link>
@@ -90,7 +90,7 @@ const SetupPassword = () => {
             </CardContent>
           </Card>
 
-          <div className={clsx('text-center mt-6 text-xs', isDarkMode ? 'text-gray-500' : 'text-gray-400')}>
+          <div className={clsx('text-center mt-6 text-xs', isDarkMode ? 'text-slate-500 dark:text-slate-400' : 'text-slate-400 dark:text-slate-500')}>
             © {new Date().getFullYear()} Jure. {t.auth.footerRights}
           </div>
         </div>
@@ -104,7 +104,7 @@ const SetupPassword = () => {
         <div className="flex items-center justify-between mb-6">
           <div className="flex-1 text-center">
             <img
-              src="/images/Jure logo.png"
+              src="/images/jure-logo.png"
               alt="Jure logo"
               className="w-22 h-20 mx-auto object-contain"
             />
@@ -135,7 +135,7 @@ const SetupPassword = () => {
               <div>
                 <Label>{t.auth.resetNewPasswordLabel}</Label>
                 <div className="relative">
-                  <Lock className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <Lock className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-500" />
                   <Input
                     type={showPassword ? 'text' : 'password'}
                     placeholder={t.auth.resetNewPasswordLabel}
@@ -152,7 +152,7 @@ const SetupPassword = () => {
                     className="absolute end-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                     onClick={() => setShowPassword(!showPassword)}
                   >
-                    {showPassword ? <EyeOff className="h-4 w-4 text-gray-400" /> : <Eye className="h-4 w-4 text-gray-400" />}
+                    {showPassword ? <EyeOff className="h-4 w-4 text-slate-400 dark:text-slate-500" /> : <Eye className="h-4 w-4 text-slate-400 dark:text-slate-500" />}
                   </Button>
                 </div>
                 {errors.password && (
@@ -163,7 +163,7 @@ const SetupPassword = () => {
               <div>
                 <Label>{t.auth.resetConfirmPasswordLabel}</Label>
                 <div className="relative">
-                  <Lock className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <Lock className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-500" />
                   <Input
                     type={showConfirm ? 'text' : 'password'}
                     placeholder={t.auth.resetConfirmPasswordLabel}
@@ -180,7 +180,7 @@ const SetupPassword = () => {
                     className="absolute end-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                     onClick={() => setShowConfirm(!showConfirm)}
                   >
-                    {showConfirm ? <EyeOff className="h-4 w-4 text-gray-400" /> : <Eye className="h-4 w-4 text-gray-400" />}
+                    {showConfirm ? <EyeOff className="h-4 w-4 text-slate-400 dark:text-slate-500" /> : <Eye className="h-4 w-4 text-slate-400 dark:text-slate-500" />}
                   </Button>
                 </div>
                 {errors.confirmPassword && (
@@ -199,7 +199,7 @@ const SetupPassword = () => {
             </form>
 
             <div className="text-center pt-4">
-              <Link to="/" className={clsx('inline-flex items-center gap-1 text-sm hover:underline', isDarkMode ? 'text-gray-400' : 'text-gray-600')}>
+              <Link to="/" className={clsx('inline-flex items-center gap-1 text-sm hover:underline', isDarkMode ? 'text-slate-400 dark:text-slate-500' : 'text-slate-600 dark:text-slate-400')}>
                 <Home className="w-4 h-4" />
                 {t.auth.backToHome}
               </Link>
@@ -207,7 +207,7 @@ const SetupPassword = () => {
           </CardContent>
         </Card>
 
-        <div className={clsx('text-center mt-6 text-xs', isDarkMode ? 'text-gray-500' : 'text-gray-400')}>
+        <div className={clsx('text-center mt-6 text-xs', isDarkMode ? 'text-slate-500 dark:text-slate-400' : 'text-slate-400 dark:text-slate-500')}>
           © {new Date().getFullYear()} Jure. {t.auth.footerRights}
         </div>
       </div>

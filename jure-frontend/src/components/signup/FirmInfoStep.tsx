@@ -86,7 +86,7 @@ const FirmInfoStep = ({ onNext, onPrev, form }: FirmInfoStepProps) => {
                 >
                   <SelectTrigger
                     className={`h-12 transition-all duration-200 focus:ring-2 focus:ring-[#64499D]/40 focus:border-[#64499D] ${
-                      errors.structure_type ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 dark:border-slate-600'
+                      errors.structure_type ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-slate-300 dark:border-slate-600 dark:border-slate-600'
                     }`}
                   >
                     <SelectValue placeholder={s.structurePlaceholder} />
@@ -117,7 +117,7 @@ const FirmInfoStep = ({ onNext, onPrev, form }: FirmInfoStepProps) => {
                 <Textarea
                   id="business_address"
                   {...register('business_address')}
-                  className={`transition-all duration-200 focus:ring-2 focus:ring-[#64499D]/40 focus:border-[#64499D] border-gray-300 dark:border-slate-600 min-h-[100px] ${
+                  className={`transition-all duration-200 focus:ring-2 focus:ring-[#64499D]/40 focus:border-[#64499D] border-slate-300 dark:border-slate-600 dark:border-slate-600 min-h-[100px] ${
                     errors.business_address ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''
                   }`}
                   placeholder={s.addressPlaceholder}

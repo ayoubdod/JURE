@@ -50,7 +50,9 @@ function normalizeStats(raw: unknown): API.FinanceDashboardStats {
         'total_ca',
         'totalCa',
         'ca_ttc',
-        'caTtc'
+        'caTtc',
+        'ca_total',
+        'caTotal'
       )
     ),
     total_collected: num(
@@ -62,11 +64,23 @@ function normalizeStats(raw: unknown): API.FinanceDashboardStats {
         'total_encaisse',
         'total_payments',
         'totalPayments',
-        'encaissements'
+        'encaissements',
+        'total_received',
+        'totalReceived'
       )
     ),
-    tva_unpaid: num(pick(o, 'tva_unpaid', 'tvaUnpaid', 'tva_due', 'tvaDue')),
-    tax_advances_due_mad: num(pick(o, 'tax_advances_due_mad', 'taxAdvancesDueMad', 'tax_advance_due', 'acomptes_dus')),
+    tva_unpaid: num(pick(o, 'tva_unpaid', 'tvaUnpaid', 'tva_due', 'tvaDue', 'tva_to_pay', 'tvaToPay')),
+    tax_advances_due_mad: num(
+      pick(
+        o,
+        'tax_advances_due_mad',
+        'taxAdvancesDueMad',
+        'tax_advance_due',
+        'acomptes_dus',
+        'tax_advances_unpaid',
+        'taxAdvancesUnpaid'
+      )
+    ),
     tax_advances_unpaid_count: Math.round(
       num(pick(o, 'tax_advances_unpaid_count', 'taxAdvancesUnpaidCount', 'unpaid_tax_advances_count'))
     ),

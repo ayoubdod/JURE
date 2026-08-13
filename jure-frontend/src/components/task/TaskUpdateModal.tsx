@@ -155,7 +155,7 @@ const TaskUpdateModal = forwardRef<TaskUpdateModalRef, TaskUpdateModalProps>(({ 
         <form onSubmit={mainForm.handleSubmit(handleSubmit)} className="px-8 py-6 space-y-6">
           {/* {t.tasks.modal.taskInformation} */}
           <div className="space-y-4">
-            <div className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-3">
+            <div className="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">
               <FileText className="w-4 h-4 text-jure-600" />
               {t.tasks.modal.taskInformation}
             </div>
@@ -223,7 +223,7 @@ const TaskUpdateModal = forwardRef<TaskUpdateModalRef, TaskUpdateModalProps>(({ 
 
           {/* {t.tasks.modal.taskDetails} */}
           <div className="space-y-4">
-            <div className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-3">
+            <div className="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">
               <Calendar className="w-4 h-4 text-jure-600" />
               {t.tasks.modal.taskDetails}
             </div>
@@ -348,7 +348,7 @@ const TaskUpdateModal = forwardRef<TaskUpdateModalRef, TaskUpdateModalProps>(({ 
             </div>
           </div>
 
-          <DialogFooter className="pt-4 border-t border-gray-100">
+          <DialogFooter className="pt-4 border-t border-slate-200/90 dark:border-slate-800">
             <Button
               type="button"
               variant="outline"

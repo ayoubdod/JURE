@@ -8,12 +8,19 @@ from django.db.models import Sum, Count
 from django.utils import timezone
 
 from cases.models import Case
-from finance.models import Invoice, Payment, TaxAdvance
+from finance.models import Expense, Invoice, Payment, TaxAdvance
 from finance.services.ca_tracking_service import build_tva_status_payload
+from finance.services.receivables_service import build_receivables_payload
 
 
 def _cabinet_case_ids(cabinet):
     return Case.objects.filter(cabinet=cabinet).values_list('id', flat=True)
+
+
+def _confirmed_payments(qs):
+    if hasattr(Payment, 'Status'):
+        return qs.filter(status=Payment.Status.CONFIRMED)
+    return qs
 
 
 def _period_range(period: str, year: int):
@@ -31,18 +38,35 @@ def _period_range(period: str, year: int):
     return (date(year, m, 1), date(year, m, last_day))
 
 
+def _empty_kpis() -> dict:
+    return {
+        'ca_total': 0,
+        'total_received': 0,
+        'tva_to_pay': 0,
+        'tax_advances_unpaid': 0,
+        'outstanding': 0,
+        'invoices_total': 0,
+        'invoices_unpaid': 0,
+        'invoices_partially_paid': 0,
+        'invoices_paid': 0,
+        'invoices_overdue': 0,
+        'total_outstanding': 0,
+        'total_overdue': 0,
+        'total_expenses': 0,
+        'net_revenue': 0,
+        'total_ca_ttc': 0,
+        'total_collected': 0,
+        'tva_unpaid': 0,
+        'tax_advances_due_mad': 0,
+    }
+
+
 def build_dashboard_payload(cabinet, period: str, year: int) -> dict:
     case_ids = list(_cabinet_case_ids(cabinet))
     if not case_ids:
         empty_months = [{'month': month_abbr[m], 'ca': 0, 'received': 0} for m in range(1, 13)]
         return {
-            'kpis': {
-                'ca_total': 0,
-                'total_received': 0,
-                'tva_to_pay': 0,
-                'tax_advances_unpaid': 0,
-                'outstanding': 0,
-            },
+            'kpis': _empty_kpis(),
             'charts': {
                 'monthly_revenue': empty_months,
                 'revenue_by_lawyer': [],
@@ -59,7 +83,7 @@ def build_dashboard_payload(cabinet, period: str, year: int) -> dict:
 
     ca_total = inv_period.aggregate(s=Sum('amount_ttc'))['s'] or Decimal('0')
 
-    pay_all = Payment.objects.filter(case_id__in=case_ids)
+    pay_all = _confirmed_payments(Payment.objects.filter(case_id__in=case_ids))
     pay_period = pay_all.filter(payment_date__gte=d_start, payment_date__lte=d_end)
     total_received = pay_period.aggregate(s=Sum('amount'))['s'] or Decimal('0')
 
@@ -71,15 +95,40 @@ def build_dashboard_payload(cabinet, period: str, year: int) -> dict:
         or Decimal('0')
     )
 
-    unpaid_advances = TaxAdvance.objects.filter(
-        case_id__in=case_ids,
-        status=TaxAdvance.Status.UNPAID,
-    ).aggregate(c=Count('id'))['c'] or 0
-    tax_advances_unpaid = Decimal(str(unpaid_advances * 100))
+    tax_advances_unpaid = (
+        TaxAdvance.objects.filter(
+            case_id__in=case_ids,
+            status=TaxAdvance.Status.UNPAID,
+        ).aggregate(s=Sum('amount'))['s']
+        or Decimal('0')
+    )
 
     ca_firm = inv_all.aggregate(s=Sum('amount_ttc'))['s'] or Decimal('0')
     received_firm = pay_all.aggregate(s=Sum('amount'))['s'] or Decimal('0')
     outstanding = ca_firm - received_firm
+
+    inv_status_counts = (
+        Invoice.objects.filter(case_id__in=case_ids)
+        .exclude(status=Invoice.Status.CANCELLED)
+        .values('status')
+        .annotate(c=Count('id'))
+    )
+    status_map = {row['status']: row['c'] for row in inv_status_counts}
+    invoices_total = sum(status_map.values())
+    invoices_paid = status_map.get(Invoice.Status.PAID, 0)
+    invoices_partially_paid = status_map.get(Invoice.Status.PARTIALLY_PAID, 0)
+    invoices_overdue = status_map.get(Invoice.Status.OVERDUE, 0)
+    invoices_unpaid = status_map.get(Invoice.Status.SENT, 0) + invoices_overdue
+
+    receivables = build_receivables_payload(cabinet)
+    total_outstanding = Decimal(str(receivables.get('total_outstanding', 0)))
+    total_overdue = Decimal(str(receivables.get('total_overdue', 0)))
+
+    total_expenses = (
+        Expense.objects.filter(case_id__in=case_ids).aggregate(s=Sum('amount'))['s']
+        or Decimal('0')
+    )
+    net_revenue = (received_firm - total_expenses).quantize(Decimal('0.01'))
 
     monthly_revenue = []
     for m in range(1, 13):
@@ -96,10 +145,12 @@ def build_dashboard_payload(cabinet, period: str, year: int) -> dict:
             or Decimal('0')
         )
         recv_m = (
-            Payment.objects.filter(
-                case_id__in=case_ids,
-                payment_date__gte=ms,
-                payment_date__lte=me,
+            _confirmed_payments(
+                Payment.objects.filter(
+                    case_id__in=case_ids,
+                    payment_date__gte=ms,
+                    payment_date__lte=me,
+                )
             ).aggregate(s=Sum('amount'))['s']
             or Decimal('0')
         )
@@ -173,9 +224,9 @@ def build_dashboard_payload(cabinet, period: str, year: int) -> dict:
         )
 
     recent_transactions = []
-    for p in Payment.objects.filter(case_id__in=case_ids).select_related(
-        'case', 'client__user'
-    )[:20]:
+    for p in _confirmed_payments(
+        Payment.objects.filter(case_id__in=case_ids)
+    ).select_related('case', 'client__user')[:20]:
         u = p.client.user
         recent_transactions.append(
             {
@@ -206,13 +257,32 @@ def build_dashboard_payload(cabinet, period: str, year: int) -> dict:
     recent_transactions.sort(key=lambda x: x['date'], reverse=True)
     recent_transactions = recent_transactions[:15]
 
+    ca_total_f = float(ca_total)
+    total_received_f = float(total_received)
+    tva_to_pay_f = float(tva_to_pay)
+    tax_advances_unpaid_f = float(tax_advances_unpaid)
+
     return {
         'kpis': {
-            'ca_total': float(ca_total),
-            'total_received': float(total_received),
-            'tva_to_pay': float(tva_to_pay),
-            'tax_advances_unpaid': float(tax_advances_unpaid),
+            'ca_total': ca_total_f,
+            'total_received': total_received_f,
+            'tva_to_pay': tva_to_pay_f,
+            'tax_advances_unpaid': tax_advances_unpaid_f,
             'outstanding': float(outstanding),
+            'invoices_total': invoices_total,
+            'invoices_unpaid': invoices_unpaid,
+            'invoices_partially_paid': invoices_partially_paid,
+            'invoices_paid': invoices_paid,
+            'invoices_overdue': invoices_overdue,
+            'total_outstanding': float(total_outstanding),
+            'total_overdue': float(total_overdue),
+            'total_expenses': float(total_expenses),
+            'net_revenue': float(net_revenue),
+            # Frontend aliases
+            'total_ca_ttc': ca_total_f,
+            'total_collected': total_received_f,
+            'tva_unpaid': tva_to_pay_f,
+            'tax_advances_due_mad': tax_advances_unpaid_f,
         },
         'charts': {
             'monthly_revenue': monthly_revenue,

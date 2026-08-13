@@ -15,12 +15,12 @@ export default function MatterTimeline({ matterId }: { matterId?: string }) {
 
   const badge = (type?: string) =>
     type === 'deadline'
-      ? 'bg-rose-100 text-rose-700'
+      ? 'bg-rose-500/15 text-rose-700 dark:text-rose-400'
       : type === 'hearing'
-        ? 'bg-blue-100 text-blue-700'
+        ? 'bg-blue-500/15 text-blue-700 dark:text-blue-400'
         : type === 'filing'
-          ? 'bg-emerald-100 text-emerald-700'
-          : 'bg-gray-100 text-gray-700';
+          ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400'
+          : 'bg-slate-500/15 text-slate-700 dark:text-slate-400';
 
   const typeLabel = (type?: string) => {
     if (type === 'deadline') return tl.types.deadline;
@@ -30,7 +30,7 @@ export default function MatterTimeline({ matterId }: { matterId?: string }) {
   };
 
   return (
-    <Card className="rounded-2xl border-gray-100">
+    <Card className="rounded-2xl border-slate-200/90 dark:border-slate-800">
       <CardHeader className="pb-2">
         <CardTitle className="text-base">{tl.title}</CardTitle>
         <CardDescription className="text-xs">{tl.description}</CardDescription>
@@ -39,12 +39,12 @@ export default function MatterTimeline({ matterId }: { matterId?: string }) {
         {sorted.map((evt) => (
           <div
             key={evt.id}
-            className="flex items-center justify-between rounded-xl border border-gray-100 bg-white px-3 py-2"
+            className="flex items-center justify-between rounded-xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-950 px-3 py-2"
           >
             <div className="flex items-center gap-2">
               <Calendar className="h-4 w-4 text-muted-foreground" />
               <div>
-                <div className="text-sm font-medium text-gray-900">{evt.label}</div>
+                <div className="text-sm font-medium text-slate-900 dark:text-white">{evt.label}</div>
                 <div className="text-xs text-muted-foreground">{evt.date}</div>
               </div>
             </div>

@@ -60,7 +60,7 @@ const FormSection: React.FC<{
   children: React.ReactNode;
 }> = ({ title, icon: Icon, children }) => (
   <div className="space-y-4">
-    <div className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 pb-2 border-b border-gray-100 dark:border-gray-800">
+    <div className="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300 pb-2 border-b border-slate-200/90 dark:border-slate-800">
       <Icon className="w-4 h-4 text-purple-600 dark:text-purple-400" />
       <span>{title}</span>
     </div>
@@ -259,7 +259,7 @@ const AdministrativeDutyForm: React.FC<AdministrativeDutyFormProps> = ({
       <FormSection title={modal.sections.basicInfo} icon={FileText}>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
               {modal.fields.reference} <span className="text-red-500">*</span>
             </label>
             <Input
@@ -272,7 +272,7 @@ const AdministrativeDutyForm: React.FC<AdministrativeDutyFormProps> = ({
             )}
           </div>
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
               {modal.fields.title} <span className="text-red-500">*</span>
             </label>
             <Input
@@ -285,7 +285,7 @@ const AdministrativeDutyForm: React.FC<AdministrativeDutyFormProps> = ({
             )}
           </div>
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
               {modal.fields.dutyType} <span className="text-red-500">*</span>
             </label>
             <Select
@@ -307,7 +307,7 @@ const AdministrativeDutyForm: React.FC<AdministrativeDutyFormProps> = ({
             </Select>
           </div>
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
               {modal.fields.priority}
             </label>
             <Select
@@ -334,7 +334,7 @@ const AdministrativeDutyForm: React.FC<AdministrativeDutyFormProps> = ({
       <FormSection title={modal.sections.clientResponsible} icon={Users}>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
               {modal.fields.relatedClient}
             </label>
             <ServerSelect
@@ -349,7 +349,7 @@ const AdministrativeDutyForm: React.FC<AdministrativeDutyFormProps> = ({
             />
           </div>
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
               {modal.fields.assignedTo}
             </label>
             <ServerSelect
@@ -366,7 +366,7 @@ const AdministrativeDutyForm: React.FC<AdministrativeDutyFormProps> = ({
       <FormSection title={modal.sections.taskDetails} icon={FileCheck}>
         <div className="space-y-4">
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
               {modal.fields.descriptionPurpose} <span className="text-red-500">*</span>
             </label>
             <Textarea
@@ -380,7 +380,7 @@ const AdministrativeDutyForm: React.FC<AdministrativeDutyFormProps> = ({
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
                 {modal.fields.institutionAuthority}
               </label>
               <Input
@@ -390,7 +390,7 @@ const AdministrativeDutyForm: React.FC<AdministrativeDutyFormProps> = ({
               />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
                 {modal.fields.institutionReferenceNumber}{' '}
                 <span className="text-slate-400 text-xs">({t.common.optional})</span>
               </label>
@@ -407,7 +407,7 @@ const AdministrativeDutyForm: React.FC<AdministrativeDutyFormProps> = ({
       <FormSection title={modal.sections.dates} icon={Calendar}>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
               {modal.fields.startDate} <span className="text-red-500">*</span>
             </label>
             <Input type="date" {...form.register('start_date')} className="h-10" />
@@ -416,7 +416,7 @@ const AdministrativeDutyForm: React.FC<AdministrativeDutyFormProps> = ({
             )}
           </div>
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
               {modal.fields.dueDateLegalDeadline} <span className="text-red-500">*</span>
             </label>
             <Input type="date" {...form.register('due_date')} className="h-10" />
@@ -425,7 +425,7 @@ const AdministrativeDutyForm: React.FC<AdministrativeDutyFormProps> = ({
             )}
           </div>
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
               {modal.fields.completionDate}{' '}
               <span className="text-slate-400 text-xs">{modal.hints.completionDateOptional}</span>
             </label>
@@ -437,7 +437,7 @@ const AdministrativeDutyForm: React.FC<AdministrativeDutyFormProps> = ({
       <FormSection title={modal.sections.documentsChecklist} icon={FileCheck}>
         <div className="space-y-4">
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
               {modal.fields.requiredDocuments}
             </label>
             <div className="space-y-2">
@@ -476,7 +476,7 @@ const AdministrativeDutyForm: React.FC<AdministrativeDutyFormProps> = ({
             </div>
           </div>
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
               {modal.fields.status}
             </label>
             <Select
@@ -500,7 +500,7 @@ const AdministrativeDutyForm: React.FC<AdministrativeDutyFormProps> = ({
         </div>
       </FormSection>
 
-      <div className="flex items-center justify-between pt-4 border-t border-gray-100 dark:border-gray-800 gap-3">
+      <div className="flex items-center justify-between pt-4 border-t border-slate-200/90 dark:border-slate-800 gap-3">
         {onBack && (
           <Button type="button" variant="outline" onClick={onBack} disabled={isLoading}>
             {modal.back}

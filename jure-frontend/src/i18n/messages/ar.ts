@@ -2241,7 +2241,9 @@ export const ar: AppMessages = {
     paymentMethods: {
       CASH: 'نقدًا',
       VIREMENT_BANCAIRE: 'تحويل بنكي',
+      BANK_TRANSFER: 'تحويل بنكي',
       CHEQUE: 'شيك',
+      OTHER: 'أخرى',
     },
     txKinds: {
       PAIEMENT: 'دفعة',

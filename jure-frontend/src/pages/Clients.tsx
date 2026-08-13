@@ -123,7 +123,7 @@ const ClientTableRow = memo(function ClientTableRow({ client, rowIdx, onOpen }: 
       className={cn(
         'group border-b border-slate-100 dark:border-slate-800/60 cursor-pointer transition-colors duration-100',
         rowIdx % 2 === 0 ? 'bg-white dark:bg-slate-950' : 'bg-slate-50/40 dark:bg-slate-900/20',
-        'hover:bg-slate-100/80 dark:hover:bg-slate-900/50',
+        'hover:bg-slate-100 dark:hover:bg-slate-800/80',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary/40'
       )}
       onClick={() => onOpen(client)}
@@ -222,7 +222,7 @@ const ClientMobileCard = memo(function ClientMobileCard({
       <div className="flex items-center border-t border-slate-100 dark:border-slate-800/80 px-1">
         <button
           type="button"
-          className="flex flex-1 items-center justify-center gap-1 min-h-[40px] text-[12px] font-medium text-slate-500"
+          className="flex flex-1 items-center justify-center gap-1 min-h-[40px] text-[12px] font-medium text-slate-500 dark:text-slate-400"
           onClick={(e) => {
             e.stopPropagation();
             setExpanded((v) => !v);
@@ -365,10 +365,10 @@ const Clients: React.FC = () => {
   const emptyState = (
     <div className="flex flex-col items-center justify-center py-12 px-6">
       <div className="h-12 w-12 rounded-xl bg-slate-100 dark:bg-slate-800/80 flex items-center justify-center mb-3">
-        <Users className="w-6 h-6 text-slate-500" aria-hidden />
+        <Users className="w-6 h-6 text-slate-500 dark:text-slate-400" aria-hidden />
       </div>
       <p className="text-sm font-semibold text-slate-900 dark:text-white">{t.clients.empty.title}</p>
-      <p className="text-xs text-slate-500 mt-1 text-center max-w-sm">
+      <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 text-center max-w-sm">
         {hasActiveFilters ? t.clients.empty.filteredHint : t.clients.empty.emptyHint}
       </p>
       {hasActiveFilters ? (
@@ -465,7 +465,7 @@ const Clients: React.FC = () => {
                         <StatusPill active={!!client.is_active} />
                       </div>
                       {company ? (
-                        <p className="mt-0.5 text-[12px] text-slate-500 truncate">{company}</p>
+                        <p className="mt-0.5 text-[12px] text-slate-500 dark:text-slate-400 truncate">{company}</p>
                       ) : null}
                       <p className="mt-2 text-[12px] tabular-nums text-slate-600 dark:text-slate-400">
                         {casesLabel}
@@ -485,7 +485,7 @@ const Clients: React.FC = () => {
         ? Array.from({ length: 6 }).map((_, i) => (
             <div
               key={i}
-              className="h-[96px] rounded-lg border border-slate-200 dark:border-slate-800 animate-pulse bg-white"
+              className="h-[96px] rounded-lg border border-slate-200 dark:border-slate-800 animate-pulse bg-white dark:bg-slate-950"
             />
           ))
         : displayedClients.length === 0
@@ -515,7 +515,7 @@ const Clients: React.FC = () => {
               )}
             >
               <div className="min-w-0">
-                <p className="text-[10px] font-medium uppercase tracking-[0.06em] text-slate-500 leading-none">
+                <p className="text-[10px] font-medium uppercase tracking-[0.06em] text-slate-500 dark:text-slate-400 leading-none">
                   {item.label}
                 </p>
                 <p className="mt-0.5 text-base font-bold tabular-nums text-slate-900 dark:text-white leading-none ws-stat-value">
@@ -641,7 +641,7 @@ const Clients: React.FC = () => {
                 {t.clients.addNewClient}
               </Button>
             </div>
-            <p className="mt-1.5 text-[11px] text-slate-500 tabular-nums">
+            <p className="mt-1.5 text-[11px] text-slate-500 dark:text-slate-400 tabular-nums">
               {clientsIsLoading
                 ? t.common.loading
                 : tf(t.clients.countSummary, {

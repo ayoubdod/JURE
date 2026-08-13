@@ -168,7 +168,7 @@ const CaseViewModal = forwardRef<CaseViewModalRef, CaseViewModalProps>(({ onSucc
       case CaseStatus.CLOSED: return 'bg-slate-50 text-slate-700 ring-slate-200 dark:bg-slate-900/30 dark:text-slate-400 dark:ring-slate-800/60';
       case CaseStatus.CANCELLED: return 'bg-red-50 text-red-700 ring-red-200 dark:bg-red-900/20 dark:text-red-300 dark:ring-red-800/60';
       case CaseStatus.PENDING: return 'bg-yellow-50 text-yellow-700 ring-yellow-200 dark:bg-yellow-900/20 dark:text-yellow-300 dark:ring-yellow-800/60';
-      case CaseStatus.ARCHIVED: return 'bg-gray-50 text-gray-600 ring-gray-200 dark:bg-gray-900/30 dark:text-gray-400 dark:ring-gray-800/60';
+      case CaseStatus.ARCHIVED: return 'bg-slate-50 text-slate-600 ring-slate-200 dark:bg-slate-900/30 dark:text-slate-400 dark:ring-slate-800/60';
       default: return 'bg-slate-50 text-slate-700 ring-slate-200 dark:bg-slate-900/30 dark:text-slate-400 dark:ring-slate-800/60';
     }
   };

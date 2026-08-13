@@ -200,7 +200,7 @@ const AppointmentUpdateModal = forwardRef<AppointmentUpdateModalRef, Appointment
 
         <form onSubmit={mainForm.handleSubmit(handleSubmit)} className="px-8 py-6 space-y-6">
           <div className="space-y-4">
-            <div className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-3">
+            <div className="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">
               <FileText className="w-4 h-4 text-purple-600" />
               {m.appointmentInfo}
             </div>
@@ -246,7 +246,7 @@ const AppointmentUpdateModal = forwardRef<AppointmentUpdateModalRef, Appointment
           </div>
 
           <div className="space-y-4">
-            <div className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-3">
+            <div className="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">
               <Clock className="w-4 h-4 text-purple-600" />
               {m.scheduleDetails}
             </div>
@@ -257,7 +257,7 @@ const AppointmentUpdateModal = forwardRef<AppointmentUpdateModalRef, Appointment
                   <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
-                  <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-500" />
                   <Input
                     type="date"
                     value={date}
@@ -280,7 +280,7 @@ const AppointmentUpdateModal = forwardRef<AppointmentUpdateModalRef, Appointment
                   <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
-                  <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-500" />
                   <Input
                     type="time"
                     value={time}
@@ -327,7 +327,7 @@ const AppointmentUpdateModal = forwardRef<AppointmentUpdateModalRef, Appointment
           </div>
 
           <div className="space-y-4">
-            <div className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-3">
+            <div className="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">
               <User className="w-4 h-4 text-purple-600" />
               {t.calendar.scheduleDialog.clientAndCase}
             </div>
@@ -368,7 +368,7 @@ const AppointmentUpdateModal = forwardRef<AppointmentUpdateModalRef, Appointment
           </div>
 
           <div className="space-y-4">
-            <div className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-3">
+            <div className="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">
               <MapPin className="w-4 h-4 text-purple-600" />
               {t.calendar.scheduleDialog.locationDetails}
             </div>
@@ -376,7 +376,7 @@ const AppointmentUpdateModal = forwardRef<AppointmentUpdateModalRef, Appointment
               <div className="space-y-2">
                 <label className="text-sm font-medium">{m.location}</label>
                 <div className="relative">
-                  <Building className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <Building className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-500" />
                   <Input
                     {...mainForm.register('location')}
                     placeholder={m.locationPlaceholder}
@@ -392,7 +392,7 @@ const AppointmentUpdateModal = forwardRef<AppointmentUpdateModalRef, Appointment
               <div className="space-y-2">
                 <label className="text-sm font-medium">{m.notes}</label>
                 <div className="relative">
-                  <FileText className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
+                  <FileText className="absolute left-3 top-3 w-4 h-4 text-slate-400 dark:text-slate-500" />
                   <Textarea
                     {...mainForm.register('description')}
                     rows={3}
@@ -409,7 +409,7 @@ const AppointmentUpdateModal = forwardRef<AppointmentUpdateModalRef, Appointment
             </div>
           </div>
 
-          <DialogFooter className="pt-4 border-t border-gray-100">
+          <DialogFooter className="pt-4 border-t border-slate-200/90 dark:border-slate-800">
             <Button
               type="button"
               variant="outline"

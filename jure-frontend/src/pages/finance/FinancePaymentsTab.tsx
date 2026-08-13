@@ -13,7 +13,13 @@ import { PaymentTable } from '@/components/finance/tables/PaymentTable';
 import { getPayments } from '@/services/finance/api';
 import { useAppTranslation } from '@/i18n';
 
-const METHOD_OPTS: API.FinancePaymentMethod[] = ['CASH', 'VIREMENT_BANCAIRE', 'CHEQUE'];
+const METHOD_OPTS: API.FinancePaymentMethod[] = [
+  'CASH',
+  'VIREMENT_BANCAIRE',
+  'BANK_TRANSFER',
+  'CHEQUE',
+  'OTHER',
+];
 
 export const FinancePaymentsTab: React.FC = () => {
   const { t, tf } = useAppTranslation();

@@ -13,6 +13,11 @@ from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.lib.units import cm
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 
+from finance.services.invoice_totals_service import (
+    invoice_amount_outstanding,
+    invoice_amount_paid,
+)
+
 
 def _mad(amount) -> str:
     d = Decimal(str(amount)).quantize(Decimal('0.01'))
@@ -24,6 +29,7 @@ def build_invoice_pdf(invoice) -> bytes:
     """
     Build PDF for a finance.Invoice instance.
     Expects select_related: cabinet, case, client__user, fee (optional).
+    Prefetch items when available.
     """
     inv = invoice
     cab = inv.cabinet
@@ -62,11 +68,16 @@ def build_invoice_pdf(invoice) -> bytes:
             story.append(Paragraph(line, normal))
     story.append(Spacer(1, 0.6 * cm))
 
+    amount_paid = invoice_amount_paid(inv)
+    amount_outstanding = invoice_amount_outstanding(inv)
+
     meta_data = [
         ['N° facture', escape(inv.invoice_number)],
         ['Date d\'émission', inv.issued_date.isoformat() if inv.issued_date else '—'],
         ['Date d\'échéance', inv.due_date.isoformat() if inv.due_date else '—'],
-        ['Statut', escape(inv.status)],
+        ['Statut de paiement', escape(inv.status)],
+        ['Montant payé', _mad(amount_paid)],
+        ['Reste à payer', _mad(amount_outstanding)],
     ]
     t_meta = Table(meta_data, colWidths=[4 * cm, 12 * cm])
     t_meta.setStyle(
@@ -101,22 +112,39 @@ def build_invoice_pdf(invoice) -> bytes:
     )
     story.append(Spacer(1, 0.5 * cm))
 
-    desc = 'Honoraires'
-    if inv.fee_id:
-        desc = f'Honoraires (réf. honoraire #{inv.fee_id})'
+    items = list(getattr(inv, 'items', []).all()) if hasattr(inv, 'items') else []
+    line_data = [['Description', 'Qté', 'P.U. HT', 'Montant HT']]
+    if items:
+        for item in items:
+            line_data.append(
+                [
+                    Paragraph(escape(item.description or 'Ligne'), normal),
+                    f'{Decimal(str(item.quantity)):.2f}'.replace('.', ','),
+                    _mad(item.unit_price),
+                    _mad(item.amount),
+                ]
+            )
+    else:
+        desc = 'Honoraires'
+        if inv.fee_id:
+            desc = f'Honoraires (réf. honoraire #{inv.fee_id})'
+        line_data.append(
+            [
+                Paragraph(escape(desc), normal),
+                '1,00',
+                _mad(inv.amount_ht),
+                _mad(inv.amount_ht),
+            ]
+        )
 
-    line_data = [
-        ['Description', 'Montant HT'],
-        [Paragraph(escape(desc), normal), _mad(inv.amount_ht)],
-    ]
-    t_line = Table(line_data, colWidths=[12 * cm, 4 * cm])
+    t_line = Table(line_data, colWidths=[8 * cm, 2 * cm, 3 * cm, 3 * cm])
     t_line.setStyle(
         TableStyle(
             [
                 ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#f0f0f0')),
                 ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
                 ('FONTSIZE', (0, 0), (-1, -1), 10),
-                ('ALIGN', (1, 0), (1, -1), 'RIGHT'),
+                ('ALIGN', (1, 0), (-1, -1), 'RIGHT'),
                 ('VALIGN', (0, 0), (-1, -1), 'TOP'),
                 ('BOX', (0, 0), (-1, -1), 0.5, colors.grey),
                 ('INNERGRID', (0, 0), (-1, -1), 0.25, colors.grey),
@@ -130,15 +158,17 @@ def build_invoice_pdf(invoice) -> bytes:
         ['Total HT', _mad(inv.amount_ht)],
         ['TVA (' + str(inv.tva_rate) + '%)', _mad(inv.tva_amount)],
         ['Total TTC', _mad(inv.amount_ttc)],
+        ['Payé', _mad(amount_paid)],
+        ['Reste à payer', _mad(amount_outstanding)],
     ]
     t_tot = Table(totals, colWidths=[12 * cm, 4 * cm])
     t_tot.setStyle(
         TableStyle(
             [
                 ('ALIGN', (1, 0), (1, -1), 'RIGHT'),
-                ('FONTNAME', (0, -1), (-1, -1), 'Helvetica-Bold'),
+                ('FONTNAME', (0, 2), (-1, 2), 'Helvetica-Bold'),
                 ('FONTSIZE', (0, 0), (-1, -1), 10),
-                ('LINEABOVE', (0, -1), (-1, -1), 1, colors.black),
+                ('LINEABOVE', (0, 2), (-1, 2), 1, colors.black),
             ]
         )
     )

@@ -30,8 +30,8 @@ export default function ClauseLibraryModal({open, onOpenChange}:{open:boolean; o
           <Input placeholder={m.searchPlaceholder} value={q} onChange={e=>setQ(e.target.value)} />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-80 overflow-auto">
             {list.map(c => (
-              <div key={c.id} className="rounded-xl border border-gray-100 p-3">
-                <div className="text-sm font-medium">{c.title}</div>
+              <div key={c.id} className="rounded-xl border border-slate-200/90 dark:border-slate-800 bg-card p-3">
+                <div className="text-sm font-medium text-slate-900 dark:text-white">{c.title}</div>
                 <p className="text-xs text-muted-foreground mt-1 line-clamp-4">{c.text}</p>
                 <div className="mt-2 flex justify-end">
                   <Button variant="outline" size="sm" onClick={()=>copy(c.text)}>{m.copy}</Button>

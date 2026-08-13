@@ -50,7 +50,7 @@ type MenuItem = {
 };
 
 const mobileSecondaryActionClass =
-  'flex min-h-11 w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted/70 hover:text-foreground';
+  'flex min-h-11 w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground dark:text-white transition-colors hover:bg-muted/70 hover:text-foreground dark:hover:text-white';
 
 const Sidebar = ({ activeTab, setActiveTab }: SidebarProps) => {
   const navigate = useNavigate();
@@ -152,7 +152,7 @@ const Sidebar = ({ activeTab, setActiveTab }: SidebarProps) => {
         >
           <SheetHeader className="shrink-0 border-b border-border px-4 py-4 text-start">
             <div className="flex items-center gap-3 pe-8">
-              <img src="/images/Jure logo.png" alt="JURE" className="h-9 w-auto" />
+              <img src="/images/jure-logo.png" alt="JURE" className="h-9 w-auto" />
             </div>
             <SheetTitle className="sr-only">{t.sidebar.dashboard}</SheetTitle>
             <SheetDescription className="sr-only">
@@ -174,7 +174,7 @@ const Sidebar = ({ activeTab, setActiveTab }: SidebarProps) => {
                       'flex min-h-11 items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
                       active
                         ? 'bg-jure-600 text-white dark:bg-jure-500'
-                        : 'text-muted-foreground hover:bg-jure-50 hover:text-jure-600 dark:hover:bg-jure-600/10 dark:hover:text-jure-400'
+                        : 'text-muted-foreground dark:text-white hover:bg-jure-50 hover:text-jure-600 dark:hover:bg-jure-600/10 dark:hover:text-white'
                     )}
                     aria-current={active ? 'page' : undefined}
                   >
@@ -209,14 +209,14 @@ const Sidebar = ({ activeTab, setActiveTab }: SidebarProps) => {
               tone="muted"
               open={isAccountSectionOpen}
               onOpenChange={setIsAccountSectionOpen}
-              triggerClassName="min-h-12 max-h-14"
+              triggerClassName="min-h-12 max-h-14 dark:text-white dark:hover:text-white"
             >
               <button
                 type="button"
                 onClick={() => navigateAndClose('/dashboard/profile')}
                 className={mobileSecondaryActionClass}
               >
-                <UserCog size={17} className="shrink-0 text-muted-foreground/70" aria-hidden />
+                <UserCog size={17} className="shrink-0 text-muted-foreground/70 dark:text-white/80" aria-hidden />
                 {t.sidebar.myProfile}
               </button>
               <button
@@ -224,7 +224,7 @@ const Sidebar = ({ activeTab, setActiveTab }: SidebarProps) => {
                 onClick={() => navigateAndClose('/dashboard/notifications')}
                 className={mobileSecondaryActionClass}
               >
-                <Bell size={17} className="shrink-0 text-muted-foreground/70" aria-hidden />
+                <Bell size={17} className="shrink-0 text-muted-foreground/70 dark:text-white/80" aria-hidden />
                 {t.sidebar.notifications}
               </button>
               <button
@@ -232,11 +232,11 @@ const Sidebar = ({ activeTab, setActiveTab }: SidebarProps) => {
                 onClick={() => navigateAndClose('/dashboard/help')}
                 className={mobileSecondaryActionClass}
               >
-                <HelpCircle size={17} className="shrink-0 text-muted-foreground/70" aria-hidden />
+                <HelpCircle size={17} className="shrink-0 text-muted-foreground/70 dark:text-white/80" aria-hidden />
                 {t.sidebar.help}
               </button>
               <button type="button" className={mobileSecondaryActionClass}>
-                <Headphones size={17} className="shrink-0 text-muted-foreground/70" aria-hidden />
+                <Headphones size={17} className="shrink-0 text-muted-foreground/70 dark:text-white/80" aria-hidden />
                 {t.sidebar.contactSupport}
               </button>
               <button
@@ -266,7 +266,7 @@ const Sidebar = ({ activeTab, setActiveTab }: SidebarProps) => {
               className="w-8 h-8 flex-shrink-0 group-hover:opacity-0 transition-opacity duration-300"
             />
             <img
-              src="/images/Jure logo.png"
+              src="/images/jure-logo.png"
               alt="JURE Logo"
               className="h-10 w-auto absolute opacity-0 group-hover:opacity-100 transition-opacity duration-300"
             />
@@ -284,7 +284,7 @@ const Sidebar = ({ activeTab, setActiveTab }: SidebarProps) => {
                   className={`flex items-center p-2.5 rounded-lg transition-all duration-200 relative ${
                     active
                       ? 'bg-jure-600 dark:bg-jure-500 text-white'
-                      : 'text-muted-foreground hover:text-jure-600 dark:hover:text-jure-400 hover:bg-jure-50 dark:hover:bg-jure-600/10'
+                      : 'text-muted-foreground dark:text-white hover:text-jure-600 dark:hover:text-white hover:bg-jure-50 dark:hover:bg-jure-600/10'
                   }`}
                   title={item.label}
                 >
@@ -316,7 +316,7 @@ const Sidebar = ({ activeTab, setActiveTab }: SidebarProps) => {
             <div className="relative">
               <button
                 onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
-                className="flex items-center p-2.5 rounded-lg transition-all duration-200 text-muted-foreground hover:text-jure-600 dark:hover:text-jure-400 hover:bg-jure-50 dark:hover:bg-jure-600/10 w-full"
+                className="flex items-center p-2.5 rounded-lg transition-all duration-200 text-muted-foreground dark:text-white hover:text-jure-600 dark:hover:text-white hover:bg-jure-50 dark:hover:bg-jure-600/10 w-full"
               >
                 <User size={16} className="flex-shrink-0" />
                 <span className="ms-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap text-xs font-medium flex-1 text-start">
@@ -376,7 +376,7 @@ const Sidebar = ({ activeTab, setActiveTab }: SidebarProps) => {
               )}
             </div>
 
-            <button className="flex items-center p-2.5 rounded-lg transition-all duration-200 text-muted-foreground hover:text-jure-600 dark:hover:text-jure-400 hover:bg-jure-50 dark:hover:bg-jure-600/10 w-full">
+            <button className="flex items-center p-2.5 rounded-lg transition-all duration-200 text-muted-foreground dark:text-white hover:text-jure-600 dark:hover:text-white hover:bg-jure-50 dark:hover:bg-jure-600/10 w-full">
               <Headphones size={16} className="flex-shrink-0" />
               <span className="ms-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap text-xs font-medium text-start">
                 {t.sidebar.contactSupport}

@@ -26,32 +26,71 @@ class LawyerMiniSerializer(serializers.Serializer):
 
 class FeeSerializer(serializers.ModelSerializer):
     lawyer = serializers.SerializerMethodField()
+    lawyer_name = serializers.SerializerMethodField()
     remaining = serializers.SerializerMethodField()
     planned_amount = serializers.SerializerMethodField()
+    invoiced_amount = serializers.SerializerMethodField()
+    paid_amount = serializers.SerializerMethodField()
+    firm_id = serializers.SerializerMethodField()
+    client_id = serializers.SerializerMethodField()
+    amount = serializers.SerializerMethodField()
 
     class Meta:
         model = Fee
         fields = [
             'id',
             'case',
+            'firm_id',
+            'client_id',
             'lawyer',
+            'lawyer_name',
+            'description',
             'fee_type',
+            'amount',
             'amount_expected',
             'planned_amount',
+            'currency',
+            'fee_date',
             'amount_billed',
+            'invoiced_amount',
             'amount_paid',
+            'paid_amount',
             'remaining',
             'status',
             'notes',
+            'created_by',
             'created_at',
             'updated_at',
         ]
-        read_only_fields = ['id', 'amount_billed', 'amount_paid', 'created_at', 'updated_at']
+        read_only_fields = [
+            'id',
+            'amount_billed',
+            'amount_paid',
+            'created_by',
+            'created_at',
+            'updated_at',
+        ]
 
     def get_lawyer(self, obj):
         if not obj.lawyer_id:
             return None
         return LawyerMiniSerializer(obj.lawyer).data
+
+    def get_lawyer_name(self, obj):
+        if not obj.lawyer_id:
+            return ''
+        u = obj.lawyer
+        return f'{u.first_name} {u.last_name}'.strip() or (u.email or '')
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data['lawyer_id'] = instance.lawyer_id
+        for k in ('amount_expected', 'amount_billed', 'amount_paid', 'amount'):
+            if k in data and data[k] is not None:
+                data[k] = float(data[k])
+        if 'remaining' in data and data['remaining'] is not None:
+            data['remaining'] = float(data['remaining'])
+        return data
 
     def get_remaining(self, obj):
         exp = obj.amount_expected or Decimal('0')
@@ -63,14 +102,20 @@ class FeeSerializer(serializers.ModelSerializer):
             return None
         return float(obj.amount_expected)
 
-    def to_representation(self, instance):
-        data = super().to_representation(instance)
-        for k in ('amount_expected', 'amount_billed', 'amount_paid'):
-            if k in data and data[k] is not None:
-                data[k] = float(data[k])
-        if 'remaining' in data and data['remaining'] is not None:
-            data['remaining'] = float(data['remaining'])
-        return data
+    def get_invoiced_amount(self, obj):
+        return float(obj.amount_billed or 0)
+
+    def get_paid_amount(self, obj):
+        return float(obj.amount_paid or 0)
+
+    def get_amount(self, obj):
+        return float(obj.amount_expected or 0)
+
+    def get_firm_id(self, obj):
+        return obj.case.cabinet_id if obj.case_id else None
+
+    def get_client_id(self, obj):
+        return obj.case.client_id if obj.case_id else None
 
 
 class FeeWriteSerializer(serializers.ModelSerializer):
@@ -78,13 +123,16 @@ class FeeWriteSerializer(serializers.ModelSerializer):
     Create/update fee (honoraire).
 
     - `planned_amount` is an alias for model field `amount_expected` (frontend contract).
-    - `lawyer_id` must be a **User.id** for a user who belongs to the case cabinet
-      (cabinet member or cabinet owner). This matches `GET /api/v1/cabinets/members/`
-      where each member row is a User and `id` is Django `User.pk` (there is no
-      separate CabinetMember table).
+    - `lawyer_id` must be a User.id belonging to the case cabinet.
     """
 
     planned_amount = serializers.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        write_only=True,
+        required=False,
+    )
+    amount = serializers.DecimalField(
         max_digits=12,
         decimal_places=2,
         write_only=True,
@@ -99,9 +147,22 @@ class FeeWriteSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Fee
-        fields = ['fee_type', 'amount_expected', 'planned_amount', 'lawyer_id', 'notes']
+        fields = [
+            'fee_type',
+            'amount_expected',
+            'planned_amount',
+            'amount',
+            'description',
+            'currency',
+            'fee_date',
+            'lawyer_id',
+            'notes',
+        ]
         extra_kwargs = {
             'amount_expected': {'required': False},
+            'description': {'required': False, 'allow_blank': True},
+            'currency': {'required': False},
+            'fee_date': {'required': False},
         }
 
     def __init__(self, *args, **kwargs):
@@ -119,24 +180,31 @@ class FeeWriteSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         case = self.context.get('case')
         planned = attrs.pop('planned_amount', None)
+        amount_alias = attrs.pop('amount', None)
         expected = attrs.get('amount_expected')
-        if planned is not None and expected is not None and planned != expected:
+
+        candidates = [v for v in (planned, amount_alias, expected) if v is not None]
+        if len(set(candidates)) > 1:
             raise serializers.ValidationError(
                 {
-                    'planned_amount': (
-                        'planned_amount and amount_expected cannot both be set to different values.'
+                    'amount': (
+                        'planned_amount, amount and amount_expected cannot both be set '
+                        'to different values.'
                     )
                 }
             )
-        if planned is not None:
-            attrs['amount_expected'] = planned
+        if candidates:
+            attrs['amount_expected'] = candidates[0]
         if attrs.get('amount_expected') is None:
             raise serializers.ValidationError(
                 {
-                    'planned_amount': 'Provide planned_amount or amount_expected.',
-                    'amount_expected': 'Provide planned_amount or amount_expected.',
+                    'planned_amount': 'Provide planned_amount, amount or amount_expected.',
+                    'amount_expected': 'Provide planned_amount, amount or amount_expected.',
                 }
             )
+        if attrs['amount_expected'] < 0:
+            raise serializers.ValidationError({'amount': 'Amount cannot be negative.'})
+
         lawyer = attrs.get('lawyer')
         if lawyer and case and not _lawyer_in_case_cabinet(lawyer, case):
             raise serializers.ValidationError(

@@ -364,14 +364,14 @@ const TeamMembers: React.FC = () => {
 
           <div className="mt-3 grid grid-cols-2 gap-2">
             <div className="rounded-md border border-slate-200/80 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/40 px-2 py-1.5">
-              <div className="flex items-center gap-1 text-[10px] font-medium text-slate-500">
+              <div className="flex items-center gap-1 text-[10px] font-medium text-slate-500 dark:text-slate-400">
                 <FolderOpen className="h-3 w-3 opacity-70" aria-hidden />
                 {t.team.inProgress}
               </div>
               <p className="mt-0.5 text-base font-bold tabular-nums text-slate-900 dark:text-white">{inProgress}</p>
             </div>
             <div className="rounded-md border border-slate-200/80 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/40 px-2 py-1.5">
-              <div className="flex items-center gap-1 text-[10px] font-medium text-slate-500">
+              <div className="flex items-center gap-1 text-[10px] font-medium text-slate-500 dark:text-slate-400">
                 <CheckSquare className="h-3 w-3 opacity-70" aria-hidden />
                 {t.team.assigned}
               </div>
@@ -382,7 +382,7 @@ const TeamMembers: React.FC = () => {
           </div>
 
           <div className="mt-2.5">
-            <div className="mb-1 flex items-center justify-between text-[10px] text-slate-500">
+            <div className="mb-1 flex items-center justify-between text-[10px] text-slate-500 dark:text-slate-400">
               <span>{t.team.workload}</span>
               <span>{tf(t.team.casesCount, { count: assignedTotal })}</span>
             </div>
@@ -511,12 +511,12 @@ const TeamMembers: React.FC = () => {
                 >
                   {roleLabel(memberRole)}
                 </span>
-                <span className="text-[11px] tabular-nums text-slate-500">
+                <span className="text-[11px] tabular-nums text-slate-500 dark:text-slate-400">
                   {tf(t.team.activeAssigned, { inProgress, assigned: assignedTotal })}
                 </span>
               </div>
               {member.email ? (
-                <p className="mt-1 text-[11px] text-slate-500 truncate">{member.email}</p>
+                <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400 truncate">{member.email}</p>
               ) : null}
             </div>
           </div>
@@ -544,7 +544,7 @@ const TeamMembers: React.FC = () => {
             <Button
               variant="ghost"
               size="sm"
-              className="h-8 text-[12px] text-amber-700"
+              className="h-8 text-[12px] text-amber-700 dark:text-amber-400"
               onClick={() => setResendTarget(member)}
             >
               <Send className="h-3.5 w-3.5" />
@@ -569,8 +569,8 @@ const TeamMembers: React.FC = () => {
         tabIndex={0}
         className={cn(
           'cursor-pointer border-b border-slate-100 dark:border-slate-800/60 transition-colors duration-100',
-          'odd:bg-white even:bg-slate-50/40 dark:odd:bg-slate-950 dark:even:bg-slate-900/20',
-          'hover:bg-slate-100/80 dark:hover:bg-slate-900/50',
+          'odd:bg-white dark:bg-slate-950 even:bg-slate-50/40 dark:odd:bg-slate-950 dark:even:bg-slate-900/20',
+          'hover:bg-slate-100 dark:hover:bg-slate-800/80',
           'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary/40',
           selected && 'bg-primary/[0.06] dark:bg-primary/10'
         )}
@@ -844,7 +844,7 @@ const TeamMembers: React.FC = () => {
               )}
             >
               <div className="min-w-0">
-                <p className="text-[10px] font-medium uppercase tracking-[0.06em] text-slate-500 leading-none">
+                <p className="text-[10px] font-medium uppercase tracking-[0.06em] text-slate-500 dark:text-slate-400 leading-none">
                   {item.label}
                 </p>
                 <p className="mt-0.5 text-base font-bold tabular-nums text-slate-900 dark:text-white leading-none ws-stat-value">
@@ -961,8 +961,8 @@ const TeamMembers: React.FC = () => {
                   className={cn(
                     'inline-flex items-center rounded-md px-2.5 py-1.5 text-[11px] font-semibold',
                     viewMode !== 'workload'
-                      ? 'bg-white shadow-sm ring-1 ring-slate-200/80'
-                      : 'text-slate-600'
+                      ? 'bg-white dark:bg-slate-950 shadow-sm ring-1 ring-slate-200/80'
+                      : 'text-slate-600 dark:text-slate-400'
                   )}
                   aria-pressed={viewMode !== 'workload'}
                 >
@@ -974,8 +974,8 @@ const TeamMembers: React.FC = () => {
                   className={cn(
                     'inline-flex items-center rounded-md px-2.5 py-1.5 text-[11px] font-semibold',
                     viewMode === 'workload'
-                      ? 'bg-white shadow-sm ring-1 ring-slate-200/80'
-                      : 'text-slate-600'
+                      ? 'bg-white dark:bg-slate-950 shadow-sm ring-1 ring-slate-200/80'
+                      : 'text-slate-600 dark:text-slate-400'
                   )}
                   aria-pressed={viewMode === 'workload'}
                 >
@@ -1019,7 +1019,7 @@ const TeamMembers: React.FC = () => {
                 {t.team.addMember}
               </Button>
             </div>
-            <p className="mt-1.5 text-[11px] text-slate-500 tabular-nums">
+            <p className="mt-1.5 text-[11px] text-slate-500 dark:text-slate-400 tabular-nums">
               {loading ? t.team.loading : tf(t.team.countSummary, { shown: displayedMembers.length, total: teamMembers.length })}
             </p>
           </div>
@@ -1042,7 +1042,7 @@ const TeamMembers: React.FC = () => {
                 <Users className="h-6 w-6 text-slate-400" aria-hidden />
               </div>
               <p className="text-sm font-semibold text-slate-900 dark:text-white">{t.team.empty.title}</p>
-              <p className="mt-1 max-w-sm text-[12px] text-slate-500">
+              <p className="mt-1 max-w-sm text-[12px] text-slate-500 dark:text-slate-400">
                 {hasActiveFilters
                   ? t.team.empty.filteredHint
                   : t.team.empty.emptyHint}
@@ -1096,7 +1096,7 @@ const TeamMembers: React.FC = () => {
                             <th
                               key={h}
                               className={cn(
-                                'px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-500',
+                                'px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400',
                                 i >= 3 && i <= 5 ? 'text-right' : i === 7 ? 'text-right' : 'text-left'
                               )}
                             >

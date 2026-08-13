@@ -78,16 +78,16 @@ const AddClientDialog = ({ open, onOpenChange }: AddClientDialogProps) => {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
-        <DialogHeader className="space-y-3 pb-6 border-b border-gray-100">
+        <DialogHeader className="space-y-3 pb-6 border-b border-slate-200/90 dark:border-slate-800">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-jure-600 rounded-lg">
               <Users className="w-5 h-5 text-white" />
             </div>
             <div>
-              <DialogTitle className="text-xl font-semibold text-gray-900">
+              <DialogTitle className="text-xl font-semibold text-slate-900 dark:text-white">
                 {m.createTitle}
               </DialogTitle>
-              <DialogDescription className="text-gray-600 mt-1">
+              <DialogDescription className="text-slate-600 dark:text-slate-400 mt-1">
                 {m.createDescription}
               </DialogDescription>
             </div>
@@ -96,7 +96,7 @@ const AddClientDialog = ({ open, onOpenChange }: AddClientDialogProps) => {
         
         <form onSubmit={handleSubmit} className="space-y-6 pt-4">
           <div className="space-y-4">
-            <div className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-3">
+            <div className="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">
               <User className="w-4 h-4 text-jure-600" />
               {m.personalInfo}
             </div>
@@ -131,7 +131,7 @@ const AddClientDialog = ({ open, onOpenChange }: AddClientDialogProps) => {
           </div>
 
           <div className="space-y-4">
-            <div className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-3">
+            <div className="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">
               <Mail className="w-4 h-4 text-jure-600" />
               {m.contactInfo}
             </div>
@@ -141,7 +141,7 @@ const AddClientDialog = ({ open, onOpenChange }: AddClientDialogProps) => {
                   {m.email} <span className="text-red-500">*</span>
                 </Label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-500" />
                   <Input
                     id="email"
                     type="email"
@@ -156,7 +156,7 @@ const AddClientDialog = ({ open, onOpenChange }: AddClientDialogProps) => {
               <div className="space-y-2">
                 <Label htmlFor="phone" className="text-sm font-medium">{m.phone}</Label>
                 <div className="relative">
-                  <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-500" />
                   <Input
                     id="phone"
                     value={formData.phone}
@@ -170,7 +170,7 @@ const AddClientDialog = ({ open, onOpenChange }: AddClientDialogProps) => {
           </div>
 
           <div className="space-y-4">
-            <div className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-3">
+            <div className="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">
               <Building2 className="w-4 h-4 text-jure-600" />
               {m.otherInfo}
             </div>
@@ -207,7 +207,7 @@ const AddClientDialog = ({ open, onOpenChange }: AddClientDialogProps) => {
           </div>
 
           <div className="space-y-4">
-            <div className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-3">
+            <div className="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">
               <MapPin className="w-4 h-4 text-jure-600" />
               {m.additionalInfo}
             </div>
@@ -215,7 +215,7 @@ const AddClientDialog = ({ open, onOpenChange }: AddClientDialogProps) => {
               <div className="space-y-2">
                 <Label htmlFor="address" className="text-sm font-medium">{m.address}</Label>
                 <div className="relative">
-                  <MapPin className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
+                  <MapPin className="absolute left-3 top-3 w-4 h-4 text-slate-400 dark:text-slate-500" />
                   <Textarea
                     id="address"
                     value={formData.address}
@@ -229,7 +229,7 @@ const AddClientDialog = ({ open, onOpenChange }: AddClientDialogProps) => {
               <div className="space-y-2">
                 <Label htmlFor="notes" className="text-sm font-medium">{m.notes}</Label>
                 <div className="relative">
-                  <FileText className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
+                  <FileText className="absolute left-3 top-3 w-4 h-4 text-slate-400 dark:text-slate-500" />
                   <Textarea
                     id="notes"
                     value={formData.notes}
@@ -243,12 +243,12 @@ const AddClientDialog = ({ open, onOpenChange }: AddClientDialogProps) => {
             </div>
           </div>
 
-          <DialogFooter className="pt-6 border-t border-gray-100 flex gap-3">
+          <DialogFooter className="pt-6 border-t border-slate-200/90 dark:border-slate-800 flex gap-3">
             <Button 
               type="button" 
               variant="outline" 
               onClick={() => onOpenChange(false)}
-              className="transition-all duration-200 hover:bg-gray-50"
+              className="transition-all duration-200 hover:bg-slate-50 dark:hover:bg-slate-900/50"
               disabled={isSubmitting}
             >
               {t.common.cancel}

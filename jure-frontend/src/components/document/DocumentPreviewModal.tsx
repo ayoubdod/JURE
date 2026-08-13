@@ -64,7 +64,7 @@ const DocumentPreviewModal = forwardRef<DocumentPreviewModalRef>((_, ref) => {
       if (pdfError) {
         return (
           <div className="flex flex-col items-center justify-center h-[70vh] space-y-4 p-8">
-            <p className="text-center text-gray-500 mb-4">
+            <p className="text-center text-slate-500 dark:text-slate-400 mb-4">
               {t.document.pdfErrorMessage}
             </p>
             <div className="flex gap-3">
@@ -94,7 +94,7 @@ const DocumentPreviewModal = forwardRef<DocumentPreviewModalRef>((_, ref) => {
       }
 
       return (
-        <div className="w-full h-[70vh] border rounded-lg overflow-hidden bg-gray-50">
+        <div className="w-full h-[70vh] border rounded-lg overflow-hidden bg-slate-50 dark:bg-slate-900/50">
           {/* Try iframe first */}
           <iframe
             key={fileUrl}
@@ -116,7 +116,7 @@ const DocumentPreviewModal = forwardRef<DocumentPreviewModalRef>((_, ref) => {
               className="w-full h-full"
             />
           </object>
-          <div className="mt-2 flex justify-end gap-2 p-2 bg-white border-t">
+          <div className="mt-2 flex justify-end gap-2 p-2 bg-white dark:bg-slate-950 border-t">
             <Button
               variant="outline"
               size="sm"
@@ -147,7 +147,7 @@ const DocumentPreviewModal = forwardRef<DocumentPreviewModalRef>((_, ref) => {
 
     return (
       <div className="flex flex-col items-center justify-center h-[70vh] space-y-4 p-8">
-        <p className="text-center text-gray-500 mb-4">
+        <p className="text-center text-slate-500 dark:text-slate-400 mb-4">
           {t.document.noPreviewTitle}
         </p>
         <div className="flex gap-3">

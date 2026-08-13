@@ -76,46 +76,27 @@ const FinancePage: React.FC = () => {
 
   const stats = dashboard?.stats ?? EMPTY_STATS;
 
-  /** KPI strip: prefer API stats; else sum monthly series; else lifetime CA from TVA status for CA Total. */
+  /** KPI strip: display backend stats only — never invent CA from TVA/monthly fallbacks. */
   const stripKpis = useMemo(() => {
     const s = dashboard?.stats ?? EMPTY_STATS;
-    const monthly = dashboard?.monthly ?? [];
-    const sumBilled = monthly.reduce((acc, m) => acc + (m.billed ?? 0), 0);
-    const sumColl = monthly.reduce((acc, m) => acc + (m.collected ?? 0), 0);
-
     const apiCa = typeof s.total_ca_ttc === 'number' && !Number.isNaN(s.total_ca_ttc) ? s.total_ca_ttc : 0;
-    const apiColl = typeof s.total_collected === 'number' && !Number.isNaN(s.total_collected) ? s.total_collected : 0;
-
-    let totalCaTtc = apiCa > 0 ? apiCa : sumBilled;
-    let caHint: string | null = null;
-    if (apiCa <= 0 && sumBilled > 0) {
-      caHint = t.finance.hints.monthlyBilled;
-    }
-    if (totalCaTtc <= 0 && tvaStatus && tvaStatus.cumulative_ca_mad > 0) {
-      totalCaTtc = tvaStatus.cumulative_ca_mad;
-      caHint = t.finance.hints.cumulativeCa;
-    }
-
-    let totalCollected = apiColl > 0 ? apiColl : sumColl;
-    let collectedHint: string | null = null;
-    if (apiColl <= 0 && sumColl > 0) {
-      collectedHint = t.finance.hints.monthlyCollected;
-    }
+    const apiColl =
+      typeof s.total_collected === 'number' && !Number.isNaN(s.total_collected) ? s.total_collected : 0;
 
     return {
-      totalCaTtc,
-      totalCollected,
-      tvaUnpaid: s.tva_unpaid,
-      caHint,
-      collectedHint,
+      totalCaTtc: apiCa,
+      totalCollected: apiColl,
+      tvaUnpaid: s.tva_unpaid ?? 0,
+      caHint: null as string | null,
+      collectedHint: null as string | null,
     };
-  }, [dashboard, tvaStatus, t]);
+  }, [dashboard]);
 
-  /** Prefer explicit MAD from API; fallback = count × 100 only if MAD not provided. */
+  /** Prefer explicit MAD from API; never invent count × 100 client-side. */
   const taxAdvancesMad =
     typeof stats.tax_advances_due_mad === 'number' && !Number.isNaN(stats.tax_advances_due_mad)
       ? stats.tax_advances_due_mad
-      : (stats.tax_advances_unpaid_count ?? 0) * 100;
+      : 0;
 
   const showEmptyDashboard = useMemo(() => {
     if (!dashboard || !dashReady) return false;

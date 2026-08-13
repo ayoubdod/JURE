@@ -16,6 +16,7 @@ export interface HomeContent {
     subtitle: string;
     ctaPrimary: string;
     ctaSecondary: string;
+    ctaPricing: string;
     trustChips: string[];
   };
   problem: {
@@ -81,6 +82,7 @@ const en: HomeContent = {
       "JURE is a LegalTech platform for law firms and legal teams — combining AI-powered legal research, matter management, document workflows and secure collaboration in one workspace. Built for modern practice across Morocco, MENA and Africa.",
     ctaPrimary: "See JURE in action",
     ctaSecondary: "Explore the platform",
+    ctaPricing: "View pricing",
     trustChips: [
       "AI-assisted, human-in-the-loop",
       "Secure by design",
@@ -233,6 +235,7 @@ const fr: HomeContent = {
       "JURE est une plateforme LegalTech pour cabinets d'avocats et équipes juridiques — recherche juridique assistée par IA, gestion de dossiers, flux documentaires et collaboration sécurisée dans un seul espace. Conçue pour la pratique moderne au Maroc, au Moyen-Orient et en Afrique.",
     ctaPrimary: "Voir JURE en action",
     ctaSecondary: "Explorer la plateforme",
+    ctaPricing: "Voir les tarifs",
     trustChips: [
       "IA assistée, validation humaine",
       "Sécurisé par conception",
@@ -385,6 +388,7 @@ const ar: HomeContent = {
       "JURE منصة LegalTech لمكاتب المحاماة والفرق القانونية — تجمع البحث القانوني المدعوم بالذكاء الاصطناعي وإدارة الملفات وسير عمل المستندات والتعاون الآمن في مساحة واحدة. صُممت للممارسة الحديثة في المغرب ومنطقة الشرق الأوسط وشمال أفريقيا وأفريقيا.",
     ctaPrimary: "شاهد JURE عمليًا",
     ctaSecondary: "استكشف المنصة",
+    ctaPricing: "عرض الأسعار",
     trustChips: [
       "ذكاء اصطناعي بمراجعة بشرية",
       "آمن بالتصميم",

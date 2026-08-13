@@ -86,7 +86,7 @@ const ResetPassword = () => {
   };
 
   const shell = (body: React.ReactNode) => (
-    <div className={clsx('min-h-screen flex items-center justify-center p-4', isDarkMode ? 'bg-[#0f1117]' : 'bg-white')}>
+    <div className={clsx('min-h-screen flex items-center justify-center p-4', isDarkMode ? 'bg-[#0f1117]' : 'bg-white dark:bg-slate-950')}>
       <div className="absolute top-4 end-4 flex items-center gap-2">
         <LangSwitcher />
         <Button
@@ -95,7 +95,7 @@ const ResetPassword = () => {
           onClick={() => setIsDarkMode(!isDarkMode)}
           aria-label={t.common.toggleTheme}
         >
-          {isDarkMode ? <Sun className="h-5 w-5 text-white" /> : <Moon className="h-5 w-5 text-gray-800" />}
+          {isDarkMode ? <Sun className="h-5 w-5 text-white" /> : <Moon className="h-5 w-5 text-slate-800 dark:text-slate-100" />}
         </Button>
       </div>
       {body}
@@ -107,16 +107,16 @@ const ResetPassword = () => {
       <div className="w-full max-w-md text-center">
         <div className="mb-6">
           <img
-            src="/images/Jure logo.png"
+            src="/images/jure-logo.png"
             alt="Jure logo"
             className="w-22 h-20 mx-auto object-contain"
           />
         </div>
 
-        <Card className={clsx('rounded-xl shadow-xl', isDarkMode ? 'bg-[#181b23] text-white' : 'bg-white text-black')}>
+        <Card className={clsx('rounded-xl shadow-xl', isDarkMode ? 'bg-[#181b23] text-white' : 'bg-white dark:bg-slate-950 text-black')}>
           <CardHeader className="text-center space-y-2">
             <CardTitle className="text-2xl">{t.auth.resetInvalidTokenTitle}</CardTitle>
-            <CardDescription className={clsx('text-sm', isDarkMode ? 'text-gray-400' : 'text-gray-600')}>
+            <CardDescription className={clsx('text-sm', isDarkMode ? 'text-slate-400 dark:text-slate-500' : 'text-slate-600 dark:text-slate-400')}>
               {t.auth.resetInvalidTokenDescription}
             </CardDescription>
           </CardHeader>
@@ -135,7 +135,7 @@ const ResetPassword = () => {
             </Link>
 
             <div className="text-center pt-4">
-              <Link to="/" className={clsx('inline-flex items-center gap-1 text-sm hover:underline', isDarkMode ? 'text-gray-400' : 'text-gray-600')}>
+              <Link to="/" className={clsx('inline-flex items-center gap-1 text-sm hover:underline', isDarkMode ? 'text-slate-400 dark:text-slate-500' : 'text-slate-600 dark:text-slate-400')}>
                 <Home className="w-4 h-4" />
                 {t.auth.backToHome}
               </Link>
@@ -143,7 +143,7 @@ const ResetPassword = () => {
           </CardContent>
         </Card>
 
-        <div className={clsx('text-center mt-6 text-xs', isDarkMode ? 'text-gray-500' : 'text-gray-400')}>
+        <div className={clsx('text-center mt-6 text-xs', isDarkMode ? 'text-slate-500 dark:text-slate-400' : 'text-slate-400 dark:text-slate-500')}>
           © {new Date().getFullYear()} Jure. {t.auth.footerRights}
         </div>
       </div>
@@ -154,16 +154,16 @@ const ResetPassword = () => {
     <div className="w-full max-w-md">
       <div className="text-center mb-6">
         <img
-          src="/images/Jure logo.png"
+          src="/images/jure-logo.png"
           alt="Jure logo"
           className="w-22 h-20 mx-auto object-contain"
         />
       </div>
 
-      <Card className={clsx('rounded-xl shadow-xl', isDarkMode ? 'bg-[#181b23] text-white' : 'bg-white text-black')}>
+      <Card className={clsx('rounded-xl shadow-xl', isDarkMode ? 'bg-[#181b23] text-white' : 'bg-white dark:bg-slate-950 text-black')}>
         <CardHeader className="text-center space-y-2">
           <CardTitle className="text-2xl">{t.auth.resetTitle}</CardTitle>
-          <CardDescription className={clsx('text-sm', isDarkMode ? 'text-gray-400' : 'text-gray-600')}>
+          <CardDescription className={clsx('text-sm', isDarkMode ? 'text-slate-400 dark:text-slate-500' : 'text-slate-600 dark:text-slate-400')}>
             {t.auth.resetSubtitle}
           </CardDescription>
         </CardHeader>
@@ -173,7 +173,7 @@ const ResetPassword = () => {
             <div>
               <Label>{t.auth.resetNewPasswordLabel}</Label>
               <div className="relative">
-                <Lock className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <Lock className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-500" />
                 <Input
                   type={showPassword1 ? 'text' : 'password'}
                   placeholder={t.auth.resetNewPasswordLabel}
@@ -194,9 +194,9 @@ const ResetPassword = () => {
                   onClick={() => setShowPassword1(!showPassword1)}
                 >
                   {showPassword1 ? (
-                    <EyeOff className="h-4 w-4 text-gray-400" />
+                    <EyeOff className="h-4 w-4 text-slate-400 dark:text-slate-500" />
                   ) : (
-                    <Eye className="h-4 w-4 text-gray-400" />
+                    <Eye className="h-4 w-4 text-slate-400 dark:text-slate-500" />
                   )}
                 </Button>
               </div>
@@ -208,7 +208,7 @@ const ResetPassword = () => {
             <div>
               <Label>{t.auth.resetConfirmPasswordLabel}</Label>
               <div className="relative">
-                <Lock className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <Lock className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-500" />
                 <Input
                   type={showPassword2 ? 'text' : 'password'}
                   placeholder={t.auth.resetConfirmPasswordLabel}
@@ -227,9 +227,9 @@ const ResetPassword = () => {
                   onClick={() => setShowPassword2(!showPassword2)}
                 >
                   {showPassword2 ? (
-                    <EyeOff className="h-4 w-4 text-gray-400" />
+                    <EyeOff className="h-4 w-4 text-slate-400 dark:text-slate-500" />
                   ) : (
-                    <Eye className="h-4 w-4 text-gray-400" />
+                    <Eye className="h-4 w-4 text-slate-400 dark:text-slate-500" />
                   )}
                 </Button>
               </div>
@@ -259,7 +259,7 @@ const ResetPassword = () => {
           </div>
 
           <div className="text-center pt-4">
-            <Link to="/" className={clsx('inline-flex items-center gap-1 text-sm hover:underline', isDarkMode ? 'text-gray-400' : 'text-gray-600')}>
+            <Link to="/" className={clsx('inline-flex items-center gap-1 text-sm hover:underline', isDarkMode ? 'text-slate-400 dark:text-slate-500' : 'text-slate-600 dark:text-slate-400')}>
               <Home className="w-4 h-4" />
               {t.auth.backToHome}
             </Link>
@@ -267,7 +267,7 @@ const ResetPassword = () => {
         </CardContent>
       </Card>
 
-      <div className={clsx('text-center mt-6 text-xs', isDarkMode ? 'text-gray-500' : 'text-gray-400')}>
+      <div className={clsx('text-center mt-6 text-xs', isDarkMode ? 'text-slate-500 dark:text-slate-400' : 'text-slate-400 dark:text-slate-500')}>
         © {new Date().getFullYear()} Jure. {t.auth.footerRights}
       </div>
     </div>
