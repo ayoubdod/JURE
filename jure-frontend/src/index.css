@@ -42,7 +42,7 @@
     --input: 214.3 31.8% 91.4%;
     --ring: var(--jure-primary);
 
-    --radius: 0.5rem;
+    --radius: 0.4375rem;
 
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
@@ -119,7 +119,7 @@
   }
 
   body {
-    @apply bg-background text-foreground font-sans antialiased;
+    @apply bg-background text-foreground font-sans antialiased text-base;
   }
 }
 
@@ -219,7 +219,10 @@
   animation: fade-in 0.6s ease-out;
 }
 :root {
-  --header-height: 4rem; /* 64px */
+  /* Compact chrome; layout components should prefer this over hard-coded heights */
+  --header-height: 3.25rem; /* 52px */
+  --sidebar-rail-width: 4rem; /* 64px — keep in sync with Sidebar SIDEBAR_RAIL_WIDTH */
+  --sidebar-expanded-width: 12.5rem; /* 200px */
 }
 
 /* Jure-specific utility classes */

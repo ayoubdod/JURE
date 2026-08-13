@@ -2,7 +2,7 @@ import React, { useRef, useState, useEffect } from 'react';
 import {
   ChevronDown, User, Settings, LogOut,
   Mail, Calendar, Search, Briefcase, FileText, CheckSquare, X, Loader2,
-  Sun, Moon, Coins, Menu, MoreHorizontal,
+  Sun, Moon, Menu, MoreHorizontal,
 } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -31,8 +31,6 @@ import GroupChatIcon from '@/components/chat/GroupChatIcon';
 import { apiListConversations } from '@/services/conversations/api';
 import { useCabinetMemberDirectory } from '@/hooks/useCabinetMemberDirectory';
 import { devError } from '@/utils/devLog';
-import { cn } from '@/lib/utils';
-import { useFinanceAccess } from '@/hooks/useFinanceAccess';
 import { NotificationBell } from '@/components/notifications/NotificationBell';
 import { useMobileNav } from '@/context/MobileNavContext';
 
@@ -171,7 +169,6 @@ const Header = () => {
   // ];
 
   const unreadMessagesCount = recentMessages.filter(m => m.unread).length;
-  const { authorized: canAccessFinance } = useFinanceAccess();
 
   const ROUTE_LABELS: Record<string, string> = {
     '': t.sidebar.dashboard,
@@ -181,6 +178,9 @@ const Header = () => {
     'team-members': t.sidebar.team,
     profile: t.sidebar.myProfile,
     cases: t.sidebar.cases,
+    consultation: t.sidebar.consultation,
+    litigation: t.sidebar.litigation,
+    administrative: t.sidebar.administrative,
     clients: t.sidebar.clients,
     'client-profile': t.sidebar.clients,
     'client-update': t.sidebar.clients,
@@ -191,8 +191,11 @@ const Header = () => {
     library: t.sidebar.library,
     tasks: t.sidebar.tasks,
     calendar: t.sidebar.calendar,
+    appointment: t.sidebar.appointment,
+    account: t.sidebar.account,
+    support: t.sidebar.support,
     settings: t.sidebar.settings,
-    conversations: t.sidebar.conversations,
+    conversations: t.sidebar.chat,
     me: t.sidebar.myProfile,
     documents: t.sidebar.library,
     reports: t.sidebar.dashboard,
@@ -379,7 +382,7 @@ const Header = () => {
     } else if (type === 'client') {
       navigate(`/dashboard/clients`);
     } else if (type === 'task') {
-      navigate(`/dashboard/tasks`);
+      navigate(`/dashboard/calendar`);
     }
   };
 
@@ -391,37 +394,37 @@ const Header = () => {
   };
 
   return (
-    <header className="sticky top-0 z-40 w-full bg-background/95 backdrop-blur-sm border-b border-border px-3 py-2 sm:px-6 sm:py-3 lg:px-8 pt-[max(0.5rem,env(safe-area-inset-top))] transition-all duration-300">
-      <div className="flex items-center justify-between gap-2 min-h-12 sm:h-16">
+    <header className="sticky top-0 z-40 w-full bg-background/95 backdrop-blur-sm border-b border-border px-3 py-1.5 sm:px-4 sm:py-2 lg:px-6 pt-[max(0.375rem,env(safe-area-inset-top))] transition-all duration-300">
+      <div className="flex items-center justify-between gap-2 min-h-10 sm:h-12">
         {/* Left side - Menu, Title and Breadcrumbs */}
-        <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1">
+        <div className="flex items-center gap-1.5 sm:gap-3 min-w-0 flex-1">
           <Button
             type="button"
             variant="ghost"
             size="icon"
-            className="lg:hidden shrink-0 h-11 w-11 text-muted-foreground hover:text-foreground"
+            className="lg:hidden shrink-0 h-10 w-10 text-muted-foreground hover:text-foreground"
             onClick={toggleMobileNav}
             aria-label="Open navigation menu"
           >
-            <Menu size={22} />
+            <Menu size={20} />
           </Button>
           <div className="min-w-0">
-            <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+            <div className="flex items-center gap-1.5 sm:gap-2.5 min-w-0">
               {organizationName && user?.logo && (
                 <img 
                   key={user.logo_version || user.logo}
                   src={user.logo_version ? `${user.logo}${user.logo.includes('?') ? '&' : '?'}t=${user.logo_version}` : user.logo}
                   alt={`${organizationName} logo`}
-                  className="h-7 w-7 sm:h-8 sm:w-8 object-contain rounded shrink-0"
+                  className="h-6 w-6 sm:h-7 sm:w-7 object-contain rounded shrink-0"
                 />
               )}
-              <h1 className="text-base sm:text-xl font-bold text-foreground tracking-tight truncate">{getPageTitle()}</h1>
+              <h1 className="text-sm sm:text-lg font-bold text-foreground tracking-tight truncate">{getPageTitle()}</h1>
             </div>
             {breadcrumbs.length > 0 && (
-              <nav className="hidden sm:flex items-center text-sm text-muted-foreground mt-1 overflow-hidden">
+              <nav className="hidden sm:flex items-center text-xs text-muted-foreground mt-0.5 overflow-hidden">
                 {breadcrumbs.map((crumb, index) => (
                   <React.Fragment key={index}>
-                    {index > 0 && <span className="mx-2 text-muted-foreground/50">/</span>}
+                    {index > 0 && <span className="mx-1.5 text-muted-foreground/50">/</span>}
                     <button
                       onClick={() => navigate(crumb.path)}
                       className={`hover:text-primary transition-colors truncate ${index === breadcrumbs.length - 1 ? "font-medium text-foreground" : ""}`}
@@ -437,67 +440,51 @@ const Header = () => {
 
         {/* Right side - Actions */}
         <div className="flex items-center gap-0.5 sm:gap-2 shrink-0">
-          {/* Theme + Finance: desktop / tablet only; mobile via More */}
+          {/* Theme: desktop / tablet only; mobile via More */}
           <Button
             variant="ghost"
             size="icon"
-            className="hidden md:inline-flex text-muted-foreground hover:text-foreground h-10 w-10"
+            className="hidden md:inline-flex text-muted-foreground hover:text-foreground h-8 w-8"
             onClick={() => setTheme(themeChoice === 'dark' ? 'light' : 'dark')}
             aria-label="Toggle theme"
           >
-            {themeChoice === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+            {themeChoice === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
           </Button>
-          {canAccessFinance && (
-            <Button
-              variant="ghost"
-              size="icon"
-              className={cn(
-                'hidden md:inline-flex text-muted-foreground hover:text-foreground h-10 w-10',
-                location.pathname.startsWith('/dashboard/finance') &&
-                  'text-jure-600 dark:text-jure-400 bg-jure-50 dark:bg-jure-950/40'
-              )}
-              onClick={() => navigate('/dashboard/finance')}
-              aria-label={t.sidebar.finance}
-              title={t.sidebar.finance}
-            >
-              <Coins size={18} />
-            </Button>
-          )}
           {/* Search - Icon only that expands */}
           <Popover open={searchExpanded} onOpenChange={setSearchExpanded}>
             <PopoverTrigger asChild>
-              <div className={`flex items-center transition-all duration-300 ${searchExpanded ? 'w-[min(100vw-8rem,16rem)] sm:w-64' : 'w-10'}`}>
+              <div className={`flex items-center transition-all duration-300 ${searchExpanded ? 'w-[min(100vw-8rem,14rem)] sm:w-56' : 'w-8'}`}>
                 {searchExpanded ? (
                   <div className="relative w-full">
-                    <Search size={16} className="absolute start-3 top-1/2 -translate-y-1/2 text-muted-foreground z-10" />
+                    <Search size={14} className="absolute start-2.5 top-1/2 -translate-y-1/2 text-muted-foreground z-10" />
                     <Input
                       value={searchValue}
                       onChange={(e) => setSearchValue(e.target.value)}
                       placeholder={t.header.searchPlaceholder}
-                      className="ps-10 pe-10 py-2 text-sm rounded-lg focus-visible:ring-primary h-10"
+                      className="ps-8 pe-8 py-1.5 text-sm rounded-lg focus-visible:ring-primary h-8"
                       autoFocus
                     />
                     {isSearching && (
-                      <Loader2 size={16} className="absolute end-10 top-1/2 -translate-y-1/2 text-muted-foreground animate-spin" />
+                      <Loader2 size={14} className="absolute end-8 top-1/2 -translate-y-1/2 text-muted-foreground animate-spin" />
                     )}
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="absolute end-1 top-1/2 -translate-y-1/2 h-8 w-8 text-muted-foreground hover:text-foreground"
+                      className="absolute end-0.5 top-1/2 -translate-y-1/2 h-7 w-7 text-muted-foreground hover:text-foreground"
                       onClick={handleSearchToggle}
                     >
-                      <X size={16} />
+                      <X size={14} />
                     </Button>
                   </div>
                 ) : (
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="text-muted-foreground hover:text-foreground h-11 w-11 sm:h-10 sm:w-10"
+                    className="text-muted-foreground hover:text-foreground h-10 w-10 sm:h-8 sm:w-8"
                     onClick={handleSearchToggle}
                     aria-label="Search"
                   >
-                    <Search size={18} />
+                    <Search size={16} />
                   </Button>
                 )}
               </div>
@@ -622,12 +609,12 @@ const Header = () => {
               <Button
                 variant="ghost"
                 size="icon"
-                className="relative hidden xs:inline-flex sm:inline-flex text-muted-foreground hover:text-foreground h-11 w-11 sm:h-10 sm:w-10 max-[379px]:hidden"
+                className="relative hidden xs:inline-flex sm:inline-flex text-muted-foreground hover:text-foreground h-10 w-10 sm:h-8 sm:w-8 max-[379px]:hidden"
                 aria-label="Messages"
               >
-                <Mail size={18} />
+                <Mail size={16} />
                 {unreadMessagesCount > 0 && (
-                  <Badge className="absolute -top-1 -end-1 h-5 w-5 p-0 flex items-center justify-center bg-blue-500 text-white">
+                  <Badge className="absolute -top-1 -end-1 h-4 w-4 p-0 flex items-center justify-center bg-blue-500 text-white text-[0.625rem]">
                     {unreadMessagesCount}
                   </Badge>
                 )}
@@ -740,58 +727,49 @@ const Header = () => {
 
           <NotificationBell />
 
-          {/* Mobile More menu — theme, finance, messages, calendar shortcuts */}
+          {/* Mobile More menu — theme, messages, calendar shortcuts */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
                 variant="ghost"
                 size="icon"
-                className="md:hidden h-11 w-11 text-muted-foreground hover:text-foreground"
+                className="md:hidden h-10 w-10 text-muted-foreground hover:text-foreground"
                 aria-label="More actions"
               >
-                <MoreHorizontal size={20} />
+                <MoreHorizontal size={18} />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
+            <DropdownMenuContent align="end" className="w-52">
               <DropdownMenuItem
                 onClick={() => setTheme(themeChoice === 'dark' ? 'light' : 'dark')}
-                className="min-h-11"
+                className="min-h-10"
               >
-                {themeChoice === 'dark' ? <Sun size={16} className="me-2" /> : <Moon size={16} className="me-2" />}
+                {themeChoice === 'dark' ? <Sun size={15} className="me-2" /> : <Moon size={15} className="me-2" />}
                 {themeChoice === 'dark' ? 'Light mode' : 'Dark mode'}
               </DropdownMenuItem>
-              {canAccessFinance && (
-                <DropdownMenuItem
-                  onClick={() => navigate('/dashboard/finance')}
-                  className="min-h-11"
-                >
-                  <Coins size={16} className="me-2" />
-                  {t.sidebar.finance}
-                </DropdownMenuItem>
-              )}
               <DropdownMenuItem
                 onClick={() => navigate('/dashboard/conversations')}
-                className="min-h-11"
+                className="min-h-10"
               >
-                <Mail size={16} className="me-2" />
+                <Mail size={15} className="me-2" />
                 {t.header.messagesTitle}
                 {unreadMessagesCount > 0 && (
-                  <Badge className="ms-auto h-5 min-w-5 px-1.5 bg-blue-500 text-white">
+                  <Badge className="ms-auto h-4 min-w-4 px-1 bg-blue-500 text-white">
                     {unreadMessagesCount}
                   </Badge>
                 )}
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={() => navigate('/dashboard/calendar')}
-                className="min-h-11"
+                className="min-h-10"
               >
-                <Calendar size={16} className="me-2" />
+                <Calendar size={15} className="me-2" />
                 {t.sidebar.calendar}
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 onClick={() => navigate('/dashboard/settings')}
-                className="min-h-11"
+                className="min-h-10"
               >
                 <Settings size={16} className="me-2" />
                 {t.sidebar.settings}
@@ -802,11 +780,11 @@ const Header = () => {
           {/* User Profile */}
           <Popover open={profileOpen} onOpenChange={setProfileOpen}>
             <PopoverTrigger asChild>
-              <Button variant="ghost" className="h-11 w-11 sm:h-10 sm:w-auto sm:px-2 rounded-full hover:bg-muted p-0 sm:p-2">
-                <div className="flex items-center gap-x-2">
-                  <Avatar className="h-8 w-8">
+              <Button variant="ghost" className="h-10 w-10 sm:h-8 sm:w-auto sm:px-1.5 rounded-full hover:bg-muted p-0 sm:p-1.5">
+                <div className="flex items-center gap-x-1.5">
+                  <Avatar className="h-7 w-7">
                     <AvatarImage src={user?.image} className='object-cover' />
-                    <AvatarFallback className="bg-gradient-to-br from-primary to-primary/80 text-white font-medium">
+                    <AvatarFallback className="bg-gradient-to-br from-primary to-primary/80 text-white font-medium text-xs">
                       {user?.first_name?.charAt(0)}
                       {user?.last_name?.charAt(0)}
                     </AvatarFallback>
@@ -814,16 +792,16 @@ const Header = () => {
                   <span className="hidden lg:inline-flex text-sm font-medium text-foreground">
                     {user?.first_name} {user?.last_name}
                   </span>
-                  <ChevronDown size={16} className="hidden lg:block text-muted-foreground" />
+                  <ChevronDown size={14} className="hidden lg:block text-muted-foreground" />
                 </div>
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-64 p-2 rounded-xl shadow-lg border" align="end">
-              <div className="p-4 border-b">
-                <div className="flex items-center gap-x-3">
-                  <Avatar className="h-10 w-10">
+            <PopoverContent className="w-56 p-1.5 rounded-xl shadow-lg border" align="end">
+              <div className="p-3 border-b">
+                <div className="flex items-center gap-x-2.5">
+                  <Avatar className="h-8 w-8">
                     <AvatarImage src={user?.image} className='object-cover' />
-                    <AvatarFallback className="bg-gradient-to-br from-primary to-primary/80 text-white font-medium">
+                    <AvatarFallback className="bg-gradient-to-br from-primary to-primary/80 text-white font-medium text-xs">
                       {user?.first_name?.charAt(0)}
                       {user?.last_name?.charAt(0)}
                     </AvatarFallback>
@@ -836,49 +814,49 @@ const Header = () => {
                   </div>
                 </div>
               </div>
-              <div className="py-1">
+              <div className="py-0.5">
                 <Button
                   variant="ghost"
-                  className="w-full justify-start px-4 py-2 text-sm font-medium min-h-11"
+                  className="w-full justify-start px-3 py-1.5 text-sm font-medium min-h-9"
                   onClick={() => navigateTo('/dashboard/profile')}
                 >
-                  <User size={16} className="me-3 text-muted-foreground" />
+                  <User size={15} className="me-2.5 text-muted-foreground" />
                   {t.sidebar.myProfile}
                 </Button>
                 <Button
                   variant="ghost"
-                  className="w-full justify-start px-4 py-2 text-sm font-medium min-h-11"
+                  className="w-full justify-start px-3 py-1.5 text-sm font-medium min-h-9"
                   onClick={() => navigateTo('/dashboard/conversations')}
                 >
-                  <Mail size={16} className="me-3 text-muted-foreground" />
+                  <Mail size={15} className="me-2.5 text-muted-foreground" />
                   {t.header.messagesTitle}
                 </Button>
                 <Button
                   variant="ghost"
-                  className="w-full justify-start px-4 py-2 text-sm font-medium min-h-11"
+                  className="w-full justify-start px-3 py-1.5 text-sm font-medium min-h-9"
                   onClick={() => navigateTo('/dashboard/calendar')}
                 >
-                  <Calendar size={16} className="me-3 text-muted-foreground" />
+                  <Calendar size={15} className="me-2.5 text-muted-foreground" />
                   {t.sidebar.calendar}
                 </Button>
                 <Button
                   variant="ghost"
-                  className="w-full justify-start px-4 py-2 text-sm font-medium min-h-11"
+                  className="w-full justify-start px-3 py-1.5 text-sm font-medium min-h-9"
                   onClick={() => navigateTo('/dashboard/settings')}
                 >
-                  <Settings size={16} className="me-3 text-muted-foreground" />
+                  <Settings size={15} className="me-2.5 text-muted-foreground" />
                   {t.sidebar.settings}
                 </Button>
               </div>
-              <div className="p-2 border-t">
+              <div className="p-1.5 border-t">
                 <Button
                   variant="ghost"
-                  className="w-full justify-start px-4 py-2 text-sm font-medium text-destructive hover:bg-destructive/10 min-h-11"
+                  className="w-full justify-start px-3 py-1.5 text-sm font-medium text-destructive hover:bg-destructive/10 min-h-9"
                   onClick={() => {
                     logoutModalRef.current?.show();
                   }}
                 >
-                  <LogOut size={16} className="me-3 text-destructive" />
+                  <LogOut size={15} className="me-2.5 text-destructive" />
                   {t.sidebar.logout}
                 </Button>
               </div>

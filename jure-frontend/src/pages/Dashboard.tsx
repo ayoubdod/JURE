@@ -73,28 +73,28 @@ const ANNOUNCEMENT_STYLES: Record<
   INFO: {
     card: ANNOUNCEMENT_GLASS,
     iconWrap:
-      'w-10 h-10 rounded-xl bg-white/20 border border-white/30 backdrop-blur-md flex items-center justify-center shrink-0 shadow-sm',
+      'w-8 h-8 rounded-lg bg-white/20 border border-white/30 backdrop-blur-md flex items-center justify-center shrink-0 shadow-sm',
     title: 'text-sm font-semibold text-white drop-shadow-sm',
     body: 'text-sm text-white/85 leading-relaxed mt-1',
   },
   SUCCESS: {
     card: ANNOUNCEMENT_GLASS,
     iconWrap:
-      'w-10 h-10 rounded-xl bg-emerald-400/25 border border-white/30 backdrop-blur-md flex items-center justify-center shrink-0 shadow-sm',
+      'w-8 h-8 rounded-lg bg-emerald-400/25 border border-white/30 backdrop-blur-md flex items-center justify-center shrink-0 shadow-sm',
     title: 'text-sm font-semibold text-white drop-shadow-sm',
     body: 'text-sm text-white/85 leading-relaxed mt-1',
   },
   WARNING: {
     card: ANNOUNCEMENT_GLASS,
     iconWrap:
-      'w-10 h-10 rounded-xl bg-amber-400/25 border border-white/30 backdrop-blur-md flex items-center justify-center shrink-0 shadow-sm',
+      'w-8 h-8 rounded-lg bg-amber-400/25 border border-white/30 backdrop-blur-md flex items-center justify-center shrink-0 shadow-sm',
     title: 'text-sm font-semibold text-white drop-shadow-sm',
     body: 'text-sm text-white/85 leading-relaxed mt-1',
   },
   IMPORTANT: {
     card: ANNOUNCEMENT_GLASS,
     iconWrap:
-      'w-10 h-10 rounded-xl bg-rose-400/30 border border-white/30 backdrop-blur-md flex items-center justify-center shrink-0 shadow-sm',
+      'w-8 h-8 rounded-lg bg-rose-400/30 border border-white/30 backdrop-blur-md flex items-center justify-center shrink-0 shadow-sm',
     title: 'text-sm font-semibold text-white drop-shadow-sm',
     body: 'text-sm text-white/85 leading-relaxed mt-1',
   },
@@ -341,7 +341,7 @@ const Dashboard = () => {
   };
 
   const handleViewAllTasks = () => {
-    navigate('/dashboard/tasks');
+    navigate('/dashboard/calendar');
   };
 
   const handleCreateFirstTask = () => {
@@ -397,14 +397,14 @@ const Dashboard = () => {
 
   return (
     <>
-      <div className="max-w-7xl mx-auto space-y-5">
+      <div className="max-w-7xl mx-auto space-y-4">
         {/* Welcome */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2.5">
           <div>
-            <h1 className="text-2xl font-semibold text-slate-900 dark:text-white tracking-tight">
+            <h1 className="text-xl font-semibold text-slate-900 dark:text-white tracking-tight">
               {tf(d.greeting, { name: user?.first_name ?? '' })}
             </h1>
-            <p className="text-sm text-muted-foreground mt-1">
+            <p className="text-sm text-muted-foreground mt-0.5">
               {d.subtitle}
             </p>
           </div>
@@ -420,7 +420,7 @@ const Dashboard = () => {
               <div className="relative z-10 p-3 sm:p-4">
                 <div className="flex items-start gap-2.5">
                   <div className={style.iconWrap}>
-                    <Megaphone size={18} className="text-white" />
+                    <Megaphone size={16} className="text-white" />
                   </div>
                   <div className="flex min-w-0 flex-1 items-start gap-2.5">
                     <div className="min-w-0 flex-1">
@@ -444,7 +444,7 @@ const Dashboard = () => {
                         <img
                           src={mediaUrl}
                           alt=""
-                          className="h-28 w-44 object-cover sm:h-32 sm:w-52"
+                          className="h-24 w-40 object-cover sm:h-28 sm:w-48"
                           loading="lazy"
                         />
                       </a>
@@ -455,7 +455,7 @@ const Dashboard = () => {
                           src={mediaUrl}
                           controls
                           preload="metadata"
-                          className="h-28 w-48 object-cover sm:h-32 sm:w-56"
+                          className="h-24 w-44 object-cover sm:h-28 sm:w-52"
                         >
                           <track kind="captions" />
                         </video>
@@ -480,7 +480,7 @@ const Dashboard = () => {
         })()}
 
         {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           {displayStats.map(({ title, value, change, changeState, Icon, iconBg, changeTone }, i) => {
             let changeLabel = '';
             if (!loading) {
@@ -496,21 +496,21 @@ const Dashboard = () => {
             return (
               <Card
                 key={i}
-                className="rounded-2xl border border-slate-200/90 dark:border-slate-800 hover:shadow-md transition-shadow"
+                className="rounded-xl border border-slate-200/90 dark:border-slate-800 hover:shadow-md transition-shadow"
               >
-                <CardContent className="p-5">
+                <CardContent className="p-4">
                   <div className="flex items-center justify-between">
-                    <div className="space-y-1.5">
+                    <div className="space-y-1">
                       <p className="text-xs font-medium text-muted-foreground">{title}</p>
-                      <div className="text-2xl font-semibold text-slate-900 dark:text-white">
+                      <div className="text-xl font-semibold text-slate-900 dark:text-white">
                         {loading ? '—' : value}
                       </div>
                       <p className={`text-xs ${changeTone}`}>
                         {loading ? '' : changeLabel}
                       </p>
                     </div>
-                    <div className={`w-11 h-11 rounded-xl ${iconBg} flex items-center justify-center shadow-sm`}>
-                      <Icon size={18} className="text-white" />
+                    <div className={`w-9 h-9 rounded-lg ${iconBg} flex items-center justify-center shadow-sm`}>
+                      <Icon size={16} className="text-white" />
                     </div>
                   </div>
                 </CardContent>
@@ -520,29 +520,29 @@ const Dashboard = () => {
         </div>
 
         {/* Quick Actions */}
-        <Card className="rounded-2xl border border-slate-200/90 dark:border-slate-800">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base">{d.quickActions.title}</CardTitle>
+        <Card className="rounded-xl border border-slate-200/90 dark:border-slate-800">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm">{d.quickActions.title}</CardTitle>
             <CardDescription className="text-xs">{d.quickActions.description}</CardDescription>
           </CardHeader>
           <CardContent className="pt-0">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5">
               {quickActions.map((qa, i) => {
                 const Icon = qa.icon;
                 return (
                   <button
                     key={i}
                     onClick={() => handleQuickAction(qa)}
-                    className="group rounded-xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-950 p-3 text-start hover:border-purple-200 dark:hover:border-purple-700/60 hover:bg-purple-50/60 dark:hover:bg-purple-950/40 transition-colors"
+                    className="group rounded-lg border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-950 p-2.5 text-start hover:border-purple-200 dark:hover:border-purple-700/60 hover:bg-purple-50/60 dark:hover:bg-purple-950/40 transition-colors"
                     aria-label={qa.title}
                   >
                     <div className="flex items-center gap-2">
-                      <span className="inline-flex w-8 h-8 items-center justify-center rounded-lg bg-purple-600 text-white shadow-sm">
-                        <Icon size={16} />
+                      <span className="inline-flex w-7 h-7 items-center justify-center rounded-md bg-purple-600 text-white shadow-sm">
+                        <Icon size={14} />
                       </span>
-                      <span className="text-[13px] font-medium text-slate-900 dark:text-white">{qa.title}</span>
+                      <span className="text-xs font-medium text-slate-900 dark:text-white">{qa.title}</span>
                     </div>
-                    <p className="text-xs text-muted-foreground mt-1.5">{qa.description}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{qa.description}</p>
                   </button>
                 );
               })}
@@ -551,7 +551,7 @@ const Dashboard = () => {
         </Card>
 
         {/* Legal Deadline Calculator — always available; binds to real cases via API */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
           <div className="lg:col-span-2 space-y-4">
             <DeadlinesCard />
             {demoMatterId ? <MatterTimeline matterId={demoMatterId} /> : null}
@@ -564,15 +564,15 @@ const Dashboard = () => {
         </div>
 
         {/* Knowledge & Evidence Row */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
           <ResearchNotebookCard />
           <EvidenceManagerCard />
         </div>
 
         {/* Recent Cases + Today’s Tasks */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
           {/* Recent Cases */}
-          <Card className="lg:col-span-2 rounded-2xl border border-slate-200/90 dark:border-slate-800">
+          <Card className="lg:col-span-2 rounded-xl border border-slate-200/90 dark:border-slate-800">
             <CardHeader className="flex flex-row items-center justify-between pb-3">
               <div>
                 <CardTitle className="text-base">{d.recentCases.title}</CardTitle>
@@ -665,7 +665,7 @@ const Dashboard = () => {
           </Card>
 
           {/* Today's Tasks */}
-          <Card className="rounded-2xl border border-slate-200/90 dark:border-slate-800">
+          <Card className="rounded-xl border border-slate-200/90 dark:border-slate-800">
             <CardHeader className="flex flex-row items-center justify-between pb-3">
               <div>
                 <CardTitle className="text-base">{d.todayTasks.title}</CardTitle>
@@ -769,7 +769,7 @@ const Dashboard = () => {
         </div>
 
         {/* Recent Activity */}
-        <Card className="rounded-2xl border border-slate-200/90 dark:border-slate-800">
+        <Card className="rounded-xl border border-slate-200/90 dark:border-slate-800">
           <CardHeader className="pb-3">
             <CardTitle className="text-base">{d.recentActivity.title}</CardTitle>
             <CardDescription className="text-xs">{d.recentActivity.description}</CardDescription>

@@ -9,6 +9,7 @@ export interface AppMessages {
     clients: string;
     calendar: string;
     conversations: string;
+    chat: string;
     settings: string;
     legalAi: string;
     profile: string;
@@ -17,6 +18,13 @@ export interface AppMessages {
     notifications: string;
     help: string;
     contactSupport: string;
+    support: string;
+    office: string;
+    appointment: string;
+    consultation: string;
+    litigation: string;
+    administrative: string;
+    comingSoon: string;
     upgradeTitle: string;
     upgradeSubtitle: string;
     upgradeCta: string;

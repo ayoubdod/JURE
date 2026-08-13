@@ -1,5 +1,9 @@
 import Header from '@/components/Header'
-import Sidebar from '@/components/Sidebar'
+import Sidebar, {
+  SIDEBAR_EXPANDED_STORAGE_KEY,
+  SIDEBAR_EXPANDED_WIDTH,
+  SIDEBAR_RAIL_WIDTH,
+} from '@/components/Sidebar'
 import useChatStore from '@/stores/chatStore'
 import useCallsWsStore from '@/stores/callsWsStore'
 import React, { useEffect, useState } from 'react'
@@ -11,6 +15,7 @@ import { NotificationToastStack } from '@/components/notifications/NotificationT
 import { JuriaFloatingAssistant } from '@/components/juria/JuriaFloatingAssistant'
 import CallShell from '@/components/conversations/call/CallShell'
 import { JURIA_ENABLED } from '@/config/features'
+import { cn } from '@/lib/utils'
 
 const isDashboardIndex = (path: string) =>
   path === '/dashboard' || path === '/dashboard/'
@@ -19,7 +24,8 @@ const isConversationsPage = (path: string) =>
   path.startsWith('/dashboard/conversations') || path.startsWith('/dashboard/messages')
 
 const isWorkspacePage = (path: string) =>
-  path.startsWith('/dashboard/tasks') || path.startsWith('/dashboard/calendar')
+  path.startsWith('/dashboard/calendar') ||
+  /^\/dashboard\/tasks\/[^/]+\/edit/.test(path)
 
 const isTeamPage = (path: string) =>
   path.startsWith('/dashboard/team')
@@ -39,71 +45,120 @@ const isJuriaPage = (path: string) =>
 const isLibraryPage = (path: string) =>
   path.startsWith('/dashboard/library')
 
+function readSidebarExpanded(): boolean {
+  try {
+    const stored = localStorage.getItem(SIDEBAR_EXPANDED_STORAGE_KEY)
+    if (stored === null) return false
+    return stored === '1'
+  } catch {
+    return false
+  }
+}
+
 const DashboardLayout = () => {
-    const [activeTab, setActiveTab] = useState('')
-    const location = useLocation()
-    const isCockpit = isDashboardIndex(location.pathname)
-    const isConversations = isConversationsPage(location.pathname)
-    const isWorkspace = isWorkspacePage(location.pathname)
-    const isTeam = isTeamPage(location.pathname)
-    const isCases = isCasesPage(location.pathname)
-    const isClients = isClientsPage(location.pathname)
-    const isFinance = isFinancePage(location.pathname)
-    const isJuria = isJuriaPage(location.pathname)
-    const isLibrary = isLibraryPage(location.pathname)
+  const [activeTab, setActiveTab] = useState('')
+  const [sidebarExpanded, setSidebarExpanded] = useState(readSidebarExpanded)
+  const location = useLocation()
+  const isCockpit = isDashboardIndex(location.pathname)
+  const isConversations = isConversationsPage(location.pathname)
+  const isWorkspace = isWorkspacePage(location.pathname)
+  const isTeam = isTeamPage(location.pathname)
+  const isCases = isCasesPage(location.pathname)
+  const isClients = isClientsPage(location.pathname)
+  const isFinance = isFinancePage(location.pathname)
+  const isJuria = isJuriaPage(location.pathname)
+  const isLibrary = isLibraryPage(location.pathname)
 
-    useEffect(() => {
-      useChatStore.getState().connect()
-      void useCallsWsStore.getState().connect().catch(() => {})
-      return () => {
-        useChatStore.getState().disconnect()
-        // Keep /ws/calls/ open across dashboard routes; CallShell owns call lifecycle.
-      }
-    }, [])
+  useEffect(() => {
+    useChatStore.getState().connect()
+    void useCallsWsStore.getState().connect().catch(() => {})
+    return () => {
+      useChatStore.getState().disconnect()
+      // Keep /ws/calls/ open across dashboard routes; CallShell owns call lifecycle.
+    }
+  }, [])
 
-    const fillViewport = isCockpit || isConversations || isWorkspace || isTeam || isCases || isClients || isFinance || isJuria || isLibrary
+  useEffect(() => {
+    try {
+      localStorage.setItem(SIDEBAR_EXPANDED_STORAGE_KEY, sidebarExpanded ? '1' : '0')
+    } catch {
+      // ignore quota / private mode
+    }
+  }, [sidebarExpanded])
 
-    return (
-        <NotificationProvider>
-        <MobileNavProvider>
-        <div className={fillViewport ? 'h-screen overflow-hidden bg-slate-50 dark:bg-slate-950 flex' : 'min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col'}>
-            <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
+  const fillViewport =
+    isCockpit ||
+    isConversations ||
+    isWorkspace ||
+    isTeam ||
+    isCases ||
+    isClients ||
+    isFinance ||
+    isJuria ||
+    isLibrary
 
-            <div className={`flex-1 flex flex-col min-w-0 lg:ms-16 ${isCockpit || isConversations || isTeam || isCases || isClients || isFinance || isJuria || isLibrary ? 'min-h-0 overflow-hidden' : ''}`}>
-                <Header />
+  const sidebarWidth = sidebarExpanded ? SIDEBAR_EXPANDED_WIDTH : SIDEBAR_RAIL_WIDTH
 
-                <TVAThresholdNotification />
+  return (
+    <NotificationProvider>
+      <MobileNavProvider>
+        <div
+          className={
+            fillViewport
+              ? 'flex h-screen overflow-hidden bg-slate-50 dark:bg-slate-950'
+              : 'flex min-h-screen flex-col bg-slate-50 dark:bg-slate-950'
+          }
+          style={{ ['--sidebar-rail-width' as string]: sidebarWidth }}
+        >
+          <Sidebar
+            activeTab={activeTab}
+            setActiveTab={setActiveTab}
+            expanded={sidebarExpanded}
+            onExpandedChange={setSidebarExpanded}
+          />
 
-                <NotificationToastStack />
+          <div
+            className={cn(
+              'flex min-w-0 flex-1 flex-col transition-[margin] duration-300 ease-in-out lg:ms-[var(--sidebar-rail-width)]',
+              fillViewport && 'min-h-0 overflow-hidden',
+            )}
+          >
+            <Header />
 
-                {JURIA_ENABLED ? <JuriaFloatingAssistant /> : null}
+            <TVAThresholdNotification />
 
-                <CallShell />
+            <NotificationToastStack />
 
-                <main className={
-                    isCockpit
-                        ? 'flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-3 sm:p-6 lg:p-8 pb-[max(2rem,env(safe-area-inset-bottom))]'
-                        : isConversations
-                        ? 'flex-1 min-h-0 overflow-hidden pt-0'
-                        : isWorkspace
-                        ? 'flex-1 min-h-0 overflow-hidden pt-0'
-                        : isTeam || isClients || isCases
-                        ? 'flex-1 min-h-0 overflow-hidden overflow-x-hidden p-2 sm:p-3 lg:p-4 pt-2 sm:pt-3'
+            {JURIA_ENABLED ? <JuriaFloatingAssistant /> : null}
+
+            <CallShell />
+
+            <main
+              className={
+                isCockpit
+                  ? 'flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-2.5 sm:p-4 lg:p-5 pb-[max(1.5rem,env(safe-area-inset-bottom))]'
+                  : isConversations
+                    ? 'flex-1 min-h-0 overflow-hidden pt-0'
+                    : isWorkspace
+                      ? 'flex-1 min-h-0 overflow-hidden pt-0'
+                      : isTeam || isClients || isCases
+                        ? 'flex-1 min-h-0 overflow-hidden overflow-x-hidden p-1.5 sm:p-2.5 lg:p-3 pt-1.5 sm:pt-2.5'
                         : isFinance
-                        ? 'flex-1 min-h-0 overflow-hidden overflow-x-hidden p-3 sm:p-6 lg:p-8 pt-4 sm:pt-6'
-                        : isJuria
-                        ? 'flex-1 min-h-0 overflow-hidden overflow-x-hidden p-2 sm:p-4 lg:p-8 pt-2 sm:pt-4'
-                        : isLibrary
-                        ? 'flex-1 min-h-0 overflow-hidden overflow-x-hidden p-0'
-                        : 'flex-1 overflow-x-hidden p-3 sm:p-6 lg:p-8 pb-[max(2rem,env(safe-area-inset-bottom))] pt-4 sm:pt-6'
-                }>
-                    <Outlet />
-                </main>
-            </div>
+                          ? 'flex-1 min-h-0 overflow-hidden overflow-x-hidden p-2.5 sm:p-4 lg:p-5 pt-3 sm:pt-4'
+                          : isJuria
+                            ? 'flex-1 min-h-0 overflow-hidden overflow-x-hidden p-1.5 sm:p-3 lg:p-5 pt-1.5 sm:pt-3'
+                            : isLibrary
+                              ? 'flex-1 min-h-0 overflow-hidden overflow-x-hidden p-0'
+                              : 'flex-1 overflow-x-hidden p-2.5 sm:p-4 lg:p-5 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-3 sm:pt-4'
+              }
+            >
+              <Outlet />
+            </main>
+          </div>
         </div>
-        </MobileNavProvider>
-        </NotificationProvider>
-    )
+      </MobileNavProvider>
+    </NotificationProvider>
+  )
 }
 
 export default DashboardLayout

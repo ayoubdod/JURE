@@ -73,9 +73,9 @@ export const LEGAL_GLOSSARY = {
     ar: 'مستند',
   },
   knowledgeBase: {
-    en: 'Knowledge Hub',
-    fr: 'Centre de savoir',
-    ar: 'مركز المعرفة',
+    en: 'Library',
+    fr: 'Bibliothèque',
+    ar: 'المكتبة',
   },
   legalAi: {
     en: 'Legal AI',

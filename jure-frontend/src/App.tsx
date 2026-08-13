@@ -64,6 +64,7 @@ const Settings = lazy(() => import("./pages/Settings"));
 const FinancePage = lazy(() => import("./pages/finance/FinancePage"));
 const NotificationsPage = lazy(() => import("./pages/notifications/NotificationsPage"));
 const EditTask = lazy(() => import("./components/EditTask"));
+const PlaceholderPage = lazy(() => import("./pages/PlaceholderPage"));
 
 const queryClient = new QueryClient();
 
@@ -188,6 +189,18 @@ const router = createBrowserRouter([
       { path: "profile/:id", element: app(<Profile />) },
       { path: "cases", element: app(<Cases />) },
       {
+        path: "cases/consultation",
+        element: app(<PlaceholderPage titleKey="consultation" />),
+      },
+      {
+        path: "cases/litigation",
+        element: app(<PlaceholderPage titleKey="litigation" />),
+      },
+      {
+        path: "cases/administrative",
+        element: app(<PlaceholderPage titleKey="administrative" />),
+      },
+      {
         path: "finance",
         element: app(
           <FinanceRouteGuard>
@@ -204,11 +217,24 @@ const router = createBrowserRouter([
           ]
         : []),
       { path: "conversations", element: app(<Conversations />) },
-      { path: "tasks", element: app(<CalendarPage />) },
+      // Calendar is the former Tasks workspace; Tasks is a separate empty placeholder.
+      { path: "calendar", element: app(<CalendarPage />) },
+      { path: "tasks", element: app(<PlaceholderPage titleKey="tasks" />) },
       { path: "tasks/:id/edit", element: app(<EditTask />) },
+      {
+        path: "appointment",
+        element: app(<PlaceholderPage titleKey="appointment" />),
+      },
+      {
+        path: "account",
+        element: app(<PlaceholderPage titleKey="account" />),
+      },
+      {
+        path: "support",
+        element: app(<PlaceholderPage titleKey="support" />),
+      },
       { path: "settings", element: app(<Settings />) },
       { path: "messages", element: app(<Conversations />) },
-      { path: "calendar", element: app(<CalendarPage />) },
       { path: "notifications", element: app(<NotificationsPage />) },
       { path: "help", element: app(<Settings />) },
     ],

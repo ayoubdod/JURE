@@ -86,7 +86,7 @@ const EditTask = () => {
   const { handleSubmit } = mainForm;
 
   const handleCancel = () => {
-    navigate('/dashboard/tasks');
+    navigate('/dashboard/calendar');
   };
 
   const handleSubmitForm = async (data: API.TaskUpdateForm) => {
@@ -101,7 +101,7 @@ const EditTask = () => {
           description: "The task has been updated successfully.",
           variant: "default",
         });
-        navigate('/dashboard/tasks');
+        navigate('/dashboard/calendar');
       })
       .catch((err) => {
         if (isAxiosError(err)) {

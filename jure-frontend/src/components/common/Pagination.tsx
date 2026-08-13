@@ -48,12 +48,12 @@ const PaginationComponent: React.FC<PaginationProps> = ({
   const nextDisabled = currentPage >= totalPages || totalCount === 0;
 
   return (
-    <div className="w-full border-t border-slate-200/90 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-900/30 py-3.5 px-2 sm:px-3">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-sm text-slate-600 dark:text-slate-400 tabular-nums">
+    <div className="w-full border-t border-slate-200/90 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-900/30 py-2.5 px-2 sm:px-3">
+      <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between">
+        <p className="text-xs text-slate-600 dark:text-slate-400 tabular-nums">
           Showing {start}–{end} of {totalCount} cases
         </p>
-        <div className="flex flex-wrap items-center justify-end gap-2 sm:gap-3">
+        <div className="flex flex-wrap items-center justify-end gap-1.5 sm:gap-2">
           <Select
             value={pageSize.toString()}
             onValueChange={(value) => {
@@ -62,7 +62,7 @@ const PaginationComponent: React.FC<PaginationProps> = ({
           >
             <SelectTrigger
               className={cn(
-                'h-10 w-[130px] rounded-lg border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 text-[13px]',
+                'h-8 w-[120px] rounded-lg border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 text-xs',
                 'focus:ring-2 focus:ring-primary/25'
               )}
             >
@@ -87,7 +87,7 @@ const PaginationComponent: React.FC<PaginationProps> = ({
                     if (!prevDisabled) onPageChange(currentPage - 1);
                   }}
                   className={cn(
-                    'h-10 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 text-[13px]',
+                    'h-8 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 px-2.5 text-xs',
                     prevDisabled && 'pointer-events-none cursor-not-allowed opacity-45'
                   )}
                 />
@@ -104,7 +104,7 @@ const PaginationComponent: React.FC<PaginationProps> = ({
                           onPageChange(pageNum);
                         }}
                         isActive={pageNum === currentPage}
-                        className="h-10 min-w-[2.25rem] rounded-lg text-[13px]"
+                        className="h-8 min-w-[2rem] rounded-lg text-xs"
                       >
                         {pageNum}
                       </PaginationLink>
@@ -119,7 +119,7 @@ const PaginationComponent: React.FC<PaginationProps> = ({
                     if (!nextDisabled) onPageChange(currentPage + 1);
                   }}
                   className={cn(
-                    'h-10 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 text-[13px]',
+                    'h-8 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 px-2.5 text-xs',
                     nextDisabled && 'pointer-events-none cursor-not-allowed opacity-45'
                   )}
                 />
