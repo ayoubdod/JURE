@@ -58,6 +58,7 @@ import {
 } from '@/utils/caseCardHelpers';
 import ServerSelect from '@/components/common/ServerSelect';
 import { useAppTranslation } from '@/i18n';
+import { useShortcutAction } from '@/context/ShortcutsContext';
 
 /* =========================
    Helpers & Mini Components
@@ -476,6 +477,8 @@ const Cases = () => {
   const openCreateCase = useCallback(() => {
     caseModalRef.current?.show();
   }, []);
+
+  useShortcutAction('create-case', openCreateCase);
 
   const stats = useMemo(() => {
     const list = allCases ?? [];

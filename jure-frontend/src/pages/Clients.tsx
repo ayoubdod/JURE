@@ -37,6 +37,7 @@ import userIcon from '@/assets/icons/userIcon.png';
 import { useDebounce } from '@/hooks/use-debounce';
 import { cn } from '@/lib/utils';
 import { useAppTranslation } from '@/i18n';
+import { useShortcutAction } from '@/context/ShortcutsContext';
 import '@/styles/workspace-list.css';
 
 type StatusFilter = 'all' | 'active' | 'inactive';
@@ -324,6 +325,8 @@ const Clients: React.FC = () => {
   const openCreate = useCallback(() => {
     clientCreateModalRef.current?.show();
   }, []);
+
+  useShortcutAction('create-client', openCreate);
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {

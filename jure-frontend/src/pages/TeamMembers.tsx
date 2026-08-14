@@ -68,6 +68,7 @@ import { getCabinetMemberRouteId, getMemberWorkloadDisplay } from '@/utils/cabin
 import { cn } from '@/lib/utils';
 import { formatDate, useAppTranslation } from '@/i18n';
 import type { Lang } from '@/i18n';
+import { useShortcutAction } from '@/context/ShortcutsContext';
 import '@/styles/workspace-list.css';
 
 const JURE_PURPLE = '#6D54B5';
@@ -789,6 +790,7 @@ const TeamMembers: React.FC = () => {
   };
 
   const openCreate = () => cabinetMemberCreateModalRef.current?.show();
+  useShortcutAction('create-member', openCreate);
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {

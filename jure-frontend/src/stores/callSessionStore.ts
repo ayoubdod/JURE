@@ -10,6 +10,10 @@ import {
 } from '@/stores/conversationCallBridge';
 import useUserStore from '@/stores/userStore';
 import { playCallSoundForStatus, stopCallSounds } from '@/utils/callSounds';
+import {
+  clearIncomingCallNotification,
+  showIncomingCallNotification,
+} from '@/utils/incomingCallNotify';
 import { devError, devLog, devWarn } from '@/utils/devLog';
 import {
   addIceCandidate,
@@ -1388,6 +1392,23 @@ export const useCallSessionStore = create<CallSessionStore>((set, get) => ({
       syncCallSounds(next.status);
       if (next.status === 'calling' && state.ui.status !== 'calling') {
         queueMicrotask(() => startCallingProgress());
+      }
+      // System / PWA ringing notification (WhatsApp-style when tab is backgrounded)
+      if (next.status === 'ringing' && state.ui.status !== 'ringing') {
+        const remote = next.remoteUser;
+        queueMicrotask(() => {
+          void showIncomingCallNotification({
+            callerName: remote?.name || 'Incoming call',
+            kind: next.kind,
+            groupName: next.groupName,
+            conversationId: next.conversationId,
+            avatarUrl: remote?.avatar ?? null,
+          });
+        });
+      } else if (state.ui.status === 'ringing' && next.status !== 'ringing') {
+        queueMicrotask(() => {
+          void clearIncomingCallNotification();
+        });
       }
       return { ui: next };
     });

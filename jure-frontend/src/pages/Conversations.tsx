@@ -40,6 +40,7 @@ import { useWebRtcCall } from '@/hooks/useWebRtcCall';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { useAppTranslation } from '@/i18n';
+import { useShortcutAction } from '@/context/ShortcutsContext';
 import {
   GroupCallParticipantPicker,
   type GroupCallKind,
@@ -54,6 +55,8 @@ const ConversationsPage: React.FC = () => {
   const [contextPanelOpen, setContextPanelOpen] = useState(true);
   const [isTyping, setIsTyping] = useState(false);
   const newChatModalRef = useRef<NewChatModalRef>(null);
+  const openNewChat = useCallback(() => newChatModalRef.current?.show(), []);
+  useShortcutAction('create-chat', openNewChat);
   const [isLoading, setIsLoading] = useState(true);
   const deleteChatModalRef = useRef<DeleteChatModalRef>(null);
   const renameGroupModalRef = useRef<RenameGroupModalRef>(null);
@@ -167,6 +170,31 @@ const ConversationsPage: React.FC = () => {
       .catch(() => setArchivedConversations([]))
       .finally(() => setArchivedLoading(false));
   }, [archivedConversations.length]);
+
+  // Deep link: ?new=1 opens the new conversation modal (command palette / shortcut).
+  useEffect(() => {
+    if (searchParams.get('new') !== '1') return;
+    openNewChat();
+    const next = new URLSearchParams(searchParams);
+    next.delete('new');
+    setSearchParams(next, { replace: true });
+  }, [searchParams, setSearchParams, openNewChat]);
+
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      const tag = target?.tagName?.toLowerCase();
+      const inField =
+        tag === 'input' || tag === 'textarea' || tag === 'select' || target?.isContentEditable;
+      if (inField || e.metaKey || e.ctrlKey || e.altKey) return;
+      if (e.key === 'n' || e.key === 'N') {
+        e.preventDefault();
+        openNewChat();
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [openNewChat]);
 
   const clearSelectedSearchParam = useCallback(() => {
     if (!searchParams.get('selected')) return;

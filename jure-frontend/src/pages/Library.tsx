@@ -50,6 +50,7 @@ import {
 } from '@/components/library/knowledge-hub';
 import { cn } from '@/lib/utils';
 import { useAppTranslation } from '@/i18n';
+import { useShortcutAction } from '@/context/ShortcutsContext';
 import { devError } from '@/utils/devLog';
 import '@/styles/workspace-list.css';
 
@@ -230,6 +231,8 @@ const Library = () => {
   const handleAddNew = useCallback(() => {
     createModalRef.current?.show();
   }, []);
+
+  useShortcutAction('create-document', handleAddNew);
 
   const handleCreateSuccess = (document: API.Document) => {
     toast({

@@ -58,6 +58,7 @@ import {
   type AppMessages,
   type Lang,
 } from '@/i18n';
+import { useShortcutAction } from '@/context/ShortcutsContext';
 
 type CaseDateSourceType = 'CASE_DEADLINE' | 'CASE_DUE_DATE' | 'CONSULTATION_DATE';
 
@@ -420,6 +421,25 @@ const CalendarPage: React.FC = () => {
   const taskUpdateRef = useRef<TaskUpdateModalRef>(null);
   const appointmentCreateRef = useRef<ScheduleAppointmentDialogRef>(null);
   const appointmentUpdateRef = useRef<AppointmentUpdateModalRef>(null);
+
+  useShortcutAction('create-task', () => taskCreateRef.current?.show());
+  useShortcutAction('create-appointment', () => appointmentCreateRef.current?.show());
+
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      const tag = target?.tagName?.toLowerCase();
+      const inField =
+        tag === 'input' || tag === 'textarea' || tag === 'select' || target?.isContentEditable;
+      if (inField || e.metaKey || e.ctrlKey || e.altKey) return;
+      if (e.key === 'n' || e.key === 'N') {
+        e.preventDefault();
+        taskCreateRef.current?.show();
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, []);
 
   const mergedEvents = useMemo(() => {
     const map = new Map<string, CalendarEvent>();

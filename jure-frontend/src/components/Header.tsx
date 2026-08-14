@@ -33,6 +33,8 @@ import { useCabinetMemberDirectory } from '@/hooks/useCabinetMemberDirectory';
 import { devError } from '@/utils/devLog';
 import { NotificationBell } from '@/components/notifications/NotificationBell';
 import { useMobileNav } from '@/context/MobileNavContext';
+import { useShortcutAction, useShortcuts } from '@/context/ShortcutsContext';
+import { HintKbd } from '@/components/shortcuts/Kbd';
 
 const pickFirstNonEmpty = (...values: Array<string | null | undefined>) =>
   values.find((value) => typeof value === 'string' && value.trim().length > 0)?.trim();
@@ -65,6 +67,7 @@ const Header = () => {
   const { t } = useAppTranslation();
   const { themeChoice, setTheme } = useTheme();
   const { toggle: toggleMobileNav } = useMobileNav();
+  const { togglePalette, showHintsOnButtons } = useShortcuts();
   const lookupCabinet = useCabinetMemberDirectory();
   /** When opening messages popover, map conversation id → group icon + title for correct avatars. */
   const [conversationMetaById, setConversationMetaById] = useState<
@@ -258,6 +261,10 @@ const Header = () => {
     }
   };
 
+  useShortcutAction('search-records', () => {
+    setSearchExpanded(true);
+  });
+
   // Ensure WebSocket connection for notifications
   useEffect(() => {
     const chatState = chatStore;
@@ -446,10 +453,21 @@ const Header = () => {
             size="icon"
             className="hidden md:inline-flex text-muted-foreground hover:text-foreground h-8 w-8"
             onClick={() => setTheme(themeChoice === 'dark' ? 'light' : 'dark')}
-            aria-label="Toggle theme"
+            aria-label={t.common.toggleTheme}
           >
             {themeChoice === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
           </Button>
+          {showHintsOnButtons ? (
+            <button
+              type="button"
+              onClick={togglePalette}
+              className="hidden sm:inline-flex h-8 items-center gap-1.5 rounded-lg border border-border bg-muted/40 px-2 text-muted-foreground hover:text-foreground hover:bg-muted/70 transition-colors"
+              aria-label={t.shortcuts.commands.commandPalette}
+              title={t.shortcuts.commands.commandPalette}
+            >
+              <HintKbd keys={['mod', 'K']} />
+            </button>
+          ) : null}
           {/* Search - Icon only that expands */}
           <Popover open={searchExpanded} onOpenChange={setSearchExpanded}>
             <PopoverTrigger asChild>
