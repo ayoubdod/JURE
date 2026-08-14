@@ -31,10 +31,12 @@ import {
   applyOutboundVideoTrack,
   initPeerConnection,
   mediaErrorMessage,
+  remoteStreamFromPeerConnection,
   replaceInputTrack,
   sampleConnectionQuality,
   setAudioOutputDevice,
   setRemoteAnswer,
+  unlockRemoteAudioPlayback,
   type CallKind,
   type CallMediaRefs,
   type ConnectionQuality,
@@ -689,6 +691,12 @@ function markCallActive() {
         }
   );
   startStatsPoll();
+  if (mediaRef.pc) {
+    const fromPc = remoteStreamFromPeerConnection(mediaRef.pc);
+    if (fromPc.getAudioTracks().length > 0 || fromPc.getTracks().length > 0) {
+      mediaRef.remoteStream = fromPc;
+    }
+  }
   if (mediaRef.remoteStream) {
     attachRemoteMedia(mediaRef.remoteStream);
     window.setTimeout(() => {
@@ -730,20 +738,20 @@ function setupPcCommon(pc: RTCPeerConnection) {
     }
   };
   pc.ontrack = (ev) => {
-    // Always accumulate into one stream so a later video/audio ontrack
-    // does not replace (and drop) the earlier track.
-    if (!mediaRef.remoteStream) mediaRef.remoteStream = new MediaStream();
-    const stream = mediaRef.remoteStream;
-    if (!stream.getTracks().some((t) => t.id === ev.track.id)) {
-      stream.addTrack(ev.track);
+    // Prefer the stream from all receivers so audio+video stay together.
+    const fromPc = remoteStreamFromPeerConnection(pc);
+    if (fromPc.getTracks().length > 0) {
+      mediaRef.remoteStream = fromPc;
+    } else if (ev.streams[0]) {
+      mediaRef.remoteStream = ev.streams[0];
+    } else {
+      if (!mediaRef.remoteStream) mediaRef.remoteStream = new MediaStream();
+      if (!mediaRef.remoteStream.getTracks().some((t) => t.id === ev.track.id)) {
+        mediaRef.remoteStream.addTrack(ev.track);
+      }
     }
-    // Prefer browser-bundled stream tracks when present (same ids).
-    const bundled = ev.streams[0];
-    if (bundled) {
-      bundled.getTracks().forEach((t) => {
-        if (!stream.getTracks().some((x) => x.id === t.id)) stream.addTrack(t);
-      });
-    }
+    const stream = mediaRef.remoteStream!;
+    ev.track.enabled = true;
     attachRemoteMedia(stream);
     updateRemoteVideoFlags(stream);
     stream.onaddtrack = () => {
@@ -1462,6 +1470,9 @@ export const useCallSessionStore = create<CallSessionStore>((set, get) => ({
           : [];
     if (targets.length === 0) return false;
 
+    // Gesture-scoped unlock so we can hear the callee after answer/ICE (async).
+    void unlockRemoteAudioPlayback();
+
     const resolvedMode: 'direct' | 'conference' =
       mode === 'conference' || targets.length > 1 ? 'conference' : 'direct';
     callMode = resolvedMode;
@@ -1523,6 +1534,7 @@ export const useCallSessionStore = create<CallSessionStore>((set, get) => ({
   }) => {
     if (get().ui.status !== 'idle') return false;
     if (!gn) return false;
+    void unlockRemoteAudioPlayback();
     callMode = mode;
     role = 'callee';
     conversationId = convId;
@@ -1563,6 +1575,8 @@ export const useCallSessionStore = create<CallSessionStore>((set, get) => ({
 
   acceptIncoming: () => {
     if (get().ui.status !== 'ringing' || !groupName) return;
+    // Gesture-scoped unlock — remote play() after ICE must stay allowed.
+    void unlockRemoteAudioPlayback();
     void (async () => {
       await useCallsWsStore.getState().connect().catch(() => {});
       useChatStore.getState().connect().catch(() => {});
