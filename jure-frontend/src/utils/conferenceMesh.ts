@@ -131,17 +131,21 @@ export async function ensurePeerConnection(
   };
 
   pc.ontrack = (ev) => {
-    let stream = ev.streams[0];
-    if (!stream) {
-      if (!slot!.remoteStream) slot!.remoteStream = new MediaStream();
-      slot!.remoteStream.addTrack(ev.track);
-      stream = slot!.remoteStream;
-    } else {
-      slot!.remoteStream = stream;
+    if (!slot!.remoteStream) slot!.remoteStream = new MediaStream();
+    const stream = slot!.remoteStream;
+    if (!stream.getTracks().some((t) => t.id === ev.track.id)) {
+      stream.addTrack(ev.track);
+    }
+    const bundled = ev.streams[0];
+    if (bundled) {
+      bundled.getTracks().forEach((t) => {
+        if (!stream.getTracks().some((x) => x.id === t.id)) stream.addTrack(t);
+      });
     }
     peers.set(peerId, slot!);
-    stream.onaddtrack = () => onTrack(peerId, stream!);
-    stream.onremovetrack = () => onTrack(peerId, stream!);
+    stream.onaddtrack = () => onTrack(peerId, stream);
+    stream.onremovetrack = () => onTrack(peerId, stream);
+    ev.track.onunmute = () => onTrack(peerId, stream);
     // Per-peer media is rendered in the conference UI — do not overwrite the global 1:1 remote element.
     onTrack(peerId, stream);
   };

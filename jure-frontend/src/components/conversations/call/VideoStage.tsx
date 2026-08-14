@@ -19,10 +19,13 @@ const PeerTile: React.FC<{
     const video = videoRef.current;
     const audio = audioRef.current;
     if (video) {
+      video.muted = true; // audio element owns playback
       video.srcObject = stream;
       if (stream) void video.play().catch(() => {});
     }
     if (audio) {
+      audio.muted = false;
+      audio.volume = 1;
       audio.srcObject = stream;
       if (stream) void audio.play().catch(() => {});
     }
@@ -40,6 +43,7 @@ const PeerTile: React.FC<{
       <video
         ref={videoRef}
         autoPlay
+        muted
         playsInline
         className={cn(
           'h-full w-full',
@@ -127,6 +131,7 @@ const VideoStage: React.FC<{
     const remote = remoteRef.current;
     const remoteStream = getRemoteStream();
     if (remote) {
+      remote.muted = true; // #remote-audio owns playback for 1:1
       remote.srcObject = remoteStream;
       if (remoteStream) void remote.play().catch(() => {});
     }
@@ -213,6 +218,7 @@ const VideoStage: React.FC<{
             <video
               ref={sharePeerRef}
               autoPlay
+              muted
               playsInline
               className="h-full w-full object-contain"
             />
@@ -221,6 +227,7 @@ const VideoStage: React.FC<{
               id="remote-video"
               ref={remoteRef}
               autoPlay
+              muted
               playsInline
               className="h-full w-full object-contain"
             />
@@ -247,6 +254,7 @@ const VideoStage: React.FC<{
             id="remote-video"
             ref={remoteRef}
             autoPlay
+            muted
             playsInline
             className={cn(
               'h-full w-full',

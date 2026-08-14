@@ -13,6 +13,8 @@ const VoicePeerCard: React.FC<{
   useEffect(() => {
     const el = audioRef.current;
     if (!el) return;
+    el.muted = false;
+    el.volume = 1;
     el.srcObject = peer.stream ?? null;
     if (peer.stream) void el.play().catch(() => {});
   }, [peer.stream, peer.id]);
