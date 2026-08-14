@@ -40,6 +40,9 @@ import {
 } from '@/components/ui/tooltip';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
+import { NAV_SHORTCUT_BY_PATH } from '@/shortcuts/catalog';
+import { HintKbd } from '@/components/shortcuts/Kbd';
+import { useShortcutAction } from '@/context/ShortcutsContext';
 
 /** Collapsed desktop rail width. Keep in sync with DashboardLayout `--sidebar-rail-width`. */
 export const SIDEBAR_RAIL_WIDTH = '3rem'; // 48px
@@ -158,28 +161,29 @@ const Sidebar = ({ activeTab, setActiveTab, expanded, onExpandedChange }: Sideba
     return items;
   }, [t, financeAuthorized]);
 
-  // Auto-expand Cases / Office when a child route is active (expanded rail / mobile).
+  const isCasesChildPath = (path: string) =>
+    path.startsWith('/dashboard/cases/consultation') ||
+    path.startsWith('/dashboard/cases/litigation') ||
+    path.startsWith('/dashboard/cases/administrative');
+
+  const isCasesSectionPath = (path: string) =>
+    path === '/dashboard/cases' || path === '/dashboard/cases/' || isCasesChildPath(path);
+
+  const isOfficeSectionPath = (path: string) =>
+    path.startsWith('/dashboard/account') ||
+    path.startsWith('/dashboard/finance') ||
+    path.startsWith('/dashboard/settings') ||
+    path.startsWith('/dashboard/support');
+
+  // Keep Cases / Office open only while their own routes are active.
   useEffect(() => {
     const path = location.pathname;
-    setExpandedIds((prev) => {
-      const next = { ...prev };
-      if (
-        path.startsWith('/dashboard/cases/consultation') ||
-        path.startsWith('/dashboard/cases/litigation') ||
-        path.startsWith('/dashboard/cases/administrative')
-      ) {
-        next.cases = true;
-      }
-      if (
-        path.startsWith('/dashboard/account') ||
-        path.startsWith('/dashboard/finance') ||
-        path.startsWith('/dashboard/settings') ||
-        path.startsWith('/dashboard/support')
-      ) {
-        next.office = true;
-      }
-      return next;
-    });
+    setExpandedIds((prev) => ({
+      cases: isCasesChildPath(path) ? true : isCasesSectionPath(path) ? prev.cases : false,
+      office: isOfficeSectionPath(path),
+    }));
+    setCasesPopoverOpen(false);
+    setOfficePopoverOpen(false);
   }, [location.pathname]);
 
   useEffect(() => {
@@ -197,11 +201,24 @@ const Sidebar = ({ activeTab, setActiveTab, expanded, onExpandedChange }: Sideba
   }, [railExpanded]);
 
   const toggleExpanded = (id: string) => {
-    setExpandedIds((prev) => ({ ...prev, [id]: !prev[id] }));
+    setExpandedIds((prev) => {
+      const opening = !prev[id];
+      if (!opening) return { ...prev, [id]: false };
+      return {
+        cases: id === 'cases',
+        office: id === 'office',
+      };
+    });
   };
 
   const handleNavigate = (id: string, path: string, options?: { closeMobile?: boolean }) => {
     setActiveTab(id);
+    setExpandedIds((prev) => ({
+      cases: isCasesChildPath(path) ? true : isCasesSectionPath(path) ? prev.cases : false,
+      office: isOfficeSectionPath(path),
+    }));
+    setCasesPopoverOpen(false);
+    setOfficePopoverOpen(false);
     navigate(path);
     if (options?.closeMobile !== false) {
       closeMobileNav();
@@ -246,6 +263,9 @@ const Sidebar = ({ activeTab, setActiveTab, expanded, onExpandedChange }: Sideba
   const isChildActive = (child: NavChild) => isPathActive(child.path) || activeTab === child.id;
 
   const logoutModalRef = useRef<LogoutModalRef>(null);
+  useShortcutAction('logout', () => logoutModalRef.current?.show());
+
+  const navShortcut = (path?: string) => (path ? NAV_SHORTCUT_BY_PATH[path] : undefined);
 
   const renderBadge = (badge: number | string, className?: string) => (
     <span
@@ -458,8 +478,9 @@ const Sidebar = ({ activeTab, setActiveTab, expanded, onExpandedChange }: Sideba
               </PopoverTrigger>
             </TooltipTrigger>
             {!casesPopoverOpen && (
-              <TooltipContent side={flyoutSide} sideOffset={10}>
+              <TooltipContent side={flyoutSide} sideOffset={10} className="flex items-center gap-2">
                 {item.label}
+                {navShortcut(item.path) ? <HintKbd keys={navShortcut(item.path)!} /> : null}
               </TooltipContent>
             )}
           </Tooltip>
@@ -595,8 +616,9 @@ const Sidebar = ({ activeTab, setActiveTab, expanded, onExpandedChange }: Sideba
     return (
       <Tooltip key={item.id}>
         <TooltipTrigger asChild>{button}</TooltipTrigger>
-        <TooltipContent side={flyoutSide} sideOffset={10}>
+        <TooltipContent side={flyoutSide} sideOffset={10} className="flex items-center gap-2">
           {item.label}
+          {navShortcut(item.path) ? <HintKbd keys={navShortcut(item.path)!} /> : null}
         </TooltipContent>
       </Tooltip>
     );
@@ -849,8 +871,9 @@ const Sidebar = ({ activeTab, setActiveTab, expanded, onExpandedChange }: Sideba
                   />
                 </button>
               </TooltipTrigger>
-              <TooltipContent side={flyoutSide} sideOffset={12}>
+              <TooltipContent side={flyoutSide} sideOffset={12} className="flex items-center gap-2">
                 {railExpanded ? 'Collapse sidebar' : 'Expand sidebar'}
+                <HintKbd keys={['mod', 'B']} />
               </TooltipContent>
             </Tooltip>
           </div>

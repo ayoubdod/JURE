@@ -392,6 +392,8 @@ export interface AppMessages {
       dataDesc: string;
       roles: string;
       rolesDesc: string;
+      shortcuts: string;
+      shortcutsDesc: string;
     };
     saveChanges: string;
     savePreferences: string;
@@ -481,6 +483,14 @@ export interface AppMessages {
     dataRoadmapDesc: string;
     dataAssistHint: string;
     requestHelp: string;
+    keyboardTitle: string;
+    keyboardDescription: string;
+    keyboardShowOnButtonsTitle: string;
+    keyboardShowOnButtonsDesc: string;
+    keyboardLibraryTitle: string;
+    keyboardLibraryDescription: string;
+    keyboardSearchPlaceholder: string;
+    keyboardEmpty: string;
     toasts: {
       profileUpdatedTitle: string;
       profileUpdatedDesc: string;
@@ -840,6 +850,62 @@ export interface AppMessages {
     description: string;
     confirm: string;
     cancel: string;
+  };
+  shortcuts: {
+    paletteTitle: string;
+    palettePlaceholder: string;
+    paletteEmpty: string;
+    paletteHint: string;
+    helpTitle: string;
+    helpSubtitle: string;
+    groups: {
+      general: string;
+      navigation: string;
+      create: string;
+      page: string;
+    };
+    commands: {
+      commandPalette: string;
+      showHelp: string;
+      toggleSidebar: string;
+      toggleTheme: string;
+      searchRecords: string;
+      logout: string;
+      goDashboard: string;
+      goTeam: string;
+      goClients: string;
+      goCases: string;
+      goConsultation: string;
+      goLitigation: string;
+      goAdministrative: string;
+      goLibrary: string;
+      goCalendar: string;
+      goTasks: string;
+      goAppointment: string;
+      goChat: string;
+      goFinance: string;
+      goJuria: string;
+      goSettings: string;
+      goNotifications: string;
+      goAccount: string;
+      goSupport: string;
+      goProfile: string;
+      newClient: string;
+      newCase: string;
+      newTask: string;
+      newAppointment: string;
+      newMember: string;
+      newDocument: string;
+      newChat: string;
+      conflictCheck: string;
+      clauseLibrary: string;
+      closeMatter: string;
+      pageSearch: string;
+      pageNew: string;
+      pageMoveDown: string;
+      pageMoveUp: string;
+      pageOpen: string;
+    };
   };
   cases: {
     myCases: string;

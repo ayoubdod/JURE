@@ -16,6 +16,10 @@ import { JuriaFloatingAssistant } from '@/components/juria/JuriaFloatingAssistan
 import CallShell from '@/components/conversations/call/CallShell'
 import { JURIA_ENABLED } from '@/config/features'
 import { cn } from '@/lib/utils'
+import { ShortcutsProvider } from '@/context/ShortcutsContext'
+import CommandPalette from '@/components/shortcuts/CommandPalette'
+import ShortcutsHelpDialog from '@/components/shortcuts/ShortcutsHelpDialog'
+import QuickCreateHost from '@/components/shortcuts/QuickCreateHost'
 
 const isDashboardIndex = (path: string) =>
   path === '/dashboard' || path === '/dashboard/'
@@ -72,7 +76,12 @@ const DashboardLayout = () => {
   useEffect(() => {
     useChatStore.getState().connect()
     void useCallsWsStore.getState().connect().catch(() => {})
+    // Keep calls socket warm so backgrounded PWA still receives ringing events.
+    const ping = window.setInterval(() => {
+      void useCallsWsStore.getState().connect().catch(() => {})
+    }, 45_000)
     return () => {
+      window.clearInterval(ping)
       useChatStore.getState().disconnect()
       // Keep /ws/calls/ open across dashboard routes; CallShell owns call lifecycle.
     }
@@ -102,6 +111,7 @@ const DashboardLayout = () => {
   return (
     <NotificationProvider>
       <MobileNavProvider>
+        <ShortcutsProvider onToggleSidebar={() => setSidebarExpanded((v) => !v)}>
         <div
           className={
             fillViewport
@@ -133,6 +143,10 @@ const DashboardLayout = () => {
 
             <CallShell />
 
+            <CommandPalette />
+            <ShortcutsHelpDialog />
+            <QuickCreateHost />
+
             <main
               className={
                 isCockpit
@@ -156,6 +170,7 @@ const DashboardLayout = () => {
             </main>
           </div>
         </div>
+        </ShortcutsProvider>
       </MobileNavProvider>
     </NotificationProvider>
   )

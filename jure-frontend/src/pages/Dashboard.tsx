@@ -1,6 +1,4 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import Sidebar from '../components/Sidebar';
-import Header from '../components/Header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -10,28 +8,23 @@ import {
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import AddClientDialog from '../components/AddClientDialog';
-import CreateCaseDialog from '../components/CreateCaseDialog';
-import ScheduleAppointmentDialog, { ScheduleAppointmentDialogRef } from '../components/ScheduleAppointmentDialog';
-import AddTaskDialog from '../components/task/TaskCreateModal';
 import useUserStore from '@/stores/userStore';
-import CaseModal, { CaseModalRef } from '@/components/case/CaseModal';
 import CaseDetailDrawer, { CaseDetailDrawerRef } from '@/components/case/CaseDetailDrawer';
-import ClientCreateModal, { ClientCreateModalRef } from '@/components/client/ClientCreateModal';
 import TaskUpdateModal, { TaskUpdateModalRef } from '@/components/task/TaskUpdateModal';
 import { TaskDetailPanel } from '@/components/calendar/EmbeddedDetailPanels';
 import { useNavigate } from 'react-router';
 import { apiUpdateTask } from '@/services/task/api';
 import { TaskStatus } from '@/utils/constants';
+import { useShortcuts } from '@/context/ShortcutsContext';
+import { HintKbd } from '@/components/shortcuts/Kbd';
+import type { ShortcutActionId } from '@/shortcuts/types';
 
 // NEW imports (your existing dashboard tools)
 import DeadlinesCard from '@/components/dashboard/DeadlinesCard';
 import MatterTimeline from '@/components/dashboard/MatterTimeline';
-import ConflictCheckDialog from '@/components/dashboard/ConflictCheckDialog';
-import ClauseLibraryModal from '@/components/dashboard/ClauseLibraryModal';
 import EngagementBudgetCard from '@/components/dashboard/EngagementBudgetCard';
 import EvidenceManagerCard from '@/components/dashboard/EvidenceManagerCard';
 import ResearchNotebookCard from '@/components/dashboard/ResearchNotebookCard';
-import MatterCloseModal from '@/components/dashboard/MatterCloseModal';
 import { useMatterStore } from '@/stores/matterStore';
 
 // Service to fetch backend overview
@@ -48,7 +41,6 @@ import {
   isAnnouncementDismissed,
 } from '@/utils/announcementDismiss';
 import { BACKEND_BASE_URL } from '@/utils/constants';
-import { TaskCreateModalRef } from '@/components/task/TaskCreateModal';
 import { useAppTranslation } from '@/i18n';
 
 function resolveAnnouncementMediaUrl(url: string | null | undefined): string | null {
@@ -116,14 +108,11 @@ type ApiActivity = DashboardOverview['recent_activity'][number];
 const Dashboard = () => {
   const { t, tf, enumLabel } = useAppTranslation();
   const d = t.dashboard;
-  const [activeTab, setActiveTab] = useState('dashboard');
+  const { runAction } = useShortcuts();
   const [openDialogs, setOpenDialogs] = useState({
     client: false,
     case: false,
   });
-  const [openConflict, setOpenConflict] = useState(false);
-  const [openClauseLib, setOpenClauseLib] = useState(false);
-  const [openMatterClose, setOpenMatterClose] = useState(false);
 
   const [loading, setLoading] = useState<boolean>(false);
   const [loadError, setLoadError] = useState(false);
@@ -143,12 +132,8 @@ const Dashboard = () => {
     { title: d.stats.tasksDue, value: '—', change: null as string | null, changeState: 'unavailable' as const, icon: CheckSquare, iconBg: 'bg-amber-500', changeTone: 'text-muted-foreground' },
   ];
 
-  const caseModalRef = useRef<CaseModalRef>(null);
   const caseDetailDrawerRef = useRef<CaseDetailDrawerRef>(null);
-  const clientCreateModalRef = useRef<ClientCreateModalRef>(null);
-  const taskCreateModalRef = useRef<TaskCreateModalRef>(null);
   const taskUpdateModalRef = useRef<TaskUpdateModalRef>(null);
-  const appointmentCreateRef = useRef<ScheduleAppointmentDialogRef>(null);
 
   const navigate = useNavigate();
 
@@ -295,14 +280,20 @@ const Dashboard = () => {
     [overview]
   );
 
-  const quickActions = [
-    { title: d.quickActions.addClientTitle, icon: UserPlus, description: d.quickActions.addClientDescription, action: 'client', modalRef: clientCreateModalRef },
-    { title: d.quickActions.createCaseTitle, icon: FolderPlus, description: d.quickActions.createCaseDescription, action: 'case', modalRef: caseModalRef },
-    { title: d.quickActions.scheduleAppointmentTitle, icon: CalendarPlus, description: d.quickActions.scheduleAppointmentDescription, action: 'appointment', modalRef: appointmentCreateRef },
-    { title: d.quickActions.addTaskTitle, icon: ClipboardList, description: d.quickActions.addTaskDescription, action: 'task', modalRef: taskCreateModalRef },
-    { title: d.quickActions.conflictCheckTitle, icon: ShieldAlert, description: d.quickActions.conflictCheckDescription, action: 'conflict', modalRef: undefined },
-    { title: d.quickActions.clauseLibraryTitle, icon: BookOpenCheck, description: d.quickActions.clauseLibraryDescription, action: 'clauseLib', modalRef: undefined },
-    { title: d.quickActions.closeMatterTitle, icon: Flag, description: d.quickActions.closeMatterDescription, action: 'closeMatter', modalRef: undefined },
+  const quickActions: {
+    title: string;
+    icon: typeof UserPlus;
+    description: string;
+    action: ShortcutActionId;
+    keys: string[];
+  }[] = [
+    { title: d.quickActions.addClientTitle, icon: UserPlus, description: d.quickActions.addClientDescription, action: 'create-client', keys: ['C', 'C'] },
+    { title: d.quickActions.createCaseTitle, icon: FolderPlus, description: d.quickActions.createCaseDescription, action: 'create-case', keys: ['C', 'M'] },
+    { title: d.quickActions.scheduleAppointmentTitle, icon: CalendarPlus, description: d.quickActions.scheduleAppointmentDescription, action: 'create-appointment', keys: ['C', 'A'] },
+    { title: d.quickActions.addTaskTitle, icon: ClipboardList, description: d.quickActions.addTaskDescription, action: 'create-task', keys: ['C', 'T'] },
+    { title: d.quickActions.conflictCheckTitle, icon: ShieldAlert, description: d.quickActions.conflictCheckDescription, action: 'conflict-check', keys: ['C', 'F'] },
+    { title: d.quickActions.clauseLibraryTitle, icon: BookOpenCheck, description: d.quickActions.clauseLibraryDescription, action: 'clause-library', keys: ['C', 'L'] },
+    { title: d.quickActions.closeMatterTitle, icon: Flag, description: d.quickActions.closeMatterDescription, action: 'close-matter', keys: ['C', 'X'] },
   ];
 
   const priorityLabel = (priority: string) => {
@@ -312,10 +303,7 @@ const Dashboard = () => {
   };
 
   const handleQuickAction = (qa: typeof quickActions[number]) => {
-    if (qa.modalRef?.current?.show) return qa.modalRef.current.show();
-    if (qa.action === 'conflict') return setOpenConflict(true);
-    if (qa.action === 'clauseLib') return setOpenClauseLib(true);
-    if (qa.action === 'closeMatter') return setOpenMatterClose(true);
+    runAction(qa.action);
   };
 
   const handleCloseDialog = (dialogType: keyof typeof openDialogs) => {
@@ -332,7 +320,7 @@ const Dashboard = () => {
   };
 
   const handleCreateFirstCase = () => {
-    caseModalRef.current?.show();
+    runAction('create-case');
   };
 
   const handleViewTask = (taskItem: ApiTask) => {
@@ -345,7 +333,7 @@ const Dashboard = () => {
   };
 
   const handleCreateFirstTask = () => {
-    taskCreateModalRef.current?.show();
+    runAction('create-task');
   };
 
   const handleOpenCaseFromTask = (caseId: number) => {
@@ -541,6 +529,7 @@ const Dashboard = () => {
                         <Icon size={14} />
                       </span>
                       <span className="text-xs font-medium text-slate-900 dark:text-white">{qa.title}</span>
+                      <HintKbd keys={qa.keys} className="ms-auto hidden sm:inline-flex opacity-70 group-hover:opacity-100" />
                     </div>
                     <p className="text-xs text-muted-foreground mt-1">{qa.description}</p>
                   </button>
@@ -844,13 +833,7 @@ const Dashboard = () => {
         open={openDialogs.client}
         onOpenChange={() => handleCloseDialog('client')}
       />
-      <CaseModal ref={caseModalRef} />
       <CaseDetailDrawer ref={caseDetailDrawerRef} />
-      <ClientCreateModal ref={clientCreateModalRef} />
-      <ScheduleAppointmentDialog
-        ref={appointmentCreateRef}
-      />
-      <AddTaskDialog ref={taskCreateModalRef} onSuccess={refreshOverview} />
       <TaskUpdateModal ref={taskUpdateModalRef} onSuccess={refreshOverview} />
       <TaskDetailPanel
         taskId={detailTaskId}
@@ -862,15 +845,6 @@ const Dashboard = () => {
         portalContainer={null}
         onOpenCase={handleOpenCaseFromTask}
         onComplete={handleCompleteTask}
-      />
-      <ConflictCheckDialog open={openConflict} onOpenChange={setOpenConflict} />
-      <ClauseLibraryModal open={openClauseLib} onOpenChange={setOpenClauseLib} />
-      <MatterCloseModal
-        open={openMatterClose}
-        onOpenChange={setOpenMatterClose}
-        onSuccess={() => {
-          void refreshOverview();
-        }}
       />
     </>
   );

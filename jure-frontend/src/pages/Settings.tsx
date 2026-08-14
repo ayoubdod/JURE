@@ -23,6 +23,7 @@ import {
   Cpu,
   Users,
   Building2,
+  Keyboard,
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -52,6 +53,8 @@ import RoleManagement from '@/components/role/RoleManagement';
 import { useAppTranslation } from '@/i18n';
 import LangSwitcher from '@/components/common/LangSwitcher';
 import { Languages } from '@/utils/constants';
+import { useShortcuts } from '@/context/ShortcutsContext';
+import ShortcutLibrary from '@/components/shortcuts/ShortcutLibrary';
 
 type NotificationKey = 'email' | 'push' | 'sms' | 'desktop';
 
@@ -94,7 +97,7 @@ const Settings: React.FC = () => {
   const { user, logout } = useUserStore();
 
   const [activeSection, setActiveSection] = useState<
-    'profile' | 'notifications' | 'security' | 'appearance' | 'language' | 'data' | 'roles'
+    'profile' | 'notifications' | 'security' | 'appearance' | 'language' | 'data' | 'roles' | 'shortcuts'
   >('profile');
   const [showPassword, setShowPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
@@ -111,6 +114,7 @@ const Settings: React.FC = () => {
   const [logoIsUploading, setLogoIsUploading] = useState(false);
   const [logoUrl, setLogoUrl] = useState(user?.logo || '');
   const { lang, t, tf } = useAppTranslation();
+  const { showHintsOnButtons, setShowHintsOnButtons } = useShortcuts();
 
   const profileSchema = useMemo(
     () =>
@@ -282,6 +286,12 @@ const Settings: React.FC = () => {
         icon: Users,
         description: t.settings.nav.rolesDesc,
       },
+      {
+        id: 'shortcuts' as const,
+        label: t.settings.nav.shortcuts,
+        icon: Keyboard,
+        description: t.settings.nav.shortcutsDesc,
+      },
     ],
     [t]
   );
@@ -433,7 +443,30 @@ const Settings: React.FC = () => {
     }
   };
 
-  const handleNotificationToggle = (type: NotificationKey, value: boolean) => {
+  const handleNotificationToggle = async (type: NotificationKey, value: boolean) => {
+    if ((type === 'desktop' || type === 'push') && value) {
+      const { requestCallNotificationPermission, setCallNotifyEnabled, getNotificationPermission } =
+        await import('@/utils/incomingCallNotify');
+      const perm = await requestCallNotificationPermission();
+      if (perm === 'denied' || perm === 'unsupported') {
+        toast({
+          title: t.settings.toasts.notificationUpdatedTitle,
+          description:
+            perm === 'unsupported'
+              ? 'Notifications are not supported in this browser.'
+              : 'Notification permission was blocked. Enable it in your browser settings.',
+          variant: 'destructive',
+        });
+        setNotifications((prev) => ({ ...prev, [type]: false }));
+        return;
+      }
+      setCallNotifyEnabled(true);
+      void getNotificationPermission();
+    }
+    if ((type === 'desktop' || type === 'push') && !value) {
+      const { setCallNotifyEnabled } = await import('@/utils/incomingCallNotify');
+      setCallNotifyEnabled(false);
+    }
     setNotifications((prev) => {
       const typeLabel =
         type === 'email'
@@ -1118,6 +1151,45 @@ const Settings: React.FC = () => {
     </Card>
   );
 
+  const renderKeyboard = () => (
+    <div className="space-y-6">
+      <Card className="border border-border/60 shadow-sm">
+        <CardHeader className="pb-2">
+          <CardTitle>{t.settings.keyboardTitle}</CardTitle>
+          <CardDescription>{t.settings.keyboardDescription}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col gap-3 rounded-xl border border-border/60 bg-muted/10 p-5 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-sm font-medium text-foreground">{t.settings.keyboardShowOnButtonsTitle}</p>
+              <p className="mt-1 text-sm text-muted-foreground">{t.settings.keyboardShowOnButtonsDesc}</p>
+            </div>
+            <Switch
+              checked={showHintsOnButtons}
+              onCheckedChange={setShowHintsOnButtons}
+              aria-label={t.settings.keyboardShowOnButtonsTitle}
+              className="sm:ml-auto"
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card className="border border-border/60 shadow-sm">
+        <CardHeader className="pb-2">
+          <CardTitle>{t.settings.keyboardLibraryTitle}</CardTitle>
+          <CardDescription>{t.settings.keyboardLibraryDescription}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <ShortcutLibrary
+            searchable
+            searchPlaceholder={t.settings.keyboardSearchPlaceholder}
+            emptyLabel={t.settings.keyboardEmpty}
+          />
+        </CardContent>
+      </Card>
+    </div>
+  );
+
   return (
     <div className="mx-auto max-w-7xl space-y-10 pb-16">
       <section className="relative overflow-hidden rounded-3xl border border-border/60 bg-gradient-to-br from-jure-700 via-jure-600 to-jure-500 text-white shadow-lg">
@@ -1223,6 +1295,7 @@ const Settings: React.FC = () => {
           <TabsContent value="language">{renderLanguage()}</TabsContent>
           <TabsContent value="data">{renderData()}</TabsContent>
           <TabsContent value="roles"><RoleManagement /></TabsContent>
+          <TabsContent value="shortcuts">{renderKeyboard()}</TabsContent>
         </div>
       </Tabs>
     </div>
