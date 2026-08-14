@@ -173,16 +173,49 @@ export async function getCallUserMedia(
   return navigator.mediaDevices.getUserMedia(constraints);
 }
 
-export function attachRemoteMedia(stream: MediaStream) {
+export function attachRemoteMedia(stream: MediaStream | null | undefined) {
+  if (!stream) return;
   const audio = document.getElementById('remote-audio') as HTMLAudioElement | null;
   if (audio) {
-    audio.srcObject = stream;
-    void audio.play().catch(() => {});
+    audio.muted = false;
+    audio.volume = 1;
+    // Ensure element can play without a second gesture when Accept already unlocked audio.
+    audio.setAttribute('autoplay', '');
+    audio.setAttribute('playsinline', '');
+    if (audio.srcObject !== stream) {
+      audio.srcObject = stream;
+    }
+    const play = () => {
+      void audio.play().catch((err) => {
+        devWarn('[webrtc] remote audio play blocked', err);
+      });
+    };
+    play();
+    // Retry shortly — element may have just mounted after Accept.
+    window.setTimeout(play, 50);
+    window.setTimeout(play, 250);
+  } else {
+    devWarn('[webrtc] #remote-audio missing — remote voice will be silent until remount');
   }
   const video = document.getElementById('remote-video') as HTMLVideoElement | null;
   if (video) {
-    video.srcObject = stream;
+    // Keep video element from double-playing audio; remote-audio owns playback.
+    video.muted = true;
+    if (video.srcObject !== stream) {
+      video.srcObject = stream;
+    }
     void video.play().catch(() => {});
+  }
+}
+
+/** Re-bind whatever remote stream we already have (after UI mounts / Accept gesture). */
+export function ensureRemoteAudioPlaying(stream?: MediaStream | null) {
+  const s =
+    stream ??
+    (document.getElementById('remote-audio') as HTMLAudioElement | null)?.srcObject;
+  if (s instanceof MediaStream) {
+    attachRemoteMedia(s);
+    return;
   }
 }
 

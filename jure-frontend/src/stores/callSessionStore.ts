@@ -689,6 +689,12 @@ function markCallActive() {
         }
   );
   startStatsPoll();
+  if (mediaRef.remoteStream) {
+    attachRemoteMedia(mediaRef.remoteStream);
+    window.setTimeout(() => {
+      if (mediaRef.remoteStream) attachRemoteMedia(mediaRef.remoteStream);
+    }, 200);
+  }
 }
 
 function updateRemoteVideoFlags(stream: MediaStream) {
@@ -724,18 +730,28 @@ function setupPcCommon(pc: RTCPeerConnection) {
     }
   };
   pc.ontrack = (ev) => {
-    let stream = ev.streams[0];
-    if (!stream) {
-      if (!mediaRef.remoteStream) mediaRef.remoteStream = new MediaStream();
-      mediaRef.remoteStream.addTrack(ev.track);
-      stream = mediaRef.remoteStream;
-    } else {
-      mediaRef.remoteStream = stream;
+    // Always accumulate into one stream so a later video/audio ontrack
+    // does not replace (and drop) the earlier track.
+    if (!mediaRef.remoteStream) mediaRef.remoteStream = new MediaStream();
+    const stream = mediaRef.remoteStream;
+    if (!stream.getTracks().some((t) => t.id === ev.track.id)) {
+      stream.addTrack(ev.track);
+    }
+    // Prefer browser-bundled stream tracks when present (same ids).
+    const bundled = ev.streams[0];
+    if (bundled) {
+      bundled.getTracks().forEach((t) => {
+        if (!stream.getTracks().some((x) => x.id === t.id)) stream.addTrack(t);
+      });
     }
     attachRemoteMedia(stream);
     updateRemoteVideoFlags(stream);
-    stream.onaddtrack = () => updateRemoteVideoFlags(stream);
+    stream.onaddtrack = () => {
+      updateRemoteVideoFlags(stream);
+      attachRemoteMedia(stream);
+    };
     stream.onremovetrack = () => updateRemoteVideoFlags(stream);
+    ev.track.onunmute = () => attachRemoteMedia(stream);
     if (getStatus() === 'connecting') markCallActive();
   };
   pc.onconnectionstatechange = () => {

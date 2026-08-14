@@ -136,8 +136,6 @@ const CallDialog: React.FC<CallDialogProps> = ({
 
   return (
     <>
-      <audio id="remote-audio" autoPlay playsInline className="hidden" />
-
       {showCompact ? (
         <div
           role="dialog"
