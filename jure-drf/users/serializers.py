@@ -22,7 +22,6 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework import exceptions, serializers
 from rest_framework.exceptions import ValidationError
 from django.conf import settings
-from django.contrib.sites.shortcuts import get_current_site
 from django.urls import reverse
 
 from allauth.account import app_settings as allauth_account_settings
@@ -459,7 +458,6 @@ class CustomAllAuthPasswordResetForm(DefaultPasswordResetForm):
         return self.cleaned_data["email"]
 
     def save(self, request, **kwargs):
-        current_site = get_current_site(request)
         email = self.cleaned_data['email']
         token_generator = kwargs.get('token_generator', default_token_generator)
 
@@ -478,11 +476,6 @@ class CustomAllAuthPasswordResetForm(DefaultPasswordResetForm):
 
 
             context = {
-                # 'current_site': current_site,
-                'current_site': {
-                    'name': settings.COMPANY_NAME,
-                    'domain': settings.FRONTEND_BASE_URL.split('//')[1],
-                },
                 'user': user,
                 'password_reset_url': url,
                 'request': request,

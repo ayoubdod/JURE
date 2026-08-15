@@ -76,3 +76,6 @@ coverage.xml
 *.cover
 
 allure-results
+
+# Local email HTML/text previews
+tmp/

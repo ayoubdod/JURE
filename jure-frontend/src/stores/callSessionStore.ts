@@ -214,8 +214,6 @@ let unsubCalls: (() => void) | null = null;
 let unsubConv: (() => void) | null = null;
 let knownRemoteUsers: Map<number, CallRemoteUser> = new Map();
 let speakingTimer: ReturnType<typeof setInterval> | null = null;
-let speakingCtx: AudioContext | null = null;
-const speakingAnalysers = new Map<number, { analyser: AnalyserNode; source: MediaStreamAudioSourceNode }>();
 /** Camera track kept while screen-sharing so we can restore it. */
 let savedCameraTrack: MediaStreamTrack | null = null;
 let screenShareTrack: MediaStreamTrack | null = null;
@@ -413,89 +411,37 @@ function stopSpeakingMonitor() {
     clearInterval(speakingTimer);
     speakingTimer = null;
   }
-  for (const slot of speakingAnalysers.values()) {
-    try {
-      slot.source.disconnect();
-      slot.analyser.disconnect();
-    } catch {
-      /* ignore */
-    }
-  }
-  speakingAnalysers.clear();
-  if (speakingCtx) {
-    void speakingCtx.close().catch(() => {});
-    speakingCtx = null;
-  }
 }
 
 function ensureSpeakingMonitor() {
   if (speakingTimer) return;
   speakingTimer = setInterval(() => {
     if (callMode !== 'conference' || conferencePeers.size === 0) return;
-    if (!speakingCtx) {
-      try {
-        speakingCtx = new AudioContext();
-      } catch {
-        return;
-      }
-    }
-    if (speakingCtx.state === 'suspended') void speakingCtx.resume().catch(() => {});
-
-    let changed = false;
-    for (const [peerId, peer] of conferencePeers) {
-      const stream = peer.remoteStream;
-      const audioTracks = stream?.getAudioTracks().filter((t) => t.readyState === 'live') ?? [];
-      if (!stream || audioTracks.length === 0) {
-        if (setPeerSpeaking(conferencePeers, peerId, false)) changed = true;
-        const old = speakingAnalysers.get(peerId);
-        if (old) {
-          try {
-            old.source.disconnect();
-            old.analyser.disconnect();
-          } catch {
-            /* ignore */
-          }
-          speakingAnalysers.delete(peerId);
-        }
-        continue;
-      }
-      let slot = speakingAnalysers.get(peerId);
-      if (!slot) {
-        try {
-          const source = speakingCtx.createMediaStreamSource(stream);
-          const analyser = speakingCtx.createAnalyser();
-          analyser.fftSize = 256;
-          analyser.smoothingTimeConstant = 0.7;
-          source.connect(analyser);
-          slot = { source, analyser };
-          speakingAnalysers.set(peerId, slot);
-        } catch {
+    void (async () => {
+      let changed = false;
+      for (const [peerId, peer] of conferencePeers) {
+        const pc = peer.pc;
+        if (!pc) {
+          if (setPeerSpeaking(conferencePeers, peerId, false)) changed = true;
           continue;
         }
-      }
-      const data = new Uint8Array(slot.analyser.frequencyBinCount);
-      slot.analyser.getByteFrequencyData(data);
-      let sum = 0;
-      for (let i = 0; i < data.length; i++) sum += data[i];
-      const avg = sum / data.length;
-      const speaking = avg > 18;
-      if (setPeerSpeaking(conferencePeers, peerId, speaking)) changed = true;
-    }
-    // Drop analysers for peers that left
-    for (const peerId of [...speakingAnalysers.keys()]) {
-      if (!conferencePeers.has(peerId)) {
-        const old = speakingAnalysers.get(peerId);
         try {
-          old?.source.disconnect();
-          old?.analyser.disconnect();
+          const stats = await pc.getStats();
+          let level = 0;
+          stats.forEach((report) => {
+            if (report.type === 'inbound-rtp' && (report as { kind?: string }).kind === 'audio') {
+              const n = Number((report as { audioLevel?: number }).audioLevel ?? 0);
+              if (n > level) level = n;
+            }
+          });
+          if (setPeerSpeaking(conferencePeers, peerId, level > 0.02)) changed = true;
         } catch {
           /* ignore */
         }
-        speakingAnalysers.delete(peerId);
       }
-    }
-    if (changed) syncPeersUi();
-  }, 200);
+      if (changed) syncPeersUi();
+    })();
+  }, 300);
 }
 
 function bindPeerTrackListeners(peerId: number, stream: MediaStream) {
@@ -738,20 +684,20 @@ function setupPcCommon(pc: RTCPeerConnection) {
     }
   };
   pc.ontrack = (ev) => {
-    // Prefer the stream from all receivers so audio+video stay together.
-    const fromPc = remoteStreamFromPeerConnection(pc);
-    if (fromPc.getTracks().length > 0) {
-      mediaRef.remoteStream = fromPc;
-    } else if (ev.streams[0]) {
-      mediaRef.remoteStream = ev.streams[0];
-    } else {
-      if (!mediaRef.remoteStream) mediaRef.remoteStream = new MediaStream();
-      if (!mediaRef.remoteStream.getTracks().some((t) => t.id === ev.track.id)) {
-        mediaRef.remoteStream.addTrack(ev.track);
-      }
-    }
-    const stream = mediaRef.remoteStream!;
     ev.track.enabled = true;
+    if (!mediaRef.remoteStream) mediaRef.remoteStream = new MediaStream();
+    if (!mediaRef.remoteStream.getTracks().some((t) => t.id === ev.track.id)) {
+      mediaRef.remoteStream.addTrack(ev.track);
+    }
+    const bundled = ev.streams[0];
+    if (bundled) {
+      bundled.getTracks().forEach((t) => {
+        if (!mediaRef.remoteStream!.getTracks().some((x) => x.id === t.id)) {
+          mediaRef.remoteStream!.addTrack(t);
+        }
+      });
+    }
+    const stream = mediaRef.remoteStream;
     attachRemoteMedia(stream);
     updateRemoteVideoFlags(stream);
     stream.onaddtrack = () => {

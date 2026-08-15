@@ -40,11 +40,9 @@ export function initPeerConnection(iceServers: RTCIceServer[]): RTCPeerConnectio
 }
 
 export async function createOffer(pc: RTCPeerConnection): Promise<RTCSessionDescriptionInit> {
-  const hasVideoSender = pc.getSenders().some((s) => s.track?.kind === 'video');
-  const offer = await pc.createOffer({
-    offerToReceiveAudio: true,
-    offerToReceiveVideo: hasVideoSender,
-  });
+  // Do not pass offerToReceiveAudio/Video after addTrack — that extra recvonly
+  // transceiver is a common cause of connected-but-silent calls.
+  const offer = await pc.createOffer();
   await pc.setLocalDescription(offer);
   return offer;
 }
@@ -96,13 +94,7 @@ export function cleanupCall(refs: CallMediaRefs): void {
       /* ignore */
     }
   });
-  refs.remoteStream?.getTracks().forEach((t) => {
-    try {
-      t.stop();
-    } catch {
-      /* ignore */
-    }
-  });
+  // Never stop remote receiver tracks — that tears down inbound audio/video.
   refs.pc = null;
   refs.localStream = null;
   refs.remoteStream = null;
@@ -188,11 +180,14 @@ export async function getCallUserMedia(
   return navigator.mediaDevices.getUserMedia(constraints);
 }
 
-/** Programmatic sink — survives React remounts and does not depend on #remote-audio alone. */
+/** Persistent sink — parked inside the call UI so a modal dialog cannot mute it. */
 let managedRemoteAudio: HTMLAudioElement | null = null;
+let attachedAudioTrackIds = '';
 let remoteAudioUnlocked = false;
 let remotePlayBlocked = false;
 let remoteAudioCtx: AudioContext | null = null;
+let remoteAudioSource: MediaStreamAudioSourceNode | null = null;
+let remoteAudioGain: GainNode | null = null;
 const remotePlayListeners = new Set<(blocked: boolean) => void>();
 
 export function onRemoteAudioPlayBlocked(cb: (blocked: boolean) => void): () => void {
@@ -212,54 +207,81 @@ export function isRemoteAudioPlayBlocked(): boolean {
 }
 
 function ensureManagedRemoteAudio(): HTMLAudioElement {
-  const fromDom = document.getElementById('remote-audio') as HTMLAudioElement | null;
-  if (fromDom) {
-    managedRemoteAudio = fromDom;
-    return fromDom;
+  if (managedRemoteAudio && managedRemoteAudio.isConnected) return managedRemoteAudio;
+  const el = document.createElement('audio');
+  el.id = 'jure-remote-audio';
+  el.autoplay = true;
+  el.playsInline = true;
+  el.setAttribute('playsinline', '');
+  el.setAttribute('webkit-playsinline', '');
+  el.setAttribute('autoplay', '');
+  // Keep a real laid-out box. display:none / 1px / z-index:-1 can silence WebKit.
+  el.style.cssText = 'width:8px;height:8px;opacity:0.02;pointer-events:none;border:0;';
+  el.volume = 1;
+  el.muted = false;
+  document.body.appendChild(el);
+  managedRemoteAudio = el;
+  return el;
+}
+
+/** Move the sink into the live call UI (dialog/sheet) so it is not aria-hidden/inert. */
+export function parkRemoteAudioIn(host: HTMLElement | null) {
+  if (!host) return;
+  const el = ensureManagedRemoteAudio();
+  if (el.parentElement !== host) {
+    host.appendChild(el);
+    if (el.srcObject) void el.play().catch(() => {});
   }
-  if (!managedRemoteAudio) {
-    const el = document.createElement('audio');
-    el.id = 'remote-audio-managed';
-    el.autoplay = true;
-    el.setAttribute('playsinline', '');
-    el.setAttribute('webkit-playsinline', '');
-    // Keep in DOM; hiding with display:none can suspend media on some browsers.
-    el.style.cssText =
-      'position:fixed;left:0;top:0;width:1px;height:1px;opacity:0.01;pointer-events:none;z-index:-1;';
-    document.body.appendChild(el);
-    managedRemoteAudio = el;
+}
+
+function getAudioContextCtor(): typeof AudioContext | null {
+  if (typeof window === 'undefined') return null;
+  return (
+    window.AudioContext ||
+    (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext ||
+    null
+  );
+}
+
+function wireWebAudio(audioStream: MediaStream) {
+  if (!remoteAudioCtx || remoteAudioCtx.state === 'closed') return;
+  if (audioStream.getAudioTracks().length === 0) return;
+  try {
+    if (remoteAudioCtx.state === 'suspended') void remoteAudioCtx.resume();
+    remoteAudioSource?.disconnect();
+    if (!remoteAudioGain) {
+      remoteAudioGain = remoteAudioCtx.createGain();
+      remoteAudioGain.gain.value = 1;
+      remoteAudioGain.connect(remoteAudioCtx.destination);
+    }
+    remoteAudioSource = remoteAudioCtx.createMediaStreamSource(audioStream);
+    remoteAudioSource.connect(remoteAudioGain);
+  } catch (e) {
+    devWarn('[webrtc] WebAudio remote bind failed', e);
   }
-  return managedRemoteAudio;
 }
 
 /**
- * Must run inside a user gesture (Accept / Start call). Unlocks HTMLMediaElement + AudioContext
- * so later async ontrack → play() is allowed after getUserMedia / ICE delay.
+ * Must start from a user gesture (Accept / Start call). Call resume() without awaiting
+ * first so the gesture token is not lost.
  */
 export async function unlockRemoteAudioPlayback(): Promise<void> {
   const el = ensureManagedRemoteAudio();
   el.muted = false;
   el.volume = 1;
+  const AC = getAudioContextCtor();
   try {
-    const AC =
-      window.AudioContext ||
-      (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
     if (AC) {
       if (!remoteAudioCtx || remoteAudioCtx.state === 'closed') {
         remoteAudioCtx = new AC();
       }
-      if (remoteAudioCtx.state === 'suspended') {
-        await remoteAudioCtx.resume();
-      }
+      void remoteAudioCtx.resume();
     }
   } catch (e) {
     devWarn('[webrtc] AudioContext unlock failed', e);
   }
   try {
-    // Empty stream play during gesture "activates" the element for later srcObject swaps.
-    if (!el.srcObject) {
-      el.srcObject = new MediaStream();
-    }
+    if (!el.srcObject) el.srcObject = new MediaStream();
     await el.play();
     remoteAudioUnlocked = true;
     setRemotePlayBlocked(false);
@@ -273,11 +295,13 @@ export async function unlockRemoteAudioPlayback(): Promise<void> {
 export function attachRemoteMedia(stream: MediaStream | null | undefined) {
   if (!stream) return;
 
-  stream.getAudioTracks().forEach((t) => {
+  const audioTracks = stream.getAudioTracks().filter((t) => t.readyState !== 'ended');
+  audioTracks.forEach((t) => {
     t.enabled = true;
   });
+  const audioStream = new MediaStream(audioTracks);
+  const ids = audioTracks.map((t) => t.id).sort().join(',');
 
-  const audioTracks = stream.getAudioTracks();
   devLog('[webrtc] attachRemoteMedia', {
     audioTracks: audioTracks.length,
     videoTracks: stream.getVideoTracks().length,
@@ -294,45 +318,35 @@ export function attachRemoteMedia(stream: MediaStream | null | undefined) {
     devWarn('[webrtc] attachRemoteMedia: stream has no audio tracks yet');
   }
 
-  const audio = ensureManagedRemoteAudio();
-  const domAudio = document.getElementById('remote-audio') as HTMLAudioElement | null;
-  const targets = domAudio && domAudio !== audio ? [audio, domAudio] : [audio];
-
-  for (const el of targets) {
-    el.muted = false;
-    el.volume = 1;
-    el.autoplay = true;
-    el.setAttribute('autoplay', '');
-    el.setAttribute('playsinline', '');
-    el.setAttribute('webkit-playsinline', '');
-    // Force rebind — browsers often ignore late addTrack on an already-assigned stream.
-    try {
-      el.srcObject = null;
-    } catch {
-      /* ignore */
-    }
-    el.srcObject = stream;
-    const tryPlay = () => {
-      void el
-        .play()
-        .then(() => {
-          setRemotePlayBlocked(false);
-        })
-        .catch((err) => {
-          setRemotePlayBlocked(true);
-          devWarn('[webrtc] remote audio play blocked', err);
-        });
-    };
-    tryPlay();
-    window.setTimeout(tryPlay, 80);
-    window.setTimeout(tryPlay, 400);
+  const el = ensureManagedRemoteAudio();
+  const tracksChanged = attachedAudioTrackIds !== ids;
+  if (tracksChanged) {
+    attachedAudioTrackIds = ids;
+    el.srcObject = audioTracks.length ? audioStream : null;
   }
+  el.autoplay = true;
+  el.volume = 1;
+  el.muted = false;
+  void el
+    .play()
+    .then(() => setRemotePlayBlocked(false))
+    .catch((err) => {
+      devWarn('[webrtc] remote audio play blocked', err);
+      // Second chance: muted element primes decode; Web Audio goes to speakers.
+      el.muted = true;
+      void el.play().catch(() => {});
+      wireWebAudio(audioStream);
+      setRemotePlayBlocked(!(remoteAudioCtx && remoteAudioCtx.state === 'running'));
+    });
 
   const video = document.getElementById('remote-video') as HTMLVideoElement | null;
   if (video) {
-    video.muted = true; // #remote-audio owns sound
-    video.srcObject = stream;
-    void video.play().catch(() => {});
+    video.muted = true;
+    const vtracks = stream.getVideoTracks().filter((t) => t.readyState !== 'ended');
+    if (vtracks.length) {
+      video.srcObject = new MediaStream(vtracks);
+      void video.play().catch(() => {});
+    }
   }
 }
 
@@ -340,11 +354,8 @@ export function attachRemoteMedia(stream: MediaStream | null | undefined) {
 export function ensureRemoteAudioPlaying(stream?: MediaStream | null) {
   const s =
     stream ??
-    (document.getElementById('remote-audio') as HTMLAudioElement | null)?.srcObject ??
-    managedRemoteAudio?.srcObject;
-  if (s instanceof MediaStream) {
-    attachRemoteMedia(s);
-  }
+    (managedRemoteAudio?.srcObject instanceof MediaStream ? managedRemoteAudio.srcObject : null);
+  if (s) attachRemoteMedia(s);
 }
 
 /** Build a MediaStream from all live PC receivers (most reliable for 1:1). */
@@ -368,11 +379,14 @@ export function attachLocalVideo(stream: MediaStream | null) {
 }
 
 export function clearRemoteMediaElements() {
-  const audio = document.getElementById('remote-audio') as HTMLAudioElement | null;
-  if (audio) audio.srcObject = null;
-  if (managedRemoteAudio && managedRemoteAudio !== audio) {
-    managedRemoteAudio.srcObject = null;
+  attachedAudioTrackIds = '';
+  try {
+    remoteAudioSource?.disconnect();
+  } catch {
+    /* ignore */
   }
+  remoteAudioSource = null;
+  if (managedRemoteAudio) managedRemoteAudio.srcObject = null;
   const remote = document.getElementById('remote-video') as HTMLVideoElement | null;
   if (remote) remote.srcObject = null;
   const local = document.getElementById('local-video') as HTMLVideoElement | null;
@@ -491,23 +505,16 @@ export async function applyOutboundVideoTrack(
 }
 
 export async function setAudioOutputDevice(deviceId: string): Promise<boolean> {
-  const candidates: Array<(HTMLAudioElement | HTMLVideoElement) & { setSinkId?: (id: string) => Promise<void> }> = [];
-  const audio = document.getElementById('remote-audio') as HTMLAudioElement | null;
-  const managed = document.getElementById('remote-audio-managed') as HTMLAudioElement | null;
-  const video = document.getElementById('remote-video') as HTMLVideoElement | null;
-  if (audio) candidates.push(audio);
-  if (managed && managed !== audio) candidates.push(managed);
-  if (video) candidates.push(video);
-  let ok = false;
-  for (const el of candidates) {
-    if (el && typeof el.setSinkId === 'function') {
-      try {
-        await el.setSinkId(deviceId);
-        ok = true;
-      } catch (e) {
-        devWarn('[webrtc] setSinkId failed', e);
-      }
+  const el = (document.getElementById('jure-remote-audio') ?? managedRemoteAudio) as
+    | (HTMLAudioElement & { setSinkId?: (id: string) => Promise<void> })
+    | null;
+  if (el && typeof el.setSinkId === 'function') {
+    try {
+      await el.setSinkId(deviceId);
+      return true;
+    } catch (e) {
+      devWarn('[webrtc] setSinkId failed', e);
     }
   }
-  return ok;
+  return false;
 }

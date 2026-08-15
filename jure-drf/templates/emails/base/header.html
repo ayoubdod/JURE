@@ -1,0 +1,10 @@
+{% load i18n %}
+<tr>
+  <td class="email-pad" style="padding:32px 40px 16px 40px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;">
+    <div style="font-size:13px;letter-spacing:0.18em;font-weight:700;color:#6D54B5;line-height:1.2;">JURE</div>
+    <div style="margin-top:4px;font-size:12px;line-height:1.4;color:#71717A;letter-spacing:0.01em;">{% trans "Legal Workspace" %}</div>
+    {% if firm_name %}
+    <div style="margin-top:10px;font-size:13px;line-height:1.4;color:#52525B;">{{ firm_name }}</div>
+    {% endif %}
+  </td>
+</tr>

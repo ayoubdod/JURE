@@ -1,9 +1,17 @@
-{% extends "account/email/base_message.txt" %}
-{% load account %}
-{% load i18n %}
+{% load i18n %}{% autoescape off %}{% include "emails/base/header.txt" %}
+{% trans "Confirm your email address" %}
 
-{% block content %}{% autoescape off %}{% user_display user as user_display %}{% blocktranslate with site_name=current_site.name site_domain=current_site.domain %}You're receiving this email because user {{ user_display }} has given your email address to register an account on {{ site_domain }}.{% endblocktranslate %}
+{% if user.first_name %}{% blocktrans with name=user.first_name %}Hello {{ name }},{% endblocktrans %}
+{% else %}{% trans "Hello," %}
+{% endif %}
+{% trans "Thanks for creating your Jure account." %}
 
-{% if code %}{% blocktranslate %}Your email verification code is listed below. Please enter it in your open browser window.{% endblocktranslate %}
+{% if code %}{% trans "Enter this verification code in your open browser window:" %}
 
-{{ code }}{% else %}{% blocktranslate %}To confirm this is correct, go to {{ activate_url }}{% endblocktranslate %}{% endif %}{% endautoescape %}{% endblock content %}
+{{ code }}
+{% else %}{% trans "Confirm your email:" %}
+{{ activate_url }}
+
+{% trans "If you did not create this account, you can ignore this email." %}
+{% endif %}
+{% trans "You're receiving this email because this email address was used to create a Jure account." as footer_note %}{% include "emails/base/footer.txt" %}{% endautoescape %}

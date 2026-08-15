@@ -5,13 +5,12 @@ import { useCallSessionStore, useWebRtcCall } from '@/stores/callSessionStore';
 import {
   attachRemoteMedia,
   onRemoteAudioPlayBlocked,
+  parkRemoteAudioIn,
   unlockRemoteAudioPlayback,
 } from '@/utils/webrtc';
 
 /**
- * App-level call UI shell. Mount once under DashboardLayout so calls survive navigation.
- * `#remote-audio` stays mounted for the whole dashboard session so WebRTC ontrack
- * can always attach — even before CallDialog opens after Accept.
+ * App-level call UI. Mount once under DashboardLayout so calls survive navigation.
  */
 const CallShell: React.FC = () => {
   const bootstrap = useCallSessionStore((s) => s.bootstrap);
@@ -37,12 +36,12 @@ const CallShell: React.FC = () => {
   } = useWebRtcCall();
 
   const getRemoteStream = useCallSessionStore((s) => s.getRemoteStream);
+  const peers = callState.peers;
   const status = callState.status;
   const [audioBlocked, setAudioBlocked] = React.useState(false);
 
   React.useEffect(() => onRemoteAudioPlayBlocked(setAudioBlocked), []);
 
-  // Re-bind remote audio whenever a call becomes live (Accept race + minimize remount).
   React.useEffect(() => {
     if (status !== 'active' && status !== 'connecting' && status !== 'reconnecting') return;
     const bind = () => {
@@ -50,14 +49,8 @@ const CallShell: React.FC = () => {
       if (stream) attachRemoteMedia(stream);
     };
     bind();
-    const t1 = window.setTimeout(bind, 100);
-    const t2 = window.setTimeout(bind, 500);
-    const t3 = window.setTimeout(bind, 1500);
-    return () => {
-      window.clearTimeout(t1);
-      window.clearTimeout(t2);
-      window.clearTimeout(t3);
-    };
+    const t = window.setTimeout(bind, 400);
+    return () => window.clearTimeout(t);
   }, [status, getRemoteStream]);
 
   const handleCallModalClose = () => {
@@ -72,13 +65,6 @@ const CallShell: React.FC = () => {
   const handleAccept = () => {
     void unlockRemoteAudioPlayback();
     acceptIncoming();
-    const bind = () => {
-      const stream = useCallSessionStore.getState().getRemoteStream();
-      if (stream) attachRemoteMedia(stream);
-    };
-    window.setTimeout(bind, 0);
-    window.setTimeout(bind, 300);
-    window.setTimeout(bind, 1000);
   };
 
   const handleTapToHear = () => {
@@ -86,21 +72,22 @@ const CallShell: React.FC = () => {
       await unlockRemoteAudioPlayback();
       const stream = getRemoteStream();
       if (stream) attachRemoteMedia(stream);
+      peers.forEach((p) => {
+        if (p.stream) attachRemoteMedia(p.stream);
+      });
     })();
   };
 
-  const live =
-    status === 'active' || status === 'connecting' || status === 'reconnecting';
+  const live = status === 'active' || status === 'connecting' || status === 'reconnecting';
 
   return (
     <>
-      <audio
-        id="remote-audio"
-        autoPlay
-        playsInline
-        // Do not use display:none / opacity-0 — some browsers suspend playback.
-        className="pointer-events-none fixed left-0 top-0 z-[-1] h-px w-px"
-        style={{ opacity: 0.01 }}
+      <div
+        ref={(el) => {
+          if (!showCallModal) parkRemoteAudioIn(el);
+        }}
+        className="pointer-events-none fixed bottom-0 left-0 z-[1] h-2 w-2 overflow-hidden"
+        aria-hidden
       />
 
       {live && audioBlocked ? (

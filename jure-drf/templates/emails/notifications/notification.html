@@ -1,0 +1,72 @@
+{% extends "emails/base/layout.html" %}
+{% load i18n %}
+
+{% block title %}{{ notification.title }}{% endblock %}
+
+{% block context_row %}
+  <tr>
+    <td class="email-pad" style="padding:0 40px 0 40px;">
+      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+        <tr>
+          <td style="height:4px;line-height:4px;font-size:0;background-color:{{ bar_color }};border-radius:2px;">&nbsp;</td>
+        </tr>
+      </table>
+      {% if show_priority_label %}
+      <p style="margin:12px 0 0 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;font-size:11px;letter-spacing:0.08em;text-transform:uppercase;font-weight:700;color:{{ bar_color }};">
+        {{ priority_label }}
+      </p>
+      {% endif %}
+    </td>
+  </tr>
+{% endblock %}
+
+{% block content %}
+  <h1 style="margin:16px 0 12px 0;font-size:20px;line-height:1.3;font-weight:600;color:#18181B;">
+    {{ notification.title }}
+  </h1>
+  <p style="margin:0 0 20px 0;font-size:15px;line-height:1.65;color:#52525B;">
+    {{ notification.message|linebreaksbr }}
+  </p>
+  {% if notification.related_case or notification.related_task or notification.related_appointment %}
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin:0 0 8px 0;background-color:#F7F7F8;border:1px solid #E4E4E7;border-radius:6px;">
+    {% if notification.related_case %}
+    <tr>
+      <td style="padding:14px 18px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;{% if notification.related_task or notification.related_appointment %}border-bottom:1px solid #E4E4E7;{% endif %}">
+        <div style="font-size:11px;letter-spacing:0.06em;text-transform:uppercase;color:#71717A;font-weight:600;">{% trans "Dossier" %}</div>
+        <div style="margin-top:6px;font-size:14px;line-height:1.5;color:#18181B;">#{{ notification.related_case.reference }} — {{ notification.related_case.title }}</div>
+      </td>
+    </tr>
+    {% endif %}
+    {% if notification.related_task %}
+    <tr>
+      <td style="padding:14px 18px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;{% if notification.related_appointment %}border-bottom:1px solid #E4E4E7;{% endif %}">
+        <div style="font-size:11px;letter-spacing:0.06em;text-transform:uppercase;color:#71717A;font-weight:600;">{% trans "Tâche" %}</div>
+        <div style="margin-top:6px;font-size:14px;line-height:1.5;color:#18181B;">{{ notification.related_task.title }}</div>
+      </td>
+    </tr>
+    {% endif %}
+    {% if notification.related_appointment %}
+    <tr>
+      <td style="padding:14px 18px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;">
+        <div style="font-size:11px;letter-spacing:0.06em;text-transform:uppercase;color:#71717A;font-weight:600;">{% trans "Rendez-vous" %}</div>
+        <div style="margin-top:6px;font-size:14px;line-height:1.5;color:#18181B;">{{ notification.related_appointment.title }}</div>
+      </td>
+    </tr>
+    {% endif %}
+  </table>
+  {% endif %}
+  {% if cta_kind == "case" %}
+    {% trans "Voir le dossier →" as cta_label %}
+  {% elif cta_kind == "task" %}
+    {% trans "Voir la tâche →" as cta_label %}
+  {% else %}
+    {% trans "Voir dans Jure →" as cta_label %}
+  {% endif %}
+  {% include "emails/base/button.html" with cta_url=cta_url cta_label=cta_label %}
+  {% include "emails/base/fallback_url.html" with cta_url=cta_url %}
+{% endblock %}
+
+{% block footer %}
+  {% blocktrans asvar footer_note %}Vous recevez cet email car vous êtes membre de {{ firm_name }} sur {{ company_name }}.{% endblocktrans %}
+  {% include "emails/base/footer.html" %}
+{% endblock %}

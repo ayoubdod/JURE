@@ -1,0 +1,7 @@
+{% load i18n %}
+<p style="margin:24px 0 6px 0;font-size:13px;line-height:1.5;color:#71717A;">
+  {% trans "If the button doesn't work, copy and paste this link into your browser:" %}
+</p>
+<p class="email-fallback" style="margin:0;font-size:13px;line-height:1.6;word-break:break-word;overflow-wrap:anywhere;">
+  <a href="{{ cta_url }}" target="_blank" rel="noopener noreferrer" style="color:#6D54B5;text-decoration:underline;">{{ cta_url }}</a>
+</p>

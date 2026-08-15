@@ -1,0 +1,5 @@
+--
+Jure Legal Workspace
+{% if footer_note %}{{ footer_note }}
+{% endif %}{% if site_domain %}{{ site_domain }}
+{% endif %}

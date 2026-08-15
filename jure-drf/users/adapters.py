@@ -1,7 +1,8 @@
 from allauth.account import app_settings
 from allauth.account.adapter import DefaultAccountAdapter
-from django.conf import settings
+from django.utils.encoding import force_str
 
+from core.email_context import email_brand_context, frontend_origin
 from users.models import User
 
 
@@ -48,10 +49,8 @@ class CustomAccountAdapter(DefaultAccountAdapter):
             ctx.update(
                 {
                     "key": emailconfirmation.key,
-                    "activate_url": f"{settings.FRONTEND_BASE_URL}/verify-email/?token={emailconfirmation.key}",
-                    # "activate_url": self.get_email_confirmation_url(
-                    #     request, emailconfirmation
-                    # ),
+                    "activate_url": f"{frontend_origin()}/verify-email/?token={emailconfirmation.key}",
+                    "preheader": "Confirm your Jure email address.",
                 }
             )
 
@@ -61,18 +60,15 @@ class CustomAccountAdapter(DefaultAccountAdapter):
             email_template = "account/email/email_confirmation"
         self.send_mail(email_template, emailconfirmation.email_address.email, ctx)
     
+    def format_email_subject(self, subject):
+        """Subjects are fully defined in templates; do not prefix [Jure]."""
+        return force_str(subject)
+
     def send_mail(self, template_prefix: str, email: str, context: dict) -> None:
-        # Get request from context if available
-        request = context.get('request')
-        ctx = {
-            "request": request,
-            "email": email,
-            # "current_site": get_current_site(request),
-            "current_site": {
-                'name': settings.COMPANY_NAME,
-                'domain': settings.FRONTEND_BASE_URL.split('//')[1],
-            },
-        }
+        request = context.get("request")
+        ctx = email_brand_context(request=request, email=email)
+        if "password_reset" in template_prefix and "preheader" not in context:
+            ctx["preheader"] = "Reset your Jure password."
         ctx.update(context)
         msg = self.render_mail(template_prefix, email, ctx)
         msg.send()

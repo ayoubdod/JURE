@@ -1,0 +1,15 @@
+{% load i18n %}{% autoescape off %}{% include "emails/base/header.txt" %}
+{% if show_priority_label %}{{ priority_label }}
+{% endif %}{{ notification.title }}
+
+{{ notification.message }}
+{% if notification.related_case %}
+{% trans "Dossier" %}: #{{ notification.related_case.reference }} — {{ notification.related_case.title }}
+{% endif %}{% if notification.related_task %}
+{% trans "Tâche" %}: {{ notification.related_task.title }}
+{% endif %}{% if notification.related_appointment %}
+{% trans "Rendez-vous" %}: {{ notification.related_appointment.title }}
+{% endif %}
+{% if cta_kind == "case" %}{% trans "Voir le dossier →" %}{% elif cta_kind == "task" %}{% trans "Voir la tâche →" %}{% else %}{% trans "Voir dans Jure →" %}{% endif %}:
+{{ cta_url }}
+{% blocktrans asvar footer_note %}Vous recevez cet email car vous êtes membre de {{ firm_name }} sur {{ company_name }}.{% endblocktrans %}{% include "emails/base/footer.txt" %}{% endautoescape %}
