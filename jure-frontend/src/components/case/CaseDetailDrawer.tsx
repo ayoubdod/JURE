@@ -41,6 +41,7 @@ import ResearchNotebookCard from '@/components/dashboard/ResearchNotebookCard';
 import MatterCloseModal from '@/components/dashboard/MatterCloseModal';
 import { useAppTranslation } from '@/i18n';
 import { CaseStatus } from '@/utils/constants';
+import { useNavigate } from 'react-router';
 export interface CaseDetailDrawerRef {
   open: (instance: API.Case) => void;
   close: () => void;
@@ -158,6 +159,7 @@ const CaseDetailDrawer = forwardRef<CaseDetailDrawerRef, CaseDetailDrawerProps>(
     const openRef = useRef(false);
     const { toast } = useToast();
     const { t } = useAppTranslation();
+    const navigate = useNavigate();
     const [typeSelectorOpen, setTypeSelectorOpen] = useState(false);
     const [conversionFormOpen, setConversionFormOpen] = useState(false);
     const [conversionTarget, setConversionTarget] = useState<ConversionTargetType | null>(null);
@@ -585,7 +587,13 @@ const CaseDetailDrawer = forwardRef<CaseDetailDrawerRef, CaseDetailDrawerProps>(
                       ? `Case ${refLine} created successfully`
                       : 'Case created successfully',
                   });
-                  openCaseById(newCase.id);
+                  closeInternal();
+                  const nextType = newCase.caseType ?? newCase.case_type;
+                  if (nextType === 'LITIGATION') {
+                    navigate('/dashboard/cases/litigation');
+                  } else if (nextType === 'ADMINISTRATIVE' || nextType === 'ADMINISTRATIVE_DUTY') {
+                    navigate('/dashboard/cases/administrative');
+                  }
                 }}
               />
             )}

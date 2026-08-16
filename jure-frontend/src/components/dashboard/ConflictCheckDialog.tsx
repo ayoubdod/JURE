@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { Loader2, Search, ShieldAlert, ExternalLink } from 'lucide-react';
 import { useAppTranslation } from '@/i18n';
 import { useNavigate } from 'react-router';
+import { navigateToCaseById } from '@/lib/caseRoutes';
 import { isAxiosError } from 'axios';
 import {
   apiRunConflictCheck,
@@ -137,9 +138,8 @@ export default function ConflictCheckDialog({
   };
 
   const viewMatter = (match: ConflictPotentialMatch) => {
-    const search = match.matter_reference || String(match.matter);
     onOpenChange(false);
-    navigate(`/dashboard/cases?search=${encodeURIComponent(search)}`);
+    void navigateToCaseById(navigate, match.matter);
   };
 
   const exact = result?.exact_matches ?? [];

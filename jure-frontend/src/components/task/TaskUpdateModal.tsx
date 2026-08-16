@@ -1,28 +1,78 @@
-'use client'
-import { forwardRef, useImperativeHandle, useMemo, useRef, useState } from 'react';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader, 
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { AlertTriangle, Calendar, CheckSquare, Clock, FileText, Flag, Loader2, User, Gavel, X } from 'lucide-react';
+'use client';
+
+import { forwardRef, useId, useImperativeHandle, useMemo, useRef, useState } from 'react';
+import { Check, Loader2, Pencil } from 'lucide-react';
+import { DialogFooter } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import ServerSelect from '@/components/common/ServerSelect';
 import { apiUpdateTask } from '@/services/task/api';
 import * as yup from 'yup';
 import { Resolver, useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
-import { Input } from '../ui/input';
 import { getRemoteFieldsValidation } from '@/utils/functions';
 import { isAxiosError } from 'axios';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
+import { eventBus } from '@/utils/eventBus';
 import { TaskPriority, TaskStatus } from '@/utils/constants';
-import { DialogDescription } from '@radix-ui/react-dialog';
-import ServerSelect from '../common/ServerSelect';
-import { Textarea } from '../ui/textarea';
-import { devError } from '@/utils/devLog';
+import { cn } from '@/lib/utils';
 import { useAppTranslation } from '@/i18n';
+import { useToast } from '@/hooks/use-toast';
+import { devError } from '@/utils/devLog';
+import {
+  CREATE_CANCEL_CLASS,
+  CREATE_FOOTER_CLASS,
+  CREATE_INPUT_CLASS,
+  CREATE_SELECT_CLASS,
+  CREATE_SERVER_SELECT_CLASS,
+  CREATE_SUBMIT_CLASS,
+  CREATE_TEXTAREA_CLASS,
+  CreateFormDialog,
+  CreateFormField,
+  CreateFormSection,
+} from '@/components/forms/CreateFormShell';
+
+function priorityDotClass(v: string) {
+  if (v === TaskPriority.HIGH) return 'bg-amber-500';
+  if (v === TaskPriority.MEDIUM) return 'bg-blue-500';
+  return 'bg-slate-400';
+}
+
+function statusDotClass(v: string) {
+  if (v === TaskStatus.DONE) return 'bg-emerald-500';
+  if (v === TaskStatus.IN_PROGRESS) return 'bg-amber-500';
+  if (v === TaskStatus.CANCELLED) return 'bg-rose-500';
+  return 'bg-slate-400';
+}
+
+function relationId(value: unknown): number | string | undefined {
+  if (value == null || value === '') return undefined;
+  if (typeof value === 'object' && value && 'id' in value) {
+    return (value as { id: number }).id;
+  }
+  return value as number | string;
+}
+
+function toDateInput(value?: string | null) {
+  if (!value) return '';
+  return value.slice(0, 10);
+}
+
+function valuesFromTask(instance: API.Task): API.TaskUpdateForm {
+  return {
+    id: instance.id,
+    title: instance.title,
+    description: instance.description,
+    priority: instance.priority,
+    status: instance.status,
+    due_date: toDateInput(instance.due_date),
+    estimated_hours: instance.estimated_hours?.toString() ?? '',
+    assigned_to: relationId(instance.assigned_to) ?? instance.assigned_to_details?.id,
+    client: relationId(instance.client) ?? (instance.client_details as { id?: number } | null)?.id,
+    case: instance.case ?? undefined,
+  };
+}
 
 export interface TaskUpdateModalRef {
   show: (instance: API.Task) => void;
@@ -34,345 +84,346 @@ export interface TaskUpdateModalProps {
 }
 
 const TaskUpdateModal = forwardRef<TaskUpdateModalRef, TaskUpdateModalProps>(({ onSuccess }, ref) => {
-  const { t } = useAppTranslation();
+  const { t, tf } = useAppTranslation();
+  const { toast } = useToast();
+  const m = t.tasks.modal;
+  const formId = useId();
+  const titleRef = useRef<HTMLInputElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
   const [instance, setInstance] = useState<API.Task | null>(null);
   const [isOpen, setIsOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [submitPhase, setSubmitPhase] = useState<'idle' | 'loading' | 'success'>('idle');
 
-  const schema = useMemo(() => yup.object({
-    title: yup.string().required(t.tasks.validation.titleRequired),
-    description: yup.string().required(t.tasks.validation.descriptionRequired),
-    priority: yup.string().required(t.tasks.validation.priorityRequired),
-    status: yup.string().required(t.tasks.validation.statusRequired),
-    due_date: yup.string().required(t.tasks.validation.dueDateRequired),
-    estimated_hours: yup.string().optional(),
-    assigned_to: yup.string().required(t.tasks.validation.assignedToRequired),
-    client: yup.string().optional(),
-    case: yup.string().optional(),
-  }), [t]);
+  const isBusy = submitPhase !== 'idle';
 
-  const schemaRef = useRef(schema);
-  schemaRef.current = schema;
+  const schema = useMemo(
+    () =>
+      yup.object({
+        title: yup.string().required(t.tasks.validation.titleRequired),
+        description: yup.string().required(t.tasks.validation.descriptionRequired),
+        priority: yup.string().required(t.tasks.validation.priorityRequired),
+        status: yup.string().required(t.tasks.validation.statusRequired),
+        due_date: yup.string().required(t.tasks.validation.dueDateRequired),
+        estimated_hours: yup.string().optional(),
+        assigned_to: yup.string().required(t.tasks.validation.assignedToRequired),
+        client: yup.string().optional(),
+        case: yup.string().optional(),
+      }),
+    [t]
+  );
 
   const mainForm = useForm<API.TaskUpdateForm>({
-    resolver: ((values, context, options) =>
-      yupResolver(schemaRef.current)(values, context, options)) as unknown as Resolver<API.TaskUpdateForm>
+    resolver: yupResolver(schema) as unknown as Resolver<API.TaskUpdateForm>,
   });
 
-  const show = (instance: API.Task) => {
-    setInstance(instance);
-
-    mainForm.reset({
-      title: instance.title,
-      description: instance.description,
-      priority: instance.priority,
-      status: instance.status,
-      due_date: instance.due_date,
-      estimated_hours: instance.estimated_hours?.toString(),
-      assigned_to: instance.assigned_to?.id,
-      client: instance.client?.id,
-      // case: instance.case?.id?.toString?.() || (instance as any).case?.toString?.(), // <--
-    });
+  const show = (next: API.Task) => {
+    setInstance(next);
+    setSubmitPhase('idle');
+    mainForm.reset(valuesFromTask(next));
+    scrollRef.current?.scrollTo({ top: 0 });
     setIsOpen(true);
-  }
+  };
 
   const hide = () => {
+    if (isBusy) return;
     setIsOpen(false);
-    mainForm.reset();
-  }
+  };
 
-  useImperativeHandle(ref, () => ({
-    show,
-    hide,
-  }));
+  useImperativeHandle(ref, () => ({ show, hide }));
 
   const handleSubmit = async (data: API.TaskUpdateForm) => {
-    setIsLoading(true);
+    if (!instance) return;
+    setSubmitPhase('loading');
     try {
       const res = await apiUpdateTask({
         ...data,
-        id: instance!.id,
+        id: instance.id,
       });
+      setSubmitPhase('success');
+      toast({
+        title: m.updatedTitle,
+        description: tf(m.updatedDescription, { title: data.title.trim() }),
+      });
+      eventBus.emit('task-updated');
+      await new Promise((resolve) => window.setTimeout(resolve, 220));
       onSuccess?.(res.data);
-      hide();
+      setIsOpen(false);
+      setSubmitPhase('idle');
     } catch (err) {
+      setSubmitPhase('idle');
       devError('Error updating task:', err);
       if (isAxiosError(err)) {
         const remoteValidation = getRemoteFieldsValidation(err);
-        Object.keys(remoteValidation).forEach((key) => {
+        const keys = Object.keys(remoteValidation);
+        keys.forEach((key) => {
           mainForm.setError(key as keyof API.TaskUpdateForm, { message: remoteValidation[key] });
         });
+        if (keys[0]) document.getElementById(`${formId}-${keys[0]}`)?.focus();
       }
-    } finally {
-      setIsLoading(false);
     }
   };
 
-  return (
-    <Dialog open={isOpen} onOpenChange={isLoading ? undefined : setIsOpen}>
-      <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto p-0 [&>button]:hidden">
-        {/* Header Banner */}
-        <div className="relative h-32 bg-gradient-to-r from-[#4ECDC4] via-[#64499D] to-[#FF6B6B] overflow-hidden">
-          {/* Decorative Pattern Overlay */}
-          <div className="absolute inset-0 opacity-10">
-            <div className="absolute inset-0" style={{
-              backgroundImage: `radial-gradient(circle at 2px 2px, white 1px, transparent 0)`,
-              backgroundSize: '32px 32px'
-            }}></div>
-          </div>
-          {/* Gradient Overlay */}
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/10"></div>
-          
-          {/* Close Button */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="absolute top-4 end-4 h-9 w-9 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white border border-white/30"
-            onClick={hide}
-            disabled={isLoading}
-          >
-            <X className="w-4 h-4" />
-          </Button>
+  const onInvalid = () => {
+    const order: (keyof API.TaskUpdateForm)[] = [
+      'title',
+      'description',
+      'priority',
+      'status',
+      'assigned_to',
+      'due_date',
+    ];
+    const first = order.find((key) => mainForm.formState.errors[key]);
+    if (first) document.getElementById(`${formId}-${first}`)?.focus();
+  };
 
-          {/* Header Content */}
-          <div className="relative px-8 pt-8 pb-6">
-            <div className="flex items-center gap-3">
-              <div className="p-3 rounded-xl bg-white/20 backdrop-blur-sm border border-white/30">
-                <CheckSquare className="w-6 h-6 text-white" />
+  const fieldError = (name: keyof API.TaskUpdateForm) =>
+    mainForm.formState.errors[name]?.message as string | undefined;
+
+  const titleRegister = mainForm.register('title');
+
+  return (
+    <CreateFormDialog
+      open={isOpen}
+      onOpenChange={setIsOpen}
+      isBusy={isBusy}
+      formId={formId}
+      title={m.updateTitle}
+      description={m.updateDescription}
+      icon={Pencil}
+      closeLabel={t.common.close}
+      onClose={hide}
+      onOpenAutoFocus={() => titleRef.current?.focus()}
+    >
+      <form
+        className="flex min-h-0 flex-1 flex-col overflow-hidden"
+        onSubmit={mainForm.handleSubmit(handleSubmit, onInvalid)}
+        noValidate
+        aria-busy={isBusy}
+      >
+        <div
+          ref={scrollRef}
+          className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-contain px-6 py-5 md:px-7"
+        >
+          <div className="space-y-6">
+            <CreateFormSection index="01" title={m.taskInformation}>
+              <div className="space-y-4">
+                <CreateFormField
+                  id={`${formId}-title`}
+                  label={m.taskTitle}
+                  required
+                  error={fieldError('title')}
+                >
+                  <Input
+                    id={`${formId}-title`}
+                    placeholder={m.titlePlaceholder}
+                    className={CREATE_INPUT_CLASS}
+                    disabled={isBusy}
+                    aria-invalid={!!fieldError('title')}
+                    {...titleRegister}
+                    ref={(el) => {
+                      titleRef.current = el;
+                      titleRegister.ref(el);
+                    }}
+                  />
+                </CreateFormField>
+                <CreateFormField
+                  id={`${formId}-description`}
+                  label={m.description}
+                  required
+                  error={fieldError('description')}
+                >
+                  <Textarea
+                    id={`${formId}-description`}
+                    placeholder={m.descriptionPlaceholder}
+                    className={CREATE_TEXTAREA_CLASS}
+                    disabled={isBusy}
+                    aria-invalid={!!fieldError('description')}
+                    {...mainForm.register('description')}
+                  />
+                </CreateFormField>
               </div>
-              <div>
-                <DialogTitle className="text-2xl font-bold text-white">
-                  {t.tasks.modal.updateTitle}
-                </DialogTitle>
-                <DialogDescription className="text-white/90 mt-1">
-                  {t.tasks.modal.updateDescription}
-                </DialogDescription>
+            </CreateFormSection>
+
+            <CreateFormSection index="02" title={m.taskDetails}>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <CreateFormField
+                  id={`${formId}-priority`}
+                  label={m.priority}
+                  required
+                  error={fieldError('priority')}
+                >
+                  <Select
+                    value={mainForm.watch('priority') || undefined}
+                    onValueChange={(val: API.TaskPriority) =>
+                      mainForm.setValue('priority', val, { shouldValidate: true, shouldDirty: true })
+                    }
+                    disabled={isBusy}
+                  >
+                    <SelectTrigger id={`${formId}-priority`} className={CREATE_SELECT_CLASS}>
+                      <SelectValue placeholder={m.selectPriority} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {TaskPriority.options.map((priority) => (
+                        <SelectItem key={priority.value} value={priority.value}>
+                          <span className="flex items-center gap-2">
+                            <span className={cn('h-2 w-2 shrink-0 rounded-full', priorityDotClass(priority.value))} />
+                            {t.enums.taskPriority[priority.value] ?? priority.label}
+                          </span>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </CreateFormField>
+                <CreateFormField
+                  id={`${formId}-status`}
+                  label={m.status}
+                  required
+                  error={fieldError('status')}
+                >
+                  <Select
+                    value={mainForm.watch('status') || undefined}
+                    onValueChange={(val: API.TaskStatus) =>
+                      mainForm.setValue('status', val, { shouldValidate: true, shouldDirty: true })
+                    }
+                    disabled={isBusy}
+                  >
+                    <SelectTrigger id={`${formId}-status`} className={CREATE_SELECT_CLASS}>
+                      <SelectValue placeholder={m.selectStatus} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {TaskStatus.options.map((status) => (
+                        <SelectItem key={status.value} value={status.value}>
+                          <span className="flex items-center gap-2">
+                            <span className={cn('h-2 w-2 shrink-0 rounded-full', statusDotClass(status.value))} />
+                            {t.enums.taskStatus[status.value] ?? status.label}
+                          </span>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </CreateFormField>
+                <CreateFormField
+                  id={`${formId}-estimated_hours`}
+                  label={m.estimatedHours}
+                  error={fieldError('estimated_hours')}
+                  className="sm:col-span-2"
+                >
+                  <Input
+                    id={`${formId}-estimated_hours`}
+                    type="number"
+                    step="0.5"
+                    min="0"
+                    placeholder={m.estimatedHoursPlaceholder}
+                    className={CREATE_INPUT_CLASS}
+                    disabled={isBusy}
+                    {...mainForm.register('estimated_hours')}
+                  />
+                </CreateFormField>
               </div>
-            </div>
+            </CreateFormSection>
+
+            <CreateFormSection index="03" title={m.assignmentTimeline}>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <CreateFormField
+                  id={`${formId}-assigned_to`}
+                  label={m.assignTo}
+                  required
+                  error={fieldError('assigned_to')}
+                >
+                  <ServerSelect
+                    id={`${formId}-assigned_to`}
+                    link="/cabinets/members/select_list"
+                    value={mainForm.watch('assigned_to')}
+                    onChange={(val) =>
+                      mainForm.setValue('assigned_to', val, { shouldValidate: true, shouldDirty: true })
+                    }
+                    labelKey="email"
+                    placeholder={m.selectAssignee}
+                    cleanable
+                    disabled={isBusy}
+                    className={CREATE_SERVER_SELECT_CLASS}
+                  />
+                </CreateFormField>
+                <CreateFormField
+                  id={`${formId}-due_date`}
+                  label={m.dueDate}
+                  required
+                  error={fieldError('due_date')}
+                >
+                  <Input
+                    id={`${formId}-due_date`}
+                    type="date"
+                    className={CREATE_INPUT_CLASS}
+                    disabled={isBusy}
+                    {...mainForm.register('due_date')}
+                  />
+                </CreateFormField>
+              </div>
+            </CreateFormSection>
+
+            <CreateFormSection index="04" title={m.relatedInformation}>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <CreateFormField id={`${formId}-case`} label={m.relatedCaseOptional} error={fieldError('case')}>
+                  <ServerSelect
+                    id={`${formId}-case`}
+                    link="/cases/"
+                    value={mainForm.watch('case')}
+                    onChange={(val) => mainForm.setValue('case', val, { shouldDirty: true })}
+                    labelKey="title"
+                    placeholder={m.selectCase}
+                    cleanable
+                    disabled={isBusy}
+                    className={CREATE_SERVER_SELECT_CLASS}
+                  />
+                </CreateFormField>
+                <CreateFormField
+                  id={`${formId}-client`}
+                  label={m.relatedClientOptional}
+                  error={fieldError('client')}
+                >
+                  <ServerSelect
+                    id={`${formId}-client`}
+                    link="/clients/clients/"
+                    value={mainForm.watch('client')}
+                    onChange={(val) => mainForm.setValue('client', val, { shouldDirty: true })}
+                    labelKey={(client) => `${client.first_name} ${client.last_name}`}
+                    placeholder={m.selectClient}
+                    cleanable
+                    disabled={isBusy}
+                    className={CREATE_SERVER_SELECT_CLASS}
+                  />
+                </CreateFormField>
+              </div>
+            </CreateFormSection>
           </div>
         </div>
 
-        <form onSubmit={mainForm.handleSubmit(handleSubmit)} className="px-8 py-6 space-y-6">
-          {/* {t.tasks.modal.taskInformation} */}
-          <div className="space-y-4">
-            <div className="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">
-              <FileText className="w-4 h-4 text-jure-600" />
-              {t.tasks.modal.taskInformation}
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="text-sm font-medium">
-                  <span>{t.tasks.modal.title}</span>
-                </label>
-                <Input
-                  {...mainForm.register('title')}
-                  className="transition-all duration-200 focus:ring-2 focus:ring-jure-600/20 focus:border-jure-600"
-                  placeholder={t.tasks.modal.titlePlaceholder}
-                />
-                {mainForm.formState.errors.title && (
-                  <p className="text-red-500 text-xs p-1 pb-0">
-                    {mainForm.formState.errors.title.message}
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <label className="text-sm font-medium">
-                  <span>{t.tasks.modal.priority}</span>
-                </label>
-                <Select value={mainForm.watch('priority')} onValueChange={(value) => mainForm.setValue('priority', value as API.TaskPriority)}>
-                  <SelectTrigger className="transition-all duration-200 focus:ring-2 focus:ring-jure-600/20 focus:border-jure-600">
-                    <SelectValue placeholder={t.tasks.modal.selectPriority} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {TaskPriority.options.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        <div className="flex items-center gap-2">
-                          <Flag className="w-4 h-4" />
-                          {t.enums.taskPriority[option.value] ?? option.label}
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {mainForm.formState.errors.priority && (
-                  <p className="text-red-500 text-xs p-1 pb-0">
-                    {mainForm.formState.errors.priority.message}
-                  </p>
-                )}
-              </div>
-            </div>
-
-            <div>
-              <label className="text-sm font-medium">
-                <span>{t.tasks.modal.description}</span>
-              </label>
-              <Textarea
-                {...mainForm.register('description')}
-                className="transition-all duration-200 focus:ring-2 focus:ring-jure-600/20 focus:border-jure-600"
-                placeholder={t.tasks.modal.descriptionPlaceholder}
-                rows={3}
-              />
-              {mainForm.formState.errors.description && (
-                <p className="text-red-500 text-xs p-1 pb-0">
-                  {mainForm.formState.errors.description.message}
-                </p>
-              )}
-            </div>
-          </div>
-
-          {/* {t.tasks.modal.taskDetails} */}
-          <div className="space-y-4">
-            <div className="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">
-              <Calendar className="w-4 h-4 text-jure-600" />
-              {t.tasks.modal.taskDetails}
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="text-sm font-medium">
-                  <span>{t.tasks.modal.status}</span>
-                </label>
-                <Select value={mainForm.watch('status')} onValueChange={(value) => mainForm.setValue('status', value as API.TaskStatus)}>
-                  <SelectTrigger className="transition-all duration-200 focus:ring-2 focus:ring-jure-600/20 focus:border-jure-600">
-                    <SelectValue placeholder={t.tasks.modal.selectStatus} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {TaskStatus.options.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {t.enums.taskStatus[option.value] ?? option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {mainForm.formState.errors.status && (
-                  <p className="text-red-500 text-xs p-1 pb-0">
-                    {mainForm.formState.errors.status.message}
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <label className="text-sm font-medium">
-                  <span>{t.tasks.modal.dueDate}</span>
-                </label>
-                <Input
-                  {...mainForm.register('due_date')}
-                  type="date"
-                  className="transition-all duration-200 focus:ring-2 focus:ring-jure-600/20 focus:border-jure-600"
-                />
-                {mainForm.formState.errors.due_date && (
-                  <p className="text-red-500 text-xs p-1 pb-0">
-                    {mainForm.formState.errors.due_date.message}
-                  </p>
-                )}
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="text-sm font-medium">
-                  <span>{t.tasks.modal.estimatedHours}</span>
-                </label>
-                <Input
-                  {...mainForm.register('estimated_hours')}
-                  type="number"
-                  className="transition-all duration-200 focus:ring-2 focus:ring-jure-600/20 focus:border-jure-600"
-                  placeholder="0"
-                />
-                {mainForm.formState.errors.estimated_hours && (
-                  <p className="text-red-500 text-xs p-1 pb-0">
-                    {mainForm.formState.errors.estimated_hours.message}
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <label className="text-sm font-medium">
-                  <span>{t.tasks.modal.assignedTo}</span>
-                </label>
-                <ServerSelect
-                  link="/cabinets/members/select_list/"
-                  labelKey="email"
-                  value={mainForm.watch('assigned_to')}
-                  onChange={(value) => mainForm.setValue('assigned_to', value)}
-                  placeholder={t.tasks.modal.selectAssignee}
-                  className="transition-all duration-200 focus:ring-2 focus:ring-jure-600/20 focus:border-jure-600"
-                  showAvatar
-                />
-                {mainForm.formState.errors.assigned_to && (
-                  <p className="text-red-500 text-xs p-1 pb-0">
-                    {mainForm.formState.errors.assigned_to.message}
-                  </p>
-                )}
-              </div>
-            </div>
-            {/* Related Case */}
-<div className="mt-2">
-  <label className="text-sm font-medium flex items-center gap-2">
-    <Gavel className="w-4 h-4 text-jure-600" />
-    <span>{t.tasks.modal.relatedCaseOptional}</span>
-  </label>
-
-  <ServerSelect
-    link="/cases/"
-    value={mainForm.watch('case')}
-    onChange={(value) => mainForm.setValue('case', value)}
-    placeholder={t.tasks.modal.selectCase}
-    className="transition-all duration-200 focus:ring-2 focus:ring-jure-600/20 focus:border-jure-600"
-  />
-
-  {mainForm.formState.errors.case && (
-    <p className="text-red-500 text-xs p-1 pb-0">
-      {String(mainForm.formState.errors.case.message)}
-    </p>
-  )}
-</div>
-
-            <div>
-              <label className="text-sm font-medium">
-                <span>{t.tasks.modal.clientOptional}</span>
-              </label>
-              <ServerSelect
-                link="/clients/clients/"
-                value={mainForm.watch('client')}
-                onChange={(value) => mainForm.setValue('client', value)}
-                labelKey={(client) => `${client.first_name} ${client.last_name}`}
-                placeholder={t.tasks.modal.selectClient}
-                className="transition-all duration-200 focus:ring-2 focus:ring-jure-600/20 focus:border-jure-600"
-              />
-              {mainForm.formState.errors.client && (
-                <p className="text-red-500 text-xs p-1 pb-0">
-                  {mainForm.formState.errors.client.message}
-                </p>
-              )}
-            </div>
-          </div>
-
-          <DialogFooter className="pt-4 border-t border-slate-200/90 dark:border-slate-800">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={hide}
-              disabled={isLoading}
-            >
-              {t.common.cancel}
-            </Button>
-            <Button type="submit" variant="default" disabled={isLoading} className="bg-purple-600 hover:bg-purple-700">
-              {isLoading ? (
-                <>
-                  <Loader2 className="w-4 h-4 me-2 animate-spin" />
-                  {t.tasks.modal.updating}
-                </>
-              ) : (
-                t.tasks.modal.updateTask
-              )}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+        <DialogFooter className={CREATE_FOOTER_CLASS}>
+          <Button type="button" variant="outline" onClick={hide} disabled={isBusy} className={CREATE_CANCEL_CLASS}>
+            {t.common.cancel}
+          </Button>
+          <Button type="submit" disabled={isBusy} className={CREATE_SUBMIT_CLASS}>
+            {submitPhase === 'loading' ? (
+              <>
+                <Loader2 className="animate-spin" />
+                {m.updating}
+              </>
+            ) : submitPhase === 'success' ? (
+              <>
+                <Check />
+                {m.updatedTitle}
+              </>
+            ) : (
+              m.updateTask
+            )}
+          </Button>
+        </DialogFooter>
+      </form>
+    </CreateFormDialog>
   );
 });
 
 TaskUpdateModal.displayName = 'TaskUpdateModal';
+
 export default TaskUpdateModal;

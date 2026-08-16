@@ -55,11 +55,17 @@ const Dashboard = lazy(() => import("./pages/Dashboard"));
 const TeamMembers = lazy(() => import("./pages/TeamMembers"));
 const Profile = lazy(() => import("./pages/Profile"));
 const Cases = lazy(() => import("./pages/Cases"));
+const ConsultationsWorkspace = lazy(() => import("./pages/cases/ConsultationsWorkspace"));
+const LitigationWorkspace = lazy(() => import("./pages/cases/LitigationWorkspace"));
+const AdministrativeWorkspace = lazy(() => import("./pages/cases/AdministrativeWorkspace"));
+const CaseWorkspacePage = lazy(() => import("./pages/cases/CaseWorkspacePage"));
 const Library = lazy(() => import("./pages/Library"));
 const Clients = lazy(() => import("./pages/Clients"));
 const LegalAI = lazy(() => import("./pages/LegalAI"));
 const Conversations = lazy(() => import("./pages/Conversations"));
 const CalendarPage = lazy(() => import("./pages/Calendar"));
+const TasksPage = lazy(() => import("./pages/Tasks"));
+const AppointmentsPage = lazy(() => import("./pages/Appointments"));
 const Settings = lazy(() => import("./pages/Settings"));
 const FinancePage = lazy(() => import("./pages/finance/FinancePage"));
 const NotificationsPage = lazy(() => import("./pages/notifications/NotificationsPage"));
@@ -189,16 +195,32 @@ const router = createBrowserRouter([
       { path: "profile/:id", element: app(<Profile />) },
       { path: "cases", element: app(<Cases />) },
       {
+        path: "cases/consultations",
+        element: app(<ConsultationsWorkspace />),
+      },
+      {
+        path: "cases/consultations/:caseSlug",
+        element: app(<CaseWorkspacePage />),
+      },
+      {
         path: "cases/consultation",
-        element: app(<PlaceholderPage titleKey="consultation" />),
+        element: <Navigate to="/dashboard/cases/consultations" replace />,
       },
       {
         path: "cases/litigation",
-        element: app(<PlaceholderPage titleKey="litigation" />),
+        element: app(<LitigationWorkspace />),
+      },
+      {
+        path: "cases/litigation/:caseSlug",
+        element: app(<CaseWorkspacePage />),
       },
       {
         path: "cases/administrative",
-        element: app(<PlaceholderPage titleKey="administrative" />),
+        element: app(<AdministrativeWorkspace />),
+      },
+      {
+        path: "cases/administrative/:caseSlug",
+        element: app(<CaseWorkspacePage />),
       },
       {
         path: "finance",
@@ -217,13 +239,13 @@ const router = createBrowserRouter([
           ]
         : []),
       { path: "conversations", element: app(<Conversations />) },
-      // Calendar is the former Tasks workspace; Tasks is a separate empty placeholder.
       { path: "calendar", element: app(<CalendarPage />) },
-      { path: "tasks", element: app(<PlaceholderPage titleKey="tasks" />) },
+      { path: "tasks", element: app(<TasksPage />) },
       { path: "tasks/:id/edit", element: app(<EditTask />) },
+      { path: "appointments", element: app(<AppointmentsPage />) },
       {
         path: "appointment",
-        element: app(<PlaceholderPage titleKey="appointment" />),
+        element: <Navigate to="/dashboard/appointments" replace />,
       },
       {
         path: "account",

@@ -1,5 +1,20 @@
-import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useState } from 'react';
-import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet';
+import React, {
+  forwardRef,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
+import * as DialogPrimitive from '@radix-ui/react-dialog';
+import {
+  Dialog,
+  DialogPortal,
+  DialogOverlay,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
 import {
   Mail,
   Phone,
@@ -8,43 +23,36 @@ import {
   Loader2,
   X,
   Copy,
+  Check,
   ChevronRight,
+  MoreHorizontal,
+  Pencil,
+  Briefcase,
+  Shield,
 } from 'lucide-react';
 import { apiGetCabinetMember } from '@/services/cabinet-member/api';
 import { cn } from '@/lib/utils';
 import UserAvatar, { getPersonImage } from '@/components/common/UserAvatar';
-import { getRoleDisplayName } from '@/utils/permissions';
 import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { useNavigate } from 'react-router';
 import { getStatusColor } from '@/utils/caseCardHelpers';
 import { getCabinetMemberRouteId, getMemberCaseCounts } from '@/utils/cabinetMemberHelpers';
 import { useToast } from '@/hooks/use-toast';
+import { formatDate, useAppTranslation } from '@/i18n';
+import { CaseStatus } from '@/utils/constants';
 
-const JURE_PURPLE = '#6D54B5';
+const JURE_PURPLE = '#64499D';
 
-const formatDate = (d?: string | Date) => {
-  if (!d) return '—';
-  const dt = typeof d === 'string' ? new Date(d) : d;
-  return dt.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
-};
-
-export interface TeamMemberProfileDrawerRef {
-  open: (member: API.CabinetMember) => void;
-  close: () => void;
-}
-
-function caseTypeDotClass(c: API.Case): string {
-  const t = c.caseType ?? c.case_type;
-  if (t === 'LITIGATION') return 'bg-rose-500';
-  if (t === 'CONSULTATION') return 'bg-indigo-500';
-  if (t === 'ADMINISTRATIVE' || t === 'ADMINISTRATIVE_DUTY') return 'bg-amber-400';
-  return 'bg-slate-400';
-}
-
-function workloadBarClass(total: number): string {
-  if (total <= 3) return 'bg-emerald-500';
-  if (total <= 6) return 'bg-amber-500';
-  return 'bg-red-500';
+function normalizeStatus(s: unknown): string {
+  return String(s ?? '')
+    .toUpperCase()
+    .replace(/\s+/g, '_');
 }
 
 function workloadFillPct(total: number): number {
@@ -52,83 +60,128 @@ function workloadFillPct(total: number): number {
 }
 
 const roleBadgeStyles: Record<API.Role, string> = {
-  LAWYER: 'bg-indigo-500/15 text-indigo-800 dark:text-indigo-300 ring-1 ring-indigo-500/25',
-  MANAGER: 'bg-purple-500/15 text-purple-800 dark:text-purple-300 ring-1 ring-purple-500/25',
-  ADMIN: 'bg-slate-500/15 text-slate-800 dark:text-slate-300 ring-1 ring-slate-500/25',
-  ASSISTANT: 'bg-teal-500/15 text-teal-800 dark:text-teal-300 ring-1 ring-teal-500/25',
-  VIEWER: 'bg-slate-200/80 text-slate-700 dark:bg-slate-800 dark:text-slate-300 ring-1 ring-slate-300/50',
-  OWNER: 'bg-amber-500/15 text-amber-900 dark:text-amber-300 ring-1 ring-amber-500/25',
+  LAWYER: 'bg-[#64499D]/10 text-[#64499D] ring-1 ring-[#64499D]/20 dark:text-[#CFC2FF]',
+  MANAGER: 'bg-slate-500/12 text-slate-700 ring-1 ring-slate-500/20 dark:text-slate-300',
+  ADMIN: 'bg-slate-500/12 text-slate-700 ring-1 ring-slate-500/20 dark:text-slate-300',
+  ASSISTANT: 'bg-slate-500/12 text-slate-700 ring-1 ring-slate-500/20 dark:text-slate-300',
+  VIEWER: 'bg-slate-100 text-slate-600 ring-1 ring-slate-200 dark:bg-zinc-800 dark:text-zinc-300',
+  OWNER: 'bg-amber-500/12 text-amber-900 ring-1 ring-amber-500/20 dark:text-amber-300',
 };
+
+export interface TeamMemberProfileDrawerRef {
+  open: (member: API.CabinetMember) => void;
+  close: () => void;
+}
 
 const TeamMemberProfileDrawer = forwardRef<
   TeamMemberProfileDrawerRef,
   {
-    portalContainer?: HTMLElement | null;
     onOpenChange?: (open: boolean) => void;
     onEditMember?: (member: API.CabinetMember) => void;
   }
->(({ portalContainer, onOpenChange, onEditMember }, ref) => {
+>(({ onOpenChange, onEditMember }, ref) => {
+  const { t, tf, enumLabel, lang } = useAppTranslation();
+  const d = t.team.drawer;
   const [member, setMember] = useState<API.CabinetMember | null>(null);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [detail, setDetail] = useState<API.CabinetMember | null>(null);
-  const [drawerMobile, setDrawerMobile] = useState(false);
+  const [categoryFilter, setCategoryFilter] = useState('all');
+  const [tab, setTab] = useState<'contact' | 'cases'>('contact');
+  const [copiedField, setCopiedField] = useState<string | null>(null);
+  const copiedTimer = useRef<number | null>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
 
   useEffect(() => {
-    const mql = window.matchMedia('(max-width: 767px)');
-    const fn = () => setDrawerMobile(mql.matches);
-    mql.addEventListener('change', fn);
-    fn();
-    return () => mql.removeEventListener('change', fn);
+    return () => {
+      if (copiedTimer.current) window.clearTimeout(copiedTimer.current);
+    };
   }, []);
 
   const handleOpenChange = useCallback(
     (next: boolean) => {
       setOpen(next);
       onOpenChange?.(next);
+      if (!next) {
+        setCategoryFilter('all');
+        setTab('contact');
+      }
     },
     [onOpenChange]
   );
 
-  useImperativeHandle(ref, () => ({
-    open: (m: API.CabinetMember) => {
-      setMember(m);
-      setDetail(null);
-      setOpen(true);
-      onOpenChange?.(true);
-      setLoading(true);
-      apiGetCabinetMember(getCabinetMemberRouteId(m), { expand: 'assigned_cases' })
-        .then((res) => setDetail(res.data))
-        .catch(() => setDetail(m))
-        .finally(() => setLoading(false));
-    },
-    close: () => {
-      setOpen(false);
-      onOpenChange?.(false);
-    },
-  }), [onOpenChange]);
+  useImperativeHandle(
+    ref,
+    () => ({
+      open: (m: API.CabinetMember) => {
+        setMember(m);
+        setDetail(null);
+        setCategoryFilter('all');
+        setTab('contact');
+        setOpen(true);
+        requestAnimationFrame(() => scrollRef.current?.scrollTo({ top: 0 }));
+        onOpenChange?.(true);
+        setLoading(true);
+        apiGetCabinetMember(getCabinetMemberRouteId(m), { expand: 'assigned_cases' })
+          .then((res) => setDetail(res.data))
+          .catch(() => setDetail(m))
+          .finally(() => setLoading(false));
+      },
+      close: () => {
+        setOpen(false);
+        onOpenChange?.(false);
+      },
+    }),
+    [onOpenChange]
+  );
 
   const data = detail ?? member;
-  const fullName = data ? `${data.first_name || ''} ${data.last_name || ''}`.trim() || 'Unnamed' : '';
+  const fullName = data
+    ? `${data.first_name || ''} ${data.last_name || ''}`.trim() || t.team.unnamed
+    : '';
   const cases = (data?.assigned_cases ?? []) as API.Case[];
   const memberRole = (data?.role || 'VIEWER') as API.Role;
-  const { inProgress, assignedTotal } = data ? getMemberCaseCounts(data) : { inProgress: 0, assignedTotal: 0 };
-  const pending = data ? !!(data as unknown as { invitation_sent?: boolean }).invitation_sent : false;
+  const { inProgress, assignedTotal } = data
+    ? getMemberCaseCounts(data)
+    : { inProgress: 0, assignedTotal: 0 };
+  const pending = data ? !!data.invitation_sent : false;
 
-  const copyText = async (label: string, value?: string | null) => {
+  const closedCount = useMemo(
+    () => cases.filter((c) => normalizeStatus(c.status) === CaseStatus.CLOSED).length,
+    [cases]
+  );
+
+  const categoryCounts = useMemo(() => {
+    const counts = new Map<string, number>();
+    cases.forEach((c) => {
+      if (!c.category) return;
+      counts.set(c.category, (counts.get(c.category) || 0) + 1);
+    });
+    return [...counts.entries()].sort((a, b) => a[0].localeCompare(b[0]));
+  }, [cases]);
+
+  const filteredCases = useMemo(() => {
+    if (categoryFilter === 'all') return cases;
+    return cases.filter((c) => c.category === categoryFilter);
+  }, [cases, categoryFilter]);
+
+  const copyText = async (field: string, label: string, value?: string | null) => {
     if (!value) return;
     try {
       await navigator.clipboard.writeText(value);
-      toast({ title: 'Copied', description: `${label} copied to clipboard.` });
+      setCopiedField(field);
+      if (copiedTimer.current) window.clearTimeout(copiedTimer.current);
+      copiedTimer.current = window.setTimeout(
+        () => setCopiedField((cur) => (cur === field ? null : cur)),
+        1400
+      );
+      toast({ title: d.copied, description: label });
     } catch {
-      toast({ title: 'Copy failed', variant: 'destructive' });
+      toast({ title: d.copyFailed, variant: 'destructive' });
     }
   };
-
-  const embedded = portalContainer != null;
-  const side = drawerMobile ? 'bottom' : 'right';
 
   const goToCase = (caseItem: API.Case) => {
     const q = (caseItem.reference || caseItem.title || '').trim();
@@ -139,279 +192,544 @@ const TeamMemberProfileDrawer = forwardRef<
     }
   };
 
-  return (
-    <Sheet modal={false} open={open} onOpenChange={handleOpenChange}>
-      <SheetContent
-        container={portalContainer ?? undefined}
-        side={side}
-        overlayClassName={cn(
-          'data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0',
-          embedded ? 'bg-transparent pointer-events-none' : 'bg-black/30'
-        )}
-        className={cn(
-          'flex flex-col gap-0 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-0 shadow-xl',
-          '[&>button]:hidden',
-          embedded && '!max-h-full',
-          drawerMobile
-            ? embedded
-              ? 'max-h-[min(92vh,100%)] h-[min(92vh,100%)] w-full max-w-[100vw] rounded-t-2xl border-t sm:max-w-full'
-              : 'h-[92vh] max-h-[100dvh] w-full max-w-[100vw] rounded-t-2xl border-t sm:max-w-full'
-            : 'h-full w-[420px] max-w-[420px] border-l'
-        )}
-      >
-        <SheetTitle className="sr-only">{fullName || 'Team member'}</SheetTitle>
+  const handleCall = () => {
+    if (!data?.phone) return;
+    toast({
+      title: t.team.toasts.callingTitle,
+      description: tf(t.team.toasts.callingDesc, { name: fullName, phone: data.phone }),
+    });
+    window.location.href = `tel:${data.phone}`;
+  };
 
-        {/* Sticky header */}
-        <header className="sticky top-0 z-20 shrink-0 border-b border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-950/95 backdrop-blur-sm px-5 pt-4 pb-4">
-          <div className="flex items-start gap-4">
-            <div className="relative shrink-0">
-              {data ? (
-                <UserAvatar
-                  image={getPersonImage(data as Record<string, unknown>)}
-                  firstName={data.first_name}
-                  lastName={data.last_name}
-                  size="lg"
-                  className="h-14 w-14"
-                />
-              ) : (
-                <div className="h-14 w-14 rounded-full bg-slate-200 dark:bg-slate-800" />
-              )}
-              <span
-                className={cn(
-                  'absolute bottom-0.5 right-0.5 h-3 w-3 rounded-full border-2 border-white dark:border-slate-950',
-                  pending ? 'bg-amber-400' : data?.is_active ? 'bg-emerald-500' : 'bg-slate-400'
-                )}
-              />
-            </div>
-            <div className="min-w-0 flex-1 space-y-2 pr-8">
-              <h2 className="text-lg font-semibold leading-tight text-slate-900 dark:text-white truncate">{fullName}</h2>
-              <div className="flex flex-wrap items-center gap-2">
-                <span
-                  className={cn(
-                    'inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-[0.06em]',
-                    roleBadgeStyles[memberRole]
-                  )}
+  const handleEmail = () => {
+    if (!data?.email) return;
+    toast({
+      title: t.team.toasts.emailTitle,
+      description: tf(t.team.toasts.emailDesc, { email: data.email }),
+    });
+    window.location.href = `mailto:${data.email}`;
+  };
+
+  const joined = data?.date_joined ? formatDate(data.date_joined, lang) : '';
+  const roleLabel = t.team.roles[memberRole] || memberRole;
+
+  return (
+    <Dialog open={open} onOpenChange={handleOpenChange} modal>
+      <DialogPortal>
+        <DialogOverlay className="bg-slate-950/50" />
+        <DialogPrimitive.Content
+          aria-describedby="member-profile-description"
+          className={cn(
+            'fixed z-50 flex min-h-0 min-w-0 flex-col overflow-hidden overflow-x-hidden border border-slate-200/90 bg-white p-0 shadow-2xl outline-none',
+            'dark:border-zinc-800 dark:bg-zinc-950',
+            'inset-x-0 bottom-0 top-auto h-[min(92dvh,860px)] w-full max-w-full translate-x-0 translate-y-0 rounded-t-2xl',
+            'data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 duration-200',
+            'data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom',
+            'md:inset-auto md:bottom-auto md:left-1/2 md:top-1/2 md:h-[min(88vh,800px)] md:w-[min(94vw,720px)] md:max-w-[720px]',
+            'md:-translate-x-1/2 md:-translate-y-1/2 md:rounded-[18px]',
+            'md:data-[state=closed]:zoom-out-95 md:data-[state=open]:zoom-in-95',
+            'md:data-[state=closed]:slide-out-to-left-1/2 md:data-[state=closed]:slide-out-to-top-[48%]',
+            'md:data-[state=open]:slide-in-from-left-1/2 md:data-[state=open]:slide-in-from-top-[48%]'
+          )}
+        >
+        <DialogDescription id="member-profile-description" className="sr-only">
+          {roleLabel}
+        </DialogDescription>
+        {!data ? (
+          <DialogTitle className="sr-only">{t.team.unnamed}</DialogTitle>
+        ) : null}
+
+        <header className="relative shrink-0 overflow-hidden border-b border-[#64499D]/10 bg-[#F7F4FF] px-5 py-4 pe-14 dark:border-[#8B6FD1]/15 dark:bg-[#24183F]/80 md:px-6">
+          <div
+            className="pointer-events-none absolute inset-0 opacity-70"
+            style={{
+              background:
+                'linear-gradient(135deg, rgba(100,73,157,0.08) 0%, rgba(100,73,157,0.02) 52%, transparent 100%)',
+            }}
+          />
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="absolute end-3 top-3 z-10 h-8 w-8 rounded-full text-slate-500 hover:bg-white/80 hover:text-slate-800 dark:text-zinc-300 dark:hover:bg-zinc-900"
+            onClick={() => handleOpenChange(false)}
+            aria-label={d.closePanel}
+          >
+            <X className="h-4 w-4" />
+          </Button>
+
+          {data ? (
+            <div className="relative min-w-0">
+              <div className="flex min-w-0 items-start gap-3">
+                <div className="relative mt-0.5 shrink-0">
+                  <UserAvatar
+                    image={getPersonImage(data as Record<string, unknown>)}
+                    firstName={data.first_name}
+                    lastName={data.last_name}
+                    size="md"
+                  />
+                  <span
+                    className={cn(
+                      'absolute -bottom-0.5 -end-0.5 h-2.5 w-2.5 rounded-full border-2 border-[#F7F4FF] dark:border-[#24183F]',
+                      pending ? 'bg-amber-400' : data.is_active ? 'bg-emerald-500' : 'bg-slate-400'
+                    )}
+                    aria-hidden
+                  />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <DialogTitle className="truncate text-[17px] font-semibold tracking-tight text-slate-900 dark:text-zinc-50">
+                    {fullName}
+                  </DialogTitle>
+                  <div className="mt-1.5 flex min-w-0 flex-wrap items-center gap-1.5">
+                    <span
+                      className={cn(
+                        'inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.06em]',
+                        roleBadgeStyles[memberRole]
+                      )}
+                    >
+                      {roleLabel}
+                    </span>
+                    <span
+                      className={cn(
+                        'inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wider ring-1 ring-inset',
+                        pending
+                          ? 'bg-amber-500/12 text-amber-800 ring-amber-500/25 dark:text-amber-300'
+                          : data.is_active
+                            ? 'bg-emerald-500/12 text-emerald-700 ring-emerald-500/25 dark:text-emerald-400'
+                            : 'bg-slate-500/12 text-slate-600 ring-slate-500/25 dark:text-slate-400'
+                      )}
+                    >
+                      <span
+                        className={cn(
+                          'h-1.5 w-1.5 rounded-full',
+                          pending ? 'bg-amber-500' : data.is_active ? 'bg-emerald-500' : 'bg-slate-400'
+                        )}
+                      />
+                      {pending
+                        ? t.team.status.pending
+                        : data.is_active
+                          ? t.team.status.active
+                          : t.team.status.inactive}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-3 flex min-w-0 flex-wrap items-center gap-1.5">
+                <Button
+                  size="sm"
+                  className="h-8 px-2.5 text-white hover:opacity-90"
+                  style={{ backgroundColor: JURE_PURPLE }}
+                  onClick={handleEmail}
+                  disabled={!data.email}
                 >
-                  {getRoleDisplayName(memberRole)}
-                </span>
-                {pending ? (
-                  <span className="inline-flex items-center rounded-full bg-amber-500/15 px-2 py-0.5 text-[11px] font-semibold text-amber-800 dark:text-amber-300 ring-1 ring-amber-500/25">
-                    Pending
-                  </span>
-                ) : data?.is_active ? (
-                  <span className="inline-flex items-center rounded-full bg-emerald-500/15 px-2 py-0.5 text-[11px] font-semibold text-emerald-800 dark:text-emerald-300 ring-1 ring-emerald-500/25">
-                    Active
-                  </span>
-                ) : (
-                  <span className="inline-flex items-center rounded-full bg-slate-500/15 px-2 py-0.5 text-[11px] font-semibold text-slate-700 dark:text-slate-300 ring-1 ring-slate-500/25">
-                    Inactive
-                  </span>
-                )}
+                  <Mail className="h-3.5 w-3.5" aria-hidden />
+                  {t.team.email}
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-8 border-slate-200 px-2.5 dark:border-zinc-700"
+                  onClick={handleCall}
+                  disabled={!data.phone}
+                >
+                  <Phone className="h-3.5 w-3.5" aria-hidden />
+                  {t.team.call}
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-8 border-slate-200 px-2.5 dark:border-zinc-700"
+                  onClick={() => onEditMember?.(data)}
+                >
+                  <Pencil className="h-3.5 w-3.5" aria-hidden />
+                  {t.common.edit}
+                </Button>
+                <DropdownMenu modal={false}>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      size="icon"
+                      variant="outline"
+                      className="h-8 w-8 border-slate-200 dark:border-zinc-700"
+                      aria-label={t.team.moreActions}
+                    >
+                      <MoreHorizontal className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-44">
+                    <DropdownMenuItem disabled={!data.email} onClick={() => copyText('email', d.copyEmail, data.email)}>
+                      <Copy className="me-2 h-3.5 w-3.5" />
+                      {d.copyEmail}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem disabled={!data.phone} onClick={() => copyText('phone', d.copyPhone, data.phone)}>
+                      <Copy className="me-2 h-3.5 w-3.5" />
+                      {d.copyPhone}
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             </div>
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              className="absolute right-3 top-3 h-9 w-9 shrink-0 rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"
-              onClick={() => handleOpenChange(false)}
-              aria-label="Close panel"
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
+          ) : null}
         </header>
 
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-5">
-          {loading ? (
+        <div
+          className="flex shrink-0 gap-1 overflow-x-hidden border-b border-slate-200 px-5 pt-2 dark:border-zinc-800 md:px-6"
+          role="tablist"
+          aria-label={fullName || t.team.unnamed}
+        >
+          {([
+            { id: 'contact' as const, label: d.contact },
+            { id: 'cases' as const, label: d.assignedCases, count: cases.length },
+          ]).map((item) => {
+            const selected = tab === item.id;
+            return (
+              <button
+                key={item.id}
+                type="button"
+                role="tab"
+                aria-selected={selected}
+                onClick={() => {
+                  setTab(item.id);
+                  scrollRef.current?.scrollTo({ top: 0 });
+                }}
+                className={cn(
+                  'relative mb-[-1px] inline-flex items-center gap-1.5 rounded-t-md px-3 py-2 text-[13px] font-medium transition-colors',
+                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#64499D]/30',
+                  selected
+                    ? 'text-[#64499D] dark:text-[#CFC2FF]'
+                    : 'text-slate-500 hover:text-slate-800 dark:text-zinc-400 dark:hover:text-zinc-200'
+                )}
+              >
+                {item.label}
+                {item.count !== undefined ? (
+                  <span
+                    className={cn(
+                      'rounded-full px-1.5 py-px text-[10px] font-semibold tabular-nums',
+                      selected
+                        ? 'bg-[#64499D]/10 text-[#64499D] dark:bg-[#8B6FD1]/20 dark:text-[#CFC2FF]'
+                        : 'bg-slate-100 text-slate-500 dark:bg-zinc-800 dark:text-zinc-400'
+                    )}
+                  >
+                    {loading ? '…' : item.count}
+                  </span>
+                ) : null}
+                {selected ? (
+                  <span className="absolute inset-x-2 -bottom-px h-0.5 rounded-full bg-[#64499D]" />
+                ) : null}
+              </button>
+            );
+          })}
+        </div>
+
+        <div
+          ref={scrollRef}
+          className="min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain px-5 py-5 md:px-6"
+        >
+          {loading && !data ? (
             <div className="flex items-center justify-center py-16">
-              <Loader2 className="h-7 w-7 animate-spin" style={{ color: JURE_PURPLE }} />
+              <Loader2 className="h-6 w-6 animate-spin text-[#64499D]" />
             </div>
-          ) : data ? (
-            <div className="space-y-8">
-              <section>
-                <h3 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800 pb-2 mb-4">
-                  Contact
+          ) : data && tab === 'contact' ? (
+            <div className="min-w-0 space-y-6">
+              <section className="min-w-0">
+                <h3 className="mb-2 text-[13px] font-semibold text-slate-800 dark:text-zinc-200">
+                  {d.contact}
                 </h3>
-                <div className="space-y-3">
-                  <div className="flex items-start justify-between gap-2 min-w-0">
-                    <div className="flex items-start gap-2 min-w-0">
-                      <Mail className="w-4 h-4 shrink-0 mt-0.5 text-slate-400" />
-                      <div className="min-w-0">
-                        <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400">Email</p>
-                        {data.email ? (
-                          <a href={`mailto:${data.email}`} className="text-[13px] text-[#6D54B5] dark:text-violet-300 hover:underline break-all">
-                            {data.email}
-                          </a>
-                        ) : (
-                          <p className="text-[13px] text-slate-600 dark:text-slate-400">—</p>
-                        )}
-                      </div>
-                    </div>
-                    {data.email ? (
-                      <button
-                        type="button"
-                        className="shrink-0 rounded-md p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800"
-                        aria-label="Copy email"
-                        onClick={() => copyText('Email', data.email)}
-                      >
-                        <Copy className="w-3.5 h-3.5" />
-                      </button>
-                    ) : null}
-                  </div>
-                  <div className="flex items-start justify-between gap-2 min-w-0">
-                    <div className="flex items-start gap-2 min-w-0">
-                      <Phone className="w-4 h-4 shrink-0 mt-0.5 text-slate-400" />
-                      <div className="min-w-0">
-                        <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400">Phone</p>
-                        {data.phone ? (
-                          <a href={`tel:${data.phone}`} className="text-[13px] text-slate-900 dark:text-white hover:underline">
-                            {data.phone}
-                          </a>
-                        ) : (
-                          <p className="text-[13px] text-slate-600 dark:text-slate-400">—</p>
-                        )}
-                      </div>
-                    </div>
-                    {data.phone ? (
-                      <button
-                        type="button"
-                        className="shrink-0 rounded-md p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800"
-                        aria-label="Copy phone"
-                        onClick={() => copyText('Phone', data.phone)}
-                      >
-                        <Copy className="w-3.5 h-3.5" />
-                      </button>
-                    ) : null}
-                  </div>
-                  <div className="flex items-start gap-2 min-w-0">
-                    <MapPin className="w-4 h-4 shrink-0 mt-0.5 text-slate-400" />
-                    <div className="min-w-0">
-                      <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400">Address</p>
-                      <p className="text-[13px] text-slate-700 dark:text-slate-300 whitespace-pre-wrap">{data.address || '—'}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-2 min-w-0">
-                    <Calendar className="w-4 h-4 shrink-0 mt-0.5 text-slate-400" />
-                    <div>
-                      <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400">Joined</p>
-                      <p className="text-[13px] text-slate-700 dark:text-slate-300">{formatDate(data.date_joined as string)}</p>
-                    </div>
-                  </div>
-                </div>
-              </section>
-
-              <section>
-                <h3 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800 pb-2 mb-4">
-                  Workload Overview
-                </h3>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="rounded-xl border border-slate-200/90 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/40 px-4 py-3">
-                    <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400">In Progress</p>
-                    <p className="mt-1 text-2xl font-bold tabular-nums text-blue-600 dark:text-blue-400">{inProgress}</p>
-                  </div>
-                  <div className="rounded-xl border border-slate-200/90 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/40 px-4 py-3">
-                    <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400">Total Assigned</p>
-                    <p className="mt-1 text-2xl font-bold tabular-nums text-indigo-600 dark:text-indigo-400">{assignedTotal}</p>
-                  </div>
-                </div>
-                <div className="mt-4">
-                  <div className="mb-1.5 flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400">
-                    <span>Workload</span>
-                    <span>{assignedTotal} cases</span>
-                  </div>
-                  <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-200 dark:bg-slate-800">
-                    <div
-                      className={cn('h-full rounded-full transition-all', workloadBarClass(assignedTotal))}
-                      style={{ width: `${workloadFillPct(assignedTotal)}%` }}
+                <div className="min-w-0 divide-y divide-slate-100 overflow-hidden rounded-xl border border-slate-200 dark:divide-zinc-800 dark:border-zinc-800">
+                  <ContactRow
+                    icon={Mail}
+                    label={t.team.modal.email}
+                    value={data.email}
+                    href={data.email ? `mailto:${data.email}` : undefined}
+                    onCopy={() => copyText('email', d.copyEmail, data.email)}
+                    copied={copiedField === 'email'}
+                    copyLabel={d.copyEmail}
+                  />
+                  <ContactRow
+                    icon={Phone}
+                    label={t.team.modal.phone}
+                    value={data.phone}
+                    href={data.phone ? `tel:${data.phone}` : undefined}
+                    onCopy={() => copyText('phone', d.copyPhone, data.phone)}
+                    copied={copiedField === 'phone'}
+                    copyLabel={d.copyPhone}
+                  />
+                  {data.address ? (
+                    <ContactRow
+                      icon={MapPin}
+                      label={t.team.modal.addressLabel}
+                      value={data.address}
+                      wrap
                     />
-                  </div>
-                  <p className="mt-2 text-[12px] text-slate-600 dark:text-slate-400">
-                    {inProgress} of {assignedTotal} cases active
-                  </p>
+                  ) : null}
+                  {data.country ? (
+                    <ContactRow icon={MapPin} label={d.country} value={String(data.country)} />
+                  ) : null}
                 </div>
               </section>
 
-              <section>
-                <h3 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800 pb-2 mb-4">
-                  Assigned Cases ({cases.length})
+              <section className="min-w-0">
+                <h3 className="mb-2 text-[13px] font-semibold text-slate-800 dark:text-zinc-200">
+                  {d.professional}
                 </h3>
-                {cases.length === 0 ? (
-                  <p className="rounded-lg border border-dashed border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/30 px-4 py-6 text-center text-[13px] text-slate-500 dark:text-slate-400">
-                    No cases assigned yet
-                  </p>
-                ) : (
-                  <ul className="space-y-2">
-                    {cases.map((c) => {
-                      const caseItem = c as API.Case;
-                      const statusKey = String(caseItem.status ?? '')
-                        .toUpperCase()
-                        .replace(/\s+/g, '_');
+                <dl className="min-w-0 space-y-2.5 rounded-xl border border-slate-200 px-3 py-3 dark:border-zinc-800">
+                  <MetaRow label={t.team.columns.role} value={roleLabel} />
+                  <MetaRow
+                    label={d.memberType}
+                    value={pending ? d.memberTypePending : d.memberTypeActive}
+                  />
+                  {joined ? <MetaRow label={t.team.columns.joined} value={joined} /> : null}
+                </dl>
+                <p className="mt-2 flex min-w-0 items-start gap-1.5 text-[12px] leading-snug text-slate-500 dark:text-zinc-400">
+                  <Shield className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-400" aria-hidden />
+                  <span className="min-w-0">
+                    <span className="font-medium text-slate-600 dark:text-zinc-300">{d.access}. </span>
+                    {t.team.roleDescriptions[memberRole]}
+                  </span>
+                </p>
+              </section>
+            </div>
+          ) : data && tab === 'cases' ? (
+            <div className="min-w-0 space-y-4">
+              <section className="min-w-0">
+                <h3 className="text-[13px] font-semibold text-slate-800 dark:text-zinc-200">
+                  {d.workload}
+                </h3>
+                <p className="mt-0.5 text-[13px] font-medium text-slate-800 dark:text-zinc-200">
+                  {tf(d.casesAssigned, { count: assignedTotal })}
+                </p>
+                <div className="mt-2 h-1 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-zinc-800">
+                  <div
+                    className="h-full rounded-full bg-[#64499D]/70 transition-[width] duration-300"
+                    style={{ width: `${workloadFillPct(assignedTotal)}%` }}
+                  />
+                </div>
+                <p className="mt-1.5 text-[12px] text-slate-500 dark:text-zinc-400">
+                  {cases.length > 0
+                    ? tf(d.activeClosed, { active: inProgress, closed: closedCount })
+                    : tf(t.team.activeAssigned, { inProgress, assigned: assignedTotal })}
+                </p>
+              </section>
+
+              {loading ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="h-5 w-5 animate-spin text-[#64499D]" />
+                </div>
+              ) : cases.length === 0 ? (
+                <p className="rounded-xl border border-dashed border-slate-200 px-3 py-6 text-center text-[13px] text-slate-500 dark:border-zinc-800 dark:text-zinc-400">
+                  {d.noCases}
+                </p>
+              ) : (
+                <div className="min-w-0 space-y-2">
+                  {categoryCounts.length > 0 ? (
+                    <div className="flex min-w-0 flex-wrap gap-1" role="group" aria-label={d.assignedCases}>
+                      <FilterChip
+                        active={categoryFilter === 'all'}
+                        label={d.filterAll}
+                        count={cases.length}
+                        onClick={() => setCategoryFilter('all')}
+                      />
+                      {categoryCounts.map(([category, count]) => (
+                        <FilterChip
+                          key={category}
+                          active={categoryFilter === category}
+                          label={enumLabel('caseCategory', category) || category}
+                          count={count}
+                          onClick={() => setCategoryFilter(category)}
+                        />
+                      ))}
+                    </div>
+                  ) : null}
+
+                  <ul className="min-w-0 divide-y divide-slate-100 overflow-hidden rounded-xl border border-slate-200 dark:divide-zinc-800 dark:border-zinc-800">
+                    {filteredCases.map((c) => {
+                      const statusKey = normalizeStatus(c.status);
+                      const title = c.title || c.reference || `#${c.id}`;
+                      const heading =
+                        c.reference && c.title && c.reference !== c.title
+                          ? `${c.reference} — ${c.title}`
+                          : title;
+                      const categoryLabel = c.category ? enumLabel('caseCategory', c.category) : '';
+                      const statusLabel =
+                        enumLabel('caseStatus', c.status) || String(c.status ?? '—').replace(/_/g, ' ');
                       return (
-                        <li key={c.id}>
+                        <li key={c.id} className="min-w-0">
                           <button
                             type="button"
-                            onClick={() => goToCase(caseItem)}
-                            className="flex w-full items-center gap-3 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/50 px-3 py-2.5 text-left transition-colors hover:border-slate-300 hover:bg-slate-50 dark:hover:border-slate-700 dark:hover:bg-slate-900"
+                            onClick={() => goToCase(c)}
+                            className="flex w-full min-w-0 items-center gap-2.5 px-3 py-2.5 text-start transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#64499D]/30 dark:hover:bg-zinc-900"
                           >
-                            <span className={cn('h-2 w-2 shrink-0 rounded-full', caseTypeDotClass(caseItem))} aria-hidden />
-                            <div className="min-w-0 flex-1">
-                              {caseItem.reference ? (
-                                <p className="font-mono text-[11px] text-slate-500 dark:text-slate-400">{caseItem.reference}</p>
-                              ) : null}
-                              <p className="text-[13px] font-medium text-slate-900 dark:text-white truncate">
-                                {caseItem.title || caseItem.reference || `Case #${c.id}`}
-                              </p>
-                              <span
-                                className={cn(
-                                  'mt-1 inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ring-1 ring-inset',
-                                  getStatusColor(statusKey)
-                                )}
-                              >
-                                {String(caseItem.status ?? '—').replace(/_/g, ' ')}
-                              </span>
+                            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-[#F1ECFF] text-[#64499D] dark:bg-[#2a2240] dark:text-[#E9E0FF]">
+                              <Briefcase className="h-3.5 w-3.5" aria-hidden />
                             </div>
-                            <ChevronRight className="h-4 w-4 shrink-0 text-slate-400" aria-hidden />
+                            <div className="min-w-0 flex-1">
+                              <p className="truncate text-[13px] font-medium text-slate-900 dark:text-zinc-100">
+                                {heading}
+                              </p>
+                              <p className="mt-0.5 flex min-w-0 items-center gap-1.5 text-[11px] text-slate-500 dark:text-zinc-400">
+                                <span
+                                  className={cn(
+                                    'inline-flex shrink-0 items-center rounded px-1.5 py-px text-[10px] font-medium uppercase tracking-wider ring-1 ring-inset',
+                                    getStatusColor(statusKey)
+                                  )}
+                                >
+                                  {statusLabel}
+                                </span>
+                                {categoryLabel ? (
+                                  <span className="min-w-0 truncate uppercase tracking-wide">
+                                    {categoryLabel}
+                                  </span>
+                                ) : null}
+                              </p>
+                            </div>
+                            <ChevronRight className="h-4 w-4 shrink-0 text-slate-300" aria-hidden />
                           </button>
                         </li>
                       );
                     })}
                   </ul>
-                )}
-              </section>
+                </div>
+              )}
             </div>
           ) : null}
         </div>
 
         {data ? (
-          <footer className="sticky bottom-0 z-20 flex shrink-0 flex-wrap items-center justify-between gap-3 border-t border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-950/95 backdrop-blur-sm px-5 py-4">
-            <p className="text-[11px] text-slate-500 dark:text-slate-400">
-              Joined {formatDate(data.date_joined as string)}
+          <footer className="flex shrink-0 min-w-0 flex-col gap-2.5 border-t border-slate-200 bg-white px-5 py-3 dark:border-zinc-800 dark:bg-zinc-950 sm:flex-row sm:items-center sm:justify-between md:px-6">
+            <p className="min-w-0 truncate text-[11px] text-slate-400">
+              {joined ? (
+                <span className="inline-flex items-center gap-1">
+                  <Calendar className="h-3 w-3" aria-hidden />
+                  {tf(d.joinedOn, { date: joined })}
+                </span>
+              ) : null}
             </p>
-            <div className="flex items-center gap-2">
+            <div className="flex shrink-0 items-center justify-end gap-2">
               <Button
                 type="button"
                 variant="outline"
-                className="h-9"
+                className="h-9 shrink-0 border-slate-200 dark:border-zinc-700"
                 onClick={() => handleOpenChange(false)}
               >
-                Close
+                {t.common.close}
               </Button>
               <Button
                 type="button"
-                className="h-9 bg-[#6D54B5] hover:bg-[#5a4699] text-white"
+                className="h-9 shrink-0 text-white hover:opacity-90"
+                style={{ backgroundColor: JURE_PURPLE }}
                 onClick={() => onEditMember?.(data)}
               >
-                Edit
+                {d.editMember}
               </Button>
             </div>
           </footer>
         ) : null}
-      </SheetContent>
-    </Sheet>
+        </DialogPrimitive.Content>
+      </DialogPortal>
+    </Dialog>
   );
 });
 
-TeamMemberProfileDrawer.displayName = 'TeamMemberProfileDrawer';
+function ContactRow({
+  icon: Icon,
+  label,
+  value,
+  href,
+  onCopy,
+  copied,
+  copyLabel,
+  wrap,
+}: {
+  icon: typeof Mail;
+  label: string;
+  value?: string | null;
+  href?: string;
+  onCopy?: () => void;
+  copied?: boolean;
+  copyLabel?: string;
+  wrap?: boolean;
+}) {
+  if (!value) return null;
+  return (
+    <div className="flex min-w-0 items-start gap-2.5 px-3 py-2.5">
+      <Icon className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-400" aria-hidden />
+      <div className="min-w-0 flex-1">
+        <p className="text-[11px] font-medium text-slate-400">{label}</p>
+        {href ? (
+          <a
+            href={href}
+            className={cn(
+              'block text-[13px] text-slate-800 hover:text-[#64499D] dark:text-zinc-200',
+              wrap ? 'break-words' : 'truncate'
+            )}
+            title={value}
+          >
+            {value}
+          </a>
+        ) : (
+          <p
+            className={cn(
+              'text-[13px] text-slate-800 dark:text-zinc-200',
+              wrap ? 'break-words' : 'truncate'
+            )}
+            title={value}
+          >
+            {value}
+          </p>
+        )}
+      </div>
+      {onCopy ? (
+        <button
+          type="button"
+          className="shrink-0 rounded-md p-1.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#64499D]/30 dark:hover:bg-zinc-800"
+          aria-label={copyLabel}
+          onClick={onCopy}
+        >
+          {copied ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <Copy className="h-3.5 w-3.5" />}
+        </button>
+      ) : null}
+    </div>
+  );
+}
 
+function MetaRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex min-w-0 items-baseline justify-between gap-3">
+      <dt className="shrink-0 text-[12px] text-slate-400">{label}</dt>
+      <dd className="truncate text-[13px] font-medium text-slate-800 dark:text-zinc-200">{value}</dd>
+    </div>
+  );
+}
+
+function FilterChip({
+  active,
+  label,
+  count,
+  onClick,
+}: {
+  active: boolean;
+  label: string;
+  count: number;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={active}
+      className={cn(
+        'inline-flex max-w-full items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium transition-colors',
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#64499D]/30',
+        active
+          ? 'bg-[#64499D] text-white'
+          : 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-zinc-800 dark:text-zinc-300'
+      )}
+    >
+      <span className="truncate">{label}</span>
+      <span className={cn('tabular-nums', active ? 'text-white/80' : 'text-slate-400')}>{count}</span>
+    </button>
+  );
+}
+
+TeamMemberProfileDrawer.displayName = 'TeamMemberProfileDrawer';
 export default TeamMemberProfileDrawer;

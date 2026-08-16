@@ -15,11 +15,23 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { DialogFooter } from '@/components/ui/dialog';
 import ServerSelect from '@/components/common/ServerSelect';
-import { FileText, Users, FileCheck, Calendar, Plus, Trash2 } from 'lucide-react';
+import { Loader2, Plus, Trash2 } from 'lucide-react';
 import { useCaseForm } from '@/hooks/useCaseForm';
 import { useToast } from '@/hooks/use-toast';
 import { useAppTranslation } from '@/i18n';
+import { cn } from '@/lib/utils';
+import {
+  CREATE_CANCEL_CLASS,
+  CREATE_FOOTER_CLASS,
+  CREATE_INPUT_CLASS,
+  CREATE_SELECT_CLASS,
+  CREATE_SERVER_SELECT_CLASS,
+  CREATE_SUBMIT_CLASS,
+  CREATE_TEXTAREA_CLASS,
+  CreateFormSection,
+} from '@/components/forms/CreateFormShell';
 
 export type AdministrativeDutyFormValues = {
   reference: string;
@@ -53,20 +65,6 @@ export interface AdministrativeDutyFormProps {
   onSubmitSuccess?: (caseItem: API.Case) => void;
   onBack?: () => void;
 }
-
-const FormSection: React.FC<{
-  title: string;
-  icon: React.ElementType;
-  children: React.ReactNode;
-}> = ({ title, icon: Icon, children }) => (
-  <div className="space-y-4">
-    <div className="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300 pb-2 border-b border-slate-200/90 dark:border-slate-800">
-      <Icon className="w-4 h-4 text-purple-600 dark:text-purple-400" />
-      <span>{title}</span>
-    </div>
-    {children}
-  </div>
-);
 
 const AdministrativeDutyForm: React.FC<AdministrativeDutyFormProps> = ({
   initialValues,
@@ -250,13 +248,19 @@ const AdministrativeDutyForm: React.FC<AdministrativeDutyFormProps> = ({
   );
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form
+      onSubmit={handleSubmit}
+      className="flex min-h-0 flex-1 flex-col overflow-hidden"
+      noValidate
+    >
+      <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-contain px-6 py-5 md:px-7">
+      <div className="space-y-6">
       {form.formState.errors.case_specific_data && (
-        <div className="p-3 rounded border border-red-200 dark:border-red-900/50 bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-300 text-[13px]">
+        <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-[13px] text-red-700 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-300">
           {form.formState.errors.case_specific_data.message}
         </div>
       )}
-      <FormSection title={modal.sections.basicInfo} icon={FileText}>
+      <CreateFormSection index="01" title={modal.sections.basicInfo}>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-2">
             <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
@@ -265,7 +269,7 @@ const AdministrativeDutyForm: React.FC<AdministrativeDutyFormProps> = ({
             <Input
               {...form.register('reference')}
               placeholder={modal.placeholders.referenceAuto}
-              className="h-10"
+              className={CREATE_INPUT_CLASS}
             />
             {form.formState.errors.reference && (
               <p className="text-red-500 text-xs">{form.formState.errors.reference.message}</p>
@@ -278,7 +282,7 @@ const AdministrativeDutyForm: React.FC<AdministrativeDutyFormProps> = ({
             <Input
               {...form.register('title')}
               placeholder={modal.placeholders.dutyTitle}
-              className="h-10"
+              className={CREATE_INPUT_CLASS}
             />
             {form.formState.errors.title && (
               <p className="text-red-500 text-xs">{form.formState.errors.title.message}</p>
@@ -294,7 +298,7 @@ const AdministrativeDutyForm: React.FC<AdministrativeDutyFormProps> = ({
                 form.setValue('duty_type', v as AdministrativeDutyFormValues['duty_type'])
               }
             >
-              <SelectTrigger className="h-10">
+              <SelectTrigger className={CREATE_SELECT_CLASS}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -316,7 +320,7 @@ const AdministrativeDutyForm: React.FC<AdministrativeDutyFormProps> = ({
                 form.setValue('priority', v as AdministrativeDutyFormValues['priority'])
               }
             >
-              <SelectTrigger className="h-10">
+              <SelectTrigger className={CREATE_SELECT_CLASS}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -329,9 +333,9 @@ const AdministrativeDutyForm: React.FC<AdministrativeDutyFormProps> = ({
             </Select>
           </div>
         </div>
-      </FormSection>
+      </CreateFormSection>
 
-      <FormSection title={modal.sections.clientResponsible} icon={Users}>
+      <CreateFormSection index="02" title={modal.sections.clientResponsible}>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-2">
             <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
@@ -346,6 +350,7 @@ const AdministrativeDutyForm: React.FC<AdministrativeDutyFormProps> = ({
               }
               cleanable
               placeholder={modal.placeholders.client}
+              className={CREATE_SERVER_SELECT_CLASS}
             />
           </div>
           <div className="space-y-2">
@@ -358,12 +363,13 @@ const AdministrativeDutyForm: React.FC<AdministrativeDutyFormProps> = ({
               onChange={(v) => form.setValue('assigned_to', v ? Number(v) : null)}
               labelKey="email"
               cleanable
+              className={CREATE_SERVER_SELECT_CLASS}
             />
           </div>
         </div>
-      </FormSection>
+      </CreateFormSection>
 
-      <FormSection title={modal.sections.taskDetails} icon={FileCheck}>
+      <CreateFormSection index="03" title={modal.sections.taskDetails}>
         <div className="space-y-4">
           <div className="space-y-2">
             <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
@@ -372,7 +378,7 @@ const AdministrativeDutyForm: React.FC<AdministrativeDutyFormProps> = ({
             <Textarea
               {...form.register('description')}
               placeholder={modal.placeholders.descriptionPurpose}
-              className="min-h-[80px] resize-none"
+              className={CREATE_TEXTAREA_CLASS}
             />
             {form.formState.errors.description && (
               <p className="text-red-500 text-xs">{form.formState.errors.description.message}</p>
@@ -386,7 +392,7 @@ const AdministrativeDutyForm: React.FC<AdministrativeDutyFormProps> = ({
               <Input
                 {...form.register('institution_authority')}
                 placeholder={modal.placeholders.institutionExample}
-                className="h-10"
+                className={CREATE_INPUT_CLASS}
               />
             </div>
             <div className="space-y-2">
@@ -397,20 +403,20 @@ const AdministrativeDutyForm: React.FC<AdministrativeDutyFormProps> = ({
               <Input
                 {...form.register('institution_reference_number')}
                 placeholder={modal.placeholders.referenceNumber}
-                className="h-10"
+                className={CREATE_INPUT_CLASS}
               />
             </div>
           </div>
         </div>
-      </FormSection>
+      </CreateFormSection>
 
-      <FormSection title={modal.sections.dates} icon={Calendar}>
+      <CreateFormSection index="04" title={modal.sections.dates}>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div className="space-y-2">
             <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
               {modal.fields.startDate} <span className="text-red-500">*</span>
             </label>
-            <Input type="date" {...form.register('start_date')} className="h-10" />
+            <Input type="date" {...form.register('start_date')} className={CREATE_INPUT_CLASS} />
             {form.formState.errors.start_date && (
               <p className="text-red-500 text-xs">{form.formState.errors.start_date.message}</p>
             )}
@@ -419,7 +425,7 @@ const AdministrativeDutyForm: React.FC<AdministrativeDutyFormProps> = ({
             <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
               {modal.fields.dueDateLegalDeadline} <span className="text-red-500">*</span>
             </label>
-            <Input type="date" {...form.register('due_date')} className="h-10" />
+            <Input type="date" {...form.register('due_date')} className={CREATE_INPUT_CLASS} />
             {form.formState.errors.due_date && (
               <p className="text-red-500 text-xs">{form.formState.errors.due_date.message}</p>
             )}
@@ -429,12 +435,12 @@ const AdministrativeDutyForm: React.FC<AdministrativeDutyFormProps> = ({
               {modal.fields.completionDate}{' '}
               <span className="text-slate-400 text-xs">{modal.hints.completionDateOptional}</span>
             </label>
-            <Input type="date" {...form.register('completion_date')} className="h-10" />
+            <Input type="date" {...form.register('completion_date')} className={CREATE_INPUT_CLASS} />
           </div>
         </div>
-      </FormSection>
+      </CreateFormSection>
 
-      <FormSection title={modal.sections.documentsChecklist} icon={FileCheck}>
+      <CreateFormSection index="05" title={modal.sections.documentsChecklist}>
         <div className="space-y-4">
           <div className="space-y-2">
             <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
@@ -447,7 +453,7 @@ const AdministrativeDutyForm: React.FC<AdministrativeDutyFormProps> = ({
                     value={item.label}
                     onChange={(e) => updateDocument(i, 'label', e.target.value)}
                     placeholder={modal.placeholders.documentName}
-                    className="h-10 flex-1"
+                    className={cn(CREATE_INPUT_CLASS, 'flex-1')}
                   />
                   <div className="flex items-center gap-2 shrink-0">
                     <Checkbox
@@ -485,7 +491,7 @@ const AdministrativeDutyForm: React.FC<AdministrativeDutyFormProps> = ({
                 form.setValue('status', v as AdministrativeDutyFormValues['status'])
               }
             >
-              <SelectTrigger className="h-10">
+              <SelectTrigger className={CREATE_SELECT_CLASS}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -498,23 +504,31 @@ const AdministrativeDutyForm: React.FC<AdministrativeDutyFormProps> = ({
             </Select>
           </div>
         </div>
-      </FormSection>
+      </CreateFormSection>
+      </div>
+      </div>
 
-      <div className="flex items-center justify-between pt-4 border-t border-slate-200/90 dark:border-slate-800 gap-3">
-        {onBack && (
-          <Button type="button" variant="outline" onClick={onBack} disabled={isLoading}>
+      <DialogFooter className={cn(CREATE_FOOTER_CLASS, onBack && 'justify-between')}>
+        {onBack ? (
+          <Button type="button" variant="outline" onClick={onBack} disabled={isLoading} className={CREATE_CANCEL_CLASS}>
             {modal.back}
           </Button>
+        ) : (
+          <span />
         )}
-        {!onBack && <div />}
-        <Button type="submit" disabled={isLoading} className="bg-purple-600 hover:bg-purple-700">
-          {isLoading
-            ? modal.submitting
-            : mode === 'edit'
-              ? modal.updateCase
-              : modal.createCase}
+        <Button type="submit" disabled={isLoading} className={CREATE_SUBMIT_CLASS}>
+          {isLoading ? (
+            <>
+              <Loader2 className="animate-spin" />
+              {modal.submitting}
+            </>
+          ) : mode === 'edit' ? (
+            modal.updateCase
+          ) : (
+            modal.createCase
+          )}
         </Button>
-      </div>
+      </DialogFooter>
     </form>
   );
 };

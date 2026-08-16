@@ -10,11 +10,13 @@ declare namespace API {
     status: TaskStatus;
     due_date: string | null;
     estimated_hours: string | null;
-    assigned_to: API.User | null;
+    assigned_to: number | API.User | null;
     assigned_to_details: API.User | null;
-    client: API.User | null;
-    client_details: API.Client | null;
-    
+    client: number | API.User | null;
+    client_details: API.User | API.Client | null;
+    case?: number | null;
+    case_title?: string;
+    created?: string;
   };
 
   type TaskCreateForm = {

@@ -1,13 +1,12 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { Plus, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { FinanceStatsStrip } from '@/components/finance/stats/FinanceStatsStrip';
 import { InvoiceDetailPanel } from '@/components/finance/panel/InvoiceDetailPanel';
-import CaseDetailDrawer, { CaseDetailDrawerRef } from '@/components/case/CaseDetailDrawer';
+import { navigateToCaseById } from '@/lib/caseRoutes';
 import { getFinanceDashboard } from '@/services/finance/api';
-import { apiGetCase } from '@/services/case/api';
 import {
   normalizeFinanceDashboardPayload,
   enrichMonthlyFromRecentTransactions,
@@ -40,7 +39,6 @@ const FinancePage: React.FC = () => {
   const [invoiceEditId, setInvoiceEditId] = useState<number | null>(null);
   const [invoiceListEpoch, setInvoiceListEpoch] = useState(0);
   const [tvaStatus, setTvaStatus] = useState<TVAStatus | null>(null);
-  const caseDrawerRef = useRef<CaseDetailDrawerRef>(null);
 
   useEffect(() => {
     getTVAStatus().then((s) => setTvaStatus((prev) => prev ?? s));
@@ -111,13 +109,8 @@ const FinancePage: React.FC = () => {
     );
   }, [dashboard, loadError, dashReady]);
 
-  const openCaseById = async (caseId: number) => {
-    try {
-      const res = await apiGetCase(caseId);
-      caseDrawerRef.current?.open(res.data);
-    } catch {
-      /* silent */
-    }
+  const openCaseById = (caseId: number) => {
+    void navigateToCaseById(navigate, caseId);
   };
 
   return (
@@ -229,7 +222,6 @@ const FinancePage: React.FC = () => {
           setInvoiceListEpoch((e) => e + 1);
         }}
       />
-      <CaseDetailDrawer ref={caseDrawerRef} />
     </div>
   );
 };

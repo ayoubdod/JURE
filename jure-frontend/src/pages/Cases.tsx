@@ -6,14 +6,14 @@ import React, {
   useMemo,
   memo,
 } from 'react';
-import { useSearchParams } from 'react-router';
+import { useNavigate, useSearchParams } from 'react-router';
 import { useDebounce } from '@/hooks/use-debounce';
 import './Cases.css';
 import {
   Plus,
   Search,
   List,
-  Grid3x3,
+  LayoutGrid,
   ChevronRight,
   Calendar,
   AlertTriangle,
@@ -36,7 +36,6 @@ import CaseModal, { CaseModalRef } from '@/components/case/CaseModal';
 import CaseUpdateModal, { CaseUpdateModalRef } from '@/components/case/CaseUpdateModal';
 import CaseDeleteModal, { CaseDeleteModalRef } from '@/components/case/CaseDeleteModal';
 import CaseViewModal, { CaseViewModalRef } from '@/components/case/CaseViewModal';
-import CaseDetailDrawer, { CaseDetailDrawerRef } from '@/components/case/CaseDetailDrawer';
 import CaseCard from '@/components/case/CaseCard';
 import MatterWorkspaceCard from '@/components/case/MatterWorkspaceCard';
 import { Input } from '@/components/ui/input';
@@ -48,6 +47,7 @@ import {
 } from '@/components/ui/popover';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
+import { navigateToCase } from '@/lib/caseRoutes';
 import { eventBus } from '@/utils/eventBus';
 import {
   getCaseData,
@@ -265,11 +265,11 @@ const CaseTableRow = memo(function CaseTableRow({
       tabIndex={0}
       data-row-idx={rowIdx}
       className={cn(
-        'group border-b border-slate-100 dark:border-slate-800/60 cursor-pointer transition-colors duration-100 motion-reduce:transition-none',
+        'group border-b border-slate-100 dark:border-slate-800/60 cursor-pointer transition-[background-color,box-shadow] duration-200 motion-reduce:transition-none',
         rowIdx % 2 === 0 ? 'bg-white dark:bg-slate-950' : 'bg-slate-50/40 dark:bg-slate-900/20',
-        'hover:bg-slate-100 dark:hover:bg-slate-800/80',
+        'hover:bg-[#F7F4FF] hover:shadow-[inset_3px_0_0_0_#64499D] dark:hover:bg-[#24183F]/50',
         selected && 'bg-primary/[0.06] dark:bg-primary/10 ring-1 ring-inset ring-primary/25',
-        'focus-visible:outline-none focus-visible:bg-primary/[0.08] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary/40'
+        'focus-visible:outline-none focus-visible:bg-[#F7F4FF] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#64499D]/40'
       )}
       onClick={() => onOpen(caseItem)}
       onFocus={() => onFocusRow(rowIdx)}
@@ -308,7 +308,7 @@ const CaseTableRow = memo(function CaseTableRow({
       </td>
       <td className="px-1.5 py-2 align-middle text-right w-8">
         <ChevronRight
-          className="w-4 h-4 text-slate-300 dark:text-slate-600 group-hover:text-slate-500 transition-colors ml-auto"
+          className="w-4 h-4 text-slate-300 dark:text-slate-600 group-hover:text-[#64499D] transition-colors ml-auto"
           aria-hidden
         />
       </td>
@@ -321,6 +321,7 @@ const CaseTableRow = memo(function CaseTableRow({
    ============== */
 const Cases = () => {
   const { t, tf } = useAppTranslation();
+  const navigate = useNavigate();
   const [casesHolderEl, setCasesHolderEl] = useState<HTMLDivElement | null>(null);
   const [searchParams, setSearchParams] = useSearchParams();
   const { user: currentUser } = useUserStore();
@@ -379,7 +380,6 @@ const Cases = () => {
   const caseUpdateModalRef = useRef<CaseUpdateModalRef>(null);
   const caseDeleteModalRef = useRef<CaseDeleteModalRef>(null);
   const caseViewModalRef = useRef<CaseViewModalRef>(null);
-  const caseDetailDrawerRef = useRef<CaseDetailDrawerRef>(null);
 
   const hasActiveFilters = useMemo(() => {
     return (
@@ -462,13 +462,8 @@ const Cases = () => {
   const allCasesCount = fullFilteredCases.length;
 
   const handleRowClick = useCallback((caseItem: API.Case) => {
-    caseDetailDrawerRef.current?.open(caseItem);
-  }, []);
-
-  const handleEditFromDrawer = (caseItem: API.Case) => {
-    caseDetailDrawerRef.current?.close();
-    caseModalRef.current?.show(caseItem);
-  };
+    void navigateToCase(navigate, caseItem);
+  }, [navigate]);
 
   const handleEditCase = useCallback((caseItem: API.Case) => {
     caseModalRef.current?.show(caseItem);
@@ -733,12 +728,12 @@ const Cases = () => {
   );
 
   const renderGridView = () => (
-    <div className="grid grid-cols-1 min-[640px]:grid-cols-2 xl:grid-cols-3 gap-3 md:gap-4 items-stretch">
+    <div className="grid grid-cols-1 items-stretch gap-3 sm:grid-cols-2 md:grid-cols-4">
       {casesIsLoading ? (
         Array.from({ length: 8 }).map((_, i) => (
           <div
             key={i}
-            className="h-[160px] rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 animate-pulse"
+            className="aspect-square animate-pulse rounded-[14px] border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950"
           />
         ))
       ) : casesLoadError ? (
@@ -747,7 +742,12 @@ const Cases = () => {
         <div className="col-span-full">{emptyState}</div>
       ) : (
         cases.map((caseItem) => (
-          <CaseCard key={caseItem.id} caseItem={caseItem} onClick={() => handleRowClick(caseItem)} />
+          <CaseCard
+            key={caseItem.id}
+            caseItem={caseItem}
+            onClick={() => handleRowClick(caseItem)}
+            onEdit={() => handleEditCase(caseItem)}
+          />
         ))
       )}
     </div>
@@ -792,6 +792,27 @@ const Cases = () => {
       className="relative h-full min-h-0 flex flex-col overflow-hidden bg-slate-50 dark:bg-slate-950"
     >
       <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden">
+        <div className="px-0 pt-3 pb-1">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="min-w-0">
+              <h1 className="text-xl font-semibold tracking-tight text-slate-900 dark:text-white">
+                {t.cases.allCases}
+              </h1>
+              <p className="mt-0.5 text-[13px] text-slate-500 dark:text-slate-400 max-w-2xl">
+                {t.cases.allCasesSubtitle}
+              </p>
+            </div>
+            <Button
+              size="sm"
+              className="hidden md:inline-flex h-9 px-3 text-[12px] font-semibold shrink-0 rounded-md shadow-sm shadow-primary/15"
+              onClick={openCreateCase}
+            >
+              <Plus className="w-4 h-4 mr-1.5" strokeWidth={2.5} />
+              {t.cases.addNewCase}
+            </Button>
+          </div>
+        </div>
+
         {/* KPI strip — scrolls away */}
         <div
           className="cases-kpi-strip flex gap-2 overflow-x-auto snap-x snap-mandatory px-1 sm:px-0 py-2"
@@ -997,50 +1018,32 @@ const Cases = () => {
               )}
 
               <div
-                className="hidden md:flex items-center gap-0.5 ml-auto p-0.5 rounded-md border border-slate-200 dark:border-slate-700 bg-slate-100/80 dark:bg-slate-900/50"
+                className="ml-auto hidden items-center rounded-md border border-slate-200 bg-slate-100/80 p-0.5 dark:border-slate-700 dark:bg-slate-900/50 md:inline-flex"
                 role="group"
                 aria-label={t.cases.aria.viewMode}
               >
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className={cn(
-                    'h-7 px-2.5 rounded-md',
-                    viewMode === 'list' &&
-                      'bg-white dark:bg-slate-800 shadow-sm text-slate-900 dark:text-white ring-1 ring-slate-200/80 dark:ring-slate-700'
-                  )}
-                  onClick={() => setViewMode('list')}
-                  aria-pressed={viewMode === 'list'}
-                  aria-label={t.cases.aria.listView}
-                >
-                  <List className="w-4 h-4" />
-                </Button>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className={cn(
-                    'h-7 px-2.5 rounded-md',
-                    viewMode === 'grid' &&
-                      'bg-white dark:bg-slate-800 shadow-sm text-slate-900 dark:text-white ring-1 ring-slate-200/80 dark:ring-slate-700'
-                  )}
-                  onClick={() => setViewMode('grid')}
-                  aria-pressed={viewMode === 'grid'}
-                  aria-label={t.cases.aria.gridView}
-                >
-                  <Grid3x3 className="w-4 h-4" />
-                </Button>
+                {(['list', 'grid'] as const).map((mode) => (
+                  <button
+                    key={mode}
+                    type="button"
+                    onClick={() => setViewMode(mode)}
+                    className={cn(
+                      'inline-flex items-center gap-1 rounded-md px-2.5 py-1.5 text-[11px] font-semibold transition-colors',
+                      viewMode === mode
+                        ? 'bg-white text-slate-900 shadow-sm ring-1 ring-slate-200/80 dark:bg-slate-800 dark:text-white dark:ring-slate-700'
+                        : 'text-slate-600 hover:bg-white/60 dark:text-slate-400 dark:hover:bg-slate-800/60'
+                    )}
+                    aria-pressed={viewMode === mode}
+                    aria-label={mode === 'list' ? t.cases.aria.listView : t.cases.aria.gridView}
+                  >
+                    {mode === 'list' ? (
+                      <List className="h-3.5 w-3.5" />
+                    ) : (
+                      <LayoutGrid className="h-3.5 w-3.5" />
+                    )}
+                  </button>
+                ))}
               </div>
-
-              <Button
-                size="sm"
-                className="hidden md:inline-flex h-9 px-3 text-[12px] font-semibold shrink-0 rounded-md shadow-sm shadow-primary/15 ml-auto lg:ml-0"
-                onClick={openCreateCase}
-              >
-                <Plus className="w-4 h-4 mr-1.5" strokeWidth={2.5} />
-                {t.cases.addNewCase}
-              </Button>
             </div>
 
             <Tabs
@@ -1129,13 +1132,6 @@ const Cases = () => {
       <CaseUpdateModal ref={caseUpdateModalRef} onSuccess={refresh} />
       <CaseDeleteModal ref={caseDeleteModalRef} onSuccess={refresh} />
       <CaseViewModal ref={caseViewModalRef} onSuccess={refresh} />
-      <CaseDetailDrawer
-        ref={caseDetailDrawerRef}
-        portalContainer={casesHolderEl}
-        onEdit={handleEditFromDrawer}
-        onDelete={(c) => caseDeleteModalRef.current?.show(c)}
-        onCaseListPatch={patchCaseInList}
-      />
     </div>
   );
 };

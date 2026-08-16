@@ -116,7 +116,7 @@ const Sidebar = ({ activeTab, setActiveTab, expanded, onExpandedChange }: Sideba
         path: '/dashboard/cases',
         badge: null,
         children: [
-          { id: 'cases-consultation', label: t.sidebar.consultation, path: '/dashboard/cases/consultation' },
+          { id: 'cases-consultation', label: t.sidebar.consultation, path: '/dashboard/cases/consultations' },
           { id: 'cases-litigation', label: t.sidebar.litigation, path: '/dashboard/cases/litigation' },
           { id: 'cases-administrative', label: t.sidebar.administrative, path: '/dashboard/cases/administrative' },
         ],
@@ -128,7 +128,7 @@ const Sidebar = ({ activeTab, setActiveTab, expanded, onExpandedChange }: Sideba
         id: 'appointment',
         icon: CalendarClock,
         label: t.sidebar.appointment,
-        path: '/dashboard/appointment',
+        path: '/dashboard/appointments',
         badge: null,
       },
       {
@@ -163,6 +163,7 @@ const Sidebar = ({ activeTab, setActiveTab, expanded, onExpandedChange }: Sideba
 
   const isCasesChildPath = (path: string) =>
     path.startsWith('/dashboard/cases/consultation') ||
+    path.startsWith('/dashboard/cases/consultations') ||
     path.startsWith('/dashboard/cases/litigation') ||
     path.startsWith('/dashboard/cases/administrative');
 
@@ -179,7 +180,7 @@ const Sidebar = ({ activeTab, setActiveTab, expanded, onExpandedChange }: Sideba
   useEffect(() => {
     const path = location.pathname;
     setExpandedIds((prev) => ({
-      cases: isCasesChildPath(path) ? true : isCasesSectionPath(path) ? prev.cases : false,
+      cases: isCasesSectionPath(path),
       office: isOfficeSectionPath(path),
     }));
     setCasesPopoverOpen(false);
@@ -214,7 +215,7 @@ const Sidebar = ({ activeTab, setActiveTab, expanded, onExpandedChange }: Sideba
   const handleNavigate = (id: string, path: string, options?: { closeMobile?: boolean }) => {
     setActiveTab(id);
     setExpandedIds((prev) => ({
-      cases: isCasesChildPath(path) ? true : isCasesSectionPath(path) ? prev.cases : false,
+      cases: isCasesSectionPath(path),
       office: isOfficeSectionPath(path),
     }));
     setCasesPopoverOpen(false);
@@ -243,13 +244,20 @@ const Sidebar = ({ activeTab, setActiveTab, expanded, onExpandedChange }: Sideba
       return location.pathname.startsWith('/dashboard/finance');
     }
     if (path === '/dashboard/calendar') {
+      return location.pathname.startsWith('/dashboard/calendar');
+    }
+    if (path === '/dashboard/tasks') {
       return (
-        location.pathname.startsWith('/dashboard/calendar') ||
+        location.pathname === '/dashboard/tasks' ||
+        location.pathname === '/dashboard/tasks/' ||
         /^\/dashboard\/tasks\/\d+\/edit/.test(location.pathname)
       );
     }
-    if (path === '/dashboard/tasks') {
-      return location.pathname === '/dashboard/tasks' || location.pathname === '/dashboard/tasks/';
+    if (path === '/dashboard/appointments') {
+      return (
+        location.pathname.startsWith('/dashboard/appointments') ||
+        location.pathname.startsWith('/dashboard/appointment')
+      );
     }
     return location.pathname === path || location.pathname.startsWith(`${path}/`);
   };
@@ -852,8 +860,8 @@ const Sidebar = ({ activeTab, setActiveTab, expanded, onExpandedChange }: Sideba
                     'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-jure-400 focus-visible:ring-offset-2',
                     'active:scale-95 active:bg-jure-800',
                     'transition-[background-color,transform,box-shadow] duration-200 ease-out',
-                    // Flat side flush with sidebar edge; round only the outer side
-                    isRTL ? 'rounded-s-xl rounded-e-none' : 'rounded-e-xl rounded-s-none',
+                    // Logical radii: always flush on the sidebar (`start`) side, rounded toward content.
+                    'rounded-e-xl rounded-s-none',
                   )}
                   aria-label={railExpanded ? 'Collapse sidebar' : 'Expand sidebar'}
                   aria-expanded={railExpanded}
@@ -863,9 +871,9 @@ const Sidebar = ({ activeTab, setActiveTab, expanded, onExpandedChange }: Sideba
                     strokeWidth={2.5}
                     className={cn(
                       'transition-transform duration-300 ease-out',
-                      // Expanded LTR / collapsed RTL → point toward sidebar (collapse)
-                      // Collapsed LTR / expanded RTL → point into content (expand)
-                      railExpanded === isRTL && 'rotate-180',
+                      // Point toward the sidebar when expanded (collapse), toward content when collapsed (expand).
+                      // Extra 180° in RTL so "left" maps to the right-docked rail.
+                      (railExpanded ? isRTL : !isRTL) && 'rotate-180',
                     )}
                     aria-hidden
                   />

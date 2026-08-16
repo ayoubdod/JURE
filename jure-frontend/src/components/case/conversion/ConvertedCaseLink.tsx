@@ -150,3 +150,10 @@ export function getConsultationWorkflowStatus(c: API.Case): string {
     c.status
   ) as string;
 }
+
+export function canShowConvertToCase(c: API.Case): boolean {
+  const type = c.caseType ?? c.case_type;
+  if (type !== 'CONSULTATION') return false;
+  if (getConsultationWorkflowStatus(c) !== 'CONVERTED_TO_CASE') return false;
+  return getConvertedToCase(c) == null;
+}

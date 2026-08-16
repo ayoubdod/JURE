@@ -33,6 +33,8 @@ import { apiGetCases, apiUpdateCase } from '@/services/case/api';
 import { apiGetCabinetMembers } from '@/services/cabinet-member/api';
 import { getRoleDisplayName } from '@/utils/permissions';
 import { cn } from '@/lib/utils';
+import { navigateToCase } from '@/lib/caseRoutes';
+import { useNavigate } from 'react-router';
 import {
   getCaseDateForFilter,
   getCountdownDays,
@@ -274,6 +276,7 @@ const sectionHeaderClass =
 
 // ─────────────── Main component ───────────────
 const TeamMemberProfile: React.FC<Props> = ({ profile, onUpdateSuccess }) => {
+  const navigate = useNavigate();
   const cabinetUpdateRef = useRef<CabinetMemberUpdateModalRef>(null);
   const caseUpdateRef = useRef<CaseUpdateModalRef>(null);
   const caseDeleteRef = useRef<CaseDeleteModalRef>(null);
@@ -418,7 +421,17 @@ const TeamMemberProfile: React.FC<Props> = ({ profile, onUpdateSuccess }) => {
     refreshCases();
   };
 
-  const viewCase = (c: CaseItem) => (window.location.href = `/dashboard/cases/${c.id}`);
+  const viewCase = (c: CaseItem) => {
+    const id = Number(c.id);
+    if (!Number.isFinite(id)) return;
+    void navigateToCase(navigate, {
+      id,
+      title: c.title,
+      reference: c.reference,
+      caseType: c.caseType,
+      case_type: c.case_type,
+    });
+  };
   const editCase = (c: CaseItem) => caseUpdateRef.current?.show(c as any);
   const deleteCase = (c: CaseItem) => caseDeleteRef.current?.show(c as any);
   const printCase = (c: CaseItem) => window.print();

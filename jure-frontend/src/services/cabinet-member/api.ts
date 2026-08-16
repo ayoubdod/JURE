@@ -60,6 +60,13 @@ export const apiUpdateCabinetMemberRole = (data: API.CabinetMemberRoleUpdateForm
     });
 }
 
+/** Optional profile photo via the existing member PATCH — multipart, not a new endpoint. */
+export const apiUploadCabinetMemberImage = (id: number, file: File) => {
+  const form = new FormData();
+  form.append('image', file);
+  return axiosInstance.patch<API.CabinetMember>(`/cabinets/members/${id}/`, form);
+};
+
 export const apiResendInvitation = (memberId: number) => {
     return axiosInstance.post<{ detail: string }>(`/cabinets/members/${memberId}/resend-invitation/`);
 }

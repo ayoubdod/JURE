@@ -1,5 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { useNavigate } from 'react-router';
+import { navigateToCaseById } from '@/lib/caseRoutes';
 import { Archive, Check, ExternalLink, Pin, PinOff, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { AppNotification } from '@/types/notification';
@@ -52,7 +53,10 @@ export function NotificationItem({
   const [swipe, setSwipe] = useState(0);
 
   const open = () => {
-    if (n.action_url) {
+    if (n.related_case?.id) {
+      onNavigate?.();
+      void navigateToCaseById(navigate, n.related_case.id);
+    } else if (n.action_url) {
       onNavigate?.();
       if (n.action_url.startsWith('http')) window.location.href = n.action_url;
       else navigate(n.action_url);

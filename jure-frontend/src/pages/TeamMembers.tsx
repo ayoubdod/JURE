@@ -14,8 +14,8 @@ import {
   Loader2,
   Eye,
   Users,
-  FolderOpen,
-  CheckSquare,
+  Calendar,
+  ChevronRight,
   X,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -120,10 +120,8 @@ const TeamMembers: React.FC = () => {
   const [myCabinetMember, setMyCabinetMember] = useState<API.CabinetMember | null>(null);
   const [resendTarget, setResendTarget] = useState<API.CabinetMember | null>(null);
   const [resendLoading, setResendLoading] = useState(false);
-  const [teamHolderEl, setTeamHolderEl] = useState<HTMLDivElement | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
   const [selectedMemberId, setSelectedMemberId] = useState<number | null>(null);
-  const [isNarrow, setIsNarrow] = useState(false);
   /** All cases for the cabinet — used to compute real In progress / Assigned when member list omits counts. */
   const [allCases, setAllCases] = useState<API.Case[] | null>(null);
 
@@ -164,14 +162,6 @@ const TeamMembers: React.FC = () => {
     apiGetMyCabinetMember()
       .then((res) => setMyCabinetMember(res.data))
       .catch(() => setMyCabinetMember(null));
-  }, []);
-
-  useEffect(() => {
-    const mql = window.matchMedia('(max-width: 767px)');
-    const fn = () => setIsNarrow(mql.matches);
-    mql.addEventListener('change', fn);
-    fn();
-    return () => mql.removeEventListener('change', fn);
   }, []);
 
   const canManageRoles = hasPermission(
@@ -306,154 +296,184 @@ const TeamMembers: React.FC = () => {
     const { inProgress, assignedTotal } = getMemberWorkloadDisplay(member, allCases);
     const pending = isPending(member);
     const selected = selectedMemberId === member.id && detailOpen;
+    const joined = formatJoined(member.date_joined, lang);
 
     return (
-      <div
+      <article
         key={member.id}
         className={cn(
-          'group relative flex flex-col overflow-hidden rounded-lg border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-950',
-          'shadow-[0_1px_2px_rgba(0,0,0,0.04)]',
-          'transition-[box-shadow,border-color] duration-150',
-          'hover:border-slate-300 dark:hover:border-slate-700 hover:shadow-sm',
-          selected && 'ring-2 ring-[#6D54B5]/40 ring-offset-1 ring-offset-slate-50 dark:ring-offset-slate-950'
+          'group relative flex aspect-square w-full cursor-pointer flex-col overflow-hidden rounded-xl border border-slate-200/90 bg-white dark:border-zinc-800 dark:bg-zinc-950',
+          'shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition-all duration-150',
+          'hover:border-[#64499D]/30 hover:shadow-[0_6px_16px_rgba(100,73,157,0.08)]',
+          selected && 'border-[#64499D]/40 ring-2 ring-[#64499D]/20'
         )}
+        onClick={() => openProfile(member)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            openProfile(member);
+          }
+        }}
       >
-        <div className="relative z-[1] flex flex-1 flex-col items-stretch p-3">
-          <div className="flex items-start gap-2.5">
-            <div className="relative shrink-0">
-              <UserAvatar
-                image={getPersonImage(member as Record<string, unknown>)}
-                firstName={member.first_name}
-                lastName={member.last_name}
-                size="md"
-              />
-              <span
-                className={cn(
-                  'absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-white dark:border-slate-950',
-                  pending ? 'bg-amber-400' : member.is_active ? 'bg-emerald-500' : 'bg-slate-400'
-                )}
-              />
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="text-[14px] font-semibold leading-snug text-slate-900 dark:text-white truncate">
-                {fullName}
-              </p>
-              <div className="mt-1 flex flex-wrap items-center gap-1.5">
-                <span
-                  className={cn(
-                    'inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.06em]',
-                    rolePillClass[memberRole]
-                  )}
-                >
-                  {roleDisplay}
-                </span>
-                {showResendForMember(member) && (
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setResendTarget(member);
-                    }}
-                    className="inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-semibold text-amber-800 bg-amber-500/15 ring-1 ring-amber-500/25 dark:text-amber-200"
-                  >
-                    {t.team.resend}
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
+        <div className="h-0.5 w-full shrink-0 bg-gradient-to-r from-[#64499D] to-[#8B6FD1]/70" aria-hidden />
 
-          <div className="mt-3 grid grid-cols-2 gap-2">
-            <div className="rounded-md border border-slate-200/80 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/40 px-2 py-1.5">
-              <div className="flex items-center gap-1 text-[10px] font-medium text-slate-500 dark:text-slate-400">
-                <FolderOpen className="h-3 w-3 opacity-70" aria-hidden />
-                {t.team.inProgress}
-              </div>
-              <p className="mt-0.5 text-base font-bold tabular-nums text-slate-900 dark:text-white">{inProgress}</p>
-            </div>
-            <div className="rounded-md border border-slate-200/80 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/40 px-2 py-1.5">
-              <div className="flex items-center gap-1 text-[10px] font-medium text-slate-500 dark:text-slate-400">
-                <CheckSquare className="h-3 w-3 opacity-70" aria-hidden />
-                {t.team.assigned}
-              </div>
-              <p className="mt-0.5 text-base font-bold tabular-nums" style={{ color: JURE_PURPLE }}>
-                {assignedTotal}
-              </p>
-            </div>
-          </div>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute end-1.5 top-2 z-10 h-7 w-7 rounded-md text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-zinc-800"
+              aria-label={t.team.moreActions}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <MoreHorizontal className="h-3.5 w-3.5" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="min-w-[200px] p-1.5" onClick={(e) => e.stopPropagation()}>
+            {showResendForMember(member) && (
+              <DropdownMenuItem onClick={() => setResendTarget(member)}>
+                <Send className="mr-2 h-3.5 w-3.5" />
+                {t.team.resendInvitation}
+              </DropdownMenuItem>
+            )}
+            <DropdownMenuItem onClick={() => handleCall(member)}>
+              <Phone className="mr-2 h-3.5 w-3.5" />
+              {t.team.call}
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => handleEmail(member)}>
+              <Mail className="mr-2 h-3.5 w-3.5" />
+              {t.team.email}
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => cabinetMemberUpdateModalRef.current?.show(member)}>
+              <Edit className="mr-2 h-3.5 w-3.5" />
+              {t.common.edit}
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              className="text-red-600 focus:bg-red-50 focus:text-red-700 dark:text-red-400 dark:focus:bg-red-950/40"
+              onClick={() => cabinetMemberDeleteModalRef.current?.show(member)}
+            >
+              <Trash2 className="mr-2 h-3.5 w-3.5" />
+              {t.common.delete}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
 
-          <div className="mt-2.5">
-            <div className="mb-1 flex items-center justify-between text-[10px] text-slate-500 dark:text-slate-400">
-              <span>{t.team.workload}</span>
-              <span>{tf(t.team.casesCount, { count: assignedTotal })}</span>
-            </div>
-            <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-200 dark:bg-slate-800">
-              <div
-                className={cn('h-full rounded-full transition-all', workloadBarClass(assignedTotal))}
-                style={{ width: `${workloadFillPct(assignedTotal)}%` }}
-                title={tf(t.team.workloadTitle, { inProgress, assigned: assignedTotal })}
-              />
-            </div>
-          </div>
-        </div>
-
-        <div className="relative z-[1] mt-auto flex items-center justify-between gap-2 border-t border-slate-200/80 dark:border-slate-800 px-3 py-2">
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-8 flex-1 text-[12px] border-slate-200 dark:border-slate-700"
-            onClick={() => openProfile(member)}
-          >
-            <Eye className="mr-1.5 h-3.5 w-3.5" />
-            {t.team.view}
-          </Button>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="outline"
-                size="icon"
-                className="h-8 w-8 shrink-0 border-slate-200 dark:border-slate-700"
-                aria-label={t.team.moreActions}
-              >
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="min-w-[200px] p-1.5">
-              {showResendForMember(member) && (
-                <DropdownMenuItem
-                  onClick={() => setResendTarget(member)}
-                  className="focus:bg-slate-100 dark:focus:bg-slate-800"
-                >
-                  <Send className="mr-2 h-3.5 w-3.5" />
-                  {t.team.resendInvitation}
-                </DropdownMenuItem>
+        <div className="flex min-h-0 flex-1 flex-col items-center px-3 pb-2 pt-5 text-center">
+          <div className="relative shrink-0">
+            <UserAvatar
+              image={getPersonImage(member as Record<string, unknown>)}
+              firstName={member.first_name}
+              lastName={member.last_name}
+              size="lg"
+              className="h-14 w-14"
+            />
+            <span
+              className={cn(
+                'absolute -bottom-0.5 -end-0.5 h-3 w-3 rounded-full border-2 border-white dark:border-zinc-950',
+                pending ? 'bg-amber-400' : member.is_active ? 'bg-emerald-500' : 'bg-slate-400'
               )}
-              <DropdownMenuItem onClick={() => handleCall(member)} className="focus:bg-slate-100 dark:focus:bg-slate-800">
-                <Phone className="mr-2 h-3.5 w-3.5" />
-                {t.team.call}
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleEmail(member)} className="focus:bg-slate-100 dark:focus:bg-slate-800">
-                <Mail className="mr-2 h-3.5 w-3.5" />
-                {t.team.email}
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => cabinetMemberUpdateModalRef.current?.show(member)}
-                className="focus:bg-slate-100 dark:focus:bg-slate-800"
+              aria-hidden
+            />
+          </div>
+
+          <h3 className="mt-2.5 w-full min-w-0 truncate px-5 text-[14px] font-semibold leading-tight text-slate-900 dark:text-white">
+            {fullName}
+          </h3>
+          {member.email ? (
+            <p className="mt-0.5 w-full truncate text-[11px] text-slate-500 dark:text-zinc-400">{member.email}</p>
+          ) : null}
+
+          <div className="mt-1.5 flex flex-wrap items-center justify-center gap-1">
+            <span
+              className={cn(
+                'inline-flex items-center rounded px-1.5 py-px text-[10px] font-semibold uppercase tracking-[0.05em]',
+                rolePillClass[memberRole]
+              )}
+            >
+              {roleDisplay}
+            </span>
+            <span
+              className={cn(
+                'inline-flex items-center rounded px-1.5 py-px text-[10px] font-medium',
+                statusBadgeClass(member)
+              )}
+            >
+              {statusBadgeText(member)}
+            </span>
+            {showResendForMember(member) && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setResendTarget(member);
+                }}
+                className="inline-flex items-center rounded bg-amber-500/15 px-1.5 py-px text-[10px] font-semibold text-amber-800 ring-1 ring-amber-500/25 dark:text-amber-200"
               >
-                <Edit className="mr-2 h-3.5 w-3.5" />
-                {t.common.edit}
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                className="text-red-600 focus:bg-red-50 focus:text-red-700 dark:text-red-400 dark:focus:bg-red-950/40"
-                onClick={() => cabinetMemberDeleteModalRef.current?.show(member)}
+                {t.team.resend}
+              </button>
+            )}
+          </div>
+
+          <div className="mt-auto w-full pt-3">
+            <div className="flex items-center gap-2">
+              <span className="shrink-0 text-[11px] tabular-nums text-slate-600 dark:text-zinc-300">
+                {tf(t.team.activeAssigned, { inProgress, assigned: assignedTotal })}
+              </span>
+              <div
+                className="h-1 min-w-0 flex-1 overflow-hidden rounded-full bg-slate-200 dark:bg-zinc-800"
+                title={tf(t.team.workloadTitle, { inProgress, assigned: assignedTotal })}
               >
-                <Trash2 className="mr-2 h-3.5 w-3.5" />
-                {t.common.delete}
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+                <div
+                  className={cn('h-full rounded-full', workloadBarClass(assignedTotal))}
+                  style={{ width: `${workloadFillPct(assignedTotal)}%` }}
+                />
+              </div>
+            </div>
+            {(member.phone || joined !== '—') && (
+              <div className="mt-1.5 flex items-center justify-center gap-2 truncate text-[11px] text-slate-500 dark:text-zinc-400">
+                {member.phone ? (
+                  <span className="inline-flex min-w-0 max-w-[55%] items-center gap-1 truncate">
+                    <Phone className="h-3 w-3 shrink-0 opacity-70" aria-hidden />
+                    <span className="truncate">{member.phone}</span>
+                  </span>
+                ) : null}
+                {joined !== '—' ? (
+                  <span className="inline-flex shrink-0 items-center gap-1">
+                    <Calendar className="h-3 w-3 opacity-70" aria-hidden />
+                    {joined}
+                  </span>
+                ) : null}
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+
+        <div className="flex shrink-0 items-center justify-between gap-2 border-t border-slate-100 px-3 py-1.5 dark:border-zinc-800">
+          <button
+            type="button"
+            className="inline-flex items-center gap-0.5 text-[12px] font-medium text-[#64499D] hover:text-[#4D3680] dark:text-[#CFC2FF]"
+            onClick={(e) => {
+              e.stopPropagation();
+              openProfile(member);
+            }}
+          >
+            {t.team.view}
+            <ChevronRight className="h-3.5 w-3.5" aria-hidden />
+          </button>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 px-2 text-[12px]"
+            onClick={(e) => {
+              e.stopPropagation();
+              cabinetMemberUpdateModalRef.current?.show(member);
+            }}
+          >
+            <Edit className="mr-1 h-3.5 w-3.5" />
+            {t.common.edit}
+          </Button>
+        </div>
+      </article>
     );
   };
 
@@ -467,36 +487,37 @@ const TeamMembers: React.FC = () => {
     return (
       <article
         key={member.id}
-        className="rounded-lg border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-950 shadow-[0_1px_2px_rgba(0,0,0,0.04)]"
+        className="overflow-hidden rounded-xl border border-slate-200/90 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)] dark:border-zinc-800 dark:bg-zinc-950"
       >
+        <div className="h-0.5 w-full bg-gradient-to-r from-[#64499D] to-[#8B6FD1]/70" aria-hidden />
         <button
           type="button"
-          className="w-full text-left px-3 py-2.5 min-h-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-inset rounded-lg"
+          className="w-full rounded-none px-3 py-2.5 text-left min-h-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#64499D]/40 focus-visible:ring-inset"
           onClick={() => openProfile(member)}
           aria-label={tf(t.team.aria.openMember, { name: fullName })}
         >
-          <div className="flex items-start gap-2.5">
+          <div className="flex items-start gap-3">
             <div className="relative shrink-0">
               <UserAvatar
                 image={getPersonImage(member as Record<string, unknown>)}
                 firstName={member.first_name}
                 lastName={member.last_name}
-                size="sm"
+                size="md"
                 className="h-9 w-9"
               />
               <span
                 className={cn(
-                  'absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-white dark:border-slate-950',
+                  'absolute -bottom-0.5 -end-0.5 h-2.5 w-2.5 rounded-full border-2 border-white dark:border-zinc-950',
                   isPending(member) ? 'bg-amber-400' : member.is_active ? 'bg-emerald-500' : 'bg-slate-400'
                 )}
               />
             </div>
             <div className="min-w-0 flex-1">
               <div className="flex items-start justify-between gap-2">
-                <p className="text-[14px] font-semibold text-slate-900 dark:text-white truncate">{fullName}</p>
+                <p className="truncate text-[14px] font-semibold text-slate-900 dark:text-white">{fullName}</p>
                 <span
                   className={cn(
-                    'shrink-0 inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-semibold',
+                    'inline-flex shrink-0 items-center rounded-md px-1.5 py-0.5 text-[10px] font-medium',
                     statusBadgeClass(member)
                   )}
                 >
@@ -506,31 +527,31 @@ const TeamMembers: React.FC = () => {
               <div className="mt-1 flex flex-wrap items-center gap-1.5">
                 <span
                   className={cn(
-                    'inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase',
+                    'inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.05em]',
                     rolePillClass[memberRole]
                   )}
                 >
                   {roleLabel(memberRole)}
                 </span>
-                <span className="text-[11px] tabular-nums text-slate-500 dark:text-slate-400">
+                <span className="text-[11px] tabular-nums text-slate-500 dark:text-zinc-400">
                   {tf(t.team.activeAssigned, { inProgress, assigned: assignedTotal })}
                 </span>
               </div>
               {member.email ? (
-                <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400 truncate">{member.email}</p>
+                <p className="mt-1 truncate text-[11px] text-slate-500 dark:text-zinc-400">{member.email}</p>
               ) : null}
             </div>
           </div>
         </button>
-        <div className="flex items-center gap-1 border-t border-slate-100 dark:border-slate-800/80 px-2 py-1.5">
+        <div className="flex items-center gap-1 border-t border-slate-100 px-2 py-1.5 dark:border-zinc-800">
           <Button
             variant="ghost"
             size="sm"
-            className="h-8 flex-1 text-[12px]"
+            className="h-8 flex-1 text-[12px] text-[#64499D] hover:text-[#4D3680] dark:text-[#CFC2FF]"
             onClick={() => openProfile(member)}
           >
             <Eye className="mr-1 h-3.5 w-3.5" />
-            {t.team.view}
+            {t.team.viewProfile}
           </Button>
           <Button
             variant="ghost"
@@ -820,16 +841,8 @@ const TeamMembers: React.FC = () => {
   ] as const;
 
   return (
-    <div
-      ref={setTeamHolderEl}
-      className="relative flex h-full min-h-0 flex-col overflow-hidden bg-slate-50 dark:bg-slate-950"
-    >
-      <div
-        className={cn(
-          'flex-1 min-h-0 overflow-y-auto overflow-x-hidden',
-          detailOpen && !isNarrow && 'md:pr-[420px]'
-        )}
-      >
+    <div className="relative flex h-full min-h-0 flex-col overflow-hidden bg-slate-50 dark:bg-slate-950">
+      <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden">
         {/* KPI strip — scrolls away */}
         <div
           className="ws-kpi-strip flex gap-2 overflow-x-auto snap-x snap-mandatory py-2"
@@ -1030,11 +1043,11 @@ const TeamMembers: React.FC = () => {
         {/* Work surface */}
         <div className="py-3 md:py-4 pb-20 md:pb-4">
           {loading ? (
-            <div className="grid grid-cols-1 gap-2 md:grid-cols-2 xl:grid-cols-3">
-              {Array.from({ length: 6 }).map((_, i) => (
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-4">
+              {Array.from({ length: 8 }).map((_, i) => (
                 <div
                   key={i}
-                  className="h-28 animate-pulse rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900/50"
+                  className="aspect-square animate-pulse rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-100 dark:bg-zinc-900/50"
                 />
               ))}
             </div>
@@ -1077,7 +1090,7 @@ const TeamMembers: React.FC = () => {
               {/* Desktop */}
               <div className="hidden md:block">
                 {viewMode === 'grid' ? (
-                  <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-4">
                     {displayedMembers.map(renderTile)}
                   </div>
                 ) : viewMode === 'list' ? (
@@ -1159,7 +1172,6 @@ const TeamMembers: React.FC = () => {
       />
       <TeamMemberProfileDrawer
         ref={profileDrawerRef}
-        portalContainer={teamHolderEl}
         onOpenChange={handleDetailOpenChange}
         onEditMember={(m) => cabinetMemberUpdateModalRef.current?.show(m)}
       />

@@ -73,6 +73,9 @@ export interface RelatedTasksAppointmentsSectionProps {
   onScheduleAppointment: () => void;
   onOpenTask: (taskId: number) => void;
   onOpenAppointment: (appointmentId: number) => void;
+  showTasks?: boolean;
+  showAppointments?: boolean;
+  bare?: boolean;
 }
 
 export function RelatedTasksAppointmentsSection({
@@ -81,20 +84,25 @@ export function RelatedTasksAppointmentsSection({
   onScheduleAppointment,
   onOpenTask,
   onOpenAppointment,
+  showTasks = true,
+  showAppointments = true,
+  bare = false,
 }: RelatedTasksAppointmentsSectionProps) {
   const rel = caseItem._related;
-  const tasks = rel?.tasks ?? [];
-  const appointments = (rel?.appointments ?? []) as Appointment[];
+  const tasks = showTasks ? (rel?.tasks ?? []) : [];
+  const appointments = showAppointments ? ((rel?.appointments ?? []) as Appointment[]) : [];
 
   const tc = caseItem._counts;
   const taskCount = typeof tc?.tasks === 'number' ? tc.tasks : tasks.length;
   const apptCount = typeof tc?.appointments === 'number' ? tc.appointments : appointments.length;
 
   const bothEmpty = tasks.length === 0 && appointments.length === 0;
-  const showCombinedEmpty = bothEmpty;
+  const showCombinedEmpty = bothEmpty && showTasks && showAppointments;
 
   return (
-    <section className="mt-8 border-t border-slate-200/90 dark:border-slate-800 pt-6">
+    <section
+      className={bare ? undefined : 'mt-8 border-t border-slate-200/90 dark:border-slate-800 pt-6'}
+    >
       <div className="flex flex-wrap items-center gap-2 gap-y-1 mb-4">
         <h3 className="text-[10px] font-semibold uppercase tracking-[0.1em] text-slate-500 dark:text-slate-400">
           Tasks &amp; Appointments
@@ -123,8 +131,8 @@ export function RelatedTasksAppointmentsSection({
         </div>
       ) : (
         <div className="space-y-8">
-          {/* Tasks */}
-          <div>
+          {showTasks ? (
+            <div>
             <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
               <div className="flex flex-wrap items-center gap-2">
                 <span className="text-[12px] font-semibold text-slate-800 dark:text-slate-200">Tasks</span>
@@ -219,8 +227,9 @@ export function RelatedTasksAppointmentsSection({
               </ul>
             )}
           </div>
+          ) : null}
 
-          {/* Appointments */}
+          {showAppointments ? (
           <div>
             <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
               <div className="flex flex-wrap items-center gap-2">
@@ -309,6 +318,7 @@ export function RelatedTasksAppointmentsSection({
               </ul>
             )}
           </div>
+          ) : null}
         </div>
       )}
     </section>

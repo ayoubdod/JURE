@@ -394,3 +394,86 @@ class CaseCloseAPITest(APITestCase):
         url = reverse("case-close", kwargs={"pk": matter.pk})
         response = self.client.post(url, {}, format="json")
         self.assertIn(response.status_code, (status.HTTP_401_UNAUTHORIZED, status.HTTP_403_FORBIDDEN))
+
+
+class CaseTypeFilterAPITest(APITestCase):
+    """GET /api/v1/cases/ — caseType and JSON filters for specialized workspaces."""
+
+    def setUp(self):
+        self.client = APIClient()
+        self.user, self.cabinet = _create_cabinet_user("filter@test.com")
+        from rest_framework_simplejwt.tokens import RefreshToken
+
+        refresh = RefreshToken.for_user(self.user)
+        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}")
+        self.list_url = reverse("case-list")
+
+    def test_case_type_consultation_excludes_litigation(self):
+        _create_consultation(self.cabinet, self.user, title="Consult A")
+        _create_consultation(
+            self.cabinet,
+            self.user,
+            case_type=Case.CaseType.LITIGATION,
+            title="Lit A",
+            case_specific_data={"clientRole": "PLAINTIFF"},
+        )
+        response = self.client.get(self.list_url, {"caseType": "CONSULTATION"})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        titles = [row["title"] for row in response.data["results"]]
+        self.assertIn("Consult A", titles)
+        self.assertNotIn("Lit A", titles)
+
+    def test_administrative_duty_alias_maps_to_administrative(self):
+        _create_consultation(
+            self.cabinet,
+            self.user,
+            case_type=Case.CaseType.ADMINISTRATIVE,
+            title="Admin A",
+            case_specific_data={"dutyType": "PERMIT", "priority": "HIGH"},
+        )
+        response = self.client.get(self.list_url, {"caseType": "ADMINISTRATIVE_DUTY"})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        titles = [row["title"] for row in response.data["results"]]
+        self.assertIn("Admin A", titles)
+
+    def test_outcome_json_filter(self):
+        _create_consultation(
+            self.cabinet,
+            self.user,
+            title="Scheduled one",
+            case_specific_data={"outcome": "SCHEDULED"},
+        )
+        _create_consultation(
+            self.cabinet,
+            self.user,
+            title="Done one",
+            case_specific_data={"outcome": "COMPLETED"},
+        )
+        response = self.client.get(
+            self.list_url, {"caseType": "CONSULTATION", "outcome": "SCHEDULED"}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        titles = [row["title"] for row in response.data["results"]]
+        self.assertEqual(titles, ["Scheduled one"])
+
+    def test_client_role_json_filter(self):
+        _create_consultation(
+            self.cabinet,
+            self.user,
+            case_type=Case.CaseType.LITIGATION,
+            title="Plaintiff matter",
+            case_specific_data={"clientRole": "PLAINTIFF"},
+        )
+        _create_consultation(
+            self.cabinet,
+            self.user,
+            case_type=Case.CaseType.LITIGATION,
+            title="Defendant matter",
+            case_specific_data={"clientRole": "DEFENDANT"},
+        )
+        response = self.client.get(
+            self.list_url, {"caseType": "LITIGATION", "clientRole": "PLAINTIFF"}
+        )
+        titles = [row["title"] for row in response.data["results"]]
+        self.assertEqual(titles, ["Plaintiff matter"])
+

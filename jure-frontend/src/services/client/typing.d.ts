@@ -24,6 +24,7 @@ declare namespace API {
         ice?: string | null;
         /** Identifiant fiscal (IF) — backend field may be `if` */
         fiscal_if?: string | null;
+        client_type?: 'INDIVIDUAL' | 'COMPANY';
     };
 
     type ClientCreateForm = {
@@ -34,6 +35,7 @@ declare namespace API {
         address: string;
         ice?: string;
         fiscal_if?: string;
+        client_type?: 'INDIVIDUAL' | 'COMPANY';
     };
 
     type ClientFormCreateValidation = {
@@ -49,6 +51,7 @@ declare namespace API {
         address?: string;
         ice?: string;
         fiscal_if?: string;
+        client_type?: 'INDIVIDUAL' | 'COMPANY';
     };
 
     type ClientFormUpdateValidation = {

@@ -1,8 +1,33 @@
-import React, { useImperativeHandle, useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import React, { useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
+import * as DialogPrimitive from '@radix-ui/react-dialog';
+import {
+  Dialog,
+  DialogPortal,
+  DialogOverlay,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import {
-  Phone, Mail, MapPin, Calendar, Briefcase, Building, X, Edit, Trash2, Loader2
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+  Briefcase,
+  Building2,
+  FileSpreadsheet,
+  Loader2,
+  Mail,
+  MapPin,
+  MoreHorizontal,
+  Pencil,
+  Phone,
+  Trash2,
+  User,
+  X,
 } from 'lucide-react';
 import ClientUpdateModal, { ClientUpdateModalRef } from './ClientUpdateModal';
 import ClientDeleteModal, { ClientDeleteModalRef } from './ClientDeleteModal';
@@ -10,7 +35,12 @@ import CaseViewModal, { CaseViewModalRef } from '@/components/case/CaseViewModal
 import CaseUpdateModal, { CaseUpdateModalRef } from '@/components/case/CaseUpdateModal';
 import CaseDeleteModal, { CaseDeleteModalRef } from '@/components/case/CaseDeleteModal';
 import { apiGetCases } from '@/services/case/api';
+import { useNavigate } from 'react-router';
 import { devError } from '@/utils/devLog';
+import { cn } from '@/lib/utils';
+import { navigateToCase } from '@/lib/caseRoutes';
+import { formatDate, useAppTranslation } from '@/i18n';
+import { CaseStatus } from '@/utils/constants';
 
 export interface ClientProfilePreviewRef {
   show: (client: API.Client) => void;
@@ -22,438 +52,558 @@ interface ClientProfilePreviewProps {
   onDeleteSuccess?: (client: API.Client) => void;
 }
 
-const formatDate = (d?: string | Date) => {
-  if (!d) return '—';
-  const dt = typeof d === 'string' ? new Date(d) : d;
-  return dt.toLocaleDateString('en-GB', {
-    day: '2-digit', month: 'short', year: 'numeric',
-  });
-};
-
 const initialsOf = (first?: string, last?: string) => {
   const i1 = (first?.[0] || '').toUpperCase();
   const i2 = (last?.[0] || '').toUpperCase();
   return (i1 + i2) || '•';
 };
 
+const caseClientId = (caseItem: API.Case) => {
+  if (!caseItem.client) return null;
+  if (typeof caseItem.client === 'object') {
+    return (caseItem.client as { id?: number }).id ?? null;
+  }
+  return caseItem.client;
+};
+
+async function fetchCasesForClient(clientId: number): Promise<API.Case[]> {
+  const pageSize = 100;
+  let page = 1;
+  const acc: API.Case[] = [];
+
+  while (true) {
+    const res = await apiGetCases({ page, page_size: pageSize });
+    const data = res.data;
+    acc.push(...(data.results || []));
+    const lastPage = data.last_page ?? 1;
+    if (page >= lastPage) break;
+    page += 1;
+  }
+
+  return acc
+    .filter((caseItem) => caseClientId(caseItem) === clientId)
+    .sort((a, b) => new Date(b.created || 0).getTime() - new Date(a.created || 0).getTime());
+}
+
+const STATUS_PILL: Record<string, string> = {
+  [CaseStatus.OPEN]: 'bg-emerald-500/12 text-emerald-700 ring-emerald-500/25 dark:text-emerald-400',
+  [CaseStatus.IN_PROGRESS]: 'bg-[#64499D]/10 text-[#64499D] ring-[#64499D]/20 dark:text-[#CFC2FF]',
+  [CaseStatus.CLOSED]: 'bg-slate-500/12 text-slate-600 ring-slate-500/25 dark:text-slate-400',
+  [CaseStatus.CANCELLED]: 'bg-rose-500/12 text-rose-700 ring-rose-500/25 dark:text-rose-400',
+  [CaseStatus.PENDING]: 'bg-amber-500/12 text-amber-800 ring-amber-500/25 dark:text-amber-300',
+  [CaseStatus.ARCHIVED]: 'bg-slate-500/10 text-slate-500 ring-slate-500/20',
+  [CaseStatus.CONVERTED_TO_CASE]: 'bg-[#64499D]/10 text-[#64499D] ring-[#64499D]/20 dark:text-[#CFC2FF]',
+};
+
+type ProfileTab = 'overview' | 'cases';
+
 const ClientProfilePreview = React.forwardRef<ClientProfilePreviewRef, ClientProfilePreviewProps>(
   ({ onUpdateSuccess, onDeleteSuccess }, ref) => {
+    const { t, tf, enumLabel, lang } = useAppTranslation();
+    const navigate = useNavigate();
+    const p = t.clients.profile;
+
     const [isOpen, setIsOpen] = useState(false);
     const [client, setClient] = useState<API.Client | null>(null);
     const [relatedCases, setRelatedCases] = useState<API.Case[]>([]);
     const [casesLoading, setCasesLoading] = useState(false);
-    const updateModalRef = React.useRef<ClientUpdateModalRef>(null);
-    const deleteModalRef = React.useRef<ClientDeleteModalRef>(null);
-    const caseViewModalRef = React.useRef<CaseViewModalRef>(null);
-    const caseUpdateModalRef = React.useRef<CaseUpdateModalRef>(null);
-    const caseDeleteModalRef = React.useRef<CaseDeleteModalRef>(null);
+    const [tab, setTab] = useState<ProfileTab>('overview');
+    const [categoryFilter, setCategoryFilter] = useState('all');
+
+    const updateModalRef = useRef<ClientUpdateModalRef>(null);
+    const deleteModalRef = useRef<ClientDeleteModalRef>(null);
+    const caseViewModalRef = useRef<CaseViewModalRef>(null);
+    const caseUpdateModalRef = useRef<CaseUpdateModalRef>(null);
+    const caseDeleteModalRef = useRef<CaseDeleteModalRef>(null);
+    const scrollRef = useRef<HTMLDivElement>(null);
 
     const show = (clientData: API.Client) => {
       setClient(clientData);
+      setTab('overview');
+      setCategoryFilter('all');
       setIsOpen(true);
+      requestAnimationFrame(() => scrollRef.current?.scrollTo({ top: 0 }));
     };
 
-    const hide = () => {
-      setIsOpen(false);
-      setClient(null);
-    };
+    const hide = () => setIsOpen(false);
 
     useImperativeHandle(ref, () => ({ show, hide }));
 
-    // Fetch related cases when client is set
-    useEffect(() => {
-      if (client?.id) {
-        setCasesLoading(true);
-        // Fetch all cases and filter client-side (backend might not support client filter)
-        const pageSize = 100;
-        let page = 1;
-        let lastPage = 1;
-        const acc: API.Case[] = [];
-        
-        const fetchAllCases = async () => {
-          try {
-            while (true) {
-              const res = await apiGetCases({ page, page_size: pageSize });
-              const data = res.data;
-              acc.push(...(data.results || []));
-              lastPage = data.last_page ?? 1;
-              if (page >= lastPage) break;
-              page += 1;
-            }
-            
-            // Filter cases by client ID
-            const filtered = acc.filter((caseItem: API.Case) => {
-              // Check if case has a client and it matches our client ID
-              if (caseItem.client) {
-                // client can be API.User object with id, or just an id
-                const clientId = typeof caseItem.client === 'object' && caseItem.client !== null
-                  ? (caseItem.client as any).id
-                  : caseItem.client;
-                return clientId === client.id;
-              }
-              return false;
-            });
-            
-            // Sort by created date (newest first)
-            const sorted = filtered.sort((a, b) => {
-              const dateA = new Date(a.created || 0).getTime();
-              const dateB = new Date(b.created || 0).getTime();
-              return dateB - dateA;
-            });
-            
-            setRelatedCases(sorted);
-          } catch (err) {
-            devError('Error fetching related cases:', err);
-            setRelatedCases([]);
-          } finally {
-            setCasesLoading(false);
-          }
-        };
-        
-        fetchAllCases();
-      } else {
-        setRelatedCases([]);
-      }
-    }, [client?.id]);
-
-    if (!client) return null;
-
-    const fullName = `${client.first_name || ''} ${client.last_name || ''}`.trim() || 'Unnamed Client';
-    const initials = initialsOf(client.first_name, client.last_name);
-    const company = (client as any).company;
-
-    // Refresh related cases after case operations
-    const refreshRelatedCases = async () => {
-      if (!client?.id) return;
-      
+    const loadRelatedCases = useCallback(async (clientId: number) => {
       setCasesLoading(true);
       try {
-        const pageSize = 100;
-        let page = 1;
-        let lastPage = 1;
-        const acc: API.Case[] = [];
-        
-        while (true) {
-          const res = await apiGetCases({ page, page_size: pageSize });
-          const data = res.data;
-          acc.push(...(data.results || []));
-          lastPage = data.last_page ?? 1;
-          if (page >= lastPage) break;
-          page += 1;
-        }
-        
-        // Filter cases by client ID
-        const filtered = acc.filter((caseItem: API.Case) => {
-          if (caseItem.client) {
-            const clientId = typeof caseItem.client === 'object' && caseItem.client !== null
-              ? (caseItem.client as any).id
-              : caseItem.client;
-            return clientId === client.id;
-          }
-          return false;
-        });
-        
-        // Sort by created date (newest first)
-        const sorted = filtered.sort((a, b) => {
-          const dateA = new Date(a.created || 0).getTime();
-          const dateB = new Date(b.created || 0).getTime();
-          return dateB - dateA;
-        });
-        
-        setRelatedCases(sorted);
+        setRelatedCases(await fetchCasesForClient(clientId));
       } catch (err) {
-        devError('Error refreshing related cases:', err);
+        devError('Error fetching related cases:', err);
+        setRelatedCases([]);
       } finally {
         setCasesLoading(false);
       }
-    };
+    }, []);
+
+    useEffect(() => {
+      if (client?.id) {
+        void loadRelatedCases(client.id);
+      } else {
+        setRelatedCases([]);
+      }
+    }, [client?.id, loadRelatedCases]);
 
     const handleEdit = () => {
-      updateModalRef.current?.show(client);
-      // Don't hide the preview, let user close it manually if needed
+      if (client) updateModalRef.current?.show(client);
     };
 
     const handleDelete = () => {
-      deleteModalRef.current?.show(client);
-      // Don't hide the preview, let user close it manually if needed
+      if (client) deleteModalRef.current?.show(client);
     };
 
     const handleCaseClick = (caseItem: API.Case) => {
-      caseViewModalRef.current?.show(caseItem);
+      hide();
+      void navigateToCase(navigate, caseItem);
     };
 
     const handleCaseUpdate = (updatedCase: API.Case) => {
-      refreshRelatedCases();
-      // Optionally refresh the case in the view modal if it's open
-      if (caseViewModalRef.current) {
-        caseViewModalRef.current?.show(updatedCase);
-      }
+      if (client?.id) void loadRelatedCases(client.id);
+      caseViewModalRef.current?.show(updatedCase);
     };
 
     const handleCaseDelete = () => {
-      refreshRelatedCases();
-      // Close the case view modal after deletion
+      if (client?.id) void loadRelatedCases(client.id);
       caseViewModalRef.current?.hide();
     };
 
     const handleCall = () => {
-      if (client.phone) window.location.href = `tel:${client.phone}`;
+      if (client?.phone) window.location.href = `tel:${client.phone}`;
     };
 
     const handleEmail = () => {
-      if (client.email) window.location.href = `mailto:${client.email}`;
+      if (client?.email) window.location.href = `mailto:${client.email}`;
     };
 
-    // Extract unique case categories from related cases
-    const categories = Array.from(
-      new Set(relatedCases.map((c: API.Case) => c?.category).filter(Boolean))
-    ) as string[];
+    const fullName = client
+      ? `${client.first_name || ''} ${client.last_name || ''}`.trim() || t.clients.unnamed
+      : '';
+    const initials = initialsOf(client?.first_name, client?.last_name);
+    const isCompany = client?.client_type === 'COMPANY';
+    const ice = client?.ice?.trim();
+    const fiscalIf = (client?.fiscal_if || (client as API.Client & { if?: string | null })?.if || '').trim();
+
+    const caseStats = useMemo(() => {
+      const total = relatedCases.length;
+      const open = relatedCases.filter(
+        (c) => c.status === CaseStatus.OPEN || c.status === CaseStatus.IN_PROGRESS
+      ).length;
+      const closed = relatedCases.filter((c) => c.status === CaseStatus.CLOSED).length;
+      const pending = relatedCases.filter((c) => c.status === CaseStatus.PENDING).length;
+      return { total, open, closed, pending };
+    }, [relatedCases]);
+
+    const categoryCounts = useMemo(() => {
+      const counts = new Map<string, number>();
+      relatedCases.forEach((c) => {
+        if (!c.category) return;
+        counts.set(c.category, (counts.get(c.category) || 0) + 1);
+      });
+      return [...counts.entries()].sort((a, b) => a[0].localeCompare(b[0]));
+    }, [relatedCases]);
+
+    const filteredCases = useMemo(() => {
+      if (categoryFilter === 'all') return relatedCases;
+      return relatedCases.filter((c) => c.category === categoryFilter);
+    }, [relatedCases, categoryFilter]);
+
+    const joinedLabel = client?.date_joined ? formatDate(client.date_joined, lang) : '';
 
     return (
       <>
-        <Dialog open={isOpen} onOpenChange={setIsOpen}>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto p-0 rounded-3xl [&>button]:hidden">
-            <div className="relative">
-              {/* HORIZONTAL COVER BANNER */}
-              <div className="relative h-48 bg-gradient-to-r from-[#FF6B6B] via-[#4ECDC4] to-[#64499D] overflow-hidden">
-                {/* Decorative Pattern Overlay */}
-                <div className="absolute inset-0 opacity-10">
-                  <div className="absolute inset-0" style={{
-                    backgroundImage: `radial-gradient(circle at 2px 2px, white 1px, transparent 0)`,
-                    backgroundSize: '32px 32px'
-                  }}></div>
-                </div>
-                {/* Gradient Overlay */}
-                <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/10"></div>
-                
-                {/* Close Button */}
+        <Dialog
+          open={isOpen}
+          onOpenChange={(open) => {
+            if (!open) hide();
+          }}
+          modal
+        >
+          <DialogPortal>
+            <DialogOverlay className="bg-slate-950/50" />
+            <DialogPrimitive.Content
+              aria-describedby="client-profile-description"
+              className={cn(
+                'fixed z-50 flex min-h-0 flex-col overflow-hidden border border-slate-200/90 bg-white p-0 shadow-2xl outline-none',
+                'dark:border-zinc-800 dark:bg-zinc-950',
+                'inset-x-0 bottom-0 top-auto h-[min(92dvh,860px)] w-full max-w-full translate-x-0 translate-y-0 rounded-t-2xl',
+                'data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 duration-200',
+                'data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom',
+                'md:inset-auto md:bottom-auto md:left-1/2 md:top-1/2 md:h-[min(88vh,760px)] md:w-[min(94vw,800px)] md:max-w-[800px]',
+                'md:-translate-x-1/2 md:-translate-y-1/2 md:rounded-[18px]',
+                'md:data-[state=closed]:zoom-out-95 md:data-[state=open]:zoom-in-95',
+                'md:data-[state=closed]:slide-out-to-left-1/2 md:data-[state=closed]:slide-out-to-top-[48%]',
+                'md:data-[state=open]:slide-in-from-left-1/2 md:data-[state=open]:slide-in-from-top-[48%]'
+              )}
+            >
+              <header className="relative shrink-0 overflow-hidden border-b border-[#64499D]/10 bg-[#F7F4FF] px-5 py-4 pe-14 dark:border-[#8B6FD1]/15 dark:bg-[#24183F]/80 md:px-6">
+                <div
+                  className="pointer-events-none absolute inset-0 opacity-70"
+                  style={{
+                    background:
+                      'linear-gradient(135deg, rgba(100,73,157,0.08) 0%, rgba(100,73,157,0.02) 52%, transparent 100%)',
+                  }}
+                />
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="absolute top-4 right-4 h-9 w-9 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white border border-white/30"
+                  className="absolute end-3 top-3 z-10 h-8 w-8 rounded-full text-slate-500 hover:bg-white/80 hover:text-slate-800 dark:text-zinc-300 dark:hover:bg-zinc-900"
                   onClick={hide}
+                  aria-label={p.closeAria}
                 >
-                  <X className="w-4 h-4" />
+                  <X className="h-4 w-4" />
                 </Button>
+
+                {client && (
+                  <div className="relative min-w-0">
+                    <div className="flex min-w-0 items-start gap-3">
+                      <div className="relative mt-0.5 shrink-0">
+                        <div className="flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br from-[#64499D] to-[#3b2b66] text-[13px] font-semibold text-white ring-1 ring-[#64499D]/20">
+                          {initials}
+                        </div>
+                        <span
+                          className={cn(
+                            'absolute -bottom-0.5 -end-0.5 h-2.5 w-2.5 rounded-full border-2 border-[#F7F4FF] dark:border-[#24183F]',
+                            client.is_active ? 'bg-emerald-500' : 'bg-slate-400'
+                          )}
+                          aria-hidden
+                        />
+                      </div>
+
+                      <div className="min-w-0 flex-1">
+                        <div className="flex min-w-0 flex-wrap items-center gap-2">
+                          <DialogTitle className="truncate text-[17px] font-semibold tracking-tight text-slate-900 dark:text-zinc-50">
+                            {fullName}
+                          </DialogTitle>
+                          <span
+                            className={cn(
+                              'inline-flex shrink-0 items-center gap-1 rounded-full px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wider ring-1 ring-inset',
+                              client.is_active
+                                ? 'bg-emerald-500/12 text-emerald-700 ring-emerald-500/25 dark:text-emerald-400'
+                                : 'bg-slate-500/12 text-slate-600 ring-slate-500/25 dark:text-slate-400'
+                            )}
+                          >
+                            <span
+                              className={cn(
+                                'h-1.5 w-1.5 rounded-full',
+                                client.is_active ? 'bg-emerald-500' : 'bg-slate-400'
+                              )}
+                            />
+                            {client.is_active ? t.clients.status.active : t.clients.status.inactive}
+                          </span>
+                        </div>
+                        <DialogDescription id="client-profile-description" className="mt-0.5 text-[12.5px] text-slate-500 dark:text-zinc-400">
+                          {isCompany ? p.roleCompany : p.roleClient}
+                        </DialogDescription>
+                        {(client.email || client.phone) ? (
+                          <p className="mt-1 truncate text-[12px] text-slate-500 dark:text-zinc-400">
+                            {[client.email, client.phone].filter(Boolean).join(' · ')}
+                          </p>
+                        ) : null}
+                        {typeof client.cases_count === 'number' || (client.cases && client.cases.length > 0) ? (
+                          <p className="mt-1 text-[12px] font-medium text-slate-600 dark:text-zinc-300">
+                            {tf(
+                              (client.cases_count ?? client.cases?.length ?? 0) === 1
+                                ? t.clients.casesCountOne
+                                : t.clients.casesCountOther,
+                              { count: client.cases_count ?? client.cases?.length ?? 0 }
+                            )}
+                          </p>
+                        ) : null}
+                        {client.address ? (
+                          <p
+                            className="mt-1 flex min-w-0 items-center gap-1 text-[12px] text-slate-500 dark:text-zinc-400"
+                            title={client.address}
+                          >
+                            <MapPin className="h-3 w-3 shrink-0" aria-hidden />
+                            <span className="truncate">{client.address}</span>
+                          </p>
+                        ) : null}
+                      </div>
+                    </div>
+
+                    <div className="mt-3 flex min-w-0 flex-wrap items-center gap-2">
+                      <Button
+                        size="sm"
+                        className="h-8 bg-[#64499D] px-3 text-white hover:bg-[#4D3680]"
+                        onClick={handleCall}
+                        disabled={!client.phone}
+                      >
+                        <Phone className="h-3.5 w-3.5" aria-hidden />
+                        {p.call}
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-8 border-slate-200 px-3 dark:border-zinc-700"
+                        onClick={handleEmail}
+                        disabled={!client.email}
+                      >
+                        <Mail className="h-3.5 w-3.5" aria-hidden />
+                        {p.sendEmail}
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-8 border-slate-200 px-3 dark:border-zinc-700"
+                        onClick={handleEdit}
+                      >
+                        <Pencil className="h-3.5 w-3.5" aria-hidden />
+                        {t.common.edit}
+                      </Button>
+                      <DropdownMenu modal={false}>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            size="icon"
+                            variant="outline"
+                            className="h-8 w-8 border-slate-200 dark:border-zinc-700"
+                            aria-label={p.moreActions}
+                          >
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-44">
+                          <DropdownMenuItem onClick={handleEdit}>
+                            <Pencil className="me-2 h-3.5 w-3.5" />
+                            {t.common.edit}
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            className="text-red-600 focus:bg-red-50 focus:text-red-700 dark:focus:bg-red-950/40"
+                            onClick={handleDelete}
+                          >
+                            <Trash2 className="me-2 h-3.5 w-3.5" />
+                            {t.common.delete}
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                  </div>
+                )}
+              </header>
+
+              <div
+                className="flex shrink-0 gap-1 overflow-x-hidden border-b border-slate-200 px-5 pt-2 dark:border-zinc-800 md:px-6"
+                role="tablist"
+                aria-label={fullName}
+              >
+                {(['overview', 'cases'] as const).map((id) => {
+                  const selected = tab === id;
+                  const label = id === 'overview' ? p.overview : p.cases;
+                  const count = id === 'cases' ? caseStats.total : undefined;
+                  return (
+                    <button
+                      key={id}
+                      type="button"
+                      role="tab"
+                      aria-selected={selected}
+                      onClick={() => {
+                        setTab(id);
+                        scrollRef.current?.scrollTo({ top: 0 });
+                      }}
+                      className={cn(
+                        'relative mb-[-1px] inline-flex items-center gap-1.5 rounded-t-md px-3 py-2 text-[13px] font-medium transition-colors',
+                        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#64499D]/30',
+                        selected
+                          ? 'text-[#64499D] dark:text-[#CFC2FF]'
+                          : 'text-slate-500 hover:text-slate-800 dark:text-zinc-400 dark:hover:text-zinc-200'
+                      )}
+                    >
+                      {label}
+                      {count !== undefined ? (
+                        <span
+                          className={cn(
+                            'rounded-full px-1.5 py-px text-[10px] font-semibold tabular-nums',
+                            selected
+                              ? 'bg-[#64499D]/10 text-[#64499D] dark:bg-[#8B6FD1]/20 dark:text-[#CFC2FF]'
+                              : 'bg-slate-100 text-slate-500 dark:bg-zinc-800 dark:text-zinc-400'
+                          )}
+                        >
+                          {count}
+                        </span>
+                      ) : null}
+                      {selected ? (
+                        <span className="absolute inset-x-2 -bottom-px h-0.5 rounded-full bg-[#64499D]" />
+                      ) : null}
+                    </button>
+                  );
+                })}
               </div>
 
-              {/* PROFILE CONTENT */}
-              <div className="relative px-8 pb-8">
-                {/* Avatar Centered on Cover */}
-                <div className="flex justify-center -mt-20 mb-6">
-                  <div className="relative">
-                    <div className="h-40 w-40 rounded-full overflow-hidden ring-4 ring-white dark:ring-slate-900 shadow-2xl bg-white dark:bg-slate-900 flex items-center justify-center">
-                      <div className="h-full w-full flex items-center justify-center bg-gradient-to-br from-[#64499D] to-[#3b2b66] text-white text-4xl font-bold">
-                        {initials}
-                      </div>
+              <div
+                ref={scrollRef}
+                className="min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain px-5 py-5 md:px-6"
+              >
+                {client && tab === 'overview' ? (
+                  <div className="min-w-0 space-y-6">
+                    <div className="grid min-w-0 grid-cols-2 gap-2 sm:grid-cols-4">
+                      <SummaryCell icon={Mail} label={t.clients.email} value={client.email || '—'} />
+                      <SummaryCell icon={Phone} label={t.clients.phone} value={client.phone || '—'} />
+                      <SummaryCell
+                        icon={Briefcase}
+                        label={p.cases}
+                        value={casesLoading ? '…' : String(caseStats.total)}
+                      />
+                      <SummaryCell
+                        icon={User}
+                        label={t.common.status}
+                        value={client.is_active ? t.clients.status.active : t.clients.status.inactive}
+                      />
                     </div>
-                    {/* Status Indicator */}
-                    <div className={`absolute -bottom-1 -right-1 w-7 h-7 rounded-full border-4 border-white dark:border-slate-900 ${
-                      client.is_active ? 'bg-emerald-500' : 'bg-slate-400'
-                    }`}></div>
-                  </div>
-                </div>
 
-                {/* Name, Company, and Status */}
-                <div className="text-center mb-6">
-                  <div className="flex items-center justify-center gap-3 mb-2">
-                    <h1 className="text-3xl font-bold text-slate-900 dark:text-white">
-                      {fullName}
-                    </h1>
-                    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-medium ring-1 ring-inset ${
-                      client.is_active
-                        ? 'bg-emerald-50 text-emerald-700 ring-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-300 dark:ring-emerald-800/60'
-                        : 'bg-slate-50 text-slate-600 ring-slate-200 dark:bg-slate-900/30 dark:text-slate-400 dark:ring-slate-800/60'
-                    }`}>
-                      {client.is_active ? 'Active' : 'Inactive'}
-                    </span>
-                  </div>
-                  {company && (
-                    <p className="text-lg text-slate-600 dark:text-slate-400 mb-1 flex items-center justify-center gap-2">
-                      <Building className="w-5 h-5" />
-                      {company}
-                    </p>
-                  )}
-                  {client.address && (
-                    <p className="text-sm text-slate-500 dark:text-slate-400 flex items-center justify-center gap-1">
-                      <MapPin className="w-4 h-4" />
-                      {client.address}
-                    </p>
-                  )}
-                  
-                  {/* Action Buttons */}
-                  <div className="flex items-center justify-center gap-3 mt-4">
-                    <Button 
-                      className="bg-[#64499D] hover:bg-[#5a3f8a] text-white shadow-md hover:shadow-lg transition-all duration-200 px-6"
-                      onClick={handleCall}
-                    >
-                      <Phone className="w-4 h-4 mr-2" /> Call
-                    </Button>
-                    <Button 
-                      variant="outline"
-                      className="border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 px-6"
-                      onClick={handleEmail}
-                    >
-                      <Mail className="w-4 h-4 mr-2" /> Email
-                    </Button>
-                    <Button 
-                      variant="outline"
-                      className="border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 px-6"
-                      onClick={handleEdit}
-                    >
-                      <Edit className="w-4 h-4 mr-2" /> Edit
-                    </Button>
-                    <Button 
-                      variant="outline"
-                      className="border-red-300 dark:border-red-700 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/30 px-6"
-                      onClick={handleDelete}
-                    >
-                      <Trash2 className="w-4 h-4 mr-2" /> Delete
-                    </Button>
-                  </div>
-                </div>
+                    <section className="min-w-0 space-y-3">
+                      <h3 className="text-[13px] font-semibold text-slate-800 dark:text-zinc-200">{p.contact}</h3>
+                      <dl className="divide-y divide-slate-100 overflow-hidden rounded-xl border border-slate-200 dark:divide-zinc-800 dark:border-zinc-800">
+                        <InfoRow icon={Mail} label={t.clients.email} value={client.email} href={client.email ? `mailto:${client.email}` : undefined} />
+                        <InfoRow icon={Phone} label={t.clients.phone} value={client.phone} href={client.phone ? `tel:${client.phone}` : undefined} />
+                        {client.address ? (
+                          <InfoRow icon={MapPin} label={t.clients.modal.address} value={client.address} />
+                        ) : null}
+                        {joinedLabel ? (
+                          <InfoRow icon={User} label={p.joined} value={joinedLabel} />
+                        ) : null}
+                      </dl>
+                    </section>
 
-                {/* Information Icons Row - Compact */}
-                <div className="flex items-center justify-center gap-6 mb-8 pb-6 border-b border-slate-200 dark:border-slate-800">
-                  <div className="flex flex-col items-center gap-2">
-                    <div className="p-3 rounded-xl bg-[#F1ECFF] dark:bg-[#2a2240]">
-                      <Mail className="w-5 h-5 text-[#64499D] dark:text-[#E9E0FF]" />
-                    </div>
-                    <span className="text-xs text-slate-600 dark:text-slate-400 font-medium max-w-[150px] truncate">{client.email || '—'}</span>
-                  </div>
-                  <div className="flex flex-col items-center gap-2">
-                    <div className="p-3 rounded-xl bg-[#F1ECFF] dark:bg-[#2a2240]">
-                      <Phone className="w-5 h-5 text-[#64499D] dark:text-[#E9E0FF]" />
-                    </div>
-                    <span className="text-xs text-slate-600 dark:text-slate-400 font-medium">{client.phone || '—'}</span>
-                  </div>
-                  <div className="flex flex-col items-center gap-2">
-                    <div className="p-3 rounded-xl bg-[#F1ECFF] dark:bg-[#2a2240]">
-                      <Calendar className="w-5 h-5 text-[#64499D] dark:text-[#E9E0FF]" />
-                    </div>
-                    <span className="text-xs text-slate-600 dark:text-slate-400 font-medium">{formatDate(client.date_joined as any)}</span>
-                  </div>
-                  <div className="flex flex-col items-center gap-2">
-                    <div className="p-3 rounded-xl bg-[#F1ECFF] dark:bg-[#2a2240]">
-                      <Briefcase className="w-5 h-5 text-[#64499D] dark:text-[#E9E0FF]" />
-                    </div>
-                    <span className="text-xs text-slate-600 dark:text-slate-400 font-medium">{relatedCases.length} Cases</span>
-                  </div>
-                </div>
-
-                {/* Cases Section */}
-                <div className="border-t border-slate-200 dark:border-slate-800 pt-6">
-                  <div className="flex items-center gap-3 mb-5">
-                    <div className="p-2.5 rounded-xl bg-[#F1ECFF] dark:bg-[#2a2240]">
-                      <Briefcase className="w-5 h-5 text-[#64499D] dark:text-[#E9E0FF]" />
-                    </div>
-                    <div>
-                      <h2 className="text-xl font-bold text-slate-900 dark:text-white">Related Cases</h2>
-                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                        {casesLoading ? 'Loading...' : `${relatedCases.length} case${relatedCases.length !== 1 ? 's' : ''}`}
-                      </p>
-                    </div>
-                  </div>
-
-                    {/* Case Categories */}
-                    {categories.length > 0 && (
-                      <div className="mb-5">
-                        <p className="text-xs text-slate-500 dark:text-slate-400 mb-2">Case Categories</p>
-                        <div className="flex flex-wrap gap-2">
-                          {categories.map((cat) => (
-                            <span
-                              key={cat}
-                              className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#F1ECFF] dark:bg-[#2a2240] text-[#64499D] dark:text-[#E9E0FF] border border-[#64499D]/20 dark:border-[#64499D]/40"
-                            >
-                              {cat}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
+                    {(ice || fiscalIf) && (
+                      <section className="min-w-0 space-y-3">
+                        <h3 className="text-[13px] font-semibold text-slate-800 dark:text-zinc-200">
+                          {p.professional}
+                        </h3>
+                        <dl className="divide-y divide-slate-100 overflow-hidden rounded-xl border border-slate-200 dark:divide-zinc-800 dark:border-zinc-800">
+                          {ice ? (
+                            <InfoRow icon={FileSpreadsheet} label={t.clients.modal.ice} value={ice} hint={t.clients.modal.iceHint} />
+                          ) : null}
+                          {fiscalIf ? (
+                            <InfoRow icon={Building2} label={t.clients.modal.fiscalIf} value={fiscalIf} hint={t.clients.modal.fiscalIfHint} />
+                          ) : null}
+                        </dl>
+                      </section>
                     )}
+                  </div>
+                ) : null}
 
-                    {/* Cases List */}
+                {client && tab === 'cases' ? (
+                  <div className="min-w-0 space-y-4">
+                    <div className="flex min-w-0 flex-wrap items-end justify-between gap-2">
+                      <div>
+                        <h3 className="text-[13px] font-semibold text-slate-800 dark:text-zinc-200">{p.cases}</h3>
+                        <p className="mt-0.5 text-[12px] text-slate-500 dark:text-zinc-400">
+                          {casesLoading ? p.loadingCases : tf(p.casesTotal, { count: caseStats.total })}
+                        </p>
+                      </div>
+                    </div>
+
+                    {!casesLoading && relatedCases.length > 0 ? (
+                      <div className="grid min-w-0 grid-cols-2 gap-2 sm:grid-cols-4">
+                        <StatChip label={p.statTotal} value={caseStats.total} />
+                        <StatChip label={p.statOpen} value={caseStats.open} />
+                        <StatChip label={p.statClosed} value={caseStats.closed} />
+                        <StatChip label={p.statPending} value={caseStats.pending} />
+                      </div>
+                    ) : null}
+
+                    {!casesLoading && relatedCases.length > 0 ? (
+                      <div className="flex min-w-0 flex-wrap gap-1.5" role="group" aria-label={p.cases}>
+                        <FilterChip
+                          active={categoryFilter === 'all'}
+                          label={p.filterAll}
+                          count={relatedCases.length}
+                          onClick={() => setCategoryFilter('all')}
+                        />
+                        {categoryCounts.map(([category, count]) => (
+                          <FilterChip
+                            key={category}
+                            active={categoryFilter === category}
+                            label={enumLabel('caseCategory', category) || category}
+                            count={count}
+                            onClick={() => setCategoryFilter(category)}
+                          />
+                        ))}
+                      </div>
+                    ) : null}
+
                     {casesLoading ? (
-                      <div className="flex flex-col items-center justify-center gap-3 py-8 text-slate-500 dark:text-slate-400">
-                        <Loader2 className="w-6 h-6 animate-spin text-[#64499D]" />
-                        <p className="text-xs font-medium">Loading cases…</p>
+                      <div className="flex flex-col items-center justify-center gap-2 py-12 text-slate-500">
+                        <Loader2 className="h-5 w-5 animate-spin text-[#64499D]" />
+                        <p className="text-[12px] font-medium">{p.loadingCases}</p>
                       </div>
                     ) : relatedCases.length === 0 ? (
-                      <div className="text-center py-8">
-                        <div className="inline-flex p-3 rounded-xl bg-slate-100 dark:bg-slate-800 mb-3">
-                          <Briefcase className="w-8 h-8 text-slate-400 dark:text-slate-500" />
-                        </div>
-                        <h3 className="text-sm font-semibold text-slate-900 dark:text-white mb-1">No cases found</h3>
-                        <p className="text-xs text-slate-500 dark:text-slate-400">
-                          This client has no related cases yet.
+                      <div className="rounded-xl border border-dashed border-slate-200 px-4 py-10 text-center dark:border-zinc-800">
+                        <Briefcase className="mx-auto h-6 w-6 text-slate-300 dark:text-zinc-600" aria-hidden />
+                        <h3 className="mt-3 text-[13px] font-semibold text-slate-800 dark:text-zinc-200">
+                          {p.noCasesTitle}
+                        </h3>
+                        <p className="mt-1 text-[12px] text-slate-500 dark:text-zinc-400">
+                          {p.noCasesDescription}
                         </p>
                       </div>
                     ) : (
-                      <div className="space-y-2 max-h-[300px] overflow-y-auto">
-                        {relatedCases.map((caseItem: API.Case) => (
-                          <div
-                            key={caseItem.id}
-                            className="rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30 p-3 hover:border-[#64499D]/40 dark:hover:border-[#64499D]/60 hover:shadow-md transition-all duration-200 cursor-pointer"
-                            onClick={() => handleCaseClick(caseItem)}
-                          >
-                            <div className="flex items-center justify-between gap-3">
-                              <div className="flex items-center gap-3 flex-1 min-w-0">
-                                <div className="p-1.5 rounded-lg bg-[#F1ECFF] dark:bg-[#2a2240] flex-shrink-0">
-                                  <Briefcase className="w-3.5 h-3.5 text-[#64499D] dark:text-[#E9E0FF]" />
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                  <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-0.5 truncate">
-                                    {caseItem.title || caseItem.reference || `Case #${caseItem.id}`}
-                                  </h3>
-                                  <div className="flex flex-wrap items-center gap-2 text-[10px] text-slate-500 dark:text-slate-400">
-                                    {caseItem.reference && (
-                                      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800">
-                                        <span className="font-semibold">Ref:</span> 
-                                        <span className="font-mono">{caseItem.reference}</span>
-                                      </span>
-                                    )}
-                                    {caseItem.category && (
-                                      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800">
-                                        {caseItem.category}
-                                      </span>
-                                    )}
-                                    {caseItem.status && (
-                                      <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-medium ${
-                                        caseItem.status === 'CLOSED' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300' :
-                                        caseItem.status === 'IN_PROGRESS' ? 'bg-[#F1ECFF] text-[#64499D] dark:bg-[#2a2240] dark:text-[#E9E0FF]' :
-                                        caseItem.status === 'PENDING' ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300' :
-                                        caseItem.status === 'CANCELLED' ? 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300' :
-                                        'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300'
-                                      }`}>
-                                        {caseItem.status}
-                                      </span>
-                                    )}
-                                  </div>
-                                </div>
+                      <ul className="min-w-0 divide-y divide-slate-100 overflow-hidden rounded-xl border border-slate-200 dark:divide-zinc-800 dark:border-zinc-800">
+                        {filteredCases.map((caseItem) => (
+                          <li key={caseItem.id} className="min-w-0">
+                            <button
+                              type="button"
+                              onClick={() => handleCaseClick(caseItem)}
+                              className="flex w-full min-w-0 items-center gap-3 px-3 py-2.5 text-start transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#64499D]/30 dark:hover:bg-zinc-900"
+                            >
+                              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#F1ECFF] text-[#64499D] dark:bg-[#2a2240] dark:text-[#E9E0FF]">
+                                <Briefcase className="h-3.5 w-3.5" aria-hidden />
                               </div>
-                            </div>
-                          </div>
+                              <div className="min-w-0 flex-1">
+                                <p className="truncate text-[13px] font-medium text-slate-900 dark:text-zinc-100">
+                                  {caseItem.title || caseItem.reference || `#${caseItem.id}`}
+                                </p>
+                                <p className="mt-0.5 truncate text-[11.5px] text-slate-500 dark:text-zinc-400">
+                                  {caseItem.reference ? `${p.ref} ${caseItem.reference}` : null}
+                                  {caseItem.reference && caseItem.category ? ' · ' : null}
+                                  {caseItem.category ? enumLabel('caseCategory', caseItem.category) : null}
+                                </p>
+                              </div>
+                              {caseItem.status ? (
+                                <span
+                                  className={cn(
+                                    'inline-flex shrink-0 items-center rounded px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wider ring-1 ring-inset',
+                                    STATUS_PILL[caseItem.status] ||
+                                      'bg-slate-500/12 text-slate-600 ring-slate-500/25'
+                                  )}
+                                >
+                                  {enumLabel('caseStatus', caseItem.status) || caseItem.status}
+                                </span>
+                              ) : null}
+                            </button>
+                          </li>
                         ))}
-                      </div>
+                      </ul>
                     )}
                   </div>
+                ) : null}
               </div>
-            </div>
-          </DialogContent>
+            </DialogPrimitive.Content>
+          </DialogPortal>
         </Dialog>
 
-        {/* Modals */}
-        <ClientUpdateModal ref={updateModalRef} onSuccess={(updatedClient) => {
-          onUpdateSuccess?.(updatedClient);
-          setClient(updatedClient as API.Client);
-          refreshRelatedCases();
-        }} />
-        <ClientDeleteModal ref={deleteModalRef} onSuccess={(deletedClient) => {
-          onDeleteSuccess?.(deletedClient);
-          hide();
-        }} />
-        <CaseViewModal 
-          ref={caseViewModalRef} 
+        <ClientUpdateModal
+          ref={updateModalRef}
+          onSuccess={(updatedClient) => {
+            onUpdateSuccess?.(updatedClient);
+            setClient(updatedClient);
+            if (updatedClient.id) void loadRelatedCases(updatedClient.id);
+          }}
+        />
+        <ClientDeleteModal
+          ref={deleteModalRef}
+          onSuccess={(deletedClient) => {
+            onDeleteSuccess?.(deletedClient);
+            hide();
+          }}
+        />
+        <CaseViewModal
+          ref={caseViewModalRef}
           onSuccess={handleCaseUpdate}
           deleteModalRef={caseDeleteModalRef}
         />
@@ -464,7 +614,115 @@ const ClientProfilePreview = React.forwardRef<ClientProfilePreviewRef, ClientPro
   }
 );
 
+function SummaryCell({
+  icon: Icon,
+  label,
+  value,
+}: {
+  icon: typeof Mail;
+  label: string;
+  value: string;
+}) {
+  return (
+    <div className="min-w-0 rounded-xl border border-slate-200 bg-white px-3 py-2.5 dark:border-zinc-800 dark:bg-zinc-950">
+      <div className="flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-[0.08em] text-slate-400">
+        <Icon className="h-3 w-3 text-[#64499D]" aria-hidden />
+        {label}
+      </div>
+      <p className="mt-1 truncate text-[13px] font-medium text-slate-800 dark:text-zinc-200" title={value}>
+        {value}
+      </p>
+    </div>
+  );
+}
+
+function InfoRow({
+  icon: Icon,
+  label,
+  value,
+  hint,
+  href,
+}: {
+  icon: typeof Mail;
+  label: string;
+  value?: string | null;
+  hint?: string;
+  href?: string;
+}) {
+  if (!value) return null;
+  const content = (
+    <>
+      <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#F1ECFF] text-[#64499D] dark:bg-[#2a2240] dark:text-[#E9E0FF]">
+        <Icon className="h-3.5 w-3.5" aria-hidden />
+      </div>
+      <div className="min-w-0 flex-1">
+        <dt className="text-[11px] font-medium uppercase tracking-[0.06em] text-slate-400">{label}</dt>
+        <dd className="truncate text-[13px] text-slate-800 dark:text-zinc-200" title={value}>
+          {value}
+        </dd>
+        {hint ? <p className="truncate text-[11px] text-slate-400">{hint}</p> : null}
+      </div>
+    </>
+  );
+
+  return (
+    <div className="px-3 py-2.5">
+      {href ? (
+        <a href={href} className="flex min-w-0 items-start gap-3 rounded-md hover:text-[#64499D] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#64499D]/30">
+          {content}
+        </a>
+      ) : (
+        <div className="flex min-w-0 items-start gap-3">{content}</div>
+      )}
+    </div>
+  );
+}
+
+function StatChip({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="min-w-0 rounded-lg border border-slate-200 bg-slate-50/80 px-2.5 py-2 dark:border-zinc-800 dark:bg-zinc-900/50">
+      <p className="text-[10px] font-medium uppercase tracking-[0.08em] text-slate-400">{label}</p>
+      <p className="mt-0.5 text-[15px] font-semibold tabular-nums text-slate-800 dark:text-zinc-100">{value}</p>
+    </div>
+  );
+}
+
+function FilterChip({
+  active,
+  label,
+  count,
+  onClick,
+}: {
+  active: boolean;
+  label: string;
+  count: number;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={active}
+      className={cn(
+        'inline-flex max-w-full items-center gap-1.5 rounded-full px-2.5 py-1 text-[12px] font-medium transition-colors',
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#64499D]/30',
+        active
+          ? 'bg-[#64499D] text-white'
+          : 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700'
+      )}
+    >
+      <span className="truncate">{label}</span>
+      <span
+        className={cn(
+          'tabular-nums',
+          active ? 'text-white/80' : 'text-slate-400 dark:text-zinc-500'
+        )}
+      >
+        {count}
+      </span>
+    </button>
+  );
+}
+
 ClientProfilePreview.displayName = 'ClientProfilePreview';
-
 export default ClientProfilePreview;
-

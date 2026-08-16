@@ -1,24 +1,38 @@
 'use client';
-import React, { forwardRef, useImperativeHandle, useMemo, useRef, useState } from 'react';
+
+import {
+  forwardRef,
+  useEffect,
+  useId,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
+import * as DialogPrimitive from '@radix-ui/react-dialog';
 import {
   Dialog,
-  DialogContent,
-  DialogHeader,
+  DialogPortal,
+  DialogOverlay,
   DialogTitle,
+  DialogDescription,
   DialogFooter,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Building2, Loader2, Mail, Phone, User, MapPin, X, Save, FileSpreadsheet } from 'lucide-react';
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Building2, Check, Loader2, User, X } from 'lucide-react';
 import { apiUpdateClient } from '@/services/client/api';
 import * as yup from 'yup';
-import { Resolver, useForm } from 'react-hook-form';
+import { Resolver, useForm, type UseFormReturn } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
-import { Input } from '../ui/input';
 import { getRemoteFieldsValidation } from '@/utils/functions';
 import { isAxiosError } from 'axios';
-import { DialogDescription } from '@radix-ui/react-dialog';
-import { devError } from '@/utils/devLog';
+import { isValidPhoneNumber } from 'react-phone-number-input';
+import { cn } from '@/lib/utils';
 import { useAppTranslation } from '@/i18n';
+import { useToast } from '@/hooks/use-toast';
+import { devError } from '@/utils/devLog';
+import { digitsOnly } from './ClientFormLayout';
+import { ClientProfileFields } from './ClientCreateModal';
 
 export interface ClientUpdateModalRef {
   show: (instance: API.Client) => void;
@@ -27,25 +41,69 @@ export interface ClientUpdateModalRef {
 
 export interface ClientUpdateModalProps {
   onSuccess?: (_: API.Client) => void;
-  readOnly?: boolean; // optional; use if you want view-only mode
+  readOnly?: boolean;
 }
 
 const ClientUpdateModal = forwardRef<ClientUpdateModalRef, ClientUpdateModalProps>(
   ({ onSuccess, readOnly = false }, ref) => {
     const { t } = useAppTranslation();
+    const { toast } = useToast();
+    const formId = useId();
+    const firstFieldRef = useRef<HTMLInputElement>(null);
+    const scrollRef = useRef<HTMLDivElement>(null);
+
     const [instance, setInstance] = useState<API.Client | null>(null);
     const [isOpen, setIsOpen] = useState(false);
-    const [isLoading, setIsLoading] = useState(false);
+    const [submitPhase, setSubmitPhase] = useState<'idle' | 'loading' | 'success'>('idle');
 
-    const schema = useMemo(() => yup.object({
-      first_name: yup.string().required(t.clients.validation.firstNameRequired),
-      last_name: yup.string().required(t.clients.validation.lastNameRequired),
-      email: yup.string().email(t.validation.invalidEmail).required(t.clients.validation.emailRequired),
-      phone: yup.string().required(t.clients.validation.phoneRequired),
-      address: yup.string().required(t.clients.validation.addressRequired),
-      ice: yup.string().optional(),
-      fiscal_if: yup.string().optional(),
-    }), [t]);
+    const schema = useMemo(
+      () =>
+        yup.object({
+          client_type: yup.string().oneOf(['INDIVIDUAL', 'COMPANY']).default('INDIVIDUAL'),
+          first_name: yup.string().when('client_type', {
+            is: 'COMPANY',
+            then: (s) =>
+              s.trim().required(t.clients.validation.contactPersonRequired).min(2, t.clients.validation.firstNameMin),
+            otherwise: (s) =>
+              s.trim().required(t.clients.validation.firstNameRequired).min(2, t.clients.validation.firstNameMin),
+          }),
+          last_name: yup.string().when('client_type', {
+            is: 'COMPANY',
+            then: (s) =>
+              s.trim().required(t.clients.validation.companyNameRequired).min(2, t.clients.validation.lastNameMin),
+            otherwise: (s) =>
+              s.trim().required(t.clients.validation.lastNameRequired).min(2, t.clients.validation.lastNameMin),
+          }),
+          email: yup.string().trim().required(t.clients.validation.emailRequired).email(t.clients.validation.invalidEmail),
+          phone: yup
+            .string()
+            .required(t.clients.validation.phoneRequired)
+            .test('phone', t.clients.validation.invalidPhone, (value) => {
+              if (!value) return false;
+              try {
+                return isValidPhoneNumber(value);
+              } catch {
+                return false;
+              }
+            }),
+          address: yup.string().trim().required(t.clients.validation.addressRequired),
+          ice: yup
+            .string()
+            .optional()
+            .test('ice', t.clients.validation.invalidIce, (value) => {
+              const digits = digitsOnly(value);
+              return !digits || digits.length === 15;
+            }),
+          fiscal_if: yup
+            .string()
+            .optional()
+            .test('fiscal_if', t.clients.validation.invalidIf, (value) => {
+              const digits = digitsOnly(value);
+              return !digits || digits.length === 8;
+            }),
+        }),
+      [t]
+    );
 
     const schemaRef = useRef(schema);
     schemaRef.current = schema;
@@ -55,358 +113,297 @@ const ClientUpdateModal = forwardRef<ClientUpdateModalRef, ClientUpdateModalProp
         yupResolver(schemaRef.current)(values, context, options)) as unknown as Resolver<API.ClientUpdateForm>,
     });
 
-    const show = (inst: API.Client) => {
-      setInstance(inst);
+    const clientType = mainForm.watch('client_type') || 'INDIVIDUAL';
+    const isCompany = clientType === 'COMPANY';
+
+    const valuesFromClient = (inst: API.Client): API.ClientUpdateForm => {
       const apiIf = (inst as API.Client & { if?: string | null }).if;
-      mainForm.reset({
-        first_name: inst.first_name,
-        last_name: inst.last_name,
-        email: inst.email,
-        phone: inst.phone,
-        address: inst.address,
+      return {
+        id: inst.id,
+        first_name: inst.first_name || '',
+        last_name: inst.last_name || '',
+        email: inst.email || '',
+        phone: inst.phone || '',
+        address: inst.address || '',
         ice: inst.ice ?? '',
         fiscal_if: inst.fiscal_if ?? apiIf ?? '',
-      });
+        client_type: inst.client_type === 'COMPANY' ? 'COMPANY' : 'INDIVIDUAL',
+      };
+    };
+
+    const show = (inst: API.Client) => {
+      setInstance(inst);
+      setSubmitPhase('idle');
+      mainForm.reset(valuesFromClient(inst));
+      scrollRef.current?.scrollTo({ top: 0 });
       setIsOpen(true);
     };
 
     const hide = () => {
-      if (isLoading) return;
+      if (submitPhase === 'loading') return;
       setIsOpen(false);
       mainForm.reset();
+      setInstance(null);
     };
 
-    useImperativeHandle(ref, () => ({ show, hide }), [isLoading]);
+    useImperativeHandle(ref, () => ({ show, hide }), [submitPhase]);
+
+    useEffect(() => {
+      if (!isOpen) return;
+      const timer = window.setTimeout(() => firstFieldRef.current?.focus(), 40);
+      return () => window.clearTimeout(timer);
+    }, [isOpen, isCompany]);
+
+    const fieldError = (name: keyof API.ClientCreateForm) =>
+      mainForm.formState.errors[name as keyof API.ClientUpdateForm]?.message as string | undefined;
+
+    const applyRemoteErrors = (err: unknown) => {
+      if (!isAxiosError(err)) return;
+      const errorData = err.response?.data;
+      if (errorData?.email && Array.isArray(errorData.email)) {
+        const emailError = errorData.email[0];
+        if (typeof emailError === 'string' && emailError.toLowerCase().includes('already')) {
+          mainForm.setError('email', { message: t.clients.validation.emailDuplicate });
+        } else if (emailError) {
+          mainForm.setError('email', { message: emailError });
+        }
+      }
+      if (errorData?.phone && Array.isArray(errorData.phone)) {
+        const phoneError = errorData.phone[0];
+        if (typeof phoneError === 'string' && phoneError.toLowerCase().includes('already')) {
+          mainForm.setError('phone', { message: t.clients.validation.phoneDuplicate });
+        } else if (phoneError) {
+          mainForm.setError('phone', { message: phoneError });
+        }
+      }
+
+      const remoteValidation = getRemoteFieldsValidation(err);
+      Object.entries(remoteValidation).forEach(([key, message]) => {
+        const clean = typeof message === 'string' ? message.replace(/^"|"$/g, '') : message;
+        if (!clean) return;
+        const field =
+          key === 'if' || key === 'if_number' ? 'fiscal_if' : (key as keyof API.ClientUpdateForm);
+        if (!mainForm.formState.errors[field]) {
+          mainForm.setError(field, { message: clean });
+        }
+      });
+
+      const first = (['first_name', 'last_name', 'email', 'phone', 'address', 'ice', 'fiscal_if'] as const).find(
+        (key) => mainForm.formState.errors[key]
+      );
+      if (first) document.getElementById(`${formId}-${first}`)?.focus();
+    };
 
     const handleSubmit = async (data: API.ClientUpdateForm) => {
-      if (!instance) return;
-      setIsLoading(true);
-      
-      // Check if any values actually changed
+      if (!instance || readOnly) return;
+      setSubmitPhase('loading');
+
+      const ice = digitsOnly(data.ice);
+      const fiscalIf = digitsOnly(data.fiscal_if);
       const apiIf = (instance as API.Client & { if?: string | null }).if;
-      const prevIf = instance.fiscal_if ?? apiIf ?? '';
-      const hasChanges = 
-        data.first_name !== instance.first_name ||
-        data.last_name !== instance.last_name ||
-        data.email !== instance.email ||
-        data.phone !== instance.phone ||
-        (data.address || '') !== (instance.address || '') ||
-        (data.ice || '') !== (instance.ice || '') ||
-        (data.fiscal_if || '') !== (prevIf || '');
-      
+      const prevIf = digitsOnly(instance.fiscal_if ?? apiIf ?? '');
+      const prevIce = digitsOnly(instance.ice);
+      const nextType = data.client_type || 'INDIVIDUAL';
+      const prevType = instance.client_type === 'COMPANY' ? 'COMPANY' : 'INDIVIDUAL';
+
+      const hasChanges =
+        data.first_name.trim() !== (instance.first_name || '') ||
+        data.last_name.trim() !== (instance.last_name || '') ||
+        data.email.trim() !== (instance.email || '') ||
+        (data.phone || '') !== (instance.phone || '') ||
+        (data.address || '').trim() !== (instance.address || '') ||
+        ice !== prevIce ||
+        fiscalIf !== prevIf ||
+        nextType !== prevType;
+
       if (!hasChanges) {
-        // No changes detected, just close the modal
         hide();
-        setIsLoading(false);
+        setSubmitPhase('idle');
         return;
       }
-      
-      // Exclude 'id' from the payload since it's in the URL
-      const { id, ...updateData } = data;
-      
-      await apiUpdateClient({
-        ...updateData,
-        id: instance.id,
-      })
-        .then((res) => {
-          onSuccess?.(res.data);
-          hide();
-        })
-        .catch((err) => {
-          if (isAxiosError(err)) {
-            devError('Error updating client:', err.response?.data);
 
-            // Check if it's a duplicate error
-            const errorData = err.response?.data;
-            if (errorData) {
-              // Handle duplicate email/phone errors with better messaging
-              if (errorData.email && Array.isArray(errorData.email)) {
-                const emailError = errorData.email[0];
-                if (emailError && typeof emailError === 'string' && emailError.toLowerCase().includes('already')) {
-                  mainForm.setError('email', { 
-                    message: t.clients.validation.emailDuplicate 
-                  });
-                } else {
-                  mainForm.setError('email', { message: emailError });
-                }
-              }
-              
-              if (errorData.phone && Array.isArray(errorData.phone)) {
-                const phoneError = errorData.phone[0];
-                if (phoneError && typeof phoneError === 'string' && phoneError.toLowerCase().includes('already')) {
-                  mainForm.setError('phone', { 
-                    message: t.clients.validation.phoneDuplicate 
-                  });
-                } else {
-                  mainForm.setError('phone', { message: phoneError });
-                }
-              }
-            }
-            
-            // Handle other validation errors
-            const remoteValidation = getRemoteFieldsValidation(err);
-            Object.keys(remoteValidation).forEach((key) => {
-              // Only set error if not already set above
-              if (!mainForm.formState.errors[key as keyof API.ClientUpdateForm]) {
-                mainForm.setError(key as keyof API.ClientUpdateForm, { message: remoteValidation[key] });
-              }
-            });
-          }
-        })
-        .finally(() => setIsLoading(false));
+      try {
+        const res = await apiUpdateClient({
+          id: instance.id,
+          first_name: data.first_name.trim(),
+          last_name: data.last_name.trim(),
+          email: data.email.trim(),
+          phone: data.phone || '',
+          address: (data.address || '').trim(),
+          ice,
+          fiscal_if: fiscalIf,
+          client_type: nextType,
+        });
+        setSubmitPhase('success');
+        toast({
+          title: t.clients.modal.updatedTitle,
+          description: t.clients.modal.updatedDescription,
+        });
+        await new Promise((resolve) => window.setTimeout(resolve, 220));
+        onSuccess?.(res.data);
+        setIsOpen(false);
+        setSubmitPhase('idle');
+      } catch (err) {
+        setSubmitPhase('idle');
+        if (isAxiosError(err)) {
+          devError('Error updating client:', err.response?.data);
+          applyRemoteErrors(err);
+        } else {
+          toast({
+            title: t.clients.modal.toastErrorTitle,
+            description: t.clients.modal.toastErrorDescription,
+            variant: 'destructive',
+          });
+        }
+      }
     };
 
-    return (
-      <Dialog open={isOpen} onOpenChange={isLoading ? undefined : setIsOpen}>
-        <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto p-0 [&>button]:hidden">
-          {/* Header Banner */}
-          <div className="relative h-32 bg-gradient-to-r from-[#FF6B6B] via-[#4ECDC4] to-[#64499D] overflow-hidden">
-            {/* Decorative Pattern Overlay */}
-            <div className="absolute inset-0 opacity-10">
-              <div className="absolute inset-0" style={{
-                backgroundImage: `radial-gradient(circle at 2px 2px, white 1px, transparent 0)`,
-                backgroundSize: '32px 32px'
-              }}></div>
-            </div>
-            {/* Gradient Overlay */}
-            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/10"></div>
-            
-            {/* Close Button */}
-            <Button
-              variant="ghost"
-              size="icon"
-              className="absolute top-4 end-4 h-9 w-9 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white border border-white/30"
-              onClick={hide}
-              disabled={isLoading}
-              aria-label={t.common.close}
-            >
-              <X className="w-4 h-4" />
-            </Button>
+    const onInvalid = () => {
+      const order: (keyof API.ClientUpdateForm)[] = isCompany
+        ? ['last_name', 'first_name', 'email', 'phone', 'address', 'ice', 'fiscal_if']
+        : ['first_name', 'last_name', 'email', 'phone', 'address', 'ice', 'fiscal_if'];
+      const first = order.find((key) => mainForm.formState.errors[key]);
+      if (first) document.getElementById(`${formId}-${first}`)?.focus();
+    };
 
-            {/* Header Content */}
-            <div className="relative px-8 pt-8 pb-6">
-              <div className="flex items-center gap-3">
-                <div className="p-3 rounded-xl bg-white/20 backdrop-blur-sm border border-white/30">
-                  <User className="w-6 h-6 text-white" />
+    const firstNameRegister = mainForm.register('first_name');
+    const lastNameRegister = mainForm.register('last_name');
+    const fieldsBusy = submitPhase !== 'idle' || readOnly;
+
+    return (
+      <Dialog
+        open={isOpen}
+        onOpenChange={(open) => {
+          if (submitPhase === 'loading') return;
+          if (!open) {
+            hide();
+            return;
+          }
+          setIsOpen(true);
+        }}
+        modal
+      >
+        <DialogPortal>
+          <DialogOverlay className="bg-slate-950/50" />
+          <DialogPrimitive.Content
+            aria-describedby={`${formId}-description`}
+            onOpenAutoFocus={(event) => {
+              event.preventDefault();
+              firstFieldRef.current?.focus();
+            }}
+            onEscapeKeyDown={(event) => {
+              if (submitPhase === 'loading') event.preventDefault();
+            }}
+            onPointerDownOutside={(event) => {
+              if (submitPhase === 'loading') event.preventDefault();
+            }}
+            className={cn(
+              'fixed z-50 flex min-h-0 flex-col overflow-hidden border border-slate-200/90 bg-white p-0 shadow-2xl outline-none',
+              'dark:border-zinc-800 dark:bg-zinc-950',
+              'inset-x-0 bottom-0 top-auto h-[min(92dvh,820px)] w-full translate-x-0 translate-y-0 rounded-t-2xl',
+              'data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 duration-200',
+              'data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom',
+              'md:inset-auto md:bottom-auto md:left-1/2 md:top-1/2 md:h-[min(86vh,740px)] md:w-[min(92vw,680px)] md:max-w-[680px]',
+              'md:-translate-x-1/2 md:-translate-y-1/2 md:rounded-[18px]',
+              'md:data-[state=closed]:zoom-out-95 md:data-[state=open]:zoom-in-95',
+              'md:data-[state=closed]:slide-out-to-left-1/2 md:data-[state=closed]:slide-out-to-top-[48%]',
+              'md:data-[state=open]:slide-in-from-left-1/2 md:data-[state=open]:slide-in-from-top-[48%]'
+            )}
+          >
+            <header className="relative shrink-0 border-b border-[#64499D]/10 bg-[#F7F4FF] px-5 py-4 pe-14 dark:border-[#8B6FD1]/15 dark:bg-[#24183F]/80 md:px-6">
+              <div
+                className="pointer-events-none absolute inset-0 opacity-70"
+                style={{
+                  background:
+                    'linear-gradient(135deg, rgba(100,73,157,0.08) 0%, rgba(100,73,157,0.02) 52%, transparent 100%)',
+                }}
+              />
+              <Button
+                variant="ghost"
+                size="icon"
+                className="absolute end-3 top-3 z-10 h-8 w-8 rounded-full text-slate-500 hover:bg-white/80 hover:text-slate-800 dark:text-zinc-300 dark:hover:bg-zinc-900"
+                onClick={hide}
+                disabled={submitPhase === 'loading'}
+                aria-label={t.common.close}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+              <div className="relative flex items-start gap-3">
+                <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white text-[#64499D] shadow-sm ring-1 ring-[#64499D]/15 dark:bg-zinc-900 dark:text-[#CFC2FF] dark:ring-[#8B6FD1]/25">
+                  {isCompany ? <Building2 className="h-4 w-4" aria-hidden /> : <User className="h-4 w-4" aria-hidden />}
                 </div>
-                <div>
-                  <DialogTitle className="text-2xl font-bold text-white">
+                <div className="min-w-0 pt-0.5">
+                  <DialogTitle className="text-[17px] font-semibold tracking-tight text-slate-900 dark:text-zinc-50">
                     {t.clients.modal.updateTitle}
                   </DialogTitle>
-                  <DialogDescription className="text-white/90 mt-1">
+                  <DialogDescription
+                    id={`${formId}-description`}
+                    className="mt-1 text-[13px] leading-snug text-slate-500 dark:text-zinc-400"
+                  >
                     {t.clients.modal.updateDescription}
                   </DialogDescription>
                 </div>
               </div>
-            </div>
-          </div>
+            </header>
 
-          <form onSubmit={mainForm.handleSubmit(handleSubmit)} className="px-8 py-6 space-y-6">
-            {/* Personal Information */}
-            <div className="space-y-4">
-              <div className="flex items-center gap-3 pb-2 border-b border-slate-200 dark:border-slate-800">
-                <div className="p-2 rounded-lg bg-[#F1ECFF] dark:bg-[#2a2240]">
-                  <User className="w-4 h-4 text-[#64499D] dark:text-[#E9E0FF]" />
-                </div>
-                <h3 className="text-base font-semibold text-slate-900 dark:text-white">
-                  {t.clients.modal.personalInfo}
-                </h3>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                    {t.clients.modal.firstName} <span className="text-red-500">*</span>
-                  </label>
-                  <div className="relative">
-                    <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                    <Input
-                      {...mainForm.register('first_name')}
-                      placeholder={t.clients.modal.firstNamePlaceholder}
-                      disabled={readOnly || isLoading}
-                      className="pl-10 h-11 border-slate-300 dark:border-slate-700 focus:border-[#64499D] focus:ring-[#64499D]"
-                    />
-                  </div>
-                  {mainForm.formState.errors.first_name && (
-                    <p className="text-red-500 text-xs mt-1">
-                      {mainForm.formState.errors.first_name.message}
-                    </p>
-                  )}
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                    {t.clients.modal.lastName} <span className="text-red-500">*</span>
-                  </label>
-                  <div className="relative">
-                    <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                    <Input
-                      {...mainForm.register('last_name')}
-                      placeholder={t.clients.modal.lastNamePlaceholder}
-                      disabled={readOnly || isLoading}
-                      className="pl-10 h-11 border-slate-300 dark:border-slate-700 focus:border-[#64499D] focus:ring-[#64499D]"
-                    />
-                  </div>
-                  {mainForm.formState.errors.last_name && (
-                    <p className="text-red-500 text-xs mt-1">
-                      {mainForm.formState.errors.last_name.message}
-                    </p>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Contact Information */}
-            <div className="space-y-4">
-              <div className="flex items-center gap-3 pb-2 border-b border-slate-200 dark:border-slate-800">
-                <div className="p-2 rounded-lg bg-[#F1ECFF] dark:bg-[#2a2240]">
-                  <Mail className="w-4 h-4 text-[#64499D] dark:text-[#E9E0FF]" />
-                </div>
-                <h3 className="text-base font-semibold text-slate-900 dark:text-white">
-                  {t.clients.modal.contactInfo}
-                </h3>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                    {t.clients.modal.emailAddress} <span className="text-red-500">*</span>
-                  </label>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                    <Input
-                      {...mainForm.register('email')}
-                      type="email"
-                      placeholder={t.clients.modal.emailPlaceholder}
-                      disabled={readOnly || isLoading}
-                      className="pl-10 h-11 border-slate-300 dark:border-slate-700 focus:border-[#64499D] focus:ring-[#64499D]"
-                    />
-                  </div>
-                  {mainForm.formState.errors.email && (
-                    <p className="text-red-500 text-xs mt-1">
-                      {mainForm.formState.errors.email.message}
-                    </p>
-                  )}
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                    {t.clients.modal.phoneNumber} <span className="text-red-500">*</span>
-                  </label>
-                  <div className="relative">
-                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                    <Input
-                      {...mainForm.register('phone')}
-                      placeholder={t.clients.modal.phonePlaceholder}
-                      disabled={readOnly || isLoading}
-                      className="pl-10 h-11 border-slate-300 dark:border-slate-700 focus:border-[#64499D] focus:ring-[#64499D]"
-                    />
-                  </div>
-                  {mainForm.formState.errors.phone && (
-                    <p className="text-red-500 text-xs mt-1">
-                      {mainForm.formState.errors.phone.message}
-                    </p>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Address Information */}
-            <div className="space-y-4">
-              <div className="flex items-center gap-3 pb-2 border-b border-slate-200 dark:border-slate-800">
-                <div className="p-2 rounded-lg bg-[#F1ECFF] dark:bg-[#2a2240]">
-                  <MapPin className="w-4 h-4 text-[#64499D] dark:text-[#E9E0FF]" />
-                </div>
-                <h3 className="text-base font-semibold text-slate-900 dark:text-white">
-                  {t.clients.modal.addressInfo}
-                </h3>
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                  {t.clients.modal.address} <span className="text-red-500">*</span>
-                </label>
-                <div className="relative">
-                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                  <Input
-                    {...mainForm.register('address')}
-                    placeholder={t.clients.modal.addressPlaceholder}
-                    disabled={readOnly || isLoading}
-                    className="pl-10 h-11 border-slate-300 dark:border-slate-700 focus:border-[#64499D] focus:ring-[#64499D]"
-                  />
-                </div>
-                {mainForm.formState.errors.address && (
-                  <p className="text-red-500 text-xs mt-1">
-                    {mainForm.formState.errors.address.message}
-                  </p>
-                )}
-              </div>
-            </div>
-
-            {/* B2B — fiscal (Morocco) */}
-            <div className="space-y-4">
-              <div className="flex items-center gap-3 pb-2 border-b border-slate-200 dark:border-slate-800">
-                <div className="p-2 rounded-lg bg-[#F1ECFF] dark:bg-[#2a2240]">
-                  <FileSpreadsheet className="w-4 h-4 text-[#64499D] dark:text-[#E9E0FF]" />
-                </div>
-                <div>
-                  <h3 className="text-base font-semibold text-slate-900 dark:text-white">
-                    {t.clients.modal.fiscalInfo}
-                  </h3>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">
-                    {t.clients.modal.fiscalInfoHint}
-                  </p>
-                </div>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-700 dark:text-slate-300">{t.clients.modal.ice}</label>
-                  <Input
-                    {...mainForm.register('ice')}
-                    placeholder={t.clients.modal.icePlaceholder}
-                    disabled={readOnly || isLoading}
-                    className="h-11 border-slate-300 dark:border-slate-700"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-700 dark:text-slate-300">{t.clients.modal.fiscalIf}</label>
-                  <Input
-                    {...mainForm.register('fiscal_if')}
-                    placeholder={t.clients.modal.fiscalIfPlaceholder}
-                    disabled={readOnly || isLoading}
-                    className="h-11 border-slate-300 dark:border-slate-700"
-                  />
-                </div>
-              </div>
-            </div>
-
-            <DialogFooter className="pt-6 border-t border-slate-200 dark:border-slate-800 gap-3">
-              <Button 
-                type="button" 
-                variant="outline" 
-                onClick={hide} 
-                disabled={isLoading}
-                className="border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800"
+            <form
+              className="flex min-h-0 flex-1 flex-col overflow-hidden"
+              onSubmit={mainForm.handleSubmit(handleSubmit, onInvalid)}
+              noValidate
+              aria-busy={submitPhase === 'loading'}
+            >
+              <div
+                ref={scrollRef}
+                className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-contain px-5 py-5 md:px-6"
               >
-                {t.common.cancel}
-              </Button>
-              {!readOnly && (
-                <Button 
-                  type="submit" 
-                  disabled={isLoading}
-                  className="bg-[#64499D] hover:bg-[#5a3f8a] text-white shadow-md hover:shadow-lg transition-all duration-200"
+                <ClientProfileFields
+                  formId={formId}
+                  t={t}
+                  isCompany={isCompany}
+                  isBusy={fieldsBusy}
+                  fieldError={fieldError}
+                  mainForm={mainForm as unknown as UseFormReturn<API.ClientCreateForm>}
+                  firstFieldRef={firstFieldRef}
+                  firstNameRegister={firstNameRegister}
+                  lastNameRegister={lastNameRegister}
+                />
+              </div>
+
+              <DialogFooter className="shrink-0 flex-row items-center justify-between gap-2.5 space-x-0 border-t border-slate-200 bg-white px-5 py-3.5 dark:border-zinc-800 dark:bg-zinc-950 sm:space-x-0 md:px-6">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={hide}
+                  disabled={submitPhase === 'loading'}
+                  className="h-10 border-slate-200 px-4 dark:border-zinc-700"
                 >
-                  {isLoading ? (
-                    <>
-                      <Loader2 className="w-4 h-4 me-2 animate-spin" />
-                      {t.clients.modal.updating}
-                    </>
-                  ) : (
-                    <>
-                      <Save className="w-4 h-4 me-2" />
-                      {t.clients.modal.updateClient}
-                    </>
-                  )}
+                  {t.common.cancel}
                 </Button>
-              )}
-            </DialogFooter>
-          </form>
-        </DialogContent>
+                {!readOnly && (
+                  <Button
+                    type="submit"
+                    disabled={submitPhase !== 'idle'}
+                    className="h-10 min-w-[168px] bg-[#64499D] px-4 text-white hover:bg-[#4D3680]"
+                  >
+                    {submitPhase === 'loading' ? (
+                      <>
+                        <Loader2 className="me-2 h-4 w-4 animate-spin" />
+                        {t.clients.modal.updating}
+                      </>
+                    ) : submitPhase === 'success' ? (
+                      <>
+                        <Check className="me-2 h-4 w-4" />
+                        {t.clients.modal.updatedTitle}
+                      </>
+                    ) : (
+                      t.clients.modal.updateClient
+                    )}
+                  </Button>
+                )}
+              </DialogFooter>
+            </form>
+          </DialogPrimitive.Content>
+        </DialogPortal>
       </Dialog>
     );
   }

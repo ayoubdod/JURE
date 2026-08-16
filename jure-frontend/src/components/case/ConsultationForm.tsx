@@ -15,11 +15,23 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { DialogFooter } from '@/components/ui/dialog';
 import ServerSelect from '@/components/common/ServerSelect';
-import { FileText, Loader2, MessageCircle, Calendar, Scale } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { useCaseForm } from '@/hooks/useCaseForm';
 import { useToast } from '@/hooks/use-toast';
 import { useAppTranslation } from '@/i18n';
+import { cn } from '@/lib/utils';
+import {
+  CREATE_CANCEL_CLASS,
+  CREATE_FOOTER_CLASS,
+  CREATE_INPUT_CLASS,
+  CREATE_SELECT_CLASS,
+  CREATE_SERVER_SELECT_CLASS,
+  CREATE_SUBMIT_CLASS,
+  CREATE_TEXTAREA_CLASS,
+  CreateFormSection,
+} from '@/components/forms/CreateFormShell';
 
 export type ConsultationFormValues = {
   reference: string;
@@ -46,20 +58,6 @@ export interface ConsultationFormProps {
   onSubmitSuccess?: (caseItem: API.Case) => void;
   onBack?: () => void;
 }
-
-const FormSection: React.FC<{
-  title: string;
-  icon: React.ElementType;
-  children: React.ReactNode;
-}> = ({ title, icon: Icon, children }) => (
-  <div className="space-y-4">
-    <div className="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300 pb-2 border-b border-slate-200/90 dark:border-slate-800">
-      <Icon className="w-4 h-4 text-purple-600 dark:text-purple-400" />
-      <span>{title}</span>
-    </div>
-    {children}
-  </div>
-);
 
 const ConsultationForm: React.FC<ConsultationFormProps> = ({
   initialValues,
@@ -230,13 +228,19 @@ const ConsultationForm: React.FC<ConsultationFormProps> = ({
   );
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form
+      onSubmit={handleSubmit}
+      className="flex min-h-0 flex-1 flex-col overflow-hidden"
+      noValidate
+    >
+      <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-contain px-6 py-5 md:px-7">
+      <div className="space-y-6">
       {form.formState.errors.case_specific_data && (
-        <div className="p-3 rounded border border-red-200 dark:border-red-900/50 bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-300 text-[13px]">
+        <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-[13px] text-red-700 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-300">
           {form.formState.errors.case_specific_data.message}
         </div>
       )}
-      <FormSection title={modal.sections.basicInfo} icon={FileText}>
+      <CreateFormSection index="01" title={modal.sections.basicInfo}>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-2">
             <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
@@ -246,7 +250,7 @@ const ConsultationForm: React.FC<ConsultationFormProps> = ({
             <Input
               {...form.register('reference')}
               placeholder={modal.placeholders.referenceAuto}
-              className="h-10"
+              className={CREATE_INPUT_CLASS}
             />
             {form.formState.errors.reference && (
               <p className="text-red-500 text-xs">{form.formState.errors.reference.message}</p>
@@ -259,7 +263,7 @@ const ConsultationForm: React.FC<ConsultationFormProps> = ({
             <Input
               {...form.register('title')}
               placeholder={modal.placeholders.consultationTitle}
-              className="h-10"
+              className={CREATE_INPUT_CLASS}
             />
             {form.formState.errors.title && (
               <p className="text-red-500 text-xs">{form.formState.errors.title.message}</p>
@@ -275,7 +279,7 @@ const ConsultationForm: React.FC<ConsultationFormProps> = ({
                 form.setValue('consultation_type', v as ConsultationFormValues['consultation_type'])
               }
             >
-              <SelectTrigger className="h-10">
+              <SelectTrigger className={CREATE_SELECT_CLASS}>
                 <SelectValue placeholder={modal.placeholders.selectType} />
               </SelectTrigger>
               <SelectContent>
@@ -293,9 +297,9 @@ const ConsultationForm: React.FC<ConsultationFormProps> = ({
             )}
           </div>
         </div>
-      </FormSection>
+      </CreateFormSection>
 
-      <FormSection title={modal.sections.clientScheduling} icon={MessageCircle}>
+      <CreateFormSection index="02" title={modal.sections.clientScheduling}>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-2">
             <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
@@ -311,6 +315,7 @@ const ConsultationForm: React.FC<ConsultationFormProps> = ({
               }
               cleanable
               placeholder={modal.placeholders.client}
+              className={CREATE_SERVER_SELECT_CLASS}
             />
           </div>
           <div className="space-y-2">
@@ -324,6 +329,7 @@ const ConsultationForm: React.FC<ConsultationFormProps> = ({
               onChange={(v) => form.setValue('assigned_to', v ? Number(v) : null)}
               labelKey="email"
               cleanable
+              className={CREATE_SERVER_SELECT_CLASS}
             />
           </div>
           <div className="space-y-2">
@@ -333,7 +339,7 @@ const ConsultationForm: React.FC<ConsultationFormProps> = ({
             <Input
               type="datetime-local"
               {...form.register('consultation_date')}
-              className="h-10"
+              className={CREATE_INPUT_CLASS}
             />
             {form.formState.errors.consultation_date && (
               <p className="text-red-500 text-xs">
@@ -349,7 +355,7 @@ const ConsultationForm: React.FC<ConsultationFormProps> = ({
               value={form.watch('duration')}
               onValueChange={(v) => form.setValue('duration', v as ConsultationFormValues['duration'])}
             >
-              <SelectTrigger className="h-10">
+              <SelectTrigger className={CREATE_SELECT_CLASS}>
                 <SelectValue placeholder={modal.placeholders.selectDuration} />
               </SelectTrigger>
               <SelectContent>
@@ -369,7 +375,7 @@ const ConsultationForm: React.FC<ConsultationFormProps> = ({
               value={form.watch('format')}
               onValueChange={(v) => form.setValue('format', v as ConsultationFormValues['format'])}
             >
-              <SelectTrigger className="h-10">
+              <SelectTrigger className={CREATE_SELECT_CLASS}>
                 <SelectValue placeholder={modal.placeholders.selectFormat} />
               </SelectTrigger>
               <SelectContent>
@@ -385,9 +391,9 @@ const ConsultationForm: React.FC<ConsultationFormProps> = ({
             )}
           </div>
         </div>
-      </FormSection>
+      </CreateFormSection>
 
-      <FormSection title={modal.sections.legalContext} icon={Scale}>
+      <CreateFormSection index="03" title={modal.sections.legalContext}>
         <div className="space-y-4">
           <div className="space-y-2">
             <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
@@ -399,7 +405,7 @@ const ConsultationForm: React.FC<ConsultationFormProps> = ({
                 form.setValue('legal_domain', v as ConsultationFormValues['legal_domain'])
               }
             >
-              <SelectTrigger className="h-10">
+              <SelectTrigger className={CREATE_SELECT_CLASS}>
                 <SelectValue placeholder={modal.placeholders.selectDomain} />
               </SelectTrigger>
               <SelectContent>
@@ -418,16 +424,16 @@ const ConsultationForm: React.FC<ConsultationFormProps> = ({
             <Textarea
               {...form.register('legal_question')}
               placeholder={modal.placeholders.legalQuestion}
-              className="min-h-[80px] resize-none"
+              className={CREATE_TEXTAREA_CLASS}
             />
             {form.formState.errors.legal_question && (
               <p className="text-red-500 text-xs">{form.formState.errors.legal_question.message}</p>
             )}
           </div>
         </div>
-      </FormSection>
+      </CreateFormSection>
 
-      <FormSection title={modal.sections.outcome} icon={Calendar}>
+      <CreateFormSection index="04" title={modal.sections.outcome}>
         <div className="space-y-4">
           <div className="space-y-2">
             <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
@@ -437,7 +443,7 @@ const ConsultationForm: React.FC<ConsultationFormProps> = ({
               value={form.watch('status')}
               onValueChange={(v) => form.setValue('status', v as ConsultationFormValues['status'])}
             >
-              <SelectTrigger className="h-10">
+              <SelectTrigger className={CREATE_SELECT_CLASS}>
                 <SelectValue placeholder={modal.placeholders.status} />
               </SelectTrigger>
               <SelectContent>
@@ -456,7 +462,7 @@ const ConsultationForm: React.FC<ConsultationFormProps> = ({
             <Textarea
               {...form.register('advice_summary')}
               placeholder={modal.placeholders.adviceSummary}
-              className="min-h-[60px] resize-none"
+              className={CREATE_TEXTAREA_CLASS}
             />
           </div>
           <div className="flex items-center gap-2">
@@ -474,23 +480,26 @@ const ConsultationForm: React.FC<ConsultationFormProps> = ({
               <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
                 {modal.fields.followUpDate}
               </label>
-              <Input type="date" {...form.register('follow_up_date')} className="h-10" />
+              <Input type="date" {...form.register('follow_up_date')} className={CREATE_INPUT_CLASS} />
             </div>
           )}
         </div>
-      </FormSection>
+      </CreateFormSection>
+      </div>
+      </div>
 
-      <div className="flex items-center justify-between pt-4 border-t border-slate-200/90 dark:border-slate-800 gap-3">
-        {onBack && (
-          <Button type="button" variant="outline" onClick={onBack} disabled={isLoading}>
+      <DialogFooter className={cn(CREATE_FOOTER_CLASS, onBack && 'justify-between')}>
+        {onBack ? (
+          <Button type="button" variant="outline" onClick={onBack} disabled={isLoading} className={CREATE_CANCEL_CLASS}>
             {modal.back}
           </Button>
+        ) : (
+          <span />
         )}
-        {!onBack && <div />}
-        <Button type="submit" disabled={isLoading} className="bg-purple-600 hover:bg-purple-700">
+        <Button type="submit" disabled={isLoading} className={CREATE_SUBMIT_CLASS}>
           {isLoading ? (
             <>
-              <Loader2 className="w-4 h-4 me-2 animate-spin" />
+              <Loader2 className="animate-spin" />
               {modal.submitting}
             </>
           ) : mode === 'edit' ? (
@@ -499,7 +508,7 @@ const ConsultationForm: React.FC<ConsultationFormProps> = ({
             modal.createCase
           )}
         </Button>
-      </div>
+      </DialogFooter>
     </form>
   );
 };

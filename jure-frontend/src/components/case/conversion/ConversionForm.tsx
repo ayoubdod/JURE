@@ -1,15 +1,9 @@
 'use client';
 
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogTitle,
-} from '@/components/ui/dialog';
+import React, { useCallback, useEffect, useId, useMemo, useState } from 'react';
+import { DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Loader2, Scale, X } from 'lucide-react';
+import { FileText, Loader2 } from 'lucide-react';
 import { getCaseData } from '@/utils/caseCardHelpers';
 import { em } from '@/components/case/case-detail-drawer/format';
 import { useConvertCase } from '@/hooks/useConvertCase';
@@ -20,6 +14,14 @@ import {
   type AdministrativeConversionState,
 } from './AdministrativeConversionFields';
 import type { ConversionTargetType } from './CaseTypeSelector';
+import {
+  CREATE_CANCEL_CLASS,
+  CREATE_FOOTER_CLASS,
+  CREATE_SUBMIT_CLASS,
+  CreateFormDialog,
+  CreateFormSection,
+} from '@/components/forms/CreateFormShell';
+import { cn } from '@/lib/utils';
 
 function validDateInput(s: string): boolean {
   if (!s.trim()) return true;
@@ -205,124 +207,83 @@ export function ConversionForm({
 
   const titleSuffix =
     targetType === 'LITIGATION' ? 'Litigation' : 'Administrative duty';
+  const formId = useId();
+  const isBusy = loading;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="z-[100] flex max-h-[min(92vh,900px)] w-[min(100vw-1.5rem,720px)] max-w-[720px] flex-col gap-0 overflow-hidden border-slate-200 p-0 sm:rounded-xl [&>button]:hidden">
-        {/* Same gradient charter as CaseModal / CaseCreateModal */}
-        <div className="relative h-32 shrink-0 overflow-hidden bg-gradient-to-r from-[#64499D] via-[#4ECDC4] to-[#FF6B6B]">
-          <div className="absolute inset-0 opacity-10">
-            <div
-              className="absolute inset-0"
-              style={{
-                backgroundImage: `radial-gradient(circle at 2px 2px, white 1px, transparent 0)`,
-                backgroundSize: '32px 32px',
-              }}
-            />
-          </div>
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/10" />
+    <CreateFormDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      isBusy={isBusy}
+      formId={formId}
+      title="Convert Consultation to Case"
+      description={`New case type: ${titleSuffix}`}
+      icon={FileText}
+      closeLabel="Close"
+      onClose={() => onOpenChange(false)}
+      overlayClassName="z-[100]"
+      contentClassName="z-[110] md:h-[min(86vh,780px)] md:w-[min(90vw,820px)] md:max-w-[820px]"
+    >
+      <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-contain px-6 py-5 md:px-7">
+        <div className="space-y-6">
+          <CreateFormSection index="01" title="Copied from consultation — read only">
+            <div className="space-y-3 rounded-xl border border-slate-200 bg-slate-50/90 p-4 dark:border-zinc-800 dark:bg-zinc-900/40">
+              <ReadRow label="Title" value={inherited.title} />
+              <ReadRow label="Client" value={inherited.clientName} />
+              <ReadRow label="Assigned To" value={inherited.assignedName} />
+              <ReadRow label="Description" value={inherited.description} multiline />
+              <ReadRow label="Summary / Notes" value={inherited.summary} multiline />
+            </div>
+          </CreateFormSection>
+
+          <CreateFormSection index="02" title="Complete the new case information">
+            {targetType === 'LITIGATION' ? (
+              <LitigationConversionFields
+                values={lit}
+                onChange={mergeLit}
+                fieldErrors={fieldErrors}
+              />
+            ) : (
+              <AdministrativeConversionFields
+                values={adm}
+                onChange={mergeAdm}
+                fieldErrors={fieldErrors}
+              />
+            )}
+          </CreateFormSection>
+        </div>
+      </div>
+
+      <DialogFooter className={cn(CREATE_FOOTER_CLASS, 'justify-between')}>
+        <Button type="button" variant="outline" onClick={onBack} disabled={isBusy} className={CREATE_CANCEL_CLASS}>
+          ← Back
+        </Button>
+        <div className="flex items-center gap-2.5">
           <Button
             type="button"
-            variant="ghost"
-            size="icon"
-            className="absolute end-4 top-4 z-10 h-9 w-9 border border-white/30 bg-white/20 text-white backdrop-blur-sm hover:bg-white/30"
+            variant="outline"
             onClick={() => onOpenChange(false)}
-            disabled={loading}
-            aria-label="Close"
+            disabled={isBusy}
+            className={CREATE_CANCEL_CLASS}
           >
-            <X className="h-4 w-4" />
+            Cancel
           </Button>
-          <div className="relative px-8 pb-6 pt-8">
-            <div className="flex items-center gap-3">
-              <div className="rounded-xl border border-white/30 bg-white/20 p-3 backdrop-blur-sm">
-                <Scale className="h-6 w-6 text-white" />
-              </div>
-              <div>
-                <DialogTitle className="text-2xl font-bold text-white">Convert Consultation to Case</DialogTitle>
-                <DialogDescription className="mt-1 text-sm text-white/90">
-                  New case type: {titleSuffix}
-                </DialogDescription>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="min-h-0 flex-1 overflow-y-auto px-8 py-6">
-          <div className="space-y-6">
-            <div>
-              <h3 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400">
-                Copied from consultation — read only
-              </h3>
-              <div className="mt-2 space-y-3 rounded-lg border border-slate-100 bg-slate-50/90 p-4 dark:border-slate-800 dark:bg-slate-900/40">
-                <ReadRow label="Title" value={inherited.title} />
-                <ReadRow label="Client" value={inherited.clientName} />
-                <ReadRow label="Assigned To" value={inherited.assignedName} />
-                <ReadRow label="Description" value={inherited.description} multiline />
-                <ReadRow label="Summary / Notes" value={inherited.summary} multiline />
-              </div>
-            </div>
-
-            <div>
-              <h3 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400">
-                Complete the new case information
-              </h3>
-              <div className="mt-3">
-                {targetType === 'LITIGATION' ? (
-                  <LitigationConversionFields
-                    values={lit}
-                    onChange={mergeLit}
-                    fieldErrors={fieldErrors}
-                  />
-                ) : (
-                  <AdministrativeConversionFields
-                    values={adm}
-                    onChange={mergeAdm}
-                    fieldErrors={fieldErrors}
-                  />
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <DialogFooter className="shrink-0 flex-col gap-3 border-t border-slate-200 bg-slate-50/90 px-8 py-4 dark:border-slate-800 dark:bg-slate-900/50 sm:flex-row sm:items-start sm:justify-between">
-          <Button type="button" variant="ghost" className="w-full sm:w-auto" onClick={onBack}>
-            ← Back
-          </Button>
-          <div className="flex w-full flex-col items-stretch gap-2 sm:w-auto sm:items-end">
-            <div className="flex w-full gap-2 sm:w-auto">
-              <Button
-                type="button"
-                variant="ghost"
-                className="flex-1 sm:flex-none"
-                onClick={() => onOpenChange(false)}
-                disabled={loading}
-              >
-                Cancel
-              </Button>
-              <Button
-                type="button"
-                className="flex-1 bg-[#64499D] text-white shadow-md hover:bg-[#5a3f8a] hover:shadow-lg sm:flex-none"
-                onClick={handleCreate}
-                disabled={loading}
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Creating...
-                  </>
-                ) : (
-                  'Create Case'
-                )}
-              </Button>
-            </div>
-            {submitError && (
-              <p className="w-full text-center text-[13px] text-red-600 sm:text-right">{submitError}</p>
+          <Button type="button" className={CREATE_SUBMIT_CLASS} onClick={handleCreate} disabled={isBusy}>
+            {isBusy ? (
+              <>
+                <Loader2 className="animate-spin" />
+                Creating...
+              </>
+            ) : (
+              'Create Case'
             )}
-          </div>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+          </Button>
+        </div>
+      </DialogFooter>
+      {submitError ? (
+        <p className="px-6 pb-3 text-end text-[13px] text-red-600 md:px-7">{submitError}</p>
+      ) : null}
+    </CreateFormDialog>
   );
 }
 

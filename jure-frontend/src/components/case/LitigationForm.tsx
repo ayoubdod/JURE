@@ -14,14 +14,26 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import ServerSelect from '@/components/common/ServerSelect';
-import { FileText, Loader2, Users, Gavel, UserCheck, Calendar, AlignJustify, Plus, Trash2, ShieldAlert } from 'lucide-react';
+import { Loader2, Plus, Trash2, ShieldAlert } from 'lucide-react';
 import { useCaseForm } from '@/hooks/useCaseForm';
 import { useToast } from '@/hooks/use-toast';
 import { useAppTranslation } from '@/i18n';
 import ConflictCheckDialog from '@/components/dashboard/ConflictCheckDialog';
+import { cn } from '@/lib/utils';
+import {
+  CREATE_CANCEL_CLASS,
+  CREATE_FOOTER_CLASS,
+  CREATE_INPUT_CLASS,
+  CREATE_SELECT_CLASS,
+  CREATE_SERVER_SELECT_CLASS,
+  CREATE_SUBMIT_CLASS,
+  CREATE_TEXTAREA_CLASS,
+  CreateFormSection,
+} from '@/components/forms/CreateFormShell';
 
 export type LitigationFormValues = {
   reference: string;
@@ -58,20 +70,6 @@ export interface LitigationFormProps {
   onSubmitSuccess?: (caseItem: API.Case) => void;
   onBack?: () => void;
 }
-
-const FormSection: React.FC<{
-  title: string;
-  icon: React.ElementType;
-  children: React.ReactNode;
-}> = ({ title, icon: Icon, children }) => (
-  <div className="space-y-4">
-    <div className="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300 pb-2 border-b border-slate-200/90 dark:border-slate-800">
-      <Icon className="w-4 h-4 text-purple-600 dark:text-purple-400" />
-      <span>{title}</span>
-    </div>
-    {children}
-  </div>
-);
 
 const LitigationForm: React.FC<LitigationFormProps> = ({
   initialValues,
@@ -274,13 +272,19 @@ const LitigationForm: React.FC<LitigationFormProps> = ({
 
   return (
     <>
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form
+      onSubmit={handleSubmit}
+      className="flex min-h-0 flex-1 flex-col overflow-hidden"
+      noValidate
+    >
+      <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-contain px-6 py-5 md:px-7">
+      <div className="space-y-6">
       {form.formState.errors.case_specific_data && (
-        <div className="p-3 rounded border border-red-200 dark:border-red-900/50 bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-300 text-[13px]">
+        <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-[13px] text-red-700 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-300">
           {form.formState.errors.case_specific_data.message}
         </div>
       )}
-      <FormSection title={modal.sections.basicInfo} icon={FileText}>
+      <CreateFormSection index="01" title={modal.sections.basicInfo}>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-2">
             <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
@@ -289,7 +293,7 @@ const LitigationForm: React.FC<LitigationFormProps> = ({
             <Input
               {...form.register('reference')}
               placeholder={modal.placeholders.reference}
-              className="h-10"
+              className={CREATE_INPUT_CLASS}
             />
             {form.formState.errors.reference && (
               <p className="text-red-500 text-xs">{form.formState.errors.reference.message}</p>
@@ -302,7 +306,7 @@ const LitigationForm: React.FC<LitigationFormProps> = ({
             <Input
               {...form.register('title')}
               placeholder={modal.placeholders.caseName}
-              className="h-10"
+              className={CREATE_INPUT_CLASS}
             />
             {form.formState.errors.title && (
               <p className="text-red-500 text-xs">{form.formState.errors.title.message}</p>
@@ -318,7 +322,7 @@ const LitigationForm: React.FC<LitigationFormProps> = ({
                 form.setValue('litigation_type', v as LitigationFormValues['litigation_type'])
               }
             >
-              <SelectTrigger className="h-10">
+              <SelectTrigger className={CREATE_SELECT_CLASS}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -338,7 +342,7 @@ const LitigationForm: React.FC<LitigationFormProps> = ({
               value={form.watch('priority')}
               onValueChange={(v) => form.setValue('priority', v as LitigationFormValues['priority'])}
             >
-              <SelectTrigger className="h-10">
+              <SelectTrigger className={CREATE_SELECT_CLASS}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -351,9 +355,9 @@ const LitigationForm: React.FC<LitigationFormProps> = ({
             </Select>
           </div>
         </div>
-      </FormSection>
+      </CreateFormSection>
 
-      <FormSection title={modal.sections.parties} icon={Users}>
+      <CreateFormSection index="02" title={modal.sections.parties}>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="sm:col-span-2 space-y-2">
             <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
@@ -368,6 +372,7 @@ const LitigationForm: React.FC<LitigationFormProps> = ({
               }
               cleanable
               placeholder={modal.placeholders.client}
+              className={CREATE_SERVER_SELECT_CLASS}
             />
           </div>
           <div className="space-y-2">
@@ -402,12 +407,12 @@ const LitigationForm: React.FC<LitigationFormProps> = ({
               <Input
                 {...form.register('opposing_party_name')}
                 placeholder={modal.placeholders.name}
-                className="h-10 flex-1"
+                className={cn(CREATE_INPUT_CLASS, 'flex-1')}
               />
               <Button
                 type="button"
                 variant="outline"
-                className="h-10 shrink-0"
+                className={cn(CREATE_CANCEL_CLASS, 'shrink-0')}
                 title={t.dashboard.conflictCheck.runFromMatter}
                 onClick={() => {
                   const party = (form.getValues('opposing_party_name') || '').trim();
@@ -427,7 +432,7 @@ const LitigationForm: React.FC<LitigationFormProps> = ({
             <Input
               {...form.register('opposing_counsel')}
               placeholder={modal.placeholders.nameOrFirm}
-              className="h-10"
+              className={CREATE_INPUT_CLASS}
             />
           </div>
           <div className="sm:col-span-2 space-y-2">
@@ -441,7 +446,7 @@ const LitigationForm: React.FC<LitigationFormProps> = ({
                     value={val}
                     onChange={(e) => updateThirdParty(i, e.target.value)}
                     placeholder={modal.placeholders.thirdPartyName}
-                    className="h-10 flex-1"
+                    className={cn(CREATE_INPUT_CLASS, 'flex-1')}
                   />
                   <Button
                     type="button"
@@ -460,9 +465,9 @@ const LitigationForm: React.FC<LitigationFormProps> = ({
             </div>
           </div>
         </div>
-      </FormSection>
+      </CreateFormSection>
 
-      <FormSection title={modal.sections.courtJurisdiction} icon={Gavel}>
+      <CreateFormSection index="03" title={modal.sections.courtJurisdiction}>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-2">
             <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
@@ -471,7 +476,7 @@ const LitigationForm: React.FC<LitigationFormProps> = ({
             <Input
               {...form.register('court_name')}
               placeholder={modal.placeholders.court}
-              className="h-10"
+              className={CREATE_INPUT_CLASS}
             />
             {form.formState.errors.court_name && (
               <p className="text-red-500 text-xs">{form.formState.errors.court_name.message}</p>
@@ -484,7 +489,7 @@ const LitigationForm: React.FC<LitigationFormProps> = ({
             <Input
               {...form.register('jurisdiction')}
               placeholder={modal.placeholders.city}
-              className="h-10"
+              className={CREATE_INPUT_CLASS}
             />
           </div>
           <div className="space-y-2">
@@ -494,7 +499,7 @@ const LitigationForm: React.FC<LitigationFormProps> = ({
             <Input
               {...form.register('chamber_division')}
               placeholder={modal.placeholders.division}
-              className="h-10"
+              className={CREATE_INPUT_CLASS}
             />
           </div>
           <div className="space-y-2">
@@ -504,7 +509,7 @@ const LitigationForm: React.FC<LitigationFormProps> = ({
             <Input
               {...form.register('judge_name')}
               placeholder={modal.placeholders.judge}
-              className="h-10"
+              className={CREATE_INPUT_CLASS}
             />
           </div>
           <div className="sm:col-span-2 space-y-2">
@@ -514,13 +519,13 @@ const LitigationForm: React.FC<LitigationFormProps> = ({
             <Input
               {...form.register('court_case_number')}
               placeholder={modal.placeholders.number}
-              className="h-10"
+              className={CREATE_INPUT_CLASS}
             />
           </div>
         </div>
-      </FormSection>
+      </CreateFormSection>
 
-      <FormSection title={modal.sections.assignedTeam} icon={UserCheck}>
+      <CreateFormSection index="04" title={modal.sections.assignedTeam}>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-2">
             <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
@@ -532,6 +537,7 @@ const LitigationForm: React.FC<LitigationFormProps> = ({
               onChange={(v) => form.setValue('lead_attorney', v ? Number(v) : null)}
               labelKey="email"
               cleanable
+              className={CREATE_SERVER_SELECT_CLASS}
             />
           </div>
           <div className="space-y-2">
@@ -544,27 +550,27 @@ const LitigationForm: React.FC<LitigationFormProps> = ({
             </p>
           </div>
         </div>
-      </FormSection>
+      </CreateFormSection>
 
-      <FormSection title={modal.sections.timelineDeadlines} icon={Calendar}>
+      <CreateFormSection index="05" title={modal.sections.timelineDeadlines}>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-2">
             <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
               {modal.fields.filingDate}
             </label>
-            <Input type="date" {...form.register('filing_date')} className="h-10" />
+            <Input type="date" {...form.register('filing_date')} className={CREATE_INPUT_CLASS} />
           </div>
           <div className="space-y-2">
             <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
               {modal.fields.firstHearingDate}
             </label>
-            <Input type="date" {...form.register('first_hearing_date')} className="h-10" />
+            <Input type="date" {...form.register('first_hearing_date')} className={CREATE_INPUT_CLASS} />
           </div>
           <div className="space-y-2">
             <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
               {modal.fields.nextHearingDate}
             </label>
-            <Input type="date" {...form.register('next_hearing_date')} className="h-10" />
+            <Input type="date" {...form.register('next_hearing_date')} className={CREATE_INPUT_CLASS} />
           </div>
           <div className="space-y-2">
             <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
@@ -573,7 +579,7 @@ const LitigationForm: React.FC<LitigationFormProps> = ({
             <Input
               type="date"
               {...form.register('statute_of_limitations_date')}
-              className="h-10"
+              className={CREATE_INPUT_CLASS}
             />
           </div>
           <div className="sm:col-span-2 space-y-2">
@@ -587,13 +593,13 @@ const LitigationForm: React.FC<LitigationFormProps> = ({
                     value={item.label}
                     onChange={(e) => updateKeyDeadline(i, 'label', e.target.value)}
                     placeholder={modal.placeholders.label}
-                    className="h-10 flex-1"
+                    className={cn(CREATE_INPUT_CLASS, 'flex-1')}
                   />
                   <Input
                     type="date"
                     value={item.date}
                     onChange={(e) => updateKeyDeadline(i, 'date', e.target.value)}
-                    className="h-10 w-[140px]"
+                    className={cn(CREATE_INPUT_CLASS, 'w-[140px]')}
                   />
                   <Button
                     type="button"
@@ -612,9 +618,9 @@ const LitigationForm: React.FC<LitigationFormProps> = ({
             </div>
           </div>
         </div>
-      </FormSection>
+      </CreateFormSection>
 
-      <FormSection title={modal.sections.caseDetails} icon={AlignJustify}>
+      <CreateFormSection index="06" title={modal.sections.caseDetails}>
         <div className="space-y-4">
           <div className="space-y-2">
             <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
@@ -623,7 +629,7 @@ const LitigationForm: React.FC<LitigationFormProps> = ({
             <Textarea
               {...form.register('description')}
               placeholder={modal.placeholders.descriptionFacts}
-              className="min-h-[100px] resize-none"
+              className={CREATE_TEXTAREA_CLASS}
             />
             {form.formState.errors.description && (
               <p className="text-red-500 text-xs">{form.formState.errors.description.message}</p>
@@ -636,7 +642,7 @@ const LitigationForm: React.FC<LitigationFormProps> = ({
             <Textarea
               {...form.register('legal_arguments')}
               placeholder={modal.placeholders.legalArguments}
-              className="min-h-[80px] resize-none"
+              className={CREATE_TEXTAREA_CLASS}
             />
           </div>
           <div className="space-y-2">
@@ -647,7 +653,7 @@ const LitigationForm: React.FC<LitigationFormProps> = ({
               value={form.watch('status')}
               onValueChange={(v) => form.setValue('status', v as LitigationFormValues['status'])}
             >
-              <SelectTrigger className="h-10">
+              <SelectTrigger className={CREATE_SELECT_CLASS}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -660,23 +666,31 @@ const LitigationForm: React.FC<LitigationFormProps> = ({
             </Select>
           </div>
         </div>
-      </FormSection>
+      </CreateFormSection>
+      </div>
+      </div>
 
-      <div className="flex items-center justify-between pt-4 border-t border-slate-200/90 dark:border-slate-800 gap-3">
-        {onBack && (
-          <Button type="button" variant="outline" onClick={onBack} disabled={isLoading}>
+      <DialogFooter className={cn(CREATE_FOOTER_CLASS, onBack && 'justify-between')}>
+        {onBack ? (
+          <Button type="button" variant="outline" onClick={onBack} disabled={isLoading} className={CREATE_CANCEL_CLASS}>
             {modal.back}
           </Button>
+        ) : (
+          <span />
         )}
-        {!onBack && <div />}
-        <Button type="submit" disabled={isLoading} className="bg-purple-600 hover:bg-purple-700">
-          {isLoading
-            ? modal.submitting
-            : mode === 'edit'
-              ? modal.updateCase
-              : modal.createCase}
+        <Button type="submit" disabled={isLoading} className={CREATE_SUBMIT_CLASS}>
+          {isLoading ? (
+            <>
+              <Loader2 className="animate-spin" />
+              {modal.submitting}
+            </>
+          ) : mode === 'edit' ? (
+            modal.updateCase
+          ) : (
+            modal.createCase
+          )}
         </Button>
-      </div>
+      </DialogFooter>
     </form>
     <ConflictCheckDialog
       open={conflictOpen}

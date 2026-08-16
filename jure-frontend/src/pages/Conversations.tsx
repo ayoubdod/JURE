@@ -1,14 +1,13 @@
 'use client';
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useSearchParams } from 'react-router';
+import { useNavigate, useSearchParams } from 'react-router';
 import ConversationList from '@/components/chat/ConversationList';
 import ChatWindow, { type ChatWindowHandle } from '@/components/chat/ChatWindow';
 import { LinkCaseModal } from '@/components/chat/LinkCaseModal';
 import ContextPanel from '@/components/chat/ContextPanel';
 import NewChatModal, { NewChatModalRef } from '@/components/chat/NewChatModal';
 import Composer from '@/components/chat/Composer';
-import CaseDetailDrawer, { CaseDetailDrawerRef } from '@/components/case/CaseDetailDrawer';
 import {
   TaskDetailPanel,
   AppointmentDetailPanel,
@@ -39,6 +38,7 @@ import useUserStore from '@/stores/userStore';
 import { useWebRtcCall } from '@/hooks/useWebRtcCall';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import { navigateToCaseById } from '@/lib/caseRoutes';
 import { useAppTranslation } from '@/i18n';
 import { useShortcutAction } from '@/context/ShortcutsContext';
 import {
@@ -49,6 +49,7 @@ import type { CallRemoteUser } from '@/stores/callSessionStore';
 import { useConversationCallPresenceStore } from '@/stores/conversationCallPresenceStore';
 const ConversationsPage: React.FC = () => {
   const { t, tf } = useAppTranslation();
+  const navigate = useNavigate();
   const toastMsgs = t.conversations.toasts;
   const [conversations, setConversations] = useState<API.Conversation[]>([]);
   const [activeId, setActiveId] = useState<number | undefined>(undefined);
@@ -128,7 +129,6 @@ const ConversationsPage: React.FC = () => {
     removeOnlyId?: number;
   } | null>(null);
 
-  const caseDetailDrawerRef = useRef<CaseDetailDrawerRef>(null);
   const taskUpdateRef = useRef<TaskUpdateModalRef>(null);
   const appointmentUpdateRef = useRef<AppointmentUpdateModalRef>(null);
   const [panelTaskId, setPanelTaskId] = useState<number | null>(null);
@@ -656,8 +656,8 @@ const ConversationsPage: React.FC = () => {
   }, [remoteUserForActiveDirect?.id]);
 
   const openCaseById = useCallback((caseId: number) => {
-    caseDetailDrawerRef.current?.open({ id: caseId } as API.Case);
-  }, []);
+    void navigateToCaseById(navigate, caseId);
+  }, [navigate]);
 
   const handleSendShared = useCallback(
     async (args: {
@@ -911,7 +911,6 @@ const ConversationsPage: React.FC = () => {
         />
       )}
 
-      <CaseDetailDrawer ref={caseDetailDrawerRef} />
       <TaskDetailPanel
         taskId={panelTaskId}
         open={panelTaskId != null}
