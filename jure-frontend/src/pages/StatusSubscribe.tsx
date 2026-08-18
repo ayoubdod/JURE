@@ -3,10 +3,10 @@ import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CheckCircle2, Mail, Bell, Database, Network, Webhook } from "lucide-react";
-import { devLog } from "@/utils/devLog";
 import MarketingShell from "@/components/landing/MarketingShell";
 import Reveal from "@/components/landing/Reveal";
 import { RouteSeo } from "@/marketing/Seo";
+import { submitLandingInquiry } from "@/services/marketing/api";
 
 type Lang = "fr" | "en" | "ar";
 
@@ -30,7 +30,9 @@ const STRINGS: Record<Lang, any> = {
       db: "Database",
       net: "Network",
       submit: "Subscribe",
-      ok: "You’re subscribed! Check your inbox to confirm.",
+      sending: "Sending…",
+      ok: "You’re subscribed! We’ll email you from contact@jure.ma.",
+      sendFailed: "We could not send your request. Please email contact@jure.ma.",
     },
     footer: { privacy: "Privacy", terms: "Terms", status: "Status", rights: "All rights reserved." },
   },
@@ -53,7 +55,9 @@ const STRINGS: Record<Lang, any> = {
       db: "Base de Données",
       net: "Réseau",
       submit: "S’abonner",
-      ok: "Inscription prise en compte ! Vérifiez votre boîte mail.",
+      sending: "Envoi…",
+      ok: "Inscription prise en compte. Nous vous écrirons depuis contact@jure.ma.",
+      sendFailed: "Impossible d’envoyer la demande. Écrivez-nous à contact@jure.ma.",
     },
     footer: { privacy: "Confidentialité", terms: "Conditions", status: "Statut", rights: "Tous droits réservés." },
   },
@@ -76,7 +80,9 @@ const STRINGS: Record<Lang, any> = {
       db: "قاعدة البيانات",
       net: "الشبكة",
       submit: "اشتراك",
-      ok: "تم الاشتراك! تحقق من بريدك لتأكيده.",
+      sending: "جارٍ الإرسال…",
+      ok: "تم الاشتراك. سنتواصل معك من contact@jure.ma.",
+      sendFailed: "تعذر إرسال الطلب. راسلونا على contact@jure.ma.",
     },
     footer: { privacy: "الخصوصية", terms: "الشروط", status: "الحالة", rights: "جميع الحقوق محفوظة." },
   },
@@ -105,17 +111,34 @@ const StatusSubscribe: React.FC = () => {
   const [email, setEmail] = useState("");
   const [freq, setFreq] = useState<"instant" | "daily" | "weekly">("instant");
   const [components, setComponents] = useState({ api: true, app: true, db: true, net: true });
+  const [sending, setSending] = useState(false);
 
   const toggle = (k: keyof typeof components) =>
     setComponents((c) => ({ ...c, [k]: !c[k] }));
 
-  const submit = (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) return;
-    // Hook up to your backend/webhook here
-    devLog("status-subscribe", { email, freq, components });
-    window.alert(t.form.ok);
-    setEmail("");
+    const selected = Object.entries(components)
+      .filter(([, on]) => on)
+      .map(([key]) => key)
+      .join(", ");
+    setSending(true);
+    try {
+      await submitLandingInquiry({
+        name: "Status subscriber",
+        email,
+        subject: "Status alerts",
+        source: "status-subscribe",
+        message: `Please subscribe this address to JURE status alerts.\nFrequency: ${freq}.\nComponents: ${selected || "none"}.`,
+      });
+      window.alert(t.form.ok);
+      setEmail("");
+    } catch {
+      window.alert(t.form.sendFailed);
+    } finally {
+      setSending(false);
+    }
   };
 
   return (
@@ -152,8 +175,8 @@ const StatusSubscribe: React.FC = () => {
                 <label className="text-sm">{t.form.email}</label>
                 <div className="mt-1 flex gap-2 flex-col sm:flex-row">
                   <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="min-w-0" />
-                  <Button type="submit" className="w-full sm:w-auto px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg bg-gradient-to-r from-[#64499D] to-[#4D3680]">
-                    <Mail className="w-4 h-4 me-2" /> {t.form.submit}
+                  <Button type="submit" disabled={sending} className="w-full sm:w-auto px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg bg-gradient-to-r from-[#64499D] to-[#4D3680]">
+                    <Mail className="w-4 h-4 me-2" /> {sending ? t.form.sending : t.form.submit}
                   </Button>
                 </div>
               </div>

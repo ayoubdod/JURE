@@ -1,29 +1,66 @@
-from django.shortcuts import render
-from rest_framework import viewsets,mixins
-from rest_framework import permissions
+import logging
+
+from rest_framework import mixins, permissions, status, viewsets
 from rest_framework.permissions import AllowAny
-from .models import Contact, Activity, Function, Tag
-from .serializers import ContactSerializer, ActivitySerializer, FunctionSerializer, TagSerializer
+from rest_framework.response import Response
+from rest_framework.throttling import AnonRateThrottle
 
-# Create your views here.
+from .mail import contact_inbox, send_landing_inquiry_email
+from .models import Activity, Contact, Function, Tag
+from .serializers import (
+    ActivitySerializer,
+    ContactSerializer,
+    FunctionSerializer,
+    TagSerializer,
+)
 
-class ContactViewSet(mixins.CreateModelMixin,viewsets.GenericViewSet):
+logger = logging.getLogger(__name__)
+
+
+class LandingInquiryThrottle(AnonRateThrottle):
+    rate = "8/hour"
+
+
+class ContactViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
     queryset = Contact.objects.all()
     serializer_class = ContactSerializer
     permission_classes = [AllowAny]
+    throttle_classes = [LandingInquiryThrottle]
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        instance = serializer.save()
+        try:
+            send_landing_inquiry_email(instance)
+        except Exception:
+            logger.exception("Failed to email landing inquiry to %s", contact_inbox())
+            return Response(
+                {
+                    "detail": (
+                        "We could not deliver your message. "
+                        f"Please email {contact_inbox()} directly."
+                    )
+                },
+                status=status.HTTP_502_BAD_GATEWAY,
+            )
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
 
-class ActivityViewSet(mixins.ListModelMixin,viewsets.GenericViewSet):
+class ActivityViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
     queryset = Activity.objects.all()
     serializer_class = ActivitySerializer
     permission_classes = [AllowAny]
 
-class FunctionViewSet(mixins.ListModelMixin,viewsets.GenericViewSet):
+
+class FunctionViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
     queryset = Function.objects.all()
     serializer_class = FunctionSerializer
     permission_classes = [AllowAny]
 
-class TagViewSet(mixins.ListModelMixin,mixins.CreateModelMixin,viewsets.GenericViewSet):
+
+class TagViewSet(mixins.ListModelMixin, mixins.CreateModelMixin, viewsets.GenericViewSet):
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]

@@ -4,7 +4,20 @@ from .models import Contact, Activity, Function, Tag
 class ContactSerializer(serializers.ModelSerializer):
     class Meta:
         model = Contact
-        fields = ['name', 'email', 'phone', 'message']
+        fields = ["name", "email", "phone", "company", "subject", "source", "message"]
+        extra_kwargs = {
+            "phone": {"required": False, "allow_blank": True, "allow_null": True},
+            "company": {"required": False, "allow_blank": True},
+            "subject": {"required": False, "allow_blank": True},
+            "source": {"required": False, "allow_blank": True},
+        }
+
+    def validate_phone(self, value):
+        return value or None
+
+    def validate_source(self, value):
+        cleaned = (value or "").strip()[:64]
+        return cleaned or "contact"
 
 
 class ActivitySerializer(serializers.ModelSerializer):

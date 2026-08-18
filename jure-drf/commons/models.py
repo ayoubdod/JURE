@@ -11,8 +11,14 @@ class Contact(TimeStampedModel):
 
     name = models.CharField(max_length=255, validators=[MinLengthValidator(2)])
     email = models.EmailField()
-    phone = PhoneNumberField()
+    phone = PhoneNumberField(blank=True, null=True)
+    company = models.CharField(max_length=255, blank=True, default="")
+    subject = models.CharField(max_length=255, blank=True, default="")
+    source = models.CharField(max_length=64, blank=True, default="contact")
     message = models.TextField(validators=[MinLengthValidator(10)])
+
+    def __str__(self):
+        return f"{self.name} <{self.email}>"
 
 
 class Activity(TimeStampedModel):
