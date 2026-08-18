@@ -104,7 +104,7 @@ const STRINGS: Record<Lang, any> = {
       contact: {
         title: "Contact",
         text:
-          "questions@jure.example",
+          "contact@jure.ma",
       },
     },
     footer: { privacy: "Confidentialité", terms: "Conditions", status: "Statut", rights: "Tous droits réservés." },
@@ -203,7 +203,7 @@ const STRINGS: Record<Lang, any> = {
       contact: {
         title: "Contact",
         text:
-          "questions@jure.example",
+          "contact@jure.ma",
       },
     },
     footer: { privacy: "Privacy", terms: "Terms", status: "Status", rights: "All rights reserved." },
@@ -302,7 +302,7 @@ const STRINGS: Record<Lang, any> = {
       contact: {
         title: "التواصل",
         text:
-          "questions@jure.example",
+          "contact@jure.ma",
       },
     },
     footer: { privacy: "الخصوصية", terms: "الشروط", status: "الحالة", rights: "جميع الحقوق محفوظة." },

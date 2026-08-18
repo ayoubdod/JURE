@@ -80,7 +80,7 @@ const STRINGS: Record<Lang, any> = {
       contact: {
         title: "Contact DPO",
         text:
-          "Pour toute question ou demande relative à vos données, écrivez-nous : dpo@jure.example",
+          "Pour toute question ou demande relative à vos données, écrivez-nous : contact@jure.ma",
       },
     },
     footer: { privacy: "Confidentialité", terms: "Conditions", status: "Statut", rights: "Tous droits réservés." },
@@ -155,7 +155,7 @@ const STRINGS: Record<Lang, any> = {
       contact: {
         title: "DPO contact",
         text:
-          "For questions or requests regarding your data, email us at: dpo@jure.example",
+          "For questions or requests regarding your data, email us at: contact@jure.ma",
       },
     },
     footer: { privacy: "Privacy", terms: "Terms", status: "Status", rights: "All rights reserved." },
@@ -230,7 +230,7 @@ const STRINGS: Record<Lang, any> = {
       contact: {
         title: "جهة الاتصال",
         text:
-          "للاستفسارات أو الطلبات المتعلقة ببياناتك: dpo@jure.example",
+          "للاستفسارات أو الطلبات المتعلقة ببياناتك: contact@jure.ma",
       },
     },
     footer: { privacy: "الخصوصية", terms: "الشروط", status: "الحالة", rights: "جميع الحقوق محفوظة." },

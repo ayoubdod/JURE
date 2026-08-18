@@ -8,7 +8,8 @@ import { Mail, Send, Phone, MapPin, ArrowRight } from "lucide-react";
 import MarketingShell from "@/components/landing/MarketingShell";
 import Reveal from "@/components/landing/Reveal";
 import { RouteSeo } from "@/marketing/Seo";
-import { devLog } from "@/utils/devLog";
+import { CONTACT_INBOX, submitLandingInquiry } from "@/services/marketing/api";
+import { track, MarketingEvents } from "@/lib/analytics";
 
 type Lang = "fr" | "en" | "ar";
 
@@ -34,6 +35,8 @@ const STRINGS: Record<Lang, any> = {
       consent: "I agree to be contacted about JURE.",
       required: "Please fill all required fields.",
       sent: "Thank you! Your message has been sent.",
+      sendFailed: "We could not send your message. Please email contact@jure.ma.",
+      sending: "Sending…",
     },
     info: {
       title: "Other ways to reach us",
@@ -64,6 +67,8 @@ const STRINGS: Record<Lang, any> = {
       consent: "J’accepte d’être recontacté au sujet de JURE.",
       required: "Veuillez compléter tous les champs requis.",
       sent: "Merci ! Votre message a été envoyé.",
+      sendFailed: "Impossible d’envoyer le message. Écrivez-nous à contact@jure.ma.",
+      sending: "Envoi…",
     },
     info: {
       title: "Autres moyens",
@@ -94,6 +99,8 @@ const STRINGS: Record<Lang, any> = {
       consent: "أوافق على التواصل معي بشأن JURE.",
       required: "يرجى تعبئة جميع الحقول المطلوبة.",
       sent: "شكرًا! تم إرسال رسالتك.",
+      sendFailed: "تعذر إرسال الرسالة. راسلونا على contact@jure.ma.",
+      sending: "جارٍ الإرسال…",
     },
     info: {
       title: "طرق أخرى للتواصل",
@@ -134,6 +141,7 @@ const Contact: React.FC = () => {
     message: "",
     consent: false,
   });
+  const [sending, setSending] = useState(false);
   const isRtl = t.dir === "rtl";
 
   const onChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -141,16 +149,30 @@ const Contact: React.FC = () => {
     setForm((f) => ({ ...f, [name]: type === "checkbox" ? checked : value }));
   };
 
-  const submit = (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.name || !form.email || !form.message) {
+    if (!form.name || !form.email || !form.message || form.message.trim().length < 10) {
       window.alert(t.form.required);
       return;
     }
-    // hook up to your API here
-    devLog("Contact submit:", form);
-    window.alert(t.form.sent);
-    setForm({ name: "", email: "", company: "", subject: "", message: "", consent: false });
+    setSending(true);
+    try {
+      await submitLandingInquiry({
+        name: form.name,
+        email: form.email,
+        company: form.company,
+        subject: form.subject,
+        message: form.message,
+        source: "contact",
+      });
+      track(MarketingEvents.ContactCta, { source: "contact-form", lang });
+      window.alert(t.form.sent);
+      setForm({ name: "", email: "", company: "", subject: "", message: "", consent: false });
+    } catch {
+      window.alert(t.form.sendFailed);
+    } finally {
+      setSending(false);
+    }
   };
 
   return (
@@ -177,7 +199,7 @@ const Contact: React.FC = () => {
           <p className="mt-4 text-base sm:text-lg text-slate-600 dark:text-slate-300 break-words">{t.hero.subtitle}</p>
           <div className="mt-6 flex justify-center gap-3">
             <a
-              href="mailto:contact@jure.ma"
+              href={`mailto:${CONTACT_INBOX}`}
               className="inline-flex items-center gap-2 text-sm underline underline-offset-4 hover:text-[#64499D] dark:hover:text-[#8B6FD1] transition-colors"
             >
               <Mail className="w-4 h-4" /> {t.hero.alt}
@@ -259,9 +281,10 @@ const Contact: React.FC = () => {
                 <div className="md:col-span-2">
                   <Button
                     type="submit"
+                    disabled={sending}
                     className="w-full sm:w-auto px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg bg-gradient-to-r from-[#64499D] to-[#4D3680] hover:from-[#4D3680] hover:to-[#3E2D71] text-white shadow-lg hover:shadow-[0_0_28px_-6px_rgba(100,73,157,0.55)]"
                   >
-                    <Send className={`w-4 h-4 ${isRtl ? "ms-2" : "me-2"}`} /> {t.hero.cta}
+                    <Send className={`w-4 h-4 ${isRtl ? "ms-2" : "me-2"}`} /> {sending ? t.form.sending : t.hero.cta}
                   </Button>
                 </div>
               </form>
@@ -279,7 +302,7 @@ const Contact: React.FC = () => {
                     <Mail className="w-5 h-5 text-[#64499D] dark:text-[#8B6FD1]" />
                   </div>
                   <a
-                    href="mailto:contact@jure.ma"
+                    href={`mailto:${CONTACT_INBOX}`}
                     className="underline underline-offset-4 hover:text-[#64499D] dark:hover:text-[#8B6FD1] transition-colors"
                   >
                     {t.info.email}

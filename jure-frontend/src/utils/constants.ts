@@ -173,7 +173,7 @@ export class MessageAttachmentKind {
 
 export const COMPANY_NAME = import.meta.env.NEXT_PUBLIC_COMPANY_NAME || "Bativalley";
 export const COMPANY_PHONE = import.meta.env.NEXT_PUBLIC_COMPANY_PHONE || "+212 661 000 000";
-export const COMPANY_EMAIL = import.meta.env.NEXT_PUBLIC_COMPANY_EMAIL || "contact@casavalley.ma";
+export const COMPANY_EMAIL = import.meta.env.NEXT_PUBLIC_COMPANY_EMAIL || "contact@jure.ma";
 export const COMPANY_ADDRESS = import.meta.env.NEXT_PUBLIC_COMPANY_ADDRESS || "Casablanca, Maroc Lotissement Zoubeir, Avenue Mostafa salmane N° 235 E El Oulfa";
 
 /** Same host as Django; use for media URLs and absolute file paths (not under /api/v1). */

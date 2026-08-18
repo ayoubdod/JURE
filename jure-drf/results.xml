@@ -1,31 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <testsuites>
-	<testsuite name="finance.tests.test_phase1.FinancePhase1Tests-20260812003921" tests="14" file="finance/tests/test_phase1.py" time="123.247" timestamp="2026-08-12T00:41:25" failures="0" errors="0" skipped="0">
-		<testcase classname="finance.tests.test_phase1.FinancePhase1Tests" name="test_cabinet_isolation_and_unauthorized" time="13.133" timestamp="2026-08-12T00:39:35" file="finance\tests\test_phase1.py" line="363"/>
-		<testcase classname="finance.tests.test_phase1.FinancePhase1Tests" name="test_cancel_payment_recalculates" time="10.354" timestamp="2026-08-12T00:39:45" file="finance\tests\test_phase1.py" line="420"/>
-		<testcase classname="finance.tests.test_phase1.FinancePhase1Tests" name="test_create_expense" time="9.541" timestamp="2026-08-12T00:39:54" file="finance\tests\test_phase1.py" line="111"/>
-		<testcase classname="finance.tests.test_phase1.FinancePhase1Tests" name="test_create_fee" time="9.601" timestamp="2026-08-12T00:40:04" file="finance\tests\test_phase1.py" line="94"/>
-		<testcase classname="finance.tests.test_phase1.FinancePhase1Tests" name="test_create_invoice_and_items" time="6.996" timestamp="2026-08-12T00:40:11" file="finance\tests\test_phase1.py" line="130"/>
-		<testcase classname="finance.tests.test_phase1.FinancePhase1Tests" name="test_duplicate_invoice_numbers_per_cabinet_prevented" time="3.825" timestamp="2026-08-12T00:40:15" file="finance\tests\test_phase1.py" line="453"/>
-		<testcase classname="finance.tests.test_phase1.FinancePhase1Tests" name="test_invoice_item_and_total_calculation" time="5.606" timestamp="2026-08-12T00:40:21" file="finance\tests\test_phase1.py" line="166"/>
-		<testcase classname="finance.tests.test_phase1.FinancePhase1Tests" name="test_matter_finance_and_dashboard" time="8.684" timestamp="2026-08-12T00:40:29" file="finance\tests\test_phase1.py" line="285"/>
-		<testcase classname="finance.tests.test_phase1.FinancePhase1Tests" name="test_negative_and_zero_amount_rejected" time="9.684" timestamp="2026-08-12T00:40:39" file="finance\tests\test_phase1.py" line="402"/>
-		<testcase classname="finance.tests.test_phase1.FinancePhase1Tests" name="test_overdue_status" time="8.348" timestamp="2026-08-12T00:40:47" file="finance\tests\test_phase1.py" line="249"/>
-		<testcase classname="finance.tests.test_phase1.FinancePhase1Tests" name="test_partial_and_full_payments" time="9.148" timestamp="2026-08-12T00:40:56" file="finance\tests\test_phase1.py" line="179"/>
-		<testcase classname="finance.tests.test_phase1.FinancePhase1Tests" name="test_pdf_generation" time="9.086" timestamp="2026-08-12T00:41:05" file="finance\tests\test_phase1.py" line="351"/>
-		<testcase classname="finance.tests.test_phase1.FinancePhase1Tests" name="test_receivables_and_empty_state" time="10.379" timestamp="2026-08-12T00:41:16" file="finance\tests\test_phase1.py" line="338"/>
-		<testcase classname="finance.tests.test_phase1.FinancePhase1Tests" name="test_tax_advance_auto_created_from_settings" time="8.863" timestamp="2026-08-12T00:41:25" file="finance\tests\test_phase1.py" line="266"/>
-	</testsuite>
-	<testsuite name="finance.tests.test_phase15_e2e.HammoudE2EScenarioTests-20260812003921" tests="10" file="finance/tests/test_phase15_e2e.py" time="54.290" timestamp="2026-08-12T00:42:19" failures="0" errors="0" skipped="0">
-		<testcase classname="finance.tests.test_phase15_e2e.HammoudE2EScenarioTests" name="test_dashboard_consistency_and_list_contract" time="5.097" timestamp="2026-08-12T00:41:30" file="finance\tests\test_phase15_e2e.py" line="314"/>
-		<testcase classname="finance.tests.test_phase15_e2e.HammoudE2EScenarioTests" name="test_decimal_money_safety" time="4.574" timestamp="2026-08-12T00:41:34" file="finance\tests\test_phase15_e2e.py" line="511"/>
-		<testcase classname="finance.tests.test_phase15_e2e.HammoudE2EScenarioTests" name="test_expenses_and_matter_net_position" time="5.362" timestamp="2026-08-12T00:41:40" file="finance\tests\test_phase15_e2e.py" line="257"/>
-		<testcase classname="finance.tests.test_phase15_e2e.HammoudE2EScenarioTests" name="test_full_lifecycle_partial_payments_and_settlement" time="4.842" timestamp="2026-08-12T00:41:45" file="finance\tests\test_phase15_e2e.py" line="138"/>
-		<testcase classname="finance.tests.test_phase15_e2e.HammoudE2EScenarioTests" name="test_invoice_status_machine" time="4.844" timestamp="2026-08-12T00:41:49" file="finance\tests\test_phase15_e2e.py" line="365"/>
-		<testcase classname="finance.tests.test_phase15_e2e.HammoudE2EScenarioTests" name="test_payment_cancellation_persists" time="3.088" timestamp="2026-08-12T00:41:53" file="finance\tests\test_phase15_e2e.py" line="228"/>
-		<testcase classname="finance.tests.test_phase15_e2e.HammoudE2EScenarioTests" name="test_pdf_uses_db_data" time="2.681" timestamp="2026-08-12T00:41:55" file="finance\tests\test_phase15_e2e.py" line="430"/>
-		<testcase classname="finance.tests.test_phase15_e2e.HammoudE2EScenarioTests" name="test_receivables_aggregation" time="3.082" timestamp="2026-08-12T00:41:58" file="finance\tests\test_phase15_e2e.py" line="284"/>
-		<testcase classname="finance.tests.test_phase15_e2e.HammoudE2EScenarioTests" name="test_tax_advance_from_firm_settings" time="4.623" timestamp="2026-08-12T00:42:03" file="finance\tests\test_phase15_e2e.py" line="416"/>
-		<testcase classname="finance.tests.test_phase15_e2e.HammoudE2EScenarioTests" name="test_tenant_isolation_and_roles" time="16.095" timestamp="2026-08-12T00:42:19" file="finance\tests\test_phase15_e2e.py" line="465"/>
+	<testsuite name="commons.tests.ContactViewSetTests-20260818160201" tests="8" file="commons/tests.py" time="0.870" timestamp="2026-08-18T16:02:02" failures="0" errors="0" skipped="0">
+		<testcase classname="commons.tests.ContactViewSetTests" name="test_create_contact_invalid_email" time="0.112" timestamp="2026-08-18T16:02:01" file="commons\tests.py" line="71"/>
+		<testcase classname="commons.tests.ContactViewSetTests" name="test_create_contact_invalid_message" time="0.194" timestamp="2026-08-18T16:02:01" file="commons\tests.py" line="85"/>
+		<testcase classname="commons.tests.ContactViewSetTests" name="test_create_contact_invalid_name" time="0.072" timestamp="2026-08-18T16:02:01" file="commons\tests.py" line="64"/>
+		<testcase classname="commons.tests.ContactViewSetTests" name="test_create_contact_invalid_phone" time="0.088" timestamp="2026-08-18T16:02:01" file="commons\tests.py" line="78"/>
+		<testcase classname="commons.tests.ContactViewSetTests" name="test_create_contact_missing_required_fields" time="0.092" timestamp="2026-08-18T16:02:02" file="commons\tests.py" line="92"/>
+		<testcase classname="commons.tests.ContactViewSetTests" name="test_create_contact_success" time="0.108" timestamp="2026-08-18T16:02:02" file="commons\tests.py" line="32"/>
+		<testcase classname="commons.tests.ContactViewSetTests" name="test_create_contact_without_phone" time="0.089" timestamp="2026-08-18T16:02:02" file="commons\tests.py" line="42"/>
+		<testcase classname="commons.tests.ContactViewSetTests" name="test_emails_inbox" time="0.116" timestamp="2026-08-18T16:02:02" file="commons\tests.py" line="54"/>
 	</testsuite>
 </testsuites>

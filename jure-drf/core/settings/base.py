@@ -368,6 +368,8 @@ else:
             default=EMAIL_HOST_USER or "webmaster@localhost",
         )
 
+CONTACT_INBOX = env.str("CONTACT_INBOX", default="contact@jure.ma")
+
 # --------------------------------------------------------------------------------------
 # Redis / Channels
 # --------------------------------------------------------------------------------------

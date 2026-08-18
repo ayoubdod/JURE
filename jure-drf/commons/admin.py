@@ -4,7 +4,13 @@ from unfold.admin import ModelAdmin
 
 from .models import Activity, Contact
 
-admin.site.register(Contact, ModelAdmin)
+
+@admin.register(Contact)
+class ContactAdmin(ModelAdmin):
+    list_display = ("name", "email", "source", "subject", "created")
+    list_filter = ("source", "created")
+    search_fields = ("name", "email", "company", "subject", "message")
+    readonly_fields = ("created", "modified")
 
 
 @admin.register(Activity)
