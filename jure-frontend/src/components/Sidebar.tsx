@@ -805,7 +805,7 @@ const Sidebar = ({ activeTab, setActiveTab, expanded, onExpandedChange }: Sideba
                   />
                 ) : (
                   <img
-                    src="/favicon.ico"
+                    src="/favicon.png"
                     alt="JURE"
                     className="h-6 w-6 object-contain"
                   />
@@ -820,11 +820,13 @@ const Sidebar = ({ activeTab, setActiveTab, expanded, onExpandedChange }: Sideba
               </nav>
 
               <div className="mt-1.5 shrink-0 space-y-1.5 border-t border-border px-1.5 pt-2">
-                {railExpanded && (
-                  <div className="flex h-8 items-center justify-center">
-                    <LangSwitcher />
-                  </div>
-                )}
+                <div className="flex h-8 items-center justify-center">
+                  <LangSwitcher
+                    menuSide={flyoutSide}
+                    menuAlign={railExpanded ? 'center' : 'end'}
+                    tooltip={railExpanded ? undefined : t.settings.nav.language}
+                  />
+                </div>
 
                 {renderDesktopOffice()}
 

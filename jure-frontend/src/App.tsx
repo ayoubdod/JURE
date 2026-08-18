@@ -54,6 +54,7 @@ const DashboardLayout = lazy(() => import("./layouts/DashboardLayout"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const TeamMembers = lazy(() => import("./pages/TeamMembers"));
 const Profile = lazy(() => import("./pages/Profile"));
+const Account = lazy(() => import("./pages/Account"));
 const Cases = lazy(() => import("./pages/Cases"));
 const ConsultationsWorkspace = lazy(() => import("./pages/cases/ConsultationsWorkspace"));
 const LitigationWorkspace = lazy(() => import("./pages/cases/LitigationWorkspace"));
@@ -249,7 +250,7 @@ const router = createBrowserRouter([
       },
       {
         path: "account",
-        element: app(<PlaceholderPage titleKey="account" />),
+        element: app(<Account />),
       },
       {
         path: "support",

@@ -9,25 +9,56 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
 } from '@/components/ui/dropdown-menu';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Languages } from '@/utils/constants';
 
-const LangSwitcher: React.FC = () => {
+type MenuSide = 'top' | 'right' | 'bottom' | 'left';
+
+type LangSwitcherProps = {
+  menuSide?: MenuSide;
+  menuAlign?: 'start' | 'center' | 'end';
+  tooltip?: string;
+};
+
+const LangSwitcher: React.FC<LangSwitcherProps> = ({
+  menuSide,
+  menuAlign = 'end',
+  tooltip,
+}) => {
   const { lang, setLang } = useLanguage();
+
+  const trigger = (
+    <Button
+      type="button"
+      variant="ghost"
+      size="icon"
+      className="h-8 w-8 shrink-0 rounded-full border border-border bg-background hover:bg-muted"
+      aria-label={tooltip || LANG_NATIVE_LABELS[lang]}
+    >
+      <Globe className="h-4 w-4" />
+    </Button>
+  );
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          className="h-8 w-8 rounded-full border border-border bg-background hover:bg-muted"
-          aria-label={LANG_NATIVE_LABELS[lang]}
-        >
-          <Globe className="h-4 w-4" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="min-w-[9rem]">
+      {tooltip ? (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <DropdownMenuTrigger asChild>{trigger}</DropdownMenuTrigger>
+          </TooltipTrigger>
+          <TooltipContent side={menuSide ?? 'right'} sideOffset={10}>
+            {tooltip}
+          </TooltipContent>
+        </Tooltip>
+      ) : (
+        <DropdownMenuTrigger asChild>{trigger}</DropdownMenuTrigger>
+      )}
+      <DropdownMenuContent
+        side={menuSide}
+        align={menuAlign}
+        sideOffset={10}
+        className="min-w-[9rem]"
+      >
         {Languages.options.map((option) => {
           const code = option.value as Lang;
           const isActive = code === lang;
