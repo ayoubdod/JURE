@@ -9,9 +9,9 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import AddClientDialog from '../components/AddClientDialog';
 import useUserStore from '@/stores/userStore';
-import CaseDetailDrawer, { CaseDetailDrawerRef } from '@/components/case/CaseDetailDrawer';
 import TaskUpdateModal, { TaskUpdateModalRef } from '@/components/task/TaskUpdateModal';
 import { TaskDetailPanel } from '@/components/calendar/EmbeddedDetailPanels';
+import { navigateToCaseById } from '@/lib/caseRoutes';
 import { useNavigate } from 'react-router';
 import { apiUpdateTask } from '@/services/task/api';
 import { TaskStatus } from '@/utils/constants';
@@ -132,7 +132,6 @@ const Dashboard = () => {
     { title: d.stats.tasksDue, value: '—', change: null as string | null, changeState: 'unavailable' as const, icon: CheckSquare, iconBg: 'bg-amber-500', changeTone: 'text-muted-foreground' },
   ];
 
-  const caseDetailDrawerRef = useRef<CaseDetailDrawerRef>(null);
   const taskUpdateModalRef = useRef<TaskUpdateModalRef>(null);
 
   const navigate = useNavigate();
@@ -312,7 +311,7 @@ const Dashboard = () => {
 
   const handleViewCase = (caseItem: ApiCase) => {
     if (!caseItem?.id) return;
-    caseDetailDrawerRef.current?.open({ id: caseItem.id } as API.Case);
+    void navigateToCaseById(navigate, caseItem.id);
   };
 
   const handleViewAllCases = () => {
@@ -338,7 +337,7 @@ const Dashboard = () => {
 
   const handleOpenCaseFromTask = (caseId: number) => {
     setDetailTaskId(null);
-    caseDetailDrawerRef.current?.open({ id: caseId } as API.Case);
+    void navigateToCaseById(navigate, caseId);
   };
 
   const handleCompleteTask = async (task: API.Task) => {
@@ -833,7 +832,6 @@ const Dashboard = () => {
         open={openDialogs.client}
         onOpenChange={() => handleCloseDialog('client')}
       />
-      <CaseDetailDrawer ref={caseDetailDrawerRef} />
       <TaskUpdateModal ref={taskUpdateModalRef} onSuccess={refreshOverview} />
       <TaskDetailPanel
         taskId={detailTaskId}

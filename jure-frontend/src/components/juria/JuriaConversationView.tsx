@@ -17,6 +17,8 @@ import { JURIA_MODE_VISUAL } from '@/components/juria/juriaConstants';
 import useJuriaStore from '@/stores/juriaStore';
 import type { JuriaCaseContextPayload } from '@/types/juria';
 import { cn } from '@/lib/utils';
+import { useNavigate } from 'react-router';
+import { navigateToCaseById } from '@/lib/caseRoutes';
 import { useToast } from '@/hooks/use-toast';
 import { getJuriaErrorMessage } from '@/utils/juriaErrors';
 
@@ -30,6 +32,7 @@ export function JuriaConversationView({
   showCaseLink?: boolean;
 }) {
   void _caseContext;
+  const navigate = useNavigate();
   const { toast } = useToast();
   const conversations = useJuriaStore((s) => s.conversations);
   const activeId = useJuriaStore((s) => s.activeConversationId);
@@ -120,9 +123,13 @@ export function JuriaConversationView({
             />
           </div>
           {(linked?.reference || conv.caseId) && (
-            <span className="mt-1 inline-flex max-w-full items-center gap-1 truncate rounded-full bg-slate-100 px-2 py-0.5 text-[11px] text-slate-700 dark:bg-slate-800 dark:text-slate-200">
+            <button
+              type="button"
+              className="mt-1 inline-flex max-w-full items-center gap-1 truncate rounded-full bg-slate-100 px-2 py-0.5 text-[11px] text-slate-700 hover:bg-[#F7F4FF] hover:text-[#64499D] dark:bg-slate-800 dark:text-slate-200"
+              onClick={() => conv.caseId && void navigateToCaseById(navigate, conv.caseId)}
+            >
               #{linked?.reference ?? conv.caseId} {linked?.title ? `— ${linked.title}` : ''}
-            </span>
+            </button>
           )}
         </div>
         <div className="flex shrink-0 items-center gap-1">

@@ -28,8 +28,13 @@ const isConversationsPage = (path: string) =>
   path.startsWith('/dashboard/conversations') || path.startsWith('/dashboard/messages')
 
 const isWorkspacePage = (path: string) =>
-  path.startsWith('/dashboard/calendar') ||
-  /^\/dashboard\/tasks\/[^/]+\/edit/.test(path)
+  path.startsWith('/dashboard/calendar')
+
+const isTasksPage = (path: string) =>
+  path.startsWith('/dashboard/tasks')
+
+const isAppointmentsPage = (path: string) =>
+  path.startsWith('/dashboard/appointments') || path.startsWith('/dashboard/appointment')
 
 const isTeamPage = (path: string) =>
   path.startsWith('/dashboard/team')
@@ -72,6 +77,8 @@ const DashboardLayout = () => {
   const isFinance = isFinancePage(location.pathname)
   const isJuria = isJuriaPage(location.pathname)
   const isLibrary = isLibraryPage(location.pathname)
+  const isTasks = isTasksPage(location.pathname)
+  const isAppointments = isAppointmentsPage(location.pathname)
 
   useEffect(() => {
     useChatStore.getState().connect()
@@ -104,7 +111,9 @@ const DashboardLayout = () => {
     isClients ||
     isFinance ||
     isJuria ||
-    isLibrary
+    isLibrary ||
+    isTasks ||
+    isAppointments
 
   const sidebarWidth = sidebarExpanded ? SIDEBAR_EXPANDED_WIDTH : SIDEBAR_RAIL_WIDTH
 
@@ -155,7 +164,7 @@ const DashboardLayout = () => {
                     ? 'flex-1 min-h-0 overflow-hidden pt-0'
                     : isWorkspace
                       ? 'flex-1 min-h-0 overflow-hidden pt-0'
-                      : isTeam || isClients || isCases
+                      : isTeam || isClients || isCases || isTasks || isAppointments
                         ? 'flex-1 min-h-0 overflow-hidden overflow-x-hidden p-1.5 sm:p-2.5 lg:p-3 pt-1.5 sm:pt-2.5'
                         : isFinance
                           ? 'flex-1 min-h-0 overflow-hidden overflow-x-hidden p-2.5 sm:p-4 lg:p-5 pt-3 sm:pt-4'

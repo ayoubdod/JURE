@@ -15,12 +15,37 @@ export type GetCasesParams = {
     client?: number;
     dateFrom?: string;  // yyyy-mm-dd
     dateTo?: string;   // yyyy-mm-dd
-    /** Optional Django-style ordering, e.g. `-created` */
     ordering?: string;
+    outcome?: string;
+    consultationType?: string;
+    format?: string;
+    legalDomain?: string;
+    followUpRequired?: boolean | string;
+    clientRole?: string;
+    priority?: string;
+    dutyType?: string;
+    litigationType?: string;
+    overdue?: boolean | string;
+    today?: boolean | string;
+    dueThisWeek?: boolean | string;
+    upcomingHearing?: boolean | string;
+    priorityIn?: string;
+    institution?: string;
+    courtName?: string;
+    jurisdiction?: string;
+    opposingParty?: string;
+    dateField?: string;
+    category?: string;
 };
 
 export const apiGetCases = (params?: GetCasesParams) =>
     axiosInstance.get<API.Paginated<API.Case>>(CASES_BASE, { params });
+
+/** Count matching cases without downloading the full page (uses pagination `count`). */
+export async function apiCountCases(params?: GetCasesParams): Promise<number> {
+  const res = await apiGetCases({ ...params, page: 1, page_size: 1 });
+  return res.data?.count ?? 0;
+}
 
 /** Fetches every page of cases (for team workload / aggregates). */
 export async function apiGetAllCasesFlattened(pageSize = 500): Promise<API.Case[]> {

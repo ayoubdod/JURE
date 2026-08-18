@@ -1,15 +1,9 @@
 'use client';
 
-import React from 'react';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
+import React, { useId } from 'react';
+import { FileCheck, Scale } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { FileCheck, Gavel, Scale, X } from 'lucide-react';
+import { CreateFormDialog } from '@/components/forms/CreateFormShell';
 
 export type ConversionTargetType = 'LITIGATION' | 'ADMINISTRATIVE_DUTY';
 
@@ -29,7 +23,7 @@ const OPTIONS: {
     value: 'LITIGATION',
     label: 'Litigation',
     description: 'Active court case with parties, hearings, and deadlines',
-    icon: Gavel,
+    icon: Scale,
   },
   {
     value: 'ADMINISTRATIVE_DUTY',
@@ -40,75 +34,48 @@ const OPTIONS: {
 ];
 
 export function CaseTypeSelector({ open, onOpenChange, onSelectType }: Props) {
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="z-[100] sm:max-w-[700px] max-h-[90vh] overflow-y-auto border-slate-200 p-0 sm:rounded-xl [&>button]:hidden">
-        {/* Same charter as CaseModal / CaseCreateModal */}
-        <div className="relative h-32 overflow-hidden bg-gradient-to-r from-[#64499D] via-[#4ECDC4] to-[#FF6B6B]">
-          <div className="absolute inset-0 opacity-10">
-            <div
-              className="absolute inset-0"
-              style={{
-                backgroundImage: `radial-gradient(circle at 2px 2px, white 1px, transparent 0)`,
-                backgroundSize: '32px 32px',
-              }}
-            />
-          </div>
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/10" />
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="absolute end-4 top-4 z-10 h-9 w-9 border border-white/30 bg-white/20 text-white backdrop-blur-sm hover:bg-white/30"
-            onClick={() => onOpenChange(false)}
-            aria-label="Close"
-          >
-            <X className="h-4 w-4" />
-          </Button>
-          <div className="relative px-8 pb-6 pt-8">
-            <div className="flex items-center gap-3">
-              <div className="rounded-xl border border-white/30 bg-white/20 p-3 backdrop-blur-sm">
-                <Scale className="h-6 w-6 text-white" />
-              </div>
-              <div>
-                <DialogTitle className="text-2xl font-bold text-white">
-                  Convert Consultation to Case
-                </DialogTitle>
-                <DialogDescription className="mt-1 text-sm text-white/90">
-                  Select the type of case to create from this consultation.
-                </DialogDescription>
-              </div>
-            </div>
-          </div>
-        </div>
+  const formId = useId();
 
-        <div className="px-8 py-6">
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            {OPTIONS.map((opt) => {
-              const Icon = opt.icon;
-              return (
-                <button
-                  key={opt.value}
-                  type="button"
-                  onClick={() => onSelectType(opt.value)}
-                  className={cn(
-                    'flex flex-col items-start gap-2 rounded-lg border-2 p-4 text-left transition-colors',
-                    'border-slate-200 bg-white hover:border-purple-500 hover:bg-purple-50/50 dark:border-slate-700 dark:bg-slate-950 dark:hover:border-purple-500 dark:hover:bg-purple-950/20'
-                  )}
-                >
-                  <div className="rounded-lg bg-purple-100 p-2 dark:bg-purple-900/30">
-                    <Icon className="h-5 w-5 text-purple-600 dark:text-purple-400" aria-hidden />
-                  </div>
-                  <span className="font-medium text-slate-900 dark:text-white">{opt.label}</span>
-                  <span className="text-[13px] leading-snug text-slate-500 dark:text-slate-400">
-                    {opt.description}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
+  return (
+    <CreateFormDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      isBusy={false}
+      formId={formId}
+      title="Convert Consultation to Case"
+      description="Select the type of case to create from this consultation."
+      icon={Scale}
+      closeLabel="Close"
+      onClose={() => onOpenChange(false)}
+      overlayClassName="z-[100]"
+      contentClassName="z-[110] md:h-[min(86vh,640px)] md:w-[min(90vw,720px)] md:max-w-[720px]"
+    >
+      <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-contain px-6 py-5 md:px-7">
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {OPTIONS.map((opt) => {
+            const Icon = opt.icon;
+            return (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => onSelectType(opt.value)}
+                className={cn(
+                  'flex flex-col items-start gap-2.5 rounded-xl border px-3.5 py-3.5 text-start transition-all duration-200',
+                  'border-slate-200 bg-white hover:border-[#64499D]/40 hover:bg-[#F7F4FF] hover:shadow-sm',
+                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#64499D]/30',
+                  'dark:border-zinc-800 dark:bg-zinc-950 dark:hover:border-[#8B6FD1]/40 dark:hover:bg-[#64499D]/15'
+                )}
+              >
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#F7F4FF] text-[#64499D] ring-1 ring-[#64499D]/15 dark:bg-[#64499D]/20 dark:text-[#CFC2FF] dark:ring-[#8B6FD1]/25">
+                  <Icon className="h-4 w-4" aria-hidden />
+                </div>
+                <span className="text-[13.5px] font-semibold text-slate-900 dark:text-zinc-100">{opt.label}</span>
+                <span className="text-[12px] leading-snug text-slate-500 dark:text-zinc-400">{opt.description}</span>
+              </button>
+            );
+          })}
         </div>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </CreateFormDialog>
   );
 }

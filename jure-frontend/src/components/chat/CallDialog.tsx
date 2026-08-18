@@ -9,6 +9,7 @@ import type { CallUiState } from '@/hooks/useWebRtcCall';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useAppTranslation } from '@/i18n';
 import { cn } from '@/lib/utils';
+import { parkRemoteAudioIn } from '@/utils/webrtc';
 
 type Presentation = 'expanded' | 'compact' | 'fullscreen';
 
@@ -141,10 +142,15 @@ const CallDialog: React.FC<CallDialogProps> = ({
           role="dialog"
           aria-label={`Call with ${remoteName}`}
           className={cn(
-            'fixed inset-x-3 bottom-3 z-[110] mx-auto flex max-w-lg flex-col gap-2 rounded-2xl border border-slate-200/80 bg-white/90 dark:bg-slate-950/90 px-3 py-2.5 shadow-[0_8px_30px_-8px_rgba(15,23,42,0.25)] backdrop-blur-xl',
+            'relative fixed inset-x-3 bottom-3 z-[110] mx-auto flex max-w-lg flex-col gap-2 rounded-2xl border border-slate-200/80 bg-white/90 dark:bg-slate-950/90 px-3 py-2.5 shadow-[0_8px_30px_-8px_rgba(15,23,42,0.25)] backdrop-blur-xl',
             'dark:border-slate-700/80 dark:bg-slate-900/90 sm:inset-x-auto sm:bottom-6 sm:left-auto sm:right-6 sm:w-[380px]'
           )}
         >
+          <div
+            ref={(el) => parkRemoteAudioIn(el)}
+            className="pointer-events-none absolute bottom-0 left-0 h-2 w-2 overflow-hidden"
+            aria-hidden
+          />
           <div className="flex items-center gap-3">
             <button
               type="button"
@@ -225,6 +231,7 @@ const CallDialog: React.FC<CallDialogProps> = ({
       {showExpanded ? (
         <Dialog
           open
+          modal={false}
           onOpenChange={(next) => {
             if (!next) {
               if (isLive) {
@@ -270,6 +277,11 @@ const CallDialog: React.FC<CallDialogProps> = ({
               onTouchEnd={onTouchEnd}
               aria-describedby={undefined}
             >
+              <div
+                ref={(el) => parkRemoteAudioIn(el)}
+                className="pointer-events-none absolute bottom-0 left-0 h-2 w-2 overflow-hidden"
+                aria-hidden
+              />
               <DialogPrimitive.Title className="sr-only">
                 {tf(
                   isVideo ? t.conversations.call.videoCallWith : t.conversations.call.voiceCallWith,

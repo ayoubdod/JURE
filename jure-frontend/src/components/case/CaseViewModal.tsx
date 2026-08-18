@@ -1,30 +1,19 @@
-'use client'
-import { forwardRef, useImperativeHandle, useMemo, useRef, useState } from 'react';
+'use client';
+
+import { forwardRef, useId, useImperativeHandle, useMemo, useRef, useState, type ReactNode } from 'react';
+import { Button } from '@/components/ui/button';
+import { DialogFooter } from '@/components/ui/dialog';
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { 
-  AlignJustify, 
-  Calendar, 
-  Edit, 
-  FileText, 
-  Gavel, 
-  Loader2, 
-  Mail, 
-  Phone, 
-  Scale, 
-  Tags, 
-  Type, 
-  Users, 
-  X,
+  Calendar,
+  Edit,
+  Loader2,
+  Mail,
+  Pencil,
+  Phone,
+  Scale,
   Save,
   UserPlus,
-  Trash2
+  Trash2,
 } from 'lucide-react';
 import { apiUpdateCase } from '@/services/case/api';
 import * as yup from 'yup';
@@ -35,12 +24,24 @@ import { getRemoteFieldsValidation } from '@/utils/functions';
 import { isAxiosError } from 'axios';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { CaseStatus } from '@/utils/constants';
-import { DialogDescription } from '@radix-ui/react-dialog';
 import ServerSelect from '../common/ServerSelect';
 import { Textarea } from '../ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import UserAvatar, { getPersonImage } from '@/components/common/UserAvatar';
 import { formatDate, useAppTranslation } from '@/i18n';
+import { cn } from '@/lib/utils';
+import {
+  CREATE_CANCEL_CLASS,
+  CREATE_FOOTER_CLASS,
+  CREATE_INPUT_CLASS,
+  CREATE_SELECT_CLASS,
+  CREATE_SERVER_SELECT_CLASS,
+  CREATE_SUBMIT_CLASS,
+  CREATE_TEXTAREA_CLASS,
+  CreateFormDialog,
+  CreateFormField,
+  CreateFormSection,
+} from '@/components/forms/CreateFormShell';
 
 export interface CaseViewModalRef {
   show: (instance: API.Case) => void;
@@ -53,562 +54,459 @@ export interface CaseViewModalProps {
   deleteModalRef?: React.RefObject<{ show: (caseItem: API.Case) => void }>;
 }
 
-const CaseViewModal = forwardRef<CaseViewModalRef, CaseViewModalProps>(({ onSuccess, onDelete, deleteModalRef }, ref) => {
-  const { t, tf, lang, enumLabel, enumOptions } = useAppTranslation();
-  const modal = t.cases.modal;
-  const [instance, setInstance] = useState<API.Case | null>(null);
-  const [isOpen, setIsOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
-  const [additionalAssignees, setAdditionalAssignees] = useState<API.CabinetMember[]>([]);
-  const { toast } = useToast();
-
-  const schema = useMemo(() => yup.object({
-    category: yup.string().required(modal.validation.categoryRequired),
-    status: yup.string().required(modal.validation.statusRequired),
-    summary: yup.string().optional().default(''),
-    description: yup.string().required(modal.validation.descriptionRequired),
-    reference: yup.string().required(modal.validation.referenceRequired),
-    title: yup.string().required(modal.validation.titleRequired),
-    court: yup.string().required(modal.validation.courtRequired),
-    assigned_to: yup.number().nullable().optional(),
-    client: yup.number().nullable().optional(),
-  }), [modal.validation]);
-
-  const schemaRef = useRef(schema);
-  schemaRef.current = schema;
-
-  const mainForm = useForm<API.CaseUpdateForm>({
-    resolver: ((values, context, options) =>
-      yupResolver(schemaRef.current)(values, context, options)) as unknown as Resolver<API.CaseUpdateForm>
-  });
-
-  const show = (instance: API.Case) => {
-    setInstance(instance);
-    setIsEditing(false);
-    setAdditionalAssignees([]);
-    
-    mainForm.reset({
-      category: instance.category,
-      status: instance.status,
-      summary: instance.summary,
-      description: instance.description,
-      reference: instance.reference,
-      title: instance.title,
-      court: instance.court,
-      assigned_to: instance?.assigned_to?.id ? instance.assigned_to.id : null,
-      client: instance?.client?.id ? instance.client.id : null
-    });
-    setIsOpen(true);
-  }
-
-  const hide = () => {
-    setIsOpen(false);
-    setIsEditing(false);
-    mainForm.reset();
-  }
-
-  useImperativeHandle(ref, () => ({
-    show,
-    hide,
-  }));
-
-  const handleSubmit = async (data: API.CaseUpdateForm) => {
-    if (!instance) return;
-    
-    setIsLoading(true);
-    
-    // Ensure assigned_to and client are properly formatted
-    const submitData = {
-      ...data,
-      id: instance.id,
-      assigned_to: data.assigned_to ? Number(data.assigned_to) : null,
-      client: data.client ? Number(data.client) : null,
-    };
-    
-    await apiUpdateCase(submitData)
-      .then((res) => {
-        onSuccess?.(res.data);
-        setIsEditing(false);
-        toast({
-          title: t.common.success,
-          description: modal.toasts.updatedTitle,
-        });
-      })
-      .catch((err) => {
-        if (isAxiosError(err)) {
-          const remoteValidation = getRemoteFieldsValidation(err);
-          Object.keys(remoteValidation).forEach((key) => {
-            mainForm.setError(key as keyof API.CaseUpdateForm,  { type: 'server', message: remoteValidation[key] });
-          });
-        }
-      })
-      .finally(() => {
-        setIsLoading(false);
-      });
-  };
-
-  const addAssignee = () => {
-    toast({
-      title: modal.addAssigneeTitle,
-      description: modal.addAssigneeDescription,
-    });
-  };
-
-  const removeAssignee = (assigneeId: number) => {
-    setAdditionalAssignees(prev => prev.filter(a => a.id !== assigneeId));
-  };
-
-  if (!instance) return null;
-
-  const getStatusBadgeColor = (status: string) => {
-    switch (status) {
-      case CaseStatus.OPEN: return 'bg-emerald-50 text-emerald-700 ring-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-300 dark:ring-emerald-800/60';
-      case CaseStatus.IN_PROGRESS: return 'bg-blue-50 text-blue-700 ring-blue-200 dark:bg-blue-900/20 dark:text-blue-300 dark:ring-blue-800/60';
-      case CaseStatus.CLOSED: return 'bg-slate-50 text-slate-700 ring-slate-200 dark:bg-slate-900/30 dark:text-slate-400 dark:ring-slate-800/60';
-      case CaseStatus.CANCELLED: return 'bg-red-50 text-red-700 ring-red-200 dark:bg-red-900/20 dark:text-red-300 dark:ring-red-800/60';
-      case CaseStatus.PENDING: return 'bg-yellow-50 text-yellow-700 ring-yellow-200 dark:bg-yellow-900/20 dark:text-yellow-300 dark:ring-yellow-800/60';
-      case CaseStatus.ARCHIVED: return 'bg-slate-50 text-slate-600 ring-slate-200 dark:bg-slate-900/30 dark:text-slate-400 dark:ring-slate-800/60';
-      default: return 'bg-slate-50 text-slate-700 ring-slate-200 dark:bg-slate-900/30 dark:text-slate-400 dark:ring-slate-800/60';
-    }
-  };
-
+function ViewField({
+  label,
+  children,
+  className,
+}: {
+  label: string;
+  children: ReactNode;
+  className?: string;
+}) {
   return (
-    <Dialog open={isOpen} onOpenChange={isLoading ? undefined : setIsOpen}>
-      <DialogContent className="sm:max-w-[900px] max-h-[90vh] overflow-y-auto p-0 [&>button]:hidden">
-        {!isEditing ? (
-          <>
-            {/* Header Banner */}
-            <div className="relative h-40 bg-gradient-to-r from-[#64499D] via-[#4ECDC4] to-[#FF6B6B] overflow-hidden">
-              {/* Decorative Pattern Overlay */}
-              <div className="absolute inset-0 opacity-10">
-                <div className="absolute inset-0" style={{
-                  backgroundImage: `radial-gradient(circle at 2px 2px, white 1px, transparent 0)`,
-                  backgroundSize: '32px 32px'
-                }}></div>
-              </div>
-              {/* Gradient Overlay */}
-              <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/10"></div>
-              
-              {/* Header Content */}
-              <div className="relative px-8 pt-8 pb-6">
-                {/* Close Button - Positioned in header content area */}
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="absolute top-4 end-4 h-9 w-9 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white border border-white/30 z-10"
-                  onClick={hide}
-                  disabled={isLoading}
-                >
-                  <X className="w-4 h-4" />
-                </Button>
+    <div className={cn('space-y-1.5', className)}>
+      <p className="text-[11px] font-medium uppercase tracking-[0.08em] text-slate-400 dark:text-zinc-500">
+        {label}
+      </p>
+      <div className="text-[13.5px] font-medium text-slate-800 dark:text-zinc-200">{children}</div>
+    </div>
+  );
+}
 
-                <div className="flex items-start justify-between gap-4 pr-12">
-                  <div className="flex items-center gap-4 flex-1 min-w-0">
-                    <div className="p-4 rounded-xl bg-white/20 backdrop-blur-sm border border-white/30 flex-shrink-0">
-                      <Scale className="w-8 h-8 text-white" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <DialogTitle className="text-2xl font-bold text-white mb-2 truncate">
-                        {instance.title}
-                      </DialogTitle>
-                      <div className="flex items-center gap-3 flex-wrap">
-                        <span className="inline-flex items-center rounded-full px-3 py-1 text-xs font-medium ring-1 ring-inset bg-white/20 backdrop-blur-sm text-white border border-white/30">
-                          {instance.reference}
-                        </span>
-                        <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium ring-1 ring-inset ${getStatusBadgeColor(instance.status)}`}>
-                          {enumLabel('caseStatus', instance.status)}
-                        </span>
-                        <span className="inline-flex items-center rounded-full px-3 py-1 text-xs font-medium ring-1 ring-inset bg-white/20 backdrop-blur-sm text-white border border-white/30">
-                          {enumLabel('caseCategory', instance.category)}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2 flex-shrink-0">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setIsEditing(true)}
-                      className="h-9 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white border border-white/30"
+const CaseViewModal = forwardRef<CaseViewModalRef, CaseViewModalProps>(
+  ({ onSuccess, onDelete, deleteModalRef }, ref) => {
+    const { t, tf, lang, enumLabel, enumOptions } = useAppTranslation();
+    const modal = t.cases.modal;
+    const formId = useId();
+    const scrollRef = useRef<HTMLDivElement>(null);
+    const [instance, setInstance] = useState<API.Case | null>(null);
+    const [isOpen, setIsOpen] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
+    const [isEditing, setIsEditing] = useState(false);
+    const [additionalAssignees, setAdditionalAssignees] = useState<API.CabinetMember[]>([]);
+    const { toast } = useToast();
+
+    const schema = useMemo(
+      () =>
+        yup.object({
+          category: yup.string().required(modal.validation.categoryRequired),
+          status: yup.string().required(modal.validation.statusRequired),
+          summary: yup.string().optional().default(''),
+          description: yup.string().required(modal.validation.descriptionRequired),
+          reference: yup.string().required(modal.validation.referenceRequired),
+          title: yup.string().required(modal.validation.titleRequired),
+          court: yup.string().required(modal.validation.courtRequired),
+          assigned_to: yup.number().nullable().optional(),
+          client: yup.number().nullable().optional(),
+        }),
+      [modal.validation]
+    );
+
+    const schemaRef = useRef(schema);
+    schemaRef.current = schema;
+
+    const mainForm = useForm<API.CaseUpdateForm>({
+      resolver: ((values, context, options) =>
+        yupResolver(schemaRef.current)(values, context, options)) as unknown as Resolver<API.CaseUpdateForm>,
+    });
+
+    const show = (next: API.Case) => {
+      setInstance(next);
+      setIsEditing(false);
+      setAdditionalAssignees([]);
+      mainForm.reset({
+        category: next.category,
+        status: next.status,
+        summary: next.summary,
+        description: next.description,
+        reference: next.reference,
+        title: next.title,
+        court: next.court,
+        assigned_to: next?.assigned_to?.id ? next.assigned_to.id : null,
+        client: next?.client?.id ? next.client.id : null,
+      });
+      scrollRef.current?.scrollTo({ top: 0 });
+      setIsOpen(true);
+    };
+
+    const hide = () => {
+      if (isLoading) return;
+      setIsOpen(false);
+      setIsEditing(false);
+      mainForm.reset();
+    };
+
+    useImperativeHandle(ref, () => ({
+      show,
+      hide,
+    }));
+
+    const handleSubmit = async (data: API.CaseUpdateForm) => {
+      if (!instance) return;
+
+      setIsLoading(true);
+
+      const submitData = {
+        ...data,
+        id: instance.id,
+        assigned_to: data.assigned_to ? Number(data.assigned_to) : null,
+        client: data.client ? Number(data.client) : null,
+      };
+
+      await apiUpdateCase(submitData)
+        .then((res) => {
+          onSuccess?.(res.data);
+          setInstance(res.data);
+          setIsEditing(false);
+          toast({
+            title: t.common.success,
+            description: modal.toasts.updatedTitle,
+          });
+        })
+        .catch((err) => {
+          if (isAxiosError(err)) {
+            const remoteValidation = getRemoteFieldsValidation(err);
+            Object.keys(remoteValidation).forEach((key) => {
+              mainForm.setError(key as keyof API.CaseUpdateForm, {
+                type: 'server',
+                message: remoteValidation[key],
+              });
+            });
+          }
+        })
+        .finally(() => {
+          setIsLoading(false);
+        });
+    };
+
+    const addAssignee = () => {
+      toast({
+        title: modal.addAssigneeTitle,
+        description: modal.addAssigneeDescription,
+      });
+    };
+
+    const removeAssignee = (assigneeId: number) => {
+      setAdditionalAssignees((prev) => prev.filter((a) => a.id !== assigneeId));
+    };
+
+    const getStatusBadgeColor = (status: string) => {
+      switch (status) {
+        case CaseStatus.OPEN:
+          return 'bg-emerald-50 text-emerald-700 ring-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-300 dark:ring-emerald-800/60';
+        case CaseStatus.IN_PROGRESS:
+          return 'bg-blue-50 text-blue-700 ring-blue-200 dark:bg-blue-900/20 dark:text-blue-300 dark:ring-blue-800/60';
+        case CaseStatus.CLOSED:
+          return 'bg-slate-50 text-slate-700 ring-slate-200 dark:bg-slate-900/30 dark:text-slate-400 dark:ring-slate-800/60';
+        case CaseStatus.CANCELLED:
+          return 'bg-red-50 text-red-700 ring-red-200 dark:bg-red-900/20 dark:text-red-300 dark:ring-red-800/60';
+        case CaseStatus.PENDING:
+          return 'bg-yellow-50 text-yellow-700 ring-yellow-200 dark:bg-yellow-900/20 dark:text-yellow-300 dark:ring-yellow-800/60';
+        case CaseStatus.ARCHIVED:
+          return 'bg-slate-50 text-slate-600 ring-slate-200 dark:bg-slate-900/30 dark:text-slate-400 dark:ring-slate-800/60';
+        default:
+          return 'bg-slate-50 text-slate-700 ring-slate-200 dark:bg-slate-900/30 dark:text-slate-400 dark:ring-slate-800/60';
+      }
+    };
+
+    const fieldError = (name: keyof API.CaseUpdateForm) =>
+      mainForm.formState.errors[name]?.message as string | undefined;
+
+    const canDelete = Boolean((deleteModalRef || onDelete) && instance);
+    const viewDescription = instance
+      ? [instance.reference, enumLabel('caseCategory', instance.category), enumLabel('caseStatus', instance.status)]
+          .filter(Boolean)
+          .join(' · ')
+      : modal.viewEditDescription;
+
+    return (
+      <CreateFormDialog
+        open={isOpen}
+        onOpenChange={(next) => {
+          if (isLoading) return;
+          if (!next) hide();
+          else setIsOpen(true);
+        }}
+        isBusy={isLoading}
+        formId={formId}
+        title={isEditing ? modal.editTitle : instance?.title || modal.editTitle}
+        description={isEditing ? modal.viewEditDescription : viewDescription}
+        icon={isEditing ? Pencil : Scale}
+        closeLabel={t.common.close}
+        onClose={hide}
+        contentClassName="md:h-[min(86vh,780px)] md:w-[min(90vw,820px)] md:max-w-[820px]"
+      >
+        {instance && isEditing ? (
+          <form
+            onSubmit={mainForm.handleSubmit(handleSubmit)}
+            className="flex min-h-0 flex-1 flex-col overflow-hidden"
+            noValidate
+            aria-busy={isLoading}
+          >
+            <div
+              ref={scrollRef}
+              className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-contain px-6 py-5 md:px-7"
+            >
+              <div className="space-y-6">
+                <CreateFormSection index="01" title={modal.sections.basicInformation}>
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <CreateFormField
+                      id={`${formId}-reference`}
+                      label={modal.fields.reference}
+                      required
+                      error={fieldError('reference')}
                     >
-                      <Edit className="w-4 h-4 mr-2" />
-                      {t.common.edit}
-                    </Button>
-                    {(deleteModalRef || onDelete) && instance && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          if (deleteModalRef?.current) {
-                            deleteModalRef.current.show(instance);
-                          } else if (onDelete) {
-                            onDelete(instance);
-                          }
-                        }}
-                        className="h-9 bg-white/20 hover:bg-red-500/30 backdrop-blur-sm text-white border border-white/30 hover:border-red-300"
+                      <Input
+                        id={`${formId}-reference`}
+                        placeholder={modal.placeholders.reference}
+                        className={CREATE_INPUT_CLASS}
+                        disabled={isLoading}
+                        {...mainForm.register('reference')}
+                      />
+                    </CreateFormField>
+                    <CreateFormField
+                      id={`${formId}-title`}
+                      label={modal.fields.title}
+                      required
+                      error={fieldError('title')}
+                    >
+                      <Input
+                        id={`${formId}-title`}
+                        placeholder={modal.placeholders.title}
+                        className={CREATE_INPUT_CLASS}
+                        disabled={isLoading}
+                        {...mainForm.register('title')}
+                      />
+                    </CreateFormField>
+                    <CreateFormField
+                      id={`${formId}-court`}
+                      label={modal.fields.courtName}
+                      required
+                      error={fieldError('court')}
+                    >
+                      <Input
+                        id={`${formId}-court`}
+                        placeholder={modal.placeholders.court}
+                        className={CREATE_INPUT_CLASS}
+                        disabled={isLoading}
+                        {...mainForm.register('court')}
+                      />
+                    </CreateFormField>
+                    <CreateFormField
+                      id={`${formId}-category`}
+                      label={modal.fields.category}
+                      required
+                      error={fieldError('category')}
+                    >
+                      <Select
+                        value={mainForm.watch('category')}
+                        onValueChange={(val: API.CaseCategory) => mainForm.setValue('category', val)}
+                        disabled={isLoading}
                       >
-                        <Trash2 className="w-4 h-4 mr-2" />
-                        {t.common.delete}
-                      </Button>
-                    )}
+                        <SelectTrigger id={`${formId}-category`} className={CREATE_SELECT_CLASS}>
+                          <SelectValue placeholder={modal.placeholders.category} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {enumOptions('caseCategory').map((category) => (
+                            <SelectItem key={category.value} value={category.value}>
+                              {category.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </CreateFormField>
+                    <CreateFormField
+                      id={`${formId}-description`}
+                      label={modal.fields.description}
+                      required
+                      error={fieldError('description')}
+                      className="sm:col-span-2"
+                    >
+                      <Textarea
+                        id={`${formId}-description`}
+                        placeholder={modal.placeholders.descriptionDetailed}
+                        className={CREATE_TEXTAREA_CLASS}
+                        disabled={isLoading}
+                        {...mainForm.register('description')}
+                      />
+                    </CreateFormField>
                   </div>
-                </div>
-              </div>
-            </div>
-          </>
-        ) : (
-          <DialogHeader className="px-8 pt-6 pb-4 border-b border-slate-200 dark:border-slate-800">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-[#F1ECFF] dark:bg-[#2a2240]">
-                  <Scale className="w-5 h-5 text-[#64499D] dark:text-[#E9E0FF]" />
-                </div>
-                <div>
-                  <DialogTitle className="text-xl font-bold text-slate-900 dark:text-white">
-                    {modal.editTitle}
-                  </DialogTitle>
-                  <DialogDescription className="text-sm text-slate-600 dark:text-slate-400 mt-1">
-                    {modal.viewEditDescription}
-                  </DialogDescription>
-                </div>
-              </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-9 w-9"
-                onClick={hide}
-                disabled={isLoading}
-              >
-                <X className="w-4 h-4" />
-              </Button>
-            </div>
-          </DialogHeader>
-        )}
+                </CreateFormSection>
 
-        {isEditing ? (
-          // Edit Form
-          <form onSubmit={mainForm.handleSubmit(handleSubmit)} className="px-8 py-6 space-y-6">
-            {/* {modal.sections.basicInformation} Section */}
-            <div className="space-y-4">
-              <div className="flex items-center gap-3 pb-2 border-b border-slate-200 dark:border-slate-800">
-                <div className="p-2 rounded-lg bg-[#F1ECFF] dark:bg-[#2a2240]">
-                  <FileText className="w-4 h-4 text-[#64499D] dark:text-[#E9E0FF]" />
-                </div>
-                <h3 className="text-base font-semibold text-slate-900 dark:text-white">
-                  {modal.sections.basicInformation}
-                </h3>
-              </div>
-              
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                    {modal.fields.reference} <span className="text-red-500">*</span>
-                  </label>
-                  <div className="relative">
-                    <FileText className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                    <Input 
-                      {...mainForm.register('reference')}
-                      placeholder={modal.placeholders.reference}
-                      className="pl-10 h-11 border-slate-300 dark:border-slate-700 focus:border-[#64499D] focus:ring-[#64499D]"
-                    />
+                <CreateFormSection index="02" title={modal.sections.caseDetails}>
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <CreateFormField
+                      id={`${formId}-status`}
+                      label={modal.fields.status}
+                      required
+                      error={fieldError('status')}
+                    >
+                      <Select
+                        value={mainForm.watch('status')}
+                        onValueChange={(val: API.CaseStatus) => mainForm.setValue('status', val)}
+                        disabled={isLoading}
+                      >
+                        <SelectTrigger id={`${formId}-status`} className={CREATE_SELECT_CLASS}>
+                          <SelectValue placeholder={modal.placeholders.status} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {enumOptions('caseStatus').map((status) => (
+                            <SelectItem key={status.value} value={status.value}>
+                              {status.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </CreateFormField>
+                    <CreateFormField id={`${formId}-summary`} label={modal.fields.summary} error={fieldError('summary')}>
+                      <Input
+                        id={`${formId}-summary`}
+                        placeholder={modal.placeholders.summary}
+                        className={CREATE_INPUT_CLASS}
+                        disabled={isLoading}
+                        {...mainForm.register('summary')}
+                      />
+                    </CreateFormField>
                   </div>
-                  {mainForm.formState.errors.reference && (
-                    <p className="text-red-500 text-xs mt-1">
-                      {mainForm.formState.errors.reference.message}
-                    </p>
-                  )}
-                </div>
+                </CreateFormSection>
 
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                    {modal.fields.title} <span className="text-red-500">*</span>
-                  </label>
-                  <div className="relative">
-                    <Type className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                    <Input 
-                      {...mainForm.register('title')} 
-                      placeholder={modal.placeholders.title}
-                      className="pl-10 h-11 border-slate-300 dark:border-slate-700 focus:border-[#64499D] focus:ring-[#64499D]"
-                    />
+                <CreateFormSection index="03" title={modal.sections.assignmentRelations}>
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <CreateFormField
+                      id={`${formId}-assigned_to`}
+                      label={modal.primaryAssignee}
+                      error={fieldError('assigned_to')}
+                    >
+                      <ServerSelect
+                        id={`${formId}-assigned_to`}
+                        link="/cabinets/members/select_list"
+                        value={mainForm.watch('assigned_to')}
+                        onChange={(val) => mainForm.setValue('assigned_to', val ? Number(val) : null)}
+                        labelKey="email"
+                        cleanable
+                        disabled={isLoading}
+                        className={CREATE_SERVER_SELECT_CLASS}
+                      />
+                    </CreateFormField>
+                    <CreateFormField
+                      id={`${formId}-client`}
+                      label={modal.fields.relatedClient}
+                      error={fieldError('client')}
+                    >
+                      <ServerSelect
+                        id={`${formId}-client`}
+                        link="/clients/clients/"
+                        value={mainForm.watch('client')}
+                        onChange={(val) => mainForm.setValue('client', val)}
+                        labelKey={(client: API.Client) =>
+                          `${client.first_name || ''} ${client.last_name || ''}`.trim() ||
+                          client.email ||
+                          t.cases.unnamed
+                        }
+                        cleanable
+                        placeholder={modal.placeholders.client}
+                        disabled={isLoading}
+                        className={CREATE_SERVER_SELECT_CLASS}
+                      />
+                    </CreateFormField>
                   </div>
-                  {mainForm.formState.errors.title && (
-                    <p className="text-red-500 text-xs mt-1">
-                      {mainForm.formState.errors.title.message}
-                    </p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                    {modal.fields.courtName} <span className="text-red-500">*</span>
-                  </label>
-                  <div className="relative">
-                    <Gavel className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                    <Input
-                      {...mainForm.register('court')}
-                      placeholder={modal.placeholders.court}
-                      className="pl-10 h-11 border-slate-300 dark:border-slate-700 focus:border-[#64499D] focus:ring-[#64499D]"
-                    />
-                  </div>
-                  {mainForm.formState.errors.court && (
-                    <p className="text-red-500 text-xs mt-1">
-                      {mainForm.formState.errors.court.message}
-                    </p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                    {modal.fields.category} <span className="text-red-500">*</span>
-                  </label>
-                  <Select
-                    value={mainForm.watch('category')}
-                    onValueChange={(val: API.CaseCategory) => mainForm.setValue('category', val)}
-                  >
-                    <SelectTrigger className="h-11 border-slate-300 dark:border-slate-700 focus:border-[#64499D] focus:ring-[#64499D]">
-                      <SelectValue placeholder={modal.placeholders.category} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {enumOptions('caseCategory').map((category) => (
-                        <SelectItem key={category.value} value={category.value}>
-                          {category.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {mainForm.formState.errors.category && (
-                    <p className="text-red-500 text-xs mt-1">
-                      {mainForm.formState.errors.category.message}
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                  {modal.fields.description} <span className="text-red-500">*</span>
-                </label>
-                <div className="relative">
-                  <AlignJustify className="absolute left-3 top-3 w-4 h-4 text-slate-400" />
-                  <Textarea 
-                    {...mainForm.register('description')} 
-                    placeholder={modal.placeholders.descriptionDetailed}
-                    className="pl-10 min-h-[100px] resize-none border-slate-300 dark:border-slate-700 focus:border-[#64499D] focus:ring-[#64499D]"
-                  />
-                </div>
-                {mainForm.formState.errors.description && (
-                  <p className="text-red-500 text-xs mt-1">
-                    {mainForm.formState.errors.description.message}
-                  </p>
-                )}
+                </CreateFormSection>
               </div>
             </div>
 
-            {/* {modal.sections.caseDetails} Section */}
-            <div className="space-y-4">
-              <div className="flex items-center gap-3 pb-2 border-b border-slate-200 dark:border-slate-800">
-                <div className="p-2 rounded-lg bg-[#F1ECFF] dark:bg-[#2a2240]">
-                  <Tags className="w-4 h-4 text-[#64499D] dark:text-[#E9E0FF]" />
-                </div>
-                <h3 className="text-base font-semibold text-slate-900 dark:text-white">
-                  {modal.sections.caseDetails}
-                </h3>
-              </div>
-              
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                    {modal.fields.status} <span className="text-red-500">*</span>
-                  </label>
-                  <Select 
-                    value={mainForm.watch('status')} 
-                    onValueChange={(val: API.CaseStatus) => mainForm.setValue('status', val)}
-                  >
-                    <SelectTrigger className="h-11 border-slate-300 dark:border-slate-700 focus:border-[#64499D] focus:ring-[#64499D]">
-                      <SelectValue placeholder={modal.placeholders.status} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {enumOptions('caseStatus').map((status) => (
-                        <SelectItem key={status.value} value={status.value}>
-                          {status.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {mainForm.formState.errors.status && (
-                    <p className="text-red-500 text-xs mt-1">
-                      {mainForm.formState.errors.status.message}
-                    </p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                    {modal.primaryAssignee} <span className="text-slate-400 text-xs">{modal.optionalHint}</span>
-                  </label>
-                  <ServerSelect
-                    link='/cabinets/members/select_list'
-                    value={mainForm.watch('assigned_to')}
-                    onChange={(val) => mainForm.setValue('assigned_to', val ? Number(val) : null)}
-                    labelKey={'email'}
-                    cleanable
-                    showAvatar
-                  />
-                  {mainForm.formState.errors.assigned_to && (
-                    <p className="text-red-500 text-xs mt-1">
-                      {mainForm.formState.errors.assigned_to.message}
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                  {modal.fields.relatedClient} <span className="text-slate-400 text-xs">{modal.optionalHint}</span>
-                </label>
-                <ServerSelect
-                  link='/clients/clients/'
-                  value={mainForm.watch('client')}
-                  onChange={(val) => mainForm.setValue('client', val)}
-                  labelKey={(client: any) => `${client.first_name || ''} ${client.last_name || ''}`.trim() || client.email || t.cases.unnamed}
-                  cleanable
-                  placeholder={modal.placeholders.client}
-                />
-                {mainForm.formState.errors.client && (
-                  <p className="text-red-500 text-xs mt-1">
-                    {mainForm.formState.errors.client.message}
-                  </p>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                  {modal.fields.summary}
-                </label>
-                <div className="relative">
-                  <FileText className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                  <Input 
-                    {...mainForm.register('summary')} 
-                    placeholder={modal.placeholders.summary}
-                    className="pl-10 h-11 border-slate-300 dark:border-slate-700 focus:border-[#64499D] focus:ring-[#64499D]"
-                  />
-                </div>
-                {mainForm.formState.errors.summary && (
-                  <p className="text-red-500 text-xs mt-1">
-                    {mainForm.formState.errors.summary.message}
-                  </p>
-                )}
-              </div>
-            </div>
-
-            <DialogFooter className="pt-6 border-t border-slate-200 dark:border-slate-800 gap-3">
+            <DialogFooter className={CREATE_FOOTER_CLASS}>
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => setIsEditing(false)}
                 disabled={isLoading}
-                className="border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800"
+                className={CREATE_CANCEL_CLASS}
               >
                 {t.common.cancel}
               </Button>
-              <Button
-                type="submit"
-                disabled={isLoading}
-                className="bg-[#64499D] hover:bg-[#5a3f8a] text-white shadow-md hover:shadow-lg transition-all duration-200"
-              >
+              <Button type="submit" disabled={isLoading} className={CREATE_SUBMIT_CLASS}>
                 {isLoading ? (
                   <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    <Loader2 className="animate-spin" />
                     {t.common.saving}
                   </>
                 ) : (
                   <>
-                    <Save className="w-4 h-4 mr-2" />
+                    <Save />
                     {modal.saveChanges}
                   </>
                 )}
               </Button>
             </DialogFooter>
           </form>
-        ) : (
-          // View Mode
-          <div className="px-8 py-6 space-y-6">
-            {/* Case Information Cards */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* {modal.sections.caseDetails} Section */}
-              <div className="space-y-4">
-                <div className="flex items-center gap-3 pb-2 border-b border-slate-200 dark:border-slate-800">
-                  <div className="p-2 rounded-lg bg-[#F1ECFF] dark:bg-[#2a2240]">
-                    <FileText className="w-4 h-4 text-[#64499D] dark:text-[#E9E0FF]" />
-                  </div>
-                  <h3 className="text-base font-semibold text-slate-900 dark:text-white">
-                    {modal.sections.caseDetails}
-                  </h3>
-                </div>
-                
-                <div className="space-y-4">
-                  <div className="flex items-start gap-3 p-3 rounded-lg bg-slate-50 dark:bg-slate-800/30 border border-slate-200 dark:border-slate-700">
-                    <Gavel className="w-5 h-5 text-[#64499D] dark:text-[#E9E0FF] mt-0.5 flex-shrink-0" />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">{modal.fields.court}</p>
-                      <p className="text-sm font-semibold text-slate-900 dark:text-white">{instance.court}</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start gap-3 p-3 rounded-lg bg-slate-50 dark:bg-slate-800/30 border border-slate-200 dark:border-slate-700">
-                    <AlignJustify className="w-5 h-5 text-[#64499D] dark:text-[#E9E0FF] mt-0.5 flex-shrink-0" />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">{modal.fields.description}</p>
-                      <p className="text-sm text-slate-900 dark:text-white leading-relaxed">{instance.description}</p>
-                    </div>
-                  </div>
-
-                  {instance.summary && (
-                    <div className="flex items-start gap-3 p-3 rounded-lg bg-slate-50 dark:bg-slate-800/30 border border-slate-200 dark:border-slate-700">
-                      <FileText className="w-5 h-5 text-[#64499D] dark:text-[#E9E0FF] mt-0.5 flex-shrink-0" />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">{modal.fields.summary}</p>
-                        <p className="text-sm text-slate-900 dark:text-white">{instance.summary}</p>
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="flex items-start gap-3 p-3 rounded-lg bg-slate-50 dark:bg-slate-800/30 border border-slate-200 dark:border-slate-700">
-                    <Calendar className="w-5 h-5 text-[#64499D] dark:text-[#E9E0FF] mt-0.5 flex-shrink-0" />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">{modal.created}</p>
-                      <p className="text-sm text-slate-900 dark:text-white">
-                        {formatDate(instance.created, lang, { year: 'numeric', month: 'long', day: 'numeric' })}
+        ) : instance ? (
+          <>
+            <div
+              ref={scrollRef}
+              className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-contain px-6 py-5 md:px-7"
+            >
+              <div className="space-y-6">
+                <CreateFormSection index="01" title={modal.sections.caseDetails}>
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <ViewField label={modal.fields.reference}>{instance.reference || '—'}</ViewField>
+                    <ViewField label={modal.fields.status}>
+                      <span
+                        className={cn(
+                          'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset',
+                          getStatusBadgeColor(instance.status)
+                        )}
+                      >
+                        {enumLabel('caseStatus', instance.status)}
+                      </span>
+                    </ViewField>
+                    <ViewField label={modal.fields.court}>{instance.court || '—'}</ViewField>
+                    <ViewField label={modal.fields.category}>
+                      {enumLabel('caseCategory', instance.category)}
+                    </ViewField>
+                    <ViewField label={modal.fields.description} className="sm:col-span-2">
+                      <p className="whitespace-pre-wrap font-normal leading-relaxed text-slate-700 dark:text-zinc-300">
+                        {instance.description || '—'}
                       </p>
-                      {instance.created_by && (
-                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                          {tf(modal.createdBy, { name: `${instance.created_by.first_name} ${instance.created_by.last_name || ''}`.trim() })}
+                    </ViewField>
+                    {instance.summary ? (
+                      <ViewField label={modal.fields.summary} className="sm:col-span-2">
+                        <p className="font-normal leading-relaxed text-slate-700 dark:text-zinc-300">
+                          {instance.summary}
                         </p>
-                      )}
-                    </div>
+                      </ViewField>
+                    ) : null}
+                    <ViewField label={modal.created} className="sm:col-span-2">
+                      <div className="flex items-start gap-2">
+                        <Calendar className="mt-0.5 h-4 w-4 shrink-0 text-[#64499D]" aria-hidden />
+                        <div>
+                          <p>
+                            {formatDate(instance.created, lang, {
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric',
+                            })}
+                          </p>
+                          {instance.created_by ? (
+                            <p className="mt-0.5 text-xs font-normal text-slate-500 dark:text-zinc-400">
+                              {tf(modal.createdBy, {
+                                name: `${instance.created_by.first_name} ${instance.created_by.last_name || ''}`.trim(),
+                              })}
+                            </p>
+                          ) : null}
+                        </div>
+                      </div>
+                    </ViewField>
                   </div>
-                </div>
-              </div>
+                </CreateFormSection>
 
-              {/* {modal.assignmentTeam} Section */}
-              <div className="space-y-4">
-                <div className="flex items-center gap-3 pb-2 border-b border-slate-200 dark:border-slate-800">
-                  <div className="p-2 rounded-lg bg-[#F1ECFF] dark:bg-[#2a2240]">
-                    <Users className="w-4 h-4 text-[#64499D] dark:text-[#E9E0FF]" />
-                  </div>
-                  <h3 className="text-base font-semibold text-slate-900 dark:text-white">
-                    {modal.assignmentTeam}
-                  </h3>
-                </div>
-
-                {/* {modal.primaryAssignee} */}
-                <div className="space-y-4">
-                  <div>
-                    <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-2">{modal.primaryAssignee}</p>
-                    {instance.assigned_to ? (
-                      <div className="bg-slate-50 dark:bg-slate-800/30 border border-slate-200 dark:border-slate-700 rounded-lg p-4">
-                        <div className="flex items-center gap-3">
+                <CreateFormSection index="02" title={modal.assignmentTeam}>
+                  <div className="space-y-4">
+                    <div>
+                      <p className="mb-2 text-[11px] font-medium uppercase tracking-[0.08em] text-slate-400 dark:text-zinc-500">
+                        {modal.primaryAssignee}
+                      </p>
+                      {instance.assigned_to ? (
+                        <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-3 py-2.5 dark:border-zinc-800 dark:bg-zinc-950">
                           <UserAvatar
                             image={getPersonImage(instance.assigned_to as Record<string, unknown>)}
                             firstName={instance.assigned_to.first_name}
@@ -616,121 +514,161 @@ const CaseViewModal = forwardRef<CaseViewModalRef, CaseViewModalProps>(({ onSucc
                             email={instance.assigned_to.email}
                             size="lg"
                           />
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-semibold text-slate-900 dark:text-white">
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-[13.5px] font-semibold text-slate-900 dark:text-zinc-50">
                               {instance.assigned_to.first_name} {instance.assigned_to.last_name}
                             </p>
-                            <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">{instance.assigned_to.email}</p>
+                            <p className="truncate text-xs text-slate-500 dark:text-zinc-400">
+                              {instance.assigned_to.email}
+                            </p>
                           </div>
                         </div>
-                      </div>
-                    ) : (
-                      <div className="bg-slate-50 dark:bg-slate-800/30 border border-slate-200 dark:border-slate-700 rounded-lg p-4 text-center">
-                        <p className="text-sm text-slate-500 dark:text-slate-400">{modal.notAssigned}</p>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* {modal.additionalAssignees} */}
-                  <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <p className="text-xs font-medium text-slate-500 dark:text-slate-400">{modal.additionalAssignees}</p>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={addAssignee}
-                        className="h-8 px-3 text-xs border-slate-300 dark:border-slate-700"
-                      >
-                        <UserPlus className="w-3 h-3 mr-1" />
-                        {t.common.add}
-                      </Button>
+                      ) : (
+                        <p className="rounded-xl border border-dashed border-slate-200 px-3 py-3 text-[13px] text-slate-500 dark:border-zinc-800 dark:text-zinc-400">
+                          {modal.notAssigned}
+                        </p>
+                      )}
                     </div>
-                    
-                    {additionalAssignees.length === 0 ? (
-                      <div className="bg-slate-50 dark:bg-slate-800/30 border border-slate-200 dark:border-slate-700 rounded-lg p-4 text-center">
-                        <p className="text-sm text-slate-500 dark:text-slate-400">{modal.noAdditionalAssignees}</p>
+
+                    <div>
+                      <div className="mb-2 flex items-center justify-between gap-2">
+                        <p className="text-[11px] font-medium uppercase tracking-[0.08em] text-slate-400 dark:text-zinc-500">
+                          {modal.additionalAssignees}
+                        </p>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          onClick={addAssignee}
+                          className="h-8 px-3 text-xs shadow-none"
+                        >
+                          <UserPlus className="mr-1 h-3 w-3" />
+                          {t.common.add}
+                        </Button>
                       </div>
-                    ) : (
-                      <div className="space-y-2">
-                        {additionalAssignees.map((assignee) => (
-                          <div key={assignee.id} className="bg-slate-50 dark:bg-slate-800/30 border border-slate-200 dark:border-slate-700 rounded-lg p-3 flex items-center justify-between">
-                            <div className="flex items-center gap-3 flex-1 min-w-0">
-                              <UserAvatar
-                                image={getPersonImage(assignee as Record<string, unknown>)}
-                                firstName={assignee.first_name}
-                                lastName={assignee.last_name}
-                                size="sm"
-                                className="h-8 w-8 shrink-0"
-                              />
-                              <div className="flex-1 min-w-0">
-                                <p className="text-sm font-medium text-slate-900 dark:text-white truncate">
-                                  {assignee.first_name} {assignee.last_name}
-                                </p>
-                                <p className="text-xs text-slate-600 dark:text-slate-400 truncate">{assignee.email}</p>
-                              </div>
-                            </div>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => removeAssignee(assignee.id)}
-                              className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/30 flex-shrink-0"
+                      {additionalAssignees.length === 0 ? (
+                        <p className="rounded-xl border border-dashed border-slate-200 px-3 py-3 text-[13px] text-slate-500 dark:border-zinc-800 dark:text-zinc-400">
+                          {modal.noAdditionalAssignees}
+                        </p>
+                      ) : (
+                        <div className="space-y-2">
+                          {additionalAssignees.map((assignee) => (
+                            <div
+                              key={assignee.id}
+                              className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-3 py-2.5 dark:border-zinc-800 dark:bg-zinc-950"
                             >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        ))}
-                      </div>
-                    )}
+                              <div className="flex min-w-0 flex-1 items-center gap-3">
+                                <UserAvatar
+                                  image={getPersonImage(assignee as Record<string, unknown>)}
+                                  firstName={assignee.first_name}
+                                  lastName={assignee.last_name}
+                                  size="sm"
+                                  className="h-8 w-8 shrink-0"
+                                />
+                                <div className="min-w-0 flex-1">
+                                  <p className="truncate text-[13.5px] font-medium text-slate-900 dark:text-zinc-50">
+                                    {assignee.first_name} {assignee.last_name}
+                                  </p>
+                                  <p className="truncate text-xs text-slate-500 dark:text-zinc-400">{assignee.email}</p>
+                                </div>
+                              </div>
+                              <Button
+                                type="button"
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => removeAssignee(assignee.id)}
+                                className="h-8 w-8 shrink-0 p-0 text-red-600 hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-950/30"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
+                </CreateFormSection>
+
+                {instance.client ? (
+                  <CreateFormSection index="03" title={modal.fields.relatedClient}>
+                    <div className="flex items-start gap-4 rounded-xl border border-slate-200 bg-white px-3 py-3 dark:border-zinc-800 dark:bg-zinc-950">
+                      <UserAvatar
+                        image={getPersonImage(instance.client as Record<string, unknown>)}
+                        firstName={instance.client.first_name}
+                        lastName={instance.client.last_name}
+                        email={instance.client.email}
+                        size="lg"
+                      />
+                      <div className="min-w-0 flex-1">
+                        <h4 className="text-[13.5px] font-semibold text-slate-900 dark:text-zinc-50">
+                          {instance.client.first_name} {instance.client.last_name}
+                        </h4>
+                        <div className="mt-1.5 flex flex-wrap gap-x-4 gap-y-1 text-[13px] font-normal text-slate-600 dark:text-zinc-400">
+                          <span className="inline-flex min-w-0 items-center gap-1.5">
+                            <Mail className="h-3.5 w-3.5 shrink-0 text-[#64499D]" aria-hidden />
+                            <span className="truncate">{instance.client.email}</span>
+                          </span>
+                          {instance.client.phone ? (
+                            <span className="inline-flex items-center gap-1.5">
+                              <Phone className="h-3.5 w-3.5 shrink-0 text-[#64499D]" aria-hidden />
+                              {instance.client.phone}
+                            </span>
+                          ) : null}
+                        </div>
+                      </div>
+                    </div>
+                  </CreateFormSection>
+                ) : null}
               </div>
             </div>
 
-            {/* Client Information */}
-            {instance.client && (
-              <div className="space-y-4 border-t border-slate-200 dark:border-slate-800 pt-6">
-                <div className="flex items-center gap-3 pb-2 border-b border-slate-200 dark:border-slate-800">
-                  <div className="p-2 rounded-lg bg-[#F1ECFF] dark:bg-[#2a2240]">
-                    <Users className="w-4 h-4 text-[#64499D] dark:text-[#E9E0FF]" />
-                  </div>
-                  <h3 className="text-base font-semibold text-slate-900 dark:text-white">
-                    {modal.fields.relatedClient}
-                  </h3>
-                </div>
-                
-                <div className="bg-slate-50 dark:bg-slate-800/30 border border-slate-200 dark:border-slate-700 rounded-lg p-4">
-                  <div className="flex items-start gap-4">
-                    <div className="w-14 h-14 bg-gradient-to-br from-[#64499D] to-[#3b2b66] rounded-full flex items-center justify-center text-white font-bold text-lg flex-shrink-0">
-                      {instance.client.first_name?.[0]}{instance.client.last_name?.[0]}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h4 className="text-base font-semibold text-slate-900 dark:text-white mb-2">
-                        {instance.client.first_name} {instance.client.last_name}
-                      </h4>
-                      <div className="flex flex-wrap gap-4">
-                        <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
-                          <Mail className="w-4 h-4 text-[#64499D] dark:text-[#E9E0FF]" />
-                          <span className="truncate">{instance.client.email}</span>
-                        </div>
-                        {instance.client.phone && (
-                          <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
-                            <Phone className="w-4 h-4 text-[#64499D] dark:text-[#E9E0FF]" />
-                            <span>{instance.client.phone}</span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
+            <DialogFooter className={cn(CREATE_FOOTER_CLASS, canDelete && 'justify-between')}>
+              {canDelete ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    if (!instance) return;
+                    if (deleteModalRef?.current) {
+                      deleteModalRef.current.show(instance);
+                    } else if (onDelete) {
+                      onDelete(instance);
+                    }
+                  }}
+                  disabled={isLoading}
+                  className={cn(CREATE_CANCEL_CLASS, 'text-red-600 hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-950/30')}
+                >
+                  <Trash2 />
+                  {t.common.delete}
+                </Button>
+              ) : (
+                <span />
+              )}
+              <div className="flex items-center gap-2.5">
+                <Button type="button" variant="outline" onClick={hide} disabled={isLoading} className={CREATE_CANCEL_CLASS}>
+                  {t.common.close}
+                </Button>
+                <Button
+                  type="button"
+                  onClick={() => {
+                    setIsEditing(true);
+                    scrollRef.current?.scrollTo({ top: 0 });
+                  }}
+                  disabled={isLoading}
+                  className={CREATE_SUBMIT_CLASS}
+                >
+                  <Edit />
+                  {t.common.edit}
+                </Button>
               </div>
-            )}
-          </div>
-        )}
-      </DialogContent>
-    </Dialog>
-  );
-});
+            </DialogFooter>
+          </>
+        ) : null}
+      </CreateFormDialog>
+    );
+  }
+);
 
 CaseViewModal.displayName = 'CaseViewModal';
 
-export default CaseViewModal; 
+export default CaseViewModal;

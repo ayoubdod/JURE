@@ -7,7 +7,6 @@ import {
   Edit,
   MapPin,
   Calendar,
-  Briefcase,
   Loader2,
   ArrowUpRight,
   MoreVertical,
@@ -17,6 +16,8 @@ import {
   CheckSquare,
   CalendarClock,
   AlarmClock,
+  Briefcase,
+  Globe,
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -24,6 +25,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { Skeleton } from '@/components/ui/skeleton';
 import CabinetMemberUpdateModal, { CabinetMemberUpdateModalRef } from './cabinet-member/CabinetMemberUpdateModal';
 import CaseUpdateModal, { CaseUpdateModalRef } from '@/components/case/CaseUpdateModal';
 import CaseDeleteModal, { CaseDeleteModalRef } from '@/components/case/CaseDeleteModal';
@@ -31,15 +33,18 @@ import useUserStore from '@/stores/userStore';
 import { useToast } from '@/hooks/use-toast';
 import { apiGetCases, apiUpdateCase } from '@/services/case/api';
 import { apiGetCabinetMembers } from '@/services/cabinet-member/api';
-import { getRoleDisplayName } from '@/utils/permissions';
 import { cn } from '@/lib/utils';
+import { navigateToCase } from '@/lib/caseRoutes';
+import { Link, useNavigate } from 'react-router';
 import {
   getCaseDateForFilter,
   getCountdownDays,
   getCountdownStyle,
-  getStatusColor,
 } from '@/utils/caseCardHelpers';
-import { TaskPriority } from '@/utils/constants';
+import { BACKEND_BASE_URL, TaskPriority } from '@/utils/constants';
+import { getPersonImage } from '@/components/common/UserAvatar';
+import { clientDisplayName } from '@/services/case/caseType';
+import { formatDate as formatI18nDate, useAppTranslation } from '@/i18n';
 
 type Props = {
   profile: API.CabinetMember;
@@ -57,40 +62,27 @@ type CaseItem = {
   case_type?: API.CaseType | string | null;
   caseType?: string | null;
   priority?: string | null;
+  client?: API.User | null;
   _counts?: API.CaseRelatedCounts | null;
 };
 
 const STATUS = [
-  { value: 'ALL', label: 'All' },
-  { value: 'IN_PROGRESS', label: 'In progress' },
-  { value: 'OPEN', label: 'Open' },
-  { value: 'PENDING', label: 'Pending' },
-  { value: 'CLOSED', label: 'Closed' },
-  { value: 'CANCELLED', label: 'Cancelled' },
-  { value: 'ARCHIVED', label: 'Archived' },
+  { value: 'ALL' },
+  { value: 'IN_PROGRESS' },
+  { value: 'OPEN' },
+  { value: 'PENDING' },
+  { value: 'CLOSED' },
+  { value: 'CANCELLED' },
+  { value: 'ARCHIVED' },
 ] as const;
 type StatusValue = (typeof STATUS)[number]['value'];
 
-const fmtDate = (d?: string | Date) =>
-  d ? new Date(d).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
-
-const fmtShortDate = (d?: string | Date) =>
-  d ? new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : '—';
-
-function caseLeftBorderClass(caseType?: string | null): string {
-  const t = String(caseType || '').toUpperCase();
-  if (t === 'LITIGATION') return 'border-l-rose-500';
-  if (t === 'CONSULTATION') return 'border-l-indigo-500';
-  if (t === 'ADMINISTRATIVE_DUTY' || t === 'ADMINISTRATIVE') return 'border-l-amber-400';
-  return 'border-l-purple-500';
-}
-
-function caseTypeDotClass(caseType?: string | null): string {
-  const t = String(caseType || '').toUpperCase();
-  if (t === 'LITIGATION') return 'bg-rose-500';
-  if (t === 'CONSULTATION') return 'bg-indigo-500';
-  if (t === 'ADMINISTRATIVE_DUTY' || t === 'ADMINISTRATIVE') return 'bg-amber-400';
-  return 'bg-purple-500';
+function resolveMediaUrl(url: string | null | undefined): string | null {
+  if (!url?.trim()) return null;
+  const u = url.trim();
+  if (u.startsWith('http://') || u.startsWith('https://')) return u;
+  const base = BACKEND_BASE_URL.replace(/\/$/, '');
+  return `${base}${u.startsWith('/') ? '' : '/'}${u}`;
 }
 
 function showPriorityPill(p?: string | null): boolean {
@@ -99,96 +91,106 @@ function showPriorityPill(p?: string | null): boolean {
   return u === 'high' || u === 'urgent' || p === TaskPriority.HIGH;
 }
 
-function filterPillSelectedClass(value: StatusValue): string {
-  switch (value) {
-    case 'IN_PROGRESS':
-      return 'bg-indigo-600 text-white shadow-sm';
-    case 'OPEN':
-      return 'bg-emerald-600 text-white shadow-sm';
-    case 'PENDING':
-      return 'bg-amber-500 text-slate-900 shadow-sm';
-    case 'CLOSED':
-      return 'bg-slate-500 text-white shadow-sm';
-    case 'CANCELLED':
-      return 'bg-rose-600 text-white shadow-sm';
-    case 'ARCHIVED':
-      return 'bg-slate-600 text-white shadow-sm';
-    case 'ALL':
-    default:
-      return 'bg-[#64499D] text-white shadow-sm';
-  }
-}
-
-function rolePillClass(role?: API.Role | string): string {
+function roleTone(role?: API.Role | string): string {
   const r = String(role || '').toUpperCase();
-  if (r === 'OWNER') return 'border-amber-400/80 bg-amber-50/80 text-amber-900 dark:bg-amber-950/30 dark:text-amber-200 dark:border-amber-400/50';
-  if (r === 'ADMIN')
-    return 'border-slate-400/80 bg-slate-50 text-slate-700 dark:bg-slate-800/80 dark:text-slate-200 dark:border-slate-500/50';
-  if (r === 'MANAGER') return 'border-purple-400/80 bg-purple-50/90 text-purple-900 dark:bg-purple-950/40 dark:text-purple-200 dark:border-purple-500/50';
-  if (r === 'LAWYER') return 'border-indigo-400/80 bg-indigo-50/80 text-indigo-900 dark:bg-indigo-950/40 dark:text-indigo-200 dark:border-indigo-500/50';
-  if (r === 'ASSISTANT') return 'border-teal-400/80 bg-teal-50/80 text-teal-900 dark:bg-teal-950/40 dark:text-teal-200 dark:border-teal-500/50';
-  return 'border-slate-200 bg-slate-50 text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300';
+  if (r === 'OWNER') return 'text-amber-800 dark:text-amber-200';
+  if (r === 'ADMIN') return 'text-slate-600 dark:text-slate-300';
+  if (r === 'MANAGER') return 'text-[#64499D] dark:text-[#C4B5FD]';
+  if (r === 'LAWYER') return 'text-indigo-700 dark:text-indigo-300';
+  if (r === 'ASSISTANT') return 'text-teal-700 dark:text-teal-300';
+  return 'text-slate-500 dark:text-slate-400';
 }
 
 function capacityFromTotal(total: number): {
   key: 'LOW' | 'MEDIUM' | 'HIGH' | 'OVERLOADED';
-  label: string;
-  pillLabel: string;
-  barClass: string;
   fillPct: number;
+  barClass: string;
 } {
   if (total <= 3) {
-    return {
-      key: 'LOW',
-      label: 'Light',
-      pillLabel: 'LOW',
-      barClass: 'bg-emerald-500',
-      fillPct: Math.min(100, (total / 10) * 100),
-    };
+    return { key: 'LOW', fillPct: Math.min(100, (total / 10) * 100), barClass: 'bg-emerald-500' };
   }
   if (total <= 6) {
-    return {
-      key: 'MEDIUM',
-      label: 'Moderate',
-      pillLabel: 'MEDIUM',
-      barClass: 'bg-blue-500',
-      fillPct: Math.min(100, (total / 10) * 100),
-    };
+    return { key: 'MEDIUM', fillPct: Math.min(100, (total / 10) * 100), barClass: 'bg-blue-500' };
   }
   if (total <= 10) {
-    return {
-      key: 'HIGH',
-      label: 'Heavy',
-      pillLabel: 'HIGH',
-      barClass: 'bg-amber-500',
-      fillPct: Math.min(100, (total / 10) * 100),
-    };
+    return { key: 'HIGH', fillPct: Math.min(100, (total / 10) * 100), barClass: 'bg-amber-500' };
   }
-  return {
-    key: 'OVERLOADED',
-    label: 'Overloaded',
-    pillLabel: 'OVERLOADED',
-    barClass: 'bg-red-500',
-    fillPct: 100,
-  };
+  return { key: 'OVERLOADED', fillPct: 100, barClass: 'bg-red-500' };
 }
 
 function capacityPillTone(key: string): string {
   const k = key.toUpperCase();
-  if (k === 'LOW') return 'text-emerald-700 dark:text-emerald-400 bg-emerald-500/15 ring-emerald-500/30';
-  if (k === 'MEDIUM') return 'text-blue-700 dark:text-blue-400 bg-blue-500/15 ring-blue-500/30';
-  if (k === 'HIGH') return 'text-amber-800 dark:text-amber-400 bg-amber-500/15 ring-amber-500/30';
-  return 'text-red-700 dark:text-red-400 bg-red-500/15 ring-red-500/30';
+  if (k === 'LOW') return 'text-emerald-700 dark:text-emerald-400';
+  if (k === 'MEDIUM') return 'text-blue-700 dark:text-blue-400';
+  if (k === 'HIGH') return 'text-amber-800 dark:text-amber-400';
+  return 'text-red-700 dark:text-red-400';
 }
 
-// ─────────────── Assign dialog (inline) ───────────────
+function statusDotClass(status: string): string {
+  switch (status) {
+    case 'IN_PROGRESS':
+      return 'bg-indigo-500';
+    case 'OPEN':
+      return 'bg-[#64499D]';
+    case 'PENDING':
+      return 'bg-amber-500';
+    case 'CLOSED':
+      return 'bg-emerald-500';
+    case 'CANCELLED':
+      return 'bg-rose-500';
+    case 'ARCHIVED':
+      return 'bg-slate-400';
+    default:
+      return 'bg-slate-400';
+  }
+}
+
+function statusTextClass(status: string): string {
+  switch (status) {
+    case 'IN_PROGRESS':
+      return 'text-indigo-700 dark:text-indigo-300';
+    case 'OPEN':
+      return 'text-[#64499D] dark:text-[#C4B5FD]';
+    case 'PENDING':
+      return 'text-amber-700 dark:text-amber-300';
+    case 'CLOSED':
+      return 'text-slate-600 dark:text-slate-300';
+    case 'CANCELLED':
+      return 'text-rose-700 dark:text-rose-300';
+    case 'ARCHIVED':
+      return 'text-slate-500 dark:text-slate-400';
+    default:
+      return 'text-slate-500 dark:text-slate-400';
+  }
+}
+
+function caseTypeLabel(
+  caseType: string | null | undefined,
+  labels: { admin: string; consultation: string; litigation: string }
+): string {
+  const t = String(caseType || '').toUpperCase();
+  if (t === 'LITIGATION') return labels.litigation;
+  if (t === 'CONSULTATION') return labels.consultation;
+  if (t === 'ADMINISTRATIVE_DUTY' || t === 'ADMINISTRATIVE') return labels.admin;
+  return '';
+}
+
+const surface =
+  'rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-[0_1px_2px_rgba(15,23,42,0.04)]';
+
+const sectionTitleClass =
+  'text-[15px] font-semibold tracking-tight text-slate-900 dark:text-white';
+
 type AssignDialogProps = {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   caseItem: CaseItem | null;
   onAssigned: () => void;
 };
+
 const AssignDialog: React.FC<AssignDialogProps> = ({ open, onOpenChange, caseItem, onAssigned }) => {
+  const { t } = useAppTranslation();
+  const p = t.profile;
   const [loading, setLoading] = useState(false);
   const [members, setMembers] = useState<API.CabinetMember[]>([]);
   const [selectedId, setSelectedId] = useState<string | number | ''>('');
@@ -209,12 +211,12 @@ const AssignDialog: React.FC<AssignDialogProps> = ({ open, onOpenChange, caseIte
     if (!caseItem || !selectedId) return;
     setLoading(true);
     try {
-      await apiUpdateCase({ id: caseItem.id as any, assigned_to: selectedId } as any);
-      toast({ title: 'Case assigned', description: 'The case has been assigned successfully.' });
+      await apiUpdateCase({ id: Number(caseItem.id), assigned_to: selectedId });
+      toast({ title: p.caseAssigned, description: p.caseAssignedDesc });
       onOpenChange(false);
       onAssigned();
     } catch {
-      toast({ title: 'Assignment failed', description: 'Please try again.', variant: 'destructive' });
+      toast({ title: p.assignmentFailed, description: p.assignmentFailedDesc, variant: 'destructive' });
     } finally {
       setLoading(false);
     }
@@ -224,40 +226,40 @@ const AssignDialog: React.FC<AssignDialogProps> = ({ open, onOpenChange, caseIte
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Assign case</DialogTitle>
+          <DialogTitle>{p.assignTitle}</DialogTitle>
         </DialogHeader>
         <div className="space-y-3">
           <div className="text-sm">
-            <div className="text-slate-700 dark:text-slate-300 font-medium">
+            <div className="font-medium text-slate-700 dark:text-slate-300">
               {caseItem?.title || caseItem?.reference || `Case #${caseItem?.id}`}
             </div>
-            <div className="text-xs text-slate-500 dark:text-slate-400">Choose an active team member</div>
+            <div className="text-xs text-slate-500 dark:text-slate-400">{p.assignHint}</div>
           </div>
           <div className="space-y-1">
-            <label className="text-xs text-slate-500 dark:text-slate-400">Assignee</label>
+            <label className="text-xs text-slate-500 dark:text-slate-400">{p.assignee}</label>
             <select
-              value={selectedId as any}
+              value={selectedId as string}
               onChange={(e) => setSelectedId(e.target.value)}
               className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-900"
               disabled={loading}
             >
               <option value="" disabled>
-                Select a member
+                {p.selectMember}
               </option>
               {members.map((m) => (
                 <option key={m.id} value={m.id}>
-                  {m.first_name} {m.last_name} {m.is_active ? '' : '(inactive)'}
+                  {m.first_name} {m.last_name} {m.is_active ? '' : p.inactiveSuffix}
                 </option>
               ))}
             </select>
           </div>
           <div className="flex justify-end gap-2 pt-2">
             <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
-              Cancel
+              {t.common.cancel}
             </Button>
             <Button onClick={handleAssign} disabled={loading || !selectedId}>
-              {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-              Assign
+              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+              {p.assignCase}
             </Button>
           </div>
         </div>
@@ -266,14 +268,34 @@ const AssignDialog: React.FC<AssignDialogProps> = ({ open, onOpenChange, caseIte
   );
 };
 
-const cardShell =
-  'rounded-xl border border-[#e5e7eb] dark:border-slate-800 bg-white dark:bg-slate-900 shadow-[0_1px_3px_rgba(0,0,0,0.08)]';
+export function ProfileWorkspaceSkeleton() {
+  return (
+    <div className="mx-auto max-w-[1180px] px-1 pb-12 sm:px-2">
+      <div className={cn(surface, 'mb-6 p-4 sm:p-5')}>
+        <div className="flex items-center gap-4">
+          <Skeleton className="h-[72px] w-[72px] shrink-0 rounded-full" />
+          <div className="min-w-0 flex-1">
+            <Skeleton className="h-6 w-44" />
+            <Skeleton className="mt-2 h-4 w-28" />
+          </div>
+          <div className="hidden gap-2 sm:flex">
+            <Skeleton className="h-8 w-20 rounded-md" />
+            <Skeleton className="h-8 w-24 rounded-md" />
+          </div>
+        </div>
+      </div>
+      <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-[minmax(0,22rem)_minmax(0,1fr)]">
+        <Skeleton className="h-[640px] w-full rounded-2xl" />
+        <Skeleton className="h-[640px] w-full rounded-2xl" />
+      </div>
+    </div>
+  );
+}
 
-const sectionHeaderClass =
-  'text-[10px] font-semibold uppercase tracking-[0.08em] text-[#6b7280] dark:text-slate-400 pb-2 border-b border-slate-200/90 dark:border-slate-800';
-
-// ─────────────── Main component ───────────────
 const TeamMemberProfile: React.FC<Props> = ({ profile, onUpdateSuccess }) => {
+  const navigate = useNavigate();
+  const { t, tf, enumLabel, lang } = useAppTranslation();
+  const p = t.profile;
   const cabinetUpdateRef = useRef<CabinetMemberUpdateModalRef>(null);
   const caseUpdateRef = useRef<CaseUpdateModalRef>(null);
   const caseDeleteRef = useRef<CaseDeleteModalRef>(null);
@@ -281,30 +303,31 @@ const TeamMemberProfile: React.FC<Props> = ({ profile, onUpdateSuccess }) => {
   const { user } = useUserStore();
   const { toast } = useToast();
 
-  const fullName = `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || 'Unnamed';
+  const isOwnProfile = user?.id === profile.id;
+  const fullName = `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || p.unnamed;
   const initials = `${profile.first_name?.[0] ?? ''}${profile.last_name?.[0] ?? ''}`.toUpperCase() || '•';
-  const roleRaw = (profile as API.CabinetMember).role;
+  const roleRaw = profile.role;
   const positionFallback = String((profile as { position?: string }).position || '').trim();
-  const roleDisplay = roleRaw
-    ? getRoleDisplayName(roleRaw)
-    : positionFallback || '—';
-  const dept = (profile as { department?: string }).department as string | undefined;
+  const roleDisplay = roleRaw ? t.team.roles[roleRaw] || String(roleRaw) : positionFallback;
+  const dept = String((profile as { department?: string }).department || '').trim();
+  const cabinetName = [
+    user?.trade_name,
+    user?.firm_name,
+    (user as { cabinet_name?: string } | null)?.cabinet_name,
+  ]
+    .map((v) => (typeof v === 'string' ? v.trim() : ''))
+    .find(Boolean);
 
   const imageUrl = useMemo(() => {
-    if (user?.id === profile.id && user?.image) return user.image;
-    return (
-      (profile as { image?: string }).image ||
-      (profile as { avatar?: string }).avatar ||
-      (profile as { photo?: string }).photo ||
-      (profile as { photo_url?: string }).photo_url ||
-      null
-    );
-  }, [user?.id, user?.image, profile]);
+    const fromProfile = getPersonImage(profile as unknown as Record<string, unknown>);
+    const fromSession = isOwnProfile ? user?.image : undefined;
+    return resolveMediaUrl(fromSession || fromProfile);
+  }, [isOwnProfile, user?.image, profile]);
 
   const [countsLoading, setCountsLoading] = useState(true);
   const [allCases, setAllCases] = useState<CaseItem[]>([]);
   const [visible, setVisible] = useState<CaseItem[]>([]);
-  const [selectedStatus, setSelectedStatus] = useState<StatusValue>('IN_PROGRESS');
+  const [selectedStatus, setSelectedStatus] = useState<StatusValue>('ALL');
 
   const [counts, setCounts] = useState<Record<StatusValue | 'TOTAL', number>>({
     ALL: 0,
@@ -316,6 +339,18 @@ const TeamMemberProfile: React.FC<Props> = ({ profile, onUpdateSuccess }) => {
     ARCHIVED: 0,
     TOTAL: 0,
   });
+
+  const fmtDate = (d?: string | Date) => {
+    if (!d) return p.emDash;
+    const formatted = formatI18nDate(d, lang, { day: 'numeric', month: 'short', year: 'numeric' });
+    return formatted || p.emDash;
+  };
+
+  const fmtShortDate = (d?: string | Date | null) => {
+    if (!d) return p.emDash;
+    const formatted = formatI18nDate(d, lang, { day: 'numeric', month: 'short' });
+    return formatted || p.emDash;
+  };
 
   const workloadStats = useMemo(() => {
     const activeStatuses = new Set(['OPEN', 'IN_PROGRESS', 'PENDING']);
@@ -331,12 +366,7 @@ const TeamMemberProfile: React.FC<Props> = ({ profile, onUpdateSuccess }) => {
       appointments += full._counts?.appointments ?? 0;
       const filterDate = getCaseDateForFilter(full as API.Case);
       const days = getCountdownDays(filterDate);
-      if (
-        filterDate &&
-        days != null &&
-        days < 0 &&
-        !['CLOSED', 'CANCELLED', 'ARCHIVED'].includes(st)
-      ) {
+      if (filterDate && days != null && days < 0 && !['CLOSED', 'CANCELLED', 'ARCHIVED'].includes(st)) {
         overdue += 1;
       }
     }
@@ -384,8 +414,7 @@ const TeamMemberProfile: React.FC<Props> = ({ profile, onUpdateSuccess }) => {
       const sorted = acc
         .map((c) => ({ ...c, _createdKey: (c.created || c.created_at || '') as string }))
         .sort(
-          (a, b) =>
-            new Date(b._createdKey || 0).getTime() - new Date(a._createdKey || 0).getTime()
+          (a, b) => new Date(b._createdKey || 0).getTime() - new Date(a._createdKey || 0).getTime()
         );
       setAllCases(sorted);
       setCounts(initial);
@@ -396,7 +425,7 @@ const TeamMemberProfile: React.FC<Props> = ({ profile, onUpdateSuccess }) => {
 
   useEffect(() => {
     refreshCases();
-    /* eslint-disable-next-line */
+    /* eslint-disable-next-line react-hooks/exhaustive-deps */
   }, [profile.id]);
 
   useEffect(() => {
@@ -418,432 +447,502 @@ const TeamMemberProfile: React.FC<Props> = ({ profile, onUpdateSuccess }) => {
     refreshCases();
   };
 
-  const viewCase = (c: CaseItem) => (window.location.href = `/dashboard/cases/${c.id}`);
-  const editCase = (c: CaseItem) => caseUpdateRef.current?.show(c as any);
-  const deleteCase = (c: CaseItem) => caseDeleteRef.current?.show(c as any);
-  const printCase = (c: CaseItem) => window.print();
+  const viewCase = (c: CaseItem) => {
+    const id = Number(c.id);
+    if (!Number.isFinite(id)) return;
+    void navigateToCase(navigate, {
+      id,
+      title: c.title,
+      reference: c.reference,
+      caseType: c.caseType,
+      case_type: c.case_type,
+    });
+  };
+  const editCase = (c: CaseItem) => caseUpdateRef.current?.show(c as API.Case);
+  const deleteCase = (c: CaseItem) => caseDeleteRef.current?.show(c as API.Case);
+  const printCase = () => window.print();
 
   const copyValue = (text: string, label: string) => {
-    if (!text) return;
+    if (!text || text === p.emDash) return;
     void navigator.clipboard.writeText(text).then(() => {
-      toast({ title: `${label} copied` });
+      toast({ title: tf(p.copied, { label }) });
     });
   };
 
-  const scrollToContact = () => {
-    document.getElementById('profile-contact-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  };
+  const openEdit = () => cabinetUpdateRef.current?.show(profile);
+  const contactHref = !isOwnProfile
+    ? profile.email?.trim()
+      ? `mailto:${profile.email.trim()}`
+      : profile.phone?.trim()
+        ? `tel:${profile.phone.trim()}`
+        : undefined
+    : undefined;
 
-  const caseRowDate = (c: CaseItem) => {
-    const full = c as CaseItem & API.Case;
-    const keyDate = getCaseDateForFilter(full as API.Case) || (c.created || c.created_at);
-    const days = getCountdownDays(keyDate);
-    const style = days != null ? getCountdownStyle(days) : 'normal';
-    const cls =
-      style === 'critical'
-        ? 'text-red-700 dark:text-red-400 font-semibold'
-        : style === 'warning'
-          ? 'text-amber-700 dark:text-amber-400'
-          : 'text-slate-500 dark:text-slate-400';
-    return { keyDate, cls, label: fmtShortDate(keyDate) };
-  };
+  const casesHref = `/dashboard/cases?assigned_to=${profile.id}`;
+
+  const contactRows = [
+    {
+      icon: Mail,
+      label: p.email,
+      value: profile.email?.trim() || '',
+      href: profile.email ? `mailto:${profile.email}` : undefined,
+    },
+    {
+      icon: Phone,
+      label: p.phone,
+      value: profile.phone?.trim() || '',
+      href: profile.phone ? `tel:${profile.phone}` : undefined,
+    },
+    {
+      icon: MapPin,
+      label: p.address,
+      value: profile.address?.trim() || '',
+    },
+    ...(profile.country?.trim()
+      ? [
+          {
+            icon: Globe,
+            label: p.country,
+            value: profile.country.trim(),
+          },
+        ]
+      : []),
+    {
+      icon: Calendar,
+      label: p.joined,
+      value: fmtDate(profile.date_joined),
+      copyable: false,
+    },
+  ];
+
+  const overviewRows = [
+    roleDisplay ? { label: p.role, value: roleDisplay } : null,
+    cabinetName ? { label: p.cabinet, value: cabinetName } : null,
+    profile.date_joined ? { label: p.activeSince, value: fmtDate(profile.date_joined) } : null,
+    !countsLoading
+      ? {
+          label: p.assignedWorkload,
+          value:
+            counts.TOTAL === 1
+              ? p.assignedWorkloadValueOne
+              : tf(p.assignedWorkloadValue, { count: counts.TOTAL }),
+        }
+      : null,
+  ].filter(Boolean) as Array<{ label: string; value: string }>;
+
+  const quickActions: Array<{
+    key: string;
+    label: string;
+    to?: string;
+    onClick?: () => void;
+  }> = [
+    { key: 'cases', label: p.viewAllCases, to: casesHref },
+    { key: 'tasks', label: isOwnProfile ? p.viewMyTasks : p.viewTasks, to: '/dashboard/tasks' },
+    { key: 'appointments', label: p.viewAppointments, to: '/dashboard/appointments' },
+    ...(isOwnProfile
+      ? [{ key: 'settings', label: p.profileSettings, to: '/dashboard/account' }]
+      : []),
+  ];
 
   return (
-    <div className="max-w-7xl mx-auto p-4">
-      {/* Header card — full width */}
-      <div className={cn('relative overflow-hidden mb-6', cardShell)}>
-        <div
-          className="relative h-[180px] md:h-[180px] bg-gradient-to-br from-[#5b3d9e] via-[#4f46e5] to-[#0d9488] overflow-hidden"
-          aria-hidden
-        >
-          <div
-            className="pointer-events-none absolute inset-0 opacity-[0.18] mix-blend-overlay"
-            style={{
-              backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.55'/%3E%3C/svg%3E")`,
-            }}
-          />
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/15" />
-
-          {profile.id === user?.id && (
-            <div className="absolute top-4 right-4 z-10">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-9 w-9 rounded-full bg-black/30 hover:bg-black/40 backdrop-blur text-white border border-white/30 shadow-sm"
-                onClick={() => cabinetUpdateRef.current?.show(profile)}
-                type="button"
-                aria-label="Edit profile"
-              >
-                <Edit className="w-4 h-4" />
-              </Button>
-            </div>
-          )}
-        </div>
-
-        <div className="relative px-4 sm:px-8 pb-8">
-          <div className="flex justify-center -mt-12 mb-6">
-            <div className="relative">
-              <div
-                className={cn(
-                  'rounded-full overflow-hidden ring-4 ring-white dark:ring-slate-900 bg-white dark:bg-slate-900',
-                  'shadow-[0_4px_12px_rgba(0,0,0,0.15)]',
-                  'h-[72px] w-[72px] md:h-24 md:w-24'
-                )}
-              >
-                {imageUrl ? (
-                  <img src={imageUrl} alt={fullName} className="h-full w-full object-cover" />
-                ) : (
-                  <div className="h-full w-full flex items-center justify-center bg-gradient-to-br from-[#64499D] to-[#3b2b66] text-white text-2xl md:text-3xl font-bold">
-                    {initials}
-                  </div>
-                )}
-              </div>
-              <div
-                className={cn(
-                  'absolute bottom-0 right-0 rounded-full border-2 border-white dark:border-slate-900',
-                  'h-[14px] w-[14px]',
-                  profile.is_active ? 'bg-emerald-500' : 'bg-slate-400'
-                )}
-              />
-            </div>
-          </div>
-
-          <div className="text-center mb-6">
-            <div className="flex flex-wrap items-center justify-center gap-2 md:gap-3 mb-2">
-              <h1 className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white">{fullName}</h1>
-              {roleRaw ? (
-                <span
-                  className={cn(
-                    'inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold uppercase tracking-[0.1em] border',
-                    rolePillClass(roleRaw)
-                  )}
-                >
-                  {roleDisplay}
-                </span>
-              ) : positionFallback ? (
-                <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold uppercase tracking-[0.1em] border border-slate-200 bg-slate-50 text-slate-700 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200">
-                  {positionFallback}
-                </span>
-              ) : null}
-              <span
-                className={cn(
-                  'inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold ring-1 ring-inset',
-                  profile.is_active
-                    ? 'bg-emerald-50 text-emerald-800 ring-emerald-200 dark:bg-emerald-900/25 dark:text-emerald-300 dark:ring-emerald-800/60'
-                    : 'bg-slate-100 text-slate-600 ring-slate-200 dark:bg-slate-800 dark:text-slate-300'
-                )}
-              >
-                {profile.is_active ? 'Active' : 'Inactive'}
-              </span>
-            </div>
-            {dept && (
-              <p className="text-sm text-slate-500 dark:text-slate-400 mb-3">{dept}</p>
-            )}
-
-            <div className="flex items-center justify-center gap-3 mt-4">
-              <Button
-                type="button"
-                variant="outline"
-                className="rounded-[10px] border-[#64499D] text-[#64499D] hover:bg-[#64499D]/10 dark:border-[#E9E0FF] dark:text-[#E9E0FF]"
-                onClick={scrollToContact}
-              >
-                <Phone className="w-4 h-4 mr-2" /> Contact
-              </Button>
-              {profile.id !== user?.id && (
-                <Button
-                  variant="outline"
-                  className="border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 px-6 rounded-[10px]"
-                  onClick={() => cabinetUpdateRef.current?.show(profile)}
-                >
-                  <Edit className="w-4 h-4 mr-2" /> Edit Profile
-                </Button>
+    <div className="mx-auto max-w-[1180px] px-1 pb-12 sm:px-2">
+      <section className={cn(surface, 'mb-6 p-4 sm:px-5 sm:py-4')}>
+        <div className="flex items-center gap-3.5 sm:gap-4">
+          <div className="relative shrink-0">
+            <div
+              className={cn(
+                'h-[64px] w-[64px] overflow-hidden rounded-full bg-white sm:h-[72px] sm:w-[72px]',
+                'ring-2 ring-slate-100 dark:bg-slate-900 dark:ring-slate-800'
+              )}
+            >
+              {imageUrl ? (
+                <img src={imageUrl} alt={fullName} className="h-full w-full object-cover" />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-[#64499D] to-[#3E2D71] text-lg font-semibold text-white sm:text-xl">
+                  {initials}
+                </div>
               )}
             </div>
+            <span
+              className={cn(
+                'absolute bottom-0.5 end-0.5 h-3 w-3 rounded-full ring-2 ring-white dark:ring-slate-900',
+                profile.is_active ? 'bg-emerald-500' : 'bg-slate-400'
+              )}
+              aria-hidden
+            />
           </div>
-        </div>
-      </div>
 
-      {/* Two columns */}
-      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,30%)_minmax(0,70%)] gap-6 items-start">
-        {/* LEFT */}
-        <div className="flex flex-col gap-6 order-2 lg:order-1">
-          <div id="profile-contact-section" className={cn('p-5', cardShell)}>
-            <p className={sectionHeaderClass}>Contact</p>
-            <div className="mt-4 space-y-0">
-              {[
-                {
-                  icon: Mail,
-                  label: 'Email',
-                  value: profile.email,
-                  href: profile.email ? `mailto:${profile.email}` : undefined,
-                },
-                {
-                  icon: Phone,
-                  label: 'Phone',
-                  value: profile.phone,
-                  href: profile.phone ? `tel:${profile.phone}` : undefined,
-                },
-                {
-                  icon: MapPin,
-                  label: 'Address',
-                  value: profile.address?.trim() ? profile.address : '—',
-                },
-                {
-                  icon: Calendar,
-                  label: 'Joined',
-                  value: fmtDate(profile.date_joined as string),
-                },
-              ].map((row) => (
-                <div
-                  key={row.label}
-                  className="group flex gap-3 py-3 border-b border-slate-100 dark:border-slate-800 last:border-0 first:pt-0"
+          <div className="flex min-w-0 flex-1 flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+            <div className="min-w-0">
+              <h1 className="truncate text-lg font-semibold leading-tight tracking-tight text-slate-900 dark:text-white">
+                {fullName}
+              </h1>
+              <p className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[13px]">
+                {(roleDisplay || dept) && (
+                  <span className={cn('font-medium', roleTone(roleRaw))}>
+                    {[roleDisplay, dept].filter(Boolean).join(' · ')}
+                  </span>
+                )}
+                {(roleDisplay || dept) && (
+                  <span className="text-slate-300 dark:text-slate-600" aria-hidden>
+                    ·
+                  </span>
+                )}
+                <span
+                  className={cn(
+                    'inline-flex items-center gap-1',
+                    profile.is_active
+                      ? 'text-emerald-700 dark:text-emerald-400'
+                      : 'text-slate-500 dark:text-slate-400'
+                  )}
                 >
-                  <div className="mt-0.5 text-[#64499D] dark:text-[#E9E0FF]">
-                    <row.icon className="w-4 h-4 shrink-0" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                      {row.label}
-                    </p>
-                    {row.href ? (
-                      <a
-                        href={row.href}
-                        className="block truncate text-sm font-semibold text-slate-900 dark:text-slate-100 hover:text-[#64499D] dark:hover:text-[#E9E0FF] transition-colors"
-                      >
-                        {row.value}
-                      </a>
-                    ) : (
-                      <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 break-words">
-                        {row.value}
-                      </p>
+                  <span
+                    className={cn(
+                      'h-1.5 w-1.5 rounded-full',
+                      profile.is_active ? 'bg-emerald-500' : 'bg-slate-400'
                     )}
-                  </div>
-                  <button
-                    type="button"
-                    className="flex items-center justify-center h-8 w-8 shrink-0 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 opacity-80 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
-                    onClick={() => copyValue(String(row.value || ''), row.label)}
-                    aria-label={`Copy ${row.label}`}
-                  >
-                    <Copy className="w-4 h-4" />
-                  </button>
-                </div>
-              ))}
+                    aria-hidden
+                  />
+                  {profile.is_active ? p.statusActive : p.statusInactive}
+                </span>
+              </p>
+            </div>
+
+            <div className="flex shrink-0 flex-wrap items-center gap-2">
+              {contactHref && (
+                <Button
+                  asChild
+                  variant="outline"
+                  size="sm"
+                  className="h-8 rounded-md border-[#64499D]/40 px-3 text-[#64499D] hover:bg-[#64499D]/10 dark:border-[#C4B5FD]/40 dark:text-[#C4B5FD] dark:hover:bg-[#C4B5FD]/10"
+                >
+                  <a href={contactHref}>
+                    <Phone className="h-3.5 w-3.5" />
+                    {p.contact}
+                  </a>
+                </Button>
+              )}
+              <Button
+                type="button"
+                size="sm"
+                className="h-8 rounded-md bg-[#64499D] px-3 text-white hover:bg-[#543d86] dark:bg-[#7C6BB8] dark:hover:bg-[#8B6FD1]"
+                onClick={openEdit}
+              >
+                <Edit className="h-3.5 w-3.5" />
+                {p.editProfile}
+              </Button>
             </div>
           </div>
+        </div>
+      </section>
 
-          <div className={cn('p-5', cardShell)}>
-            <p className={sectionHeaderClass}>Workload</p>
-            <div className="mt-4 grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-[minmax(0,22rem)_minmax(0,1fr)]">
+        <aside className={cn(surface, 'order-2 divide-y divide-slate-100 overflow-hidden dark:divide-slate-800 lg:order-1')}>
+          <section id="profile-contact-section" className="scroll-mt-24 p-6">
+            <h2 className={sectionTitleClass}>{p.contactInformation}</h2>
+            <div className="mt-5">
+              {contactRows.map((row) => {
+                const display = row.value || p.emDash;
+                const canCopy = display !== p.emDash && (row as { copyable?: boolean }).copyable !== false;
+                return (
+                  <div
+                    key={row.label}
+                    className="group flex gap-3 border-b border-slate-100 py-3.5 first:pt-0 last:border-0 last:pb-0 dark:border-slate-800"
+                  >
+                    <div className="mt-0.5 text-[#64499D] dark:text-[#C4B5FD]">
+                      <row.icon className="h-4 w-4 shrink-0" aria-hidden />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400">{row.label}</p>
+                      {row.href && row.value ? (
+                        <a
+                          href={row.href}
+                          className="mt-0.5 block truncate text-sm font-semibold text-slate-900 transition-colors hover:text-[#64499D] dark:text-slate-100 dark:hover:text-[#C4B5FD]"
+                        >
+                          {display}
+                        </a>
+                      ) : (
+                        <p className="mt-0.5 break-words text-sm font-semibold text-slate-900 dark:text-slate-100">
+                          {display}
+                        </p>
+                      )}
+                    </div>
+                    {canCopy && (
+                      <button
+                        type="button"
+                        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-slate-400 opacity-80 transition-opacity hover:bg-slate-100 hover:text-slate-700 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#64499D]/35 dark:hover:bg-slate-800 sm:opacity-0 sm:group-hover:opacity-100"
+                        onClick={() => copyValue(display, row.label)}
+                        aria-label={tf(p.copyAria, { label: row.label })}
+                      >
+                        <Copy className="h-3.5 w-3.5" />
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+
+          {overviewRows.length > 0 && (
+            <section className="p-6">
+              <h2 className={sectionTitleClass}>{p.professionalOverview}</h2>
+              <dl className="mt-5 space-y-3.5">
+                {overviewRows.map((row) => (
+                  <div key={row.label} className="flex items-baseline justify-between gap-4">
+                    <dt className="text-[12px] text-slate-500 dark:text-slate-400">{row.label}</dt>
+                    <dd className="text-right text-sm font-semibold text-slate-900 dark:text-slate-100">{row.value}</dd>
+                  </div>
+                ))}
+              </dl>
+            </section>
+          )}
+
+          <section className="p-6">
+            <h2 className={sectionTitleClass}>{p.workload}</h2>
+            <div className="mt-5 grid grid-cols-2 gap-3">
               {[
                 {
                   icon: FolderOpen,
-                  label: 'Active Cases',
+                  label: p.activeCases,
                   value: workloadStats.activeCases,
-                  color: 'text-indigo-600 dark:text-indigo-400',
+                  tone: 'text-indigo-600 dark:text-indigo-400',
                   bg: 'bg-indigo-500/10',
                 },
                 {
                   icon: CheckSquare,
-                  label: 'Tasks',
+                  label: p.tasks,
                   value: workloadStats.tasks,
-                  color: 'text-emerald-600 dark:text-emerald-400',
+                  tone: 'text-emerald-600 dark:text-emerald-400',
                   bg: 'bg-emerald-500/10',
                 },
                 {
                   icon: CalendarClock,
-                  label: 'Appointments',
+                  label: p.appointments,
                   value: workloadStats.appointments,
-                  color: 'text-blue-600 dark:text-blue-400',
+                  tone: 'text-blue-600 dark:text-blue-400',
                   bg: 'bg-blue-500/10',
                 },
                 {
                   icon: AlarmClock,
-                  label: 'Overdue',
+                  label: p.overdue,
                   value: workloadStats.overdue,
-                  color: 'text-rose-600 dark:text-rose-400',
+                  tone: 'text-rose-600 dark:text-rose-400',
                   bg: 'bg-rose-500/10',
                 },
               ].map((s) => (
-                <div
-                  key={s.label}
-                  className="rounded-lg border border-slate-100 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-950/40 p-3"
-                >
-                  <div className={cn('inline-flex rounded-lg p-1.5 mb-2', s.bg)}>
-                    <s.icon className={cn('w-4 h-4', s.color)} />
+                <div key={s.label} className="rounded-xl bg-slate-50/90 px-3.5 py-3.5 dark:bg-slate-950/50">
+                  <div className={cn('mb-2 inline-flex rounded-lg p-1.5', s.bg)}>
+                    <s.icon className={cn('h-3.5 w-3.5', s.tone)} aria-hidden />
                   </div>
-                  <p className="text-2xl font-bold tabular-nums text-slate-900 dark:text-white">
-                    {countsLoading ? '—' : s.value}
+                  <p className="text-[1.35rem] font-semibold tabular-nums leading-none text-slate-900 dark:text-white">
+                    {countsLoading ? p.emDash : s.value}
                   </p>
-                  <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400">{s.label}</p>
+                  <p className="mt-1.5 text-[11px] font-medium text-slate-500 dark:text-slate-400">{s.label}</p>
                 </div>
               ))}
             </div>
 
-            <div className="mt-5 pt-4 border-t border-slate-100 dark:border-slate-800">
-              <div className="flex items-center justify-between gap-2 mb-2">
-                <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Capacity</span>
-                <span
-                  className={cn(
-                    'inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ring-1 ring-inset',
-                    capacityPillTone(capacity.key)
-                  )}
-                >
-                  {capacity.pillLabel} · {capacity.label}
+            <div className="mt-5">
+              <div className="mb-2 flex items-center justify-between gap-2">
+                <span className="text-sm font-medium text-slate-700 dark:text-slate-300">{p.capacity}</span>
+                <span className="text-xs font-semibold tabular-nums text-slate-500 dark:text-slate-400">
+                  {countsLoading ? p.emDash : `${Math.round(capacity.fillPct)}%`}
                 </span>
               </div>
-              <div className="h-1.5 w-full rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden">
+              <div
+                className="h-2 w-full overflow-hidden rounded-full bg-slate-200 dark:bg-slate-800"
+                role="progressbar"
+                aria-valuenow={Math.round(capacity.fillPct)}
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-label={p.capacity}
+              >
                 <div
-                  className={cn('h-full rounded-full transition-all', capacity.barClass)}
+                  className={cn('h-full rounded-full transition-all duration-500', capacity.barClass)}
                   style={{ width: `${capacity.fillPct}%` }}
                 />
               </div>
-            </div>
-          </div>
-
-          <div className={cn('p-5', cardShell)}>
-            <p className={sectionHeaderClass}>Quick actions</p>
-            <div className="mt-4 flex flex-col gap-2">
-              {profile.id !== user?.id && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="w-full justify-start rounded-[10px] border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800"
-                  onClick={() => cabinetUpdateRef.current?.show(profile)}
-                >
-                  <Edit className="w-4 h-4 mr-2 shrink-0" />
-                  Edit profile
-                </Button>
-              )}
-              <a
-                href={`/dashboard/cases?assigned_to=${profile.id}`}
-                className={cn(
-                  'inline-flex w-full items-center justify-start rounded-[10px] border border-slate-200 dark:border-slate-700 bg-transparent px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors'
-                )}
-              >
-                <Briefcase className="w-4 h-4 mr-2 shrink-0" />
-                View all cases
-              </a>
-            </div>
-          </div>
-        </div>
-
-        {/* RIGHT — Assigned cases */}
-        <div className={cn('p-5', cardShell, 'order-1 lg:order-2')}>
-          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-5">
-            <div>
-              <h2 className="text-lg font-bold text-slate-900 dark:text-white">Assigned Cases</h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                {countsLoading ? 'Loading...' : `${counts.TOTAL} total case${counts.TOTAL !== 1 ? 's' : ''}`}
+              <p className={cn('mt-2 text-[11px] font-semibold tracking-wide', capacityPillTone(capacity.key))}>
+                {p.capacityLevels[capacity.key]} · {p.capacityLabels[capacity.key]}
               </p>
             </div>
-            <a
-              href={`/dashboard/cases?assigned_to=${profile.id}`}
-              className="text-sm font-semibold text-[#64499D] dark:text-[#E9E0FF] hover:underline shrink-0 self-start"
+          </section>
+
+          <section className="p-6">
+            <h2 className={sectionTitleClass}>{p.quickActions}</h2>
+            <nav className="mt-3" aria-label={p.quickActions}>
+              <ul className="flex flex-col">
+                {quickActions.map((action) => {
+                  const rowClass =
+                    'group flex w-full items-center justify-between gap-3 rounded-lg px-2 py-2.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 hover:text-[#64499D] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#64499D]/35 dark:text-slate-200 dark:hover:bg-slate-800/80 dark:hover:text-[#C4B5FD]';
+                  const inner = (
+                    <>
+                      <span>{action.label}</span>
+                      <ArrowRight className="h-4 w-4 shrink-0 text-slate-400 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:text-[#64499D] motion-reduce:group-hover:translate-x-0 rtl:rotate-180 rtl:group-hover:-translate-x-0.5 dark:group-hover:text-[#C4B5FD]" />
+                    </>
+                  );
+                  return (
+                    <li key={action.key}>
+                      {action.to ? (
+                        <Link to={action.to} className={rowClass}>
+                          {inner}
+                        </Link>
+                      ) : (
+                        <button type="button" onClick={action.onClick} className={rowClass}>
+                          {inner}
+                        </button>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+            </nav>
+          </section>
+        </aside>
+
+        <section className={cn(surface, 'order-1 p-6 sm:p-7 lg:order-2')}>
+          <div className="mb-5 flex flex-col gap-3 sm:mb-6 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <h2 className="text-lg font-semibold tracking-tight text-slate-900 dark:text-white">
+                {p.assignedCases}
+              </h2>
+              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                {countsLoading
+                  ? t.common.loading
+                  : counts.TOTAL === 1
+                    ? p.totalCasesOne
+                    : tf(p.totalCases, { count: counts.TOTAL })}
+              </p>
+            </div>
+            <Link
+              to={casesHref}
+              className="inline-flex shrink-0 items-center gap-1 self-start text-sm font-semibold text-[#64499D] transition-colors hover:text-[#543d86] dark:text-[#C4B5FD]"
             >
-              View all →
-            </a>
+              {p.viewAll}
+              <ArrowRight className="h-3.5 w-3.5 rtl:rotate-180" aria-hidden />
+            </Link>
           </div>
 
-          <div className="mb-5">
-            <div
-              className="flex flex-wrap gap-2 md:gap-2"
-              role="tablist"
-              aria-label="Filter by case status"
-            >
-              {STATUS.map(({ value, label }) => {
-                const active = selectedStatus === value;
-                const count = value === 'ALL' ? counts.ALL : (counts as Record<string, number>)[value] ?? 0;
-                return (
-                  <button
-                    key={value}
-                    type="button"
-                    role="tab"
-                    onClick={() => setSelectedStatus(value)}
-                    className={cn(
-                      'inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold whitespace-nowrap transition-all duration-200 min-h-[32px]',
-                      active
-                        ? filterPillSelectedClass(value)
-                        : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
-                    )}
-                    aria-pressed={active}
-                  >
-                    <span>{label}</span>
-                    <span className={cn('tabular-nums', active ? 'opacity-95' : 'opacity-80')}>
-                      {countsLoading ? '…' : count}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
+          <div
+            className="mb-5 flex flex-wrap gap-2"
+            role="tablist"
+            aria-label={p.filterByStatus}
+          >
+            {STATUS.map(({ value }) => {
+              const active = selectedStatus === value;
+              const count = value === 'ALL' ? counts.ALL : (counts as Record<string, number>)[value] ?? 0;
+              const label =
+                value === 'ALL' ? p.filterAll : enumLabel('caseStatus', value) || value.replace(/_/g, ' ');
+              return (
+                <button
+                  key={value}
+                  type="button"
+                  role="tab"
+                  onClick={() => setSelectedStatus(value)}
+                  className={cn(
+                    'inline-flex min-h-[32px] items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium whitespace-nowrap transition-colors duration-150',
+                    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#64499D]/35',
+                    active
+                      ? 'bg-[#64499D] text-white shadow-sm dark:bg-[#7C6BB8]'
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700'
+                  )}
+                  aria-pressed={active}
+                >
+                  <span>{label}</span>
+                  <span className={cn('tabular-nums', active ? 'opacity-90' : 'opacity-70')}>
+                    {countsLoading ? '…' : count}
+                  </span>
+                </button>
+              );
+            })}
           </div>
 
           {countsLoading ? (
-            <div className="flex flex-col items-center justify-center gap-3 py-12 text-slate-500 dark:text-slate-400">
-              <Loader2 className="w-6 h-6 animate-spin text-[#64499D]" />
-              <p className="text-xs font-medium">Loading cases…</p>
+            <div className="flex flex-col items-center justify-center gap-3 py-16 text-slate-500 dark:text-slate-400">
+              <Loader2 className="h-6 w-6 animate-spin text-[#64499D]" />
+              <p className="text-xs font-medium">{p.loadingCases}</p>
             </div>
           ) : visible.length === 0 ? (
-            <div className="text-center py-10">
-              <div className="inline-flex p-3 rounded-xl bg-slate-100 dark:bg-slate-800 mb-3">
-                <Briefcase className="w-8 h-8 text-slate-400 dark:text-slate-500" />
+            <div className="py-14 text-center">
+              <div className="mb-3 inline-flex rounded-xl bg-slate-100 p-3 dark:bg-slate-800">
+                <Briefcase className="h-7 w-7 text-slate-400 dark:text-slate-500" aria-hidden />
               </div>
-              <h3 className="text-sm font-semibold text-slate-900 dark:text-white mb-1">No cases found</h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
-                No cases match the selected filter criteria.
-              </p>
+              <h3 className="mb-1 text-sm font-semibold text-slate-900 dark:text-white">{p.noCasesTitle}</h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400">{p.noCasesHint}</p>
             </div>
           ) : (
-            <div className="space-y-3 max-h-[min(520px,70vh)] overflow-y-auto pr-0.5">
+            <div className="max-h-[min(560px,70vh)] space-y-2.5 overflow-y-auto pe-0.5">
               {visible.map((c) => {
                 const full = c as CaseItem & API.Case;
                 const ct = full.caseType ?? full.case_type;
                 const statusKey = (c.status || '').toUpperCase();
-                const dateInfo = caseRowDate(c);
-                const prio = full.priority;
+                const keyDate = getCaseDateForFilter(full as API.Case) || c.created || c.created_at;
+                const days = getCountdownDays(keyDate);
+                const style = days != null ? getCountdownStyle(days) : 'normal';
+                const dateCls =
+                  style === 'critical'
+                    ? 'text-red-700 font-semibold dark:text-red-400'
+                    : style === 'warning'
+                      ? 'text-amber-700 dark:text-amber-400'
+                      : 'text-slate-500 dark:text-slate-400';
+                const clientName = clientDisplayName(full.client);
+                const typeLabel = caseTypeLabel(ct, t.cases.typeLabels);
+                const categoryLabel = c.category ? enumLabel('caseCategory', c.category) || c.category : '';
+                const statusLabel = enumLabel('caseStatus', statusKey) || (c.status || p.emDash).replace(/_/g, ' ');
+                const ref = c.reference
+                  ? `Ref: ${c.reference.startsWith('#') ? c.reference : `#${c.reference}`}`
+                  : '';
+                const meta = [ref, typeLabel, categoryLabel, fmtShortDate(keyDate)].filter(
+                  (part, i, arr) => Boolean(part) && arr.indexOf(part) === i
+                );
+
                 return (
-                  <div
+                  <article
                     key={c.id}
                     role="button"
                     tabIndex={0}
                     onClick={() => viewCase(c)}
-                    onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && viewCase(c)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        viewCase(c);
+                      }
+                    }}
                     className={cn(
-                      'group relative rounded-xl border border-[#e5e7eb] dark:border-slate-800 bg-white dark:bg-slate-900',
-                      'shadow-[0_1px_3px_rgba(0,0,0,0.08)]',
-                      'border-l-[3px] pl-4 pr-3 py-3 cursor-pointer',
-                      'transition-[transform,box-shadow,border-color] duration-300 ease-out',
-                      'hover:-translate-y-0.5 hover:border-slate-300 dark:hover:border-slate-600 hover:shadow-lg',
-                      caseLeftBorderClass(ct ?? undefined)
+                      'group relative cursor-pointer rounded-xl border border-slate-200/90 bg-white px-4 py-3.5',
+                      'transition-[border-color,box-shadow,background-color,transform] duration-200',
+                      'hover:-translate-y-px hover:border-[#64499D]/40 hover:bg-[#F7F4FF] hover:shadow-[0_6px_18px_rgba(100,73,157,0.10)] motion-reduce:hover:translate-y-0',
+                      'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#64499D]/30',
+                      'dark:border-slate-800 dark:bg-slate-900 dark:hover:border-[#8B6FD1]/45 dark:hover:bg-[#24183F]/40'
                     )}
+                    aria-label={c.title || c.reference || `${p.openCase} ${c.id}`}
                   >
                     <div className="flex items-start justify-between gap-2">
-                      <div className="flex flex-wrap items-center gap-2 min-w-0">
-                        <span
-                          className={cn('inline-block h-2 w-2 rounded-full shrink-0', caseTypeDotClass(ct ?? undefined))}
-                          aria-hidden
-                        />
+                      <div className="flex min-w-0 flex-wrap items-center gap-2">
                         <span
                           className={cn(
-                            'inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold uppercase tracking-[0.05em] ring-1 ring-inset',
-                            getStatusColor(statusKey)
+                            'inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.06em]',
+                            statusTextClass(statusKey)
                           )}
                         >
-                          {(c.status || '—').replace(/_/g, ' ')}
+                          <span className={cn('h-1.5 w-1.5 rounded-full', statusDotClass(statusKey))} aria-hidden />
+                          {statusLabel}
                         </span>
-                        {showPriorityPill(prio) && (
-                          <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold uppercase tracking-[0.05em] bg-amber-500/12 text-amber-800 dark:text-amber-400 ring-1 ring-inset ring-amber-500/25">
-                            {prio}
+                        {showPriorityPill(full.priority) && (
+                          <span className="inline-flex items-center rounded-full bg-amber-500/12 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-800 ring-1 ring-inset ring-amber-500/20 dark:text-amber-400">
+                            {enumLabel('taskPriority', String(full.priority).toLowerCase()) || full.priority}
                           </span>
                         )}
                       </div>
-                      <div className="flex items-center gap-1 shrink-0">
+                      <div className="flex shrink-0 items-center gap-0.5">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-slate-100 dark:hover:bg-slate-800"
-                              >
+                              className="h-8 w-8 opacity-0 transition-opacity hover:bg-slate-100 group-hover:opacity-100 focus-visible:opacity-100 dark:hover:bg-slate-800"
+                              aria-label={p.moreActions}
+                            >
                               <MoreVertical className="h-3.5 w-3.5" />
                             </Button>
                           </DropdownMenuTrigger>
@@ -855,8 +954,8 @@ const TeamMemberProfile: React.FC<Props> = ({ profile, onUpdateSuccess }) => {
                               }}
                               className="rounded-lg"
                             >
-                              <ArrowUpRight className="w-4 h-4 mr-2" />
-                              View Details
+                              <ArrowUpRight className="me-2 h-4 w-4" />
+                              {p.viewDetails}
                             </DropdownMenuItem>
                             <DropdownMenuItem
                               onClick={(e) => {
@@ -865,8 +964,8 @@ const TeamMemberProfile: React.FC<Props> = ({ profile, onUpdateSuccess }) => {
                               }}
                               className="rounded-lg"
                             >
-                              <Edit className="w-4 h-4 mr-2" />
-                              Edit
+                              <Edit className="me-2 h-4 w-4" />
+                              {t.common.edit}
                             </DropdownMenuItem>
                             <DropdownMenuItem
                               onClick={(e) => {
@@ -875,77 +974,75 @@ const TeamMemberProfile: React.FC<Props> = ({ profile, onUpdateSuccess }) => {
                               }}
                               className="rounded-lg"
                             >
-                              Assign
+                              {p.assignCase}
                             </DropdownMenuItem>
                             <DropdownMenuItem
                               onClick={(e) => {
                                 e.stopPropagation();
-                                printCase(c);
+                                printCase();
                               }}
                               className="rounded-lg"
                             >
-                              Print
+                              {p.print}
                             </DropdownMenuItem>
                             <DropdownMenuItem
                               onClick={(e) => {
                                 e.stopPropagation();
                                 deleteCase(c);
                               }}
-                              className="text-red-600 dark:text-red-400 focus:text-red-600 dark:focus:text-red-400 rounded-lg"
+                              className="rounded-lg text-red-600 focus:text-red-600 dark:text-red-400 dark:focus:text-red-400"
                             >
-                              Delete
+                              {t.common.delete}
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
-                        <button
-                          type="button"
-                          className="p-1.5 rounded-lg text-slate-400 hover:text-[#64499D] dark:hover:text-[#E9E0FF] hover:bg-slate-100 dark:hover:bg-slate-800"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            viewCase(c);
-                          }}
-                          aria-label="Open case"
+                        <span
+                          className="p-1.5 text-slate-400 transition-colors group-hover:text-[#64499D] dark:group-hover:text-[#C4B5FD]"
+                          aria-hidden
                         >
-                          <ArrowRight className="w-4 h-4" />
-                        </button>
+                          <ArrowRight className="h-4 w-4 rtl:rotate-180" />
+                        </span>
                       </div>
                     </div>
-                    <h3 className="mt-2 text-sm font-semibold text-slate-900 dark:text-white line-clamp-2 group-hover:text-[#64499D] dark:group-hover:text-[#E9E0FF] transition-colors">
+                    <h3 className="mt-1.5 text-sm font-semibold text-slate-900 transition-colors group-hover:text-[#64499D] dark:text-white dark:group-hover:text-[#C4B5FD]">
                       {c.title || c.reference || `Case #${c.id}`}
                     </h3>
-                    <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">
-                      {c.reference && (
-                        <span className="font-mono">
-                          Ref: {c.reference.startsWith('#') ? c.reference : `#${c.reference}`}
-                        </span>
-                      )}
-                      {c.reference && c.category && <span className="mx-1.5">·</span>}
-                      {c.category && <span>{c.category}</span>}
-                      {(c.reference || c.category) && <span className="mx-1.5">·</span>}
-                      <span className={dateInfo.cls}>{dateInfo.label}</span>
+                    <p className={cn('mt-1 text-[11px]', dateCls)}>
+                      {meta.map((part, i) => (
+                        <React.Fragment key={`${part}-${i}`}>
+                          {i > 0 && <span className="mx-1.5 text-slate-300 dark:text-slate-600">·</span>}
+                          <span className={i === meta.length - 1 ? dateCls : 'text-slate-500 dark:text-slate-400'}>
+                            {part}
+                          </span>
+                        </React.Fragment>
+                      ))}
                     </p>
-                  </div>
+                    {clientName ? (
+                      <p className="mt-1.5 text-[11px] text-slate-500 dark:text-slate-400">
+                        {p.client}: <span className="font-medium text-slate-700 dark:text-slate-300">{clientName}</span>
+                      </p>
+                    ) : null}
+                  </article>
                 );
               })}
             </div>
           )}
 
           {!countsLoading && visible.length > 0 && (
-            <div className="pt-5 mt-5 border-t border-slate-200 dark:border-slate-800">
-              <a
-                href={`/dashboard/cases?assigned_to=${profile.id}`}
+            <div className="mt-6 border-t border-slate-100 pt-5 dark:border-slate-800">
+              <Link
+                to={casesHref}
                 className={cn(
-                  'flex w-full items-center justify-center gap-2 rounded-lg border border-dashed border-[#64499D] dark:border-[#E9E0FF]/50',
-                  'px-4 py-3 text-sm font-semibold text-[#64499D] dark:text-[#E9E0FF]',
-                  'hover:bg-[#64499D]/5 dark:hover:bg-[#E9E0FF]/10 hover:border-solid transition-colors'
+                  'flex w-full items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold',
+                  'text-[#64499D] transition-colors hover:bg-[#64499D]/10 dark:text-[#C4B5FD] dark:hover:bg-[#C4B5FD]/10'
                 )}
               >
-                View all assigned cases
-                <ArrowUpRight className="w-4 h-4" />
-              </a>
+                {p.viewAllAssigned}
+                <ArrowUpRight className="h-4 w-4" />
+              </Link>
             </div>
           )}
-        </div>
+        </section>
       </div>
 
       <CabinetMemberUpdateModal ref={cabinetUpdateRef} onSuccess={onUpdateSuccess} />

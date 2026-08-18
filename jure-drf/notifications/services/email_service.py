@@ -5,6 +5,15 @@ from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.utils import timezone
 
+from core.email_context import (
+    PRIORITY_COLORS,
+    absolute_frontend_url,
+    company_name,
+    email_brand_context,
+    firm_name_for_user,
+    notification_cta_kind,
+)
+
 logger = logging.getLogger(__name__)
 
 
@@ -16,7 +25,14 @@ def send_notification_email(notification_id: int) -> None:
     from notifications.models import Notification
 
     try:
-        n = Notification.objects.select_related("recipient", "related_case").get(pk=notification_id)
+        n = Notification.objects.select_related(
+            "recipient",
+            "recipient__cabinet",
+            "recipient__owned_cabinet",
+            "related_case",
+            "related_task",
+            "related_appointment",
+        ).get(pk=notification_id)
     except Notification.DoesNotExist:
         logger.warning("send_notification_email: notification %s missing", notification_id)
         return
@@ -30,42 +46,26 @@ def send_notification_email(notification_id: int) -> None:
         logger.warning("send_notification_email: no email for user %s", recipient.pk)
         return
 
-    firm_name = "votre cabinet"
-    cab = getattr(recipient, "cabinet", None)
-    if cab and getattr(cab, "trade_name", None):
-        firm_name = cab.trade_name
-    else:
-        owned = getattr(recipient, "owned_cabinet", None)
-        if owned and getattr(owned, "trade_name", None):
-            firm_name = owned.trade_name
+    firm = firm_name_for_user(recipient, fallback="votre cabinet")
+    cta_url = absolute_frontend_url(n.action_url or "")
+    bar_color = PRIORITY_COLORS.get(n.priority, PRIORITY_COLORS["MEDIUM"])
+    company = company_name()
 
-    base = getattr(settings, "FRONTEND_BASE_URL_NORMALIZED", None) or getattr(
-        settings, "FRONTEND_BASE_URL", "http://localhost:3000"
+    ctx = email_brand_context(
+        email_lang="fr",
+        notification=n,
+        bar_color=bar_color,
+        cta_url=cta_url,
+        cta_kind=notification_cta_kind(n),
+        firm_name=firm,
+        preheader=n.title,
+        email_title=n.title,
+        show_priority_label=n.priority in ("URGENT", "HIGH"),
+        priority_label=n.priority,
     )
-    base = str(base).rstrip("/")
-    action = (n.action_url or "").strip()
-    cta_url = f"{base}{action}" if action.startswith("/") else f"{base}/{action}" if action else base
 
-    priority_colors = {
-        "URGENT": "#dc2626",
-        "HIGH": "#d97706",
-        "MEDIUM": "#4f46e5",
-        "LOW": "#6b7280",
-    }
-    bar_color = priority_colors.get(n.priority, priority_colors["MEDIUM"])
-
-    company = getattr(settings, "COMPANY_NAME", "Jure")
-
-    html = render_to_string(
-        "notifications/email_notification.html",
-        {
-            "notification": n,
-            "bar_color": bar_color,
-            "cta_url": cta_url,
-            "firm_name": firm_name,
-            "company_name": company,
-        },
-    )
+    html = render_to_string("emails/notifications/notification.html", ctx)
+    text = render_to_string("emails/notifications/notification.txt", ctx)
 
     subject = f"[{company}] {n.title}"
     from_email = getattr(settings, "DEFAULT_FROM_EMAIL", "webmaster@localhost")
@@ -73,7 +73,7 @@ def send_notification_email(notification_id: int) -> None:
     try:
         msg = EmailMultiAlternatives(
             subject=subject,
-            body=n.message,
+            body=text,
             from_email=from_email,
             to=[to_email],
         )

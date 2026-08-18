@@ -47,8 +47,32 @@ export const apiCreateAppointment = (data: AppointmentCreateForm) => {
   return axiosInstance.post<Appointment>('/tasks/appointments/', data);
 };
 
-export const apiGetAppointments = (params?: Record<string, any>) => {
+export type AppointmentListParams = {
+  page?: number;
+  page_size?: number;
+  search?: string;
+  status?: string;
+  case?: string | number;
+  client?: string | number;
+  assigned_to?: string | number;
+  period?: 'today' | 'week' | 'month' | 'upcoming' | 'all' | string;
+  ordering?: string;
+};
+
+export type AppointmentStats = {
+  total: number;
+  today: number;
+  upcoming: number;
+  completed: number;
+  cancelled: number;
+};
+
+export const apiGetAppointments = (params?: AppointmentListParams) => {
   return axiosInstance.get<API.Paginated<Appointment>>('/tasks/appointments/', { params });
+};
+
+export const apiGetAppointmentStats = () => {
+  return axiosInstance.get<AppointmentStats>('/tasks/appointments/stats/');
 };
 
 export const apiGetAppointment = (id: number) => {

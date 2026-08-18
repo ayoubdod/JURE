@@ -19,6 +19,7 @@ interface PaginationProps {
   onPageChange: (page: number) => void;
   onPageSizeChange: (pageSize: number) => void;
   pageSizeOptions?: { value: string; label: string }[];
+  itemLabel?: string;
 }
 
 const PaginationComponent: React.FC<PaginationProps> = ({
@@ -36,6 +37,7 @@ const PaginationComponent: React.FC<PaginationProps> = ({
     { value: '20', label: '20 per page' },
     { value: '50', label: '50 per page' },
   ],
+  itemLabel = 'cases',
 }) => {
   if (isLoading) {
     return null;
@@ -51,7 +53,7 @@ const PaginationComponent: React.FC<PaginationProps> = ({
     <div className="w-full border-t border-slate-200/90 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-900/30 py-2.5 px-2 sm:px-3">
       <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-xs text-slate-600 dark:text-slate-400 tabular-nums">
-          Showing {start}–{end} of {totalCount} cases
+          Showing {start}–{end} of {totalCount} {itemLabel}
         </p>
         <div className="flex flex-wrap items-center justify-end gap-1.5 sm:gap-2">
           <Select

@@ -9,8 +9,8 @@ function clientWriteBody<T extends { fiscal_if?: string; ice?: string }>(data: T
   return body;
 }
 
-export const apiGetClients = ()=>{
-    return axiosInstance.get<API.Paginated<API.Client>>('/clients/clients/');
+export const apiGetClients = (params?: { page?: number; page_size?: number }) => {
+    return axiosInstance.get<API.Paginated<API.Client>>('/clients/clients/', { params });
 }
 
 export const apiGetClient = (id: number)=>{

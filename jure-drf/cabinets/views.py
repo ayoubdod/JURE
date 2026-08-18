@@ -219,6 +219,8 @@ class CabinetMemberViewSet(FlexFieldsModelViewSet):
                     recipient_email=member_user.email,
                     token=token_value,
                     first_name=member_user.first_name or "",
+                    firm_name=getattr(cabinet, "trade_name", "") or "",
+                    expiry_days=PASSWORD_SETUP_TOKEN_EXPIRY_DAYS,
                 )
             except Exception as e:
                 from rest_framework import serializers as drf_serializers
@@ -268,10 +270,13 @@ class CabinetMemberViewSet(FlexFieldsModelViewSet):
         )
 
         try:
+            cabinet = get_user_cabinet(request.user) or get_user_cabinet(member)
             InvitationMailer.send_invitation(
                 recipient_email=member.email,
                 token=token_value,
                 first_name=member.first_name or "",
+                firm_name=(getattr(cabinet, "trade_name", "") or "") if cabinet else "",
+                expiry_days=PASSWORD_SETUP_TOKEN_EXPIRY_DAYS,
             )
         except Exception as e:
             from django.core.exceptions import ValidationError as DjangoValidationError

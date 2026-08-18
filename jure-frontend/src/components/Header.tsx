@@ -182,6 +182,7 @@ const Header = () => {
     profile: t.sidebar.myProfile,
     cases: t.sidebar.cases,
     consultation: t.sidebar.consultation,
+    consultations: t.sidebar.consultation,
     litigation: t.sidebar.litigation,
     administrative: t.sidebar.administrative,
     clients: t.sidebar.clients,

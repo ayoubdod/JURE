@@ -1,0 +1,17 @@
+{% load i18n %}{% autoescape off %}{% include "emails/base/header.txt" %}
+{% trans "You're invited to join your team on Jure" %}
+
+{% if first_name %}{% blocktrans with name=first_name %}Hello {{ name }},{% endblocktrans %}
+{% else %}{% trans "Hello," %}
+{% endif %}
+{% if firm_name %}{% blocktrans %}You've been invited to join {{ firm_name }} on Jure, your legal workspace for managing matters, clients, documents, tasks, and team collaboration.{% endblocktrans %}
+{% else %}{% trans "You've been invited to join your team on Jure, your legal workspace for managing matters, clients, documents, tasks, and team collaboration." %}
+{% endif %}
+{% trans "Email" %}: {{ login_email }}
+
+{% trans "Set up your account:" %}
+{{ setup_url }}
+{% if expiry_days %}
+{% blocktrans %}This invitation link expires in {{ expiry_days }} days.{% endblocktrans %}
+{% endif %}
+{% trans "You received this invitation because someone invited this email address to join a Jure workspace." as footer_note %}{% include "emails/base/footer.txt" %}{% endautoescape %}

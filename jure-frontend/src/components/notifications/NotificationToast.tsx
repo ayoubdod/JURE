@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { X } from 'lucide-react';
 import { useNavigate } from 'react-router';
+import { navigateToCaseById } from '@/lib/caseRoutes';
 import type { AppNotification } from '@/types/notification';
 import { getNotificationIcon, getToastBorderColor } from '@/utils/notificationUtils';
 import { cn } from '@/lib/utils';
@@ -38,7 +39,9 @@ export function NotificationToast({ notification: n, urgentManualClose, onDismis
   const line = msg.length > 120 ? `${msg.slice(0, 117)}…` : msg;
 
   const go = () => {
-    if (n.action_url) {
+    if (n.related_case?.id) {
+      void navigateToCaseById(navigate, n.related_case.id);
+    } else if (n.action_url) {
       if (n.action_url.startsWith('http')) window.location.href = n.action_url;
       else navigate(n.action_url);
     }

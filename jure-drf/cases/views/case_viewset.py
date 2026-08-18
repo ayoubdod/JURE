@@ -37,7 +37,15 @@ class CaseViewSet(CloseCaseMixin, ConsultationConvertMixin, viewsets.ModelViewSe
     serializer_class = CaseSerializer
     filter_backends = [DjangoFilterBackend, CaseFilter, filters.SearchFilter]
     filterset_fields = ["status", "case_type", "assigned_to"]
-    search_fields = ["title", "description"]
+    search_fields = [
+        "title",
+        "description",
+        "reference",
+        "court",
+        "client__first_name",
+        "client__last_name",
+        "client__email",
+    ]
     permission_classes = [permissions.IsAuthenticated, HasCasesPermission]
     pagination_class = NumericPagination
 

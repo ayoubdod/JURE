@@ -1,14 +1,9 @@
-
-import React, { useEffect, useState } from 'react';
-import Sidebar from '../components/Sidebar';
-import Header from '../components/Header';
-import TeamMemberProfile from '../components/TeamMemberProfile';
+import { useEffect, useState } from 'react';
+import TeamMemberProfile, { ProfileWorkspaceSkeleton } from '../components/TeamMemberProfile';
 import { useNavigate, useParams } from 'react-router';
 import { apiGetCabinetMember, apiGetMyCabinetMember } from '@/services/cabinet-member/api';
-import { useAppTranslation } from '@/i18n';
 
 const Profile = () => {
-  const { t } = useAppTranslation();
   const params = useParams();
   const navigate = useNavigate();
   const id = parseInt(params.id as string);
@@ -17,43 +12,40 @@ const Profile = () => {
 
   useEffect(() => {
     setIsLoading(true);
-    if(id){
-      apiGetCabinetMember(id,{expand:'assigned_cases'}).then((res) => {
+    const request = id
+      ? apiGetCabinetMember(id, { expand: 'assigned_cases' })
+      : apiGetMyCabinetMember({ expand: 'assigned_cases' });
+
+    request
+      .then((res) => {
         setProfile(res.data);
       })
-        .catch((err) => {
-          navigate(-1)
-        })
-        .finally(() => {
-          setIsLoading(false);
-        });
-    }else{
-        apiGetMyCabinetMember({expand:'assigned_cases'}).then((res) => {
-          setProfile(res.data);
-        })
-          .catch((err) => {
-            navigate(-1)
-          })
-          .finally(() => {
-            setIsLoading(false);
-          });
-    }
-  }, [id]);
+      .catch(() => {
+        navigate(-1);
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
+  }, [id, navigate]);
 
   if (isLoading && !profile) {
-    return <div>{t.profile.loading}</div>;
+    return <ProfileWorkspaceSkeleton />;
+  }
+
+  if (!profile) {
+    return null;
   }
 
   return (
-    <div>
-      {/* Team Member Profile - Full Width with Integrated Assigned Cases */}
-      <TeamMemberProfile profile={profile} onUpdateSuccess={(instance)=>{
+    <TeamMemberProfile
+      profile={profile}
+      onUpdateSuccess={(instance) => {
         setProfile({
           ...profile,
-          ...instance
-        })
-      }} />
-    </div>
+          ...instance,
+        });
+      }}
+    />
   );
 };
 

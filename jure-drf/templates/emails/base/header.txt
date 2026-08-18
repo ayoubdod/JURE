@@ -1,0 +1,4 @@
+JURE
+Legal Workspace
+{% if firm_name %}{{ firm_name }}
+{% endif %}
