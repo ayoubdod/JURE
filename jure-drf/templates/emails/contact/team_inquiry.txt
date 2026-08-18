@@ -1,0 +1,13 @@
+{% autoescape off %}{% include "emails/base/header.txt" %}
+[JURE website] New contact request
+
+From: {{ contact.name }} <{{ contact.email }}>
+Source: {{ source_label }}
+{% if contact.company %}Company: {{ contact.company }}
+{% endif %}{% if contact.phone %}Phone: {{ contact.phone }}
+{% endif %}Subject: {{ visitor_subject }}
+
+{{ visitor_message }}
+
+Reply to this email to answer the visitor.
+{% include "emails/base/footer.txt" %}{% endautoescape %}

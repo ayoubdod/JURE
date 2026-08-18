@@ -10,6 +10,7 @@ export type LandingInquiry = {
   company?: string;
   subject?: string;
   source?: string;
+  locale?: string;
   message: string;
 };
 
@@ -29,6 +30,7 @@ export async function submitLandingInquiry(payload: LandingInquiry): Promise<voi
       company: payload.company?.trim() || "",
       subject: payload.subject?.trim() || "",
       source: payload.source?.trim() || "contact",
+      locale: payload.locale || "en",
       message: payload.message.trim(),
     }),
   });

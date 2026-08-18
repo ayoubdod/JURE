@@ -1083,6 +1083,10 @@ export const fr: AppMessages = {
     confirm: 'Se déconnecter',
     cancel: 'Annuler',
   },
+  sessionIdle: {
+    title: 'Déconnexion pour inactivité',
+    description: 'Vous êtes resté inactif pendant 15 minutes. Nous vous avons déconnecté pour protéger votre compte.',
+  },
   shortcuts: {
     paletteTitle: 'Palette de commandes',
     palettePlaceholder: 'Rechercher une commande…',

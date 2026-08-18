@@ -130,6 +130,7 @@ const StatusSubscribe: React.FC = () => {
         email,
         subject: "Status alerts",
         source: "status-subscribe",
+        locale: lang,
         message: `Please subscribe this address to JURE status alerts.\nFrequency: ${freq}.\nComponents: ${selected || "none"}.`,
       });
       window.alert(t.form.ok);
