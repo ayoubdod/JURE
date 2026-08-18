@@ -1,0 +1,13 @@
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin:0 0 8px 0;background-color:#F7F7F9;border:1px solid #E8E6ED;border-radius:8px;">
+  <tr>
+    <td style="padding:18px 20px;font-family:Inter,Arial,Helvetica,sans-serif;border-left:3px solid #64499D;">
+      <div style="font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:#667085;font-weight:600;">{{ label }}</div>
+      {% if heading %}
+      <div style="margin-top:8px;font-size:15px;line-height:1.5;font-weight:600;color:#17141F;word-break:break-word;">{{ heading }}</div>
+      {% endif %}
+      {% if body %}
+      <div style="margin-top:10px;font-size:14px;line-height:1.7;color:#17141F;word-break:break-word;white-space:pre-wrap;">{{ body }}</div>
+      {% endif %}
+    </td>
+  </tr>
+</table>

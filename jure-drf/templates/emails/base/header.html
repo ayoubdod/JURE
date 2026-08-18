@@ -1,10 +1,18 @@
 {% load i18n %}
 <tr>
-  <td class="email-pad" style="padding:32px 40px 16px 40px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;">
-    <div style="font-size:13px;letter-spacing:0.18em;font-weight:700;color:#6D54B5;line-height:1.2;">JURE</div>
-    <div style="margin-top:4px;font-size:12px;line-height:1.4;color:#71717A;letter-spacing:0.01em;">{% trans "Legal Workspace" %}</div>
+  <td class="email-pad" style="padding:36px 40px 20px 40px;font-family:Inter,Arial,Helvetica,sans-serif;">
+    <a href="{{ website_url|default:frontend_base_url }}" target="_blank" rel="noopener noreferrer" style="text-decoration:none;">
+      <img
+        class="email-logo"
+        src="{{ logo_url }}"
+        alt="JURE"
+        width="112"
+        height="46"
+        style="display:block;width:112px;height:auto;max-width:140px;border:0;outline:none;text-decoration:none;"
+      />
+    </a>
     {% if firm_name %}
-    <div style="margin-top:10px;font-size:13px;line-height:1.4;color:#52525B;">{{ firm_name }}</div>
+    <div style="margin-top:12px;font-size:13px;line-height:1.4;color:#667085;">{{ firm_name }}</div>
     {% endif %}
   </td>
 </tr>

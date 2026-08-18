@@ -1,13 +1,17 @@
 {% autoescape off %}{% include "emails/base/header.txt" %}
-[JURE website] New contact request
+{{ heading }}
 
-From: {{ contact.name }} <{{ contact.email }}>
-Source: {{ source_label }}
-{% if contact.company %}Company: {{ contact.company }}
-{% endif %}{% if contact.phone %}Phone: {{ contact.phone }}
-{% endif %}Subject: {{ visitor_subject }}
+{{ subtitle }}
 
+{{ labels.from }}: {{ contact.name }} <{{ contact.email }}>
+{{ labels.source }}: {{ source_label }}
+{% if contact.company %}{{ labels.company }}: {{ contact.company }}
+{% endif %}{% if contact.phone %}{{ labels.phone }}: {{ contact.phone }}
+{% endif %}{{ labels.subject }}: {{ visitor_subject }}
+
+{{ labels.message }}:
 {{ visitor_message }}
 
-Reply to this email to answer the visitor.
+{{ reply_cta }}: {{ reply_mailto }}
+{{ view_site_cta }}: {{ website_url }}
 {% include "emails/base/footer.txt" %}{% endautoescape %}

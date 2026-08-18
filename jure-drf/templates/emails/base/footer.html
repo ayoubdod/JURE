@@ -1,14 +1,18 @@
 {% load i18n %}
-<p style="margin:0 0 8px 0;font-size:13px;line-height:1.5;font-weight:600;color:#18181B;">
+<p style="margin:0 0 8px 0;font-size:13px;line-height:1.5;font-weight:600;color:#17141F;">
   {% trans "Jure Legal Workspace" %}
 </p>
 {% if footer_note %}
-<p style="margin:0 0 8px 0;font-size:12px;line-height:1.6;color:#71717A;">{{ footer_note }}</p>
+<p style="margin:0 0 8px 0;font-size:12px;line-height:1.6;color:#667085;">{{ footer_note }}</p>
 {% else %}
-<p style="margin:0 0 8px 0;font-size:12px;line-height:1.6;color:#71717A;">
+<p style="margin:0 0 8px 0;font-size:12px;line-height:1.6;color:#667085;">
   {% trans "You're receiving this email because of activity related to your Jure account or workspace." %}
 </p>
 {% endif %}
-{% if site_domain %}
+{% if website_url %}
+<p style="margin:0;font-size:12px;line-height:1.5;color:#667085;">
+  <a href="{{ website_url }}" target="_blank" rel="noopener noreferrer" style="color:#64499D;text-decoration:none;font-weight:500;">{{ website_label|default:site_domain }}</a>
+</p>
+{% elif site_domain %}
 <p style="margin:0;font-size:12px;line-height:1.5;color:#A1A1AA;">{{ site_domain }}</p>
 {% endif %}

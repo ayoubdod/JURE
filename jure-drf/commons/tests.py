@@ -63,7 +63,11 @@ class ContactViewSetTests(TestCase):
         self.assertIn("[JURE website]", team.subject)
         self.assertIn("John Doe", team.subject)
         self.assertIn("John Doe", team.body)
-        self.assertIn(self.valid_data["message"], team.body)
+        html = team.alternatives[0][0]
+        self.assertIn("jure-logo.png", html)
+        self.assertIn("mailto:john@example.com", html)
+        self.assertIn("Reply to John Doe", html)
+        self.assertIn("New contact request", html)
 
         ack = mail.outbox[1]
         self.assertEqual(ack.to, ["john@example.com"])

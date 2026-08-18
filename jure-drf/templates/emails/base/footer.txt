@@ -1,5 +1,7 @@
 --
 Jure Legal Workspace
 {% if footer_note %}{{ footer_note }}
-{% endif %}{% if site_domain %}{{ site_domain }}
+{% endif %}{% if website_url %}{{ website_label|default:website_url }}
+{{ website_url }}
+{% elif site_domain %}{{ site_domain }}
 {% endif %}

@@ -1,10 +1,11 @@
 import logging
+from urllib.parse import quote
 
 from django.conf import settings
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 
-from core.email_context import absolute_frontend_url, email_brand_context
+from core.email_context import email_brand_context
 
 logger = logging.getLogger(__name__)
 
@@ -23,42 +24,90 @@ SOURCE_LABELS = {
     },
 }
 
+TEAM_COPY = {
+    "en": {
+        "context_label": "JURE website",
+        "heading": "New contact request",
+        "subtitle": "A visitor submitted a request through the JURE website.",
+        "from": "From",
+        "source": "Source",
+        "company": "Company",
+        "phone": "Phone",
+        "subject": "Subject",
+        "message": "Message",
+        "reply": "Reply to {name}",
+        "view_site": "View website",
+        "footer": "This notification was generated from the JURE website contact form.",
+    },
+    "fr": {
+        "context_label": "JURE website",
+        "heading": "New contact request",
+        "subtitle": "A visitor submitted a request through the JURE website.",
+        "from": "From",
+        "source": "Source",
+        "company": "Company",
+        "phone": "Phone",
+        "subject": "Subject",
+        "message": "Message",
+        "reply": "Reply to {name}",
+        "view_site": "View website",
+        "footer": "This notification was generated from the JURE website contact form.",
+    },
+    "ar": {
+        "context_label": "JURE website",
+        "heading": "New contact request",
+        "subtitle": "A visitor submitted a request through the JURE website.",
+        "from": "From",
+        "source": "Source",
+        "company": "Company",
+        "phone": "Phone",
+        "subject": "Subject",
+        "message": "Message",
+        "reply": "Reply to {name}",
+        "view_site": "View website",
+        "footer": "This notification was generated from the JURE website contact form.",
+    },
+}
+
 ACK_COPY = {
     "contact": {
         "en": {
             "subject": "We received your request — JURE",
             "preheader": "Thank you. The JURE team will get back to you shortly.",
+            "context_label": "JURE",
             "title": "Thank you for contacting JURE",
             "hello": "Hello {name},",
             "body": (
                 "Thank you for writing to us. We have received your request and our team "
-                "will contact you within a reasonable time, usually within one business day."
+                "will get back to you within a reasonable time."
             ),
             "ref": "Your message",
-            "footer": "You received this email because you submitted a request on jure.ma.",
+            "cta": "Visit jure.ma",
+            "footer": "You received this email because you submitted a request from jure.ma.",
         },
         "fr": {
             "subject": "Nous avons bien reçu votre demande — JURE",
             "preheader": "Merci. L’équipe JURE vous recontactera rapidement.",
+            "context_label": "JURE",
             "title": "Merci d’avoir contacté JURE",
             "hello": "Bonjour {name},",
             "body": (
                 "Merci de nous avoir écrit. Nous avons bien reçu votre demande et notre équipe "
-                "vous recontactera dans un délai raisonnable, généralement sous un jour ouvré."
+                "reviendra vers vous dans un délai raisonnable."
             ),
             "ref": "Votre message",
-            "footer": "Vous recevez cet e-mail car vous avez envoyé une demande sur jure.ma.",
+            "cta": "Visiter jure.ma",
+            "footer": "Vous recevez cet e-mail car vous avez envoyé une demande depuis jure.ma.",
         },
         "ar": {
             "subject": "استلمنا طلبك — JURE",
             "preheader": "شكرًا لك. سيتواصل معك فريق JURE قريبًا.",
+            "context_label": "JURE",
             "title": "شكرًا لتواصلك مع JURE",
             "hello": "مرحبًا {name}،",
-            "body": (
-                "شكرًا لرسالتك. استلمنا طلبك وسيتواصل معك فريقنا خلال فترة معقولة، "
-                "عادةً خلال يوم عمل واحد."
-            ),
+            "body": "شكرًا لرسالتك. استلمنا طلبك وسيتواصل معك فريقنا خلال فترة معقولة.",
             "ref": "رسالتك",
+            "cta": "زيارة jure.ma",
             "footer": "وصلك هذا البريد لأنك أرسلت طلبًا عبر jure.ma.",
         },
     },
@@ -66,6 +115,7 @@ ACK_COPY = {
         "en": {
             "subject": "Status alerts request received — JURE",
             "preheader": "We received your request for JURE status alerts.",
+            "context_label": "JURE",
             "title": "We received your status alerts request",
             "hello": "Hello,",
             "body": (
@@ -73,11 +123,13 @@ ACK_COPY = {
                 "and will confirm shortly."
             ),
             "ref": "Your request",
+            "cta": "Visit jure.ma",
             "footer": "You received this email because you requested status alerts on jure.ma.",
         },
         "fr": {
             "subject": "Demande d’alertes de statut reçue — JURE",
             "preheader": "Nous avons bien reçu votre demande d’alertes JURE.",
+            "context_label": "JURE",
             "title": "Demande d’alertes bien reçue",
             "hello": "Bonjour,",
             "body": (
@@ -85,15 +137,18 @@ ACK_COPY = {
                 "et nous la confirmerons rapidement."
             ),
             "ref": "Votre demande",
+            "cta": "Visiter jure.ma",
             "footer": "Vous recevez cet e-mail car vous avez demandé des alertes sur jure.ma.",
         },
         "ar": {
             "subject": "استلمنا طلب تنبيهات الحالة — JURE",
             "preheader": "استلمنا طلبك لتنبيهات حالة JURE.",
+            "context_label": "JURE",
             "title": "استلمنا طلب تنبيهات الحالة",
             "hello": "مرحبًا،",
             "body": "شكرًا لك. استلمنا طلبك لتنبيهات حالة JURE وسنؤكده قريبًا.",
             "ref": "طلبك",
+            "cta": "زيارة jure.ma",
             "footer": "وصلك هذا البريد لأنك طلبت تنبيهات الحالة عبر jure.ma.",
         },
     },
@@ -143,6 +198,14 @@ def _team_subject(contact) -> str:
     return f"[JURE website] Contact request from {name}"[:200]
 
 
+def _reply_mailto(contact, topic: str) -> str:
+    email = (contact.email or "").strip()
+    if not email:
+        return ""
+    subject = f"Re: {topic}" if topic and topic != "—" else f"Re: {contact.name}"
+    return f"mailto:{email}?subject={quote(subject)}"
+
+
 def send_landing_inquiry_emails(contact, locale: str | None = None) -> None:
     """Notify contact@jure.ma and send a thank-you email to the visitor."""
     lang = normalize_locale(locale)
@@ -156,26 +219,39 @@ def send_landing_inquiry_emails(contact, locale: str | None = None) -> None:
 def _send_team_notification(contact, lang: str) -> None:
     inbox = contact_inbox()
     source = _source_key(contact)
-    source_label = SOURCE_LABELS[source][lang]
-    subject = _team_subject(contact)
+    copy = TEAM_COPY[lang]
     visitor_subject = (contact.subject or "").strip() or "—"
+    reply_mailto = _reply_mailto(contact, visitor_subject)
     ctx = email_brand_context(
-        email_lang=lang,
-        email_dir="rtl" if lang == "ar" else "ltr",
+        email_lang="en",
+        email_dir="ltr",
         preheader=f"New website inquiry from {contact.name} ({contact.email})",
-        email_title="New website inquiry",
+        email_title="New contact request",
         contact=contact,
-        source_label=source_label,
+        source_label=SOURCE_LABELS[source][lang],
         visitor_subject=visitor_subject,
         visitor_message=contact.message,
         inbox=inbox,
-        site_url=absolute_frontend_url("/contact"),
-        footer_note="This message was submitted from the JURE public website, not from a workspace account.",
+        context_label=copy["context_label"],
+        heading=copy["heading"],
+        subtitle=copy["subtitle"],
+        labels={
+            "from": copy["from"],
+            "source": copy["source"],
+            "company": copy["company"],
+            "phone": copy["phone"],
+            "subject": copy["subject"],
+            "message": copy["message"],
+        },
+        reply_mailto=reply_mailto,
+        reply_cta=copy["reply"].format(name=(contact.name or "").strip() or contact.email),
+        view_site_cta=copy["view_site"],
+        footer_note=copy["footer"],
     )
     html = render_to_string("emails/contact/team_inquiry.html", ctx)
     text = render_to_string("emails/contact/team_inquiry.txt", ctx)
     msg = EmailMultiAlternatives(
-        subject=subject,
+        subject=_team_subject(contact),
         body=text,
         from_email=contact_from_email(),
         to=[inbox],
@@ -199,13 +275,14 @@ def _send_visitor_acknowledgement(contact, lang: str) -> None:
         email_title=copy["title"],
         hello=hello,
         title=copy["title"],
+        context_label=copy["context_label"],
         body=copy["body"],
         ref_label=copy["ref"],
         visitor_subject=(contact.subject or "").strip(),
         visitor_message=contact.message,
+        cta_label=copy["cta"],
         footer_note=copy["footer"],
         inbox=contact_inbox(),
-        contact_url=absolute_frontend_url("/contact"),
     )
     html = render_to_string("emails/contact/acknowledgement.html", ctx)
     text = render_to_string("emails/contact/acknowledgement.txt", ctx)
