@@ -9,5 +9,5 @@
 {% endif %}
 {{ visitor_message }}
 
-{{ inbox }}
+{{ cta_label }}: {{ website_url }}
 {% include "emails/base/footer.txt" %}{% endautoescape %}

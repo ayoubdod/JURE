@@ -180,26 +180,42 @@ class Command(BaseCommand):
         )
         team_ctx = email_brand_context(
             preheader="New website inquiry from Ayoub Hammady (ayoub@example.com)",
-            email_title="New website inquiry",
+            email_title="New contact request",
             contact=contact,
-            source_label="Website contact form",
+            source_label="Formulaire de contact du site",
             visitor_subject="Early access",
             visitor_message=contact.message,
             inbox="contact@jure.ma",
-            footer_note="This message was submitted from the JURE public website, not from a workspace account.",
+            context_label="JURE website",
+            heading="New contact request",
+            subtitle="A visitor submitted a request through the JURE website.",
+            labels={
+                "from": "From",
+                "source": "Source",
+                "company": "Company",
+                "phone": "Phone",
+                "subject": "Subject",
+                "message": "Message",
+            },
+            reply_mailto="mailto:ayoub@example.com?subject=Re:%20Early%20access",
+            reply_cta="Reply to Ayoub Hammady",
+            view_site_cta="View website",
+            footer_note="This notification was generated from the JURE website contact form.",
         )
         ack_ctx = email_brand_context(
-            preheader="Thank you. The JURE team will get back to you shortly.",
-            email_title="Thank you for contacting JURE",
-            hello="Hello Ayoub,",
-            title="Thank you for contacting JURE",
-            body="Thank you for writing to us. We have received your request.",
-            ref_label="Your message",
+            email_lang="fr",
+            preheader="Merci. L’équipe JURE vous recontactera rapidement.",
+            email_title="Merci d’avoir contacté JURE",
+            hello="Bonjour Ayoub,",
+            title="Merci d’avoir contacté JURE",
+            context_label="JURE",
+            body="Merci de nous avoir écrit. Nous avons bien reçu votre demande et notre équipe reviendra vers vous dans un délai raisonnable.",
+            ref_label="Votre message",
             visitor_subject="Early access",
             visitor_message=contact.message,
-            footer_note="You received this email because you submitted a request on jure.ma.",
+            cta_label="Visiter jure.ma",
+            footer_note="Vous recevez cet e-mail car vous avez envoyé une demande depuis jure.ma.",
             inbox="contact@jure.ma",
-            contact_url=absolute_frontend_url("/contact"),
         )
 
         return [
@@ -245,11 +261,11 @@ class Command(BaseCommand):
             ),
             (
                 "website_contact_ack",
-                "We received your request — JURE",
+                "Nous avons bien reçu votre demande — JURE",
                 "emails/contact/acknowledgement.html",
                 "emails/contact/acknowledgement.txt",
                 ack_ctx,
-                ["Hello Ayoub,", "jure.ma"],
+                ["Bonjour Ayoub,", "jure.ma"],
             ),
         ]
 
