@@ -1013,6 +1013,10 @@ export interface AppMessages {
     confirm: string;
     cancel: string;
   };
+  sessionIdle: {
+    title: string;
+    description: string;
+  };
   shortcuts: {
     paletteTitle: string;
     palettePlaceholder: string;

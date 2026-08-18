@@ -52,14 +52,24 @@ class ContactViewSetTests(TestCase):
         self.assertIsNone(contact.phone)
 
     def test_emails_inbox(self):
-        response = self.client.post(self.url, self.valid_data, format="json")
+        data = {**self.valid_data, "locale": "en", "subject": "Early access"}
+        response = self.client.post(self.url, data, format="json")
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(len(mail.outbox), 1)
-        sent = mail.outbox[0]
-        self.assertEqual(sent.to, ["contact@jure.ma"])
-        self.assertEqual(sent.reply_to, ["john@example.com"])
-        self.assertIn("John Doe", sent.body)
-        self.assertIn(self.valid_data["message"], sent.body)
+        self.assertEqual(len(mail.outbox), 2)
+
+        team = mail.outbox[0]
+        self.assertEqual(team.to, ["contact@jure.ma"])
+        self.assertEqual(team.reply_to, ["john@example.com"])
+        self.assertIn("[JURE website]", team.subject)
+        self.assertIn("John Doe", team.subject)
+        self.assertIn("John Doe", team.body)
+        self.assertIn(self.valid_data["message"], team.body)
+
+        ack = mail.outbox[1]
+        self.assertEqual(ack.to, ["john@example.com"])
+        self.assertEqual(ack.reply_to, ["contact@jure.ma"])
+        self.assertIn("We received your request", ack.subject)
+        self.assertIn("Thank you", ack.body)
 
     def test_create_contact_invalid_name(self):
         data = self.valid_data.copy()

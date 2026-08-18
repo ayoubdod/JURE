@@ -1,0 +1,13 @@
+{% autoescape off %}{% include "emails/base/header.txt" %}
+{{ title }}
+
+{{ hello }}
+
+{{ body }}
+{% if visitor_subject %}
+{{ ref_label }}: {{ visitor_subject }}
+{% endif %}
+{{ visitor_message }}
+
+{{ inbox }}
+{% include "emails/base/footer.txt" %}{% endautoescape %}

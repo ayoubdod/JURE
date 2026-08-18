@@ -164,6 +164,7 @@ const Contact: React.FC = () => {
         subject: form.subject,
         message: form.message,
         source: "contact",
+        locale: lang,
       });
       track(MarketingEvents.ContactCta, { source: "contact-form", lang });
       window.alert(t.form.sent);

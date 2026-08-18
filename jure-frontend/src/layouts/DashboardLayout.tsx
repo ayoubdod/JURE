@@ -20,6 +20,7 @@ import { ShortcutsProvider } from '@/context/ShortcutsContext'
 import CommandPalette from '@/components/shortcuts/CommandPalette'
 import ShortcutsHelpDialog from '@/components/shortcuts/ShortcutsHelpDialog'
 import QuickCreateHost from '@/components/shortcuts/QuickCreateHost'
+import { useIdleLogout } from '@/hooks/useIdleLogout'
 
 const isDashboardIndex = (path: string) =>
   path === '/dashboard' || path === '/dashboard/'
@@ -65,6 +66,7 @@ function readSidebarExpanded(): boolean {
 }
 
 const DashboardLayout = () => {
+  useIdleLogout()
   const [activeTab, setActiveTab] = useState('')
   const [sidebarExpanded, setSidebarExpanded] = useState(readSidebarExpanded)
   const location = useLocation()

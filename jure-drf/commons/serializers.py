@@ -2,9 +2,11 @@ from rest_framework import serializers
 from .models import Contact, Activity, Function, Tag
 
 class ContactSerializer(serializers.ModelSerializer):
+    locale = serializers.CharField(required=False, allow_blank=True, write_only=True, max_length=16)
+
     class Meta:
         model = Contact
-        fields = ["name", "email", "phone", "company", "subject", "source", "message"]
+        fields = ["name", "email", "phone", "company", "subject", "source", "message", "locale"]
         extra_kwargs = {
             "phone": {"required": False, "allow_blank": True, "allow_null": True},
             "company": {"required": False, "allow_blank": True},
@@ -18,6 +20,10 @@ class ContactSerializer(serializers.ModelSerializer):
     def validate_source(self, value):
         cleaned = (value or "").strip()[:64]
         return cleaned or "contact"
+
+    def create(self, validated_data):
+        validated_data.pop("locale", None)
+        return super().create(validated_data)
 
 
 class ActivitySerializer(serializers.ModelSerializer):

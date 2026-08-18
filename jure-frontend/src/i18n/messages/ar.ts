@@ -1071,6 +1071,10 @@ export const ar: AppMessages = {
     confirm: 'تسجيل الخروج',
     cancel: 'إلغاء',
   },
+  sessionIdle: {
+    title: 'تم تسجيل الخروج بسبب عدم النشاط',
+    description: 'كنت غير نشط لمدة 15 دقيقة، لذلك تم تسجيل خروجك لحماية حسابك.',
+  },
   shortcuts: {
     paletteTitle: 'لوحة الأوامر',
     palettePlaceholder: 'ابحث عن أمر…',

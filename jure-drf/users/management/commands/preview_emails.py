@@ -169,6 +169,38 @@ class Command(BaseCommand):
             show_priority_label=True,
             priority_label="HIGH",
         )
+        contact = SimpleNamespace(
+            name="Ayoub Hammady",
+            email="ayoub@example.com",
+            company="Cabinet Demo",
+            phone="+212 665236382",
+            subject="Early access",
+            message="We would like to try JURE with our team.",
+            source="contact",
+        )
+        team_ctx = email_brand_context(
+            preheader="New website inquiry from Ayoub Hammady (ayoub@example.com)",
+            email_title="New website inquiry",
+            contact=contact,
+            source_label="Website contact form",
+            visitor_subject="Early access",
+            visitor_message=contact.message,
+            inbox="contact@jure.ma",
+            footer_note="This message was submitted from the JURE public website, not from a workspace account.",
+        )
+        ack_ctx = email_brand_context(
+            preheader="Thank you. The JURE team will get back to you shortly.",
+            email_title="Thank you for contacting JURE",
+            hello="Hello Ayoub,",
+            title="Thank you for contacting JURE",
+            body="Thank you for writing to us. We have received your request.",
+            ref_label="Your message",
+            visitor_subject="Early access",
+            visitor_message=contact.message,
+            footer_note="You received this email because you submitted a request on jure.ma.",
+            inbox="contact@jure.ma",
+            contact_url=absolute_frontend_url("/contact"),
+        )
 
         return [
             (
@@ -202,6 +234,22 @@ class Command(BaseCommand):
                 "emails/notifications/notification.txt",
                 notif_ctx,
                 [cta_url, action_url],
+            ),
+            (
+                "website_contact_team",
+                "[JURE website] Contact request from Ayoub Hammady — Early access",
+                "emails/contact/team_inquiry.html",
+                "emails/contact/team_inquiry.txt",
+                team_ctx,
+                ["ayoub@example.com", "Early access"],
+            ),
+            (
+                "website_contact_ack",
+                "We received your request — JURE",
+                "emails/contact/acknowledgement.html",
+                "emails/contact/acknowledgement.txt",
+                ack_ctx,
+                ["Hello Ayoub,", "jure.ma"],
             ),
         ]
 

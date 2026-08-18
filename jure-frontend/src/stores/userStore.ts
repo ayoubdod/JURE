@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { clearDismissedAnnouncements } from '@/utils/announcementDismiss';
+import { clearIdleSessionMarkers } from '@/utils/idleSession';
 
 interface UserStore {
     user: API.User | null;
@@ -19,6 +20,7 @@ const useUserStore = create<UserStore>()(persist(
         isLoggedIn: false,
         logout: () => {
             clearDismissedAnnouncements();
+            clearIdleSessionMarkers();
             set({
                 user: null,
                 isLoggedIn: false,

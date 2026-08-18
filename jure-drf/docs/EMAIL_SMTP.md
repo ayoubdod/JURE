@@ -51,4 +51,11 @@ If this succeeds, SMTP is correct and the app just needs a restart. If it fails,
 
 ### 5. **Local dev without SMTP**
 
-If you do **not** set `SMTP_PASS` (or `EMAIL_HOST_PASSWORD`), the **console** backend is used: invitation emails are printed in the terminal where you run `manage.py` or Daphne. No real email is sent; use this to test the flow without SMTP.
+If you do **not** set `SMTP_PASS` (or `EMAIL_HOST_PASSWORD` / `RESEND_API_KEY`), the **console** backend is used: emails are printed in the terminal where you run `manage.py` or Daphne. No real email is sent.
+
+Landing-page contact and status-alert requests send two emails:
+
+1. **To `contact@jure.ma`** — subject starts with `[JURE website]`, so it is easy to tell apart from invitations and password resets. Reply-To is the visitor.
+2. **To the visitor** — a thank-you confirming the request was received.
+
+Set `CONTACT_INBOX=contact@jure.ma` and a real `DEFAULT_FROM_EMAIL` (for example `JURE <contact@jure.ma>`). Restart Daphne after changing `.env`.

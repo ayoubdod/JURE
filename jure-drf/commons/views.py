@@ -5,7 +5,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.throttling import AnonRateThrottle
 
-from .mail import contact_inbox, send_landing_inquiry_email
+from .mail import contact_inbox, send_landing_inquiry_emails
 from .models import Activity, Contact, Function, Tag
 from .serializers import (
     ActivitySerializer,
@@ -31,8 +31,9 @@ class ContactViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         instance = serializer.save()
+        locale = request.data.get("locale") or request.LANGUAGE_CODE
         try:
-            send_landing_inquiry_email(instance)
+            send_landing_inquiry_emails(instance, locale=locale)
         except Exception:
             logger.exception("Failed to email landing inquiry to %s", contact_inbox())
             return Response(

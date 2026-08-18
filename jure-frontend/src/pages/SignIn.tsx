@@ -10,6 +10,7 @@ import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { apiLoginUser } from '@/services/auth/api';
 import useUserStore from '@/stores/userStore';
+import { stampLastActivity } from '@/utils/idleSession';
 import { isAxiosError } from 'axios';
 import { useAppTranslation } from '@/i18n';
 import AuthShell from '@/components/landing/AuthShell';
@@ -67,6 +68,7 @@ const SignIn = () => {
         user: res.data.user,
         isLoggedIn: true,
       });
+      stampLastActivity();
       toast({ title: t.auth.loginSuccessTitle, description: t.auth.loginSuccessDescription });
       navigate('/dashboard');
     } catch (error) {

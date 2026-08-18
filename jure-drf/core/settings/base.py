@@ -300,7 +300,7 @@ UNFOLD = get_unfold_settings(frontend_url=FRONTEND_BASE_URL_NORMALIZED)
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 DEFAULT_FROM_EMAIL = env.str(
     "DEFAULT_FROM_EMAIL",
-    default="webmaster@localhost",
+    default="JURE <contact@jure.ma>",
 )
 
 RESEND_API_KEY = env.str("RESEND_API_KEY", default="")
@@ -316,7 +316,7 @@ if RESEND_API_KEY:
 
     DEFAULT_FROM_EMAIL = env.str(
         "DEFAULT_FROM_EMAIL",
-        default="contact@jure.ma",
+        default="JURE <contact@jure.ma>",
     )
 
 else:
@@ -365,7 +365,7 @@ else:
 
         DEFAULT_FROM_EMAIL = env.str(
             "DEFAULT_FROM_EMAIL",
-            default=EMAIL_HOST_USER or "webmaster@localhost",
+            default=f"JURE <{EMAIL_HOST_USER}>" if EMAIL_HOST_USER else "JURE <contact@jure.ma>",
         )
 
 CONTACT_INBOX = env.str("CONTACT_INBOX", default="contact@jure.ma")

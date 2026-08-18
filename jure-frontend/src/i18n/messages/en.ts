@@ -1071,6 +1071,10 @@ export const en: AppMessages = {
     confirm: 'Log out',
     cancel: 'Cancel',
   },
+  sessionIdle: {
+    title: 'Signed out due to inactivity',
+    description: 'You were inactive for 15 minutes, so we signed you out to protect your account.',
+  },
   shortcuts: {
     paletteTitle: 'Command palette',
     palettePlaceholder: 'Search commands…',
