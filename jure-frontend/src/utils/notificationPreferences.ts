@@ -33,7 +33,7 @@ export function shouldAlertForNotificationType(type: string, prefs: Notification
   if (t.startsWith('TASK_')) return prefs.tasks;
   if (t.startsWith('CASE_')) return prefs.cases;
   if (t.startsWith('APPOINTMENT_')) return prefs.appointments;
-  if (t === 'NEW_MESSAGE' || t === 'CALL_MISSED') return prefs.messages;
+  if (t === 'NEW_MESSAGE' || t === 'NEW_MESSAGE_DAILY_REMINDER' || t === 'CALL_MISSED') return prefs.messages;
   if (
     t.startsWith('TVA_') ||
     t === 'TVA_THRESHOLD_CROSSED' ||

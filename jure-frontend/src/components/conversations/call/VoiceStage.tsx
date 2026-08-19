@@ -28,7 +28,13 @@ const VoicePeerCard: React.FC<{
           : 'bg-transparent'
       )}
     >
-      <audio ref={audioRef} autoPlay playsInline className="hidden" />
+      <audio
+        ref={audioRef}
+        autoPlay
+        playsInline
+        className="pointer-events-none absolute left-0 bottom-0"
+        style={{ width: 8, height: 8, opacity: 0.02, border: 0 }}
+      />
       <div className="relative">
         <UserAvatar
           image={peer.avatar ?? undefined}

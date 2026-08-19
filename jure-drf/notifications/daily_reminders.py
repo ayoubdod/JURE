@@ -8,9 +8,11 @@ from __future__ import annotations
 import logging
 from datetime import date
 
+from django.contrib.auth import get_user_model
 from django.utils import timezone
 
 from cases.models import Case
+from chat.models import ConversationMembership, Message
 from finance.models import Invoice
 from notifications.constants import NotificationPriority, NotificationType
 from notifications.models import Notification
@@ -60,6 +62,7 @@ def send_daily_deadline_reminders() -> None:
     _remind_administrative_due_dates(today, in_3)
     _remind_calculated_legal_deadlines(today)
     _remind_invoices_overdue(today)
+    _remind_unread_messages(today)
 
 
 def _add_days(d, n):
@@ -379,3 +382,54 @@ def _remind_invoices_overdue(today) -> None:
                 action_url="/dashboard/finance",
                 send_email=True,
             )
+
+
+def _count_unread_messages(user_id: int) -> int:
+    """Messages in the user's conversations not sent by them and not marked read."""
+    conv_ids = ConversationMembership.objects.filter(
+        user_id=user_id,
+        is_deleted=False,
+    ).values_list("conversation_id", flat=True)
+    if not conv_ids:
+        return 0
+    return (
+        Message.objects.filter(conversation_id__in=conv_ids, is_deleted=False)
+        .exclude(sender_id=user_id)
+        .exclude(read_by=user_id)
+        .count()
+    )
+
+
+def _remind_unread_messages(today) -> None:
+    """
+    Once per day: email users who still have unread chat messages.
+    Skip users with nothing unread or who already received today's digest email.
+    """
+    User = get_user_model()
+    member_ids = (
+        ConversationMembership.objects.filter(is_deleted=False)
+        .values_list("user_id", flat=True)
+        .distinct()
+    )
+    for user_id in member_ids:
+        user = User.objects.filter(pk=user_id, is_active=True).only("id", "email").first()
+        if not user or not user.email:
+            continue
+        unread = _count_unread_messages(user_id)
+        if unread == 0:
+            continue
+        if _dedupe_today(user_id, NotificationType.NEW_MESSAGE_DAILY_REMINDER):
+            continue
+        if unread == 1:
+            body = "Vous avez 1 message non lu. Connectez-vous pour le consulter."
+        else:
+            body = f"Vous avez {unread} messages non lus. Connectez-vous pour les consulter."
+        create_notification(
+            recipient_id=user_id,
+            notification_type=NotificationType.NEW_MESSAGE_DAILY_REMINDER,
+            title="Messages non lus",
+            message=body,
+            priority=NotificationPriority.MEDIUM,
+            action_url="/dashboard/chat",
+            send_email=True,
+        )

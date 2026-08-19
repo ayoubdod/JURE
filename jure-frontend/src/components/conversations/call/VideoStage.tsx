@@ -39,7 +39,13 @@ const PeerTile: React.FC<{
         className
       )}
     >
-      <audio ref={audioRef} autoPlay playsInline className="hidden" />
+      <audio
+        ref={audioRef}
+        autoPlay
+        playsInline
+        className="pointer-events-none absolute left-0 bottom-0"
+        style={{ width: 8, height: 8, opacity: 0.02, border: 0 }}
+      />
       <video
         ref={videoRef}
         autoPlay
@@ -197,7 +203,8 @@ const VideoStage: React.FC<{
               key={`a-${p.id}`}
               autoPlay
               playsInline
-              className="hidden"
+              className="pointer-events-none absolute left-0 bottom-0"
+              style={{ width: 8, height: 8, opacity: 0.02, border: 0 }}
               ref={(el) => {
                 if (!el) return;
                 el.srcObject = p.stream ?? null;

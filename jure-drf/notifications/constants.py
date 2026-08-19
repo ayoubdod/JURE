@@ -54,4 +54,5 @@ class NotificationType:
 
     # Chat / calls
     NEW_MESSAGE = "NEW_MESSAGE"
+    NEW_MESSAGE_DAILY_REMINDER = "NEW_MESSAGE_DAILY_REMINDER"
     CALL_MISSED = "CALL_MISSED"

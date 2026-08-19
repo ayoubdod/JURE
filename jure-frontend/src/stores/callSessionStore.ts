@@ -19,6 +19,7 @@ import {
   addIceCandidate,
   attachLocalVideo,
   attachRemoteMedia,
+  attachConferencePeerAudio,
   classifyMediaError,
   cleanupCall,
   clearIceServersCache,
@@ -32,6 +33,7 @@ import {
   initPeerConnection,
   mediaErrorMessage,
   remoteStreamFromPeerConnection,
+  refreshRemoteAudioPlayback,
   replaceInputTrack,
   sampleConnectionQuality,
   setAudioOutputDevice,
@@ -461,6 +463,9 @@ function onConferenceTrack(peerId: number, stream: MediaStream) {
   // Prefer keeping a dedicated remoteStream per peer; only use global for 1:1 fallbacks.
   if (callMode !== 'conference') {
     mediaRef.remoteStream = stream;
+    attachRemoteMedia(stream);
+  } else {
+    attachConferencePeerAudio(peerId, stream);
   }
   bindPeerTrackListeners(peerId, stream);
   updatePeerVideoFlags(conferencePeers, peerId, useCallSessionStore.getState().ui.kind);
@@ -644,10 +649,10 @@ function markCallActive() {
     }
   }
   if (mediaRef.remoteStream) {
-    attachRemoteMedia(mediaRef.remoteStream);
+    void refreshRemoteAudioPlayback(mediaRef.remoteStream);
     window.setTimeout(() => {
-      if (mediaRef.remoteStream) attachRemoteMedia(mediaRef.remoteStream);
-    }, 200);
+      if (mediaRef.remoteStream) void refreshRemoteAudioPlayback(mediaRef.remoteStream);
+    }, 300);
   }
 }
 

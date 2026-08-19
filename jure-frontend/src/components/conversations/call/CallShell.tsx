@@ -6,7 +6,7 @@ import {
   attachRemoteMedia,
   onRemoteAudioPlayBlocked,
   parkRemoteAudioIn,
-  unlockRemoteAudioPlayback,
+  refreshRemoteAudioPlayback,
 } from '@/utils/webrtc';
 
 /**
@@ -63,15 +63,13 @@ const CallShell: React.FC = () => {
   };
 
   const handleAccept = () => {
-    void unlockRemoteAudioPlayback();
+    void refreshRemoteAudioPlayback();
     acceptIncoming();
   };
 
   const handleTapToHear = () => {
     void (async () => {
-      await unlockRemoteAudioPlayback();
-      const stream = getRemoteStream();
-      if (stream) attachRemoteMedia(stream);
+      await refreshRemoteAudioPlayback(getRemoteStream());
       peers.forEach((p) => {
         if (p.stream) attachRemoteMedia(p.stream);
       });
