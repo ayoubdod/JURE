@@ -7,6 +7,7 @@
  */
 
 import { useCallSessionStore } from '@/stores/callSessionStore';
+import { unlockRemoteAudioPlayback } from '@/utils/webrtc';
 
 export const CALL_NOTIFICATION_TAG = 'jure-incoming-call';
 const PERM_KEY = 'jure.callNotify.permissionAsked';
@@ -103,6 +104,7 @@ function bindCallNotificationActions() {
     const store = useCallSessionStore.getState();
     const action = String(data.action || '');
     if (action === 'accept') {
+      void unlockRemoteAudioPlayback();
       store.acceptIncoming();
       void clearIncomingCallNotification();
     } else if (action === 'decline') {

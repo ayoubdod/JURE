@@ -79,7 +79,7 @@ export function getNotificationIcon(type: string): ReactNode {
   if (t.startsWith('PAYMENT_') || t === 'PAYMENT_RECEIVED') {
     return <Coins className="h-4 w-4 text-emerald-600" aria-hidden />;
   }
-  if (t === 'NEW_MESSAGE') return <MessageCircle className="h-4 w-4 text-purple-600" aria-hidden />;
+  if (t === 'NEW_MESSAGE' || t === 'NEW_MESSAGE_DAILY_REMINDER') return <MessageCircle className="h-4 w-4 text-purple-600" aria-hidden />;
   if (t === 'CALL_MISSED') return <PhoneMissed className="h-4 w-4 text-red-600" aria-hidden />;
   return <Bell className="h-4 w-4 text-slate-500" aria-hidden />;
 }
@@ -133,7 +133,7 @@ function matchesFilter(n: AppNotification, filter: NotificationFilterId): boolea
     return t === 'PROFILE_UPDATED' || t === 'ROLE_CHANGED' || t === 'MEMBER_ADDED';
   }
   if (filter === 'messages') {
-    return t === 'NEW_MESSAGE' || t === 'CALL_MISSED';
+    return t === 'NEW_MESSAGE' || t === 'NEW_MESSAGE_DAILY_REMINDER' || t === 'CALL_MISSED';
   }
   return true;
 }

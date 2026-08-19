@@ -36,8 +36,27 @@ export function clearIceServersCache(): void {
 }
 
 export function initPeerConnection(iceServers: RTCIceServer[]): RTCPeerConnection {
-  return new RTCPeerConnection({ iceServers });
+  return new RTCPeerConnection({
+    iceServers,
+    // iOS Safari often needs relay candidates on cellular / strict Wi‑Fi.
+    iceTransportPolicy: 'all',
+  });
 }
+
+/** iPhone, iPad, iPod, and iOS/iPadOS Safari / WebKit browsers. */
+export function isAppleDevice(): boolean {
+  if (typeof navigator === 'undefined') return false;
+  const ua = navigator.userAgent;
+  return (
+    /iPad|iPhone|iPod/.test(ua) ||
+    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1) ||
+    (/Safari/.test(ua) && !/Chrome|CriOS|FxiOS|EdgiOS/.test(ua))
+  );
+}
+
+/** CSS for off-screen audio that still plays on WebKit (never use display:none / hidden). */
+export const WEBKIT_SAFE_AUDIO_CSS =
+  'position:absolute;left:0;bottom:0;width:8px;height:8px;opacity:0.02;pointer-events:none;border:0;';
 
 export async function createOffer(pc: RTCPeerConnection): Promise<RTCSessionDescriptionInit> {
   // Do not pass offerToReceiveAudio/Video after addTrack — that extra recvonly
@@ -157,27 +176,47 @@ export async function getCallUserMedia(
   kind: CallKind,
   deviceIds?: { audioId?: string; videoId?: string }
 ): Promise<MediaStream> {
-  const constraints: MediaStreamConstraints = {
-    audio: deviceIds?.audioId
-      ? {
+  const apple = isAppleDevice();
+  const audio: MediaTrackConstraints | boolean = deviceIds?.audioId
+    ? apple
+      ? { deviceId: { ideal: deviceIds.audioId }, echoCancellation: true, noiseSuppression: true }
+      : {
           deviceId: { exact: deviceIds.audioId },
           echoCancellation: true,
           noiseSuppression: true,
           autoGainControl: true,
         }
-      : {
-          echoCancellation: true,
-          noiseSuppression: true,
-          autoGainControl: true,
-        },
-    video:
-      kind === 'video'
-        ? deviceIds?.videoId
-          ? { deviceId: { exact: deviceIds.videoId }, width: { ideal: 1280 }, height: { ideal: 720 } }
-          : { width: { ideal: 1280 }, height: { ideal: 720 } }
-        : false,
-  };
-  return navigator.mediaDevices.getUserMedia(constraints);
+    : {
+        echoCancellation: true,
+        noiseSuppression: true,
+        autoGainControl: !apple,
+      };
+
+  let video: boolean | MediaTrackConstraints = false;
+  if (kind === 'video') {
+    video = {
+      facingMode: 'user',
+      width: apple ? { ideal: 640, max: 1280 } : { ideal: 1280 },
+      height: apple ? { ideal: 480, max: 720 } : { ideal: 720 },
+    };
+    if (deviceIds?.videoId) {
+      video = apple
+        ? { ...video, deviceId: { ideal: deviceIds.videoId } }
+        : { ...video, deviceId: { exact: deviceIds.videoId } };
+    }
+  }
+
+  const constraints: MediaStreamConstraints = { audio, video };
+  try {
+    return await navigator.mediaDevices.getUserMedia(constraints);
+  } catch (e) {
+    // iOS sometimes rejects ideal/max — retry with minimal constraints.
+    if (!apple || kind !== 'video') throw e;
+    return navigator.mediaDevices.getUserMedia({
+      audio: true,
+      video: { facingMode: 'user' },
+    });
+  }
 }
 
 /** Persistent sink — parked inside the call UI so a modal dialog cannot mute it. */
@@ -350,6 +389,46 @@ export function attachRemoteMedia(stream: MediaStream | null | undefined) {
   }
 }
 
+/** Per-peer sinks for conference voice (WebKit-safe, not display:none). */
+const conferencePeerAudio = new Map<number, HTMLAudioElement>();
+
+export function attachConferencePeerAudio(peerId: number, stream: MediaStream | null | undefined) {
+  if (!stream) return;
+  const audioTracks = stream.getAudioTracks().filter((t) => t.readyState !== 'ended');
+  if (audioTracks.length === 0) return;
+
+  let el = conferencePeerAudio.get(peerId);
+  if (!el) {
+    el = document.createElement('audio');
+    el.id = `jure-peer-audio-${peerId}`;
+    el.autoplay = true;
+    el.playsInline = true;
+    el.setAttribute('playsinline', '');
+    el.setAttribute('webkit-playsinline', '');
+    el.style.cssText = WEBKIT_SAFE_AUDIO_CSS;
+    document.body.appendChild(el);
+    conferencePeerAudio.set(peerId, el);
+  }
+  el.volume = 1;
+  el.muted = false;
+  el.srcObject = new MediaStream(audioTracks);
+  void el.play().catch(() => {
+    el!.muted = true;
+    void el!.play().catch(() => {});
+    wireWebAudio(new MediaStream(audioTracks));
+  });
+}
+
+/** Unlock + re-attach remote audio (call when ICE connects / call goes active). */
+export async function refreshRemoteAudioPlayback(stream?: MediaStream | null) {
+  await unlockRemoteAudioPlayback();
+  if (stream) {
+    attachRemoteMedia(stream);
+    return;
+  }
+  ensureRemoteAudioPlaying();
+}
+
 /** Re-bind whatever remote stream we already have (after UI mounts / Accept gesture). */
 export function ensureRemoteAudioPlaying(stream?: MediaStream | null) {
   const s =
@@ -387,6 +466,11 @@ export function clearRemoteMediaElements() {
   }
   remoteAudioSource = null;
   if (managedRemoteAudio) managedRemoteAudio.srcObject = null;
+  conferencePeerAudio.forEach((el) => {
+    el.srcObject = null;
+    el.remove();
+  });
+  conferencePeerAudio.clear();
   const remote = document.getElementById('remote-video') as HTMLVideoElement | null;
   if (remote) remote.srcObject = null;
   const local = document.getElementById('local-video') as HTMLVideoElement | null;
@@ -469,11 +553,14 @@ export async function replaceInputTrack(
 
 /** Capture the JURE tab / a window / the full screen for collaboration. */
 export async function getScreenShareStream(): Promise<MediaStream> {
+  const video: MediaTrackConstraints = isAppleDevice()
+    ? { frameRate: { ideal: 15, max: 24 } }
+    : ({
+        displaySurface: 'monitor',
+        frameRate: { ideal: 15, max: 30 },
+      } as MediaTrackConstraints);
   return navigator.mediaDevices.getDisplayMedia({
-    video: {
-      displaySurface: 'monitor',
-      frameRate: { ideal: 15, max: 30 },
-    } as MediaTrackConstraints,
+    video,
     audio: false,
   });
 }

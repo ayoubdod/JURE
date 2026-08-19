@@ -434,7 +434,7 @@ def _maybe_new_message_notification(message_id: int, recipient_id: int) -> None:
         message="Vous avez un nouveau message dans une conversation.",
         priority=NotificationPriority.MEDIUM,
         action_url="/dashboard/chat",
-        send_email=True,
+        send_email=False,
     )
     close_old_connections()
 
