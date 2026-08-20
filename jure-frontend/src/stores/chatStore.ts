@@ -11,6 +11,25 @@ export interface WebSocketMessage {
 
 const callMessageSubscribers = new Set<(msg: WebSocketMessage) => void>();
 
+function conversationIdOf(n: { conversation_id?: unknown; conversationId?: unknown; conversation?: unknown } | null | undefined): number | null {
+  if (!n) return null;
+  const raw = n.conversation_id ?? n.conversationId ?? n.conversation;
+  if (typeof raw === 'number' && Number.isFinite(raw)) return raw;
+  if (raw && typeof raw === 'object' && typeof (raw as { id?: unknown }).id === 'number') {
+    return (raw as { id: number }).id;
+  }
+  const parsed = Number(raw);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function markInboxRead(notifications: any[], conversationId: number): any[] {
+  return notifications.map((n) => {
+    if (conversationIdOf(n) !== conversationId) return n;
+    if (n?.unread === false) return n;
+    return { ...n, unread: false };
+  });
+}
+
 /** Subscribe to `call.*` messages on the main chat WebSocket (signaling). */
 export function subscribeCallMessages(handler: (msg: WebSocketMessage) => void): () => void {
   callMessageSubscribers.add(handler);
@@ -30,6 +49,8 @@ export interface ChatStore {
   lastConversationUpdated: API.Conversation | null;
   /** IDs of users/members currently connected to chat (from online_user_ids, online_member_ids, or online). In this app they are the same. */
   onlineIds: number[];
+  /** Conversation currently open in the chat window — new inbox items for it are stored as read. */
+  viewingConversationId: number | null;
 
   // WebSocket instance
   ws: WebSocket | null;
@@ -38,6 +59,8 @@ export interface ChatStore {
   connect: () => Promise<void>;
   disconnect: () => void;
   clearConversationUpdate: () => void;
+  setViewingConversationId: (id: number | null) => void;
+  markConversationInboxRead: (conversationId: number) => void;
 }
 
 const useChatStore = create<ChatStore>()(
@@ -51,6 +74,7 @@ const useChatStore = create<ChatStore>()(
     notifications: [],
     lastConversationUpdated: null,
     onlineIds: [],
+    viewingConversationId: null,
     // Connection methods
     connect: async () => {
       const state = get();
@@ -145,9 +169,15 @@ const useChatStore = create<ChatStore>()(
                 set({ onlineIds });
                 break;
               }
-              case 'notification.new':
-                set({ notifications: [ data.payload,...get().notifications] });
+              case 'notification.new': {
+                const payload = data.payload ?? {};
+                const convId = conversationIdOf(payload);
+                const viewing = get().viewingConversationId;
+                const nextPayload =
+                  convId != null && viewing === convId ? { ...payload, unread: false } : payload;
+                set({ notifications: [nextPayload, ...get().notifications] });
                 break;
+              }
               case 'error':
                 devError('WebSocket error:', data.payload);
                 set({ connectionError: data.payload.message });
@@ -210,6 +240,10 @@ const useChatStore = create<ChatStore>()(
     },
 
     clearConversationUpdate: () => set({ lastConversationUpdated: null }),
+    setViewingConversationId: (id) => set({ viewingConversationId: id }),
+    markConversationInboxRead: (conversationId) => {
+      set({ notifications: markInboxRead(get().notifications, conversationId) });
+    },
   }))
 );
 

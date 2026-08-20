@@ -265,13 +265,6 @@ const ClientProfilePreview = React.forwardRef<ClientProfilePreviewRef, ClientPro
                         <div className="flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br from-[#64499D] to-[#3b2b66] text-[13px] font-semibold text-white ring-1 ring-[#64499D]/20">
                           {initials}
                         </div>
-                        <span
-                          className={cn(
-                            'absolute -bottom-0.5 -end-0.5 h-2.5 w-2.5 rounded-full border-2 border-[#F7F4FF] dark:border-[#24183F]',
-                            client.is_active ? 'bg-emerald-500' : 'bg-slate-400'
-                          )}
-                          aria-hidden
-                        />
                       </div>
 
                       <div className="min-w-0 flex-1">

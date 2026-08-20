@@ -1,6 +1,6 @@
 import React from 'react';
 import { AlertTriangle, X } from 'lucide-react';
-import UserAvatar from '@/components/common/UserAvatar';
+import UserAvatar, { PresenceDot } from '@/components/common/UserAvatar';
 import { cn } from '@/lib/utils';
 import CallTimer from './CallTimer';
 import AudioWave from './AudioWave';
@@ -294,7 +294,7 @@ const CallModal: React.FC<{
             <button
               type="button"
               onClick={onMinimize}
-              className="inline-flex h-10 items-center gap-1.5 rounded-full bg-white/90 dark:bg-slate-950/90 px-3 text-xs font-medium text-slate-600 shadow-sm ring-1 ring-slate-200/80 dark:bg-slate-900/90 dark:text-slate-300 dark:ring-slate-700"
+              className="inline-flex h-10 items-center gap-1.5 rounded-full bg-white/90 px-3 text-xs font-medium text-slate-600 shadow-sm ring-1 ring-slate-200/80 dark:bg-slate-900/90 dark:text-slate-300 dark:ring-slate-700"
               aria-label={call.minimize}
             >
               <span className="h-1 w-6 rounded-full bg-slate-300 dark:bg-slate-600" aria-hidden />
@@ -307,7 +307,7 @@ const CallModal: React.FC<{
             <button
               type="button"
               onClick={onToggleFullscreen}
-              className="inline-flex h-10 items-center rounded-full bg-white/90 dark:bg-slate-950/90 px-3 text-xs font-medium text-slate-600 shadow-sm ring-1 ring-slate-200/80 dark:bg-slate-900/90 dark:text-slate-300 dark:ring-slate-700"
+              className="inline-flex h-10 items-center rounded-full bg-white/90 px-3 text-xs font-medium text-slate-600 shadow-sm ring-1 ring-slate-200/80 dark:bg-slate-900/90 dark:text-slate-300 dark:ring-slate-700"
               aria-label={call.exitFullScreen}
             >
               {call.exitFullScreen}
@@ -320,7 +320,7 @@ const CallModal: React.FC<{
         <button
           type="button"
           onClick={onClose}
-          className="absolute end-3 top-3 rounded-lg p-2 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 dark:hover:bg-slate-800"
+          className="absolute end-3 top-3 rounded-lg p-2 text-slate-400 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 dark:hover:bg-slate-800"
           aria-label={t.common.close}
         >
           <X className="h-4 w-4" />
@@ -413,12 +413,7 @@ const CallModal: React.FC<{
                 )}
               />
             </div>
-            {status === 'active' ? (
-              <span
-                className="absolute bottom-1 end-1 h-3.5 w-3.5 rounded-full border-2 border-white bg-emerald-500 dark:border-slate-900"
-                aria-hidden
-              />
-            ) : null}
+            {status === 'active' ? <PresenceDot online className="bottom-1 end-1 h-3.5 w-3.5" /> : null}
           </div>
         ) : null}
 

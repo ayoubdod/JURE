@@ -62,9 +62,11 @@ import CabinetMemberDeleteModal, {
 import TeamMemberProfileDrawer, {
   TeamMemberProfileDrawerRef,
 } from '@/components/team/TeamMemberProfileDrawer';
-import UserAvatar, { getPersonImage } from '@/components/common/UserAvatar';
+import UserAvatar, { getPersonImage, PresenceDot } from '@/components/common/UserAvatar';
 import { getRoleDisplayName } from '@/utils/permissions';
 import { getCabinetMemberRouteId, getMemberWorkloadDisplay } from '@/utils/cabinetMemberHelpers';
+import { isCabinetMemberOnline } from '@/lib/presence';
+import { useOnlineIds } from '@/hooks/useOnlinePresence';
 import { cn } from '@/lib/utils';
 import { formatDate, useAppTranslation } from '@/i18n';
 import type { Lang } from '@/i18n';
@@ -110,6 +112,7 @@ function workloadFillPct(assigned: number): number {
 
 const TeamMembers: React.FC = () => {
   const { t, tf, lang } = useAppTranslation();
+  const onlineIds = useOnlineIds();
   const [searchTerm, setSearchTerm] = useState('');
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [roleFilter, setRoleFilter] = useState<API.Role | ''>('');
@@ -367,13 +370,17 @@ const TeamMembers: React.FC = () => {
               size="lg"
               className="h-14 w-14"
             />
-            <span
-              className={cn(
-                'absolute -bottom-0.5 -end-0.5 h-3 w-3 rounded-full border-2 border-white dark:border-zinc-950',
-                pending ? 'bg-amber-400' : member.is_active ? 'bg-emerald-500' : 'bg-slate-400'
-              )}
-              aria-hidden
-            />
+            {pending ? (
+              <span
+                className="absolute -bottom-0.5 -end-0.5 h-3 w-3 rounded-full border-2 border-white bg-amber-400 dark:border-zinc-950"
+                aria-hidden
+              />
+            ) : (
+              <PresenceDot
+                online={isCabinetMemberOnline(member, onlineIds)}
+                className="h-3 w-3 dark:border-zinc-950"
+              />
+            )}
           </div>
 
           <h3 className="mt-2.5 w-full min-w-0 truncate px-5 text-[14px] font-semibold leading-tight text-slate-900 dark:text-white">
@@ -505,12 +512,17 @@ const TeamMembers: React.FC = () => {
                 size="md"
                 className="h-9 w-9"
               />
-              <span
-                className={cn(
-                  'absolute -bottom-0.5 -end-0.5 h-2.5 w-2.5 rounded-full border-2 border-white dark:border-zinc-950',
-                  isPending(member) ? 'bg-amber-400' : member.is_active ? 'bg-emerald-500' : 'bg-slate-400'
-                )}
-              />
+              {isPending(member) ? (
+                <span
+                  className="absolute -bottom-0.5 -end-0.5 h-2.5 w-2.5 rounded-full border-2 border-white bg-amber-400 dark:border-zinc-950"
+                  aria-hidden
+                />
+              ) : (
+                <PresenceDot
+                  online={isCabinetMemberOnline(member, onlineIds)}
+                  className="dark:border-zinc-950"
+                />
+              )}
             </div>
             <div className="min-w-0 flex-1">
               <div className="flex items-start justify-between gap-2">
@@ -614,12 +626,17 @@ const TeamMembers: React.FC = () => {
                 size="sm"
                 className="h-8 w-8"
               />
-              <span
-                className={cn(
-                  'absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-white dark:border-slate-950',
-                  isPending(member) ? 'bg-amber-400' : member.is_active ? 'bg-emerald-500' : 'bg-slate-400'
-                )}
-              />
+              {isPending(member) ? (
+                <span
+                  className="absolute -bottom-0.5 -end-0.5 h-2.5 w-2.5 rounded-full border-2 border-white bg-amber-400 dark:border-slate-950"
+                  aria-hidden
+                />
+              ) : (
+                <PresenceDot
+                  online={isCabinetMemberOnline(member, onlineIds)}
+                  className="dark:border-slate-950"
+                />
+              )}
             </div>
             <div className="min-w-0">
               <p className="text-[13px] font-semibold text-slate-900 dark:text-white truncate">{fullName}</p>

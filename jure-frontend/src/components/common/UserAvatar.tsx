@@ -48,6 +48,26 @@ export interface UserAvatarProps {
   className?: string;
 }
 
+/** Live-presence pip. Render only when the person is actually online. */
+export function PresenceDot({
+  online,
+  className,
+}: {
+  online?: boolean;
+  className?: string;
+}) {
+  if (!online) return null;
+  return (
+    <span
+      className={cn(
+        'absolute -bottom-0.5 -end-0.5 h-2.5 w-2.5 rounded-full border-2 border-white bg-emerald-500 dark:border-slate-900',
+        className
+      )}
+      aria-hidden
+    />
+  );
+}
+
 const sizeClasses = {
   xs: 'h-7 w-7',
   sm: 'h-8 w-8',

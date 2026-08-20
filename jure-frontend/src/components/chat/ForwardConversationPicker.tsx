@@ -8,12 +8,14 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import UserAvatar, { getPersonImage } from '@/components/common/UserAvatar';
+import UserAvatar, { getPersonImage, PresenceDot } from '@/components/common/UserAvatar';
 import GroupChatIcon from '@/components/chat/GroupChatIcon';
 import { apiListConversations } from '@/services/conversations/api';
 import { cn } from '@/lib/utils';
 import useUserStore from '@/stores/userStore';
 import { useAppTranslation } from '@/i18n';
+import { isOnlineUserId, personPresenceId } from '@/lib/presence';
+import { useOnlineIds } from '@/hooks/useOnlinePresence';
 
 interface ForwardConversationPickerProps {
   open: boolean;
@@ -33,6 +35,7 @@ const ForwardConversationPicker: React.FC<ForwardConversationPickerProps> = ({
   const [search, setSearch] = useState('');
   const currentUser = useUserStore((s) => s.user);
   const { t } = useAppTranslation();
+  const onlineIds = useOnlineIds();
 
   useEffect(() => {
     if (open) {
@@ -127,13 +130,16 @@ const ForwardConversationPicker: React.FC<ForwardConversationPickerProps> = ({
                     )}
                   >
                     {c.type === 'direct' && person ? (
-                      <UserAvatar
-                        image={getPeerImage(c)}
-                        firstName={person.first_name}
-                        lastName={person.last_name}
-                        size="sm"
-                        className="h-9 w-9 shrink-0"
-                      />
+                      <div className="relative shrink-0">
+                        <UserAvatar
+                          image={getPeerImage(c)}
+                          firstName={person.first_name}
+                          lastName={person.last_name}
+                          size="sm"
+                          className="h-9 w-9 shrink-0"
+                        />
+                        <PresenceDot online={isOnlineUserId(personPresenceId(person), onlineIds)} />
+                      </div>
                     ) : c.type === 'group' ? (
                       <GroupChatIcon
                         iconUrl={(c as API.Conversation).icon_url}

@@ -2,13 +2,14 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Loader2, MessageSquarePlus, Search } from 'lucide-react';
 import { apiGetAllCabinetMembers } from '@/services/cabinet-member/api';
 import { Button } from '../ui/button';
-import UserAvatar, { getPersonImage } from '../common/UserAvatar';
+import UserAvatar, { getPersonImage, PresenceDot } from '../common/UserAvatar';
 import useUserStore from '@/stores/userStore';
 import useChatStore from '@/stores/chatStore';
 import { cn } from '@/lib/utils';
 import { useAppTranslation } from '@/i18n';
 import ConversationListItem from './ConversationListItem';
 import { getDirectPeer, getLinkedCase, getMemberPerson } from './conversationUtils';
+import { isCabinetMemberOnline, isOnlineUserId, personPresenceId } from '@/lib/presence';
 
 type ListFilter = 'all' | 'unread' | 'cases' | 'team' | 'archived';
 
@@ -71,14 +72,7 @@ const ConversationList: React.FC<Props> = ({
   const recentMessages = chatStore.notifications.filter((m: { is_message?: boolean }) => m.is_message);
   const onlineIds = chatStore.onlineIds ?? [];
 
-  const isMemberOnline = (member: API.CabinetMember) => {
-    const ids = [
-      (member as { user_id?: number }).user_id,
-      (member as { user?: { id?: number } }).user?.id,
-      member.id,
-    ].filter((x): x is number => typeof x === 'number');
-    return ids.some((id) => onlineIds.includes(id));
-  };
+  const isMemberOnline = (member: API.CabinetMember) => isCabinetMemberOnline(member, onlineIds);
 
   const membersForAvatars = useMemo(() => {
     const currentEmail = (currentUser?.email ?? '').toLowerCase();
@@ -143,10 +137,7 @@ const ConversationList: React.FC<Props> = ({
     if (c.type !== 'direct') return false;
     const peer = getDirectPeer(c, currentUser?.email);
     const person = peer ? getMemberPerson(peer) : c.other_participant;
-    const ids = [person?.id, (person as { pk?: number } | undefined)?.pk].filter(
-      (x): x is number => typeof x === 'number'
-    );
-    return ids.some((id) => onlineIds.includes(id));
+    return isOnlineUserId(personPresenceId(person), onlineIds);
   };
 
   return (
@@ -217,9 +208,7 @@ const ConversationList: React.FC<Props> = ({
                       size="sm"
                       className="h-8 w-8 ring-2 ring-transparent transition-shadow group-hover:ring-[#64499D]/30"
                     />
-                    {isOnline ? (
-                      <span className="absolute -bottom-0.5 -end-0.5 h-2 w-2 rounded-full border border-white bg-emerald-500 dark:border-slate-900" />
-                    ) : null}
+                    {isOnline ? <PresenceDot online className="h-2 w-2 border" /> : null}
                   </div>
                 </button>
               );

@@ -7,9 +7,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import UserAvatar from '@/components/common/UserAvatar';
+import UserAvatar, { PresenceDot } from '@/components/common/UserAvatar';
 import type { CallRemoteUser } from '@/stores/callSessionStore';
 import { cn } from '@/lib/utils';
+import { isOnlineUserId } from '@/lib/presence';
+import { useOnlineIds } from '@/hooks/useOnlinePresence';
 
 export type GroupCallKind = 'voice' | 'video';
 
@@ -37,6 +39,7 @@ export function GroupCallParticipantPicker({
   onSelect,
 }: GroupCallParticipantPickerProps) {
   const [query, setQuery] = useState('');
+  const onlineIds = useOnlineIds();
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -102,13 +105,16 @@ export function GroupCallParticipantPicker({
                   'dark:hover:bg-slate-900/70 dark:focus-visible:bg-slate-900/70'
                 )}
               >
-                <UserAvatar
-                  image={p.avatar ?? undefined}
-                  firstName={p.firstName}
-                  lastName={p.lastName}
-                  size="md"
-                  className="h-9 w-9 shrink-0"
-                />
+                <div className="relative shrink-0">
+                  <UserAvatar
+                    image={p.avatar ?? undefined}
+                    firstName={p.firstName}
+                    lastName={p.lastName}
+                    size="md"
+                    className="h-9 w-9 shrink-0"
+                  />
+                  <PresenceDot online={isOnlineUserId(p.id, onlineIds)} />
+                </div>
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium text-slate-900 dark:text-slate-50">{p.name}</p>
                 </div>

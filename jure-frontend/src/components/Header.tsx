@@ -28,7 +28,7 @@ import { useAppTranslation, intlLocale } from '@/i18n';
 import { useTheme } from '@/hooks/useTheme';
 import UserAvatar, { getPersonImage } from '@/components/common/UserAvatar';
 import GroupChatIcon from '@/components/chat/GroupChatIcon';
-import { apiListConversations } from '@/services/conversations/api';
+import { apiListConversations, apiMarkConversationRead } from '@/services/conversations/api';
 import { useCabinetMemberDirectory } from '@/hooks/useCabinetMemberDirectory';
 import { devError } from '@/utils/devLog';
 import { NotificationBell } from '@/components/notifications/NotificationBell';
@@ -250,8 +250,11 @@ const Header = () => {
   };
 
   const handleMessageClick = (message: ChatMessage) => {
+    const convId = message.conversation_id;
+    useChatStore.getState().markConversationInboxRead(convId);
+    void apiMarkConversationRead(convId).catch(() => {});
     setMessagesOpen(false);
-    navigate(`/dashboard/conversations?selected=${message.conversation_id}`);
+    navigate(`/dashboard/conversations?selected=${convId}`);
   };
 
   const handleSearchToggle = () => {

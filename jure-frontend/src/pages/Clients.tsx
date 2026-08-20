@@ -146,14 +146,6 @@ const ClientAvatar: React.FC<{ client: API.Client; size?: 'sm' | 'md' }> = ({
       >
         {initials || <img src={userIcon} alt="" className="h-4 w-4 opacity-90" />}
       </div>
-      <span
-        className={cn(
-          'absolute -bottom-0.5 -end-0.5 rounded-full border-2 border-white dark:border-slate-950',
-          size === 'sm' ? 'h-2.5 w-2.5' : 'h-3 w-3',
-          client.is_active ? 'bg-emerald-500' : 'bg-slate-400'
-        )}
-        aria-hidden
-      />
     </div>
   );
 };

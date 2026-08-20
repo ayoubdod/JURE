@@ -59,7 +59,7 @@ export const ActiveCallBanner: React.FC<{
         <p className="text-[11px] text-emerald-800/80 dark:text-emerald-200/70">{subtitle}</p>
       </div>
       {amInCall ? (
-        <span className="shrink-0 text-xs font-medium text-emerald-700 dark:text-emerald-400 dark:text-emerald-300">{inCallLabel}</span>
+        <span className="shrink-0 text-xs font-medium text-emerald-700 dark:text-emerald-300">{inCallLabel}</span>
       ) : (
         <button
           type="button"
@@ -92,12 +92,12 @@ export const MissedCallMessage: React.FC<{
       <div
         className={cn(
           'group relative flex max-w-[min(100%,22rem)] items-center gap-3 rounded-2xl border px-3.5 py-2.5 shadow-sm',
-          'border-rose-200/70 bg-white dark:bg-slate-950 text-rose-950',
+          'border-rose-200/70 bg-white text-rose-950',
           'dark:border-rose-900/50 dark:bg-slate-900 dark:text-rose-50'
         )}
       >
         <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-rose-100 text-rose-600 dark:bg-rose-950 dark:text-rose-300">
-          <Icon className="h-4.5 w-4.5 h-[18px] w-[18px]" aria-hidden />
+          <Icon className="h-[18px] w-[18px]" aria-hidden />
         </span>
         <div className="min-w-0 flex-1">
           <p className="text-sm font-semibold tracking-tight">{title}</p>

@@ -32,7 +32,8 @@ import {
 } from 'lucide-react';
 import { apiGetCabinetMember } from '@/services/cabinet-member/api';
 import { cn } from '@/lib/utils';
-import UserAvatar, { getPersonImage } from '@/components/common/UserAvatar';
+import UserAvatar, { getPersonImage, PresenceDot } from '@/components/common/UserAvatar';
+import { useIsCabinetMemberOnline } from '@/hooks/useOnlinePresence';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -138,6 +139,7 @@ const TeamMemberProfileDrawer = forwardRef<
   );
 
   const data = detail ?? member;
+  const isOnline = useIsCabinetMemberOnline(data);
   const fullName = data
     ? `${data.first_name || ''} ${data.last_name || ''}`.trim() || t.team.unnamed
     : '';
@@ -268,13 +270,17 @@ const TeamMemberProfileDrawer = forwardRef<
                     lastName={data.last_name}
                     size="md"
                   />
-                  <span
-                    className={cn(
-                      'absolute -bottom-0.5 -end-0.5 h-2.5 w-2.5 rounded-full border-2 border-[#F7F4FF] dark:border-[#24183F]',
-                      pending ? 'bg-amber-400' : data.is_active ? 'bg-emerald-500' : 'bg-slate-400'
-                    )}
-                    aria-hidden
-                  />
+                  {pending ? (
+                    <span
+                      className="absolute -bottom-0.5 -end-0.5 h-2.5 w-2.5 rounded-full border-2 border-[#F7F4FF] bg-amber-400 dark:border-[#24183F]"
+                      aria-hidden
+                    />
+                  ) : (
+                    <PresenceDot
+                      online={isOnline}
+                      className="border-[#F7F4FF] dark:border-[#24183F]"
+                    />
+                  )}
                 </div>
                 <div className="min-w-0 flex-1">
                   <DialogTitle className="truncate text-[17px] font-semibold tracking-tight text-slate-900 dark:text-zinc-50">

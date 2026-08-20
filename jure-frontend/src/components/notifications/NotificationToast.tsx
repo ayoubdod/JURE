@@ -12,9 +12,10 @@ export interface NotificationToastProps {
   notification: AppNotification;
   urgentManualClose: boolean;
   onDismiss: () => void;
+  onRead?: (id: number | string) => void;
 }
 
-export function NotificationToast({ notification: n, urgentManualClose, onDismiss }: NotificationToastProps) {
+export function NotificationToast({ notification: n, urgentManualClose, onDismiss, onRead }: NotificationToastProps) {
   const navigate = useNavigate();
   const { t, dir } = useAppTranslation();
   const copy = translateNotification(n, t.notifications.items);
@@ -43,6 +44,7 @@ export function NotificationToast({ notification: n, urgentManualClose, onDismis
   const line = msg.length > 120 ? `${msg.slice(0, 117)}…` : msg;
 
   const go = () => {
+    if (!n.is_read && onRead) void onRead(n.id);
     void openNotification(navigate, n);
     dismiss();
   };
