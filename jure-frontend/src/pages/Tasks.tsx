@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router';
+import { useNavigate, useSearchParams } from 'react-router';
 import { Plus, CheckSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import TaskCreateModal, { TaskCreateModalRef } from '@/components/task/TaskCreateModal';
@@ -61,6 +61,7 @@ const TasksPage: React.FC = () => {
   const { t } = useAppTranslation();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const canEdit = usePermission('tasks.edit');
 
   const [filters, setFilters] = useState<TaskFiltersValue>(DEFAULT_FILTERS);
@@ -86,6 +87,17 @@ const TasksPage: React.FC = () => {
   }, []);
 
   useShortcutAction('create-task', openCreate);
+
+  useEffect(() => {
+    const raw = searchParams.get('task');
+    if (!raw) return;
+    const id = parseInt(raw, 10);
+    if (!Number.isFinite(id)) return;
+    setDetailId(id);
+    const next = new URLSearchParams(searchParams);
+    next.delete('task');
+    setSearchParams(next, { replace: true });
+  }, [searchParams, setSearchParams]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {

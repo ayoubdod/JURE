@@ -7,7 +7,12 @@ from rest_framework.views import APIView
 
 from notifications.models import Notification
 from notifications.serializers import NotificationSerializer
-from notifications.services.notification_service import get_unread_count, mark_all_as_read, mark_as_read
+from notifications.services.notification_service import (
+    get_unread_count,
+    in_app_queryset,
+    mark_all_as_read,
+    mark_as_read,
+)
 
 
 class NotificationPagination(PageNumberPagination):
@@ -22,11 +27,13 @@ class NotificationListView(generics.ListAPIView):
     pagination_class = NotificationPagination
 
     def get_queryset(self):
-        qs = Notification.objects.filter(recipient=self.request.user).select_related(
-            "related_case",
-            "related_task",
-            "related_appointment",
-            "related_user",
+        qs = in_app_queryset(
+            Notification.objects.filter(recipient=self.request.user).select_related(
+                "related_case",
+                "related_task",
+                "related_appointment",
+                "related_user",
+            )
         )
         p = self.request.query_params
         if p.get("is_read") is not None:

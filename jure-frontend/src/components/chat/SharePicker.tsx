@@ -21,6 +21,7 @@ import {
 } from '@/services/search/api';
 import { normalizeShareableResults, type SharePickResult } from './sharePickerTypes';
 import { TaskPriority } from '@/utils/constants';
+import { useAppTranslation, intlLocale } from '@/i18n';
 
 type ShareTab = Exclude<ShareableApiType, 'all'>;
 
@@ -32,9 +33,19 @@ function caseDotClass(row: ShareableSearchCaseHit): string {
   return 'bg-slate-400';
 }
 
-function caseTypeLabel(row: ShareableSearchCaseHit): string {
-  const t = row.caseType ?? '';
-  return String(t).replace(/_/g, ' ') || 'CASE';
+function caseTypeLabel(row: ShareableSearchCaseHit, t: ReturnType<typeof useAppTranslation>['t']): string {
+  const v = String(row.caseType ?? '').toUpperCase();
+  if (v === 'LITIGATION') return t.sidebar.litigation;
+  if (v === 'CONSULTATION') return t.sidebar.consultation;
+  if (v === 'ADMINISTRATIVE' || v === 'ADMINISTRATIVE_DUTY') return t.sidebar.administrative;
+  return v.replace(/_/g, ' ') || t.sidebar.cases;
+}
+
+function formatShortDate(iso: string | undefined, locale: string): string {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return '—';
+  return d.toLocaleDateString(locale, { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
 function statusBadgeClass(): string {
@@ -46,14 +57,8 @@ function taskPriorityShow(p?: string | null): boolean {
   return u === 'high' || u === 'urgent' || p === TaskPriority.HIGH;
 }
 
-function formatShortDate(iso?: string): string {
-  if (!iso) return '—';
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return '—';
-  return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
-}
-
 function CaseResultRow({ row, onPick }: { row: ShareableSearchCaseHit; onPick: () => void }) {
+  const { t, enumLabel } = useAppTranslation();
   const ref = row.reference?.startsWith('#') ? row.reference : row.reference ? `#${row.reference}` : `#${row.id}`;
   return (
     <button
@@ -67,10 +72,10 @@ function CaseResultRow({ row, onPick }: { row: ShareableSearchCaseHit; onPick: (
         <span className="text-[13px] font-medium text-slate-800 dark:text-slate-200 truncate">{row.title ?? '—'}</span>
       </div>
       <div className="flex flex-wrap items-center gap-1.5 mt-1 pl-4">
-        {row.status && <span className={statusBadgeClass()}>{String(row.status).replace(/_/g, ' ')}</span>}
-        <span className={statusBadgeClass()}>{caseTypeLabel(row)}</span>
+        {row.status && <span className={statusBadgeClass()}>{enumLabel('caseStatus', String(row.status)) || String(row.status).replace(/_/g, ' ')}</span>}
+        <span className={statusBadgeClass()}>{caseTypeLabel(row, t)}</span>
         {row.priority && (
-          <span className="text-[10px] text-slate-500 dark:text-slate-400">{String(row.priority)}</span>
+          <span className="text-[10px] text-slate-500 dark:text-slate-400">{enumLabel('taskPriority', String(row.priority)) || String(row.priority)}</span>
         )}
       </div>
     </button>
@@ -78,6 +83,7 @@ function CaseResultRow({ row, onPick }: { row: ShareableSearchCaseHit; onPick: (
 }
 
 function TaskResultRow({ row, onPick }: { row: ShareableSearchTaskHit; onPick: () => void }) {
+  const { t, tf, lang, enumLabel } = useAppTranslation();
   return (
     <button
       type="button"
@@ -89,14 +95,16 @@ function TaskResultRow({ row, onPick }: { row: ShareableSearchTaskHit; onPick: (
         <span className="text-[13px] font-medium text-slate-800 dark:text-slate-200 truncate">{row.title ?? '—'}</span>
       </div>
       <div className="flex flex-wrap items-center gap-1.5 mt-1 pl-6">
-        {row.status && <span className={statusBadgeClass()}>{String(row.status).replace(/_/g, ' ')}</span>}
+        {row.status && <span className={statusBadgeClass()}>{enumLabel('taskStatus', String(row.status)) || String(row.status).replace(/_/g, ' ')}</span>}
         {taskPriorityShow(row.priority) && (
           <span className="text-[10px] font-semibold rounded-full px-1.5 py-0.5 bg-rose-500/15 text-rose-700 dark:text-rose-400 ring-1 ring-rose-500/25">
-            {String(row.priority).toUpperCase()}
+            {enumLabel('taskPriority', String(row.priority)) || String(row.priority).toUpperCase()}
           </span>
         )}
         {row.dueDate && (
-          <span className="text-[11px] text-slate-500 dark:text-slate-400">Due: {formatShortDate(row.dueDate)}</span>
+          <span className="text-[11px] text-slate-500 dark:text-slate-400">
+            {tf(t.conversations.dueLabel, { date: formatShortDate(row.dueDate, intlLocale(lang)) })}
+          </span>
         )}
         {row.relatedCase && (row.relatedCase.reference || row.relatedCase.title) && (
           <span className="text-[10px] text-slate-500 truncate max-w-[200px]">
@@ -110,6 +118,7 @@ function TaskResultRow({ row, onPick }: { row: ShareableSearchTaskHit; onPick: (
 }
 
 function AppointmentResultRow({ row, onPick }: { row: ShareableSearchAppointmentHit; onPick: () => void }) {
+  const { lang, enumLabel } = useAppTranslation();
   const when = row.date;
   const dur =
     row.duration != null && row.duration > 0
@@ -128,8 +137,8 @@ function AppointmentResultRow({ row, onPick }: { row: ShareableSearchAppointment
         <span className="text-[13px] font-medium text-slate-800 dark:text-slate-200 truncate">{row.title ?? '—'}</span>
       </div>
       <div className="flex flex-wrap items-center gap-1.5 mt-1 pl-6">
-        {row.status && <span className={statusBadgeClass()}>{String(row.status).replace(/_/g, ' ')}</span>}
-        {when && <span className="text-[11px] text-slate-500 dark:text-slate-400">{formatShortDate(when)}</span>}
+        {row.status && <span className={statusBadgeClass()}>{enumLabel('caseStatus', String(row.status)) || String(row.status).replace(/_/g, ' ')}</span>}
+        {when && <span className="text-[11px] text-slate-500 dark:text-slate-400">{formatShortDate(when, intlLocale(lang))}</span>}
         {dur && <span className="text-[11px] text-slate-500 dark:text-slate-400">{dur}</span>}
       </div>
     </button>
@@ -149,10 +158,10 @@ function SkeletonRows() {
   );
 }
 
-const TABS: { id: ShareTab; label: string; icon: React.ReactNode }[] = [
-  { id: 'case', label: 'Cases', icon: <Folder className="h-3 w-3" /> },
-  { id: 'task', label: 'Tasks', icon: <CheckSquare className="h-3 w-3" /> },
-  { id: 'appointment', label: 'Appts', icon: <Calendar className="h-3 w-3" /> },
+const TABS: { id: ShareTab; icon: React.ReactNode }[] = [
+  { id: 'case', icon: <Folder className="h-3 w-3" /> },
+  { id: 'task', icon: <CheckSquare className="h-3 w-3" /> },
+  { id: 'appointment', icon: <Calendar className="h-3 w-3" /> },
 ];
 
 export interface SharePickerProps {
@@ -172,6 +181,7 @@ export function SharePicker({
   onPick,
   triggerTooltip,
 }: SharePickerProps) {
+  const { t, tf } = useAppTranslation();
   const [tab, setTab] = useState<ShareTab>('case');
   const [query, setQuery] = useState('');
   const [loading, setLoading] = useState(false);
@@ -214,7 +224,18 @@ export function SharePicker({
     return () => clearTimeout(t);
   }, [open, query, tab, runSearch]);
 
-  const emptyLabel = tab === 'case' ? 'cases' : tab === 'task' ? 'tasks' : 'appointments';
+  const emptyKind =
+    tab === 'case'
+      ? t.conversations.shareTabCases
+      : tab === 'task'
+        ? t.conversations.shareTabTasks
+        : t.conversations.shareTabAppointments;
+  const tabLabel = (id: ShareTab) =>
+    id === 'case'
+      ? t.conversations.shareTabCases
+      : id === 'task'
+        ? t.conversations.shareTabTasks
+        : t.conversations.shareTabAppointments;
 
   const handlePick = (result: SharePickResult) => {
     onPick(result);
@@ -247,7 +268,7 @@ export function SharePicker({
           onOpenAutoFocus={(e) => e.preventDefault()}
         >
           <div className="px-3 pt-3 pb-2 border-b border-slate-200 dark:border-slate-800">
-            <p className="text-[12px] font-semibold text-slate-800 dark:text-slate-200">Share to conversation</p>
+            <p className="text-[12px] font-semibold text-slate-800 dark:text-slate-200">{t.conversations.sharePickerTitle}</p>
           </div>
           <div className="flex gap-1 px-2 py-2 border-b border-slate-200 dark:border-slate-800">
             {TABS.map((x) => (
@@ -260,7 +281,7 @@ export function SharePicker({
                 onClick={() => setTab(x.id)}
               >
                 {x.icon}
-                {x.label}
+                {tabLabel(x.id)}
               </Button>
             ))}
           </div>
@@ -270,7 +291,7 @@ export function SharePicker({
               <Input
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search…"
+                placeholder={t.conversations.shareSearchPlaceholder}
                 className="h-8 pl-8 text-[13px]"
               />
             </div>
@@ -280,11 +301,11 @@ export function SharePicker({
               <SkeletonRows />
             ) : query.trim().length < 2 ? (
               <p className="text-[12px] text-slate-500 dark:text-slate-500 px-3 py-4 text-center">
-                Type at least 2 characters
+                {t.conversations.shareTypeMinChars}
               </p>
             ) : rows.length === 0 ? (
               <p className="text-[12px] text-slate-500 dark:text-slate-500 px-3 py-4 text-center">
-                No {emptyLabel} found
+                {tf(t.conversations.shareNoneFound, { kind: emptyKind })}
               </p>
             ) : tab === 'case' ? (
               (rows as ShareableSearchCaseHit[]).map((row) => (

@@ -1,7 +1,7 @@
 import { useLanguage } from '@/hooks/useLanguage';
 import { getMessages } from './messages';
 import { interpolate } from './format';
-import { translateEnum, enumOptions } from './enums';
+import { translateEnum, translateKnownEnum, enumOptions } from './enums';
 import { translateApiError, translateErrorCode } from './errors';
 import type { Lang } from './types';
 import type { AppMessages } from './messages/types';
@@ -36,7 +36,7 @@ export {
 } from './format';
 export { LEGAL_GLOSSARY, glossaryTerm } from './glossary';
 export type { GlossaryKey } from './glossary';
-export { translateEnum, enumOptions } from './enums';
+export { translateEnum, translateKnownEnum, enumOptions } from './enums';
 export { translateApiError, translateErrorCode } from './errors';
 export { getMessages, messages } from './messages';
 
@@ -59,6 +59,8 @@ export const useAppTranslation = () => {
       interpolate(template, vars),
     enumLabel: (group: Parameters<typeof translateEnum>[1], value: string | null | undefined) =>
       translateEnum(lang, group, value),
+    /** Localized label for any known enum token (status, priority, type, role, …). */
+    enumPretty: (value: string | null | undefined) => translateKnownEnum(lang, value),
     enumOptions: (group: Parameters<typeof enumOptions>[1]) => enumOptions(lang, group),
     apiError: (codeOrMessage: string | null | undefined, fallback?: string) =>
       translateApiError(lang, codeOrMessage, fallback),

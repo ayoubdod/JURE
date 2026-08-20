@@ -15,30 +15,20 @@ import {
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import ServerSelect from '@/components/common/ServerSelect';
 import { Plus, Trash2 } from 'lucide-react';
+import { useAppTranslation } from '@/i18n';
 
 const LITIGATION_TYPE_OPTIONS = [
-  { label: 'Civil', value: 'CIVIL' },
-  { label: 'Criminal', value: 'CRIMINAL' },
-  { label: 'Commercial', value: 'COMMERCIAL' },
-  { label: 'Administrative', value: 'ADMINISTRATIVE' },
-  { label: 'Labor', value: 'LABOR' },
-  { label: 'Family', value: 'FAMILY' },
-];
+  'CIVIL',
+  'CRIMINAL',
+  'COMMERCIAL',
+  'ADMINISTRATIVE',
+  'LABOR',
+  'FAMILY',
+] as const;
 
-const PRIORITY_OPTIONS = [
-  { label: 'Low', value: 'LOW' },
-  { label: 'Medium', value: 'MEDIUM' },
-  { label: 'High', value: 'HIGH' },
-  { label: 'Urgent', value: 'URGENT' },
-];
+const PRIORITY_OPTIONS = ['LOW', 'MEDIUM', 'HIGH', 'URGENT'] as const;
 
-const STATUS_OPTIONS = [
-  { label: 'Open', value: 'OPEN' },
-  { label: 'In Progress', value: 'IN_PROGRESS' },
-  { label: 'Pending', value: 'PENDING' },
-  { label: 'Closed', value: 'CLOSED' },
-  { label: 'Archived', value: 'ARCHIVED' },
-];
+const STATUS_OPTIONS = ['OPEN', 'IN_PROGRESS', 'PENDING', 'CLOSED', 'ARCHIVED'] as const;
 
 export type LitigationConversionState = {
   litigation_type: string;
@@ -89,6 +79,7 @@ type Props = {
 };
 
 export function LitigationConversionFields({ values, onChange, fieldErrors }: Props) {
+  const { enumPretty } = useAppTranslation();
   const setDeadline = (i: number, field: 'label' | 'date', v: string) => {
     const next = [...values.key_deadlines];
     next[i] = { ...next[i], [field]: v };
@@ -120,9 +111,9 @@ export function LitigationConversionFields({ values, onChange, fieldErrors }: Pr
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {LITIGATION_TYPE_OPTIONS.map((opt) => (
-                <SelectItem key={opt.value} value={opt.value}>
-                  {opt.label}
+              {LITIGATION_TYPE_OPTIONS.map((value) => (
+                <SelectItem key={value} value={value}>
+                  {enumPretty(value)}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -135,9 +126,9 @@ export function LitigationConversionFields({ values, onChange, fieldErrors }: Pr
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {PRIORITY_OPTIONS.map((opt) => (
-                <SelectItem key={opt.value} value={opt.value}>
-                  {opt.label}
+              {PRIORITY_OPTIONS.map((value) => (
+                <SelectItem key={value} value={value}>
+                  {enumPretty(value)}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -157,13 +148,13 @@ export function LitigationConversionFields({ values, onChange, fieldErrors }: Pr
           <div className="flex items-center gap-2">
             <RadioGroupItem value="PLAINTIFF" id="conv_plaintiff" />
             <Label htmlFor="conv_plaintiff" className="font-normal">
-              Plaintiff
+              {enumPretty('PLAINTIFF')}
             </Label>
           </div>
           <div className="flex items-center gap-2">
             <RadioGroupItem value="DEFENDANT" id="conv_defendant" />
             <Label htmlFor="conv_defendant" className="font-normal">
-              Defendant
+              {enumPretty('DEFENDANT')}
             </Label>
           </div>
           <div className="flex items-center gap-2">
@@ -334,9 +325,9 @@ export function LitigationConversionFields({ values, onChange, fieldErrors }: Pr
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            {STATUS_OPTIONS.map((opt) => (
-              <SelectItem key={opt.value} value={opt.value}>
-                {opt.label}
+            {STATUS_OPTIONS.map((value) => (
+              <SelectItem key={value} value={value}>
+                {enumPretty(value)}
               </SelectItem>
             ))}
           </SelectContent>

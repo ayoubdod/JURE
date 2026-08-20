@@ -3,6 +3,7 @@ import UserAvatar from '@/components/common/UserAvatar';
 import { cn } from '@/lib/utils';
 import { useCallSessionStore } from '@/stores/callSessionStore';
 import type { ConferencePeerSnapshot } from '@/utils/conferenceMesh';
+import { useAppTranslation } from '@/i18n';
 
 const VoicePeerCard: React.FC<{
   peer: ConferencePeerSnapshot;
@@ -69,6 +70,8 @@ const VoicePeerCard: React.FC<{
 
 /** Group voice: show all participants; highlight whoever is speaking. */
 const VoiceStage: React.FC<{ className?: string }> = ({ className }) => {
+  const { t, tf } = useAppTranslation();
+  const call = t.conversations.call;
   const peers = useCallSessionStore((s) => s.ui.peers);
   const status = useCallSessionStore((s) => s.ui.status);
   const mode = useCallSessionStore((s) => s.ui.mode);
@@ -104,11 +107,11 @@ const VoiceStage: React.FC<{ className?: string }> = ({ className }) => {
     <div className={cn('w-full', className)}>
       {speaker ? (
         <p className="mb-3 text-center text-xs font-medium text-emerald-600 dark:text-emerald-400" aria-live="polite">
-          {speaker.name} is speaking
+          {tf(call.isSpeaking, { name: speaker.name })}
         </p>
       ) : (
         <p className="mb-3 text-center text-xs text-slate-500 dark:text-slate-400">
-          {list.length > 0 ? `${list.length} in call` : 'Waiting for others…'}
+          {list.length > 0 ? tf(call.inCallCount, { count: list.length }) : call.waitingForOthers}
         </p>
       )}
       <div

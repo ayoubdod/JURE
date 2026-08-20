@@ -30,7 +30,7 @@ import {
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import useUserStore from '@/stores/userStore';
-import { apiGetCases, GetCasesParams } from '@/services/case/api';
+import { apiGetCase, apiGetCases, GetCasesParams } from '@/services/case/api';
 import { CaseCategory, CaseStatus } from '@/utils/constants';
 import CaseModal, { CaseModalRef } from '@/components/case/CaseModal';
 import CaseUpdateModal, { CaseUpdateModalRef } from '@/components/case/CaseUpdateModal';
@@ -171,16 +171,19 @@ const statusPillStyles: Record<string, string> = {
     'bg-purple-500/15 text-purple-600 dark:text-purple-400 ring-purple-500/30',
 };
 
-const StatusPill: React.FC<{ status: API.CaseStatus }> = ({ status }) => (
-  <span
-    className={cn(
-      'inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wider ring-1 ring-inset',
-      statusPillStyles[status] ?? 'bg-slate-500/15 text-slate-600 dark:text-slate-400'
-    )}
-  >
-    {status.replace('_', ' ')}
-  </span>
-);
+const StatusPill: React.FC<{ status: API.CaseStatus }> = ({ status }) => {
+  const { enumPretty } = useAppTranslation();
+  return (
+    <span
+      className={cn(
+        'inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wider ring-1 ring-inset',
+        statusPillStyles[status] ?? 'bg-slate-500/15 text-slate-600 dark:text-slate-400'
+      )}
+    >
+      {enumPretty(status)}
+    </span>
+  );
+};
 
 const AnimatedStatValue: React.FC<{ value: number; className?: string }> = ({ value, className }) => {
   const [display, setDisplay] = useState(value);
@@ -229,8 +232,6 @@ const GENERAL_STATUSES = ['OPEN', 'CLOSED', 'IN_PROGRESS', 'CANCELLED', 'PENDING
 const CONSULTATION_STATUSES = ['SCHEDULED', 'COMPLETED', 'NO_SHOW', 'CONVERTED_TO_CASE'] as const;
 const LITIGATION_ADMIN_STATUSES = ['SUBMITTED', 'APPROVED', 'REJECTED', 'URGENT'] as const;
 
-const getStatusLabel = (s: string) => s.replace(/_/g, ' ');
-
 type CaseTypeFilter = 'ALL' | 'CONSULTATION' | 'LITIGATION' | 'ADMINISTRATIVE';
 type CasesTab = 'my' | 'all';
 
@@ -242,6 +243,9 @@ const KPI_ACCENTS: Record<string, string> = {
   urgent: 'border-l-amber-500',
   closed: 'border-l-slate-300 dark:border-l-slate-600',
 };
+
+const TABLE_TH =
+  'text-start py-2 px-3 text-[10px] font-semibold text-slate-500 dark:text-slate-400 whitespace-nowrap uppercase tracking-[0.08em] rtl:normal-case rtl:tracking-normal';
 
 interface CaseTableRowProps {
   caseItem: API.Case;
@@ -267,7 +271,7 @@ const CaseTableRow = memo(function CaseTableRow({
       className={cn(
         'group border-b border-slate-100 dark:border-slate-800/60 cursor-pointer transition-[background-color,box-shadow] duration-200 motion-reduce:transition-none',
         rowIdx % 2 === 0 ? 'bg-white dark:bg-slate-950' : 'bg-slate-50/40 dark:bg-slate-900/20',
-        'hover:bg-[#F7F4FF] hover:shadow-[inset_3px_0_0_0_#64499D] dark:hover:bg-[#24183F]/50',
+        'hover:bg-[#F7F4FF] hover:shadow-[inset_3px_0_0_0_#64499D] rtl:hover:shadow-[inset_-3px_0_0_0_#64499D] dark:hover:bg-[#24183F]/50',
         selected && 'bg-primary/[0.06] dark:bg-primary/10 ring-1 ring-inset ring-primary/25',
         'focus-visible:outline-none focus-visible:bg-[#F7F4FF] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#64499D]/40'
       )}
@@ -281,34 +285,34 @@ const CaseTableRow = memo(function CaseTableRow({
       }}
       aria-label={tf(t.cases.aria.openMatter, { title })}
     >
-      <td className="px-3 py-2 align-middle">
+      <td className="px-3 py-2 align-middle text-start">
         <TypeBadge caseItem={caseItem} />
       </td>
-      <td className="px-3 py-2 align-middle">
+      <td className="px-3 py-2 align-middle text-start">
         <span className="font-mono text-[11px] text-slate-500 dark:text-slate-400 tabular-nums">
           {caseItem.reference || '—'}
         </span>
       </td>
-      <td className="px-3 py-2 align-middle">
+      <td className="px-3 py-2 align-middle text-start">
         <span className="text-[13px] font-semibold text-slate-900 dark:text-white line-clamp-1 max-w-[min(320px,30vw)]">
           {title}
         </span>
       </td>
-      <td className="px-3 py-2 align-middle text-[12px] text-slate-700 dark:text-slate-300 truncate max-w-[160px]">
+      <td className="px-3 py-2 align-middle text-start text-[12px] text-slate-700 dark:text-slate-300 truncate max-w-[160px]">
         {getClientName(caseItem.client)}
       </td>
-      <td className="px-3 py-2 align-middle text-[12px] text-slate-700 dark:text-slate-300 truncate max-w-[140px]">
+      <td className="px-3 py-2 align-middle text-start text-[12px] text-slate-700 dark:text-slate-300 truncate max-w-[140px]">
         {getAssignedName(caseItem)}
       </td>
-      <td className="px-3 py-2 align-middle">
+      <td className="px-3 py-2 align-middle text-start">
         <StatusPill status={caseItem.status} />
       </td>
-      <td className="px-3 py-2 align-middle">
+      <td className="px-3 py-2 align-middle text-start">
         <ListDeadlineCell caseItem={caseItem} />
       </td>
-      <td className="px-1.5 py-2 align-middle text-right w-8">
+      <td className="px-1.5 py-2 align-middle text-end w-8">
         <ChevronRight
-          className="w-4 h-4 text-slate-300 dark:text-slate-600 group-hover:text-[#64499D] transition-colors ml-auto"
+          className="w-4 h-4 text-slate-300 dark:text-slate-600 group-hover:text-[#64499D] transition-colors ms-auto rtl:rotate-180"
           aria-hidden
         />
       </td>
@@ -320,7 +324,7 @@ const CaseTableRow = memo(function CaseTableRow({
    Main Component
    ============== */
 const Cases = () => {
-  const { t, tf } = useAppTranslation();
+  const { t, tf, enumPretty } = useAppTranslation();
   const navigate = useNavigate();
   const [casesHolderEl, setCasesHolderEl] = useState<HTMLDivElement | null>(null);
   const [searchParams, setSearchParams] = useSearchParams();
@@ -345,6 +349,38 @@ const Cases = () => {
   const searchTerm = searchParams.get(Q.search) ?? '';
 
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
+
+  useEffect(() => {
+    const raw = searchParams.get('case');
+    if (!raw) return;
+    let cancelled = false;
+    (async () => {
+      const asId = Number(raw);
+      if (Number.isInteger(asId) && String(asId) === raw) {
+        try {
+          const res = await apiGetCase(asId);
+          if (!cancelled && res.data) {
+            navigateToCase(navigate, res.data);
+            return;
+          }
+        } catch {
+          /* search by reference */
+        }
+      }
+      try {
+        const res = await apiGetCases({ search: raw, page: 1, page_size: 50 });
+        const match = (res.data?.results ?? []).find(
+          (c) => c.reference === raw || String(c.id) === raw
+        );
+        if (!cancelled && match) navigateToCase(navigate, match);
+      } catch {
+        /* ignore */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [searchParams, navigate]);
 
   const updateUrlFilters = (updates: Partial<Record<string, string | null>>) => {
     setSearchParams((prev) => {
@@ -645,26 +681,26 @@ const Cases = () => {
         <table className="w-full min-w-[960px]" role="grid" aria-label={t.cases.aria.mattersList}>
           <thead className="sticky top-0 z-[1]">
             <tr className="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/90">
-              <th className="text-left py-2 px-3 text-[10px] uppercase tracking-[0.08em] font-semibold text-slate-500 dark:text-slate-400">
-                Type
+              <th className={TABLE_TH}>
+                {t.cases.columns.type}
               </th>
-              <th className="text-left py-2 px-3 text-[10px] uppercase tracking-[0.08em] font-semibold text-slate-500 dark:text-slate-400">
-                Reference
+              <th className={TABLE_TH}>
+                {t.cases.columns.reference}
               </th>
-              <th className="text-left py-2 px-3 text-[10px] uppercase tracking-[0.08em] font-semibold text-slate-500 dark:text-slate-400">
-                Title
+              <th className={TABLE_TH}>
+                {t.cases.columns.title}
               </th>
-              <th className="text-left py-2 px-3 text-[10px] uppercase tracking-[0.08em] font-semibold text-slate-500 dark:text-slate-400">
-                Client
+              <th className={TABLE_TH}>
+                {t.cases.columns.client}
               </th>
-              <th className="text-left py-2 px-3 text-[10px] uppercase tracking-[0.08em] font-semibold text-slate-500 dark:text-slate-400">
-                Assigned
+              <th className={TABLE_TH}>
+                {t.cases.columns.assigned}
               </th>
-              <th className="text-left py-2 px-3 text-[10px] uppercase tracking-[0.08em] font-semibold text-slate-500 dark:text-slate-400">
-                Status
+              <th className={TABLE_TH}>
+                {t.cases.columns.status}
               </th>
-              <th className="text-left py-2 px-3 text-[10px] uppercase tracking-[0.08em] font-semibold text-slate-500 dark:text-slate-400">
-                Date / Deadline
+              <th className={TABLE_TH}>
+                {t.cases.columns.dateDeadline}
               </th>
               <th className="w-8 py-2 px-1" aria-hidden />
             </tr>
@@ -921,13 +957,16 @@ const Cases = () => {
                       statusFilters.length > 0 && 'ring-1 ring-primary/30 border-primary/40 bg-primary/[0.04]'
                     )}
                   >
-                    Status{statusFilters.length > 0 ? ` (${statusFilters.length})` : ''} ▾
+                    {t.cases.filters.status}
+                    {statusFilters.length > 0 ? ` (${statusFilters.length})` : ''} ▾
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-64 p-2" align="start">
                   <div className="space-y-2 max-h-[280px] overflow-y-auto">
                     <div>
-                      <p className="text-[10px] uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">General</p>
+                      <p className="text-[10px] uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
+                        {t.cases.filters.general}
+                      </p>
                       <div className="flex flex-wrap gap-1">
                         {GENERAL_STATUSES.map((s) => (
                           <Button
@@ -937,7 +976,7 @@ const Cases = () => {
                             className="h-7 text-[11px]"
                             onClick={() => handleStatusToggle(s)}
                           >
-                            {getStatusLabel(s)}
+                            {enumPretty(s)}
                           </Button>
                         ))}
                       </div>
@@ -956,7 +995,7 @@ const Cases = () => {
                               className="h-7 text-[11px]"
                               onClick={() => handleStatusToggle(s)}
                             >
-                              {getStatusLabel(s)}
+                              {enumPretty(s)}
                             </Button>
                           ))}
                         </div>
@@ -975,7 +1014,7 @@ const Cases = () => {
                             className="h-7 text-[11px]"
                             onClick={() => handleStatusToggle(s)}
                           >
-                            {getStatusLabel(s)}
+                            {enumPretty(s)}
                           </Button>
                         ))}
                       </div>

@@ -2,10 +2,11 @@ import React from 'react';
 import { Phone, PhoneIncoming, PhoneMissed, Users, Video, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { ConversationActiveCall, ConversationMissedCall } from '@/stores/conversationCallPresenceStore';
+import { intlLocale, useAppTranslation } from '@/i18n';
 
-function formatCallTime(at: number): string {
+function formatCallTime(at: number, locale: string): string {
   try {
-    return new Intl.DateTimeFormat(undefined, { hour: '2-digit', minute: '2-digit' }).format(new Date(at));
+    return new Intl.DateTimeFormat(locale, { hour: '2-digit', minute: '2-digit' }).format(new Date(at));
   } catch {
     return '';
   }
@@ -82,8 +83,9 @@ export const MissedCallMessage: React.FC<{
   onRecall: () => void;
   onDismiss: () => void;
 }> = ({ missed, title, subtitle, recallLabel, onRecall, onDismiss }) => {
+  const { t, lang } = useAppTranslation();
   const Icon = missed.kind === 'video' ? Video : PhoneMissed;
-  const time = formatCallTime(missed.at);
+  const time = formatCallTime(missed.at, intlLocale(lang));
 
   return (
     <div className="flex w-full justify-center py-1" role="status">
@@ -115,7 +117,7 @@ export const MissedCallMessage: React.FC<{
         <button
           type="button"
           onClick={onDismiss}
-          aria-label="Dismiss"
+          aria-label={t.notifications.dismiss}
           className="absolute -right-1.5 -top-1.5 inline-flex h-6 w-6 items-center justify-center rounded-full border border-rose-200/80 bg-white text-rose-500 opacity-0 shadow-sm transition group-hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400 dark:border-rose-800 dark:bg-slate-900 dark:text-rose-300"
         >
           <X className="h-3 w-3" />

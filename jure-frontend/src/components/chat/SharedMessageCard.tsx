@@ -4,6 +4,7 @@ import React from 'react';
 import { Calendar, CheckSquare, Folder } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { TaskPriority } from '@/utils/constants';
+import { useAppTranslation } from '@/i18n';
 
 export type SharedMessageKind = 'SHARED_CASE' | 'SHARED_TASK' | 'SHARED_APPOINTMENT';
 
@@ -203,6 +204,7 @@ export interface SharedMessageCardProps {
 }
 
 export function SharedMessageCard({ item, onOpenCase, onOpenTask, onOpenAppointment }: SharedMessageCardProps) {
+  const { enumPretty } = useAppTranslation();
   const baseCard =
     'max-w-[320px] w-full text-left rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-sm px-3 py-2.5 transition-colors cursor-pointer hover:border-slate-300 dark:hover:border-slate-600 border-l-[3px]';
 
@@ -223,7 +225,7 @@ export function SharedMessageCard({ item, onOpenCase, onOpenTask, onOpenAppointm
             <Folder className="h-3 w-3" />
             Case
           </span>
-          {item.status ? <span className={statusPill()}>{String(item.status).replace(/_/g, ' ')}</span> : null}
+          {item.status ? <span className={statusPill()}>{enumPretty(String(item.status))}</span> : null}
         </div>
         <p className="text-[11px] text-slate-600 dark:text-slate-400 font-mono">
           {refDisplay} · <span className="font-sans text-[10px] font-medium">{caseTypeBadgeLabel(item.caseType)}</span>
@@ -253,7 +255,7 @@ export function SharedMessageCard({ item, onOpenCase, onOpenTask, onOpenAppointm
             <CheckSquare className="h-3 w-3" />
             Task
           </span>
-          {item.status ? <span className={statusPill()}>{String(item.status).replace(/_/g, ' ')}</span> : null}
+          {item.status ? <span className={statusPill()}>{enumPretty(String(item.status))}</span> : null}
         </div>
         <p className="text-[13px] font-semibold text-slate-900 dark:text-slate-100 line-clamp-2">
           {item.title?.trim() ? item.title : '—'}
@@ -285,7 +287,7 @@ export function SharedMessageCard({ item, onOpenCase, onOpenTask, onOpenAppointm
           <Calendar className="h-3 w-3" />
           Appointment
         </span>
-        {item.status ? <span className={statusPill()}>{String(item.status).replace(/_/g, ' ')}</span> : null}
+        {item.status ? <span className={statusPill()}>{enumPretty(String(item.status))}</span> : null}
       </div>
       <p className="text-[13px] font-semibold text-slate-900 dark:text-slate-100 line-clamp-2">
         {item.title?.trim() ? item.title : '—'}
@@ -346,10 +348,30 @@ export function getSharedIds(msg: API.Message): {
 }
 
 /** Conversation list / latest_message preview line */
-export function getSharedMessagePreviewText(msg: API.Message | undefined): string | null {
+export function getSharedMessagePreviewText(
+  msg: API.Message | undefined,
+  labels?: {
+    missedVideo: string;
+    missedVoice: string;
+    videoCall: string;
+    voiceCall: string;
+    sharedCase: string;
+    sharedTask: string;
+    sharedAppointment: string;
+  }
+): string | null {
   if (!msg) return null;
   const mt = getMessageType(msg);
   if (mt === 'TEXT') return null;
+  const L = labels ?? {
+    missedVideo: 'Missed video call',
+    missedVoice: 'Missed voice call',
+    videoCall: 'Video call',
+    voiceCall: 'Voice call',
+    sharedCase: 'Shared case',
+    sharedTask: 'Shared task',
+    sharedAppointment: 'Shared appointment',
+  };
   if (
     mt === 'CALL_VOICE' ||
     mt === 'CALL_VIDEO' ||
@@ -358,22 +380,22 @@ export function getSharedMessagePreviewText(msg: API.Message | undefined): strin
   ) {
     const body = (msg.body ?? '').trim();
     if (body) return body;
-    if (mt === 'CALL_MISSED_VIDEO') return 'Missed video call';
-    if (mt === 'CALL_MISSED_VOICE') return 'Missed voice call';
-    if (mt === 'CALL_VIDEO') return 'Video call';
-    return 'Voice call';
+    if (mt === 'CALL_MISSED_VIDEO') return L.missedVideo;
+    if (mt === 'CALL_MISSED_VOICE') return L.missedVoice;
+    if (mt === 'CALL_VIDEO') return L.videoCall;
+    return L.voiceCall;
   }
   const ids = getSharedIds(msg);
   const coerced = coerceMessageSharedItem(msg, mt, ids);
   if (coerced === 'deleted') {
-    if (mt === 'SHARED_CASE') return 'Shared case';
-    if (mt === 'SHARED_TASK') return 'Shared task';
-    if (mt === 'SHARED_APPOINTMENT') return 'Shared appointment';
+    if (mt === 'SHARED_CASE') return L.sharedCase;
+    if (mt === 'SHARED_TASK') return L.sharedTask;
+    if (mt === 'SHARED_APPOINTMENT') return L.sharedAppointment;
     return null;
   }
   if (coerced?.title?.trim()) return coerced.title.trim();
-  if (mt === 'SHARED_CASE') return 'Shared case';
-  if (mt === 'SHARED_TASK') return 'Shared task';
-  if (mt === 'SHARED_APPOINTMENT') return 'Shared appointment';
+  if (mt === 'SHARED_CASE') return L.sharedCase;
+  if (mt === 'SHARED_TASK') return L.sharedTask;
+  if (mt === 'SHARED_APPOINTMENT') return L.sharedAppointment;
   return null;
 }

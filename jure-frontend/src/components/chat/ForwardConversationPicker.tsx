@@ -13,6 +13,7 @@ import GroupChatIcon from '@/components/chat/GroupChatIcon';
 import { apiListConversations } from '@/services/conversations/api';
 import { cn } from '@/lib/utils';
 import useUserStore from '@/stores/userStore';
+import { useAppTranslation } from '@/i18n';
 
 interface ForwardConversationPickerProps {
   open: boolean;
@@ -31,6 +32,7 @@ const ForwardConversationPicker: React.FC<ForwardConversationPickerProps> = ({
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState('');
   const currentUser = useUserStore((s) => s.user);
+  const { t } = useAppTranslation();
 
   useEffect(() => {
     if (open) {
@@ -77,9 +79,9 @@ const ForwardConversationPicker: React.FC<ForwardConversationPickerProps> = ({
     if (c.type === 'direct') {
       const op = (c as any).other_participant;
       const person = getPeerPerson(c);
-      return op?.full_name ?? (`${person?.first_name ?? ''} ${person?.last_name ?? ''}`.trim() || person?.email || 'Unknown');
+      return op?.full_name ?? (`${person?.first_name ?? ''} ${person?.last_name ?? ''}`.trim() || person?.email || t.conversations.unknownContact);
     }
-    return c.title || 'Group';
+    return c.title || t.conversations.groupFallback;
   };
 
   const getPeerImage = (c: API.Conversation) =>
@@ -89,14 +91,14 @@ const ForwardConversationPicker: React.FC<ForwardConversationPickerProps> = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[400px]">
         <DialogHeader>
-          <DialogTitle>Forward to</DialogTitle>
+          <DialogTitle>{t.conversations.forwardTo}</DialogTitle>
         </DialogHeader>
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search conversations…"
+            placeholder={t.conversations.searchPlaceholder}
             className="pl-9"
           />
         </div>
@@ -107,7 +109,7 @@ const ForwardConversationPicker: React.FC<ForwardConversationPickerProps> = ({
             </div>
           ) : filtered.length === 0 ? (
             <div className="py-8 text-center text-sm text-muted-foreground">
-              No conversations found
+              {t.conversations.empty}
             </div>
           ) : (
             <div className="divide-y">

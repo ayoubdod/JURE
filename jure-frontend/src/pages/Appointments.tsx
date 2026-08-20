@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router';
+import { useNavigate, useSearchParams } from 'react-router';
 import { Plus, CalendarClock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import ScheduleAppointmentDialog, { ScheduleAppointmentDialogRef } from '@/components/ScheduleAppointmentDialog';
@@ -50,6 +50,7 @@ function readPageSize(): number {
 const AppointmentsPage: React.FC = () => {
   const { t } = useAppTranslation();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const a = t.appointments;
 
   const [filters, setFilters] = useState<AppointmentFiltersValue>(DEFAULT_FILTERS);
@@ -74,6 +75,17 @@ const AppointmentsPage: React.FC = () => {
   }, []);
 
   useShortcutAction('create-appointment', openCreate);
+
+  useEffect(() => {
+    const raw = searchParams.get('appointment');
+    if (!raw) return;
+    const id = parseInt(raw, 10);
+    if (!Number.isFinite(id)) return;
+    setDetailId(id);
+    const next = new URLSearchParams(searchParams);
+    next.delete('appointment');
+    setSearchParams(next, { replace: true });
+  }, [searchParams, setSearchParams]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {

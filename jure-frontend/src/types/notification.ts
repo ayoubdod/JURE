@@ -4,6 +4,8 @@ export interface RelatedCase {
   id: number;
   reference?: string | null;
   title?: string | null;
+  case_type?: string | null;
+  caseType?: string | null;
 }
 
 export interface RelatedTask {

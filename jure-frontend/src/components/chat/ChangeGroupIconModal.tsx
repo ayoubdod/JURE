@@ -146,7 +146,15 @@ const ChangeGroupIconModal = forwardRef<ChangeGroupIconModalRef, ChangeGroupIcon
                       onClick={() => handlePresetClick(icon.id)}
                       disabled={isLoading}
                       className="h-10 w-10 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center text-xl transition-colors disabled:opacity-50"
-                      title={icon.label}
+                      title={
+                        icon.id === 'group' ? m.presetGroup
+                        : icon.id === 'legal' ? m.presetLegal
+                        : icon.id === 'briefcase' ? m.presetBusiness
+                        : icon.id === 'document' ? m.presetDocument
+                        : icon.id === 'bulb' ? m.presetIdea
+                        : icon.id === 'star' ? m.presetStar
+                        : icon.label
+                      }
                     >
                       {icon.emoji}
                     </button>

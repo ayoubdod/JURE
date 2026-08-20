@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { cn } from '@/lib/utils';
+import { useAppTranslation } from '@/i18n';
 
 export interface MediaDeviceLists {
   audioInputs: MediaDeviceInfo[];
@@ -40,6 +41,8 @@ const CallDeviceSettings: React.FC<{
   onSelectVideoInput,
   onSelectAudioOutput,
 }) => {
+  const { t } = useAppTranslation();
+  const call = t.conversations.call;
   const [devices, setDevices] = useState<MediaDeviceLists>({
     audioInputs: [],
     videoInputs: [],
@@ -66,27 +69,27 @@ const CallDeviceSettings: React.FC<{
   return (
     <div
       role="dialog"
-      aria-label="Device settings"
+      aria-label={call.deviceSettings}
       className="absolute bottom-full left-1/2 z-30 mb-2 w-64 -translate-x-1/2 rounded-xl border border-slate-200 bg-white p-3 shadow-lg dark:border-slate-700 dark:bg-slate-900"
     >
       <div className="mb-2 flex items-center justify-between">
-        <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">Device settings</p>
+        <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">{call.deviceSettings}</p>
         <button type="button" onClick={onClose} className="text-xs text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100">
-          Close
+          {t.common.close}
         </button>
       </div>
 
       <label className="block text-xs font-medium text-slate-500 dark:text-slate-400">
-        Microphone
+        {call.microphone}
         <select
           className={selectClass}
           value={selectedAudioInputId ?? ''}
           onChange={(e) => onSelectAudioInput(e.target.value)}
         >
-          <option value="">Default microphone</option>
+          <option value="">{call.defaultMicrophone}</option>
           {devices.audioInputs.map((d) => (
             <option key={d.deviceId} value={d.deviceId}>
-              {d.label || `Microphone ${d.deviceId.slice(0, 6)}`}
+              {d.label || `${call.microphone} ${d.deviceId.slice(0, 6)}`}
             </option>
           ))}
         </select>
@@ -94,16 +97,16 @@ const CallDeviceSettings: React.FC<{
 
       {kind === 'video' ? (
         <label className={cn('mt-2 block text-xs font-medium text-slate-500 dark:text-slate-400')}>
-          Camera
+          {call.camera}
           <select
             className={selectClass}
             value={selectedVideoInputId ?? ''}
             onChange={(e) => onSelectVideoInput(e.target.value)}
           >
-            <option value="">Default camera</option>
+            <option value="">{call.defaultCamera}</option>
             {devices.videoInputs.map((d) => (
               <option key={d.deviceId} value={d.deviceId}>
-                {d.label || `Camera ${d.deviceId.slice(0, 6)}`}
+                {d.label || `${call.camera} ${d.deviceId.slice(0, 6)}`}
               </option>
             ))}
           </select>
@@ -112,22 +115,22 @@ const CallDeviceSettings: React.FC<{
 
       {sinkSupported ? (
         <label className="mt-2 block text-xs font-medium text-slate-500 dark:text-slate-400">
-          Speaker
+          {call.speaker}
           <select
             className={selectClass}
             value={selectedAudioOutputId ?? ''}
             onChange={(e) => onSelectAudioOutput(e.target.value)}
           >
-            <option value="">Default speaker</option>
+            <option value="">{call.defaultSpeaker}</option>
             {devices.audioOutputs.map((d) => (
               <option key={d.deviceId} value={d.deviceId}>
-                {d.label || `Speaker ${d.deviceId.slice(0, 6)}`}
+                {d.label || `${call.speaker} ${d.deviceId.slice(0, 6)}`}
               </option>
             ))}
           </select>
         </label>
       ) : (
-        <p className="mt-2 text-xs text-slate-400">Speaker selection is not supported in this browser.</p>
+        <p className="mt-2 text-xs text-slate-400">{call.speakerUnsupported}</p>
       )}
     </div>
   );

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Phone, PhoneMissed, Video } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { intlLocale, useAppTranslation } from '@/i18n';
 
 export type CallHistoryKind = 'voice' | 'video';
 export type CallHistoryOutcome = 'missed' | 'completed' | 'declined';
@@ -57,10 +58,10 @@ function formatDuration(sec: number | null): string | null {
   return `${m}:${r.toString().padStart(2, '0')}`;
 }
 
-function formatTime(iso?: string | null): string {
+function formatTime(iso: string | null | undefined, locale: string): string {
   if (!iso) return '';
   try {
-    return new Intl.DateTimeFormat(undefined, { hour: '2-digit', minute: '2-digit' }).format(
+    return new Intl.DateTimeFormat(locale, { hour: '2-digit', minute: '2-digit' }).format(
       new Date(iso)
     );
   } catch {
@@ -74,58 +75,72 @@ export const CallHistoryMessage: React.FC<{
   subtitle?: string;
   recallLabel?: string;
   onRecall?: () => void;
-}> = ({ msg, title, subtitle, recallLabel, onRecall }) => {
+  /** True when the current user initiated the call (same as sent messages). */
+  isOwn?: boolean;
+  /** Show timestamp below the card (MessageItem layout). */
+  showInlineTime?: boolean;
+}> = ({ msg, title, subtitle, recallLabel, onRecall, isOwn = false, showInlineTime = true }) => {
+  const { lang } = useAppTranslation();
   const { kind, outcome } = callMetaFromMessage(msg);
   const missed = outcome === 'missed' || outcome === 'declined';
   const Icon = missed ? (kind === 'video' ? Video : PhoneMissed) : kind === 'video' ? Video : Phone;
-  const time = formatTime(msg.sent_at ?? msg.created);
+  const time = formatTime(msg.sent_at ?? msg.created, intlLocale(lang));
 
   return (
-    <div className="flex w-full justify-center py-1" role="status">
-      <div
-        className={cn(
-          'flex max-w-[min(100%,22rem)] items-center gap-3 rounded-2xl border px-3.5 py-2.5 shadow-sm',
-          missed
+    <div
+      className={cn(
+        'flex max-w-[min(100%,20rem)] items-center gap-3 rounded-2xl border px-3.5 py-2.5 shadow-sm',
+        isOwn
+          ? missed
+            ? 'border-rose-300/60 bg-primary/90 text-primary-foreground dark:border-rose-800/50'
+            : 'border-primary/40 bg-primary text-primary-foreground'
+          : missed
             ? 'border-rose-200/70 bg-white text-rose-950 dark:border-rose-900/50 dark:bg-slate-900 dark:text-rose-50'
             : 'border-slate-200/80 bg-white text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-50'
-        )}
-      >
-        <span
-          className={cn(
-            'flex h-10 w-10 shrink-0 items-center justify-center rounded-full',
-            missed
+      )}
+      role="status"
+    >
+      <span
+        className={cn(
+          'flex h-10 w-10 shrink-0 items-center justify-center rounded-full',
+          isOwn
+            ? missed
+              ? 'bg-white/20 text-white'
+              : 'bg-white/25 text-white'
+            : missed
               ? 'bg-rose-100 text-rose-600 dark:bg-rose-950 dark:text-rose-300'
               : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300'
-          )}
-        >
-          <Icon className="h-[18px] w-[18px]" aria-hidden />
-        </span>
-        <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold tracking-tight">{title}</p>
-          {(subtitle || time) && (
-            <p
-              className={cn(
-                'truncate text-[11px]',
-                missed
+        )}
+      >
+        <Icon className="h-[18px] w-[18px]" aria-hidden />
+      </span>
+      <div className="min-w-0 flex-1">
+        <p className="text-sm font-semibold tracking-tight">{title}</p>
+        {(subtitle || (showInlineTime && time)) && (
+          <p
+            className={cn(
+              'truncate text-[11px]',
+              isOwn
+                ? 'text-primary-foreground/80'
+                : missed
                   ? 'text-rose-800/75 dark:text-rose-200/65'
                   : 'text-slate-500 dark:text-slate-400'
-              )}
-            >
-              {[subtitle, time].filter(Boolean).join(' · ')}
-            </p>
-          )}
-        </div>
-        {missed && onRecall && recallLabel ? (
-          <button
-            type="button"
-            onClick={onRecall}
-            className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full bg-rose-600 px-3 text-xs font-semibold text-white transition hover:bg-rose-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400"
+            )}
           >
-            <Phone className="h-3.5 w-3.5" />
-            {recallLabel}
-          </button>
-        ) : null}
+            {[subtitle, showInlineTime ? time : null].filter(Boolean).join(' · ')}
+          </p>
+        )}
       </div>
+      {missed && !isOwn && onRecall && recallLabel ? (
+        <button
+          type="button"
+          onClick={onRecall}
+          className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full bg-rose-600 px-3 text-xs font-semibold text-white transition hover:bg-rose-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400"
+        >
+          <Phone className="h-3.5 w-3.5" />
+          {recallLabel}
+        </button>
+      ) : null}
     </div>
   );
 };

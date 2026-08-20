@@ -4,32 +4,12 @@ import { getCaseData } from '@/utils/caseCardHelpers';
 import { ConvertedCaseLink, getConvertedToCase } from '@/components/case/conversion/ConvertedCaseLink';
 import { em, formatDrawerDate, formatDrawerDateTime } from './format';
 import { BoolTag, Field, LongText, SectionTitle } from './primitives';
-
-const CONSULTATION_TYPE_LABELS: Record<string, string> = {
-  INITIAL: 'Initial',
-  FOLLOW_UP: 'Follow-up',
-  URGENT: 'Urgent',
-};
-
-const DOMAIN_LABELS: Record<string, string> = {
-  FAMILY: 'Family',
-  CRIMINAL: 'Criminal',
-  CORPORATE: 'Corporate',
-  LABOR: 'Labor',
-  REAL_ESTATE: 'Real Estate',
-  OTHER: 'Other',
-};
+import { useAppTranslation } from '@/i18n';
 
 const FORMAT_ICONS: Record<string, React.ReactNode> = {
   IN_PERSON: <Building2 className="inline h-3.5 w-3.5 mr-1 align-text-bottom text-slate-500" aria-hidden />,
   PHONE: <Phone className="inline h-3.5 w-3.5 mr-1 align-text-bottom text-slate-500" aria-hidden />,
   VIDEO: <Video className="inline h-3.5 w-3.5 mr-1 align-text-bottom text-slate-500" aria-hidden />,
-};
-
-const FORMAT_LABELS: Record<string, string> = {
-  IN_PERSON: 'In Person',
-  PHONE: 'Phone',
-  VIDEO: 'Video',
 };
 
 export function ConsultationSection({
@@ -39,6 +19,7 @@ export function ConsultationSection({
   c: API.Case;
   onOpenCaseById?: (id: number) => void;
 }) {
+  const { enumPretty } = useAppTranslation();
   const consultationDate = getCaseData(c, 'consultation_date') as string | undefined;
   const duration = getCaseData(c, 'duration') as string | undefined;
   const format = getCaseData(c, 'format') as string | undefined;
@@ -56,7 +37,7 @@ export function ConsultationSection({
     ? [client.first_name, client.last_name].filter(Boolean).join(' ') || em(client.email)
     : '—';
 
-  const formatLabel = format ? FORMAT_LABELS[format] ?? format : null;
+  const formatLabel = format ? enumPretty(format) : null;
   const formatDisplay = formatLabel ? (
     <span className="inline-flex items-center gap-1">
       {FORMAT_ICONS[format ?? ''] ?? null}
@@ -85,7 +66,7 @@ export function ConsultationSection({
           <Field label="Duration">{em(duration)}</Field>
           <Field label="Format">{formatDisplay}</Field>
           <Field label="Consultation type">
-            {consultationType ? CONSULTATION_TYPE_LABELS[consultationType] ?? consultationType : '—'}
+            {consultationType ? enumPretty(consultationType) : '—'}
           </Field>
         </div>
       </section>
@@ -104,7 +85,7 @@ export function ConsultationSection({
         <SectionTitle>Legal context</SectionTitle>
         <div className="space-y-4">
           <Field label="Legal domain">
-            {legalDomain ? DOMAIN_LABELS[legalDomain] ?? legalDomain : '—'}
+            {legalDomain ? enumPretty(legalDomain) : '—'}
           </Field>
           <Field label="Legal question / subject">
             {legalQuestion?.trim() ? <LongText>{legalQuestion}</LongText> : '—'}
@@ -115,7 +96,7 @@ export function ConsultationSection({
       <section>
         <SectionTitle>Outcome</SectionTitle>
         <div className="space-y-4">
-          <Field label="Status">{em(outcome?.replace(/_/g, ' '))}</Field>
+          <Field label="Status">{em(outcome ? enumPretty(outcome) : outcome)}</Field>
           <Field label="Advice summary / notes">
             {adviceSummary?.trim() ? <LongText>{adviceSummary}</LongText> : '—'}
           </Field>

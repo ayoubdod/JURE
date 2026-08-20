@@ -57,7 +57,7 @@ export function NotificationFilters({
         aria-label={t.notifications.filtersAria}
         className={cn(
           'flex gap-1 rounded-lg bg-slate-100/90 p-1 dark:bg-slate-800/80',
-          'overflow-x-auto scrollbar-none'
+          'overflow-x-auto scrollbar-none [direction:inherit]',
         )}
       >
         {primaryPills.map((pill) => {

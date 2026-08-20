@@ -49,42 +49,11 @@ const PRIORITY_DOT: Record<string, string> = {
   LOW: 'bg-slate-400',
 };
 
-const LITIGATION_TYPE_LABELS: Record<string, string> = {
-  CIVIL: 'Civil',
-  CRIMINAL: 'Criminal',
-  COMMERCIAL: 'Commercial',
-  ADMINISTRATIVE: 'Administrative',
-  LABOR: 'Labor',
-  FAMILY: 'Family',
-};
-
-const DUTY_TYPE_LABELS: Record<string, string> = {
-  CORPORATE_FILING: 'Corporate Filing',
-  PROPERTY_REGISTRATION: 'Property Registration',
-  NOTARIAL_ACT: 'Notarial Act',
-  PERMIT: 'Permit',
-  COMPLIANCE: 'Compliance',
-  INHERITANCE: 'Inheritance',
-  OTHER: 'Other',
-};
-
-const LEGAL_DOMAIN_LABELS: Record<string, string> = {
-  FAMILY: 'Family',
-  CRIMINAL: 'Criminal',
-  CORPORATE: 'Corporate',
-  LABOR: 'Labor',
-  REAL_ESTATE: 'Real Estate',
-  OTHER: 'Other',
-};
-
 const personName = (u?: API.User | null) =>
   u ? [u.first_name, u.last_name].filter(Boolean).join(' ').trim() : '';
 
-const pretty = (value?: string | null) =>
-  value ? String(value).replace(/_/g, ' ') : '';
-
 const CaseWorkspaceCard: React.FC<CaseWorkspaceCardProps> = ({ caseItem, onClick, onEdit }) => {
-  const { t, tf, enumLabel } = useAppTranslation();
+  const { t, tf, enumLabel, enumPretty } = useAppTranslation();
   const c = t.cases.card;
   const rawType = String(caseItem.caseType ?? caseItem.case_type ?? '');
   const isAdmin = rawType === 'ADMINISTRATIVE' || rawType === 'ADMINISTRATIVE_DUTY';
@@ -105,14 +74,14 @@ const CaseWorkspaceCard: React.FC<CaseWorkspaceCardProps> = ({ caseItem, onClick
       caseItem.status ||
       ''
   );
-  const statusLabel = enumLabel('caseStatus', status) || pretty(status) || '—';
+  const statusLabel = enumPretty(status) || '—';
 
   const title =
     caseItem.title || caseItem.reference || CaseCategory.getLabel(caseItem.category) || t.cases.untitledCase;
   const reference = caseItem.reference ? `#${String(caseItem.reference).replace(/^#/, '')}` : '';
 
   const clientName = personName(caseItem.client as API.User | undefined) || t.cases.unnamed;
-  const clientRole = pretty(getCaseData(caseItem, 'client_role') as string | undefined);
+  const clientRole = enumPretty(getCaseData(caseItem, 'client_role') as string | undefined);
   const leadName = personName(caseItem.assigned_to as API.User | undefined);
   const courtName =
     (getCaseData(caseItem, 'court_name') as string) ||
@@ -122,18 +91,15 @@ const CaseWorkspaceCard: React.FC<CaseWorkspaceCardProps> = ({ caseItem, onClick
     '';
 
   const subtype = isLitigation
-    ? LITIGATION_TYPE_LABELS[String(getCaseData(caseItem, 'litigation_type') || '')] ||
-      enumLabel('caseCategory', caseItem.category) ||
-      pretty(caseItem.category)
+    ? enumPretty(String(getCaseData(caseItem, 'litigation_type') || '')) ||
+      enumLabel('caseCategory', caseItem.category)
     : isConsultation
-      ? LEGAL_DOMAIN_LABELS[String(getCaseData(caseItem, 'legal_domain') || '')] ||
-        enumLabel('caseCategory', caseItem.category) ||
-        pretty(caseItem.category)
+      ? enumPretty(String(getCaseData(caseItem, 'legal_domain') || '')) ||
+        enumLabel('caseCategory', caseItem.category)
       : isAdmin
-        ? DUTY_TYPE_LABELS[String(getCaseData(caseItem, 'duty_type') || '')] ||
-          enumLabel('caseCategory', caseItem.category) ||
-          pretty(caseItem.category)
-        : enumLabel('caseCategory', caseItem.category) || pretty(caseItem.category);
+        ? enumPretty(String(getCaseData(caseItem, 'duty_type') || '')) ||
+          enumLabel('caseCategory', caseItem.category)
+        : enumLabel('caseCategory', caseItem.category) || enumPretty(caseItem.category);
 
   const priority = String(getCaseData(caseItem, 'priority') || '');
   const opened = caseItem.created;
@@ -266,7 +232,7 @@ const CaseWorkspaceCard: React.FC<CaseWorkspaceCardProps> = ({ caseItem, onClick
           <MetaCell label={c.caseType} value={subtype || '—'} />
           <MetaCell
             label={c.priority}
-            value={priority ? pretty(priority) : '—'}
+            value={priority ? enumPretty(priority) : '—'}
             dot={priority ? PRIORITY_DOT[priority] : undefined}
           />
           <MetaCell

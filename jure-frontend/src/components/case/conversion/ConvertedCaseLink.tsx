@@ -6,6 +6,7 @@ import { Link2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { getStatusColor } from '@/utils/caseCardHelpers';
+import { useAppTranslation } from '@/i18n';
 
 function typeLabel(link: API.CaseLinkSummary): string {
   const t = link.caseType ?? link.case_type ?? '';
@@ -33,11 +34,12 @@ type Props =
     };
 
 export function ConvertedCaseLink(props: Props) {
+  const { t, enumPretty } = useAppTranslation();
   const { link } = props;
   const title = link.title?.trim() || '—';
   const ref = link.reference?.trim();
   const statusRaw = link.status ?? '';
-  const statusDisplay = String(statusRaw).replace(/_/g, ' ');
+  const statusDisplay = enumPretty(String(statusRaw)) || String(statusRaw);
 
   return (
     <section className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/40 p-4 shadow-sm">
@@ -67,7 +69,7 @@ export function ConvertedCaseLink(props: Props) {
           )}
           <div className="flex flex-wrap items-center gap-2">
             <span className="inline-flex rounded-full bg-slate-200/80 dark:bg-slate-800 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.06em] text-slate-800 dark:text-slate-200">
-              {typeLabel(link)}
+              {enumPretty(link.caseType ?? link.case_type) || typeLabel(link)}
             </span>
           </div>
           <p className="text-[13px] font-medium text-slate-900 dark:text-slate-100 line-clamp-2">{title}</p>
@@ -79,7 +81,7 @@ export function ConvertedCaseLink(props: Props) {
           )}
           {statusRaw && (
             <p className="text-[11px] text-slate-500 dark:text-slate-400">
-              Status:{' '}
+              {t.cases.filters.status}:{' '}
               <span
                 className={cn(
                   'inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ring-1 ring-inset',

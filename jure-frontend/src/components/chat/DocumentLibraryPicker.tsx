@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import axiosInstance from '@/utils/axiosInstance';
 import { BACKEND_BASE_URL } from '@/utils/constants';
+import { useAppTranslation } from '@/i18n';
 
 interface DocumentLibraryPickerProps {
   onSelect: (files: File[]) => void;
@@ -31,6 +32,7 @@ const DocumentLibraryPicker: React.FC<DocumentLibraryPickerProps> = ({
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { t } = useAppTranslation();
 
   useEffect(() => {
     if (open) {
@@ -42,7 +44,7 @@ const DocumentLibraryPicker: React.FC<DocumentLibraryPickerProps> = ({
           setDocs(list);
         })
         .catch(() => {
-          toast({ title: 'Error', description: 'Failed to load documents', variant: 'destructive' });
+          toast({ title: t.common.error, description: t.conversations.loadDocumentsFailed, variant: 'destructive' });
         })
         .finally(() => setLoading(false));
     }
@@ -57,7 +59,7 @@ const DocumentLibraryPicker: React.FC<DocumentLibraryPickerProps> = ({
       const file = new File([res.data], doc.title || `document-${doc.id}.${ext}`, { type: res.data.type || 'application/octet-stream' });
       onSelect([file]);
     } catch {
-      toast({ title: 'Error', description: 'Could not attach document', variant: 'destructive' });
+      toast({ title: t.common.error, description: t.conversations.attachDocumentFailed, variant: 'destructive' });
     }
   };
 
@@ -69,7 +71,7 @@ const DocumentLibraryPicker: React.FC<DocumentLibraryPickerProps> = ({
       <PopoverContent className="w-64 p-0" align="start">
         <div className="p-2 border-b border-slate-200 dark:border-slate-700">
           <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-            Document Library
+            {t.conversations.documentLibrary}
           </p>
         </div>
         <ScrollArea className="h-48">
@@ -79,7 +81,7 @@ const DocumentLibraryPicker: React.FC<DocumentLibraryPickerProps> = ({
             </div>
           ) : docs.length === 0 ? (
             <div className="p-4 text-center text-[12px] text-slate-500">
-              No documents in library
+              {t.conversations.noDocuments}
             </div>
           ) : (
             <div className="p-1 space-y-0.5">
@@ -90,7 +92,7 @@ const DocumentLibraryPicker: React.FC<DocumentLibraryPickerProps> = ({
                   className="w-full flex items-center gap-2 px-2 py-0.5 rounded text-left hover:bg-slate-100 dark:hover:bg-slate-800 text-[13px]"
                 >
                   <FileText className="w-4 h-4 text-slate-400 shrink-0" />
-                  <span className="truncate">{doc.title || 'Untitled'}</span>
+                  <span className="truncate">{doc.title || t.conversations.untitled}</span>
                 </button>
               ))}
             </div>
@@ -107,7 +109,7 @@ const DocumentLibraryPicker: React.FC<DocumentLibraryPickerProps> = ({
                 onUploadClick();
               }}
             >
-              Upload file…
+              {t.conversations.uploadFile}
             </Button>
           )}
           <Button
@@ -119,7 +121,7 @@ const DocumentLibraryPicker: React.FC<DocumentLibraryPickerProps> = ({
               navigate('/dashboard/library');
             }}
           >
-            Open full library →
+            {t.conversations.openLibrary}
           </Button>
         </div>
       </PopoverContent>

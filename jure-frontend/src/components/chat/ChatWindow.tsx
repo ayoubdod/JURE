@@ -3,25 +3,10 @@ import MessageItem from './MessageItem';
 import MessageEditModal from './MessageEditModal';
 import DeleteMessageModal from './DeleteMessageModal';
 import ForwardConversationPicker from './ForwardConversationPicker';
-import {
-  Phone,
-  Video,
-  MoreHorizontal,
-  Trash2,
-  ChevronRight,
-  ImageIcon,
-  Link2,
-  ArrowLeft,
-} from 'lucide-react';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+import ConversationHeader from './ConversationHeader';
+import ConversationEmptyState from './ConversationEmptyState';
 import useUserStore from '@/stores/userStore';
-import UserAvatar, { getPersonImage } from '@/components/common/UserAvatar';
-import GroupChatIcon from './GroupChatIcon';
+import useChatStore from '@/stores/chatStore';
 import {
   apiMarkConversationRead,
   apiEditMessage,
@@ -50,11 +35,13 @@ import {
   ActiveCallBanner,
 } from '@/components/conversations/call/ConversationCallBanners';
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
+  collectConversationFiles,
+  formatDateSeparator,
+  getDirectPeer,
+  getMemberPerson,
+  getMessageLayoutMeta,
+  messageSentAt,
+} from './conversationUtils';
 
 export type ChatWindowHandle = {
   scrollToMessage: (messageId: number) => void;
@@ -96,8 +83,11 @@ const ChatWindow = forwardRef<
   onPinnedMessagesChange?: (messages: API.Message[]) => void;
   onOpenLinkCaseModal?: () => void;
   onUnlinkConversationCase?: () => void | Promise<void>;
+  onOpenLinkedCase?: (caseId: number) => void;
   /** Mobile: back to conversation list */
   onBack?: () => void;
+  onOpenContext?: () => void;
+  onConversationFilesChange?: (files: API.MessageAttachment[]) => void;
 }
 >(({ 
   conversation,
@@ -106,7 +96,7 @@ const ChatWindow = forwardRef<
   callInProgress = false,
   onJoinActiveCall,
   onRecallMissedCall,
-  onOpenSettings,
+  onOpenSettings: _onOpenSettings,
   onStartNewChat,
   onDeleteConversation,
   onChangeIcon,
@@ -120,11 +110,15 @@ const ChatWindow = forwardRef<
   onPinnedMessagesChange,
   onOpenLinkCaseModal,
   onUnlinkConversationCase,
+  onOpenLinkedCase,
   onBack,
+  onOpenContext,
+  onConversationFilesChange,
 }, ref) => {
   const { t } = useAppTranslation();
   const toastMsgs = t.conversations.toasts;
   const callCopy = t.conversations.call;
+  const onlineIds = useChatStore((s) => s.onlineIds ?? []);
   const callSessionStatus = useCallSessionStore((s) => s.ui.status);
   const callSessionConvId = useCallSessionStore((s) => s.ui.conversationId);
   const activeCall = useConversationCallPresenceStore((s) =>
@@ -143,6 +137,7 @@ const ChatWindow = forwardRef<
   const loadingForConvRef = useRef<number | null>(null);
   const pinnedMessageIdsRef = useRef<Set<string>>(new Set());
   const [messages, setMessages] = useState<API.Message[]>([]);
+  const [messagesLoading, setMessagesLoading] = useState(false);
   const [editMessage, setEditMessage] = useState<API.Message | null>(null);
   const [deleteMessage, setDeleteMessage] = useState<API.Message | null>(null);
   const [forwardMessage, setForwardMessage] = useState<API.Message | null>(null);
@@ -227,6 +222,7 @@ const ChatWindow = forwardRef<
     loadPinnedMessages();
 
     // Load messages via REST – avoid clearing first to prevent flash; replace only when data arrives
+    setMessagesLoading(true);
     apiGetMessages(convId, { limit: 50 })
       .then((res) => {
         if (loadingForConvRef.current !== convId) return;
@@ -236,6 +232,9 @@ const ChatWindow = forwardRef<
       })
       .catch(() => {
         if (loadingForConvRef.current === convId) setMessages([]);
+      })
+      .finally(() => {
+        if (loadingForConvRef.current === convId) setMessagesLoading(false);
       });
 
     if (
@@ -428,197 +427,40 @@ const ChatWindow = forwardRef<
     },
   }));
 
+  useEffect(() => {
+    onConversationFilesChange?.(collectConversationFiles(messages));
+  }, [messages, onConversationFilesChange]);
+
   if (!conversation) {
-    return (
-      <div className="flex-1 flex items-center justify-center bg-slate-50 dark:bg-slate-950/50 min-w-0">
-        <div className="text-center px-6">
-          <p className="text-[13px] text-slate-500 dark:text-slate-500">
-            {t.conversations.emptyPane}
-          </p>
-          <button
-            onClick={onStartNewChat}
-            className="mt-3 text-[13px] font-medium text-primary hover:underline"
-          >
-            {t.conversations.newChat}
-          </button>
-        </div>
-      </div>
-    );
+    return <ConversationEmptyState onNewChat={onStartNewChat} />;
   }
 
-  const getMemberPerson = (m: API.ConversationMembership) =>
-    (m as any).user ?? (m as any).cabinet_member ?? (m as any).member;
-  const isDirect = conversation.type === 'direct';
-  const linkedCase: API.LinkedCaseSummary | null =
-    (conversation as API.Conversation).linkedCase ??
-    (conversation as API.Conversation).linked_case ??
-    null;
   const currentEmail = (useUserStore.getState().user?.email ?? '').toLowerCase();
-  const peer = isDirect
-    ? conversation.memberships.find((m) =>
-        (getMemberPerson(m)?.email ?? '').toLowerCase() !== currentEmail
-      )
-    : undefined;
-  const peerPerson = peer ? getMemberPerson(peer) : undefined;
-  const otherParticipant = (conversation as any).other_participant;
-  const peerForAvatar = peerPerson ?? otherParticipant;
-  const peerImage = getPersonImage(peerForAvatar as Record<string, unknown>);
-  const displayName =
-    (conversation as any).display_name ||
-    (isDirect
-      ? (conversation as any).other_participant?.full_name ||
-        `${peerPerson?.first_name ?? ''} ${peerPerson?.last_name ?? ''}`.trim()
-      : conversation.title);
+  const peer = getDirectPeer(conversation, currentEmail);
+  const peerPerson = peer ? getMemberPerson(peer) : conversation.other_participant;
+  const peerId = peerPerson?.id ?? (peerPerson as { pk?: number } | undefined)?.pk;
+  const isPeerOnline =
+    conversation.type === 'direct' &&
+    typeof peerId === 'number' &&
+    onlineIds.includes(peerId);
 
   return (
-    <div className="flex-1 flex flex-col min-h-0 min-w-0">
-      {/* Header */}
-      <div className="shrink-0 flex items-center justify-between px-2 sm:px-3 py-2 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60">
-        <div className="flex items-center gap-1.5 sm:gap-2.5 min-w-0">
-          {onBack && (
-            <button
-              type="button"
-              onClick={onBack}
-              className="md:hidden flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
-              aria-label={t.conversations.backAria}
-            >
-              <ArrowLeft size={20} />
-            </button>
-          )}
-          {isDirect ? (
-            <UserAvatar
-              image={peerImage}
-              firstName={peerForAvatar?.first_name}
-              lastName={peerForAvatar?.last_name}
-              size="sm"
-              className="h-8 w-8 shrink-0"
-            />
-          ) : (
-            <GroupChatIcon
-              iconUrl={(conversation as any).icon_url}
-              iconPresetEmoji={(conversation as any).icon_preset_emoji}
-              size="sm"
-              className="h-8 w-8"
-            />
-          )}
-          <div className="min-w-0">
-            <p className="text-[13px] font-medium text-slate-800 dark:text-slate-200 truncate">
-              {displayName || 'Chat'}
-            </p>
-            {isTyping && (
-              <p className="text-[11px] text-slate-500 dark:text-slate-500 animate-pulse">
-                {t.conversations.typing}
-              </p>
-            )}
-          </div>
-        </div>
-
-        <div className="flex items-center gap-0.5 shrink-0">
-          <TooltipProvider delayDuration={300}>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <span className="inline-flex">
-                  <button
-                    type="button"
-                    onClick={callInProgress ? undefined : onCallVoice}
-                    disabled={callInProgress}
-                    aria-disabled={callInProgress}
-                    className={cn(
-                      'p-1.5 rounded text-slate-500',
-                      callInProgress
-                        ? 'cursor-not-allowed opacity-45'
-                        : 'hover:bg-slate-100 dark:hover:bg-slate-800'
-                    )}
-                  >
-                    <Phone className="w-4 h-4" />
-                  </button>
-                </span>
-              </TooltipTrigger>
-              {callInProgress && (
-                <TooltipContent side="bottom">Call in progress</TooltipContent>
-              )}
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <span className="inline-flex">
-                  <button
-                    type="button"
-                    onClick={callInProgress ? undefined : onCallVideo}
-                    disabled={callInProgress}
-                    aria-disabled={callInProgress}
-                    className={cn(
-                      'p-1.5 rounded text-slate-500',
-                      callInProgress
-                        ? 'cursor-not-allowed opacity-45'
-                        : 'hover:bg-slate-100 dark:hover:bg-slate-800'
-                    )}
-                  >
-                    <Video className="w-4 h-4" />
-                  </button>
-                </span>
-              </TooltipTrigger>
-              {callInProgress && (
-                <TooltipContent side="bottom">Call in progress</TooltipContent>
-              )}
-            </Tooltip>
-          </TooltipProvider>
-          <button
-            onClick={onOpenSettings}
-            className="p-1.5 rounded hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 hidden"
-          >
-            <ChevronRight className="w-4 h-4" />
-          </button>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button className="p-1.5 rounded hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500">
-                <MoreHorizontal className="w-4 h-4" />
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              {!isDirect && onChangeIcon && (
-                <DropdownMenuItem onClick={() => onChangeIcon?.(conversation)}>
-                  <ImageIcon className="mr-2 h-4 w-4" /> Change icon
-                </DropdownMenuItem>
-              )}
-              {!isDirect && onOpenLinkCaseModal && onUnlinkConversationCase && (
-                <>
-                  {linkedCase ? (
-                    <>
-                      <div className="px-2 py-1.5 text-[11px] text-slate-500 cursor-default">
-                        <span className="flex items-center gap-1 font-medium text-slate-600 dark:text-slate-400">
-                          <Link2 className="h-3 w-3" />
-                          Linked: {linkedCase.reference ?? `#${linkedCase.id}`}
-                        </span>
-                      </div>
-                      <DropdownMenuItem onClick={() => onOpenLinkCaseModal()}>
-                        <Link2 className="mr-2 h-4 w-4" /> Change Case
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => {
-                          if (window.confirm('Remove case link from this conversation?')) void onUnlinkConversationCase();
-                        }}
-                        className="text-slate-700 dark:text-slate-300"
-                      >
-                        Remove Link
-                      </DropdownMenuItem>
-                    </>
-                  ) : (
-                    <DropdownMenuItem onClick={() => onOpenLinkCaseModal()}>
-                      <Link2 className="mr-2 h-4 w-4" /> Link Case
-                    </DropdownMenuItem>
-                  )}
-                </>
-              )}
-              <DropdownMenuItem
-                onClick={() => onDeleteConversation?.(conversation)}
-                className="text-red-600 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-950/30"
-              >
-                <Trash2 className="mr-2 h-4 w-4" /> Delete conversation
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      </div>
+    <div className="flex min-h-0 min-w-0 flex-1 flex-col bg-slate-50/70 dark:bg-slate-950/40">
+      <ConversationHeader
+        conversation={conversation}
+        isTyping={isTyping}
+        isOnline={isPeerOnline}
+        callInProgress={callInProgress}
+        onBack={onBack}
+        onCallVoice={onCallVoice}
+        onCallVideo={onCallVideo}
+        onOpenContext={onOpenContext}
+        onDeleteConversation={onDeleteConversation}
+        onChangeIcon={onChangeIcon}
+        onOpenLinkCaseModal={onOpenLinkCaseModal}
+        onUnlinkConversationCase={onUnlinkConversationCase}
+        onOpenLinkedCase={onOpenLinkedCase}
+      />
 
       {activeCall &&
       conversation?.id === activeCall.conversationId &&
@@ -650,37 +492,75 @@ const ChatWindow = forwardRef<
       {/* Messages - stable scroll area to prevent layout shift */}
       <div
         ref={messagesContainerRef}
-        className="flex-1 overflow-y-auto overflow-x-hidden p-3 min-h-0 flex flex-col"
+        className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto px-3 py-3 sm:px-4"
       >
-        <div className="flex flex-col gap-2">
-          {messages.map((message) => (
-            <div
-              key={message.id}
-              className="w-full shrink-0"
-              ref={(el) => {
-                if (el) messageRefsMap.current.set(message.id, el);
-              }}
-              data-message-id={message.id}
-            >
-            <MessageItem
-              msg={message}
-              conversation={conversation}
-              onEdit={(m) => setEditMessage(m)}
-              onDelete={(m) => setDeleteMessage(m)}
-              onForward={(m) => setForwardMessage(m)}
-              onPin={handlePinMessage}
-              onOpenSharedCase={onOpenSharedCase}
-              onOpenSharedTask={onOpenSharedTask}
-              onOpenSharedAppointment={onOpenSharedAppointment}
-              onRecallCall={(kind) => onRecallMissedCall?.(kind)}
-            />
+        {messagesLoading && messages.length === 0 ? (
+          <div className="space-y-4 py-4">
+            {[0, 1, 2, 3].map((i) => (
+              <div key={i} className={cn('flex animate-pulse gap-2', i % 2 === 0 ? '' : 'justify-end')}>
+                {i % 2 === 0 ? <div className="h-7 w-7 rounded-full bg-slate-200 dark:bg-slate-800" /> : null}
+                <div className="h-10 w-[45%] rounded-2xl bg-slate-200 dark:bg-slate-800" />
+              </div>
+            ))}
+          </div>
+        ) : messages.length === 0 ? (
+          <div className="flex h-full min-h-[180px] items-center justify-center">
+            <div className="text-center">
+              <p className="text-[13px] font-medium text-slate-700 dark:text-slate-300">
+                {t.conversations.emptyMessages}
+              </p>
+              <p className="mt-1 text-[12px] text-slate-500">{t.conversations.emptyMessagesHint}</p>
             </div>
-          ))}
-        </div>
+          </div>
+        ) : (
+          <div className="flex flex-col">
+            {messages.map((message, index) => {
+              const layout = getMessageLayoutMeta(messages, index);
+              const sent = messageSentAt(message);
+              return (
+                <div
+                  key={message.id}
+                  className="w-full shrink-0"
+                  ref={(el) => {
+                    if (el) messageRefsMap.current.set(message.id, el);
+                  }}
+                  data-message-id={message.id}
+                >
+                  {layout.showDateSeparator && sent ? (
+                    <div className="my-3 flex items-center gap-3">
+                      <div className="h-px flex-1 bg-slate-200 dark:bg-slate-800" />
+                      <span className="text-[11px] font-medium text-slate-400">
+                        {formatDateSeparator(sent, {
+                          today: t.conversations.today,
+                          yesterday: t.conversations.yesterday,
+                        })}
+                      </span>
+                      <div className="h-px flex-1 bg-slate-200 dark:bg-slate-800" />
+                    </div>
+                  ) : null}
+                  <MessageItem
+                    msg={message}
+                    conversation={conversation}
+                    onEdit={(m) => setEditMessage(m)}
+                    onDelete={(m) => setDeleteMessage(m)}
+                    onForward={(m) => setForwardMessage(m)}
+                    onPin={handlePinMessage}
+                    onOpenSharedCase={onOpenSharedCase}
+                    onOpenSharedTask={onOpenSharedTask}
+                    onOpenSharedAppointment={onOpenSharedAppointment}
+                    onRecallCall={(kind) => onRecallMissedCall?.(kind)}
+                    isFirstInGroup={layout.isFirstInGroup}
+                    isLastInGroup={layout.isLastInGroup}
+                  />
+                </div>
+              );
+            })}
+          </div>
+        )}
         {isTyping && (
-          <div className="flex gap-2 items-end">
-            <div className="w-7 h-7 rounded-full bg-slate-200 dark:bg-slate-700 shrink-0" />
-            <div className="px-2.5 py-1.5 rounded-[4px] bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-500 text-[13px]">
+          <div className="mt-3 flex items-end gap-2">
+            <div className="h-7 w-7 shrink-0 rounded-full bg-slate-200 dark:bg-slate-700" />
+            <div className="rounded-2xl rounded-bl-md border border-slate-200 bg-white px-3 py-1.5 text-[13px] text-slate-400 dark:border-slate-700 dark:bg-slate-800">
               {t.conversations.typing}
             </div>
           </div>

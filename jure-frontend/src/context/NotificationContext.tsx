@@ -15,6 +15,7 @@ import type { NotificationFilterId } from '@/types/notification';
 import type { NotificationPrefs } from '@/types/notification';
 import { loadNotificationPrefs, saveNotificationPrefs, shouldAlertForNotificationType } from '@/utils/notificationPreferences';
 import { filterNotifications, normalizeNotification } from '@/utils/notificationUtils';
+import { isChatMessageNotification } from '@/utils/notificationNav';
 import { devError } from '@/utils/devLog';
 
 const DROPDOWN_MAX = 80;
@@ -58,13 +59,17 @@ const newNotificationSubscribers = new Set<(n: AppNotification) => void>();
 
 function parseWsPayload(data: Record<string, unknown>): AppNotification | null {
   const nested = data.notification ?? data.payload;
-  if (nested && typeof nested === 'object') {
-    return normalizeNotification(nested as Record<string, unknown>);
-  }
-  if (data.id != null || data.type != null) {
-    return normalizeNotification(data);
-  }
-  return null;
+  const raw =
+    nested && typeof nested === 'object'
+      ? (nested as Record<string, unknown>)
+      : data.id != null || data.type != null
+        ? data
+        : null;
+  if (!raw) return null;
+  if (raw.is_message) return null;
+  const n = normalizeNotification(raw);
+  if (isChatMessageNotification(n.type) || n.id == null || n.id === '') return null;
+  return n;
 }
 
 export function NotificationProvider({ children }: { children: React.ReactNode }) {
@@ -116,7 +121,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
       };
 
       const { results } = await notificationApi.getNotifications(params);
-      setNotifications(filterNotifications(results, f));
+      setNotifications(filterNotifications(results, f).filter((n) => !isChatMessageNotification(n.type)));
       const count = await notificationApi.getUnreadCount();
       if (count != null) setUnreadCount(count);
     } catch (e) {
@@ -128,6 +133,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
 
   const prependNotification = useCallback(
     (n: AppNotification, opts?: { skipToast?: boolean; skipBadge?: boolean }) => {
+      if (isChatMessageNotification(n.type)) return;
       setNotifications((prev) => {
         const id = n.id;
         const without = prev.filter((x) => String(x.id) !== String(id));
@@ -320,7 +326,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
         const c = await notificationApi.getUnreadCount();
         if (!cancelled && c != null) setUnreadCount(c);
         const { results } = await notificationApi.getNotifications({ page: 1, per_page: DROPDOWN_MAX });
-        if (!cancelled) setNotifications(results);
+        if (!cancelled) setNotifications(results.filter((n) => !isChatMessageNotification(n.type)));
       } catch (e) {
         devError('initial notifications load', e);
       }

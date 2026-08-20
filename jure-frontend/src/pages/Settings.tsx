@@ -36,6 +36,7 @@ import { cn } from '@/lib/utils';
 import { useTheme } from '@/hooks/useTheme';
 import RoleManagement from '@/components/role/RoleManagement';
 import { useAppTranslation } from '@/i18n';
+import { LANG_NATIVE_LABELS } from '@/i18n/types';
 import { Languages } from '@/utils/constants';
 import { useShortcuts } from '@/context/ShortcutsContext';
 import ShortcutLibrary from '@/components/shortcuts/ShortcutLibrary';
@@ -305,7 +306,7 @@ const Settings: React.FC = () => {
   const renderAppearance = () => (
     <FormSection title={t.settings.sectionPreferences} hint={t.settings.appearanceDescription}>
       <div
-        className="inline-flex w-full flex-wrap rounded-full border border-slate-200 bg-slate-50 p-1 dark:border-zinc-800 dark:bg-zinc-900 sm:w-auto"
+        className="flex w-full flex-wrap gap-1 rounded-xl border border-slate-200 bg-slate-50 p-1 dark:border-zinc-800 dark:bg-zinc-900 sm:w-auto"
         role="radiogroup"
         aria-label={t.settings.appearanceTitle}
       >
@@ -323,10 +324,10 @@ const Settings: React.FC = () => {
               aria-checked={active}
               onClick={() => setTheme(id)}
               className={cn(
-                'rounded-full px-4 py-1.5 text-[13px] font-medium transition-colors',
+                'rounded-lg px-3.5 py-1.5 text-[13px] font-medium transition-colors',
                 active
                   ? 'bg-[#64499D] text-white shadow-sm'
-                  : 'text-slate-600 hover:text-slate-900 dark:text-zinc-300 dark:hover:text-white'
+                  : 'text-slate-600 hover:bg-white hover:text-slate-900 dark:text-zinc-300 dark:hover:bg-zinc-800 dark:hover:text-white'
               )}
             >
               {title}
@@ -339,7 +340,11 @@ const Settings: React.FC = () => {
 
   const renderLanguage = () => (
     <FormSection title={t.settings.sectionPreferences} hint={t.settings.languageSectionDescription}>
-      <div className="inline-flex w-full flex-wrap rounded-full border border-slate-200 bg-slate-50 p-1 dark:border-zinc-800 dark:bg-zinc-900 sm:w-auto">
+      <div
+        className="flex w-full flex-wrap gap-1 rounded-xl border border-slate-200 bg-slate-50 p-1 dark:border-zinc-800 dark:bg-zinc-900 sm:w-auto"
+        role="radiogroup"
+        aria-label={t.settings.languageSectionTitle}
+      >
         {Languages.options.map((option) => {
           const code = option.value as Lang;
           const active = code === lang;
@@ -347,15 +352,17 @@ const Settings: React.FC = () => {
             <button
               key={code}
               type="button"
+              role="radio"
+              aria-checked={active}
               onClick={() => setLang(code)}
               className={cn(
-                'rounded-full px-4 py-1.5 text-[13px] font-medium transition-colors',
+                'rounded-lg px-3.5 py-1.5 text-[13px] font-medium transition-colors',
                 active
                   ? 'bg-[#64499D] text-white shadow-sm'
-                  : 'text-slate-600 hover:text-slate-900 dark:text-zinc-300 dark:hover:text-white'
+                  : 'text-slate-600 hover:bg-white hover:text-slate-900 dark:text-zinc-300 dark:hover:bg-zinc-800 dark:hover:text-white'
               )}
             >
-              {t.common.languageNames[code]}
+              {LANG_NATIVE_LABELS[code]}
             </button>
           );
         })}
@@ -454,7 +461,7 @@ const Settings: React.FC = () => {
                 key={section.id}
                 value={section.id}
                 className={cn(
-                  'h-auto min-w-[8.5rem] w-auto flex-none items-center justify-start gap-2 rounded-xl px-3 py-2 text-left text-[13px] shadow-none lg:w-full',
+                  'h-auto min-w-[8.5rem] w-auto flex-none items-center justify-start gap-2 rounded-xl px-3 py-2 text-start text-[13px] shadow-none lg:w-full',
                   active
                     ? 'bg-[#F7F4FF] text-[#64499D] ring-1 ring-[#64499D]/15 dark:bg-[#64499D]/20 dark:text-[#CFC2FF]'
                     : 'text-slate-600 hover:bg-slate-50 dark:text-zinc-400 dark:hover:bg-zinc-900'

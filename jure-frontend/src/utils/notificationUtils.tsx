@@ -22,6 +22,7 @@ import type {
   RelatedTask,
   RelatedUser,
 } from '@/types/notification';
+import { isChatMessageNotification } from '@/utils/notificationNav';
 
 const MONTHS_FR = [
   'janv.',
@@ -86,8 +87,8 @@ export function getNotificationIcon(type: string): ReactNode {
 
 export function getPriorityBorderClass(priority?: string): string {
   const p = (priority || '').toUpperCase();
-  if (p === 'URGENT') return 'border-l-[3px] border-l-red-500';
-  if (p === 'HIGH') return 'border-l-[3px] border-l-amber-500';
+  if (p === 'URGENT') return 'border-s-[3px] border-s-red-500';
+  if (p === 'HIGH') return 'border-s-[3px] border-s-amber-500';
   return '';
 }
 
@@ -139,7 +140,7 @@ function matchesFilter(n: AppNotification, filter: NotificationFilterId): boolea
 }
 
 export function filterNotifications(list: AppNotification[], filter: NotificationFilterId): AppNotification[] {
-  return list.filter((n) => matchesFilter(n, filter));
+  return list.filter((n) => !isChatMessageNotification(n.type) && matchesFilter(n, filter));
 }
 
 export type DateGroupKey = 'today' | 'yesterday' | 'week' | 'older';
@@ -196,6 +197,8 @@ function parseRelatedCase(raw: Record<string, unknown>): RelatedCase | null {
     id: Number(id),
     reference: (o.reference as string | null | undefined) ?? null,
     title: (o.title as string | null | undefined) ?? null,
+    case_type: (o.case_type as string | null | undefined) ?? (o.caseType as string | null | undefined) ?? null,
+    caseType: (o.caseType as string | null | undefined) ?? (o.case_type as string | null | undefined) ?? null,
   };
 }
 

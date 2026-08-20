@@ -4,7 +4,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { createBrowserRouter, RouterProvider, Navigate } from "react-router"; // ✅ keep react-router
+import { createBrowserRouter, RouterProvider, Navigate, useSearchParams } from "react-router"; // ✅ keep react-router
 import { HelmetProvider } from "react-helmet-async";
 import { useTheme } from "@/hooks/useTheme";
 
@@ -88,6 +88,17 @@ const app = (element: ReactNode) => (
     <Suspense fallback={<LogoLoading />}>{element}</Suspense>
   </ProtectedRoute>
 );
+
+function LegacyChatRedirect() {
+  const [params] = useSearchParams();
+  const conv = params.get("selected") || params.get("conversation") || params.get("c");
+  return (
+    <Navigate
+      to={conv ? `/dashboard/conversations?selected=${encodeURIComponent(conv)}` : "/dashboard/conversations"}
+      replace
+    />
+  );
+}
 
 /** Slugs of the 8 high-intent landing pages, mapped to registry keys. */
 const INTENT_ROUTES: Array<{ slug: string; routeKey: string }> = [
@@ -240,6 +251,7 @@ const router = createBrowserRouter([
           ]
         : []),
       { path: "conversations", element: app(<Conversations />) },
+      { path: "chat", element: app(<LegacyChatRedirect />) },
       { path: "calendar", element: app(<CalendarPage />) },
       { path: "tasks", element: app(<TasksPage />) },
       { path: "tasks/:id/edit", element: app(<EditTask />) },

@@ -174,7 +174,7 @@ export default function NotificationsPage() {
         <div className="space-y-8">
           {groups.map((g) => (
             <section key={g.key}>
-              <h2 className="mb-3 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+              <h2 className="mb-3 text-xs font-bold text-slate-500 dark:text-slate-400 ltr:uppercase ltr:tracking-wider">
                 {g.label}
               </h2>
               <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950">

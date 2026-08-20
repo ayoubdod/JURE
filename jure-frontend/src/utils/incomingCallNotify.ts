@@ -8,6 +8,7 @@
 
 import { useCallSessionStore } from '@/stores/callSessionStore';
 import { unlockRemoteAudioPlayback } from '@/utils/webrtc';
+import { detectInitialLanguage, interpolate, tFor } from '@/i18n';
 
 export const CALL_NOTIFICATION_TAG = 'jure-incoming-call';
 const PERM_KEY = 'jure.callNotify.permissionAsked';
@@ -117,12 +118,17 @@ function bindCallNotificationActions() {
   });
 }
 
+function callCopy() {
+  return tFor(detectInitialLanguage()).conversations.call;
+}
+
 function startTitleFlash(callerName: string, kind: 'voice' | 'video') {
   if (typeof document === 'undefined') return;
   stopTitleFlash();
   originalTitle = document.title;
   let tick = false;
-  const label = kind === 'video' ? 'Video call' : 'Incoming call';
+  const copy = callCopy();
+  const label = kind === 'video' ? copy.incomingVideo : copy.incoming;
   titleFlashTimer = setInterval(() => {
     tick = !tick;
     document.title = tick ? `📞 ${callerName}` : `${label}…`;
@@ -170,8 +176,9 @@ export type IncomingCallNotifyOpts = {
 /** Show a persistent system notification + vibrate + title flash while ringing. */
 export async function showIncomingCallNotification(opts: IncomingCallNotifyOpts): Promise<void> {
   const kind = opts.kind === 'video' ? 'video' : 'voice';
-  const title = kind === 'video' ? 'Incoming video call' : 'Incoming call';
-  const body = `${opts.callerName} is calling…`;
+  const copy = callCopy();
+  const title = kind === 'video' ? copy.incomingVideo : copy.incoming;
+  const body = interpolate(copy.callingBody, { name: opts.callerName });
 
   startTitleFlash(opts.callerName, kind);
   vibrateRing();
@@ -212,8 +219,8 @@ export async function showIncomingCallNotification(opts: IncomingCallNotifyOpts)
         vibrate: [400, 200, 400, 200, 400],
         data,
         actions: [
-          { action: 'accept', title: 'Accept' },
-          { action: 'decline', title: 'Decline' },
+          { action: 'accept', title: copy.accept },
+          { action: 'decline', title: copy.decline },
         ],
       } as NotificationOptions);
       return;

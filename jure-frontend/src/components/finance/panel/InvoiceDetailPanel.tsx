@@ -12,6 +12,7 @@ import {
 } from '@/services/finance/api';
 import { invoiceExonerationNote } from '@/components/finance/tva/TVAProgressBar';
 import { useToast } from '@/hooks/use-toast';
+import { useAppTranslation } from '@/i18n';
 import { isAxiosError } from 'axios';
 
 const statusClass: Record<API.FinanceInvoiceStatus, string> = {
@@ -48,6 +49,7 @@ export const InvoiceDetailPanel: React.FC<Props> = ({
   onInvoiceMutated,
 }) => {
   const { toast } = useToast();
+  const { enumLabel } = useAppTranslation();
   const [data, setData] = useState<API.FinanceInvoiceDetail | null>(null);
   const [loading, setLoading] = useState(false);
   const [pdfLoading, setPdfLoading] = useState(false);
@@ -160,7 +162,7 @@ export const InvoiceDetailPanel: React.FC<Props> = ({
                         statusClass[data.status]
                       )}
                     >
-                      {data.status.replace(/_/g, ' ')}
+                      {enumLabel('invoiceStatus', data.status) || data.status}
                     </span>
                   ) : null}
                   <p className="mt-2 text-sm font-semibold text-slate-800 dark:text-slate-100">{data?.client_name}</p>
@@ -254,7 +256,7 @@ export const InvoiceDetailPanel: React.FC<Props> = ({
                       >
                         <span className="font-medium tabular-nums">{formatMAD(p.amount)}</span>
                         <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] dark:bg-slate-800">
-                          {methodLabel[p.method]}
+                          {enumLabel('paymentMethod', p.method) || methodLabel[p.method]}
                         </span>
                         <span className="text-slate-600">{p.date}</span>
                         <span className="font-mono text-[12px] text-slate-500">{p.reference || '—'}</span>

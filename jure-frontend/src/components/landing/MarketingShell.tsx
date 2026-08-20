@@ -53,7 +53,7 @@ const LangSwitcher: React.FC<{
   pathname: string;
   onNavigate: (to: string, next: MarketingLang) => void;
 }> = ({ lang, pathname, onNavigate }) => (
-  <div className="inline-flex rounded-lg overflow-hidden border border-[#64499D]/20 dark:border-[#8B6FD1]/30 bg-white/50 dark:bg-slate-900/40 backdrop-blur-sm shrink-0">
+  <div className="inline-flex overflow-hidden rounded-lg border border-[#64499D]/20 bg-white/50 backdrop-blur-sm dark:border-[#8B6FD1]/30 dark:bg-slate-900/40" dir="ltr">
     {(["fr", "en", "ar"] as MarketingLang[]).map((code) => {
       const href = swapLocaleInPath(pathname, code);
       return (
