@@ -1079,6 +1079,13 @@ export const ar: AppMessages = {
     description: 'عذرًا! الصفحة غير موجودة',
     returnHome: 'العودة إلى الصفحة الرئيسية',
   },
+  routeError: {
+    title: 'حدث خطأ ما',
+    description: 'تعذر تحميل هذه الصفحة. حاول مرة أخرى أو عد إلى الصفحة الرئيسية.',
+    staleTitle: 'تحديث جور',
+    staleDescription: 'يتوفر إصدار جديد. جارٍ إعادة التحميل…',
+    reload: 'إعادة تحميل الصفحة',
+  },
   logoutModal: {
     title: 'تسجيل الخروج',
     description: 'هل أنت متأكد أنك تريد تسجيل الخروج من JURE؟',

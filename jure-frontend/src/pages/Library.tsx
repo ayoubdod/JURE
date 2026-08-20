@@ -49,19 +49,20 @@ import {
   type KnowledgeSearchHandle,
 } from '@/components/library/knowledge-hub';
 import { cn } from '@/lib/utils';
+import { importWithRetry } from '@/lib/chunkLoad';
 import { useAppTranslation } from '@/i18n';
 import { useShortcutAction } from '@/context/ShortcutsContext';
 import { devError } from '@/utils/devLog';
 import '@/styles/workspace-list.css';
 
-const KnowledgeTimelineView = lazy(
-  () => import('@/components/library/knowledge-hub/KnowledgeTimelineView')
+const KnowledgeTimelineView = lazy(() =>
+  importWithRetry(() => import('@/components/library/knowledge-hub/KnowledgeTimelineView'))
 );
-const KnowledgeGraphView = lazy(
-  () => import('@/components/library/knowledge-hub/KnowledgeGraphView')
+const KnowledgeGraphView = lazy(() =>
+  importWithRetry(() => import('@/components/library/knowledge-hub/KnowledgeGraphView'))
 );
-const KnowledgeAIView = lazy(
-  () => import('@/components/library/knowledge-hub/KnowledgeAIView')
+const KnowledgeAIView = lazy(() =>
+  importWithRetry(() => import('@/components/library/knowledge-hub/KnowledgeAIView'))
 );
 
 type SortKey = 'date' | 'name' | 'size' | 'score';

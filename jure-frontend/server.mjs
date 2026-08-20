@@ -214,17 +214,42 @@ app.use((req, res, next) => {
   res.redirect(301, `/${locale}${trimmed ? `/${trimmed}` : ''}`);
 });
 
+/** Hashed Vite output under /assets/ can be cached forever. Everything else must revalidate. */
+function setStaticHeaders(res, filePath) {
+  const rel = path.relative(distDir, filePath).split(path.sep).join('/');
+  if (rel.startsWith('assets/')) {
+    res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+  } else {
+    res.setHeader('Cache-Control', 'no-cache');
+  }
+}
+
+/**
+ * Missing hashed chunks must 404 — not fall through to index.html.
+ * A 200 HTML response for `/assets/*.js` makes the browser throw
+ * "Failed to fetch dynamically imported module" after a deploy.
+ */
+function isStaticAssetPath(reqPath) {
+  if (reqPath === '/assets' || reqPath.startsWith('/assets/')) return true;
+  return /\.(?:js|mjs|cjs|css|map|json|webmanifest|txt|xml|ico|png|jpe?g|gif|svg|webp|woff2?|ttf|eot|mp3|mp4|wasm)$/i.test(
+    reqPath
+  );
+}
+
 app.use(
   express.static(distDir, {
     index: false,
-    maxAge: '1y',
-    immutable: true,
+    setHeaders: setStaticHeaders,
   })
 );
 
 app.use((req, res) => {
   if (req.method !== 'GET' && req.method !== 'HEAD') {
     res.status(405).type('text/plain').send('Method Not Allowed');
+    return;
+  }
+  if (isStaticAssetPath(req.path)) {
+    res.status(404).set('Cache-Control', 'no-store').type('text/plain').send('Not Found');
     return;
   }
   res

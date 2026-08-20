@@ -1079,6 +1079,13 @@ export const en: AppMessages = {
     description: 'Oops! Page not found',
     returnHome: 'Return to Home',
   },
+  routeError: {
+    title: 'Something went wrong',
+    description: 'This page failed to load. Try again, or return home.',
+    staleTitle: 'Updating JURE',
+    staleDescription: 'A new version is available. Reloading…',
+    reload: 'Reload page',
+  },
   logoutModal: {
     title: 'Log out',
     description: 'Are you sure you want to log out of JURE?',

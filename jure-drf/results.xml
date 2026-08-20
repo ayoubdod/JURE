@@ -1,13 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <testsuites>
-	<testsuite name="commons.tests.ContactViewSetTests-20260818231211" tests="8" file="commons/tests.py" time="1.447" timestamp="2026-08-18T23:12:13" failures="0" errors="0" skipped="0">
-		<testcase classname="commons.tests.ContactViewSetTests" name="test_create_contact_invalid_email" time="0.181" timestamp="2026-08-18T23:12:12" file="commons\tests.py" line="85"/>
-		<testcase classname="commons.tests.ContactViewSetTests" name="test_create_contact_invalid_message" time="0.318" timestamp="2026-08-18T23:12:12" file="commons\tests.py" line="99"/>
-		<testcase classname="commons.tests.ContactViewSetTests" name="test_create_contact_invalid_name" time="0.157" timestamp="2026-08-18T23:12:12" file="commons\tests.py" line="78"/>
-		<testcase classname="commons.tests.ContactViewSetTests" name="test_create_contact_invalid_phone" time="0.139" timestamp="2026-08-18T23:12:12" file="commons\tests.py" line="92"/>
-		<testcase classname="commons.tests.ContactViewSetTests" name="test_create_contact_missing_required_fields" time="0.143" timestamp="2026-08-18T23:12:12" file="commons\tests.py" line="106"/>
-		<testcase classname="commons.tests.ContactViewSetTests" name="test_create_contact_success" time="0.208" timestamp="2026-08-18T23:12:12" file="commons\tests.py" line="32"/>
-		<testcase classname="commons.tests.ContactViewSetTests" name="test_create_contact_without_phone" time="0.157" timestamp="2026-08-18T23:12:13" file="commons\tests.py" line="42"/>
-		<testcase classname="commons.tests.ContactViewSetTests" name="test_emails_inbox" time="0.145" timestamp="2026-08-18T23:12:13" file="commons\tests.py" line="54"/>
+	<testsuite name="library.tests.DocumentSerializerMissingFileTests-20260820193501" tests="1" file="library/tests.py" time="0.013" timestamp="2026-08-20T19:35:01" failures="0" errors="0" skipped="0">
+		<testcase classname="library.tests.DocumentSerializerMissingFileTests" name="test_missing_blob_does_not_raise" time="0.013" timestamp="2026-08-20T19:35:01" file="library\tests.py" line="11"/>
 	</testsuite>
 </testsuites>

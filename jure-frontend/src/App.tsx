@@ -1,77 +1,82 @@
 // src/App.tsx
-import { lazy, Suspense, type ReactNode } from "react";
+import { lazy, Suspense, type ComponentType, type ReactNode } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { createBrowserRouter, RouterProvider, Navigate, useSearchParams } from "react-router"; // ✅ keep react-router
+import { createBrowserRouter, RouterProvider, Navigate, Outlet, useSearchParams } from "react-router"; // ✅ keep react-router
 import { HelmetProvider } from "react-helmet-async";
 import { useTheme } from "@/hooks/useTheme";
 
 import { FinanceRouteGuard } from "./components/finance/FinanceRouteGuard";
 import NotFound from "./pages/NotFound";
+import RouteError from "./pages/RouteError";
 import ProtectedRoute from "./components/ProtectedRoute";
 import LogoLoading from "@/components/common/LogoLoading";
 import { JURIA_ENABLED } from "@/config/features";
-
+import { importWithRetry } from "@/lib/chunkLoad";
 import MarketingLocaleLayout, {
   LegacyMarketingRedirect,
 } from "@/marketing/MarketingLocale";
 
+/** Route-split pages: retry/reload once if a hashed chunk vanished after a deploy. */
+const lazyRoute = (load: () => Promise<{ default: ComponentType }>) =>
+  lazy(() => importWithRetry(load));
+
 // Marketing pages are route-split: they load on demand and stay out of the
 // authenticated app bundle (and vice versa).
-const Landing = lazy(() => import("./pages/Landing"));
-const About = lazy(() => import("./pages/About"));
-const Features = lazy(() => import("./pages/Features"));
-const Privacy = lazy(() => import("./pages/Privacy"));
-const Terms = lazy(() => import("./pages/Terms"));
-const Status = lazy(() => import("./pages/Status"));
-const Contact = lazy(() => import("./pages/Contact"));
-const StatusSubscribe = lazy(() => import("./pages/StatusSubscribe"));
-const Docs = lazy(() => import("./pages/Docs"));
-const Pricing = lazy(() => import("./pages/Pricing"));
-const Community = lazy(() => import("./pages/Community"));
-const Security = lazy(() => import("./pages/Security"));
-const Demo = lazy(() => import("./pages/Demo"));
-const JuriaPage = lazy(() => import("./pages/Juria"));
-const SolutionPage = lazy(() => import("./pages/solutions/SolutionPage"));
-const IntentPage = lazy(() => import("./pages/intent/IntentPage"));
-const InsightsIndex = lazy(() => import("./pages/insights/InsightsIndex"));
-const InsightArticle = lazy(() => import("./pages/insights/InsightArticle"));
+const Landing = lazyRoute(() => import("./pages/Landing"));
+const About = lazyRoute(() => import("./pages/About"));
+const Features = lazyRoute(() => import("./pages/Features"));
+const Privacy = lazyRoute(() => import("./pages/Privacy"));
+const Terms = lazyRoute(() => import("./pages/Terms"));
+const Status = lazyRoute(() => import("./pages/Status"));
+const Contact = lazyRoute(() => import("./pages/Contact"));
+const StatusSubscribe = lazyRoute(() => import("./pages/StatusSubscribe"));
+const Docs = lazyRoute(() => import("./pages/Docs"));
+const Pricing = lazyRoute(() => import("./pages/Pricing"));
+const Community = lazyRoute(() => import("./pages/Community"));
+const Security = lazyRoute(() => import("./pages/Security"));
+const Demo = lazyRoute(() => import("./pages/Demo"));
+const JuriaPage = lazyRoute(() => import("./pages/Juria"));
+const SolutionPage = lazyRoute(() => import("./pages/solutions/SolutionPage"));
+const IntentPage = lazyRoute(() => import("./pages/intent/IntentPage"));
+const InsightsIndex = lazyRoute(() => import("./pages/insights/InsightsIndex"));
+const InsightArticle = lazyRoute(() => import("./pages/insights/InsightArticle"));
 
 // Auth pages are route-split too — they carry form/validation dependencies.
-const SignIn = lazy(() => import("./pages/SignIn"));
-const SignUp = lazy(() => import("./pages/SignUp"));
-const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
-const ResetPassword = lazy(() => import("./pages/ResetPassword"));
-const VerifyEmail = lazy(() => import("./pages/VerifyEmail"));
-const VerifyEmailWaiting = lazy(() => import("./pages/VerifyEmailWaiting"));
-const SetupPassword = lazy(() => import("./pages/SetupPassword"));
+const SignIn = lazyRoute(() => import("./pages/SignIn"));
+const SignUp = lazyRoute(() => import("./pages/SignUp"));
+const ForgotPassword = lazyRoute(() => import("./pages/ForgotPassword"));
+const ResetPassword = lazyRoute(() => import("./pages/ResetPassword"));
+const VerifyEmail = lazyRoute(() => import("./pages/VerifyEmail"));
+const VerifyEmailWaiting = lazyRoute(() => import("./pages/VerifyEmailWaiting"));
+const SetupPassword = lazyRoute(() => import("./pages/SetupPassword"));
 
 // Authenticated app pages are also route-split so marketing visitors never
 // download the dashboard bundle.
-const DashboardLayout = lazy(() => import("./layouts/DashboardLayout"));
-const Dashboard = lazy(() => import("./pages/Dashboard"));
-const TeamMembers = lazy(() => import("./pages/TeamMembers"));
-const Profile = lazy(() => import("./pages/Profile"));
-const Account = lazy(() => import("./pages/Account"));
-const Cases = lazy(() => import("./pages/Cases"));
-const ConsultationsWorkspace = lazy(() => import("./pages/cases/ConsultationsWorkspace"));
-const LitigationWorkspace = lazy(() => import("./pages/cases/LitigationWorkspace"));
-const AdministrativeWorkspace = lazy(() => import("./pages/cases/AdministrativeWorkspace"));
-const CaseWorkspacePage = lazy(() => import("./pages/cases/CaseWorkspacePage"));
-const Library = lazy(() => import("./pages/Library"));
-const Clients = lazy(() => import("./pages/Clients"));
-const LegalAI = lazy(() => import("./pages/LegalAI"));
-const Conversations = lazy(() => import("./pages/Conversations"));
-const CalendarPage = lazy(() => import("./pages/Calendar"));
-const TasksPage = lazy(() => import("./pages/Tasks"));
-const AppointmentsPage = lazy(() => import("./pages/Appointments"));
-const Settings = lazy(() => import("./pages/Settings"));
-const FinancePage = lazy(() => import("./pages/finance/FinancePage"));
-const NotificationsPage = lazy(() => import("./pages/notifications/NotificationsPage"));
-const EditTask = lazy(() => import("./components/EditTask"));
-const PlaceholderPage = lazy(() => import("./pages/PlaceholderPage"));
+const DashboardLayout = lazyRoute(() => import("./layouts/DashboardLayout"));
+const Dashboard = lazyRoute(() => import("./pages/Dashboard"));
+const TeamMembers = lazyRoute(() => import("./pages/TeamMembers"));
+const Profile = lazyRoute(() => import("./pages/Profile"));
+const Account = lazyRoute(() => import("./pages/Account"));
+const Cases = lazyRoute(() => import("./pages/Cases"));
+const ConsultationsWorkspace = lazyRoute(() => import("./pages/cases/ConsultationsWorkspace"));
+const LitigationWorkspace = lazyRoute(() => import("./pages/cases/LitigationWorkspace"));
+const AdministrativeWorkspace = lazyRoute(() => import("./pages/cases/AdministrativeWorkspace"));
+const CaseWorkspacePage = lazyRoute(() => import("./pages/cases/CaseWorkspacePage"));
+const Library = lazyRoute(() => import("./pages/Library"));
+const Clients = lazyRoute(() => import("./pages/Clients"));
+const LegalAI = lazyRoute(() => import("./pages/LegalAI"));
+const Conversations = lazyRoute(() => import("./pages/Conversations"));
+const CalendarPage = lazyRoute(() => import("./pages/Calendar"));
+const TasksPage = lazyRoute(() => import("./pages/Tasks"));
+const AppointmentsPage = lazyRoute(() => import("./pages/Appointments"));
+const Settings = lazyRoute(() => import("./pages/Settings"));
+const FinancePage = lazyRoute(() => import("./pages/finance/FinancePage"));
+const NotificationsPage = lazyRoute(() => import("./pages/notifications/NotificationsPage"));
+const EditTask = lazyRoute(() => import("./components/EditTask"));
+const PlaceholderPage = lazyRoute(() => import("./pages/PlaceholderPage"));
 
 const queryClient = new QueryClient();
 
@@ -137,6 +142,10 @@ const LEGACY_MARKETING_SLUGS = [
 ];
 
 const router = createBrowserRouter([
+  {
+    element: <Outlet />,
+    errorElement: <RouteError />,
+    children: [
   // Localized public site: /en, /fr/features, /ar/security, ...
   {
     path: "/:lang",
@@ -277,6 +286,8 @@ const router = createBrowserRouter([
 
   // 404
   { path: "*", element: <NotFound /> },
+    ],
+  },
 ]);
 
 const AppContent = () => {
