@@ -1,6 +1,6 @@
 import React from 'react';
 import { ArrowLeft, ImageIcon, Link2, MoreHorizontal, PanelRight, Phone, Trash2, Video } from 'lucide-react';
-import UserAvatar, { getPersonImage } from '@/components/common/UserAvatar';
+import UserAvatar, { getPersonImage, PresenceDot } from '@/components/common/UserAvatar';
 import GroupChatIcon from './GroupChatIcon';
 import LinkedMatterChip from './LinkedMatterChip';
 import {
@@ -110,9 +110,7 @@ const ConversationHeader: React.FC<{
               size="sm"
               className="h-9 w-9"
             />
-            {isOnline ? (
-              <span className="absolute -bottom-0.5 -end-0.5 h-2.5 w-2.5 rounded-full border-2 border-white bg-emerald-500 dark:border-slate-900" />
-            ) : null}
+            <PresenceDot online={isOnline} />
           </div>
         ) : (
           <GroupChatIcon

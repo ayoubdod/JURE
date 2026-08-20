@@ -170,6 +170,19 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
   );
 
   const markAsRead = useCallback(async (id: number | string) => {
+    let shouldDecrement = false;
+    setNotifications((prev) => {
+      const target = prev.find((n) => String(n.id) === String(id));
+      if (!target) {
+        shouldDecrement = true;
+        return prev;
+      }
+      if (!target.is_read) shouldDecrement = true;
+      return prev.map((n) =>
+        String(n.id) === String(id) ? { ...n, is_read: true, read_at: n.read_at } : n
+      );
+    });
+    if (shouldDecrement) setUnreadCount((c) => Math.max(0, c - 1));
     try {
       const data = await notificationApi.markAsRead(id);
       setNotifications((prev) =>
@@ -179,9 +192,12 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
             : n
         )
       );
-      setUnreadCount((c) => Math.max(0, c - 1));
+      const count = await notificationApi.getUnreadCount();
+      if (count != null) setUnreadCount(count);
     } catch (e) {
       devError('markAsRead', e);
+      const count = await notificationApi.getUnreadCount();
+      if (count != null) setUnreadCount(count);
     }
   }, []);
 

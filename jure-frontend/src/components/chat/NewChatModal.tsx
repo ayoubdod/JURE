@@ -6,9 +6,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { apiCreateConversation } from '@/services/conversations/api';
-import UserAvatar, { getPersonImage } from '@/components/common/UserAvatar';
+import UserAvatar, { getPersonImage, PresenceDot } from '@/components/common/UserAvatar';
 import { cn } from '@/lib/utils';
 import { useAppTranslation } from '@/i18n';
+import { isCabinetMemberOnline } from '@/lib/presence';
+import { useOnlineIds } from '@/hooks/useOnlinePresence';
 import {
   CREATE_CANCEL_CLASS,
   CREATE_FOOTER_CLASS,
@@ -32,6 +34,7 @@ export interface NewChatModalProps {
 const NewChatModal = forwardRef<NewChatModalRef, NewChatModalProps>(
   ({ onCreateConversation, onClose }, ref) => {
     const { t, tf } = useAppTranslation();
+    const onlineIds = useOnlineIds();
     const copy = t.conversations.newChatModal;
     const formId = useId();
     const searchRef = useRef<HTMLInputElement>(null);
@@ -262,13 +265,16 @@ const NewChatModal = forwardRef<NewChatModalRef, NewChatModalProps>(
                                 disabled={isBusy}
                                 className={memberRowClass(selected)}
                               >
-                                <UserAvatar
-                                  image={getPersonImage(member as Record<string, unknown>)}
-                                  firstName={member.first_name}
-                                  lastName={member.last_name}
-                                  size="sm"
-                                  className="shrink-0"
-                                />
+                                <div className="relative shrink-0">
+                                  <UserAvatar
+                                    image={getPersonImage(member as Record<string, unknown>)}
+                                    firstName={member.first_name}
+                                    lastName={member.last_name}
+                                    size="sm"
+                                    className="shrink-0"
+                                  />
+                                  <PresenceDot online={isCabinetMemberOnline(member, onlineIds)} />
+                                </div>
                                 <span className="min-w-0 flex-1">
                                   <span className="block truncate text-[13.5px] font-medium text-slate-900 dark:text-zinc-100">
                                     {member.first_name} {member.last_name}
@@ -297,13 +303,16 @@ const NewChatModal = forwardRef<NewChatModalRef, NewChatModalProps>(
                                 disabled={isBusy}
                                 className="data-[state=checked]:border-[#64499D] data-[state=checked]:bg-[#64499D]"
                               />
-                              <UserAvatar
-                                image={getPersonImage(member as Record<string, unknown>)}
-                                firstName={member.first_name}
-                                lastName={member.last_name}
-                                size="sm"
-                                className="shrink-0"
-                              />
+                              <div className="relative shrink-0">
+                                <UserAvatar
+                                  image={getPersonImage(member as Record<string, unknown>)}
+                                  firstName={member.first_name}
+                                  lastName={member.last_name}
+                                  size="sm"
+                                  className="shrink-0"
+                                />
+                                <PresenceDot online={isCabinetMemberOnline(member, onlineIds)} />
+                              </div>
                               <span className="min-w-0 flex-1">
                                 <span className="block truncate text-[13.5px] font-medium text-slate-900 dark:text-zinc-100">
                                   {member.first_name} {member.last_name}

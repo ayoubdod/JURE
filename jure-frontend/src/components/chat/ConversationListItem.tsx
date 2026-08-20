@@ -9,7 +9,7 @@ import {
   PinOff,
   Trash2,
 } from 'lucide-react';
-import UserAvatar, { getPersonImage } from '@/components/common/UserAvatar';
+import UserAvatar, { getPersonImage, PresenceDot } from '@/components/common/UserAvatar';
 import GroupChatIcon from './GroupChatIcon';
 import LinkedMatterChip from './LinkedMatterChip';
 import {
@@ -197,9 +197,7 @@ export const ConversationListItem: React.FC<{
             className="h-10 w-10 shrink-0"
           />
         )}
-        {conversation.type === 'direct' && isOnline ? (
-          <span className="absolute -bottom-0.5 -end-0.5 h-2.5 w-2.5 rounded-full border-2 border-white bg-emerald-500 dark:border-slate-900" />
-        ) : null}
+        <PresenceDot online={conversation.type === 'direct' && isOnline} />
       </div>
 
       <div className="min-w-0 flex-1">

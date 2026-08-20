@@ -211,12 +211,22 @@ const ConversationsPage: React.FC = () => {
   }, [searchParams, setSearchParams]);
 
   /** Prefer this over setActiveId when the user picks a thread — avoids ?selected= fighting manual choice. */
+  const clearThreadUnread = useCallback((id: number) => {
+    setConversations((prev) => prev.map((c) => (c.id === id ? { ...c, unread_count: 0 } : c)));
+    setArchivedConversations((prev) =>
+      prev.map((c) => (c.id === id ? { ...c, unread_count: 0 } : c))
+    );
+    useChatStore.getState().markConversationInboxRead(id);
+  }, []);
+
+  /** Prefer this over setActiveId when the user picks a thread — avoids ?selected= fighting manual choice. */
   const selectConversation = useCallback(
     (id: number) => {
       setActiveId(id);
+      clearThreadUnread(id);
       clearSelectedSearchParam();
     },
-    [clearSelectedSearchParam]
+    [clearSelectedSearchParam, clearThreadUnread]
   );
 
   // Deep link: ?selected=<id> (e.g. notification). Strip param after apply so list refetches don't reset activeId.
@@ -237,17 +247,20 @@ const ConversationsPage: React.FC = () => {
     };
     if (inActive) {
       setActiveId(id);
+      clearThreadUnread(id);
       consume();
       return;
     }
     if (inArchived) {
       setActiveId(id);
+      clearThreadUnread(id);
       setShowArchived(true);
       consume();
       return;
     }
     if (!isLoading) {
       setActiveId(id);
+      clearThreadUnread(id);
       setShowArchived(true);
       loadArchived();
       consume();
@@ -259,6 +272,7 @@ const ConversationsPage: React.FC = () => {
     isLoading,
     loadArchived,
     setSearchParams,
+    clearThreadUnread,
   ]);
 
   const handleApiError = (

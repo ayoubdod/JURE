@@ -3,7 +3,7 @@ import { useNotifications } from '@/context/NotificationContext';
 import { NotificationToast } from '@/components/notifications/NotificationToast';
 
 export function NotificationToastStack() {
-  const { incomingToasts, dismissToast } = useNotifications();
+  const { incomingToasts, dismissToast, markAsRead } = useNotifications();
 
   return (
     <div
@@ -16,6 +16,7 @@ export function NotificationToastStack() {
             notification={t.notification}
             urgentManualClose={t.urgentManualClose}
             onDismiss={() => dismissToast(t.notification.id)}
+            onRead={(id) => void markAsRead(id)}
           />
         </div>
       ))}

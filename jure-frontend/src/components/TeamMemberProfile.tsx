@@ -42,7 +42,8 @@ import {
   getCountdownStyle,
 } from '@/utils/caseCardHelpers';
 import { BACKEND_BASE_URL, TaskPriority } from '@/utils/constants';
-import { getPersonImage } from '@/components/common/UserAvatar';
+import { getPersonImage, PresenceDot } from '@/components/common/UserAvatar';
+import { useIsCabinetMemberOnline } from '@/hooks/useOnlinePresence';
 import { clientDisplayName } from '@/services/case/caseType';
 import { formatDate as formatI18nDate, useAppTranslation } from '@/i18n';
 
@@ -302,6 +303,7 @@ const TeamMemberProfile: React.FC<Props> = ({ profile, onUpdateSuccess }) => {
 
   const { user } = useUserStore();
   const { toast } = useToast();
+  const isOnline = useIsCabinetMemberOnline(profile);
 
   const isOwnProfile = user?.id === profile.id;
   const fullName = `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || p.unnamed;
@@ -563,13 +565,7 @@ const TeamMemberProfile: React.FC<Props> = ({ profile, onUpdateSuccess }) => {
                 </div>
               )}
             </div>
-            <span
-              className={cn(
-                'absolute bottom-0.5 end-0.5 h-3 w-3 rounded-full ring-2 ring-white dark:ring-slate-900',
-                profile.is_active ? 'bg-emerald-500' : 'bg-slate-400'
-              )}
-              aria-hidden
-            />
+            <PresenceDot online={isOnline} className="bottom-0.5 end-0.5 h-3 w-3 ring-2 ring-white dark:ring-slate-900 border-0" />
           </div>
 
           <div className="flex min-w-0 flex-1 flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between sm:gap-4">

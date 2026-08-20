@@ -31,6 +31,7 @@ import {
 } from '@/stores/conversationCallBridge';
 import { useConversationCallPresenceStore } from '@/stores/conversationCallPresenceStore';
 import { useCallSessionStore } from '@/stores/callSessionStore';
+import { isOnlineUserId, personPresenceId } from '@/lib/presence';
 import {
   ActiveCallBanner,
 } from '@/components/conversations/call/ConversationCallBanners';
@@ -206,6 +207,21 @@ const ChatWindow = forwardRef<
       return [...base, msg];
     });
   }, [lastLocallySentMessage?.key, conversation?.id, lastLocallySentMessage]);
+
+  useEffect(() => {
+    if (!conversation) {
+      useChatStore.getState().setViewingConversationId(null);
+      return;
+    }
+    const convId = conversation.id;
+    useChatStore.getState().setViewingConversationId(convId);
+    useChatStore.getState().markConversationInboxRead(convId);
+    return () => {
+      if (useChatStore.getState().viewingConversationId === convId) {
+        useChatStore.getState().setViewingConversationId(null);
+      }
+    };
+  }, [conversation?.id]);
 
   useEffect(() => {
     if (!conversation) return;
@@ -438,11 +454,8 @@ const ChatWindow = forwardRef<
   const currentEmail = (useUserStore.getState().user?.email ?? '').toLowerCase();
   const peer = getDirectPeer(conversation, currentEmail);
   const peerPerson = peer ? getMemberPerson(peer) : conversation.other_participant;
-  const peerId = peerPerson?.id ?? (peerPerson as { pk?: number } | undefined)?.pk;
   const isPeerOnline =
-    conversation.type === 'direct' &&
-    typeof peerId === 'number' &&
-    onlineIds.includes(peerId);
+    conversation.type === 'direct' && isOnlineUserId(personPresenceId(peerPerson), onlineIds);
 
   return (
     <div className="flex min-h-0 min-w-0 flex-1 flex-col bg-slate-50/70 dark:bg-slate-950/40">

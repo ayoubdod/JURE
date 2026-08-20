@@ -169,7 +169,8 @@ export default function CaseWorkspaceView({
   const canDelete = usePermission('cases.delete');
   const { authorized: showFinance } = useFinanceAccess();
 
-  const type = getCaseType(caseItem) === 'UNKNOWN' ? 'LITIGATION' : getCaseType(caseItem);
+  const rawType = getCaseType(caseItem);
+  const type: BackendCaseType = rawType === 'UNKNOWN' ? 'LITIGATION' : rawType;
   const tabs = useMemo(
     () =>
       tabsForType(type).filter((tab) => {
@@ -699,6 +700,7 @@ export default function CaseWorkspaceView({
         }}
         onEdit={(task) => taskUpdateRef.current?.show(task)}
         portalContainer={null}
+        onOpenCase={openRelated}
         contextCaseId={caseItem.id}
       />
       <AppointmentDetailPanel
@@ -709,6 +711,7 @@ export default function CaseWorkspaceView({
         }}
         onEdit={(a: Appointment) => appointmentUpdateRef.current?.show(a)}
         portalContainer={null}
+        onOpenCase={openRelated}
         contextCaseId={caseItem.id}
       />
       <MatterCloseModal

@@ -3,7 +3,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { ChevronRight, Mail, Users, Copy, Phone, Pin, FileText, ImageIcon, Play, Shield } from 'lucide-react';
 import GroupChatIcon from '@/components/chat/GroupChatIcon';
-import UserAvatar, { getPersonImage } from '@/components/common/UserAvatar';
+import UserAvatar, { getPersonImage, PresenceDot } from '@/components/common/UserAvatar';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import useUserStore from '@/stores/userStore';
@@ -22,6 +22,8 @@ import { getMessageType } from '@/components/chat/SharedMessageCard';
 import LinkedMatterCard, { type LinkedMatterTab } from '@/components/chat/LinkedMatterCard';
 import { attachmentFileName, attachmentHref, getMemberPerson, isDocumentAttachment, isImageOrVideoAttachment } from '@/components/chat/conversationUtils';
 import { useAppTranslation, intlLocale } from '@/i18n';
+import { isOnlineUserId, personPresenceId } from '@/lib/presence';
+import { useOnlineIds } from '@/hooks/useOnlinePresence';
 
 interface ContextPanelProps {
   conversation?: API.Conversation;
@@ -159,6 +161,7 @@ const ContextPanel: React.FC<ContextPanelProps> = ({
   const { t, tf, lang, enumLabel } = useAppTranslation();
   const currentUser = useUserStore?.getState?.()?.user;
   const { toast } = useToast();
+  const onlineIds = useOnlineIds();
   const [mainTab, setMainTab] = useState<MainTab>('contact');
   const [taskSubTab, setTaskSubTab] = useState<TaskSubTab>('active');
   const [workspace, setWorkspace] = useState<API.UserWorkspace | null>(null);
@@ -373,13 +376,16 @@ const ContextPanel: React.FC<ContextPanelProps> = ({
     <>
       <div className="flex items-center gap-3">
         {conversation?.type === 'direct' && user ? (
-          <UserAvatar
-            image={peerImage}
-            firstName={user.first_name}
-            lastName={user.last_name}
-            size="md"
-            className="shrink-0"
-          />
+          <div className="relative shrink-0">
+            <UserAvatar
+              image={peerImage}
+              firstName={user.first_name}
+              lastName={user.last_name}
+              size="md"
+              className="shrink-0"
+            />
+            <PresenceDot online={isOnlineUserId(peerUserId ?? personPresenceId(user), onlineIds)} />
+          </div>
         ) : conversation?.type === 'group' ? (
           <GroupChatIcon
             iconUrl={(conversation as API.Conversation).icon_url}
@@ -485,13 +491,16 @@ const ContextPanel: React.FC<ContextPanelProps> = ({
                   const img = getPersonImage(p as Record<string, unknown>);
                   return (
                     <li key={m.id} className="flex min-w-0 items-center gap-2">
-                      <UserAvatar
-                        firstName={p.first_name}
-                        lastName={p.last_name}
-                        image={img}
-                        size="sm"
-                        className="h-8 w-8 shrink-0"
-                      />
+                      <div className="relative shrink-0">
+                        <UserAvatar
+                          firstName={p.first_name}
+                          lastName={p.last_name}
+                          image={img}
+                          size="sm"
+                          className="h-8 w-8 shrink-0"
+                        />
+                        <PresenceDot online={isOnlineUserId(personPresenceId(p), onlineIds)} />
+                      </div>
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-[12px] font-medium text-slate-800 dark:text-slate-200">
                           {`${p.first_name ?? ''} ${p.last_name ?? ''}`.trim() || p.email || t.team.drawer.memberTypeActive}

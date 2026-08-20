@@ -400,7 +400,7 @@ const CasesTable = ({ cases, hide_assigned_to = false }: CasesTableProps) => {
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                   <Popover>
                     <PopoverTrigger asChild>
-                      <button className="text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:text-slate-400">
+                      <button className="text-slate-400 hover:text-slate-600 dark:text-slate-400 dark:hover:text-slate-300">
                         <MoreHorizontal size={20} />
                       </button>
                     </PopoverTrigger>

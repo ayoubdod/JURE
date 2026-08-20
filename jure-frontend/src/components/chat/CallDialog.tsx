@@ -4,7 +4,7 @@ import { Dialog, DialogPortal } from '@/components/ui/dialog';
 import CallModal, { getCallStatusLabel, type CallModalStatus } from '@/components/conversations/call/CallModal';
 import CallControls from '@/components/conversations/call/CallControls';
 import CallTimer from '@/components/conversations/call/CallTimer';
-import UserAvatar from '@/components/common/UserAvatar';
+import UserAvatar, { PresenceDot } from '@/components/common/UserAvatar';
 import type { CallUiState } from '@/hooks/useWebRtcCall';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useAppTranslation } from '@/i18n';
@@ -142,7 +142,7 @@ const CallDialog: React.FC<CallDialogProps> = ({
           role="dialog"
           aria-label={`Call with ${remoteName}`}
           className={cn(
-            'relative fixed inset-x-3 bottom-3 z-[110] mx-auto flex max-w-lg flex-col gap-2 rounded-2xl border border-slate-200/80 bg-white/90 dark:bg-slate-950/90 px-3 py-2.5 shadow-[0_8px_30px_-8px_rgba(15,23,42,0.25)] backdrop-blur-xl',
+            'fixed inset-x-3 bottom-3 z-[110] mx-auto flex max-w-lg flex-col gap-2 rounded-2xl border border-slate-200/80 bg-white/90 px-3 py-2.5 shadow-[0_8px_30px_-8px_rgba(15,23,42,0.25)] backdrop-blur-xl',
             'dark:border-slate-700/80 dark:bg-slate-900/90 sm:inset-x-auto sm:bottom-6 sm:left-auto sm:right-6 sm:w-[380px]'
           )}
         >
@@ -166,10 +166,7 @@ const CallDialog: React.FC<CallDialogProps> = ({
                   size="md"
                   className="h-10 w-10 ring-2 ring-emerald-400/50 ring-offset-2 ring-offset-white dark:ring-offset-slate-900"
                 />
-                <span
-                  className="absolute bottom-0 end-0 h-2.5 w-2.5 rounded-full border-2 border-white bg-emerald-500 dark:border-slate-900"
-                  aria-hidden
-                />
+                {status === 'active' ? <PresenceDot online className="bottom-0 end-0" /> : null}
               </div>
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-semibold text-slate-900 dark:text-slate-50">
