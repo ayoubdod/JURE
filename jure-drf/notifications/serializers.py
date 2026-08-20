@@ -53,7 +53,12 @@ class NotificationSerializer(serializers.ModelSerializer):
         c = obj.related_case
         if not c:
             return None
-        return {"id": c.id, "reference": c.reference, "title": c.title}
+        return {
+            "id": c.id,
+            "reference": c.reference,
+            "title": c.title,
+            "case_type": getattr(c, "case_type", None),
+        }
 
     def get_related_task(self, obj):
         t = obj.related_task

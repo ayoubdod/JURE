@@ -10,6 +10,7 @@ import { Label } from './ui/label';
 import { Checkbox } from './ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import UserAvatar, { getPersonImage } from '@/components/common/UserAvatar';
+import { useAppTranslation } from '@/i18n';
 
 interface CasesTableProps {
   cases: API.Case[];
@@ -23,6 +24,7 @@ interface FilterState {
 }
 
 const CasesTable = ({ cases, hide_assigned_to = false }: CasesTableProps) => {
+  const { enumPretty } = useAppTranslation();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterModalOpen, setFilterModalOpen] = useState(false);
   const [caseDetailsOpen, setCaseDetailsOpen] = useState(false);
@@ -73,26 +75,7 @@ const CasesTable = ({ cases, hide_assigned_to = false }: CasesTableProps) => {
     }
   };
 
-  const getStatusLabel = (status: API.CaseStatus) => {
-    switch (status) {
-      case 'OPEN':
-        return 'Open';
-      case 'IN_PROGRESS':
-        return 'In Progress';
-      case 'CLOSED':
-        return 'Closed';
-      case 'CANCELLED':
-        return 'Cancelled';
-      case 'PENDING':
-        return 'Pending';
-      case 'ARCHIVED':
-        return 'Archived';
-      case 'CONVERTED_TO_CASE':
-        return 'Converted to case';
-      default:
-        return status;
-    }
-  };
+  const getStatusLabel = (status: API.CaseStatus) => enumPretty(status) || status;
 
   const handleCaseClick = (caseItem: API.Case) => {
     setSelectedCase(caseItem);
@@ -210,7 +193,7 @@ const CasesTable = ({ cases, hide_assigned_to = false }: CasesTableProps) => {
                            checked={filters.statuses.includes('OPEN')}
                            onCheckedChange={(checked) => handleStatusChange('OPEN', checked)}
                          />
-                         <Label htmlFor="open" className="text-sm">Open</Label>
+                         <Label htmlFor="open" className="text-sm">{getStatusLabel('OPEN')}</Label>
                        </div>
                        <div className="flex items-center space-x-2">
                          <Checkbox
@@ -218,7 +201,7 @@ const CasesTable = ({ cases, hide_assigned_to = false }: CasesTableProps) => {
                            checked={filters.statuses.includes('IN_PROGRESS')}
                            onCheckedChange={(checked) => handleStatusChange('IN_PROGRESS', checked)}
                          />
-                         <Label htmlFor="in-progress" className="text-sm">In Progress</Label>
+                         <Label htmlFor="in-progress" className="text-sm">{getStatusLabel('IN_PROGRESS')}</Label>
                        </div>
                        <div className="flex items-center space-x-2">
                          <Checkbox
@@ -226,7 +209,7 @@ const CasesTable = ({ cases, hide_assigned_to = false }: CasesTableProps) => {
                            checked={filters.statuses.includes('CLOSED')}
                            onCheckedChange={(checked) => handleStatusChange('CLOSED', checked)}
                          />
-                         <Label htmlFor="closed" className="text-sm">Closed</Label>
+                         <Label htmlFor="closed" className="text-sm">{getStatusLabel('CLOSED')}</Label>
                        </div>
                        <div className="flex items-center space-x-2">
                          <Checkbox
@@ -234,7 +217,7 @@ const CasesTable = ({ cases, hide_assigned_to = false }: CasesTableProps) => {
                            checked={filters.statuses.includes('CANCELLED')}
                            onCheckedChange={(checked) => handleStatusChange('CANCELLED', checked)}
                          />
-                         <Label htmlFor="cancelled" className="text-sm">Cancelled</Label>
+                         <Label htmlFor="cancelled" className="text-sm">{getStatusLabel('CANCELLED')}</Label>
                        </div>
                        <div className="flex items-center space-x-2">
                          <Checkbox
@@ -242,7 +225,7 @@ const CasesTable = ({ cases, hide_assigned_to = false }: CasesTableProps) => {
                            checked={filters.statuses.includes('PENDING')}
                            onCheckedChange={(checked) => handleStatusChange('PENDING', checked)}
                          />
-                         <Label htmlFor="pending" className="text-sm">Pending</Label>
+                         <Label htmlFor="pending" className="text-sm">{getStatusLabel('PENDING')}</Label>
                        </div>
                        <div className="flex items-center space-x-2">
                          <Checkbox
@@ -250,7 +233,7 @@ const CasesTable = ({ cases, hide_assigned_to = false }: CasesTableProps) => {
                            checked={filters.statuses.includes('ARCHIVED')}
                            onCheckedChange={(checked) => handleStatusChange('ARCHIVED', checked)}
                          />
-                         <Label htmlFor="archived" className="text-sm">Archived</Label>
+                         <Label htmlFor="archived" className="text-sm">{getStatusLabel('ARCHIVED')}</Label>
                        </div>
                        <div className="flex items-center space-x-2">
                          <Checkbox
@@ -258,7 +241,7 @@ const CasesTable = ({ cases, hide_assigned_to = false }: CasesTableProps) => {
                            checked={filters.statuses.includes('CONVERTED_TO_CASE')}
                            onCheckedChange={(checked) => handleStatusChange('CONVERTED_TO_CASE', checked)}
                          />
-                         <Label htmlFor="converted-to-case" className="text-sm">Converted to case</Label>
+                         <Label htmlFor="converted-to-case" className="text-sm">{getStatusLabel('CONVERTED_TO_CASE')}</Label>
                        </div>
                     </div>
                   </div>
@@ -270,12 +253,12 @@ const CasesTable = ({ cases, hide_assigned_to = false }: CasesTableProps) => {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="ALL">All Categories</SelectItem>
-                        <SelectItem value="CRIMINAL">Criminal</SelectItem>
-                        <SelectItem value="CIVIL">Civil</SelectItem>
-                        <SelectItem value="ECONOMIC">Economic</SelectItem>
-                        <SelectItem value="ENVIRONMENTAL">Environmental</SelectItem>
-                        <SelectItem value="SOCIAL">Social</SelectItem>
-                        <SelectItem value="OTHER">Other</SelectItem>
+                        <SelectItem value="CRIMINAL">{enumPretty('CRIMINAL')}</SelectItem>
+                        <SelectItem value="CIVIL">{enumPretty('CIVIL')}</SelectItem>
+                        <SelectItem value="ECONOMIC">{enumPretty('ECONOMIC')}</SelectItem>
+                        <SelectItem value="ENVIRONMENTAL">{enumPretty('ENVIRONMENTAL')}</SelectItem>
+                        <SelectItem value="SOCIAL">{enumPretty('SOCIAL')}</SelectItem>
+                        <SelectItem value="OTHER">{enumPretty('OTHER')}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>

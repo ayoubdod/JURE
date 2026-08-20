@@ -13,32 +13,21 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Plus, Trash2 } from 'lucide-react';
+import { useAppTranslation } from '@/i18n';
 
-const DUTY_TYPE_OPTIONS = [
-  { label: 'Corporate Filing', value: 'CORPORATE_FILING' },
-  { label: 'Property Registration', value: 'PROPERTY_REGISTRATION' },
-  { label: 'Notarial Act', value: 'NOTARIAL_ACT' },
-  { label: 'Permit', value: 'PERMIT' },
-  { label: 'Compliance', value: 'COMPLIANCE' },
-  { label: 'Inheritance', value: 'INHERITANCE' },
-  { label: 'Other', value: 'OTHER' },
-];
+const DUTY_TYPE_VALUES = [
+  'CORPORATE_FILING',
+  'PROPERTY_REGISTRATION',
+  'NOTARIAL_ACT',
+  'PERMIT',
+  'COMPLIANCE',
+  'INHERITANCE',
+  'OTHER',
+] as const;
 
-const PRIORITY_OPTIONS = [
-  { label: 'Low', value: 'LOW' },
-  { label: 'Medium', value: 'MEDIUM' },
-  { label: 'High', value: 'HIGH' },
-  { label: 'Urgent', value: 'URGENT' },
-];
+const PRIORITY_VALUES = ['LOW', 'MEDIUM', 'HIGH', 'URGENT'] as const;
 
-const STATUS_OPTIONS = [
-  { label: 'Pending', value: 'PENDING' },
-  { label: 'In Progress', value: 'IN_PROGRESS' },
-  { label: 'Submitted', value: 'SUBMITTED' },
-  { label: 'Approved', value: 'APPROVED' },
-  { label: 'Rejected', value: 'REJECTED' },
-  { label: 'Closed', value: 'CLOSED' },
-];
+const STATUS_VALUES = ['PENDING', 'IN_PROGRESS', 'SUBMITTED', 'APPROVED', 'REJECTED', 'CLOSED'] as const;
 
 export type AdministrativeConversionState = {
   duty_type: string;
@@ -69,6 +58,7 @@ type Props = {
 };
 
 export function AdministrativeConversionFields({ values, onChange, fieldErrors }: Props) {
+  const { enumPretty } = useAppTranslation();
   const setDoc = (i: number, field: 'label' | 'completed', v: string | boolean) => {
     const next = [...values.required_documents];
     next[i] = { ...next[i], [field]: v };
@@ -89,9 +79,9 @@ export function AdministrativeConversionFields({ values, onChange, fieldErrors }
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {DUTY_TYPE_OPTIONS.map((opt) => (
-                <SelectItem key={opt.value} value={opt.value}>
-                  {opt.label}
+              {DUTY_TYPE_VALUES.map((value) => (
+                <SelectItem key={value} value={value}>
+                  {enumPretty(value)}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -104,9 +94,9 @@ export function AdministrativeConversionFields({ values, onChange, fieldErrors }
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {PRIORITY_OPTIONS.map((opt) => (
-                <SelectItem key={opt.value} value={opt.value}>
-                  {opt.label}
+              {PRIORITY_VALUES.map((value) => (
+                <SelectItem key={value} value={value}>
+                  {enumPretty(value)}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -197,9 +187,9 @@ export function AdministrativeConversionFields({ values, onChange, fieldErrors }
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            {STATUS_OPTIONS.map((opt) => (
-              <SelectItem key={opt.value} value={opt.value}>
-                {opt.label}
+            {STATUS_VALUES.map((value) => (
+              <SelectItem key={value} value={value}>
+                {enumPretty(value)}
               </SelectItem>
             ))}
           </SelectContent>

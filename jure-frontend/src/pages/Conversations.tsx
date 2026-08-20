@@ -6,6 +6,7 @@ import ConversationList from '@/components/chat/ConversationList';
 import ChatWindow, { type ChatWindowHandle } from '@/components/chat/ChatWindow';
 import { LinkCaseModal } from '@/components/chat/LinkCaseModal';
 import ContextPanel from '@/components/chat/ContextPanel';
+import ConversationContextSheet from '@/components/chat/ConversationContextSheet';
 import NewChatModal, { NewChatModalRef } from '@/components/chat/NewChatModal';
 import Composer from '@/components/chat/Composer';
 import {
@@ -38,7 +39,9 @@ import useUserStore from '@/stores/userStore';
 import { useWebRtcCall } from '@/hooks/useWebRtcCall';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
-import { navigateToCaseById } from '@/lib/caseRoutes';
+import { navigateToCaseById, caseWorkspacePath } from '@/lib/caseRoutes';
+import { apiGetCase } from '@/services/case/api';
+import type { LinkedMatterTab } from '@/components/chat/LinkedMatterCard';
 import { useAppTranslation } from '@/i18n';
 import { useShortcutAction } from '@/context/ShortcutsContext';
 import {
@@ -54,6 +57,8 @@ const ConversationsPage: React.FC = () => {
   const [conversations, setConversations] = useState<API.Conversation[]>([]);
   const [activeId, setActiveId] = useState<number | undefined>(undefined);
   const [contextPanelOpen, setContextPanelOpen] = useState(true);
+  const [contextSheetOpen, setContextSheetOpen] = useState(false);
+  const [conversationFiles, setConversationFiles] = useState<API.MessageAttachment[]>([]);
   const [isTyping, setIsTyping] = useState(false);
   const newChatModalRef = useRef<NewChatModalRef>(null);
   const openNewChat = useCallback(() => newChatModalRef.current?.show(), []);
@@ -197,9 +202,11 @@ const ConversationsPage: React.FC = () => {
   }, [openNewChat]);
 
   const clearSelectedSearchParam = useCallback(() => {
-    if (!searchParams.get('selected')) return;
+    if (!searchParams.get('selected') && !searchParams.get('conversation') && !searchParams.get('c')) return;
     const next = new URLSearchParams(searchParams);
     next.delete('selected');
+    next.delete('conversation');
+    next.delete('c');
     setSearchParams(next, { replace: true });
   }, [searchParams, setSearchParams]);
 
@@ -214,7 +221,8 @@ const ConversationsPage: React.FC = () => {
 
   // Deep link: ?selected=<id> (e.g. notification). Strip param after apply so list refetches don't reset activeId.
   useEffect(() => {
-    const selected = searchParams.get('selected');
+    const selected =
+      searchParams.get('selected') || searchParams.get('conversation') || searchParams.get('c');
     if (!selected) return;
     const id = parseInt(selected, 10);
     if (isNaN(id)) return;
@@ -223,6 +231,8 @@ const ConversationsPage: React.FC = () => {
     const consume = () => {
       const next = new URLSearchParams(searchParams);
       next.delete('selected');
+      next.delete('conversation');
+      next.delete('c');
       setSearchParams(next, { replace: true });
     };
     if (inActive) {
@@ -646,7 +656,18 @@ const ConversationsPage: React.FC = () => {
 
   useEffect(() => {
     setPinnedForContext([]);
+    setConversationFiles([]);
+    setContextSheetOpen(false);
   }, [activeId]);
+
+  useEffect(() => {
+    const mql = window.matchMedia('(min-width: 1200px)');
+    const onChange = () => {
+      if (mql.matches) setContextSheetOpen(false);
+    };
+    mql.addEventListener('change', onChange);
+    return () => mql.removeEventListener('change', onChange);
+  }, []);
 
   const bumpWorkspaceCache = useCallback(() => {
     if (remoteUserForActiveDirect?.id) {
@@ -655,8 +676,16 @@ const ConversationsPage: React.FC = () => {
     setWorkspaceRefreshKey((k) => k + 1);
   }, [remoteUserForActiveDirect?.id]);
 
-  const openCaseById = useCallback((caseId: number) => {
-    void navigateToCaseById(navigate, caseId);
+  const openCaseById = useCallback((caseId: number, tab?: LinkedMatterTab) => {
+    void (async () => {
+      try {
+        const res = await apiGetCase(caseId);
+        const path = caseWorkspacePath(res.data);
+        navigate(tab ? `${path}?tab=${encodeURIComponent(tab)}` : path);
+      } catch {
+        void navigateToCaseById(navigate, caseId);
+      }
+    })();
   }, [navigate]);
 
   const handleSendShared = useCallback(
@@ -742,8 +771,7 @@ const ConversationsPage: React.FC = () => {
   );
 
   return (
-    <div className="h-full flex bg-slate-50 dark:bg-slate-950 min-h-0 text-[13px] font-sans overflow-hidden">
-      {/* Chat list — full width on mobile when no active chat */}
+    <div className="flex h-full min-h-0 overflow-hidden bg-slate-50 text-[13px] font-sans dark:bg-slate-950">
       <ConversationList
         className={cn(
           activeId != null ? 'hidden md:flex' : 'flex'
@@ -763,16 +791,17 @@ const ConversationsPage: React.FC = () => {
         onUnpin={handleUnpin}
         onDelete={(conv) => deleteChatModalRef.current?.show(conv)}
         onRename={(conv) => renameGroupModalRef.current?.show(conv)}
+        onChangeIcon={(conv) => changeGroupIconModalRef.current?.show(conv)}
         activeId={activeId}
         onSelectConversation={selectConversation}
         onNewChat={() => newChatModalRef.current?.show()}
         onSelectMember={handleSelectMember}
+        onOpenLinkedCase={openCaseById}
       />
 
-      {/* Main Chat Pane — full screen on mobile when a chat is open */}
       <div
         className={cn(
-          'flex-1 flex flex-col min-w-0 border-r border-slate-200 dark:border-slate-800',
+          'flex min-w-0 flex-1 flex-col',
           activeId == null ? 'hidden md:flex' : 'flex'
         )}
       >
@@ -804,8 +833,11 @@ const ConversationsPage: React.FC = () => {
           onOpenSharedTask={(id) => setPanelTaskId(id)}
           onOpenSharedAppointment={(id) => setPanelAppointmentId(id)}
           onPinnedMessagesChange={setPinnedForContext}
+          onConversationFilesChange={setConversationFiles}
           onOpenLinkCaseModal={() => setLinkCaseModalOpen(true)}
           onUnlinkConversationCase={handleUnlinkConversationCase}
+          onOpenLinkedCase={openCaseById}
+          onOpenContext={() => setContextSheetOpen(true)}
         />
 
         {activeId && (
@@ -813,27 +845,27 @@ const ConversationsPage: React.FC = () => {
             disabled={!activeId}
             conversationId={activeId}
             onSendShared={handleSendShared}
-            onSend={(text, attachments) => {
+            onSend={async (text, attachments) => {
               if (!activeId) return;
               const trimmed = text.trim();
               if (trimmed || (attachments && attachments.length > 0)) {
-                apiSendMessage({
-                  conversation: activeId,
-                  body: trimmed,
-                  attachments: attachments ?? [],
-                })
-                  .then((res) => {
-                    if (res.data) {
-                      setLastLocallySentMessage({ key: Date.now(), message: res.data });
-                    }
-                  })
-                  .catch(() => {
-                    toast({
-                      title: toastMsgs.messageNotSent,
-                      description: toastMsgs.messageNotSentHint,
-                      variant: 'destructive',
-                    });
+                try {
+                  const res = await apiSendMessage({
+                    conversation: activeId,
+                    body: trimmed,
+                    attachments: attachments ?? [],
                   });
+                  if (res.data) {
+                    setLastLocallySentMessage({ key: Date.now(), message: res.data });
+                  }
+                } catch {
+                  toast({
+                    title: toastMsgs.messageNotSent,
+                    description: toastMsgs.messageNotSentHint,
+                    variant: 'destructive',
+                  });
+                  throw new Error('send-failed');
+                }
               }
             }}
             onAttachFiles={(files) => {
@@ -858,49 +890,82 @@ const ConversationsPage: React.FC = () => {
             }}
             onRecordVoice={async (blob) => {
               if (!activeId) return;
-              apiSendMessage({
-                conversation: activeId,
-                body: '',
-                attachments: [
-                  new File([blob], 'voice.webm', { type: 'audio/webm' }),
-                ],
-              })
-                .then((res) => {
-                  if (res.data) {
-                    setLastLocallySentMessage({ key: Date.now(), message: res.data });
-                  }
-                })
-                .catch(() => {
-                  toast({
-                    title: toastMsgs.messageNotSent,
-                    description: toastMsgs.messageNotSentHint,
-                    variant: 'destructive',
-                  });
+              try {
+                const res = await apiSendMessage({
+                  conversation: activeId,
+                  body: '',
+                  attachments: [
+                    new File([blob], 'voice.webm', { type: 'audio/webm' }),
+                  ],
                 });
+                if (res.data) {
+                  setLastLocallySentMessage({ key: Date.now(), message: res.data });
+                }
+              } catch {
+                toast({
+                  title: toastMsgs.messageNotSent,
+                  description: toastMsgs.messageNotSentHint,
+                  variant: 'destructive',
+                });
+                throw new Error('send-failed');
+              }
             }}
           />
         )}
       </div>
 
-      {/* Context Panel — desktop only */}
-      <div className="hidden lg:contents">
-      <ContextPanel
-        conversation={activeConversation}
-        isOpen={contextPanelOpen}
-        onToggle={() => setContextPanelOpen((o) => !o)}
-        peerUserId={remoteUserForActiveDirect?.id ?? null}
-        workspaceRefreshKey={workspaceRefreshKey}
-        onOpenTask={(id) => setPanelTaskId(id)}
-        onWorkspaceTaskMutated={bumpWorkspaceCache}
-        linkedCaseSummary={activeLinkedCaseForPanel}
-        canManageGroupCase={activeConversation?.type === 'group'}
-        onOpenLinkCaseModal={() => setLinkCaseModalOpen(true)}
-        onUnlinkConversationCase={handleUnlinkConversationCase}
-        onOpenLinkedCase={openCaseById}
-        panelPinnedMessages={pinnedForContext}
-        onPanelPinnedMessageClick={(id) => chatWindowRef.current?.scrollToMessage(id)}
-      />
+      <div className="hidden h-full min-h-0 min-[1200px]:flex">
+        <ContextPanel
+          conversation={activeConversation}
+          isOpen={contextPanelOpen}
+          onToggle={() => setContextPanelOpen((o) => !o)}
+          peerUserId={remoteUserForActiveDirect?.id ?? null}
+          workspaceRefreshKey={workspaceRefreshKey}
+          onOpenTask={(id) => setPanelTaskId(id)}
+          onWorkspaceTaskMutated={bumpWorkspaceCache}
+          linkedCaseSummary={activeLinkedCaseForPanel}
+          canManageGroupCase={activeConversation?.type === 'group'}
+          onOpenLinkCaseModal={() => setLinkCaseModalOpen(true)}
+          onUnlinkConversationCase={handleUnlinkConversationCase}
+          onOpenLinkedCase={openCaseById}
+          onOpenLinkedCaseTab={openCaseById}
+          panelPinnedMessages={pinnedForContext}
+          onPanelPinnedMessageClick={(id) => chatWindowRef.current?.scrollToMessage(id)}
+          conversationFiles={conversationFiles}
+        />
       </div>
+
+      <ConversationContextSheet open={contextSheetOpen} onOpenChange={setContextSheetOpen}>
+        <ContextPanel
+          conversation={activeConversation}
+          isOpen
+          hideToggle
+          variant="overlay"
+          onToggle={() => setContextSheetOpen(false)}
+          peerUserId={remoteUserForActiveDirect?.id ?? null}
+          workspaceRefreshKey={workspaceRefreshKey}
+          onOpenTask={(id) => {
+            setContextSheetOpen(false);
+            setPanelTaskId(id);
+          }}
+          onWorkspaceTaskMutated={bumpWorkspaceCache}
+          linkedCaseSummary={activeLinkedCaseForPanel}
+          canManageGroupCase={activeConversation?.type === 'group'}
+          onOpenLinkCaseModal={() => {
+            setContextSheetOpen(false);
+            setLinkCaseModalOpen(true);
+          }}
+          onUnlinkConversationCase={handleUnlinkConversationCase}
+          onOpenLinkedCase={openCaseById}
+          onOpenLinkedCaseTab={openCaseById}
+          panelPinnedMessages={pinnedForContext}
+          onPanelPinnedMessageClick={(id) => {
+            setContextSheetOpen(false);
+            chatWindowRef.current?.scrollToMessage(id);
+          }}
+          conversationFiles={conversationFiles}
+        />
+      </ConversationContextSheet>
 
       {activeConversation?.type === 'group' && (
         <LinkCaseModal

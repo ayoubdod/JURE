@@ -4,6 +4,7 @@ import UserAvatar from '@/components/common/UserAvatar';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { requestCallNotificationPermission } from '@/utils/incomingCallNotify';
+import { useAppTranslation } from '@/i18n';
 
 const AUTO_DISMISS_MS = 45_000;
 
@@ -27,6 +28,8 @@ const IncomingCallNotification: React.FC<{
   onDecline,
 }) => {
   const isMobile = useIsMobile();
+  const { t } = useAppTranslation();
+  const call = t.conversations.call;
   const [entered, setEntered] = useState(false);
   const [progress, setProgress] = useState(0);
   const isVideo = kind === 'video';
@@ -76,11 +79,11 @@ const IncomingCallNotification: React.FC<{
           entered ? 'opacity-100' : 'opacity-0'
         )}
         role="dialog"
-        aria-label={isVideo ? 'Incoming video call' : 'Incoming call'}
+        aria-label={isVideo ? call.incomingVideo : call.incoming}
       >
         <div className="flex flex-1 flex-col items-center justify-center gap-6 px-6 text-center">
           <p className="text-sm font-medium uppercase tracking-[0.14em] text-emerald-400/90">
-            {isVideo ? 'Video call' : 'Voice call'}
+            {isVideo ? call.historyVideoCall : call.historyVoiceCall}
           </p>
           <div className="relative">
             <span className="absolute inset-0 animate-ping rounded-full bg-emerald-400/20" aria-hidden />
@@ -96,7 +99,7 @@ const IncomingCallNotification: React.FC<{
           <div className="min-w-0">
             <h2 className="truncate text-2xl font-semibold tracking-tight">{callerName}</h2>
             <p className="mt-2 text-sm text-white/65">
-              {isVideo ? 'is video calling you…' : 'is calling you…'}
+              {isVideo ? call.isVideoCallingYou : call.isCallingYou}
             </p>
           </div>
           <div className="mt-2 h-1 w-40 overflow-hidden rounded-full bg-white/10" aria-hidden>
@@ -111,24 +114,24 @@ const IncomingCallNotification: React.FC<{
           <button
             type="button"
             onClick={onDecline}
-            aria-label="Decline call"
+            aria-label={call.decline}
             className="flex flex-col items-center gap-2"
           >
             <span className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-rose-600 text-white shadow-lg shadow-rose-900/40">
               <PhoneOff className="h-7 w-7" />
             </span>
-            <span className="text-xs font-medium text-white/80">Decline</span>
+            <span className="text-xs font-medium text-white/80">{call.decline}</span>
           </button>
           <button
             type="button"
             onClick={onAccept}
-            aria-label="Accept call"
+            aria-label={call.accept}
             className="flex flex-col items-center gap-2"
           >
             <span className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500 text-white shadow-lg shadow-emerald-900/40 animate-pulse">
               <PhoneIncoming className="h-7 w-7" />
             </span>
-            <span className="text-xs font-medium text-white/80">Accept</span>
+            <span className="text-xs font-medium text-white/80">{call.accept}</span>
           </button>
         </div>
       </div>
@@ -146,13 +149,13 @@ const IncomingCallNotification: React.FC<{
         entered ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'
       )}
       role="dialog"
-      aria-label={isVideo ? 'Incoming video call' : 'Incoming call'}
+      aria-label={isVideo ? call.incomingVideo : call.incoming}
     >
       <div className="p-4">
         <div className="mb-3 flex items-center gap-2 text-slate-800 dark:text-slate-100">
           <Icon className="h-4 w-4 shrink-0 text-emerald-600" aria-hidden />
           <span className="text-sm font-semibold tracking-tight">
-            {isVideo ? 'Incoming Video Call' : 'Incoming Call'}
+            {isVideo ? call.incomingVideo : call.incoming}
           </span>
         </div>
         <div className="flex gap-3">
@@ -195,7 +198,7 @@ const IncomingCallNotification: React.FC<{
               {callerName}
             </p>
             <p className="text-xs text-slate-500 dark:text-slate-400">
-              {isVideo ? 'is video calling you…' : 'is calling you…'}
+              {isVideo ? call.isVideoCallingYou : call.isCallingYou}
             </p>
           </div>
         </div>
@@ -203,18 +206,18 @@ const IncomingCallNotification: React.FC<{
           <button
             type="button"
             onClick={onDecline}
-            aria-label="Decline call"
+            aria-label={call.decline}
             className="inline-flex h-10 items-center gap-1.5 rounded-full bg-rose-600 px-4 text-sm font-medium text-white hover:bg-rose-700"
           >
-            Decline
+            {call.decline}
           </button>
           <button
             type="button"
             onClick={onAccept}
-            aria-label="Accept call"
+            aria-label={call.accept}
             className="inline-flex h-10 items-center gap-1.5 rounded-full bg-emerald-600 px-4 text-sm font-medium text-white hover:bg-emerald-700"
           >
-            Accept
+            {call.accept}
           </button>
         </div>
       </div>

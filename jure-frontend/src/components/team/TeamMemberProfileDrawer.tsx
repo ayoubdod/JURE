@@ -373,7 +373,7 @@ const TeamMemberProfileDrawer = forwardRef<
         </header>
 
         <div
-          className="flex shrink-0 gap-1 overflow-x-hidden border-b border-slate-200 px-5 pt-2 dark:border-zinc-800 md:px-6"
+          className="flex shrink-0 gap-1 border-b border-slate-200 px-5 pt-2 dark:border-zinc-800 md:px-6"
           role="tablist"
           aria-label={fullName || t.team.unnamed}
         >

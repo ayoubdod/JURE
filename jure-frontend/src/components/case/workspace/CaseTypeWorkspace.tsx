@@ -86,13 +86,14 @@ const LITIGATION_TYPES = ['CIVIL', 'CRIMINAL', 'COMMERCIAL', 'ADMINISTRATIVE', '
 const CATEGORIES = ['CRIMINAL', 'CIVIL', 'ECONOMIC', 'ENVIRONMENTAL', 'SOCIAL', 'OTHER'] as const;
 
 function thClass() {
-  return 'text-left py-2 px-3 text-[10px] uppercase tracking-[0.08em] font-semibold text-slate-500 dark:text-slate-400 whitespace-nowrap';
+  return 'text-start py-2 px-3 text-[10px] font-semibold text-slate-500 dark:text-slate-400 whitespace-nowrap uppercase tracking-[0.08em] rtl:normal-case rtl:tracking-normal';
 }
 function tdClass() {
-  return 'px-3 py-2 align-middle text-[12px] text-slate-700 dark:text-slate-300';
+  return 'px-3 py-2 align-middle text-[12px] text-slate-700 dark:text-slate-300 text-start';
 }
 
 function EnumPill({ value }: { value: string }) {
+  const { enumPretty } = useAppTranslation();
   return (
     <span
       className={cn(
@@ -100,7 +101,7 @@ function EnumPill({ value }: { value: string }) {
         getStatusColor(value)
       )}
     >
-      {prettyEnum(value)}
+      {enumPretty(value)}
     </span>
   );
 }
@@ -141,10 +142,14 @@ function FilterSelect({
   );
 }
 
-function displayOrMissing(value: unknown, missingLabel: string): string {
+function displayOrMissing(
+  value: unknown,
+  missingLabel: string,
+  pretty: (s: string) => string = prettyEnum,
+): string {
   if (value == null || value === '' || value === 'N/A') return missingLabel;
-  const pretty = prettyEnum(value);
-  return pretty === 'Not provided' ? missingLabel : pretty;
+  const formatted = pretty(String(value));
+  return formatted === 'Not provided' ? missingLabel : formatted;
 }
 
 interface CaseTypeWorkspaceProps {
@@ -152,7 +157,7 @@ interface CaseTypeWorkspaceProps {
 }
 
 export default function CaseTypeWorkspace({ kind }: CaseTypeWorkspaceProps) {
-  const { t } = useAppTranslation();
+  const { t, enumPretty } = useAppTranslation();
   const { toast } = useToast();
   const navigate = useNavigate();
   const ws = t.cases.workspaces;
@@ -440,7 +445,7 @@ export default function CaseTypeWorkspace({ kind }: CaseTypeWorkspaceProps) {
           setPage(1);
         }}
         placeholder={ws.status}
-        options={CASE_STATUSES.map((s) => ({ value: s, label: prettyEnum(s) }))}
+        options={CASE_STATUSES.map((s) => ({ value: s, label: enumPretty(s) }))}
       />
       {memberSelect}
       {kind === 'CONSULTATION' && (
@@ -452,7 +457,7 @@ export default function CaseTypeWorkspace({ kind }: CaseTypeWorkspaceProps) {
               setPage(1);
             }}
             placeholder={ws.type}
-            options={CONSULTATION_TYPES.map((s) => ({ value: s, label: prettyEnum(s) }))}
+            options={CONSULTATION_TYPES.map((s) => ({ value: s, label: enumPretty(s) }))}
           />
           <FilterSelect
             value={legalDomain}
@@ -461,7 +466,7 @@ export default function CaseTypeWorkspace({ kind }: CaseTypeWorkspaceProps) {
               setPage(1);
             }}
             placeholder={ws.legalDomain}
-            options={LEGAL_DOMAINS.map((s) => ({ value: s, label: prettyEnum(s) }))}
+            options={LEGAL_DOMAINS.map((s) => ({ value: s, label: enumPretty(s) }))}
           />
           <FilterSelect
             value={format}
@@ -470,7 +475,7 @@ export default function CaseTypeWorkspace({ kind }: CaseTypeWorkspaceProps) {
               setPage(1);
             }}
             placeholder={ws.format}
-            options={FORMATS.map((s) => ({ value: s, label: prettyEnum(s) }))}
+            options={FORMATS.map((s) => ({ value: s, label: enumPretty(s) }))}
           />
           <FilterSelect
             value={outcome}
@@ -479,7 +484,7 @@ export default function CaseTypeWorkspace({ kind }: CaseTypeWorkspaceProps) {
               setPage(1);
             }}
             placeholder={ws.outcome}
-            options={OUTCOMES.map((s) => ({ value: s, label: prettyEnum(s) }))}
+            options={OUTCOMES.map((s) => ({ value: s, label: enumPretty(s) }))}
           />
           <FilterSelect
             value={followUpRequired}
@@ -504,7 +509,7 @@ export default function CaseTypeWorkspace({ kind }: CaseTypeWorkspaceProps) {
               setPage(1);
             }}
             placeholder={t.cases.filters.matterType}
-            options={CATEGORIES.map((s) => ({ value: s, label: prettyEnum(s) }))}
+            options={CATEGORIES.map((s) => ({ value: s, label: enumPretty(s) }))}
           />
           <FilterSelect
             value={litigationType}
@@ -513,7 +518,7 @@ export default function CaseTypeWorkspace({ kind }: CaseTypeWorkspaceProps) {
               setPage(1);
             }}
             placeholder={ws.type}
-            options={LITIGATION_TYPES.map((s) => ({ value: s, label: prettyEnum(s) }))}
+            options={LITIGATION_TYPES.map((s) => ({ value: s, label: enumPretty(s) }))}
           />
           <FilterSelect
             value={clientRole}
@@ -522,7 +527,7 @@ export default function CaseTypeWorkspace({ kind }: CaseTypeWorkspaceProps) {
               setPage(1);
             }}
             placeholder={ws.clientRole}
-            options={CLIENT_ROLES.map((s) => ({ value: s, label: prettyEnum(s) }))}
+            options={CLIENT_ROLES.map((s) => ({ value: s, label: enumPretty(s) }))}
           />
           <Input
             value={courtName}
@@ -549,7 +554,7 @@ export default function CaseTypeWorkspace({ kind }: CaseTypeWorkspaceProps) {
               setPage(1);
             }}
             placeholder={ws.priority}
-            options={PRIORITIES.map((s) => ({ value: s, label: prettyEnum(s) }))}
+            options={PRIORITIES.map((s) => ({ value: s, label: enumPretty(s) }))}
           />
         </>
       )}
@@ -562,7 +567,7 @@ export default function CaseTypeWorkspace({ kind }: CaseTypeWorkspaceProps) {
               setPage(1);
             }}
             placeholder={ws.dutyType}
-            options={DUTY_TYPES.map((s) => ({ value: s, label: prettyEnum(s) }))}
+            options={DUTY_TYPES.map((s) => ({ value: s, label: enumPretty(s) }))}
           />
           <Input
             value={institution}
@@ -580,7 +585,7 @@ export default function CaseTypeWorkspace({ kind }: CaseTypeWorkspaceProps) {
               setPage(1);
             }}
             placeholder={ws.priority}
-            options={PRIORITIES.map((s) => ({ value: s, label: prettyEnum(s) }))}
+            options={PRIORITIES.map((s) => ({ value: s, label: enumPretty(s) }))}
           />
           <Button
             type="button"
@@ -731,7 +736,7 @@ export default function CaseTypeWorkspace({ kind }: CaseTypeWorkspaceProps) {
         className={cn(
           'group border-b border-slate-100 dark:border-slate-800/60 cursor-pointer transition-[background-color,box-shadow] duration-200',
           rowIdx % 2 === 0 ? 'bg-white dark:bg-slate-950' : 'bg-slate-50/40 dark:bg-slate-900/20',
-          'hover:bg-[#F7F4FF] hover:shadow-[inset_3px_0_0_0_#64499D] dark:hover:bg-[#24183F]/50'
+          'hover:bg-[#F7F4FF] hover:shadow-[inset_3px_0_0_0_#64499D] rtl:hover:shadow-[inset_-3px_0_0_0_#64499D] dark:hover:bg-[#24183F]/50'
         )}
         onClick={() => void navigateToCase(navigate, c)}
       >
@@ -741,14 +746,14 @@ export default function CaseTypeWorkspace({ kind }: CaseTypeWorkspaceProps) {
             <td className={tdClass()}>{clientDisplayName(c.client) || miss}</td>
             <td className={cn(tdClass(), 'font-semibold text-slate-900 dark:text-white')}>{titleOf(c)}</td>
             <td className={tdClass()}>
-              {displayOrMissing(getCaseData(c, 'consultation_type'), miss)}
+              {displayOrMissing(getCaseData(c, 'consultation_type'), miss, enumPretty)}
             </td>
-            <td className={tdClass()}>{displayOrMissing(getCaseData(c, 'legal_domain'), miss)}</td>
+            <td className={tdClass()}>{displayOrMissing(getCaseData(c, 'legal_domain'), miss, enumPretty)}</td>
             <td className={tdClass()}>
               {formatShortDate(getCaseData(c, 'consultation_date') as string | undefined) || miss}
             </td>
             <td className={tdClass()}>{formatDuration(getCaseData(c, 'duration')) || miss}</td>
-            <td className={tdClass()}>{displayOrMissing(getCaseData(c, 'format'), miss)}</td>
+            <td className={tdClass()}>{displayOrMissing(getCaseData(c, 'format'), miss, enumPretty)}</td>
             <td className={tdClass()}>{assignedDisplayName(c) || miss}</td>
             <td className={tdClass()}>
               <EnumPill value={consultationOutcome(c) || c.status} />
@@ -757,7 +762,7 @@ export default function CaseTypeWorkspace({ kind }: CaseTypeWorkspaceProps) {
             <td className={tdClass()}>
               <EnumPill value={c.status} />
             </td>
-            <td className={cn(tdClass(), 'text-right')} onClick={(e) => e.stopPropagation()}>
+            <td className={cn(tdClass(), 'text-end')} onClick={(e) => e.stopPropagation()}>
               {rowActions(c)}
             </td>
           </>
@@ -767,7 +772,7 @@ export default function CaseTypeWorkspace({ kind }: CaseTypeWorkspaceProps) {
             <td className={cn(tdClass(), 'font-mono text-[11px]')}>{c.reference || miss}</td>
             <td className={cn(tdClass(), 'font-semibold text-slate-900 dark:text-white')}>{titleOf(c)}</td>
             <td className={tdClass()}>{clientDisplayName(c.client) || miss}</td>
-            <td className={tdClass()}>{displayOrMissing(getCaseData(c, 'client_role'), miss)}</td>
+            <td className={tdClass()}>{displayOrMissing(getCaseData(c, 'client_role'), miss, enumPretty)}</td>
             <td className={tdClass()}>{displayOrMissing(getCaseData(c, 'opposing_party'), miss)}</td>
             <td className={tdClass()}>{courtDisplay(c) || miss}</td>
             <td className={tdClass()}>{displayOrMissing(getCaseData(c, 'jurisdiction'), miss)}</td>
@@ -784,7 +789,7 @@ export default function CaseTypeWorkspace({ kind }: CaseTypeWorkspaceProps) {
             <td className={tdClass()}>
               <EnumPill value={c.status} />
             </td>
-            <td className={cn(tdClass(), 'text-right')} onClick={(e) => e.stopPropagation()}>
+            <td className={cn(tdClass(), 'text-end')} onClick={(e) => e.stopPropagation()}>
               {rowActions(c)}
             </td>
           </>
@@ -794,7 +799,7 @@ export default function CaseTypeWorkspace({ kind }: CaseTypeWorkspaceProps) {
             <td className={cn(tdClass(), 'font-mono text-[11px]')}>{c.reference || miss}</td>
             <td className={cn(tdClass(), 'font-semibold text-slate-900 dark:text-white')}>{titleOf(c)}</td>
             <td className={tdClass()}>{clientDisplayName(c.client) || miss}</td>
-            <td className={tdClass()}>{displayOrMissing(getCaseData(c, 'duty_type'), miss)}</td>
+            <td className={tdClass()}>{displayOrMissing(getCaseData(c, 'duty_type'), miss, enumPretty)}</td>
             <td className={tdClass()}>{displayOrMissing(getCaseData(c, 'institution'), miss)}</td>
             <td className={tdClass()}>{assignedDisplayName(c) || miss}</td>
             <td className={tdClass()}>
@@ -813,7 +818,7 @@ export default function CaseTypeWorkspace({ kind }: CaseTypeWorkspaceProps) {
             <td className={tdClass()}>
               <EnumPill value={c.status} />
             </td>
-            <td className={cn(tdClass(), 'text-right')} onClick={(e) => e.stopPropagation()}>
+            <td className={cn(tdClass(), 'text-end')} onClick={(e) => e.stopPropagation()}>
               {rowActions(c)}
             </td>
           </>

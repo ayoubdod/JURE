@@ -87,10 +87,6 @@ function rawStatusKey(c: API.Case): string {
   return c.status as string;
 }
 
-function displayStatusForHeader(c: API.Case): string {
-  return String(rawStatusKey(c) ?? '').replace(/_/g, ' ');
-}
-
 function CaseBody({ c, onOpenCaseById }: { c: API.Case; onOpenCaseById?: (id: number) => void }) {
   const t = normalizeCaseType(c);
   if (t === 'CONSULTATION') return <ConsultationSection c={c} onOpenCaseById={onOpenCaseById} />;
@@ -158,7 +154,7 @@ const CaseDetailDrawer = forwardRef<CaseDetailDrawerRef, CaseDetailDrawerProps>(
     const [drawerMobile, setDrawerMobile] = useState(false);
     const openRef = useRef(false);
     const { toast } = useToast();
-    const { t } = useAppTranslation();
+    const { t, enumPretty } = useAppTranslation();
     const navigate = useNavigate();
     const [typeSelectorOpen, setTypeSelectorOpen] = useState(false);
     const [conversionFormOpen, setConversionFormOpen] = useState(false);
@@ -365,7 +361,7 @@ const CaseDetailDrawer = forwardRef<CaseDetailDrawerRef, CaseDetailDrawerProps>(
                 <div className="min-w-0 flex-1 space-y-2">
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="inline-flex rounded-full bg-slate-200/80 dark:bg-slate-800 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.06em] text-slate-800 dark:text-slate-200">
-                      {typeLabel(fetched)}
+                      {enumPretty(fetched.caseType ?? fetched.case_type) || typeLabel(fetched)}
                     </span>
                     <span
                       className={cn(
@@ -373,11 +369,11 @@ const CaseDetailDrawer = forwardRef<CaseDetailDrawerRef, CaseDetailDrawerProps>(
                         getStatusColor(rawStatusKey(fetched))
                       )}
                     >
-                      {displayStatusForHeader(fetched)}
+                      {enumPretty(rawStatusKey(fetched))}
                     </span>
                     {showPriority && (
                       <span className="inline-flex rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-semibold uppercase text-amber-800 dark:text-amber-300 ring-1 ring-amber-500/25">
-                        {priority}
+                        {enumPretty(priority)}
                       </span>
                     )}
                   </div>

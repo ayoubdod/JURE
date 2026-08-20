@@ -4,15 +4,7 @@ import { ConvertedCaseLink, getConvertedFromCase } from '@/components/case/conve
 import { em, formatDrawerDate } from './format';
 import { Field, LongText, SectionTitle, TagList, TimelineRow } from './primitives';
 import CaseLegalDeadlinesList from '@/components/case/CaseLegalDeadlinesList';
-
-const LIT_TYPE: Record<string, string> = {
-  CIVIL: 'Civil',
-  CRIMINAL: 'Criminal',
-  COMMERCIAL: 'Commercial',
-  ADMINISTRATIVE: 'Administrative',
-  LABOR: 'Labor',
-  FAMILY: 'Family',
-};
+import { useAppTranslation } from '@/i18n';
 
 function coCounselPills(raw: unknown): string[] {
   if (raw == null) return [];
@@ -29,6 +21,7 @@ export function LitigationSection({
   c: API.Case;
   onOpenCaseById?: (id: number) => void;
 }) {
+  const { enumPretty } = useAppTranslation();
   const litigationType = getCaseData(c, 'litigation_type') as string | undefined;
   const priority = getCaseData(c, 'priority') as string | undefined;
   const courtCaseNumber = getCaseData(c, 'court_case_number') as string | undefined;
@@ -79,10 +72,10 @@ export function LitigationSection({
         <SectionTitle>Case overview</SectionTitle>
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Litigation type">
-            {litigationType ? LIT_TYPE[litigationType] ?? litigationType : '—'}
+            {litigationType ? enumPretty(litigationType) : '—'}
           </Field>
-          <Field label="Status">{em(String(c.status ?? '').replace(/_/g, ' '))}</Field>
-          <Field label="Priority">{em(priority)}</Field>
+          <Field label="Status">{em(enumPretty(c.status) || c.status)}</Field>
+          <Field label="Priority">{em(priority ? enumPretty(priority) : priority)}</Field>
           <Field label="Court case number">
             {courtCaseNumber ? <span className="font-mono text-[12px]">{courtCaseNumber}</span> : '—'}
           </Field>
@@ -97,7 +90,7 @@ export function LitigationSection({
             <span>{clientName}</span>
             {clientRole && (
               <span className="ml-2 inline-flex rounded-full bg-slate-100 dark:bg-slate-800 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-300">
-                {clientRole.replace(/_/g, ' ')}
+                {enumPretty(clientRole)}
               </span>
             )}
           </Field>

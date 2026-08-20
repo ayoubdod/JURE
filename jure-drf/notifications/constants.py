@@ -56,3 +56,12 @@ class NotificationType:
     NEW_MESSAGE = "NEW_MESSAGE"
     NEW_MESSAGE_DAILY_REMINDER = "NEW_MESSAGE_DAILY_REMINDER"
     CALL_MISSED = "CALL_MISSED"
+
+
+# Chat already has its own inbox; these must not appear in the activity panel.
+IN_APP_HIDDEN_TYPES = frozenset(
+    (
+        NotificationType.NEW_MESSAGE,
+        NotificationType.NEW_MESSAGE_DAILY_REMINDER,
+    )
+)

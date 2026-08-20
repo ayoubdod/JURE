@@ -10,6 +10,7 @@ import { TaskPriority, TaskStatus } from '@/utils/constants';
 import { cn } from '@/lib/utils';
 import UserAvatar, { getPersonImage } from '@/components/common/UserAvatar';
 import { useCabinetMemberDirectory } from '@/hooks/useCabinetMemberDirectory';
+import { useAppTranslation } from '@/i18n';
 
 export const SHEET_PANEL =
   'flex flex-col gap-0 !p-0 border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 shadow-xl [&>button]:hidden !absolute !right-0 !top-0 !h-full !w-[min(100%,420px)] !max-w-[420px] !sm:max-w-[420px]';
@@ -89,6 +90,7 @@ export function TaskDetailPanel({
   /** Optional quick-complete handler (e.g. dashboard). Hidden when task is already done. */
   onComplete?: (task: API.Task) => void | Promise<void>;
 }) {
+  const { enumPretty } = useAppTranslation();
   const lookupCabinet = useCabinetMemberDirectory();
   const [task, setTask] = useState<API.Task | null>(null);
   const [loading, setLoading] = useState(false);
@@ -152,7 +154,7 @@ export function TaskDetailPanel({
               </span>
               {(task?.priority === TaskPriority.HIGH || String(task?.priority || '').toLowerCase() === 'urgent') && (
                 <span className="inline-flex rounded-md bg-rose-500/15 px-2 py-0.5 text-[10px] font-semibold uppercase text-rose-700 dark:text-rose-400 ring-1 ring-rose-500/25">
-                  {String(task?.priority || '').toLowerCase() === 'urgent' ? 'Urgent' : 'High'}
+                  {enumPretty(task?.priority)}
                 </span>
               )}
               {task?.status && (
@@ -162,7 +164,7 @@ export function TaskDetailPanel({
                     taskStatusBadgeClass(task.status)
                   )}
                 >
-                  {task.status.replace(/_/g, ' ')}
+                  {enumPretty(task.status)}
                 </span>
               )}
             </div>
@@ -188,10 +190,10 @@ export function TaskDetailPanel({
                 </div>
                 <div className="mt-3 flex flex-wrap gap-2">
                   <span className={cn('inline-flex rounded-md px-2 py-0.5 text-xs font-medium ring-1 ring-inset', taskPriorityBadgeClass(task.priority))}>
-                    {task.priority || '—'}
+                    {enumPretty(task.priority) || '—'}
                   </span>
                   <span className={cn('inline-flex rounded-md px-2 py-0.5 text-xs font-medium ring-1 ring-inset', taskStatusBadgeClass(task.status))}>
-                    {task.status?.replace(/_/g, ' ') || '—'}
+                    {enumPretty(task.status) || '—'}
                   </span>
                 </div>
                 {task.estimated_hours && (
@@ -332,6 +334,7 @@ export function AppointmentDetailPanel({
   onOpenCase: (id: number) => void;
   contextCaseId?: number | null;
 }) {
+  const { enumPretty } = useAppTranslation();
   const lookupCabinet = useCabinetMemberDirectory();
   const [appointment, setAppointment] = useState<Appointment | null>(null);
   const [loading, setLoading] = useState(false);
@@ -393,7 +396,7 @@ export function AppointmentDetailPanel({
                     appointmentStatusBadgeClass(appointment.status)
                   )}
                 >
-                  {appointment.status}
+                  {enumPretty(appointment.status)}
                 </span>
               )}
             </div>

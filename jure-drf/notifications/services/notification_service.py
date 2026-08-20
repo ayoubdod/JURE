@@ -9,8 +9,9 @@ from channels.layers import get_channel_layer
 from django.db import transaction
 from django.utils import timezone
 
-from notifications.constants import NotificationPriority
+from notifications.constants import IN_APP_HIDDEN_TYPES, NotificationPriority
 from notifications.models import Notification
+from notifications.utils.urls import case_action_url
 
 logger = logging.getLogger(__name__)
 
@@ -32,6 +33,7 @@ def _serialize_related_case(case) -> dict[str, Any] | None:
         "id": case.id,
         "reference": case.reference,
         "title": case.title,
+        "case_type": getattr(case, "case_type", None),
     }
 
 
@@ -81,7 +83,11 @@ def push_notification_via_websocket(notification: Notification) -> None:
     if not channel_layer:
         logger.warning("No channel layer; skip push for notification %s", notification.pk)
         return
+    if notification.notification_type in IN_APP_HIDDEN_TYPES:
+        return
     payload = notification_to_ws_payload(notification)
+    if not payload.get("id"):
+        return
     try:
         async_to_sync(channel_layer.group_send)(
             f"user_{notification.recipient_id}",
@@ -218,15 +224,23 @@ def mark_as_read(notification_id: int, user_id: int) -> Notification | None:
     return n
 
 
+def in_app_queryset(qs):
+    return qs.exclude(notification_type__in=IN_APP_HIDDEN_TYPES)
+
+
 def mark_all_as_read(user_id: int) -> int:
-    return Notification.objects.filter(recipient_id=user_id, is_read=False).update(
+    return in_app_queryset(
+        Notification.objects.filter(recipient_id=user_id, is_read=False)
+    ).update(
         is_read=True,
         read_at=timezone.now(),
     )
 
 
 def get_unread_count(user_id: int) -> int:
-    return Notification.objects.filter(recipient_id=user_id, is_read=False).count()
+    return in_app_queryset(
+        Notification.objects.filter(recipient_id=user_id, is_read=False)
+    ).count()
 
 
 def notify_case_converted(source_case, new_case, target_type: str) -> None:
@@ -249,6 +263,6 @@ def notify_case_converted(source_case, new_case, target_type: str) -> None:
             priority=NotificationPriority.HIGH,
             related_case_id=new_case.id,
             related_user_id=None,
-            action_url=f"/dashboard/cases?case={new_case.reference}",
+            action_url=case_action_url(new_case),
             send_email=True,
         )

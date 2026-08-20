@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate } from 'react-router';
+import { useNavigate, useSearchParams } from 'react-router';
 import FullCalendar from '@fullcalendar/react';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
@@ -52,6 +52,7 @@ const DEFAULT_FILTERS: CalendarFiltersValue = {
 const CalendarPage: React.FC = () => {
   const { t } = useAppTranslation();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const cal = t.calendar;
 
   const [events, setEvents] = useState<CalendarEvent[]>([]);
@@ -77,6 +78,23 @@ const CalendarPage: React.FC = () => {
 
   useShortcutAction('create-task', openCreateTask);
   useShortcutAction('create-appointment', openCreateAppointment);
+
+  useEffect(() => {
+    const taskId = parseInt(searchParams.get('task') || '', 10);
+    const appointmentId = parseInt(searchParams.get('appointment') || '', 10);
+    if (!Number.isFinite(taskId) && !Number.isFinite(appointmentId)) return;
+    if (Number.isFinite(taskId)) {
+      setDetailKind('task');
+      setDetailId(taskId);
+    } else {
+      setDetailKind('appointment');
+      setDetailId(appointmentId);
+    }
+    const next = new URLSearchParams(searchParams);
+    next.delete('task');
+    next.delete('appointment');
+    setSearchParams(next, { replace: true });
+  }, [searchParams, setSearchParams]);
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {

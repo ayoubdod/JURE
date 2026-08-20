@@ -1,16 +1,11 @@
 import copy
 import logging
-import threading
-from datetime import timedelta
 
-from django.contrib.auth import get_user_model
 from django.core.cache import cache
 from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
-from django.utils import timezone
 
 from cases.models import Case
-from chat.models import ConversationMembership, Message
 from finance.models import Payment
 from notifications.constants import NotificationPriority, NotificationType
 from notifications.services.notification_service import (
@@ -19,6 +14,14 @@ from notifications.services.notification_service import (
 )
 from notifications.utils.cases import case_assigned_user_ids, co_counsel_id_set
 from notifications.utils.team import owner_admin_user_ids_for_cabinet
+from notifications.utils.urls import (
+    appointment_action_url,
+    case_action_url,
+    finance_action_url,
+    profile_action_url,
+    task_action_url,
+    team_action_url,
+)
 from tasks.models import Appointment, Task
 from users.models import PasswordSetupToken, User
 
@@ -59,7 +62,7 @@ def on_task_saved(sender, instance: Task, created, **kwargs):
                 message=f'La tâche "{instance.title}" vous a été assignée.',
                 related_task_id=instance.id,
                 related_case_id=instance.case_id,
-                action_url="/dashboard/tasks",
+                action_url=task_action_url(instance.id),
                 priority=NotificationPriority.MEDIUM,
             )
             return
@@ -76,7 +79,7 @@ def on_task_saved(sender, instance: Task, created, **kwargs):
                 message=f'La tâche "{instance.title}" vous a été assignée.',
                 related_task_id=instance.id,
                 related_case_id=instance.case_id,
-                action_url="/dashboard/tasks",
+                action_url=task_action_url(instance.id),
                 priority=NotificationPriority.MEDIUM,
             )
 
@@ -107,7 +110,7 @@ def on_task_saved(sender, instance: Task, created, **kwargs):
                     message=f'La tâche "{instance.title}" a été modifiée.',
                     related_task_id=instance.id,
                     related_case_id=instance.case_id,
-                    action_url="/dashboard/tasks",
+                    action_url=task_action_url(instance.id),
                     priority=NotificationPriority.MEDIUM,
                 )
     except Exception:
@@ -162,7 +165,7 @@ def on_case_saved(sender, instance: Case, created, **kwargs):
                 message=f'Vous avez été assigné au dossier #{instance.reference} — {instance.title}.',
                 priority=NotificationPriority.MEDIUM,
                 related_case_id=instance.id,
-                action_url=f"/dashboard/cases?case={instance.reference}",
+                action_url=case_action_url(instance),
             )
 
         recipients = case_assigned_user_ids(instance)
@@ -180,7 +183,7 @@ def on_case_saved(sender, instance: Case, created, **kwargs):
                 ),
                 priority=NotificationPriority.HIGH,
                 related_case_id=instance.id,
-                action_url=f"/dashboard/cases?case={instance.reference}",
+                action_url=case_action_url(instance),
             )
             return
 
@@ -213,7 +216,7 @@ def on_case_saved(sender, instance: Case, created, **kwargs):
             message=f'Le dossier #{instance.reference} "{instance.title}" a été modifié.',
             priority=NotificationPriority.MEDIUM,
             related_case_id=instance.id,
-            action_url=f"/dashboard/cases?case={instance.reference}",
+            action_url=case_action_url(instance),
         )
     except Exception:
         logger.exception("on_case_saved notification failed")
@@ -236,7 +239,7 @@ def on_appointment_saved(sender, instance: Appointment, created, **kwargs):
                 message=f'Le rendez-vous "{instance.title}" a été créé.',
                 related_appointment_id=instance.id,
                 related_case_id=instance.case_id,
-                action_url="/dashboard/calendar",
+                action_url=appointment_action_url(instance.id),
                 priority=NotificationPriority.MEDIUM,
             )
         else:
@@ -247,7 +250,7 @@ def on_appointment_saved(sender, instance: Appointment, created, **kwargs):
                 message=f'Le rendez-vous "{instance.title}" a été mis à jour.',
                 related_appointment_id=instance.id,
                 related_case_id=instance.case_id,
-                action_url="/dashboard/calendar",
+                action_url=appointment_action_url(instance.id),
                 priority=NotificationPriority.MEDIUM,
             )
     except Exception:
@@ -294,7 +297,7 @@ def on_user_saved(sender, instance: User, created, **kwargs):
                     ),
                     priority=NotificationPriority.MEDIUM,
                     related_user_id=instance.id,
-                    action_url="/dashboard/team",
+                    action_url=profile_action_url(instance.id),
                     send_email=True,
                 )
             return
@@ -312,7 +315,7 @@ def on_user_saved(sender, instance: User, created, **kwargs):
                 message=f"Votre rôle a été changé de {old_r} à {instance.role}.",
                 priority=NotificationPriority.URGENT,
                 related_user_id=None,
-                action_url="/dashboard/profile",
+                action_url=profile_action_url(),
             )
 
         profile_changed = any(
@@ -331,7 +334,7 @@ def on_user_saved(sender, instance: User, created, **kwargs):
                 title="Votre profil a été mis à jour",
                 message="Les informations de votre profil ont été modifiées.",
                 priority=NotificationPriority.LOW,
-                action_url="/dashboard/profile",
+                action_url=profile_action_url(),
             )
     except Exception:
         logger.exception("on_user_saved notification failed")
@@ -368,7 +371,7 @@ def on_invitation_token_saved(sender, instance: PasswordSetupToken, created, **k
                     message=f"{user.first_name} {user.last_name} a accepté son invitation.",
                     priority=NotificationPriority.MEDIUM,
                     related_user_id=user.id,
-                    action_url="/dashboard/team",
+                    action_url=team_action_url(),
                 )
     except Exception:
         logger.exception("on_invitation_token_saved notification failed")
@@ -398,59 +401,7 @@ def on_payment_created(sender, instance: Payment, created, **kwargs):
             ),
             priority=NotificationPriority.HIGH,
             related_case_id=case.id,
-            action_url="/dashboard/finance",
+            action_url=finance_action_url(),
         )
     except Exception:
         logger.exception("on_payment_created notification failed")
-
-
-# ── Chat message (delayed) ───────────────────────────────────────────────
-
-
-def _maybe_new_message_notification(message_id: int, recipient_id: int) -> None:
-    from django.db import close_old_connections
-
-    close_old_connections()
-    try:
-        msg = Message.objects.select_related("conversation").get(pk=message_id)
-    except Message.DoesNotExist:
-        return
-
-    if msg.sender_id == recipient_id:
-        return
-    if msg.read_by.filter(pk=recipient_id).exists():
-        return
-    try:
-        mem = ConversationMembership.objects.get(conversation=msg.conversation, user_id=recipient_id)
-    except ConversationMembership.DoesNotExist:
-        return
-    if mem.last_read_at and mem.last_read_at >= msg.sent_at:
-        return
-
-    create_notification(
-        recipient_id=recipient_id,
-        notification_type=NotificationType.NEW_MESSAGE,
-        title="Nouveau message",
-        message="Vous avez un nouveau message dans une conversation.",
-        priority=NotificationPriority.MEDIUM,
-        action_url="/dashboard/chat",
-        send_email=False,
-    )
-    close_old_connections()
-
-
-@receiver(post_save, sender=Message)
-def on_message_created(sender, instance: Message, created, **kwargs):
-    if not created:
-        return
-    try:
-        for participant in instance.conversation.participants.exclude(id=instance.sender_id):
-            mid = instance.id
-            pid = participant.id
-
-            def _schedule(m=mid, r=pid):
-                threading.Timer(30.0, lambda: _maybe_new_message_notification(m, r)).start()
-
-            _schedule()
-    except Exception:
-        logger.exception("on_message_created schedule failed")

@@ -24,7 +24,7 @@ import { useDebounce } from '@/hooks/use-debounce';
 import { apiGetCases } from '@/services/case/api';
 import { apiGetClients } from '@/services/client/api';
 import { apiGetTasks } from '@/services/task/api';
-import { useAppTranslation } from '@/i18n';
+import { useAppTranslation, intlLocale } from '@/i18n';
 import { useTheme } from '@/hooks/useTheme';
 import UserAvatar, { getPersonImage } from '@/components/common/UserAvatar';
 import GroupChatIcon from '@/components/chat/GroupChatIcon';
@@ -64,7 +64,7 @@ const Header = () => {
   const logoutModalRef = useRef<LogoutModalRef>(null);
   const { user } = useUserStore();
   const chatStore = useChatStore();
-  const { t } = useAppTranslation();
+  const { t, tf, lang } = useAppTranslation();
   const { themeChoice, setTheme } = useTheme();
   const { toggle: toggleMobileNav } = useMobileNav();
   const { togglePalette, showHintsOnButtons } = useShortcuts();
@@ -96,10 +96,10 @@ const Header = () => {
       date.getMonth() === now.getMonth() &&
       date.getFullYear() === now.getFullYear();
     if (isToday) {
-      return date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+      return date.toLocaleTimeString(intlLocale(lang), { hour: '2-digit', minute: '2-digit' });
     }
-    return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined }) +
-      ' ' + date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+    return date.toLocaleDateString(intlLocale(lang), { month: 'short', day: 'numeric', year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined }) +
+      ' ' + date.toLocaleTimeString(intlLocale(lang), { hour: '2-digit', minute: '2-digit' });
   };
 
   // Group messages by conversation_id; keep latest message per conversation, count unread only
@@ -629,7 +629,7 @@ const Header = () => {
                 variant="ghost"
                 size="icon"
                 className="relative hidden xs:inline-flex sm:inline-flex text-muted-foreground hover:text-foreground h-10 w-10 sm:h-8 sm:w-8 max-[379px]:hidden"
-                aria-label="Messages"
+                aria-label={t.header.messagesTitle}
               >
                 <Mail size={16} />
                 {unreadMessagesCount > 0 && (
@@ -674,7 +674,7 @@ const Header = () => {
                     (sender?.full_name as string | undefined)?.trim() ||
                     `${firstName ?? ''} ${lastName ?? ''}`.trim() ||
                     email ||
-                    'Unknown';
+                    t.conversations.unknownContact;
                   const convId =
                     (lastMessage as any).conversation_id ?? (lastMessage as any).conversationId;
                   const meta = typeof convId === 'number' ? conversationMetaById.get(convId) : undefined;
@@ -713,7 +713,7 @@ const Header = () => {
                           <span className="text-xs text-muted-foreground flex-shrink-0">
                             {formatMessageTime((lastMessage as any).created)}
                             {unreadCount > 1 && (
-                              <span className="ml-1">· {unreadCount} messages</span>
+                              <span className="ml-1">· {tf(t.header.messagesCount, { count: unreadCount })}</span>
                             )}
                           </span>
                         </div>

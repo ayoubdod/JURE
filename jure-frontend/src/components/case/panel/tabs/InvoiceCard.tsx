@@ -7,6 +7,7 @@ import { getCountdownDays, getCountdownStyle } from '@/utils/caseCardHelpers';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { invoiceExonerationNote } from '@/components/finance/tva/TVAProgressBar';
+import { useAppTranslation } from '@/i18n';
 
 type Inv = API.FinanceCaseInvoice;
 
@@ -22,11 +23,13 @@ const statusClass: Record<API.FinanceInvoiceStatus, string> = {
 type Props = {
   invoice: Inv;
   onPdf?: (inv: Inv) => void;
+  onPreviewPdf?: (inv: Inv) => void;
   onEdit?: (inv: Inv) => void;
   onDelete?: (inv: Inv) => void;
 };
 
 export const InvoiceCard: React.FC<Props> = ({ invoice, onPdf, onPreviewPdf, onEdit, onDelete }) => {
+  const { enumLabel } = useAppTranslation();
   const tvaExempt = invoice.tva_applicable === false;
   const exonerationLine = invoiceExonerationNote(invoice);
   const due = invoice.due_date;
@@ -65,7 +68,7 @@ export const InvoiceCard: React.FC<Props> = ({ invoice, onPdf, onPreviewPdf, onE
               statusClass[invoice.status]
             )}
           >
-            {invoice.status.replace(/_/g, ' ')}
+            {enumLabel('invoiceStatus', invoice.status) || invoice.status}
           </span>
         </div>
         <div className="flex gap-1">

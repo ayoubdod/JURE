@@ -32,11 +32,9 @@ def _notify_call_missed_sync(
         from notifications.constants import NotificationPriority, NotificationType
         from notifications.services.notification_service import create_notification
 
-        url = (
-            f"/dashboard/chat?conversation={conversation_id}"
-            if conversation_id
-            else "/dashboard/chat"
-        )
+        from notifications.utils.urls import conversation_action_url
+
+        url = conversation_action_url(conversation_id)
         is_video = _normalize_call_kind(kind) == "video"
         create_notification(
             recipient_id=int(user_id),

@@ -14,6 +14,7 @@ import {
   truncateText,
 } from '@/utils/caseCardHelpers';
 import { CaseCategory } from '@/utils/constants';
+import { useAppTranslation } from '@/i18n';
 
 export interface MatterWorkspaceCardProps {
   caseItem: API.Case;
@@ -55,6 +56,7 @@ const MatterWorkspaceCard = memo(function MatterWorkspaceCard({
   onOpen,
   onEdit,
 }: MatterWorkspaceCardProps) {
+  const { t, enumPretty } = useAppTranslation();
   const [expanded, setExpanded] = useState(false);
   const priority = getCaseData(caseItem, 'priority') as string | undefined;
   const dateStr = getCaseDateForFilter(caseItem);
@@ -97,7 +99,7 @@ const MatterWorkspaceCard = memo(function MatterWorkspaceCard({
               getStatusColor(caseItem.status)
             )}
           >
-            {String(caseItem.status || '').replace(/_/g, ' ')}
+            {enumPretty(caseItem.status) || '—'}
           </span>
         </div>
 
@@ -111,7 +113,13 @@ const MatterWorkspaceCard = memo(function MatterWorkspaceCard({
 
         <div className="mt-2 flex flex-wrap items-center gap-1.5">
           <span className="inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
-            {getTypeLabel(caseItem)}
+            {t.cases.typeLabels[
+              String(caseItem.caseType ?? caseItem.case_type) === 'CONSULTATION'
+                ? 'consultation'
+                : String(caseItem.caseType ?? caseItem.case_type) === 'LITIGATION'
+                  ? 'litigation'
+                  : 'admin'
+            ] || getTypeLabel(caseItem)}
           </span>
           {showPriority && (
             <span
@@ -122,7 +130,7 @@ const MatterWorkspaceCard = memo(function MatterWorkspaceCard({
                   : 'bg-slate-500/10 text-slate-600 dark:text-slate-400 ring-slate-500/20'
               )}
             >
-              {priority}
+              {enumPretty(priority)}
             </span>
           )}
           {dateStr && (

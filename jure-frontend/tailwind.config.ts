@@ -174,6 +174,14 @@ export default {
 					from: { opacity: '1', transform: 'translateX(0)' },
 					to: { opacity: '0', transform: 'translateX(120%)' }
 				},
+				'notification-toast-in-rtl': {
+					from: { opacity: '0', transform: 'translateX(-100%)' },
+					to: { opacity: '1', transform: 'translateX(0)' }
+				},
+				'notification-toast-out-rtl': {
+					from: { opacity: '1', transform: 'translateX(0)' },
+					to: { opacity: '0', transform: 'translateX(-120%)' }
+				},
 				'juria-fab-breathe': {
 					'0%, 100%': { transform: 'scale(1)' },
 					'50%': { transform: 'scale(1.05)' }
@@ -193,6 +201,8 @@ export default {
 				'notification-row-in': 'notification-row-in 220ms ease-out forwards',
 				'notification-toast-in': 'notification-toast-in 300ms ease-out forwards',
 				'notification-toast-out': 'notification-toast-out 280ms ease-in forwards',
+				'notification-toast-in-rtl': 'notification-toast-in-rtl 300ms ease-out forwards',
+				'notification-toast-out-rtl': 'notification-toast-out-rtl 280ms ease-in forwards',
 				'juria-fab-breathe': 'juria-fab-breathe 2.8s ease-in-out infinite'
 			}
 		}

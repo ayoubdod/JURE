@@ -153,9 +153,11 @@ class ChatConsumer(CallSignalingMixin, AsyncJsonWebsocketConsumer):
         )
 
     async def notification_new(self, event):
-        # Chat message rings use `payload`; app notifications use `notification`.
+        # Chat inbox rings only. Activity-center notifications use /ws/notifications/.
         body = event.get("payload", event.get("notification"))
         if body is None:
+            return
+        if isinstance(body, dict) and not body.get("is_message"):
             return
         await self.send_json(
             {

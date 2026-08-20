@@ -450,7 +450,7 @@ const LangSwitcher: React.FC<{ lang: Lang; onChange: (l: Lang) => void }> = ({
   lang,
   onChange,
 }) => (
-  <div className="inline-flex rounded-lg overflow-hidden border border-[#64499D]/20 dark:border-[#8B6FD1]/30 bg-white/50 dark:bg-slate-900/40 backdrop-blur-sm">
+  <div className="inline-flex overflow-hidden rounded-lg border border-[#64499D]/20 bg-white/50 backdrop-blur-sm dark:border-[#8B6FD1]/30 dark:bg-slate-900/40" dir="ltr">
     {(["fr", "en", "ar"] as Lang[]).map((code) => (
       <button
         key={code}

@@ -20,6 +20,13 @@ from notifications.services.notification_service import create_notification
 from notifications.utils.cases import case_assigned_user_ids
 from notifications.utils.dates import MOROCCO_TZ, parse_iso_date, today_in_morocco
 from notifications.utils.team import owner_admin_user_ids_for_cabinet
+from notifications.utils.urls import (
+    appointment_action_url,
+    case_action_url,
+    conversation_action_url,
+    finance_action_url,
+    task_action_url,
+)
 from tasks.models import Appointment, Task
 
 logger = logging.getLogger(__name__)
@@ -88,7 +95,7 @@ def _remind_tasks_3d(today, in_3) -> None:
             priority=NotificationPriority.MEDIUM,
             related_task_id=task.id,
             related_case_id=task.case_id,
-            action_url="/dashboard/tasks",
+            action_url=task_action_url(task.id),
             send_email=True,
         )
 
@@ -110,7 +117,7 @@ def _remind_tasks_overdue(today) -> None:
             priority=NotificationPriority.URGENT,
             related_task_id=task.id,
             related_case_id=task.case_id,
-            action_url="/dashboard/tasks",
+            action_url=task_action_url(task.id),
             send_email=True,
         )
 
@@ -159,7 +166,7 @@ def _remind_appointments_3d(today, in_3) -> None:
                 priority=NotificationPriority.MEDIUM,
                 related_appointment_id=appt.id,
                 related_case_id=appt.case_id,
-                action_url="/dashboard/calendar",
+                action_url=appointment_action_url(appt.id),
                 send_email=True,
             )
 
@@ -179,7 +186,7 @@ def _remind_appointments_today(today) -> None:
                 priority=NotificationPriority.HIGH,
                 related_appointment_id=appt.id,
                 related_case_id=appt.case_id,
-                action_url="/dashboard/calendar",
+                action_url=appointment_action_url(appt.id),
                 send_email=True,
             )
 
@@ -210,7 +217,7 @@ def _remind_litigation_hearings(today, in_3) -> None:
                 message=f'L\'audience pour le dossier #{case.reference} est dans 3 jours.',
                 priority=NotificationPriority.HIGH,
                 related_case_id=case.id,
-                action_url=f"/dashboard/cases?case={case.reference}",
+                action_url=case_action_url(case),
                 send_email=True,
             )
         if nh == today:
@@ -223,7 +230,7 @@ def _remind_litigation_hearings(today, in_3) -> None:
                 message=f'L\'audience pour le dossier #{case.reference} est aujourd\'hui.',
                 priority=NotificationPriority.URGENT,
                 related_case_id=case.id,
-                action_url=f"/dashboard/cases?case={case.reference}",
+                action_url=case_action_url(case),
                 send_email=True,
             )
 
@@ -259,7 +266,7 @@ def _remind_litigation_key_deadlines(today, in_3) -> None:
                     message=f"Échéance pour le dossier #{case.reference} — {case.title}.",
                     priority=pri,
                     related_case_id=case.id,
-                    action_url=f"/dashboard/cases?case={case.reference}",
+                    action_url=case_action_url(case),
                     send_email=True,
                 )
 
@@ -288,7 +295,7 @@ def _remind_administrative_due_dates(today, in_3) -> None:
                 message=f'Le dossier administratif #{case.reference} a une échéance dans 3 jours.',
                 priority=NotificationPriority.HIGH,
                 related_case_id=case.id,
-                action_url=f"/dashboard/cases?case={case.reference}",
+                action_url=case_action_url(case),
                 send_email=True,
             )
         if dd == today:
@@ -301,7 +308,7 @@ def _remind_administrative_due_dates(today, in_3) -> None:
                 message=f'Le dossier administratif #{case.reference} a une échéance aujourd\'hui.',
                 priority=NotificationPriority.URGENT,
                 related_case_id=case.id,
-                action_url=f"/dashboard/cases?case={case.reference}",
+                action_url=case_action_url(case),
                 send_email=True,
             )
 
@@ -356,7 +363,7 @@ def _remind_calculated_legal_deadlines(today: date) -> None:
                 ),
                 priority=NotificationPriority.URGENT if reminder.days_before == 0 else NotificationPriority.HIGH,
                 related_case_id=case.id,
-                action_url=f"/dashboard/cases?case={case.reference}",
+                action_url=case_action_url(case),
                 send_email=True,
             )
         reminder.notified_at = timezone.now()
@@ -379,7 +386,7 @@ def _remind_invoices_overdue(today) -> None:
                 message=f"La facture {inv.invoice_number} pour le dossier #{inv.case.reference} est en retard.",
                 priority=NotificationPriority.HIGH,
                 related_case_id=inv.case_id,
-                action_url="/dashboard/finance",
+                action_url=finance_action_url(),
                 send_email=True,
             )
 
@@ -430,6 +437,6 @@ def _remind_unread_messages(today) -> None:
             title="Messages non lus",
             message=body,
             priority=NotificationPriority.MEDIUM,
-            action_url="/dashboard/chat",
+            action_url=conversation_action_url(),
             send_email=True,
         )

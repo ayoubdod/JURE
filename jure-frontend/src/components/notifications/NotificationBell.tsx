@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { useNotifications } from '@/context/NotificationContext';
 import { NotificationDropdown } from '@/components/notifications/NotificationDropdown';
 import { cn } from '@/lib/utils';
+import { useAppTranslation } from '@/i18n';
 
 function formatBadgeCount(n: number): string {
   if (n <= 0) return '';
@@ -19,6 +20,7 @@ export function NotificationBell() {
     closeDropdown,
     animationTick,
   } = useNotifications();
+  const { t, tf } = useAppTranslation();
 
   const containerRef = useRef<HTMLDivElement>(null);
   const [panelExiting, setPanelExiting] = useState(false);
@@ -66,7 +68,7 @@ export function NotificationBell() {
         type="button"
         variant="ghost"
         size="icon"
-        aria-label={showBadge ? `Notifications, ${unreadCount} unread` : 'Notifications'}
+        aria-label={showBadge ? tf(t.notifications.unreadAria, { count: unreadCount }) : t.notifications.title}
         aria-expanded={isDropdownOpen}
         aria-haspopup="dialog"
         className={cn(
@@ -81,7 +83,7 @@ export function NotificationBell() {
         {showBadge ? (
           <span
             className={cn(
-              'absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#ef4444] px-0.5 text-[9px] font-bold leading-none text-white',
+              'absolute -end-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#ef4444] px-0.5 text-[9px] font-bold leading-none text-white',
               animationTick > 0 && 'motion-safe:animate-notification-badge-pulse'
             )}
             key={`badge-${animationTick}`}

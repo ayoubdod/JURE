@@ -32,7 +32,7 @@ export default function CaseDateDetailPanel({
   portalContainer: HTMLElement | null;
   onViewCase: (caseId: number) => void;
 }) {
-  const { t, tf, lang } = useAppTranslation();
+  const { t, tf, lang, enumPretty } = useAppTranslation();
   const cal = t.calendar;
 
   useEffect(() => {
@@ -82,7 +82,7 @@ export default function CaseDateDetailPanel({
                 </span>
               )}
               <span className="inline-flex rounded-md bg-slate-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase text-slate-700 dark:text-slate-300 ring-1 ring-slate-500/20">
-                {String(caseType).replace(/_/g, ' ')}
+                {enumPretty(caseType)}
               </span>
             </div>
             <Button
@@ -141,7 +141,7 @@ export default function CaseDateDetailPanel({
                 </p>
                 {caseStatus && (
                   <span className="mt-2 inline-flex rounded-md bg-slate-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase text-slate-700 dark:text-slate-300 ring-1 ring-slate-500/20">
-                    {String(caseStatus).replace(/_/g, ' ')}
+                    {enumPretty(caseStatus)}
                   </span>
                 )}
               </section>

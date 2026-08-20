@@ -54,6 +54,8 @@ interface MessageItemProps {
   onOpenSharedTask?: (taskId: number) => void;
   onOpenSharedAppointment?: (appointmentId: number) => void;
   onRecallCall?: (kind: 'voice' | 'video') => void;
+  isFirstInGroup?: boolean;
+  isLastInGroup?: boolean;
 }
 
 const MessageItem: React.FC<MessageItemProps> = ({
@@ -67,9 +69,11 @@ const MessageItem: React.FC<MessageItemProps> = ({
   onOpenSharedTask,
   onOpenSharedAppointment,
   onRecallCall,
+  isFirstInGroup = true,
+  isLastInGroup = true,
 }) => {
   const currentUser = useUserStore((s) => s.user);
-  const { t } = useAppTranslation();
+  const { t, tf } = useAppTranslation();
   const callCopy = t.conversations.call;
 
   // Helper: get person object from membership (backend may use user or cabinet_member)
@@ -95,10 +99,8 @@ const MessageItem: React.FC<MessageItemProps> = ({
     ? (senderUser as any).full_name?.trim() ||
       `${senderUser.first_name ?? ''} ${senderUser.last_name ?? ''}`.trim() ||
       senderUser.email?.split('@')[0] ||
-      '?'
-    : 'Unknown';
-
-  // Identify "me" by email match in memberships (works across User/CabinetMember id systems)
+      t.conversations.unknownContact
+    : t.conversations.unknownContact;
   const myMembership = currentUser?.email && conversation.memberships?.find((m) => {
     const p = getMemberPerson(m);
     const email = (p?.email || '').toLowerCase();
@@ -150,23 +152,58 @@ const MessageItem: React.FC<MessageItemProps> = ({
   if (isCallHistory && !isDeleted) {
     const { kind, outcome } = callMetaFromMessage(msg);
     const missed = outcome === 'missed' || outcome === 'declined';
+    const isGroup = conversation.type === 'group';
+    const showSenderName = !isOwn && isGroup && senderName && isFirstInGroup;
+
     return (
-      <CallHistoryMessage
-        msg={msg}
-        title={callHistoryTitle(msg, {
-          missedVoice: callCopy.missedCallTitle,
-          missedVideo: callCopy.missedVideoCallTitle,
-          voice: callCopy.historyVoiceCall,
-          video: callCopy.historyVideoCall,
-        })}
-        subtitle={missed ? callCopy.missedCallSubtitle : undefined}
-        recallLabel={callCopy.missedCallRecall}
-        onRecall={
-          missed && onRecallCall
-            ? () => onRecallCall(kind)
-            : undefined
-        }
-      />
+      <div className={cn('group flex w-full items-start gap-2', isFirstInGroup ? 'mt-2' : 'mt-0.5', isOwn && 'justify-end')}>
+        {!isOwn && (
+          isFirstInGroup ? (
+            <UserAvatar
+              image={getPersonImage(senderUser as Record<string, unknown>)}
+              firstName={senderUser?.first_name}
+              lastName={senderUser?.last_name}
+              size="xs"
+              className="h-7 w-7 shrink-0"
+            />
+          ) : (
+            <div className="h-7 w-7 shrink-0" aria-hidden />
+          )
+        )}
+        <div
+          className={cn(
+            'flex min-w-0 max-w-[70%] flex-col',
+            isOwn ? 'items-end' : 'items-start'
+          )}
+        >
+          {showSenderName && (
+            <span className="mb-0.5 px-0.5 text-[11px] font-semibold leading-none text-slate-500 dark:text-slate-400">
+              {senderName}
+            </span>
+          )}
+          <CallHistoryMessage
+            msg={msg}
+            isOwn={isOwn}
+            showInlineTime={false}
+            title={callHistoryTitle(msg, {
+              missedVoice: callCopy.missedCallTitle,
+              missedVideo: callCopy.missedVideoCallTitle,
+              voice: callCopy.historyVoiceCall,
+              video: callCopy.historyVideoCall,
+            })}
+            subtitle={missed ? callCopy.missedCallSubtitle : undefined}
+            recallLabel={callCopy.missedCallRecall}
+            onRecall={
+              missed && onRecallCall
+                ? () => onRecallCall(kind)
+                : undefined
+            }
+          />
+          {isLastInGroup ? (
+            <span className="mt-0.5 px-0.5 text-[11px] leading-none text-slate-400 dark:text-slate-500">{time}</span>
+          ) : null}
+        </div>
+      </div>
     );
   }
 
@@ -261,23 +298,29 @@ const MessageItem: React.FC<MessageItemProps> = ({
     </>
   );
 
+  const isSending = typeof msg.id === 'number' && msg.id < 0;
+  const bubbleRadius = isOwn
+    ? cn('rounded-2xl', isLastInGroup ? 'rounded-br-md' : 'rounded-br-2xl')
+    : cn('rounded-2xl', isLastInGroup ? 'rounded-bl-md' : 'rounded-bl-2xl');
+
   const bubbleContent = (
     <div
       className={cn(
-        'rounded-2xl text-[13px]',
+        'text-[13px] leading-relaxed',
         isShared
-          ? 'px-0 py-0 bg-transparent text-slate-900 dark:text-slate-100 rounded-none'
-          : 'px-2.5 py-1.5',
+          ? 'rounded-none bg-transparent px-0 py-0 text-slate-900 dark:text-slate-100'
+          : cn('px-3 py-1.5', bubbleRadius),
         !isShared &&
           (isOwn
-            ? 'bg-primary text-primary-foreground rounded-br-md'
-            : 'bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200 rounded-bl-md')
+            ? 'bg-[#64499D] text-white'
+            : 'border border-slate-200/90 bg-white text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100'),
+        isSending && 'opacity-80'
       )}
     >
       {forwardedDetail && (
         <div className="text-[11px] opacity-90 mb-1 flex items-center gap-1">
           <Forward className="h-3 w-3 shrink-0" />
-          <span>Forwarded</span>
+          <span>{t.conversations.forwarded}</span>
           {forwardedDetail.body && (
             <span className="truncate opacity-80">
               — {forwardedDetail.body.slice(0, 40)}
@@ -287,13 +330,18 @@ const MessageItem: React.FC<MessageItemProps> = ({
         </div>
       )}
       {showPlaceholder ? (
-        <p className="italic opacity-75">[Message deleted]</p>
+        <p className="italic opacity-75">{t.conversations.messageDeletedPreview}</p>
       ) : isShared ? (
         coercedShared === 'deleted' || coercedShared === null ? (
           <p className="text-[13px] italic text-slate-500 dark:text-slate-400 max-w-[320px]">
-            This{' '}
-            {messageType === 'SHARED_CASE' ? 'case' : messageType === 'SHARED_TASK' ? 'task' : 'appointment'} is no
-            longer available
+            {tf(t.conversations.sharedUnavailable, {
+              item:
+                messageType === 'SHARED_CASE'
+                  ? t.conversations.sharedCase
+                  : messageType === 'SHARED_TASK'
+                    ? t.conversations.sharedTask
+                    : t.conversations.sharedAppointment,
+            })}
           </p>
         ) : (
           <div className="flex flex-col gap-1.5 items-stretch max-w-[320px] w-full">
@@ -358,7 +406,11 @@ const MessageItem: React.FC<MessageItemProps> = ({
                 .map((attachment) => (
                   <React.Fragment key={attachment.id}>
                     {attachment.kind === MessageAttachmentKind.AUDIO && (
-                      <AudioControl audioSrc={attachment.file} isOwn={isOwn} />
+                      <AudioControl
+                        audioSrc={attachment.file}
+                        isOwn={isOwn}
+                        durationMs={attachment.duration_ms}
+                      />
                     )}
                     {attachment.kind === MessageAttachmentKind.FILE && (
                       <div className="flex items-center gap-2 p-2 rounded-[4px] bg-black/10 dark:bg-white/10 mt-1">
@@ -399,7 +451,11 @@ const MessageItem: React.FC<MessageItemProps> = ({
                     />
                   )}
                   {attachment.kind === MessageAttachmentKind.AUDIO && (
-                    <AudioControl audioSrc={attachment.file} isOwn={isOwn} />
+                    <AudioControl
+                      audioSrc={attachment.file}
+                      isOwn={isOwn}
+                      durationMs={attachment.duration_ms}
+                    />
                   )}
                   {attachment.kind === MessageAttachmentKind.FILE && (
                     <div className="flex items-center gap-2 p-2 rounded-[4px] bg-black/10 dark:bg-white/10">
@@ -430,11 +486,11 @@ const MessageItem: React.FC<MessageItemProps> = ({
   const readReceipt =
     isOwn && !isDeleted ? (
       readCount > 0 ? (
-        <CheckCheck className="h-3 w-3 text-blue-500 shrink-0" aria-label="Read" />
+        <CheckCheck className="h-3 w-3 text-blue-500 shrink-0" aria-label={t.conversations.readAria} />
       ) : deliveredCount > 0 ? (
-        <CheckCheck className="h-3 w-3 text-slate-400 dark:text-slate-500 shrink-0" aria-label="Delivered" />
+        <CheckCheck className="h-3 w-3 text-slate-400 dark:text-slate-500 shrink-0" aria-label={t.conversations.deliveredAria} />
       ) : (
-        <Check className="h-3 w-3 text-slate-400 dark:text-slate-500 shrink-0" aria-label="Sent" />
+        <Check className="h-3 w-3 text-slate-400 dark:text-slate-500 shrink-0" aria-label={t.conversations.sentAria} />
       )
     ) : null;
 
@@ -453,44 +509,46 @@ const MessageItem: React.FC<MessageItemProps> = ({
   };
 
   const isGroup = conversation.type === 'group';
-  const showSenderName = !isOwn && isGroup && senderName;
+  const showSenderName = !isOwn && isGroup && senderName && isFirstInGroup;
 
-  // Fixed layout. Received: [Avatar][Content][Spacer]. Sent: [Spacer][Content]. Spacer = flex-1 pushes content to left/right.
   return (
     <>
       {wrapper(
-        <div className="w-full flex gap-2 group items-end min-h-[32px]">
+        <div className={cn('group flex w-full items-start gap-2', isFirstInGroup ? 'mt-2.5' : 'mt-0.5', isOwn && 'justify-end')}>
           {!isOwn && (
-            <UserAvatar
-              image={getPersonImage(senderUser as Record<string, unknown>)}
-              firstName={senderUser?.first_name}
-              lastName={senderUser?.last_name}
-              size="xs"
-              className="flex-shrink-0"
-            />
+            isFirstInGroup ? (
+              <UserAvatar
+                image={getPersonImage(senderUser as Record<string, unknown>)}
+                firstName={senderUser?.first_name}
+                lastName={senderUser?.last_name}
+                size="xs"
+                className="h-7 w-7 shrink-0"
+              />
+            ) : (
+              <div className="h-7 w-7 shrink-0" aria-hidden />
+            )
           )}
-          {isOwn && <div className="flex-1 min-w-0" aria-hidden />}
           <div
             className={cn(
-              'max-w-[75%] min-w-0 flex flex-col flex-shrink-0',
+              'flex min-w-0 max-w-[70%] flex-col',
               isOwn ? 'items-end' : 'items-start'
             )}
           >
             {showSenderName && (
-              <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400 mb-0.5 px-0.5">
+              <span className="mb-0.5 px-0.5 text-[11px] font-semibold leading-none text-slate-500 dark:text-slate-400">
                 {senderName}
               </span>
             )}
-            <div className="flex items-start gap-1">
+            <div className="relative min-w-0 max-w-full">
               {hasMenu && (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <button
                       className={cn(
-                        'shrink-0 p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 mt-0.5 transition-opacity',
-                        isOwn ? 'opacity-70 hover:opacity-100' : 'opacity-0 group-hover:opacity-100'
+                        'absolute top-0 z-10 rounded-md p-1 text-slate-400 opacity-0 transition-opacity hover:bg-slate-200 hover:text-slate-600 group-hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#64499D]/30 dark:hover:bg-slate-700',
+                        isOwn ? '-start-7' : '-end-7'
                       )}
-                      aria-label="Message options"
+                      aria-label={t.conversations.optionsAria}
                     >
                       <MoreHorizontal className="h-3.5 w-3.5" />
                     </button>
@@ -500,24 +558,25 @@ const MessageItem: React.FC<MessageItemProps> = ({
                   </DropdownMenuContent>
                 </DropdownMenu>
               )}
-              <div className="flex flex-col">
-                <div className="flex items-center gap-1">
-                  {isPinned && (
-                    <Pin className="h-3 w-3 shrink-0 text-slate-500 dark:text-slate-400" />
-                  )}
-                  {bubbleContent}
-                </div>
-                <div className="flex items-center gap-1 mt-0.5 min-h-[14px]">
-                  <span className="text-[11px] text-slate-500 dark:text-slate-500">{time}</span>
-                  {editedAt && (
-                    <span className="text-[11px] italic text-slate-500 dark:text-slate-500">(edited)</span>
-                  )}
-                  {readReceipt}
-                </div>
+              <div className="flex min-w-0 items-start gap-1">
+                {isPinned && (
+                  <Pin className="mt-1.5 h-3 w-3 shrink-0 text-[#64499D]" />
+                )}
+                {bubbleContent}
               </div>
             </div>
+            {isLastInGroup ? (
+              <div className="mt-0.5 flex min-h-[14px] items-center gap-1 px-0.5">
+                <span className="text-[11px] leading-none text-slate-400 dark:text-slate-500">
+                  {isSending ? t.conversations.sending : time}
+                </span>
+                {editedAt && !isSending ? (
+                  <span className="text-[11px] italic leading-none text-slate-400">{t.conversations.edited}</span>
+                ) : null}
+                {readReceipt}
+              </div>
+            ) : null}
           </div>
-          {!isOwn && <div className="flex-1 min-w-0" aria-hidden />}
         </div>
       )}
 

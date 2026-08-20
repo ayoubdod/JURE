@@ -8,6 +8,7 @@ from django.db.models import Q
 from finance.models.firm_settings import FirmFinanceSettings
 from notifications.constants import NotificationPriority, NotificationType
 from notifications.services.notification_service import create_bulk_notifications
+from notifications.utils.urls import finance_action_url
 from users.models import User
 
 logger = logging.getLogger(__name__)
@@ -52,7 +53,7 @@ def dispatch_tva_threshold_notification(ca_data: dict, cabinet) -> None:
             title=title,
             message=message,
             priority=NotificationPriority.URGENT,
-            action_url="/dashboard/finance",
+            action_url=finance_action_url(),
             send_email=True,
         )
     except Exception:

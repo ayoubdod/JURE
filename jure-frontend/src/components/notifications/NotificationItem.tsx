@@ -1,11 +1,12 @@
 import React, { useRef, useState } from 'react';
 import { useNavigate } from 'react-router';
-import { navigateToCaseById } from '@/lib/caseRoutes';
 import { Archive, Check, ExternalLink, Pin, PinOff, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { AppNotification } from '@/types/notification';
+import { notificationHasTarget, openNotification } from '@/utils/notificationNav';
+import { translateNotification } from '@/utils/notificationI18n';
+import { formatRelativeTime, useAppTranslation } from '@/i18n';
 import {
-  formatTimeAgo,
   getNotificationIcon,
   getPriorityBorderClass,
   itemOpacityClass,
@@ -23,16 +24,12 @@ export interface NotificationItemProps {
   onPin?: (id: number | string) => void;
 }
 
-function matterLabel(n: AppNotification): string | null {
-  if (n.related_case?.reference) return `Matter #${n.related_case.reference}`;
+function matterLabel(n: AppNotification, matterRef: string, interpolate: (tpl: string, vars: Record<string, string>) => string): string | null {
+  if (n.related_case?.reference) {
+    return interpolate(matterRef, { ref: `\u2068${n.related_case.reference}\u2069` });
+  }
   if (n.related_case?.title) return n.related_case.title;
   return n.context_label?.trim() || null;
-}
-
-function priorityLabel(priority?: string): string | null {
-  const p = String(priority || '').toUpperCase();
-  if (p === 'URGENT' || p === 'HIGH') return p.charAt(0) + p.slice(1).toLowerCase();
-  return null;
 }
 
 export function NotificationItem({
@@ -46,20 +43,20 @@ export function NotificationItem({
   onPin,
 }: NotificationItemProps) {
   const navigate = useNavigate();
+  const { t, tf, lang, dir } = useAppTranslation();
+  const copy = translateNotification(n, t.notifications.items);
   const unread = !n.is_read;
-  const matter = matterLabel(n);
-  const priority = priorityLabel(n.priority);
+  const matter = matterLabel(n, t.notifications.matterRef, tf);
+  const p = String(n.priority || '').toUpperCase();
+  const priority =
+    p === 'URGENT' ? t.notifications.priorityUrgent : p === 'HIGH' ? t.notifications.priorityHigh : null;
   const touchX = useRef<number | null>(null);
   const [swipe, setSwipe] = useState(0);
 
   const open = () => {
-    if (n.related_case?.id) {
+    if (notificationHasTarget(n)) {
       onNavigate?.();
-      void navigateToCaseById(navigate, n.related_case.id);
-    } else if (n.action_url) {
-      onNavigate?.();
-      if (n.action_url.startsWith('http')) window.location.href = n.action_url;
-      else navigate(n.action_url);
+      void openNotification(navigate, n);
     }
     if (unread && onRead) void onRead(n.id);
   };
@@ -84,7 +81,8 @@ export function NotificationItem({
   };
   const onTouchMove = (e: React.TouchEvent) => {
     if (touchX.current == null) return;
-    const dx = (e.touches[0]?.clientX ?? touchX.current) - touchX.current;
+    const physical = (e.touches[0]?.clientX ?? touchX.current) - touchX.current;
+    const dx = dir === 'rtl' ? -physical : physical;
     setSwipe(Math.max(-96, Math.min(96, dx)));
   };
   const onTouchEnd = () => {
@@ -97,13 +95,13 @@ export function NotificationItem({
   return (
     <div className="relative overflow-hidden border-b border-slate-100 last:border-b-0 dark:border-slate-800">
       <div
-        className="pointer-events-none absolute inset-y-0 left-0 flex w-24 items-center justify-center bg-emerald-500/15 text-emerald-700 dark:text-emerald-400"
+        className="pointer-events-none absolute inset-y-0 start-0 flex w-24 items-center justify-center bg-emerald-500/15 text-emerald-700 dark:text-emerald-400"
         aria-hidden
       >
         <Check className="h-4 w-4" />
       </div>
       <div
-        className="pointer-events-none absolute inset-y-0 right-0 flex w-24 items-center justify-center bg-rose-500/15 text-rose-700 dark:text-rose-400"
+        className="pointer-events-none absolute inset-y-0 end-0 flex w-24 items-center justify-center bg-rose-500/15 text-rose-700 dark:text-rose-400"
         aria-hidden
       >
         <Archive className="h-4 w-4" />
@@ -112,7 +110,7 @@ export function NotificationItem({
       <div
         role="button"
         tabIndex={0}
-        aria-label={`${n.title}${unread ? ', unread' : ''}`}
+        aria-label={`${copy.title}${unread ? `, ${t.notifications.unreadSuffix}` : ''}`}
         onKeyDown={(e) => {
           if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
@@ -123,9 +121,9 @@ export function NotificationItem({
         onTouchStart={onTouchStart}
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
-        style={{ transform: swipe ? `translateX(${swipe}px)` : undefined }}
+        style={{ transform: swipe ? `translateX(${dir === 'rtl' ? -swipe : swipe}px)` : undefined }}
         className={cn(
-          'group relative z-[1] flex gap-3 bg-white px-3 py-3 text-left transition-colors duration-150 dark:bg-slate-950',
+          'group relative z-[1] flex gap-3 bg-white px-3 py-3 text-start transition-colors duration-150 dark:bg-slate-950',
           unread ? 'bg-[#f8fafc] dark:bg-slate-900/60' : '',
           'hover:bg-slate-50 dark:hover:bg-slate-900/50',
           getPriorityBorderClass(n.priority),
@@ -150,13 +148,15 @@ export function NotificationItem({
             </div>
             <div className="min-w-0 flex-1">
               <div className="flex items-start justify-between gap-2">
-                <h4 className={cn('text-[13px] font-semibold leading-snug', titleColorClass(n.priority))}>
-                  {n.title}
+                <h4 className={cn('min-w-0 flex-1 break-words text-[13px] font-semibold leading-snug', titleColorClass(n.priority))}>
+                  {copy.title}
                 </h4>
-                <span className="shrink-0 text-[11px] tabular-nums text-slate-500 dark:text-slate-400">{formatTimeAgo(n.created_at)}</span>
+                <span className="shrink-0 text-[11px] tabular-nums text-slate-500 dark:text-slate-400" dir="ltr">
+                  {formatRelativeTime(n.created_at, lang)}
+                </span>
               </div>
               <p className={cn('mt-0.5 text-xs leading-relaxed text-slate-600 dark:text-slate-400', variant === 'dropdown' && 'line-clamp-2')}>
-                {n.message}
+                {copy.message}
               </p>
               <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
                 {matter ? (
@@ -167,8 +167,8 @@ export function NotificationItem({
                 {priority ? (
                   <span
                     className={cn(
-                      'rounded-md px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide',
-                      priority === 'Urgent' ? 'bg-rose-500/15 text-rose-700 dark:text-rose-400' : 'bg-amber-500/15 text-amber-700 dark:text-amber-400'
+                      'rounded-md px-1.5 py-0.5 text-[10px] font-semibold ltr:uppercase ltr:tracking-wide',
+                      priority === t.notifications.priorityUrgent ? 'bg-rose-500/15 text-rose-700 dark:text-rose-400' : 'bg-amber-500/15 text-amber-700 dark:text-amber-400'
                     )}
                   >
                     {priority}
@@ -176,7 +176,7 @@ export function NotificationItem({
                 ) : null}
                 {pinned ? (
                   <span className="inline-flex items-center gap-0.5 text-[10px] font-medium text-indigo-600">
-                    <Pin className="h-3 w-3" /> Pinned
+                    <Pin className="h-3 w-3" /> {t.notifications.pinned}
                   </span>
                 ) : null}
               </div>
@@ -187,7 +187,7 @@ export function NotificationItem({
                   variant === 'dropdown' && 'opacity-100 sm:opacity-0 sm:transition-opacity sm:group-hover:opacity-100 sm:group-focus-within:opacity-100'
                 )}
               >
-                {n.action_url ? (
+                {notificationHasTarget(n) ? (
                   <button
                     type="button"
                     className="inline-flex h-7 items-center gap-1 rounded-md px-2 text-[11px] font-medium text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
@@ -196,12 +196,12 @@ export function NotificationItem({
                       open();
                     }}
                   >
-                    <ExternalLink className="h-3 w-3" /> Open
+                    <ExternalLink className="h-3 w-3" /> {t.notifications.open}
                   </button>
                 ) : null}
                 {unread ? (
                   <button type="button" className="inline-flex h-7 items-center gap-1 rounded-md px-2 text-[11px] font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400" onClick={markRead}>
-                    <Check className="h-3 w-3" /> Mark read
+                    <Check className="h-3 w-3" /> {t.notifications.markRead}
                   </button>
                 ) : null}
                 {onPin ? (
@@ -214,16 +214,16 @@ export function NotificationItem({
                     }}
                   >
                     {pinned ? <PinOff className="h-3 w-3" /> : <Pin className="h-3 w-3" />}
-                    {pinned ? 'Unpin' : 'Pin'}
+                    {pinned ? t.notifications.unpin : t.notifications.pin}
                   </button>
                 ) : null}
                 {onDelete ? (
                   <button type="button" className="inline-flex h-7 items-center gap-1 rounded-md px-2 text-[11px] font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400" onClick={archive}>
-                    <Archive className="h-3 w-3" /> Archive
+                    <Archive className="h-3 w-3" /> {t.notifications.archive}
                   </button>
                 ) : (
                   <button type="button" className="inline-flex h-7 items-center gap-1 rounded-md px-2 text-[11px] font-medium text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400" onClick={dismiss}>
-                    <X className="h-3 w-3" /> Dismiss
+                    <X className="h-3 w-3" /> {t.notifications.dismiss}
                   </button>
                 )}
               </div>

@@ -31,10 +31,18 @@ class NotificationConsumer(AsyncJsonWebsocketConsumer):
             await self.channel_layer.group_discard(self.group_name, self.channel_name)
 
     async def notification_new(self, event):
+        notification = event.get("notification") or event.get("payload") or {}
+        if not isinstance(notification, dict) or not notification.get("id"):
+            return
+        if notification.get("is_message"):
+            return
+        ntype = str(notification.get("type") or notification.get("notification_type") or "")
+        if ntype in ("NEW_MESSAGE", "NEW_MESSAGE_DAILY_REMINDER"):
+            return
         await self.send_json(
             {
                 "type": "notification.new",
-                "notification": event.get("notification", {}),
+                "notification": notification,
             }
         )
 

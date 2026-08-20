@@ -1,178 +1,222 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Play, Pause, Volume2 } from 'lucide-react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { Pause, Play } from 'lucide-react';
 import getBlobDuration from 'get-blob-duration';
-import { devError, devLog } from '@/utils/devLog';
+import { cn } from '@/lib/utils';
+import { useAppTranslation } from '@/i18n';
+import { devError } from '@/utils/devLog';
 
 interface AudioControlProps {
   audioSrc: string;
   isOwn?: boolean;
+  durationMs?: number | null;
   className?: string;
 }
 
-const AudioControl: React.FC<AudioControlProps> = ({ audioSrc, isOwn = false, className = '' }) => {
+const BAR_COUNT = 32;
+
+function barsFromKey(key: string): number[] {
+  let h = 2166136261;
+  for (let i = 0; i < key.length; i++) {
+    h ^= key.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  const out: number[] = [];
+  for (let i = 0; i < BAR_COUNT; i++) {
+    h = Math.imul(h ^ (h >>> 13), 1274126177);
+    const n = ((h >>> 0) % 1000) / 1000;
+    const envelope = 0.35 + 0.65 * Math.sin((i / BAR_COUNT) * Math.PI);
+    out.push(0.18 + n * 0.82 * envelope);
+  }
+  return out;
+}
+
+function formatTime(time: number) {
+  if (!Number.isFinite(time) || time < 0) return '0:00';
+  const minutes = Math.floor(time / 60);
+  const seconds = Math.floor(time % 60);
+  return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+}
+
+const AudioControl: React.FC<AudioControlProps> = ({
+  audioSrc,
+  isOwn = false,
+  durationMs,
+  className = '',
+}) => {
+  const { t } = useAppTranslation();
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
+  const [duration, setDuration] = useState(durationMs && durationMs > 0 ? durationMs / 1000 : 0);
+  const [isLoading, setIsLoading] = useState(!(durationMs && durationMs > 0));
   const audioRef = useRef<HTMLAudioElement>(null);
+  const bars = useMemo(() => barsFromKey(audioSrc), [audioSrc]);
 
-  // Load duration using the get-blob-duration library
   useEffect(() => {
-    const loadDuration = async () => {
-      if (!audioSrc) return;
-      
-      setIsLoading(true);
-      
-      try {
-        // Fetch the audio file
-        const response = await fetch(audioSrc);
-        if (!response.ok) {
-          throw new Error(`Failed to fetch audio: ${response.statusText}`);
-        }
-        
-        const blob = await response.blob();
-        const duration = await getBlobDuration(blob);
-        
-        if (duration && !isNaN(duration) && isFinite(duration)) {
-          setDuration(duration);
-          setIsLoading(false);
-          devLog('Audio duration loaded:', duration);
-        } else {
-          throw new Error('Invalid duration received');
-        }
-      } catch (error) {
-        devError('Error loading audio duration:', error);
+    const fromMeta = durationMs && durationMs > 0 ? durationMs / 1000 : 0;
+    setDuration(fromMeta);
+    setCurrentTime(0);
+    setIsPlaying(false);
+    setIsLoading(!fromMeta);
+  }, [audioSrc, durationMs]);
+
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio || !audioSrc) return;
+
+    const applyDuration = (value: number) => {
+      if (Number.isFinite(value) && value > 0) {
+        setDuration(value);
         setIsLoading(false);
-        
-        // Fallback: try to get duration from the audio element after a delay
-        setTimeout(() => {
-          const audio = audioRef.current;
-          if (audio && audio.duration && !isNaN(audio.duration) && isFinite(audio.duration)) {
-            setDuration(audio.duration);
-            devLog('Fallback duration loaded:', audio.duration);
-          }
-        }, 2000);
       }
     };
 
-    loadDuration();
-  }, [audioSrc]);
-
-  // Handle audio playback events
-  useEffect(() => {
-    const audio = audioRef.current;
-    if (!audio) return;
-
-    const handleTimeUpdate = () => {
-      setCurrentTime(audio.currentTime);
-    };
-
+    const handleLoaded = () => applyDuration(audio.duration);
+    const handleTimeUpdate = () => setCurrentTime(audio.currentTime);
     const handleEnded = () => {
       setIsPlaying(false);
       setCurrentTime(0);
     };
-
-    const handleError = (e: Event) => {
-      devError('Audio playback error:', e);
+    const handleError = () => {
+      setIsLoading(false);
+      setIsPlaying(false);
     };
 
+    audio.addEventListener('loadedmetadata', handleLoaded);
+    audio.addEventListener('durationchange', handleLoaded);
     audio.addEventListener('timeupdate', handleTimeUpdate);
     audio.addEventListener('ended', handleEnded);
     audio.addEventListener('error', handleError);
 
+    if (audio.readyState >= 1) handleLoaded();
+
+    let cancelled = false;
+    if (!fromKnownDuration(durationMs) && (!Number.isFinite(audio.duration) || audio.duration === Infinity)) {
+      void (async () => {
+        try {
+          const response = await fetch(audioSrc);
+          if (!response.ok) return;
+          const blob = await response.blob();
+          const blobDuration = await getBlobDuration(blob);
+          if (!cancelled && Number.isFinite(blobDuration) && blobDuration > 0) {
+            applyDuration(blobDuration);
+          }
+        } catch (error) {
+          devError('Error loading audio duration:', error);
+          if (!cancelled) setIsLoading(false);
+        }
+      })();
+    }
+
     return () => {
+      cancelled = true;
+      audio.removeEventListener('loadedmetadata', handleLoaded);
+      audio.removeEventListener('durationchange', handleLoaded);
       audio.removeEventListener('timeupdate', handleTimeUpdate);
       audio.removeEventListener('ended', handleEnded);
       audio.removeEventListener('error', handleError);
     };
-  }, [audioSrc]);
-
-  // Reset state when audio source changes
-  useEffect(() => {
-    setDuration(0);
-    setCurrentTime(0);
-    setIsPlaying(false);
-    setIsLoading(true);
-  }, [audioSrc]);
+  }, [audioSrc, durationMs]);
 
   const togglePlayPause = () => {
     const audio = audioRef.current;
     if (!audio || isLoading) return;
-
     if (isPlaying) {
       audio.pause();
       setIsPlaying(false);
-    } else {
-      audio.play().catch((e) => devError('Audio play failed:', e));
-      setIsPlaying(true);
+      return;
     }
+    audio.play().then(() => setIsPlaying(true)).catch((e) => devError('Audio play failed:', e));
   };
 
-  const formatTime = (time: number) => {
-    if (isNaN(time)) return '0:00';
-    const minutes = Math.floor(time / 60);
-    const seconds = Math.floor(time % 60);
-    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  const seekTo = (ratio: number) => {
+    const audio = audioRef.current;
+    if (!audio || duration <= 0) return;
+    const next = Math.min(1, Math.max(0, ratio)) * duration;
+    audio.currentTime = next;
+    setCurrentTime(next);
   };
 
-  const progressPercentage = duration > 0 ? (currentTime / duration) * 100 : 0;
+  const progress = duration > 0 ? Math.min(1, currentTime / duration) : 0;
+  const remaining = duration > 0 ? Math.max(0, duration - currentTime) : 0;
 
   return (
-    <div className={`flex items-center gap-3 p-3 rounded-lg border max-w-xs ${className}`}
-         style={{
-           backgroundColor: isOwn ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.5)',
-         }}>
-      {/* Hidden audio element */}
+    <div
+      className={cn(
+        'flex w-[min(100%,15.5rem)] items-center gap-2.5 py-0.5',
+        className
+      )}
+      role="group"
+      aria-label={t.conversations.voiceNoteAria}
+    >
       <audio ref={audioRef} src={audioSrc} preload="metadata" />
-      
-      {/* Play/Pause Button */}
+
       <button
+        type="button"
         onClick={togglePlayPause}
         disabled={isLoading}
-        className={`p-2 rounded-full transition-colors ${
-          isOwn 
-            ? 'bg-white/20 hover:bg-white/30 text-black' 
-            : 'bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:bg-slate-600 text-slate-700 dark:text-slate-300'
-        } ${isLoading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+        aria-label={isPlaying ? t.conversations.pauseAria : t.conversations.playAria}
+        className={cn(
+          'flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70',
+          isOwn
+            ? 'bg-white text-[#64499D] hover:bg-white/90'
+            : 'bg-[#64499D] text-white hover:bg-[#553d86]',
+          isLoading && 'cursor-not-allowed opacity-60'
+        )}
       >
         {isLoading ? (
-          <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+          <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent" />
         ) : isPlaying ? (
-          <Pause className="w-4 h-4" />
+          <Pause className="h-3.5 w-3.5" fill="currentColor" />
         ) : (
-          <Play className="w-4 h-4" />
+          <Play className="ms-0.5 h-3.5 w-3.5" fill="currentColor" />
         )}
       </button>
 
-      {/* Audio Waveform/Progress Bar */}
-      <div className="flex-1 flex items-center gap-2">
-        <Volume2 className={`w-4 h-4 ${isOwn ? 'text-black/70' : 'text-slate-500 dark:text-slate-400'}`} />
-        
-        {/* Progress bar */}
-        <div className="flex-1 relative">
-          <div 
-            className={`h-1 rounded-full ${
-              isOwn ? 'bg-white/30' : 'bg-slate-300 dark:bg-slate-600'
-            }`}
-          >
-            <div
-              className={`h-full rounded-full transition-all duration-100 ${
-                isOwn ? 'bg-white dark:bg-slate-950' : 'bg-blue-500'
-              }`}
-              style={{ width: `${progressPercentage}%` }}
+      <button
+        type="button"
+        className="flex h-8 min-w-0 flex-1 items-center gap-[2px] rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#64499D]/30"
+        aria-label={t.conversations.seekAria}
+        onClick={(e) => {
+          const rect = e.currentTarget.getBoundingClientRect();
+          seekTo((e.clientX - rect.left) / rect.width);
+        }}
+      >
+        {bars.map((peak, i) => {
+          const filled = i / bars.length <= progress;
+          return (
+            <span
+              key={i}
+              className={cn(
+                'w-[3px] rounded-full transition-colors duration-75',
+                filled
+                  ? isOwn
+                    ? 'bg-white'
+                    : 'bg-[#64499D]'
+                  : isOwn
+                    ? 'bg-white/30'
+                    : 'bg-slate-300 dark:bg-slate-600',
+                isPlaying && filled && 'animate-pulse'
+              )}
+              style={{ height: `${Math.round(6 + peak * 18)}px` }}
             />
-          </div>
-        </div>
-      </div>
+          );
+        })}
+      </button>
 
-      {/* Time Display */}
-      <div className={`text-xs font-mono min-w-0 ${
-        isOwn ? 'text-black/80' : 'text-slate-600 dark:text-slate-400'
-      }`}>
-        {formatTime(currentTime)} / {formatTime(duration)}
-      </div>
+      <span
+        className={cn(
+          'min-w-[2.25rem] text-right font-mono text-[11px] tabular-nums',
+          isOwn ? 'text-white/85' : 'text-slate-500 dark:text-slate-400'
+        )}
+      >
+        {isPlaying || currentTime > 0 ? formatTime(remaining) : formatTime(duration)}
+      </span>
     </div>
   );
 };
+
+function fromKnownDuration(durationMs?: number | null): boolean {
+  return !!(durationMs && durationMs > 0);
+}
 
 export default AudioControl;

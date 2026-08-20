@@ -5,16 +5,7 @@ import { ConvertedCaseLink, getConvertedFromCase } from '@/components/case/conve
 import { em, formatDrawerDate } from './format';
 import { Field, LongText, SectionTitle } from './primitives';
 import { cn } from '@/lib/utils';
-
-const DUTY_LABELS: Record<string, string> = {
-  CORPORATE_FILING: 'Corporate filing',
-  PROPERTY_REGISTRATION: 'Property registration',
-  NOTARIAL_ACT: 'Notarial act',
-  PERMIT: 'Permit',
-  COMPLIANCE: 'Compliance',
-  INHERITANCE: 'Inheritance',
-  OTHER: 'Other',
-};
+import { useAppTranslation } from '@/i18n';
 
 function DueCountdown({ dateIso }: { dateIso: string | undefined }) {
   if (!dateIso) return <span className="text-[13px]">—</span>;
@@ -49,6 +40,7 @@ export function AdministrativeSection({
   c: API.Case;
   onOpenCaseById?: (id: number) => void;
 }) {
+  const { enumPretty } = useAppTranslation();
   const dutyType = getCaseData(c, 'duty_type') as string | undefined;
   const priority = getCaseData(c, 'priority') as string | undefined;
   const institution =
@@ -87,11 +79,14 @@ export function AdministrativeSection({
       <section>
         <SectionTitle>Task overview</SectionTitle>
         <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Duty type">{dutyType ? DUTY_LABELS[dutyType] ?? dutyType : '—'}</Field>
+          <Field label="Duty type">{dutyType ? enumPretty(dutyType) : '—'}</Field>
           <Field label="Status">
-            {em(String((getCaseData(c, 'status') as string) ?? c.status ?? '').replace(/_/g, ' '))}
+            {em(
+              enumPretty(String((getCaseData(c, 'status') as string) ?? c.status ?? '')) ||
+                ((getCaseData(c, 'status') as string) ?? c.status)
+            )}
           </Field>
-          <Field label="Priority">{em(priority)}</Field>
+          <Field label="Priority">{em(priority ? enumPretty(priority) : priority)}</Field>
           <Field label="Institution / authority">{em(institution)}</Field>
           <Field label="Institution reference number">
             {instRef ? <span className="font-mono text-[12px]">{instRef}</span> : '—'}

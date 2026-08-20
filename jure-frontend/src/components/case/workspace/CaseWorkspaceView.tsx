@@ -140,10 +140,13 @@ function tabsForType(type: BackendCaseType): WorkspaceTab[] {
   return ADMINISTRATIVE_TABS;
 }
 
-function typeWord(type: BackendCaseType): string {
-  if (type === 'CONSULTATION') return 'CONSULTATION';
-  if (type === 'LITIGATION') return 'LITIGATION';
-  return 'ADMINISTRATIVE';
+function typeWord(
+  type: BackendCaseType | 'UNKNOWN',
+  labels: { consultation: string; litigation: string; admin: string },
+): string {
+  if (type === 'CONSULTATION') return labels.consultation;
+  if (type === 'LITIGATION') return labels.litigation;
+  return labels.admin;
 }
 
 function personName(user?: API.User | null): string {
@@ -157,7 +160,7 @@ export default function CaseWorkspaceView({
   caseItem: API.Case;
   onCaseChange: (next: API.Case) => void;
 }) {
-  const { t, tf } = useAppTranslation();
+  const { t, tf, enumPretty } = useAppTranslation();
   const pw = t.cases.pageWorkspace;
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -312,7 +315,7 @@ export default function CaseWorkspaceView({
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
                 <span className="inline-flex rounded-full bg-[#F7F4FF] px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.08em] text-[#64499D] ring-1 ring-[#64499D]/15">
-                  {typeWord(type)}
+                  {typeWord(type, t.cases.typeLabels)}
                 </span>
                 <span
                   className={cn(
@@ -320,7 +323,7 @@ export default function CaseWorkspaceView({
                     getStatusColor(headerStatus)
                   )}
                 >
-                  {headerStatus.replace(/_/g, ' ')}
+                  {enumPretty(headerStatus) || headerStatus}
                 </span>
               </div>
               <h1 className="mt-2 text-2xl font-semibold tracking-tight text-slate-900 dark:text-white">
@@ -356,7 +359,7 @@ export default function CaseWorkspaceView({
                     <div>
                       <dt className="text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-400">{pw.role}</dt>
                       <dd className="mt-0.5 text-[13.5px] font-medium text-slate-800 dark:text-zinc-200">
-                        {clientRole?.replace(/_/g, ' ') || '—'}
+                        {clientRole ? enumPretty(clientRole) : '—'}
                       </dd>
                     </div>
                     <div>
@@ -382,7 +385,7 @@ export default function CaseWorkspaceView({
                         {pw.priority}
                       </dt>
                       <dd className="mt-0.5 text-[13.5px] font-medium text-slate-800 dark:text-zinc-200">
-                        {priority?.replace(/_/g, ' ') || '—'}
+                        {priority ? enumPretty(priority) : '—'}
                       </dd>
                     </div>
                   </>
@@ -517,7 +520,7 @@ export default function CaseWorkspaceView({
                   {personName(caseItem.client)}
                   {clientRole ? (
                     <span className="ml-2 inline-flex rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold uppercase dark:bg-slate-800">
-                      {clientRole.replace(/_/g, ' ')}
+                      {enumPretty(clientRole)}
                     </span>
                   ) : null}
                 </Field>

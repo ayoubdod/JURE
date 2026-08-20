@@ -15,6 +15,7 @@ import { cn } from '@/lib/utils';
 import { getCountdownDays, getCountdownStyle } from '@/utils/caseCardHelpers';
 import { TaskPriority, TaskStatus } from '@/utils/constants';
 import type { Appointment } from '@/services/appointment/api';
+import { useAppTranslation } from '@/i18n';
 
 function formatDayMonthYear(iso: string): string {
   const d = new Date(iso);
@@ -60,13 +61,6 @@ function showPriorityPill(p?: string): boolean {
   return u === 'high' || u === 'urgent' || p === TaskPriority.HIGH;
 }
 
-function priorityLabel(p?: string): string {
-  const u = String(p || '').toLowerCase();
-  if (u === 'urgent') return 'URGENT';
-  if (u === 'high' || p === TaskPriority.HIGH) return 'HIGH';
-  return String(p || '');
-}
-
 export interface RelatedTasksAppointmentsSectionProps {
   caseItem: API.Case;
   onAddTask: () => void;
@@ -88,6 +82,7 @@ export function RelatedTasksAppointmentsSection({
   showAppointments = true,
   bare = false,
 }: RelatedTasksAppointmentsSectionProps) {
+  const { enumPretty } = useAppTranslation();
   const rel = caseItem._related;
   const tasks = showTasks ? (rel?.tasks ?? []) : [];
   const appointments = showAppointments ? ((rel?.appointments ?? []) as Appointment[]) : [];
@@ -168,7 +163,7 @@ export function RelatedTasksAppointmentsSection({
                       <div className="flex flex-wrap items-start gap-1.5 mb-1.5">
                         {showPriorityPill(t.priority) && (
                           <span className="inline-flex rounded-full bg-rose-500/15 px-2 py-0.5 text-[10px] font-bold uppercase text-rose-800 dark:text-rose-300 ring-1 ring-rose-500/25">
-                            {priorityLabel(t.priority)}
+                            {enumPretty(t.priority)}
                           </span>
                         )}
                         {t.status && (
@@ -178,7 +173,7 @@ export function RelatedTasksAppointmentsSection({
                               taskStatusPill(t.status)
                             )}
                           >
-                            {t.status.replace(/_/g, ' ')}
+                            {enumPretty(t.status)}
                           </span>
                         )}
                       </div>
@@ -275,7 +270,7 @@ export function RelatedTasksAppointmentsSection({
                             appointmentStatusPill(a.status)
                           )}
                         >
-                          {a.status}
+                          {enumPretty(a.status)}
                         </span>
                       )}
                       <p className="text-[13px] font-semibold text-slate-900 dark:text-white pr-8">{a.title}</p>
