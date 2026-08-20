@@ -1009,6 +1009,13 @@ export interface AppMessages {
     description: string;
     returnHome: string;
   };
+  routeError: {
+    title: string;
+    description: string;
+    staleTitle: string;
+    staleDescription: string;
+    reload: string;
+  };
   logoutModal: {
     title: string;
     description: string;

@@ -1,4 +1,5 @@
 import json
+import logging
 from rest_framework import serializers
 from django.http import QueryDict
 
@@ -6,10 +7,24 @@ from commons.models import Tag
 from core.utils import is_valid_slug
 from .models import Document
 
+logger = logging.getLogger(__name__)
+
+
+class SafeFileURLField(serializers.FileField):
+    """File URL that never raises if the blob is missing from disk/S3."""
+
+    def to_representation(self, value):
+        try:
+            return super().to_representation(value)
+        except (OSError, ValueError, AttributeError):
+            name = getattr(value, "name", None)
+            return name or None
+
 
 class DocumentSerializer(serializers.ModelSerializer):
 
     size = serializers.SerializerMethodField()
+    file = SafeFileURLField(required=False, allow_null=True, allow_empty_file=True)
     # Don't define tags here - we'll add it manually in __init__ to prevent DRF auto-generation
     
     description = serializers.CharField(required=False, allow_blank=True, allow_null=True)
@@ -231,14 +246,22 @@ class DocumentSerializer(serializers.ModelSerializer):
         return instance
     
     def get_size(self, obj):
-        """Get file size, return 0 if file doesn't exist."""
-        if obj.file and hasattr(obj.file, 'size'):
-            return obj.file.size
-        return 0
+        """Get file size, return 0 if the blob is missing (common on ephemeral Railway disks)."""
+        f = getattr(obj, "file", None)
+        if not f or not getattr(f, "name", ""):
+            return 0
+        try:
+            return int(f.size or 0)
+        except (OSError, ValueError, AttributeError, TypeError):
+            return 0
     
     def get_tags(self, obj):
         """Get tags as a list of slugs."""
-        return [tag.slug for tag in obj.tags.all()]
+        try:
+            return [tag.slug for tag in obj.tags.all() if getattr(tag, "slug", None)]
+        except Exception:
+            logger.exception("Failed to load tags for library document id=%s", getattr(obj, "pk", None))
+            return []
     
     def to_representation(self, instance) -> dict:
         """Convert model instance to dictionary representation."""
@@ -246,19 +269,33 @@ class DocumentSerializer(serializers.ModelSerializer):
         # (it might be ListField with write_only=True from __init__)
         if 'tags' in self.fields and not isinstance(self.fields['tags'], serializers.SerializerMethodField):
             self.fields['tags'] = serializers.SerializerMethodField()
-        
-        data = super().to_representation(instance)
-        
+
+        try:
+            data = super().to_representation(instance)
+        except Exception:
+            logger.exception("Failed to serialize library document id=%s", getattr(instance, "pk", None))
+            created = getattr(instance, "created", None)
+            modified = getattr(instance, "modified", None)
+            return {
+                "id": getattr(instance, "pk", None),
+                "title": getattr(instance, "title", "") or "",
+                "category": getattr(instance, "category", "") or "",
+                "description": getattr(instance, "description", "") or "",
+                "file": None,
+                "size": 0,
+                "tags": [],
+                "created": created.isoformat() if created else None,
+                "modified": modified.isoformat() if modified else None,
+            }
+
         # Ensure file URL is absolute
-        if 'file' in data and data['file']:
-            request = self.context.get('request') if hasattr(self, 'context') and self.context else None
-            if request and data['file']:
-                # If file URL is relative, make it absolute
-                file_url = data['file']
-                if file_url.startswith('/'):
-                    data['file'] = request.build_absolute_uri(file_url)
-                elif not file_url.startswith('http://') and not file_url.startswith('https://'):
-                    # If it's a relative path without leading slash, add it
-                    data['file'] = request.build_absolute_uri('/' + file_url.lstrip('/'))
-        
+        file_url = data.get("file")
+        if file_url and isinstance(file_url, str):
+            request = self.context.get("request") if hasattr(self, "context") and self.context else None
+            if request:
+                if file_url.startswith("/"):
+                    data["file"] = request.build_absolute_uri(file_url)
+                elif not file_url.startswith("http://") and not file_url.startswith("https://"):
+                    data["file"] = request.build_absolute_uri("/" + file_url.lstrip("/"))
+
         return data

@@ -1091,6 +1091,13 @@ export const fr: AppMessages = {
     description: 'Oups ! Page introuvable',
     returnHome: "Retour à l'accueil",
   },
+  routeError: {
+    title: 'Une erreur est survenue',
+    description: "Cette page n'a pas pu se charger. Réessayez, ou revenez à l'accueil.",
+    staleTitle: 'Mise à jour de JURE',
+    staleDescription: "Une nouvelle version est disponible. Rechargement…",
+    reload: 'Recharger la page',
+  },
   logoutModal: {
     title: 'Déconnexion',
     description: 'Voulez-vous vraiment vous déconnecter de JURE ?',
