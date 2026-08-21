@@ -147,6 +147,11 @@ def get_unfold_settings(*, frontend_url: str = "/") -> dict:
                             "link": reverse_lazy("admin:library_document_changelist"),
                         },
                         {
+                            "title": _("Upload multiple"),
+                            "icon": "upload_file",
+                            "link": reverse_lazy("admin:library_document_bulk_upload"),
+                        },
+                        {
                             "title": _("Notifications"),
                             "icon": "notifications",
                             "link": reverse_lazy(
