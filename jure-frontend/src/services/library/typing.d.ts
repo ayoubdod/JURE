@@ -8,6 +8,7 @@ declare namespace API {
         description: string | null;
         file: string; // File URL or path
         size: number; // File size in bytes
+        is_shared?: boolean;
         created: string; // ISO date string
         modified: string; // ISO date string
     }
