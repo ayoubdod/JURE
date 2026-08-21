@@ -19,7 +19,7 @@ class Document(TimeStampedModel):
 
     title = models.CharField(max_length=255)
     category = models.CharField(max_length=255, choices=DocumentCategory.choices)
-    tags = models.ManyToManyField(Tag, related_name='documents')
+    tags = models.ManyToManyField(Tag, related_name='documents', blank=True)
     description = models.TextField(blank=True, null=True)
     file = models.FileField(upload_to='documents/')
 

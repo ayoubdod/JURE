@@ -3,6 +3,7 @@ import os
 from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
+from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient, APITestCase
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -184,3 +185,91 @@ class SharedLibraryApiTests(APITestCase):
         ids = {item["id"] for item in listed.data}
         self.assertNotIn(copied.data["id"], ids)
         self.assertIn(self.shared.pk, ids)
+
+
+class DocumentAdminFormTests(TestCase):
+    def _form(self, **data):
+        from library.admin import DocumentAdminForm
+
+        payload = {
+            "title": "Shared template",
+            "category": Document.DocumentCategory.TEMPLATES,
+            "is_shared": True,
+            "tags_input": "",
+            **data,
+        }
+        return DocumentAdminForm(data=payload, files={"file": _pdf("admin.pdf")})
+
+    def test_tags_input_creates_missing_tags(self):
+        form = self._form(tags_input="Contrat, Modèle, formation")
+        self.assertTrue(form.is_valid(), form.errors)
+        self.assertEqual(form.cleaned_data["tags_input"], ["contrat", "modele", "formation"])
+
+    def test_tags_are_optional(self):
+        form = self._form(tags_input="")
+        self.assertTrue(form.is_valid(), form.errors)
+        self.assertEqual(form.cleaned_data["tags_input"], [])
+
+
+class DocumentBulkUploadTests(TestCase):
+    def setUp(self):
+        self.admin = User.objects.create_superuser(
+            email="bulk-admin@test.com",
+            password="adminpass123",
+            first_name="Bulk",
+            last_name="Admin",
+            phone="+33641000099",
+            country="FR",
+        )
+        self.client = APIClient()
+        self.client.force_login(self.admin)
+
+    def test_title_from_filename(self):
+        from library.admin import title_from_filename
+
+        self.assertEqual(title_from_filename("NDA_Microsoft.pdf"), "NDA Microsoft")
+        self.assertEqual(title_from_filename("contrat-type.docx"), "contrat type")
+
+    def test_create_many_shared_documents(self):
+        from library.admin import create_documents_from_uploads
+
+        created = create_documents_from_uploads(
+            files=[_pdf("Modele_NDA.pdf"), _pdf("contrat-travail.pdf")],
+            category=Document.DocumentCategory.TEMPLATES,
+            is_shared=True,
+            description="JURE pack",
+            tag_slugs=["modele"],
+            created_by=self.admin,
+        )
+        self.assertEqual(len(created), 2)
+        titles = {doc.title for doc in created}
+        self.assertEqual(titles, {"Modele NDA", "contrat travail"})
+        for doc in created:
+            self.assertTrue(doc.is_shared)
+            self.assertIsNone(doc.cabinet_id)
+            self.assertEqual(list(doc.tags.values_list("slug", flat=True)), ["modele"])
+
+    def test_bulk_upload_page_loads(self):
+        url = reverse("admin:library_document_bulk_upload")
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Upload multiple")
+
+    def test_bulk_upload_post_creates_documents(self):
+        url = reverse("admin:library_document_bulk_upload")
+        response = self.client.post(
+            url,
+            {
+                "category": Document.DocumentCategory.TEMPLATES,
+                "is_shared": "on",
+                "tags_input": "modele, contrat",
+                "files": [_pdf("one.pdf"), _pdf("two.pdf")],
+            },
+            follow=True,
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            Document.objects.filter(is_shared=True, title__in=["one", "two"]).count(),
+            2,
+        )
+

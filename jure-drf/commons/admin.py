@@ -2,7 +2,7 @@ from django.contrib import admin
 from modeltranslation.admin import TabbedTranslationAdmin
 from unfold.admin import ModelAdmin
 
-from .models import Activity, Contact
+from .models import Activity, Contact, Tag
 
 
 @admin.register(Contact)
@@ -11,6 +11,13 @@ class ContactAdmin(ModelAdmin):
     list_filter = ("source", "created")
     search_fields = ("name", "email", "company", "subject", "message")
     readonly_fields = ("created", "modified")
+
+
+@admin.register(Tag)
+class TagAdmin(ModelAdmin):
+    list_display = ["slug", "created", "modified"]
+    search_fields = ["slug"]
+    readonly_fields = ["created", "modified"]
 
 
 @admin.register(Activity)
