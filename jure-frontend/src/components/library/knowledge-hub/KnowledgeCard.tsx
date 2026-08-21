@@ -131,7 +131,7 @@ const KnowledgeCard = memo(function KnowledgeCard({
         </span>
         {shared ? (
           <span className="rounded-md border border-[#64499D]/25 bg-[#64499D]/10 px-1.5 py-0.5 text-[10px] font-semibold text-[#64499D] dark:text-[#CFC2FF]">
-            {t.library.jureSharedBadge}
+            {t.library.publicLibraryBadge}
           </span>
         ) : null}
         {insight.aiIndexed ? (

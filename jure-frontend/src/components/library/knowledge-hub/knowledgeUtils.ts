@@ -236,6 +236,12 @@ export function matchesCollection(
   collection: CollectionId,
   favorites: number[]
 ): boolean {
+  if (collection === 'public') {
+    return Boolean(doc.is_shared);
+  }
+  if (doc.is_shared) {
+    return false;
+  }
   if (collection === 'all') return true;
   if (collection === 'favorites') return favorites.includes(doc.id);
   if (collection === 'recent') {
@@ -248,9 +254,6 @@ export function matchesCollection(
       (doc.tags?.some((t) => /ai|generated|juria/i.test(t)) ||
         /ai|generated|summary/i.test(`${doc.title} ${doc.description || ''}`))
     );
-  }
-  if (collection === 'shared') {
-    return Boolean(doc.is_shared);
   }
   return doc.category === collection;
 }
@@ -326,7 +329,7 @@ export type CollectionDef = {
 
 export const COLLECTIONS: CollectionDef[] = [
   { id: 'all', label: 'Collections', group: 'core' },
-  { id: 'shared', label: 'JURE Shared', group: 'core' },
+  { id: 'public', label: 'Public library', group: 'core' },
   { id: 'contracts', label: 'Contracts', group: 'core' },
   { id: 'law', label: 'Corporate', group: 'core' },
   { id: 'evidence', label: 'Litigation', group: 'core' },

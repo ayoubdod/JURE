@@ -133,8 +133,8 @@ class DocumentBulkUploadForm(forms.Form):
     is_shared = forms.BooleanField(
         required=False,
         initial=True,
-        label=_("Shared with all cabinets"),
-        help_text=_("If checked, every cabinet sees these files in Library → JURE Shared."),
+        label=_("Add to public library"),
+        help_text=_("If checked, every cabinet sees these files in Library → Public library, not in their own collections."),
     )
     tags_input = forms.CharField(
         required=False,
@@ -175,7 +175,8 @@ class DocumentAdmin(ModelAdmin):
                 "is_shared",
             ),
             "description": (
-                "To share with every cabinet, tick “Shared with all cabinets”. "
+                "To publish for every cabinet, tick “Add to public library”. "
+                "Those files appear only in Public library, not in a cabinet’s own collections. "
                 "Tags are optional — type them here, they are created if missing. "
                 "To upload several files at once, use “Upload multiple”."
             ),
@@ -184,8 +185,8 @@ class DocumentAdmin(ModelAdmin):
             "fields": ("cabinet", "created_by", "created", "modified"),
             "classes": ("collapse",),
             "description": (
-                "Leave cabinet empty for shared documents. "
-                "Cabinet is cleared automatically when the document is shared."
+                "Leave cabinet empty for public library documents. "
+                "Cabinet is cleared automatically when a document is in the public library."
             ),
         }),
     )

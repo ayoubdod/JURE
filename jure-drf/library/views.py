@@ -57,7 +57,7 @@ class DocumentViewSet(viewsets.ModelViewSet):
     def _deny_shared_mutation(self, instance: Document) -> None:
         if instance.is_shared:
             raise PermissionDenied(
-                "JURE shared documents cannot be edited or deleted from a cabinet."
+                "Public library documents cannot be edited or deleted from a cabinet."
             )
     
     def list(self, request, *args, **kwargs):
@@ -106,7 +106,7 @@ class DocumentViewSet(viewsets.ModelViewSet):
         source = self.get_object()
         if not source.is_shared:
             return Response(
-                {"detail": "Only JURE shared documents can be added to your library."},
+                {"detail": "Only public library documents can be added to your library."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 

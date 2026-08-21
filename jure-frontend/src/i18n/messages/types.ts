@@ -843,8 +843,8 @@ export interface AppMessages {
     };
     resultsCount: string;
     collections: string;
-    jureShared: string;
-    jureSharedBadge: string;
+    publicLibrary: string;
+    publicLibraryBadge: string;
     addToMyLibrary: string;
     openCollections: string;
     openCopilot: string;

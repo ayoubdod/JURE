@@ -238,7 +238,7 @@ const DocumentDetailDrawer = forwardRef<
           </SheetTitle>
           {shared ? (
             <p className="text-[11px] text-[#64499D] dark:text-[#CFC2FF]">
-              {t.library.jureShared}
+              {t.library.publicLibrary}
             </p>
           ) : null}
         </SheetHeader>
