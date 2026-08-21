@@ -163,8 +163,9 @@ const Library = () => {
   const metrics = useMemo(
     () =>
       computeSmartMetrics(
-        enriched,
-        COLLECTIONS.filter((c) => c.group === 'core' && c.id !== 'all').length
+        enriched.filter((d) => !d.is_shared),
+        COLLECTIONS.filter((c) => c.group === 'core' && c.id !== 'all' && c.id !== 'public')
+          .length
       ),
     [enriched]
   );

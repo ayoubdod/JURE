@@ -12,7 +12,7 @@ export type CollectionId =
   | 'recent'
   | 'favorites'
   | 'ai_generated'
-  | 'shared';
+  | 'public';
 
 export type RiskLevel = 'low' | 'medium' | 'high';
 

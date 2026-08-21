@@ -9,7 +9,7 @@ import {
   ShieldCheck,
   Building2,
   Sparkles,
-  Share2,
+  Globe,
   Star,
   Clock,
 } from 'lucide-react';
@@ -30,7 +30,7 @@ const ICONS: Record<CollectionId, React.ElementType> = {
   recent: Clock,
   favorites: Star,
   ai_generated: Sparkles,
-  shared: Share2,
+  public: Globe,
 };
 
 type Props = {
@@ -59,7 +59,7 @@ const CollectionsSidebar: React.FC<Props> = ({
     const Icon = ICONS[item.id];
     const isSelected = selected === item.id;
     const count = counts[item.id] ?? 0;
-    const label = item.id === 'shared' ? t.library.jureShared : item.label;
+    const label = item.id === 'public' ? t.library.publicLibrary : item.label;
     return (
       <button
         key={item.id}

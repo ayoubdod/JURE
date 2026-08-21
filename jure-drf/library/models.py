@@ -26,10 +26,10 @@ class Document(TimeStampedModel):
     cabinet = models.ForeignKey(Cabinet, on_delete=models.CASCADE, related_name='documents', null=True, blank=True)
     created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='documents', null=True, blank=True)
     is_shared = models.BooleanField(
-        _('shared with all cabinets'),
+        _('public library'),
         default=False,
         db_index=True,
-        help_text=_('If enabled, this document is visible to every cabinet. Upload these from Django admin.'),
+        help_text=_('If enabled, this document appears only in Public library for every cabinet. Upload from Django admin.'),
     )
 
     def __str__(self):

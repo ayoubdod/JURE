@@ -136,7 +136,7 @@ const KnowledgeTableView = memo(function KnowledgeTableView({
                         {item.title}
                       </p>
                       <p className="truncate text-[10px] text-slate-400">
-                        {shared ? `${t.library.jureShared} · ` : ''}
+                        {shared ? `${t.library.publicLibrary} · ` : ''}
                         {item.insight.aiIndexed ? 'AI Indexed' : 'Pending'} · {item.insight.language}
                       </p>
                     </div>
