@@ -33,3 +33,7 @@ export const apiUpdateDocument = (data: API.DocumentUpdateForm & { id: number })
 export const apiDeleteDocument = (id: number)=>{
     return axiosInstance.delete<API.Document>(`/library/documents/${id}/`);
 }
+
+export const apiCopySharedDocument = (id: number)=>{
+    return axiosInstance.post<API.Document>(`/library/documents/${id}/copy-to-cabinet/`);
+}

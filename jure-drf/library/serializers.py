@@ -32,8 +32,8 @@ class DocumentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Document
         # Exclude tags from fields - we'll add it manually to prevent DRF auto-generation
-        fields = ['id', 'title', 'category', 'description', 'file', 'size', 'created', 'modified']
-        read_only_fields = ['created', 'modified']
+        fields = ['id', 'title', 'category', 'description', 'file', 'size', 'is_shared', 'created', 'modified']
+        read_only_fields = ['is_shared', 'created', 'modified']
         extra_kwargs = {
             'title': {'required': False},
             'category': {'required': False},
@@ -283,6 +283,7 @@ class DocumentSerializer(serializers.ModelSerializer):
                 "description": getattr(instance, "description", "") or "",
                 "file": None,
                 "size": 0,
+                "is_shared": bool(getattr(instance, "is_shared", False)),
                 "tags": [],
                 "created": created.isoformat() if created else None,
                 "modified": modified.isoformat() if modified else None,

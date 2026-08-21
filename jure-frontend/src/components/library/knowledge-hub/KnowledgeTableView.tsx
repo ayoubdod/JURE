@@ -1,5 +1,6 @@
 import React, { memo } from 'react';
 import {
+  Copy,
   Download,
   Edit,
   Eye,
@@ -19,8 +20,9 @@ import {
 } from '@/components/ui/table';
 import { DocumentCategory } from '@/utils/constants';
 import { cn } from '@/lib/utils';
-import { formatFileSize, riskStyles } from './knowledgeUtils';
+import { formatFileSize, isPlatformShared, riskStyles } from './knowledgeUtils';
 import type { EnrichedDocument } from './types';
+import { useAppTranslation } from '@/i18n';
 
 type SortKey = 'date' | 'name' | 'size' | 'score';
 
@@ -35,6 +37,7 @@ type Props = {
   onEdit: (e: React.MouseEvent, doc: EnrichedDocument) => void;
   onDownload: (e: React.MouseEvent, doc: EnrichedDocument) => void;
   onDelete: (e: React.MouseEvent, doc: EnrichedDocument) => void;
+  onCopy?: (e: React.MouseEvent, doc: EnrichedDocument) => void;
 };
 
 const SortIcon = ({ active, order }: { active: boolean; order: 'asc' | 'desc' }) =>
@@ -57,7 +60,9 @@ const KnowledgeTableView = memo(function KnowledgeTableView({
   onEdit,
   onDownload,
   onDelete,
+  onCopy,
 }: Props) {
+  const { t } = useAppTranslation();
   const headers: { key: SortKey | null; label: string; className?: string }[] = [
     { key: 'name', label: 'Knowledge asset' },
     { key: null, label: 'Category', className: 'w-28' },
@@ -102,6 +107,7 @@ const KnowledgeTableView = memo(function KnowledgeTableView({
             const category =
               DocumentCategory.options.find((c) => c.value === item.category)?.label ||
               item.category;
+            const shared = isPlatformShared(item);
             return (
               <TableRow
                 key={item.id}
@@ -130,6 +136,7 @@ const KnowledgeTableView = memo(function KnowledgeTableView({
                         {item.title}
                       </p>
                       <p className="truncate text-[10px] text-slate-400">
+                        {shared ? `${t.library.jureShared} · ` : ''}
                         {item.insight.aiIndexed ? 'AI Indexed' : 'Pending'} · {item.insight.language}
                       </p>
                     </div>
@@ -172,15 +179,28 @@ const KnowledgeTableView = memo(function KnowledgeTableView({
                     >
                       <Eye className="h-3.5 w-3.5" />
                     </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-7 w-7 p-0 text-slate-400"
-                      onClick={(e) => onEdit(e, item)}
-                      aria-label="Edit"
-                    >
-                      <Edit className="h-3.5 w-3.5" />
-                    </Button>
+                    {shared ? (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 w-7 p-0 text-slate-400 hover:text-[#64499D]"
+                        onClick={(e) => onCopy?.(e, item)}
+                        aria-label={t.library.addToMyLibrary}
+                        title={t.library.addToMyLibrary}
+                      >
+                        <Copy className="h-3.5 w-3.5" />
+                      </Button>
+                    ) : (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 w-7 p-0 text-slate-400"
+                        onClick={(e) => onEdit(e, item)}
+                        aria-label="Edit"
+                      >
+                        <Edit className="h-3.5 w-3.5" />
+                      </Button>
+                    )}
                     <Button
                       variant="ghost"
                       size="sm"
@@ -190,15 +210,17 @@ const KnowledgeTableView = memo(function KnowledgeTableView({
                     >
                       <Download className="h-3.5 w-3.5" />
                     </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-7 w-7 p-0 text-slate-400 hover:text-rose-500"
-                      onClick={(e) => onDelete(e, item)}
-                      aria-label="Delete"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </Button>
+                    {shared ? null : (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 w-7 p-0 text-slate-400 hover:text-rose-500"
+                        onClick={(e) => onDelete(e, item)}
+                        aria-label="Delete"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    )}
                   </div>
                 </TableCell>
               </TableRow>

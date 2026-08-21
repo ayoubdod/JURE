@@ -16,6 +16,7 @@ import {
 import { cn } from '@/lib/utils';
 import { COLLECTIONS, type CollectionDef } from './knowledgeUtils';
 import type { CollectionId, EnrichedDocument } from './types';
+import { useAppTranslation } from '@/i18n';
 
 const ICONS: Record<CollectionId, React.ElementType> = {
   all: BookOpen,
@@ -47,6 +48,7 @@ const CollectionsSidebar: React.FC<Props> = ({
   counts,
   className,
 }) => {
+  const { t } = useAppTranslation();
   const groups = useMemo(() => {
     const core = COLLECTIONS.filter((c) => c.group === 'core');
     const smart = COLLECTIONS.filter((c) => c.group === 'smart');
@@ -57,6 +59,7 @@ const CollectionsSidebar: React.FC<Props> = ({
     const Icon = ICONS[item.id];
     const isSelected = selected === item.id;
     const count = counts[item.id] ?? 0;
+    const label = item.id === 'shared' ? t.library.jureShared : item.label;
     return (
       <button
         key={item.id}
@@ -77,7 +80,7 @@ const CollectionsSidebar: React.FC<Props> = ({
           )}
           aria-hidden
         />
-        <span className="min-w-0 flex-1 truncate font-medium">{item.label}</span>
+        <span className="min-w-0 flex-1 truncate font-medium">{label}</span>
         <span
           className={cn(
             'tabular-nums text-[11px]',

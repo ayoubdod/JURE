@@ -1,6 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <testsuites>
-	<testsuite name="library.tests.DocumentSerializerMissingFileTests-20260820193501" tests="1" file="library/tests.py" time="0.013" timestamp="2026-08-20T19:35:01" failures="0" errors="0" skipped="0">
-		<testcase classname="library.tests.DocumentSerializerMissingFileTests" name="test_missing_blob_does_not_raise" time="0.013" timestamp="2026-08-20T19:35:01" file="library\tests.py" line="11"/>
+	<testsuite name="library.tests.DocumentSerializerMissingFileTests-20260821152539" tests="1" file="library/tests.py" time="0.008" timestamp="2026-08-21T15:25:39" failures="0" errors="0" skipped="0">
+		<testcase classname="library.tests.DocumentSerializerMissingFileTests" name="test_missing_blob_does_not_raise" time="0.008" timestamp="2026-08-21T15:25:39" file="library\tests.py" line="53"/>
+	</testsuite>
+	<testsuite name="library.tests.SharedLibraryApiTests-20260821152539" tests="7" file="library/tests.py" time="19.343" timestamp="2026-08-21T15:25:58" failures="0" errors="0" skipped="0">
+		<testcase classname="library.tests.SharedLibraryApiTests" name="test_cabinet_cannot_edit_or_delete_shared" time="3.652" timestamp="2026-08-21T15:25:43" file="library\tests.py" line="134"/>
+		<testcase classname="library.tests.SharedLibraryApiTests" name="test_cannot_copy_private_document" time="2.675" timestamp="2026-08-21T15:25:45" file="library\tests.py" line="174"/>
+		<testcase classname="library.tests.SharedLibraryApiTests" name="test_copy_shared_into_cabinet" time="2.745" timestamp="2026-08-21T15:25:48" file="library\tests.py" line="161"/>
+		<testcase classname="library.tests.SharedLibraryApiTests" name="test_create_via_api_is_never_shared" time="2.521" timestamp="2026-08-21T15:25:51" file="library\tests.py" line="144"/>
+		<testcase classname="library.tests.SharedLibraryApiTests" name="test_list_includes_own_and_shared_not_other_cabinet" time="2.579" timestamp="2026-08-21T15:25:53" file="library\tests.py" line="111"/>
+		<testcase classname="library.tests.SharedLibraryApiTests" name="test_other_cabinet_cannot_see_private_copy" time="2.737" timestamp="2026-08-21T15:25:56" file="library\tests.py" line="179"/>
+		<testcase classname="library.tests.SharedLibraryApiTests" name="test_shared_save_clears_cabinet" time="2.432" timestamp="2026-08-21T15:25:58" file="library\tests.py" line="99"/>
 	</testsuite>
 </testsuites>

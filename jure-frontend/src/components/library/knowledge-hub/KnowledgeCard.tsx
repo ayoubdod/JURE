@@ -1,6 +1,7 @@
 import React, { memo } from 'react';
 import {
   Archive,
+  Copy,
   Download,
   Edit,
   Eye,
@@ -16,8 +17,9 @@ import { Button } from '@/components/ui/button';
 import { getFileType } from '@/utils/functions';
 import { DocumentCategory } from '@/utils/constants';
 import { cn } from '@/lib/utils';
-import { formatFileSize, riskStyles } from './knowledgeUtils';
+import { formatFileSize, isPlatformShared, riskStyles } from './knowledgeUtils';
 import type { EnrichedDocument } from './types';
+import { useAppTranslation } from '@/i18n';
 
 type Props = {
   document: EnrichedDocument;
@@ -28,6 +30,7 @@ type Props = {
   onEdit: (e: React.MouseEvent, doc: EnrichedDocument) => void;
   onDownload: (e: React.MouseEvent, doc: EnrichedDocument) => void;
   onDelete: (e: React.MouseEvent, doc: EnrichedDocument) => void;
+  onCopy?: (e: React.MouseEvent, doc: EnrichedDocument) => void;
   onToggleFavorite: (e: React.MouseEvent, doc: EnrichedDocument) => void;
 };
 
@@ -59,8 +62,11 @@ const KnowledgeCard = memo(function KnowledgeCard({
   onEdit,
   onDownload,
   onDelete,
+  onCopy,
   onToggleFavorite,
 }: Props) {
+  const { t } = useAppTranslation();
+  const shared = isPlatformShared(doc);
   const category =
     DocumentCategory.options.find((c) => c.value === doc.category)?.label || doc.category;
   const { insight } = doc;
@@ -123,6 +129,11 @@ const KnowledgeCard = memo(function KnowledgeCard({
         <span className="rounded-md border border-slate-200/80 bg-slate-50 px-1.5 py-0.5 text-[10px] font-medium text-slate-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">
           {category}
         </span>
+        {shared ? (
+          <span className="rounded-md border border-[#64499D]/25 bg-[#64499D]/10 px-1.5 py-0.5 text-[10px] font-semibold text-[#64499D] dark:text-[#CFC2FF]">
+            {t.library.jureSharedBadge}
+          </span>
+        ) : null}
         {insight.aiIndexed ? (
           <span className="rounded-md border border-[#64499D]/20 bg-[#64499D]/08 px-1.5 py-0.5 text-[10px] font-medium text-[#64499D] dark:text-[#CFC2FF]">
             AI Indexed
@@ -172,15 +183,28 @@ const KnowledgeCard = memo(function KnowledgeCard({
           >
             <Eye className="h-3.5 w-3.5" />
           </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-7 w-7 p-0 text-slate-400 hover:text-slate-800 dark:hover:text-slate-100"
-            onClick={(e) => onEdit(e, doc)}
-            aria-label="Edit"
-          >
-            <Edit className="h-3.5 w-3.5" />
-          </Button>
+          {shared ? (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 w-7 p-0 text-slate-400 hover:text-[#64499D]"
+              onClick={(e) => onCopy?.(e, doc)}
+              aria-label={t.library.addToMyLibrary}
+              title={t.library.addToMyLibrary}
+            >
+              <Copy className="h-3.5 w-3.5" />
+            </Button>
+          ) : (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 w-7 p-0 text-slate-400 hover:text-slate-800 dark:hover:text-slate-100"
+              onClick={(e) => onEdit(e, doc)}
+              aria-label="Edit"
+            >
+              <Edit className="h-3.5 w-3.5" />
+            </Button>
+          )}
           <Button
             variant="ghost"
             size="sm"
@@ -190,15 +214,17 @@ const KnowledgeCard = memo(function KnowledgeCard({
           >
             <Download className="h-3.5 w-3.5" />
           </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-7 w-7 p-0 text-slate-400 hover:text-rose-500"
-            onClick={(e) => onDelete(e, doc)}
-            aria-label="Delete"
-          >
-            <Trash2 className="h-3.5 w-3.5" />
-          </Button>
+          {shared ? null : (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 w-7 p-0 text-slate-400 hover:text-rose-500"
+              onClick={(e) => onDelete(e, doc)}
+              aria-label="Delete"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+            </Button>
+          )}
         </div>
       </div>
     </article>

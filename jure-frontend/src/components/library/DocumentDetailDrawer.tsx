@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/select';
 import TagsInput from '@/components/TagsInput';
 import {
+  Copy,
   Edit,
   FileText,
   Calendar,
@@ -31,7 +32,7 @@ import {
 import { DocumentCategory } from '@/utils/constants';
 import { getFileType } from '@/utils/functions';
 import FilePreviewer from '@/components/library/FilePreviewer';
-import { apiUpdateDocument } from '@/services/library/api';
+import { apiUpdateDocument, apiCopySharedDocument } from '@/services/library/api';
 import { useToast } from '@/hooks/use-toast';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
@@ -40,6 +41,7 @@ import { getRemoteFieldsValidation } from '@/utils/functions';
 import { isAxiosError } from 'axios';
 import { cn } from '@/lib/utils';
 import { API_ORIGIN } from '@/config/api';
+import { useAppTranslation } from '@/i18n';
 
 export interface DocumentDetailDrawerRef {
   open: (doc: API.Document) => void;
@@ -55,13 +57,17 @@ const schema = yup.object({
 
 const DocumentDetailDrawer = forwardRef<
   DocumentDetailDrawerRef,
-  { onSuccess?: (doc: API.Document) => void }
->(({ onSuccess }, ref) => {
+  {
+    onSuccess?: (doc: API.Document) => void;
+    onCopied?: (doc: API.Document) => void;
+  }
+>(({ onSuccess, onCopied }, ref) => {
   const [currentDoc, setCurrentDoc] = useState<API.Document | null>(null);
   const [open, setOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const { t, tf } = useAppTranslation();
 
   const form = useForm<Partial<API.DocumentUpdateForm>>({
     resolver: yupResolver(schema) as never,
@@ -179,8 +185,33 @@ const DocumentDetailDrawer = forwardRef<
     }
   });
 
+  const handleCopyToLibrary = async () => {
+    if (!currentDoc?.is_shared) return;
+    setIsLoading(true);
+    try {
+      const res = await apiCopySharedDocument(currentDoc.id);
+      onCopied?.(res.data);
+      toast({
+        title: t.library.toasts.copiedTitle,
+        description: tf(t.library.toasts.copiedDesc, { title: res.data.title || currentDoc.title }),
+      });
+    } catch (err) {
+      const description = isAxiosError(err)
+        ? err.response?.data?.detail || t.library.toasts.copyFailedDesc
+        : t.library.toasts.copyFailedDesc;
+      toast({
+        title: t.library.toasts.copyFailedTitle,
+        description,
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   if (!currentDoc) return null;
 
+  const shared = Boolean(currentDoc.is_shared);
   const categoryLabel =
     DocumentCategory.options.find((c) => c.value === currentDoc.category)
       ?.label || currentDoc.category;
@@ -205,6 +236,11 @@ const DocumentDetailDrawer = forwardRef<
           <SheetTitle className="text-[13px] font-semibold text-[#0F172A] dark:text-[#F8FAFC]">
             {currentDoc.title}
           </SheetTitle>
+          {shared ? (
+            <p className="text-[11px] text-[#64499D] dark:text-[#CFC2FF]">
+              {t.library.jureShared}
+            </p>
+          ) : null}
         </SheetHeader>
 
         <div className="flex-1 overflow-y-auto">
@@ -225,15 +261,32 @@ const DocumentDetailDrawer = forwardRef<
                 Details
               </h3>
               {!isEditing ? (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-7 text-[11px] text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
-                  onClick={() => setIsEditing(true)}
-                >
-                  <Edit size={12} className="mr-1" />
-                  Edit
-                </Button>
+                shared ? (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 text-[11px] text-[#64499D] dark:text-[#CFC2FF] hover:bg-[#64499D]/10"
+                    onClick={handleCopyToLibrary}
+                    disabled={isLoading}
+                  >
+                    {isLoading ? (
+                      <Loader2 size={12} className="mr-1 animate-spin" />
+                    ) : (
+                      <Copy size={12} className="mr-1" />
+                    )}
+                    {t.library.addToMyLibrary}
+                  </Button>
+                ) : (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 text-[11px] text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
+                    onClick={() => setIsEditing(true)}
+                  >
+                    <Edit size={12} className="mr-1" />
+                    Edit
+                  </Button>
+                )
               ) : (
                 <div className="flex gap-2">
                   <Button

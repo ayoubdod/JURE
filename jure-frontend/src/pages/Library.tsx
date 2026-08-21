@@ -12,7 +12,7 @@ import { FolderTree, Plus, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { useToast } from '@/hooks/use-toast';
-import { apiGetDocuments } from '@/services/library/api';
+import { apiGetDocuments, apiCopySharedDocument } from '@/services/library/api';
 import DocumentCreateModal, {
   DocumentCreateModalRef,
 } from '@/components/document/DocumentCreateModal';
@@ -52,6 +52,7 @@ import { cn } from '@/lib/utils';
 import { importWithRetry } from '@/lib/chunkLoad';
 import { useAppTranslation } from '@/i18n';
 import { useShortcutAction } from '@/context/ShortcutsContext';
+import { isAxiosError } from 'axios';
 import { devError } from '@/utils/devLog';
 import '@/styles/workspace-list.css';
 
@@ -202,6 +203,7 @@ const Library = () => {
 
   const handleEdit = useCallback((e: React.MouseEvent, item: EnrichedDocument) => {
     e.stopPropagation();
+    if (item.is_shared) return;
     updateModalRef.current?.show(item);
   }, []);
 
@@ -218,8 +220,33 @@ const Library = () => {
 
   const handleDelete = useCallback((e: React.MouseEvent, item: EnrichedDocument) => {
     e.stopPropagation();
+    if (item.is_shared) return;
     deleteModalRef.current?.show(item);
   }, []);
+
+  const handleCopy = useCallback(
+    async (e: React.MouseEvent, item: EnrichedDocument) => {
+      e.stopPropagation();
+      try {
+        const res = await apiCopySharedDocument(item.id);
+        toast({
+          title: t.library.toasts.copiedTitle,
+          description: tf(t.library.toasts.copiedDesc, { title: res.data.title || item.title }),
+        });
+        fetchDocuments();
+      } catch (error) {
+        const description = isAxiosError(error)
+          ? error.response?.data?.detail || t.library.toasts.copyFailedDesc
+          : t.library.toasts.copyFailedDesc;
+        toast({
+          title: t.library.toasts.copyFailedTitle,
+          description,
+          variant: 'destructive',
+        });
+      }
+    },
+    [toast, t, tf, fetchDocuments]
+  );
 
   const handleToggleFavorite = useCallback(
     (e: React.MouseEvent, item: EnrichedDocument) => {
@@ -322,6 +349,7 @@ const Library = () => {
     onEdit: handleEdit,
     onDownload: handleDownload,
     onDelete: handleDelete,
+    onCopy: handleCopy,
     onToggleFavorite: handleToggleFavorite,
   };
 
@@ -476,6 +504,7 @@ const Library = () => {
                         onEdit={handleEdit}
                         onDownload={handleDownload}
                         onDelete={handleDelete}
+                        onCopy={handleCopy}
                       />
                     </div>
                   </div>
@@ -557,6 +586,9 @@ const Library = () => {
         ref={detailDrawerRef}
         onSuccess={(doc) => {
           setLibraryItems((prev) => prev.map((d) => (d.id === doc.id ? doc : d)));
+        }}
+        onCopied={(doc) => {
+          fetchDocuments();
         }}
       />
     </>

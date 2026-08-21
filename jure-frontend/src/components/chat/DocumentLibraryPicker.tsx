@@ -93,6 +93,11 @@ const DocumentLibraryPicker: React.FC<DocumentLibraryPickerProps> = ({
                 >
                   <FileText className="w-4 h-4 text-slate-400 shrink-0" />
                   <span className="truncate">{doc.title || t.conversations.untitled}</span>
+                  {doc.is_shared ? (
+                    <span className="ml-auto shrink-0 rounded border border-[#64499D]/25 bg-[#64499D]/10 px-1 py-px text-[9px] font-semibold text-[#64499D] dark:text-[#CFC2FF]">
+                      {t.library.jureSharedBadge}
+                    </span>
+                  ) : null}
                 </button>
               ))}
             </div>

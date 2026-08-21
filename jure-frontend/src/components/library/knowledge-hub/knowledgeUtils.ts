@@ -250,7 +250,7 @@ export function matchesCollection(
     );
   }
   if (collection === 'shared') {
-    return Boolean(doc.tags?.some((t) => /shared|team|firm/i.test(t)));
+    return Boolean(doc.is_shared);
   }
   return doc.category === collection;
 }
@@ -314,6 +314,10 @@ export function riskStyles(level: RiskLevel): string {
   }
 }
 
+export function isPlatformShared(doc: Pick<API.Document, 'is_shared'>): boolean {
+  return Boolean(doc.is_shared);
+}
+
 export type CollectionDef = {
   id: CollectionId;
   label: string;
@@ -322,6 +326,7 @@ export type CollectionDef = {
 
 export const COLLECTIONS: CollectionDef[] = [
   { id: 'all', label: 'Collections', group: 'core' },
+  { id: 'shared', label: 'JURE Shared', group: 'core' },
   { id: 'contracts', label: 'Contracts', group: 'core' },
   { id: 'law', label: 'Corporate', group: 'core' },
   { id: 'evidence', label: 'Litigation', group: 'core' },
@@ -330,7 +335,6 @@ export const COLLECTIONS: CollectionDef[] = [
   { id: 'templates', label: 'Compliance', group: 'core' },
   { id: 'training', label: 'Governance', group: 'core' },
   { id: 'ai_generated', label: 'AI Generated', group: 'smart' },
-  { id: 'shared', label: 'Shared', group: 'smart' },
   { id: 'favorites', label: 'Favorites', group: 'smart' },
   { id: 'recent', label: 'Recent', group: 'smart' },
 ];

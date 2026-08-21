@@ -843,6 +843,9 @@ export interface AppMessages {
     };
     resultsCount: string;
     collections: string;
+    jureShared: string;
+    jureSharedBadge: string;
+    addToMyLibrary: string;
     openCollections: string;
     openCopilot: string;
     copilot: string;
@@ -860,6 +863,10 @@ export interface AppMessages {
       downloading: string;
       addedTitle: string;
       addedDesc: string;
+      copiedTitle: string;
+      copiedDesc: string;
+      copyFailedTitle: string;
+      copyFailedDesc: string;
       updatedTitle: string;
       updatedDesc: string;
       removedTitle: string;
