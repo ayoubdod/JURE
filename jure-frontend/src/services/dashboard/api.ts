@@ -3,7 +3,14 @@ import { devError } from '@/utils/devLog';
 
 export type DashboardChangeState = 'up' | 'down' | 'flat' | 'no_previous_data';
 
-export type AnnouncementType = 'INFO' | 'SUCCESS' | 'WARNING' | 'IMPORTANT';
+export type AnnouncementType =
+  | 'INFO'
+  | 'PRODUCT_UPDATE'
+  | 'FEATURE'
+  | 'MAINTENANCE'
+  | 'WARNING'
+  | 'IMPORTANT'
+  | 'SUCCESS';
 export type AnnouncementMediaKind = 'IMAGE' | 'VIDEO';
 
 export interface DashboardAnnouncement {
@@ -11,6 +18,10 @@ export interface DashboardAnnouncement {
   title: string;
   message: string;
   type: AnnouncementType;
+  status?: 'DRAFT' | 'PUBLISHED' | 'SCHEDULED' | 'ARCHIVED';
+  priority?: number;
+  link_url?: string | null;
+  link_label?: string | null;
   media_url: string | null;
   media_kind: AnnouncementMediaKind | null;
   start_date: string | null;

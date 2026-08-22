@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import {
   Users, Briefcase, CheckSquare, Megaphone, Eye, ArrowRight,
   CalendarPlus, FolderPlus, ClipboardList, UserPlus, Clock,
@@ -25,6 +25,7 @@ import MatterTimeline from '@/components/dashboard/MatterTimeline';
 import EngagementBudgetCard from '@/components/dashboard/EngagementBudgetCard';
 import EvidenceManagerCard from '@/components/dashboard/EvidenceManagerCard';
 import ResearchNotebookCard from '@/components/dashboard/ResearchNotebookCard';
+import DashboardCollapsibleCard from '@/components/dashboard/DashboardCollapsibleCard';
 import { useMatterStore } from '@/stores/matterStore';
 
 // Service to fetch backend overview
@@ -42,6 +43,7 @@ import {
 } from '@/utils/announcementDismiss';
 import { BACKEND_BASE_URL } from '@/utils/constants';
 import { useAppTranslation } from '@/i18n';
+import { AnnouncementLearnMoreLink } from '@/components/dashboard/AnnouncementLearnMoreLink';
 
 function resolveAnnouncementMediaUrl(url: string | null | undefined): string | null {
   if (!url?.trim()) return null;
@@ -61,13 +63,34 @@ const ANNOUNCEMENT_TITLE = 'text-[15px] font-semibold tracking-tight text-white'
 const ANNOUNCEMENT_BODY = 'mt-1.5 text-[13px] leading-relaxed text-white/80';
 
 const ANNOUNCEMENT_STYLES: Record<
-  DashboardAnnouncement['type'],
+  string,
   { card: string; iconWrap: string; title: string; body: string }
 > = {
   INFO: {
     card: ANNOUNCEMENT_GLASS,
     iconWrap:
       'flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-white/25 bg-white/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.25)]',
+    title: ANNOUNCEMENT_TITLE,
+    body: ANNOUNCEMENT_BODY,
+  },
+  PRODUCT_UPDATE: {
+    card: ANNOUNCEMENT_GLASS,
+    iconWrap:
+      'flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-white/25 bg-white/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.25)]',
+    title: ANNOUNCEMENT_TITLE,
+    body: ANNOUNCEMENT_BODY,
+  },
+  FEATURE: {
+    card: ANNOUNCEMENT_GLASS,
+    iconWrap:
+      'flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-white/25 bg-white/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.25)]',
+    title: ANNOUNCEMENT_TITLE,
+    body: ANNOUNCEMENT_BODY,
+  },
+  MAINTENANCE: {
+    card: ANNOUNCEMENT_GLASS,
+    iconWrap:
+      'flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-amber-200/30 bg-amber-400/20 shadow-[inset_0_1px_0_rgba(255,255,255,0.25)]',
     title: ANNOUNCEMENT_TITLE,
     body: ANNOUNCEMENT_BODY,
   },
@@ -459,13 +482,20 @@ const Dashboard = () => {
                       <Megaphone size={15} className="text-white" />
                     </div>
                     <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-cyan-100/80">
-                      {d.announcementKicker}
+                      {enumLabel('announcementType', displayAnnouncement.type) || d.announcementKicker}
                     </span>
                   </div>
                   <h3 className={`${style.title} mt-2.5`}>{displayAnnouncement.title}</h3>
                   {displayAnnouncement.message ? (
                     <p className={style.body}>{displayAnnouncement.message}</p>
                   ) : null}
+                  <div className="mt-3">
+                    <AnnouncementLearnMoreLink
+                      url={displayAnnouncement.link_url}
+                      label={displayAnnouncement.link_label}
+                      fallbackLabel={d.learnMore}
+                    />
+                  </div>
                 </div>
               </div>
             </div>
@@ -513,13 +543,11 @@ const Dashboard = () => {
         </div>
 
         {/* Quick Actions */}
-        <Card className="rounded-xl border border-slate-200/90 dark:border-slate-800">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm">{d.quickActions.title}</CardTitle>
-            <CardDescription className="text-xs">{d.quickActions.description}</CardDescription>
-          </CardHeader>
-          <CardContent className="pt-0">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5">
+        <DashboardCollapsibleCard
+          title={d.quickActions.title}
+          description={d.quickActions.description}
+        >
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5">
               {quickActions.map((qa, i) => {
                 const Icon = qa.icon;
                 return (
@@ -541,8 +569,7 @@ const Dashboard = () => {
                 );
               })}
             </div>
-          </CardContent>
-        </Card>
+        </DashboardCollapsibleCard>
 
         {/* Legal Deadline Calculator — always available; binds to real cases via API */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
@@ -566,18 +593,17 @@ const Dashboard = () => {
         {/* Recent Cases + Today’s Tasks */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
           {/* Recent Cases */}
-          <Card className="lg:col-span-2 rounded-xl border border-slate-200/90 dark:border-slate-800">
-            <CardHeader className="flex flex-row items-center justify-between pb-3">
-              <div>
-                <CardTitle className="text-base">{d.recentCases.title}</CardTitle>
-                <CardDescription className="text-xs">{d.recentCases.description}</CardDescription>
-              </div>
+          <DashboardCollapsibleCard
+            className="lg:col-span-2"
+            title={d.recentCases.title}
+            description={d.recentCases.description}
+            headerRight={
               <Button variant="outline" size="sm" className="rounded-lg" onClick={handleViewAllCases}>
                 <Eye size={12} className="me-1.5" />
                 {t.common.viewAll}
               </Button>
-            </CardHeader>
-            <CardContent className="pt-0">
+            }
+          >
               <div className="space-y-2.5">
                 {loading && !overview ? (
                   <div className="space-y-2.5" aria-busy="true" aria-label={d.recentCases.loading}>
@@ -655,22 +681,19 @@ const Dashboard = () => {
                   </div>
                 )}
               </div>
-            </CardContent>
-          </Card>
+          </DashboardCollapsibleCard>
 
           {/* Today's Tasks */}
-          <Card className="rounded-xl border border-slate-200/90 dark:border-slate-800">
-            <CardHeader className="flex flex-row items-center justify-between pb-3">
-              <div>
-                <CardTitle className="text-base">{d.todayTasks.title}</CardTitle>
-                <CardDescription className="text-xs">{d.todayTasks.description}</CardDescription>
-              </div>
+          <DashboardCollapsibleCard
+            title={d.todayTasks.title}
+            description={d.todayTasks.description}
+            headerRight={
               <Button variant="outline" size="sm" className="rounded-lg" onClick={handleViewAllTasks}>
                 <Eye size={12} className="me-1.5" />
                 {t.common.viewAll}
               </Button>
-            </CardHeader>
-            <CardContent className="pt-0">
+            }
+          >
               <div className="space-y-2.5">
                 {loading && !overview ? (
                   <div className="space-y-2.5" aria-busy="true" aria-label={d.todayTasks.loading}>
@@ -758,17 +781,14 @@ const Dashboard = () => {
                   </div>
                 )}
               </div>
-            </CardContent>
-          </Card>
+          </DashboardCollapsibleCard>
         </div>
 
         {/* Recent Activity */}
-        <Card className="rounded-xl border border-slate-200/90 dark:border-slate-800">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base">{d.recentActivity.title}</CardTitle>
-            <CardDescription className="text-xs">{d.recentActivity.description}</CardDescription>
-          </CardHeader>
-          <CardContent className="pt-0">
+        <DashboardCollapsibleCard
+          title={d.recentActivity.title}
+          description={d.recentActivity.description}
+        >
             <div className="space-y-3">
               {loading && !overview ? (
                 <div className="space-y-3" aria-busy="true" aria-label={d.recentActivity.loading}>
@@ -829,8 +849,7 @@ const Dashboard = () => {
                 </div>
               )}
             </div>
-          </CardContent>
-        </Card>
+        </DashboardCollapsibleCard>
       </div>
 
       {/* Dialogs */}

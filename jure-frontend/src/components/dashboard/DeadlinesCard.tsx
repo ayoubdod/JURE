@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
@@ -13,6 +12,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import ServerSelect from '@/components/common/ServerSelect';
+import DashboardCollapsibleCard from '@/components/dashboard/DashboardCollapsibleCard';
 import { useToast } from '@/hooks/use-toast';
 import { CalendarPlus, Loader2, Scale } from 'lucide-react';
 import { formatDate, useAppTranslation } from '@/i18n';
@@ -263,15 +263,17 @@ export default function DeadlinesCard({ caseId }: Props) {
   };
 
   return (
-    <Card className="rounded-2xl border-slate-200/90 dark:border-slate-800">
-      <CardHeader className="pb-2">
-        <CardTitle className="text-base flex items-center gap-2">
+    <DashboardCollapsibleCard
+      className="rounded-2xl"
+      title={
+        <span className="flex items-center gap-2">
           <Scale className="h-4 w-4 text-emerald-700 dark:text-emerald-400" />
           {d.title}
-        </CardTitle>
-        <CardDescription className="text-xs">{d.description}</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
+        </span>
+      }
+      description={d.description}
+      contentClassName="space-y-4"
+    >
         {selectedCaseId ? (
           <div className="space-y-2 rounded-xl border border-slate-200/90 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-900/40 p-3">
             <p className="text-xs font-medium text-slate-900 dark:text-white">{d.savedOnCase}</p>
@@ -569,7 +571,6 @@ export default function DeadlinesCard({ caseId }: Props) {
             )}
           </>
         )}
-      </CardContent>
-    </Card>
+    </DashboardCollapsibleCard>
   );
 }

@@ -378,3 +378,45 @@ class CanonicalCategoryTests(APITestCase):
         self.assertNotIn("Judgment", titles)
 
 
+class LibraryDocumentStatusTests(APITestCase):
+    def setUp(self):
+        self.user, self.cabinet = _create_cabinet_lawyer(
+            "lib-status@test.com", "+33641000021", "Status Cabinet"
+        )
+        self.api = _auth_client(self.user)
+        self.list_url = "/api/v1/library/documents/"
+        self.doc = Document.objects.create(
+            title="Commercial Code",
+            category=Document.DocumentCategory.LEGISLATION_REGULATIONS,
+            file=_pdf("code.pdf"),
+            cabinet=self.cabinet,
+            created_by=self.user,
+        )
+
+    def test_archived_documents_hidden_from_default_list(self):
+        self.doc.status = Document.DocumentStatus.ARCHIVED
+        self.doc.save(update_fields=["status"])
+        response = self.api.get(self.list_url, {"all": "true"})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        titles = {item["title"] for item in response.data}
+        self.assertNotIn("Commercial Code", titles)
+
+    def test_owner_can_archive_and_restore(self):
+        archive = self.api.post(f"{self.list_url}{self.doc.id}/archive/")
+        self.assertEqual(archive.status_code, status.HTTP_200_OK)
+        self.assertEqual(archive.data["status"], "archived")
+        self.doc.refresh_from_db()
+        self.assertEqual(self.doc.status, Document.DocumentStatus.ARCHIVED)
+
+        restore = self.api.post(f"{self.list_url}{self.doc.id}/restore/")
+        self.assertEqual(restore.status_code, status.HTTP_200_OK)
+        self.assertEqual(restore.data["status"], "published")
+
+    def test_list_includes_created_by_name(self):
+        response = self.api.get(self.list_url, {"all": "true"})
+        item = next(x for x in response.data if x["id"] == self.doc.id)
+        self.assertIn("created_by_name", item)
+        self.assertTrue(item["created_by_name"])
+
+
+

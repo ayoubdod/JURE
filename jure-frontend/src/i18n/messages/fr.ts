@@ -31,6 +31,7 @@ export const fr: AppMessages = {
     logout: 'Déconnexion',
     finance: 'Finance',
     tasks: 'Tâches',
+    admin: 'Admin',
   },
   header: {
     searchPlaceholder: 'Rechercher dossiers, clients, tâches...',
@@ -1118,7 +1119,32 @@ export const fr: AppMessages = {
       CASH: 'Cash',
       VIREMENT_BANCAIRE: 'Virement',
       CHEQUE: 'Chèque',
-    }
+    },
+    announcementType: {
+      INFO: 'Information',
+      PRODUCT_UPDATE: 'Mise à jour produit',
+      FEATURE: 'Fonctionnalité',
+      MAINTENANCE: 'Maintenance',
+      WARNING: 'Avertissement',
+      IMPORTANT: 'Important',
+      SUCCESS: 'Succès',
+    },
+    announcementStatus: {
+      DRAFT: 'Brouillon',
+      PUBLISHED: 'Publié',
+      SCHEDULED: 'Planifié',
+      ARCHIVED: 'Archivé',
+    },
+    announcementPriority: {
+      '0': 'Basse',
+      '1': 'Normale',
+      '2': 'Haute',
+      '3': 'Urgente',
+    },
+    documentStatus: {
+      published: 'Publié',
+      archived: 'Archivé',
+    },
   },
   errors: {
     generic: 'Une erreur est survenue. Veuillez réessayer.',
@@ -2385,6 +2411,7 @@ export const fr: AppMessages = {
     loadErrorDescription: 'Impossible de charger les données du tableau de bord.',
     hideAnnouncement: 'Masquer',
     announcementKicker: 'Brief système',
+    learnMore: 'En savoir plus',
     fromLastMonth: '{change} par rapport au mois dernier',
     noPreviousData: 'Aucune donnée précédente',
     kpiUnavailable: 'Indisponible',

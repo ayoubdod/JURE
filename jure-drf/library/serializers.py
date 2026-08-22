@@ -1,5 +1,6 @@
 import json
 import logging
+import os
 from rest_framework import serializers
 from django.http import QueryDict
 
@@ -8,6 +9,21 @@ from core.utils import is_valid_slug
 from .models import Document, normalize_document_category
 
 logger = logging.getLogger(__name__)
+
+MAX_DOCUMENT_BYTES = 25 * 1024 * 1024
+ALLOWED_DOCUMENT_EXTENSIONS = {
+    ".pdf", ".doc", ".docx", ".odt", ".rtf", ".txt",
+    ".xls", ".xlsx", ".csv",
+    ".png", ".jpg", ".jpeg", ".webp", ".gif",
+    ".ppt", ".pptx",
+}
+
+
+def _user_display_name(user) -> str | None:
+    if user is None:
+        return None
+    full = f"{getattr(user, 'first_name', '') or ''} {getattr(user, 'last_name', '') or ''}".strip()
+    return full or getattr(user, "email", None) or None
 
 
 class SafeFileURLField(serializers.FileField):
@@ -25,6 +41,8 @@ class DocumentSerializer(serializers.ModelSerializer):
 
     size = serializers.SerializerMethodField()
     file = SafeFileURLField(required=False, allow_null=True, allow_empty_file=True)
+    created_by_name = serializers.SerializerMethodField()
+    updated_by_name = serializers.SerializerMethodField()
     # Don't define tags here - we'll add it manually in __init__ to prevent DRF auto-generation
     
     description = serializers.CharField(required=False, allow_blank=True, allow_null=True)
@@ -32,8 +50,12 @@ class DocumentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Document
         # Exclude tags from fields - we'll add it manually to prevent DRF auto-generation
-        fields = ['id', 'title', 'category', 'description', 'file', 'size', 'is_shared', 'created', 'modified']
-        read_only_fields = ['is_shared', 'created', 'modified']
+        fields = [
+            'id', 'title', 'category', 'description', 'file', 'size', 'is_shared',
+            'status', 'created', 'modified', 'created_by', 'created_by_name',
+            'updated_by', 'updated_by_name',
+        ]
+        read_only_fields = ['is_shared', 'created', 'modified', 'created_by', 'updated_by']
         extra_kwargs = {
             'title': {'required': False},
             'category': {'required': False},
@@ -171,6 +193,33 @@ class DocumentSerializer(serializers.ModelSerializer):
                     raise serializers.ValidationError(f"Invalid tag: {tag}")
         return value
     
+    def validate_file(self, value):
+        if not value:
+            return value
+        name = getattr(value, "name", "") or ""
+        ext = os.path.splitext(name)[1].lower()
+        if ext and ext not in ALLOWED_DOCUMENT_EXTENSIONS:
+            raise serializers.ValidationError(
+                f"Unsupported file type ({ext}). Allowed: "
+                + ", ".join(sorted(ALLOWED_DOCUMENT_EXTENSIONS))
+            )
+        size = getattr(value, "size", None)
+        if size is not None and size > MAX_DOCUMENT_BYTES:
+            raise serializers.ValidationError("File is too large (max 25 MB).")
+        if size == 0:
+            raise serializers.ValidationError("The uploaded file is empty.")
+        return value
+
+    def validate_status(self, value):
+        if not value:
+            return value
+        valid = [choice[0] for choice in Document.DocumentStatus.choices]
+        if value not in valid:
+            raise serializers.ValidationError(
+                f"Invalid status. Must be one of: {', '.join(valid)}"
+            )
+        return value
+
     def validate_category(self, value):
         """Validate category is a canonical choice. Legacy slugs are remapped, not rejected."""
         if not value:
@@ -224,6 +273,8 @@ class DocumentSerializer(serializers.ModelSerializer):
         
         # Handle file field - only update if a new file is provided
         # If file is None, empty string, or empty file, don't update the file field
+        replacing_file = False
+        old_file_name = getattr(getattr(instance, "file", None), "name", "") or ""
         if 'file' in validated_data:
             file_value = validated_data.get('file')
             # Remove file from update if it's None, empty, or an empty file object
@@ -235,9 +286,23 @@ class DocumentSerializer(serializers.ModelSerializer):
                 validated_data.pop('file')
             elif hasattr(file_value, 'size') and file_value.size == 0:
                 validated_data.pop('file')
+            else:
+                replacing_file = True
         
         # Update the instance with validated data (excluding tags)
         instance = super().update(instance, validated_data)
+
+        if replacing_file and old_file_name:
+            new_name = getattr(getattr(instance, "file", None), "name", "") or ""
+            if new_name and new_name != old_file_name:
+                try:
+                    instance.file.storage.delete(old_file_name)
+                except Exception:
+                    logger.exception(
+                        "Failed to delete previous library file %s for document id=%s",
+                        old_file_name,
+                        instance.pk,
+                    )
         
         # Handle tags update only if tags were explicitly provided in the request
         if tags_data is not None:
@@ -254,6 +319,12 @@ class DocumentSerializer(serializers.ModelSerializer):
         
         return instance
     
+    def get_created_by_name(self, obj):
+        return _user_display_name(getattr(obj, "created_by", None))
+
+    def get_updated_by_name(self, obj):
+        return _user_display_name(getattr(obj, "updated_by", None))
+
     def get_size(self, obj):
         """Get file size, return 0 if the blob is missing (common on ephemeral Railway disks)."""
         f = getattr(obj, "file", None)
@@ -293,6 +364,11 @@ class DocumentSerializer(serializers.ModelSerializer):
                 "file": None,
                 "size": 0,
                 "is_shared": bool(getattr(instance, "is_shared", False)),
+                "status": getattr(instance, "status", "published") or "published",
+                "created_by": getattr(instance, "created_by_id", None),
+                "created_by_name": _user_display_name(getattr(instance, "created_by", None)),
+                "updated_by": getattr(instance, "updated_by_id", None),
+                "updated_by_name": _user_display_name(getattr(instance, "updated_by", None)),
                 "tags": [],
                 "created": created.isoformat() if created else None,
                 "modified": modified.isoformat() if modified else None,

@@ -3,7 +3,8 @@ import os
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
-from django.db.models import Case, IntegerField, Q, Value, When
+from django.db.models import Case, DateTimeField, IntegerField, Q, Value, When
+from django.db.models.functions import Coalesce
 from django.utils import timezone
 from django_extensions.db.models import TimeStampedModel
 
@@ -38,10 +39,25 @@ class Announcement(TimeStampedModel):
     """
 
     class AnnouncementType(models.TextChoices):
-        INFO = "INFO", "Info"
-        SUCCESS = "SUCCESS", "Success"
+        INFO = "INFO", "Information"
+        PRODUCT_UPDATE = "PRODUCT_UPDATE", "Product Update"
+        FEATURE = "FEATURE", "Feature"
+        MAINTENANCE = "MAINTENANCE", "Maintenance"
         WARNING = "WARNING", "Warning"
         IMPORTANT = "IMPORTANT", "Important"
+        SUCCESS = "SUCCESS", "Success"
+
+    class Status(models.TextChoices):
+        DRAFT = "DRAFT", "Draft"
+        PUBLISHED = "PUBLISHED", "Published"
+        SCHEDULED = "SCHEDULED", "Scheduled"
+        ARCHIVED = "ARCHIVED", "Archived"
+
+    class Priority(models.IntegerChoices):
+        LOW = 0, "Low"
+        NORMAL = 1, "Normal"
+        HIGH = 2, "High"
+        URGENT = 3, "Urgent"
 
     class MediaKind(models.TextChoices):
         IMAGE = "IMAGE", "Image"
@@ -50,9 +66,14 @@ class Announcement(TimeStampedModel):
     TYPE_PRIORITY = {
         AnnouncementType.IMPORTANT: 0,
         AnnouncementType.WARNING: 1,
-        AnnouncementType.INFO: 2,
-        AnnouncementType.SUCCESS: 3,
+        AnnouncementType.MAINTENANCE: 2,
+        AnnouncementType.PRODUCT_UPDATE: 3,
+        AnnouncementType.FEATURE: 4,
+        AnnouncementType.INFO: 5,
+        AnnouncementType.SUCCESS: 6,
     }
+
+    LIVE_STATUSES = (Status.PUBLISHED, Status.SCHEDULED)
 
     title = models.CharField(max_length=200)
     message = models.TextField(blank=True)
@@ -78,6 +99,34 @@ class Announcement(TimeStampedModel):
         help_text="Auto-detected from the uploaded file.",
     )
     is_active = models.BooleanField(default=True, db_index=True)
+    status = models.CharField(
+        max_length=20,
+        choices=Status.choices,
+        default=Status.DRAFT,
+        db_index=True,
+    )
+    priority = models.PositiveSmallIntegerField(
+        choices=Priority.choices,
+        default=Priority.NORMAL,
+        db_index=True,
+    )
+    link_url = models.CharField(
+        "Learn more URL",
+        max_length=500,
+        blank=True,
+        default="",
+        help_text=(
+            "Optional. Opens from the dashboard announcement. "
+            "Use an in-app path such as /dashboard/juria, or a full HTTPS URL."
+        ),
+    )
+    link_label = models.CharField(
+        "Learn more button text",
+        max_length=80,
+        blank=True,
+        default="",
+        help_text='Optional. Shown on the dashboard button, e.g. "Learn more".',
+    )
     start_date = models.DateTimeField(
         null=True,
         blank=True,
@@ -94,6 +143,13 @@ class Announcement(TimeStampedModel):
         blank=True,
         on_delete=models.SET_NULL,
         related_name="created_announcements",
+    )
+    updated_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="updated_announcements",
     )
     target_cabinets = models.ManyToManyField(
         "cabinets.Cabinet",
@@ -116,7 +172,26 @@ class Announcement(TimeStampedModel):
             return Announcement.MediaKind.VIDEO
         return ""
 
+    def sync_status_and_active(self, at=None):
+        """Keep status / is_active aligned with the schedule window."""
+        at = at or timezone.now()
+        status = self.status or self.Status.DRAFT
+        if status == self.Status.ARCHIVED:
+            self.is_active = False
+            return
+        if status == self.Status.DRAFT:
+            self.is_active = False
+            return
+        if self.start_date and self.start_date > at:
+            self.status = self.Status.SCHEDULED
+            self.is_active = True
+            return
+        self.status = self.Status.PUBLISHED
+        self.is_active = True
+
     def clean(self):
+        from .link_validation import validate_announcement_link
+
         super().clean()
         if self.media:
             validate_announcement_media(self.media)
@@ -126,12 +201,25 @@ class Announcement(TimeStampedModel):
             self.media_kind = kind
         elif not self.media:
             self.media_kind = ""
+        if self.end_date and self.start_date and self.end_date < self.start_date:
+            raise ValidationError({"end_date": "End date must be after start date."})
+        try:
+            self.link_url = validate_announcement_link(self.link_url)
+        except ValidationError as exc:
+            raise ValidationError({"link_url": exc.messages}) from exc
+        self.link_label = (self.link_label or "").strip()
+        if self.link_label and not self.link_url:
+            raise ValidationError(
+                {"link_url": "A URL is required when a learn-more label is set."}
+            )
+        self.sync_status_and_active()
 
     def save(self, *args, **kwargs):
         if self.media:
             self.media_kind = self.detect_media_kind(self.media.name)
         else:
             self.media_kind = ""
+        self.sync_status_and_active()
         super().save(*args, **kwargs)
 
     @classmethod
@@ -154,7 +242,7 @@ class Announcement(TimeStampedModel):
             return cls.objects.none()
 
         qs = (
-            cls.objects.filter(is_active=True)
+            cls.objects.filter(is_active=True, status__in=cls.LIVE_STATUSES)
             .filter(cls.scheduled_q(at))
             .filter(target_cabinets=cabinet)
             .distinct()
@@ -171,8 +259,9 @@ class Announcement(TimeStampedModel):
                 *priority_whens,
                 default=Value(99),
                 output_field=IntegerField(),
-            )
-        ).order_by("type_priority", "-created")
+            ),
+            sort_start=Coalesce("start_date", "created", output_field=DateTimeField()),
+        ).order_by("-priority", "type_priority", "-sort_start", "-created")
 
     @classmethod
     def pick_for_cabinet(cls, cabinet, *, at=None, exclude_ids=None):

@@ -1,8 +1,8 @@
 // src/components/dashboard/MatterTimeline.tsx
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { useMatterStore } from '@/stores/matterStore';
 import { Calendar, AlertTriangle } from 'lucide-react';
 import { useAppTranslation } from '@/i18n';
+import DashboardCollapsibleCard from '@/components/dashboard/DashboardCollapsibleCard';
 
 export default function MatterTimeline({ matterId }: { matterId?: string }) {
   const { t } = useAppTranslation();
@@ -30,12 +30,12 @@ export default function MatterTimeline({ matterId }: { matterId?: string }) {
   };
 
   return (
-    <Card className="rounded-2xl border-slate-200/90 dark:border-slate-800">
-      <CardHeader className="pb-2">
-        <CardTitle className="text-base">{tl.title}</CardTitle>
-        <CardDescription className="text-xs">{tl.description}</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-2">
+    <DashboardCollapsibleCard
+      className="rounded-2xl"
+      title={tl.title}
+      description={tl.description}
+      contentClassName="space-y-2"
+    >
         {sorted.map((evt) => (
           <div
             key={evt.id}
@@ -58,7 +58,6 @@ export default function MatterTimeline({ matterId }: { matterId?: string }) {
             <AlertTriangle className="h-4 w-4" /> {tl.empty}
           </div>
         )}
-      </CardContent>
-    </Card>
+    </DashboardCollapsibleCard>
   );
 }

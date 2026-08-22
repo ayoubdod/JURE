@@ -1,7 +1,14 @@
 import axiosInstance from "@/utils/axiosInstance";
 import { getFormDataFromObject } from "@/utils/functions";
 
-export const apiGetDocuments = (params?: { all?: boolean })=>{
+export const apiGetDocuments = (params?: {
+    all?: boolean;
+    search?: string;
+    category?: string;
+    page?: number;
+    page_size?: number;
+    ordering?: string;
+})=>{
     return axiosInstance.get<API.Document[] | API.Paginated<API.Document>>('/library/documents/', { params });
 }
 

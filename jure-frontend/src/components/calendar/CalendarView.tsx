@@ -16,7 +16,11 @@ import {
 } from '@/lib/calendarEvents';
 import CalendarLegend from '@/components/calendar/CalendarLegend';
 
-const MOBILE_TOOLBAR = { start: 'prev,next', center: 'title', end: 'today listWeek,dayGridMonth' };
+const MOBILE_TOOLBAR = {
+  start: 'prev,next title today dayGridMonth,timeGridWeek,timeGridDay,listWeek',
+  center: '',
+  end: '',
+};
 const DESKTOP_TOOLBAR = {
   start: 'prev,next today',
   center: 'title',
