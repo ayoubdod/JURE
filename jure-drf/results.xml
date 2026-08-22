@@ -1,11 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <testsuites>
-	<testsuite name="library.tests.CanonicalCategoryTests-20260822004158" tests="6" file="library/tests.py" time="9.361" timestamp="2026-08-22T00:42:07" failures="0" errors="0" skipped="0">
-		<testcase classname="library.tests.CanonicalCategoryTests" name="test_canonical_category_accepted" time="1.684" timestamp="2026-08-22T00:41:59" file="library\tests.py" line="313"/>
-		<testcase classname="library.tests.CanonicalCategoryTests" name="test_filter_by_canonical_category" time="1.455" timestamp="2026-08-22T00:42:01" file="library\tests.py" line="356"/>
-		<testcase classname="library.tests.CanonicalCategoryTests" name="test_legacy_category_is_remapped_on_create" time="1.373" timestamp="2026-08-22T00:42:02" file="library\tests.py" line="285"/>
-		<testcase classname="library.tests.CanonicalCategoryTests" name="test_legacy_legal_forms_maps_to_forms_templates" time="1.476" timestamp="2026-08-22T00:42:04" file="library\tests.py" line="300"/>
-		<testcase classname="library.tests.CanonicalCategoryTests" name="test_unknown_category_rejected_on_create" time="1.510" timestamp="2026-08-22T00:42:05" file="library\tests.py" line="326"/>
-		<testcase classname="library.tests.CanonicalCategoryTests" name="test_unknown_existing_category_preserved_on_update" time="1.863" timestamp="2026-08-22T00:42:07" file="library\tests.py" line="338"/>
+	<testsuite name="dashboard.test_announcements.AnnouncementModelTest-20260822150106" tests="2" file="dashboard/test_announcements.py" time="10.225" timestamp="2026-08-22T15:01:16" failures="0" errors="0" skipped="0">
+		<testcase classname="dashboard.test_announcements.AnnouncementModelTest" name="test_announcement_add_form_includes_learn_more_fields" time="5.359" timestamp="2026-08-22T15:01:11" file="dashboard\test_announcements.py" line="128"/>
+		<testcase classname="dashboard.test_announcements.AnnouncementModelTest" name="test_staff_admin_can_access_announcement_admin" time="4.866" timestamp="2026-08-22T15:01:16" file="dashboard\test_announcements.py" line="113"/>
 	</testsuite>
 </testsuites>

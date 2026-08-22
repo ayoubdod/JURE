@@ -125,9 +125,9 @@ def get_unfold_settings(*, frontend_url: str = "/") -> dict:
                     ],
                 },
                 {
-                    "title": _("Work"),
+                    "title": _("Content"),
                     "separator": True,
-                    "collapsible": True,
+                    "collapsible": False,
                     "items": [
                         {
                             "title": _("Announcements"),
@@ -137,19 +137,26 @@ def get_unfold_settings(*, frontend_url: str = "/") -> dict:
                             ),
                         },
                         {
-                            "title": _("Cases"),
-                            "icon": "folder_open",
-                            "link": reverse_lazy("admin:cases_case_changelist"),
-                        },
-                        {
-                            "title": _("Documents"),
-                            "icon": "description",
+                            "title": _("Library"),
+                            "icon": "menu_book",
                             "link": reverse_lazy("admin:library_document_changelist"),
                         },
                         {
-                            "title": _("Upload multiple"),
+                            "title": _("Upload library files"),
                             "icon": "upload_file",
                             "link": reverse_lazy("admin:library_document_bulk_upload"),
+                        },
+                    ],
+                },
+                {
+                    "title": _("Work"),
+                    "separator": True,
+                    "collapsible": True,
+                    "items": [
+                        {
+                            "title": _("Cases"),
+                            "icon": "folder_open",
+                            "link": reverse_lazy("admin:cases_case_changelist"),
                         },
                         {
                             "title": _("Notifications"),

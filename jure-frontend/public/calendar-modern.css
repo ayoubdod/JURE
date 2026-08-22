@@ -899,40 +899,52 @@ html.dark .fc-button-group > .fc-button:hover:not(.fc-button-active) {
   color: rgb(255 255 255) !important;
 }
 
-/* Compact mobile chrome — global .fc-header-toolbar { flex-direction: column } would
-   stack prev/next, title, and views into three tall rows and hide the agenda. */
+/* Compact mobile chrome — keep title + Today + view switcher on one row. */
 @media (max-width: 768px) {
+  .fc-calendar-card .fc .fc-header-toolbar.fc-toolbar,
   .fc-calendar-card .fc-header-toolbar {
     display: flex !important;
     flex-direction: row !important;
-    flex-wrap: wrap !important;
+    flex-wrap: nowrap !important;
     align-items: center !important;
     justify-content: space-between !important;
-    gap: 0.375rem !important;
-    padding: 0.375rem 0.5rem !important;
+    gap: 0.25rem !important;
+    padding: 0.3rem 0.4rem !important;
+    overflow-x: auto;
   }
 
   .fc-calendar-card .fc-toolbar-chunk {
     margin: 0 !important;
+    flex: 0 1 auto !important;
+    justify-content: flex-start !important;
   }
 
-  .fc-calendar-card .fc-toolbar-chunk:nth-child(2) {
-    flex: 1 1 auto;
-    min-width: 0;
-    justify-content: center;
+  .fc-calendar-card .fc-toolbar-chunk:empty {
+    display: none !important;
   }
 
   .fc-calendar-card .fc-toolbar-chunk:last-child {
-    flex: 1 1 100%;
-    justify-content: flex-end;
+    flex: 1 1 auto !important;
+    justify-content: flex-end !important;
+    min-width: 0;
   }
 
   .fc-calendar-card .fc-toolbar-title {
-    font-size: 0.8125rem !important;
+    font-size: 0.75rem !important;
     order: 0 !important;
     white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    margin: 0 0.15rem !important;
+  }
+
+  .fc-calendar-card .fc-today-button {
+    height: 1.5rem !important;
+    padding: 0 0.4rem !important;
+    font-size: 0.625rem !important;
+  }
+
+  .fc-calendar-card .fc-button-group > .fc-button {
+    padding: 0.2rem 0.35rem !important;
+    font-size: 0.625rem !important;
   }
 
   .fc-calendar-card .fc-list-day-cushion {

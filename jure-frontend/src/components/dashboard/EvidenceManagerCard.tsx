@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useAppTranslation } from '@/i18n';
+import DashboardCollapsibleCard from '@/components/dashboard/DashboardCollapsibleCard';
 
 type Item = { id: string; name: string; tag: 'privileged' | 'public' | 'internal' };
 
@@ -20,12 +20,12 @@ export default function EvidenceManagerCard() {
   const tagLabel = (tag: Item['tag']) => e.tags[tag];
 
   return (
-    <Card className="rounded-2xl border-slate-200/90 dark:border-slate-800">
-      <CardHeader className="pb-2">
-        <CardTitle className="text-base">{e.title}</CardTitle>
-        <CardDescription className="text-xs">{e.description}</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-3">
+    <DashboardCollapsibleCard
+      className="rounded-2xl"
+      title={e.title}
+      description={e.description}
+      contentClassName="space-y-3"
+    >
         <div className="flex items-center justify-between">
           <input type="file" onChange={onUpload} className="text-xs text-slate-700 dark:text-slate-300" />
         </div>
@@ -71,7 +71,6 @@ export default function EvidenceManagerCard() {
             <div className="text-xs text-muted-foreground">{e.empty}</div>
           )}
         </div>
-      </CardContent>
-    </Card>
+    </DashboardCollapsibleCard>
   );
 }

@@ -95,6 +95,9 @@ class DocumentAdminForm(forms.ModelForm):
             self.fields["tags_input"].initial = ", ".join(
                 self.instance.tags.order_by("slug").values_list("slug", flat=True)
             )
+        if "status" in self.fields:
+            self.fields["status"].required = False
+            self.fields["status"].initial = self.fields["status"].initial or Document.DocumentStatus.PUBLISHED
 
     def clean_tags_input(self):
         return parse_tag_slugs(self.cleaned_data.get("tags_input") or "")
@@ -159,11 +162,12 @@ class DocumentAdmin(ModelAdmin):
     formfield_overrides = {
         models.FileField: {"widget": UnfoldAdminFileFieldWidget},
     }
-    list_display = ["title", "category", "is_shared", "cabinet", "created", "modified"]
-    list_filter = ["is_shared", "category", "tags", "created"]
+    list_display = ["title", "category", "status", "is_shared", "cabinet", "created_by", "created", "modified"]
+    list_filter = ["status", "is_shared", "category", "tags", "created"]
     search_fields = ["title", "description"]
-    readonly_fields = ["created", "modified"]
-    raw_id_fields = ["cabinet", "created_by"]
+    readonly_fields = ["created", "modified", "updated_by"]
+    raw_id_fields = ["cabinet", "created_by", "updated_by"]
+    actions = ("archive_documents", "restore_documents")
     fieldsets = (
         (None, {
             "fields": (
@@ -173,16 +177,18 @@ class DocumentAdmin(ModelAdmin):
                 "file",
                 "tags_input",
                 "is_shared",
+                "status",
             ),
             "description": (
                 "To publish for every cabinet, tick “Add to public library”. "
                 "Those files appear only in Public library, not in a cabinet’s own collections. "
+                "Archived files are hidden from the JURE library. "
                 "Tags are optional — type them here, they are created if missing. "
-                "To upload several files at once, use “Upload multiple”."
+                "To upload several files at once, use “Upload library files”."
             ),
         }),
         ("Ownership", {
-            "fields": ("cabinet", "created_by", "created", "modified"),
+            "fields": ("cabinet", "created_by", "updated_by", "created", "modified"),
             "classes": ("collapse",),
             "description": (
                 "Leave cabinet empty for public library documents. "
@@ -248,7 +254,27 @@ class DocumentAdmin(ModelAdmin):
             obj.cabinet = None
         if not obj.created_by_id:
             obj.created_by = request.user
+        obj.updated_by = request.user
         super().save_model(request, obj, form, change)
+
+    @admin.action(description=_("Archive selected documents"))
+    def archive_documents(self, request, queryset):
+        updated = queryset.update(status=Document.DocumentStatus.ARCHIVED)
+        self.message_user(
+            request,
+            _("Archived %(count)s document(s). They no longer appear in the JURE library.")
+            % {"count": updated},
+            messages.WARNING,
+        )
+
+    @admin.action(description=_("Restore selected documents to published"))
+    def restore_documents(self, request, queryset):
+        updated = queryset.update(status=Document.DocumentStatus.PUBLISHED)
+        self.message_user(
+            request,
+            _("Restored %(count)s document(s) to the library.") % {"count": updated},
+            messages.SUCCESS,
+        )
 
     def save_related(self, request, form, formsets, change):
         super().save_related(request, form, formsets, change)

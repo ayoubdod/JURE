@@ -2,6 +2,7 @@
 from datetime import timedelta
 
 from django.contrib.auth import get_user_model
+from django.core.exceptions import ValidationError
 from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
@@ -48,13 +49,22 @@ def _auth_client(user) -> APIClient:
 
 
 def _make_announcement(*, title, cabinets, **kwargs):
+    is_active = kwargs.pop("is_active", True)
+    status = kwargs.pop(
+        "status",
+        Announcement.Status.PUBLISHED if is_active else Announcement.Status.DRAFT,
+    )
     ann = Announcement.objects.create(
         title=title,
         message=kwargs.pop("message", "Test message"),
         announcement_type=kwargs.pop(
             "announcement_type", Announcement.AnnouncementType.INFO
         ),
-        is_active=kwargs.pop("is_active", True),
+        is_active=is_active,
+        status=status,
+        priority=kwargs.pop("priority", Announcement.Priority.NORMAL),
+        link_url=kwargs.pop("link_url", ""),
+        link_label=kwargs.pop("link_label", ""),
         start_date=kwargs.pop("start_date", None),
         end_date=kwargs.pop("end_date", None),
         created_by=kwargs.pop("created_by", None),
@@ -114,6 +124,24 @@ class AnnouncementModelTest(TestCase):
         url = reverse("admin:dashboard_announcement_changelist")
         response = client.get(url)
         self.assertEqual(response.status_code, 200)
+
+    def test_announcement_add_form_includes_learn_more_fields(self):
+        admin = User.objects.create_superuser(
+            email="link-admin@test.com",
+            password="adminpass123",
+            first_name="Link",
+            last_name="Admin",
+            phone="+33640000097",
+            country="FR",
+        )
+        client = APIClient()
+        client.force_login(admin)
+        response = client.get(reverse("admin:dashboard_announcement_add"))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'name="link_url"')
+        self.assertContains(response, 'name="link_label"')
+        self.assertContains(response, "Learn more URL")
+        self.assertContains(response, "Learn more button text")
 
     def test_cabinet_a_receives_targeted_announcement(self):
         _make_announcement(title="For A", cabinets=[self.cab_a])
@@ -197,6 +225,93 @@ class AnnouncementModelTest(TestCase):
             Announcement.pick_for_cabinet(self.cab_a).id, important.id
         )
 
+    def test_priority_then_start_date_ordering(self):
+        older = _make_announcement(
+            title="Older high",
+            cabinets=[self.cab_a],
+            priority=Announcement.Priority.HIGH,
+            start_date=self.now - timedelta(days=2),
+        )
+        newer = _make_announcement(
+            title="Newer high",
+            cabinets=[self.cab_a],
+            priority=Announcement.Priority.HIGH,
+            start_date=self.now - timedelta(hours=1),
+        )
+        _make_announcement(
+            title="Low",
+            cabinets=[self.cab_a],
+            priority=Announcement.Priority.LOW,
+            start_date=self.now,
+        )
+        picked = Announcement.pick_for_cabinet(self.cab_a)
+        self.assertEqual(picked.id, newer.id)
+        self.assertNotEqual(picked.id, older.id)
+
+    def test_draft_not_visible_until_published(self):
+        draft = _make_announcement(
+            title="Draft JURIA notice",
+            cabinets=[self.cab_a],
+            status=Announcement.Status.DRAFT,
+            is_active=False,
+            link_url="/dashboard/juria",
+            link_label="Learn more",
+        )
+        self.assertIsNone(Announcement.pick_for_cabinet(self.cab_a))
+        draft.status = Announcement.Status.PUBLISHED
+        draft.save()
+        picked = Announcement.pick_for_cabinet(self.cab_a)
+        self.assertEqual(picked.id, draft.id)
+
+    def test_rejects_javascript_link(self):
+        ann = Announcement(
+            title="Unsafe",
+            message="No",
+            link_url="javascript:alert(1)",
+        )
+        with self.assertRaises(ValidationError):
+            ann.full_clean()
+
+    def test_rejects_http_external_link(self):
+        ann = Announcement(
+            title="Http",
+            message="No",
+            link_url="http://example.com",
+        )
+        with self.assertRaises(ValidationError):
+            ann.full_clean()
+
+    def test_accepts_https_and_internal_links(self):
+        https = Announcement(
+            title="Https",
+            message="Yes",
+            status=Announcement.Status.DRAFT,
+            link_url="https://example.com/announcement",
+            link_label="Read announcement",
+        )
+        https.full_clean()
+        self.assertEqual(https.link_url, "https://example.com/announcement")
+
+        internal = Announcement(
+            title="Internal",
+            message="Yes",
+            status=Announcement.Status.DRAFT,
+            link_url="/dashboard/juria",
+            link_label="Learn more",
+        )
+        internal.full_clean()
+        self.assertEqual(internal.link_url, "/dashboard/juria")
+
+    def test_learn_more_label_requires_url(self):
+        ann = Announcement(
+            title="Label only",
+            message="No url",
+            status=Announcement.Status.DRAFT,
+            link_label="Learn more",
+        )
+        with self.assertRaises(ValidationError):
+            ann.full_clean()
+
     def test_deleted_announcement_no_longer_returned(self):
         ann = _make_announcement(title="Gone", cabinets=[self.cab_a])
         ann_id = ann.id
@@ -235,6 +350,20 @@ class AnnouncementAPITest(APITestCase):
         self.assertIsNone(payload.get("media_url"))
         self.assertIsNone(payload.get("media_kind"))
         self.assertNotIn("Welcome to Jure", payload.get("message", ""))
+
+    def test_overview_includes_learn_more_link(self):
+        _make_announcement(
+            title="JURIA is available",
+            cabinets=[self.cab_a],
+            message="Faster legal research.",
+            announcement_type=Announcement.AnnouncementType.PRODUCT_UPDATE,
+            link_url="/dashboard/juria",
+            link_label="Learn more",
+        )
+        payload = self.api_a.get(self.overview_url).json()["announcement"]
+        self.assertEqual(payload["link_url"], "/dashboard/juria")
+        self.assertEqual(payload["link_label"], "Learn more")
+        self.assertEqual(payload["type"], "PRODUCT_UPDATE")
 
     def test_overview_cabinet_b_does_not_see_cabinet_a_announcement(self):
         _make_announcement(title="Secret A", cabinets=[self.cab_a])

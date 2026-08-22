@@ -31,6 +31,7 @@ export const ar: AppMessages = {
     logout: 'تسجيل الخروج',
     finance: 'المالية',
     tasks: 'المهام',
+    admin: 'الإدارة',
   },
   header: {
     searchPlaceholder: 'ابحث في القضايا والعملاء والمهام...',
@@ -1106,7 +1107,32 @@ export const ar: AppMessages = {
       CASH: 'نقدًا',
       VIREMENT_BANCAIRE: 'تحويل بنكي',
       CHEQUE: 'شيك',
-    }
+    },
+    announcementType: {
+      INFO: 'معلومة',
+      PRODUCT_UPDATE: 'تحديث المنتج',
+      FEATURE: 'ميزة',
+      MAINTENANCE: 'صيانة',
+      WARNING: 'تحذير',
+      IMPORTANT: 'مهم',
+      SUCCESS: 'نجاح',
+    },
+    announcementStatus: {
+      DRAFT: 'مسودة',
+      PUBLISHED: 'منشور',
+      SCHEDULED: 'مجدول',
+      ARCHIVED: 'مؤرشف',
+    },
+    announcementPriority: {
+      '0': 'منخفضة',
+      '1': 'عادية',
+      '2': 'عالية',
+      '3': 'عاجلة',
+    },
+    documentStatus: {
+      published: 'منشور',
+      archived: 'مؤرشف',
+    },
   },
   errors: {
     generic: 'حدث خطأ ما. يرجى المحاولة مرة أخرى.',
@@ -2366,6 +2392,7 @@ export const ar: AppMessages = {
     loadErrorDescription: 'تعذر تحميل بيانات لوحة التحكم.',
     hideAnnouncement: 'إخفاء',
     announcementKicker: 'موجز النظام',
+    learnMore: 'اعرف المزيد',
     fromLastMonth: '{change} مقارنة بالشهر الماضي',
     noPreviousData: 'لا توجد بيانات سابقة',
     kpiUnavailable: 'غير متاح',

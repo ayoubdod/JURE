@@ -33,11 +33,17 @@ def _absolute_media_url(announcement, request=None) -> str | None:
 
 def serialize_announcement(announcement, request=None) -> dict:
     media_url = _absolute_media_url(announcement, request=request)
+    link_url = getattr(announcement, "link_url", "") or None
+    link_label = getattr(announcement, "link_label", "") or None
     return {
         "id": announcement.id,
         "title": announcement.title,
         "message": announcement.message,
         "type": announcement.announcement_type,
+        "status": getattr(announcement, "status", None),
+        "priority": getattr(announcement, "priority", None),
+        "link_url": link_url or None,
+        "link_label": (link_label or "").strip() or None,
         "media_url": media_url,
         "media_kind": announcement.media_kind or None,
         "start_date": announcement.start_date.isoformat() if announcement.start_date else None,

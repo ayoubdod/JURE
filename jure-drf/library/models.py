@@ -47,11 +47,30 @@ class Document(TimeStampedModel):
 
     cabinet = models.ForeignKey(Cabinet, on_delete=models.CASCADE, related_name='documents', null=True, blank=True)
     created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='documents', null=True, blank=True)
+    updated_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        related_name='updated_documents',
+        null=True,
+        blank=True,
+    )
     is_shared = models.BooleanField(
         _('public library'),
         default=False,
         db_index=True,
         help_text=_('If enabled, this document appears only in Public library for every cabinet. Upload from Django admin.'),
+    )
+
+    class DocumentStatus(models.TextChoices):
+        PUBLISHED = 'published', _('Published')
+        ARCHIVED = 'archived', _('Archived')
+
+    status = models.CharField(
+        max_length=20,
+        choices=DocumentStatus.choices,
+        default=DocumentStatus.PUBLISHED,
+        blank=True,
+        db_index=True,
     )
 
     def __str__(self):

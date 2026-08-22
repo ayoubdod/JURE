@@ -34,6 +34,11 @@ declare namespace API {
         file: string; // File URL or path
         size: number; // File size in bytes
         is_shared?: boolean;
+        status?: 'published' | 'archived' | string;
+        created_by?: number | null;
+        created_by_name?: string | null;
+        updated_by?: number | null;
+        updated_by_name?: string | null;
         created: string; // ISO date string
         modified: string; // ISO date string
     }
@@ -57,6 +62,7 @@ declare namespace API {
         tags?: string[];
         description?: string | null;
         file?: File;
+        status?: 'published' | 'archived';
     }
 
     type DocumentUpdateFormRemoteValidation = {

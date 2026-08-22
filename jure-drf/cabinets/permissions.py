@@ -191,4 +191,26 @@ HasConversationsPermission = _create_resource_permission_class('conversations')
 HasTasksPermission = _create_resource_permission_class('tasks')
 
 
+CONTENT_MANAGER_ROLES = frozenset({'OWNER', 'ADMIN'})
+
+
+def can_manage_content(user) -> bool:
+    """Cabinet Owner/Admin or platform staff may archive/restore cabinet library docs."""
+    if not getattr(user, 'is_authenticated', False):
+        return False
+    if getattr(user, 'is_staff', False) or getattr(user, 'is_superuser', False):
+        return True
+    role = getattr(user, 'role', None)
+    if hasattr(user, 'owned_cabinet') and user.owned_cabinet:
+        role = role or 'OWNER'
+    return role in CONTENT_MANAGER_ROLES
+
+
+class CanManageContent(BasePermission):
+    """Owner, Admin, or staff — used for cabinet library archive/restore."""
+
+    def has_permission(self, request, view):
+        return can_manage_content(request.user)
+
+
 

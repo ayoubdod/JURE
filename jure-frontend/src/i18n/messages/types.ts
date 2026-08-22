@@ -31,6 +31,7 @@ export interface AppMessages {
     logout: string;
     finance: string;
     tasks: string;
+    admin: string;
   };
   header: {
     searchPlaceholder: string;
@@ -1016,6 +1017,10 @@ export interface AppMessages {
 
     invoiceStatus: Record<string, string>;
     paymentMethod: Record<string, string>;
+    announcementType: Record<string, string>;
+    announcementStatus: Record<string, string>;
+    announcementPriority: Record<string, string>;
+    documentStatus: Record<string, string>;
   };
   errors: {
     generic: string;
@@ -2254,6 +2259,7 @@ export interface AppMessages {
     loadErrorDescription: string;
     hideAnnouncement: string;
     announcementKicker: string;
+    learnMore: string;
     fromLastMonth: string;
     noPreviousData: string;
     kpiUnavailable: string;

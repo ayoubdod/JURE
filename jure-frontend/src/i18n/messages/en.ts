@@ -31,6 +31,7 @@ export const en: AppMessages = {
     logout: 'Logout',
     finance: 'Finance',
     tasks: 'Tasks',
+    admin: 'Admin',
   },
   header: {
     searchPlaceholder: 'Search cases, clients, tasks...',
@@ -1106,7 +1107,32 @@ export const en: AppMessages = {
       CASH: 'Cash',
       VIREMENT_BANCAIRE: 'Bank transfer',
       CHEQUE: 'Check',
-    }
+    },
+    announcementType: {
+      INFO: 'Information',
+      PRODUCT_UPDATE: 'Product Update',
+      FEATURE: 'Feature',
+      MAINTENANCE: 'Maintenance',
+      WARNING: 'Warning',
+      IMPORTANT: 'Important',
+      SUCCESS: 'Success',
+    },
+    announcementStatus: {
+      DRAFT: 'Draft',
+      PUBLISHED: 'Published',
+      SCHEDULED: 'Scheduled',
+      ARCHIVED: 'Archived',
+    },
+    announcementPriority: {
+      '0': 'Low',
+      '1': 'Normal',
+      '2': 'High',
+      '3': 'Urgent',
+    },
+    documentStatus: {
+      published: 'Published',
+      archived: 'Archived',
+    },
   },
   errors: {
     generic: 'Something went wrong. Please try again.',
@@ -2368,6 +2394,7 @@ export const en: AppMessages = {
     loadErrorDescription: 'Unable to load dashboard data.',
     hideAnnouncement: 'Hide',
     announcementKicker: 'System brief',
+    learnMore: 'Learn more',
     fromLastMonth: '{change} from last month',
     noPreviousData: 'No previous data',
     kpiUnavailable: 'Unavailable',

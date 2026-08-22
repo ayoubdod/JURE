@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
@@ -15,6 +14,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Pencil, Plus, Trash2 } from 'lucide-react';
+import DashboardCollapsibleCard from '@/components/dashboard/DashboardCollapsibleCard';
 import {
   apiCreateResearchNote,
   apiDeleteResearchNote,
@@ -162,14 +162,12 @@ export default function ResearchNotebookCard({ caseId }: Props) {
 
   return (
     <>
-      <Card className="rounded-2xl border-slate-200/90 dark:border-slate-800">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-base">{n.title}</CardTitle>
-          <CardDescription className="text-xs">
-            {caseId ? n.descriptionWithMatter : n.description}
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-3">
+      <DashboardCollapsibleCard
+        className="rounded-2xl"
+        title={n.title}
+        description={caseId ? n.descriptionWithMatter : n.description}
+        contentClassName="space-y-3"
+      >
           <Input
             placeholder={n.titlePlaceholder}
             value={draft.title}
@@ -307,8 +305,7 @@ export default function ResearchNotebookCard({ caseId }: Props) {
                 </div>
               ))}
           </div>
-        </CardContent>
-      </Card>
+      </DashboardCollapsibleCard>
 
       <AlertDialog
         open={!!deleteTarget}
