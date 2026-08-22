@@ -43,6 +43,7 @@ class DocumentSerializer(serializers.ModelSerializer):
     file = SafeFileURLField(required=False, allow_null=True, allow_empty_file=True)
     created_by_name = serializers.SerializerMethodField()
     updated_by_name = serializers.SerializerMethodField()
+    jurisdiction_code = serializers.SerializerMethodField()
     # Don't define tags here - we'll add it manually in __init__ to prevent DRF auto-generation
     
     description = serializers.CharField(required=False, allow_blank=True, allow_null=True)
@@ -52,10 +53,14 @@ class DocumentSerializer(serializers.ModelSerializer):
         # Exclude tags from fields - we'll add it manually to prevent DRF auto-generation
         fields = [
             'id', 'title', 'category', 'description', 'file', 'size', 'is_shared',
+            'visibility_scope', 'jurisdiction', 'jurisdiction_code',
             'status', 'created', 'modified', 'created_by', 'created_by_name',
             'updated_by', 'updated_by_name',
         ]
-        read_only_fields = ['is_shared', 'created', 'modified', 'created_by', 'updated_by']
+        read_only_fields = [
+            'is_shared', 'visibility_scope', 'jurisdiction', 'created', 'modified',
+            'created_by', 'updated_by',
+        ]
         extra_kwargs = {
             'title': {'required': False},
             'category': {'required': False},
@@ -325,6 +330,10 @@ class DocumentSerializer(serializers.ModelSerializer):
     def get_updated_by_name(self, obj):
         return _user_display_name(getattr(obj, "updated_by", None))
 
+    def get_jurisdiction_code(self, obj):
+        jur = getattr(obj, "jurisdiction", None)
+        return getattr(jur, "code", None)
+
     def get_size(self, obj):
         """Get file size, return 0 if the blob is missing (common on ephemeral Railway disks)."""
         f = getattr(obj, "file", None)
@@ -364,6 +373,9 @@ class DocumentSerializer(serializers.ModelSerializer):
                 "file": None,
                 "size": 0,
                 "is_shared": bool(getattr(instance, "is_shared", False)),
+                "visibility_scope": getattr(instance, "visibility_scope", None),
+                "jurisdiction": getattr(instance, "jurisdiction_id", None),
+                "jurisdiction_code": getattr(getattr(instance, "jurisdiction", None), "code", None),
                 "status": getattr(instance, "status", "published") or "published",
                 "created_by": getattr(instance, "created_by_id", None),
                 "created_by_name": _user_display_name(getattr(instance, "created_by", None)),

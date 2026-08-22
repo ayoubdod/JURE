@@ -194,6 +194,7 @@ class DocumentAdminFormTests(TestCase):
         payload = {
             "title": "Shared template",
             "category": Document.DocumentCategory.FORMS_TEMPLATES,
+            "visibility_scope": "GLOBAL",
             "is_shared": True,
             "tags_input": "",
             **data,
@@ -261,6 +262,7 @@ class DocumentBulkUploadTests(TestCase):
             url,
             {
                 "category": Document.DocumentCategory.FORMS_TEMPLATES,
+                "visibility_scope": "GLOBAL",
                 "is_shared": "on",
                 "tags_input": "modele, contrat",
                 "files": [_pdf("one.pdf"), _pdf("two.pdf")],

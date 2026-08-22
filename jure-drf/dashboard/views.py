@@ -232,6 +232,35 @@ class DashboardOverview(APIView):
         })
 
 
+class AnnouncementListView(APIView):
+    """GLOBAL + current cabinet jurisdiction announcements. Backend-enforced."""
+
+    permission_classes = [IsAuthenticated, IsCabinetMember]
+
+    def get(self, request):
+        cab = get_user_cabinet(request.user)
+        if not cab:
+            return Response({"detail": "User is not attached to any cabinet."}, status=403)
+        dismissed_ids = get_dismissed_announcement_ids(request)
+        qs = Announcement.active_for_cabinet(cab, exclude_ids=dismissed_ids)
+        return Response([serialize_announcement(item, request=request) for item in qs])
+
+
+class AnnouncementDetailView(APIView):
+    """Object-level: a Morocco user cannot retrieve a Qatar announcement by ID."""
+
+    permission_classes = [IsAuthenticated, IsCabinetMember]
+
+    def get(self, request, announcement_id: int):
+        cab = get_user_cabinet(request.user)
+        if not cab:
+            return Response({"detail": "User is not attached to any cabinet."}, status=403)
+        announcement = Announcement.active_for_cabinet(cab).filter(pk=announcement_id).first()
+        if not announcement:
+            return Response({"detail": "Announcement not found."}, status=404)
+        return Response(serialize_announcement(announcement, request=request))
+
+
 class AnnouncementDismissView(APIView):
     """
     Hide an announcement for the current connection/session only.

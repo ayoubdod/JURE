@@ -5,15 +5,12 @@ import type { SignUpData } from '@/schemas/signupValidation';
 
 interface PersonalInfoStepProps {
   onNext: () => void;
+  onPrev: () => void;
   form: UseFormReturn<SignUpData>;
 }
 
-const PersonalInfoStep = ({ onNext, form }: PersonalInfoStepProps) => {
-  return (
-    <div className="w-full h-full min-h-[600px]">
-      <PersonalInfoForm onNext={onNext} form={form} />
-    </div>
-  );
+const PersonalInfoStep = ({ onNext, onPrev, form }: PersonalInfoStepProps) => {
+  return <PersonalInfoForm onNext={onNext} onPrev={onPrev} form={form} />;
 };
 
 export default PersonalInfoStep;

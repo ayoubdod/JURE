@@ -111,6 +111,13 @@ def get_unfold_settings(*, frontend_url: str = "/") -> dict:
                             "link": reverse_lazy("admin:cabinets_cabinet_changelist"),
                         },
                         {
+                            "title": _("Jurisdictions"),
+                            "icon": "public",
+                            "link": reverse_lazy(
+                                "admin:jurisdictions_jurisdiction_changelist"
+                            ),
+                        },
+                        {
                             "title": _("Clients"),
                             "icon": "contacts",
                             "link": reverse_lazy("admin:clients_client_changelist"),

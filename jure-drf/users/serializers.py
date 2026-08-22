@@ -8,6 +8,8 @@ from rest_framework import serializers
 from phonenumber_field.serializerfields import PhoneNumberField
 from commons.models import Activity, Function
 from cabinets.models import Cabinet
+from jurisdictions.models import Jurisdiction
+from jurisdictions.scoping import serialize_jurisdiction
 from .models import User, UserAttachment, UserAddress
 from django_countries.serializer_fields import CountryField
 from django.core.exceptions import ValidationError as DjangoValidationError
@@ -107,6 +109,12 @@ class CustomUserDetailsSerializer(UserDetailsSerializer):
     website = CabinetAttrField(
         'website', serializers.URLField(allow_blank=True, allow_null=True)
     )
+    practice_type = CabinetAttrField(
+        'practice_type',
+        serializers.ChoiceField(choices=Cabinet.PracticeType.choices, allow_blank=True, allow_null=True),
+    )
+    cabinet_id = serializers.SerializerMethodField()
+    jurisdiction = serializers.SerializerMethodField()
 
     class Meta:
         extra_fields = []
@@ -127,10 +135,13 @@ class CustomUserDetailsSerializer(UserDetailsSerializer):
             'business_address',
             'team_size',
             'website',
+            'practice_type',
+            'cabinet_id',
+            'jurisdiction',
             'accept_terms',
             'accept_data_processing',
         ]
-        read_only_fields = ('email',)
+        read_only_fields = ('email', 'cabinet_id', 'jurisdiction')
 
     def to_representation(self, instance):
         """Build absolute URL for logo in response."""
@@ -142,10 +153,20 @@ class CustomUserDetailsSerializer(UserDetailsSerializer):
                 data['logo'] = request.build_absolute_uri(logo)
         return data
 
+    def get_cabinet_id(self, obj):
+        cabinet = _cabinet_for_user(obj)
+        return getattr(cabinet, "id", None)
+
+    def get_jurisdiction(self, obj):
+        cabinet = _cabinet_for_user(obj)
+        if cabinet is None:
+            return None
+        return serialize_jurisdiction(getattr(cabinet, "jurisdiction", None))
+
     def update(self, instance, validated_data):
         """Update user and sync cabinet fields (logo, etc.) to the cabinet."""
         cabinet = _cabinet_for_user(instance)
-        cabinet_fields = ['logo', 'trade_name', 'structure_type', 'business_address', 'team_size', 'website']
+        cabinet_fields = ['logo', 'trade_name', 'structure_type', 'business_address', 'team_size', 'website', 'practice_type']
         cabinet_data = {}
         for field in cabinet_fields:
             if field in validated_data:
@@ -172,7 +193,14 @@ class CustomRegisterSerializer(RegisterSerializer):
 
     # Required business fields
     trade_name = serializers.CharField(required=True)
-    structure_type = serializers.CharField(required=True)
+    structure_type = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    practice_type = serializers.ChoiceField(choices=Cabinet.PracticeType.choices, required=True)
+    jurisdiction = serializers.SlugRelatedField(
+        slug_field="code",
+        queryset=Jurisdiction.objects.filter(status=Jurisdiction.Status.ACTIVE),
+        required=True,
+        error_messages={"does_not_exist": "Select an active jurisdiction.", "null": "Jurisdiction is required."},
+    )
     business_address = serializers.CharField(required=True)
     team_size = serializers.IntegerField(required=True, min_value=1)
 
@@ -241,6 +269,8 @@ class CustomRegisterSerializer(RegisterSerializer):
             'affiliator': self.validated_data.get('affiliator', None),
             'trade_name': self.validated_data.get('trade_name', ''),
             'structure_type': self.validated_data.get('structure_type', ''),
+            'practice_type': self.validated_data.get('practice_type', ''),
+            'jurisdiction': self.validated_data.get('jurisdiction', None),
             'business_address': self.validated_data.get('business_address', ''),
             'team_size': self.validated_data.get('team_size', None),
             'website': self.validated_data.get('website', None),
@@ -271,6 +301,8 @@ class CustomRegisterSerializer(RegisterSerializer):
         # Extract business fields for cabinet creation
         trade_name = self.cleaned_data.pop('trade_name', None)
         structure_type = self.cleaned_data.pop('structure_type', None)
+        practice_type = self.cleaned_data.pop('practice_type', None)
+        jurisdiction = self.cleaned_data.pop('jurisdiction', None)
         business_address = self.cleaned_data.pop('business_address', None)
         team_size = self.cleaned_data.pop('team_size', None)
         website = self.cleaned_data.pop('website', None)
@@ -279,12 +311,20 @@ class CustomRegisterSerializer(RegisterSerializer):
         # Ensure required fields are provided and not empty
         if not trade_name or (isinstance(trade_name, str) and not trade_name.strip()):
             raise serializers.ValidationError({'trade_name': 'Trade name is required.'})
-        if not structure_type or (isinstance(structure_type, str) and not structure_type.strip()):
-            raise serializers.ValidationError({'structure_type': 'Structure type is required.'})
+        if not practice_type:
+            raise serializers.ValidationError({'practice_type': 'Practice type is required.'})
+        if not jurisdiction:
+            raise serializers.ValidationError({'jurisdiction': 'Jurisdiction is required.'})
         if not business_address or (isinstance(business_address, str) and not business_address.strip()):
             raise serializers.ValidationError({'business_address': 'Business address is required.'})
         if not team_size or team_size < 1:
             raise serializers.ValidationError({'team_size': 'Team size must be at least 1.'})
+
+        if not structure_type or (isinstance(structure_type, str) and not structure_type.strip()):
+            structure_type = {
+                Cabinet.PracticeType.LAW_OFFICE: "Cabinet d'avocat",
+                Cabinet.PracticeType.LAW_FIRM: "Société d'avocat",
+            }.get(practice_type, '')
 
         # Set affiliation if provided
         if affiliator:
@@ -315,6 +355,8 @@ class CustomRegisterSerializer(RegisterSerializer):
                 trade_name=trade_name or '',
                 business_address=business_address or '',
                 structure_type=structure_type or '',
+                practice_type=practice_type,
+                jurisdiction=jurisdiction,
                 team_size=team_size or 1,
                 website=website,
                 logo=logo,

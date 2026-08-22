@@ -2,7 +2,6 @@ import logging
 import os
 
 from django.core.files.base import ContentFile
-from django.db.models import Q
 from rest_framework import viewsets, filters, status, permissions
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
@@ -10,6 +9,8 @@ from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
 from core.utils import NumericPagination, get_user_cabinet
 from cabinets.permissions import HasLibraryPermission, can_manage_content
+from jurisdictions.constants import VisibilityScope
+from jurisdictions.scoping import documents_visible_to_cabinet_q
 
 from users.models import User
 from .models import Document
@@ -53,8 +54,8 @@ class DocumentViewSet(viewsets.ModelViewSet):
         if not cabinet:
             return Document.objects.none()
         qs = (
-            Document.objects.filter(Q(cabinet=cabinet) | Q(is_shared=True))
-            .select_related('created_by', 'updated_by', 'cabinet')
+            Document.objects.filter(documents_visible_to_cabinet_q(cabinet))
+            .select_related('created_by', 'updated_by', 'cabinet', 'jurisdiction')
             .prefetch_related('tags')
             .distinct()
         )
@@ -116,7 +117,14 @@ class DocumentViewSet(viewsets.ModelViewSet):
         cabinet = get_user_cabinet(user)
         if not cabinet:
             raise PermissionDenied("User must belong to a cabinet to create documents.")
-        serializer.save(created_by=user, updated_by=user, cabinet=cabinet, is_shared=False)
+        serializer.save(
+            created_by=user,
+            updated_by=user,
+            cabinet=cabinet,
+            is_shared=False,
+            visibility_scope=VisibilityScope.CABINET,
+            jurisdiction=None,
+        )
 
     def perform_update(self, serializer: DocumentSerializer) -> None:
         serializer.save(updated_by=self.request.user)
@@ -238,6 +246,8 @@ class DocumentViewSet(viewsets.ModelViewSet):
             created_by=request.user,
             updated_by=request.user,
             is_shared=False,
+            visibility_scope=VisibilityScope.CABINET,
+            jurisdiction=None,
             status=Document.DocumentStatus.PUBLISHED,
         )
         copy.file.save(file_copy.name, file_copy, save=False)

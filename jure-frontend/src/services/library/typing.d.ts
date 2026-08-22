@@ -34,6 +34,9 @@ declare namespace API {
         file: string; // File URL or path
         size: number; // File size in bytes
         is_shared?: boolean;
+        visibility_scope?: 'GLOBAL' | 'JURISDICTION' | 'CABINET' | string;
+        jurisdiction?: number | null;
+        jurisdiction_code?: string | null;
         status?: 'published' | 'archived' | string;
         created_by?: number | null;
         created_by_name?: string | null;

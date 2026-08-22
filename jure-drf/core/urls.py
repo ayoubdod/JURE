@@ -47,6 +47,8 @@ urlpatterns = [
     path('api/v1/notifications/', include('notifications.urls')),
     path('api/v1/clients/', include('clients.urls')),
     path('api/v1/cabinets/', include('cabinets.urls')),
+    path('api/v1/jurisdictions/', include('jurisdictions.urls')),
+    path('api/v1/announcements/', include('dashboard.announcement_urls')),
     path('api/v1/auth/setup-password/', setup_password_by_token, name='setup_password_by_token'),
     path('api/v1/library/', include('library.urls')),
     path('api/v1/tasks/', include('tasks.urls')),

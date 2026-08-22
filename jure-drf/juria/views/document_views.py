@@ -20,6 +20,7 @@ from juria.serializers.message_serializer import JuriaDraftRequestSerializer
 from juria.services.juria_api_service import JuriaAPIError, JuriaTimeoutError, draft_document
 from juria.views.conversation_views import get_case_for_user, get_user_conversation
 from juria.views.mixins import JuriaEnabledMixin, juria_error_http_status
+from core.utils import get_user_cabinet
 
 
 def _safe_filename(name: str) -> str:
@@ -50,10 +51,19 @@ class JuriaConversationDraftView(JuriaEnabledMixin, APIView):
             case = get_case_for_user(request.user, conv.linked_case_id)
 
         case_context = build_case_context(case) if case else None
+        cabinet = get_user_cabinet(request.user)
+        jurisdiction = getattr(cabinet, "jurisdiction", None) if cabinet else None
 
         t0 = time.perf_counter()
         try:
-            api_out = draft_document(document_type, parameters, case_context=case_context)
+            api_out = draft_document(
+                document_type,
+                parameters,
+                case_context=case_context,
+                jurisdiction_code=getattr(jurisdiction, "code", None),
+                legal_system=getattr(jurisdiction, "legal_system", None),
+                language=getattr(jurisdiction, "default_language", None),
+            )
         except JuriaTimeoutError:
             return Response(
                 {"error": "Juria is taking too long. Please retry."},

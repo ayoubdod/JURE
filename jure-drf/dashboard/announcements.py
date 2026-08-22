@@ -42,6 +42,8 @@ def serialize_announcement(announcement, request=None) -> dict:
         "type": announcement.announcement_type,
         "status": getattr(announcement, "status", None),
         "priority": getattr(announcement, "priority", None),
+        "visibility_scope": getattr(announcement, "visibility_scope", None),
+        "jurisdiction_code": getattr(getattr(announcement, "jurisdiction", None), "code", None),
         "link_url": link_url or None,
         "link_label": (link_label or "").strip() or None,
         "media_url": media_url,
