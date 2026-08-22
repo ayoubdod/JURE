@@ -6,16 +6,38 @@ from commons.models import Tag
 from users.models import User
 # Create your models here.
 
+# Legacy category values → canonical slugs. Applied on write and in data migration.
+LEGACY_CATEGORY_MAP = {
+    'law': 'legislation_regulations',
+    'templates': 'forms_templates',
+    'contracts': 'contracts_agreements',
+    'research': 'legal_research_opinions',
+    'legal_forms': 'forms_templates',
+    'training': 'training_knowledge',
+    'evidence': 'evidence_case_materials',
+}
+
+
+def normalize_document_category(value: str | None) -> str | None:
+    """Map legacy category slugs to canonical identifiers. Unknown values are preserved."""
+    if not value:
+        return value
+    return LEGACY_CATEGORY_MAP.get(value, value)
+
+
 class Document(TimeStampedModel):
 
     class DocumentCategory(models.TextChoices):
-        LAW = 'law', _('Law')
-        TEMPLATES = 'templates', _('Templates')
-        CONTRACTS = 'contracts', _('Contracts')
-        RESEARCH = 'research', _('Research')
-        LEGAL_FORMS = 'legal_forms', _('Legal Forms')
-        TRAINING = 'training', _('Training')
-        EVIDENCE = 'evidence', _('Evidence')
+        LEGISLATION_REGULATIONS = 'legislation_regulations', _('Legislation & Regulations')
+        CASE_LAW_JURISPRUDENCE = 'case_law_jurisprudence', _('Case Law & Jurisprudence')
+        CONTRACTS_AGREEMENTS = 'contracts_agreements', _('Contracts & Agreements')
+        PLEADINGS_PROCEEDINGS = 'pleadings_proceedings', _('Pleadings & Proceedings')
+        FORMS_TEMPLATES = 'forms_templates', _('Forms & Templates')
+        LEGAL_RESEARCH_OPINIONS = 'legal_research_opinions', _('Legal Research & Opinions')
+        CORPORATE_GOVERNANCE = 'corporate_governance', _('Corporate & Governance')
+        COMPLIANCE_POLICIES = 'compliance_policies', _('Compliance & Policies')
+        EVIDENCE_CASE_MATERIALS = 'evidence_case_materials', _('Evidence & Case Materials')
+        TRAINING_KNOWLEDGE = 'training_knowledge', _('Training & Knowledge')
 
     title = models.CharField(max_length=255)
     category = models.CharField(max_length=255, choices=DocumentCategory.choices)
@@ -38,4 +60,6 @@ class Document(TimeStampedModel):
     def save(self, *args, **kwargs):
         if self.is_shared:
             self.cabinet = None
+        if self.category:
+            self.category = normalize_document_category(self.category)
         super().save(*args, **kwargs)

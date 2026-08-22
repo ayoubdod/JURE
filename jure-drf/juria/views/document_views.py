@@ -18,8 +18,8 @@ from juria.models import JuriaConversation, JuriaMessage, record_juria_usage
 from juria.serializers.conversation_serializer import build_case_context
 from juria.serializers.message_serializer import JuriaDraftRequestSerializer
 from juria.services.juria_api_service import JuriaAPIError, JuriaTimeoutError, draft_document
-from juria.views.conversation_views import get_case_for_user
-from juria.views.mixins import JuriaEnabledMixin
+from juria.views.conversation_views import get_case_for_user, get_user_conversation
+from juria.views.mixins import JuriaEnabledMixin, juria_error_http_status
 
 
 def _safe_filename(name: str) -> str:
@@ -31,10 +31,7 @@ class JuriaConversationDraftView(JuriaEnabledMixin, APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request, conversation_id):
-        conv = get_object_or_404(
-            JuriaConversation.objects.filter(user=request.user, is_archived=False),
-            pk=conversation_id,
-        )
+        conv = get_user_conversation(request.user, conversation_id, restore_archived=True)
         ser = JuriaDraftRequestSerializer(data=request.data)
         ser.is_valid(raise_exception=True)
         document_type = ser.validated_data["document_type"]
@@ -62,10 +59,10 @@ class JuriaConversationDraftView(JuriaEnabledMixin, APIView):
                 {"error": "Juria is taking too long. Please retry."},
                 status=status.HTTP_504_GATEWAY_TIMEOUT,
             )
-        except JuriaAPIError:
+        except JuriaAPIError as exc:
             return Response(
-                {"error": "Juria API unavailable. Please try again."},
-                status=status.HTTP_502_BAD_GATEWAY,
+                {"error": str(exc)},
+                status=juria_error_http_status(exc),
             )
 
         content = api_out.get("content") or ""

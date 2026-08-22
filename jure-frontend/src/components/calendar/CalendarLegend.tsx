@@ -13,12 +13,12 @@ export default function CalendarLegend() {
     { k: cal.legend.consultation, className: 'bg-blue-600' },
   ];
   return (
-    <div className="shrink-0 flex flex-wrap items-center gap-2 px-3 py-2 border-t border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/80">
-      <Info className="h-3.5 w-3.5 text-slate-400 shrink-0" aria-hidden />
+    <div className="ws-kpi-strip shrink-0 flex flex-nowrap items-center gap-1.5 overflow-x-auto px-3 py-1.5 sm:flex-wrap sm:gap-2 sm:py-2 border-t border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/80">
+      <Info className="hidden sm:block h-3.5 w-3.5 text-slate-400 shrink-0" aria-hidden />
       {items.map(({ k, className }) => (
         <span
           key={k}
-          className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 dark:border-slate-700 bg-white/80 dark:bg-slate-900/80 px-2 py-0.5 text-[10px] text-slate-600 dark:text-slate-400"
+          className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-slate-200 dark:border-slate-700 bg-white/80 dark:bg-slate-900/80 px-2 py-0.5 text-[10px] text-slate-600 dark:text-slate-400 whitespace-nowrap"
         >
           <span className={cn('w-2 h-2 rounded-full', className)} />
           {k}

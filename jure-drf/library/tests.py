@@ -55,7 +55,7 @@ class DocumentSerializerMissingFileTests(TestCase):
         upload = _pdf()
         doc = Document.objects.create(
             title="Brief",
-            category=Document.DocumentCategory.LAW,
+            category=Document.DocumentCategory.LEGISLATION_REGULATIONS,
             file=upload,
         )
         path = doc.file.path
@@ -84,7 +84,7 @@ class SharedLibraryApiTests(APITestCase):
 
         self.private_a = Document.objects.create(
             title="Cabinet A private",
-            category=Document.DocumentCategory.CONTRACTS,
+            category=Document.DocumentCategory.CONTRACTS_AGREEMENTS,
             file=_pdf("a-private.pdf"),
             cabinet=self.cab_a,
             created_by=self.user_a,
@@ -92,7 +92,7 @@ class SharedLibraryApiTests(APITestCase):
         )
         self.shared = Document.objects.create(
             title="JURE template",
-            category=Document.DocumentCategory.TEMPLATES,
+            category=Document.DocumentCategory.FORMS_TEMPLATES,
             file=_pdf("shared.pdf"),
             is_shared=True,
         )
@@ -100,7 +100,7 @@ class SharedLibraryApiTests(APITestCase):
     def test_shared_save_clears_cabinet(self):
         doc = Document.objects.create(
             title="Should be global",
-            category=Document.DocumentCategory.LAW,
+            category=Document.DocumentCategory.LEGISLATION_REGULATIONS,
             file=_pdf("global.pdf"),
             cabinet=self.cab_a,
             is_shared=True,
@@ -119,7 +119,7 @@ class SharedLibraryApiTests(APITestCase):
 
         private_b = Document.objects.create(
             title="Cabinet B private",
-            category=Document.DocumentCategory.CONTRACTS,
+            category=Document.DocumentCategory.CONTRACTS_AGREEMENTS,
             file=_pdf("b-private.pdf"),
             cabinet=self.cab_b,
             created_by=self.user_b,
@@ -147,7 +147,7 @@ class SharedLibraryApiTests(APITestCase):
             self.list_url,
             {
                 "title": "My upload",
-                "category": Document.DocumentCategory.LAW,
+                "category": Document.DocumentCategory.LEGISLATION_REGULATIONS,
                 "file": _pdf("mine.pdf"),
                 "is_shared": True,
             },
@@ -193,7 +193,7 @@ class DocumentAdminFormTests(TestCase):
 
         payload = {
             "title": "Shared template",
-            "category": Document.DocumentCategory.TEMPLATES,
+            "category": Document.DocumentCategory.FORMS_TEMPLATES,
             "is_shared": True,
             "tags_input": "",
             **data,
@@ -235,7 +235,7 @@ class DocumentBulkUploadTests(TestCase):
 
         created = create_documents_from_uploads(
             files=[_pdf("Modele_NDA.pdf"), _pdf("contrat-travail.pdf")],
-            category=Document.DocumentCategory.TEMPLATES,
+            category=Document.DocumentCategory.FORMS_TEMPLATES,
             is_shared=True,
             description="JURE pack",
             tag_slugs=["modele"],
@@ -260,7 +260,7 @@ class DocumentBulkUploadTests(TestCase):
         response = self.client.post(
             url,
             {
-                "category": Document.DocumentCategory.TEMPLATES,
+                "category": Document.DocumentCategory.FORMS_TEMPLATES,
                 "is_shared": "on",
                 "tags_input": "modele, contrat",
                 "files": [_pdf("one.pdf"), _pdf("two.pdf")],
@@ -272,4 +272,109 @@ class DocumentBulkUploadTests(TestCase):
             Document.objects.filter(is_shared=True, title__in=["one", "two"]).count(),
             2,
         )
+
+
+class CanonicalCategoryTests(APITestCase):
+    def setUp(self):
+        self.user, self.cabinet = _create_cabinet_lawyer(
+            "cat@test.com", "+33641000011", "Category Cabinet"
+        )
+        self.api = _auth_client(self.user)
+        self.list_url = "/api/v1/library/documents/"
+
+    def test_legacy_category_is_remapped_on_create(self):
+        response = self.api.post(
+            self.list_url,
+            {
+                "title": "Old law slug",
+                "category": "law",
+                "file": _pdf("legacy.pdf"),
+            },
+            format="multipart",
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data["category"], "legislation_regulations")
+        created = Document.objects.get(pk=response.data["id"])
+        self.assertEqual(created.category, Document.DocumentCategory.LEGISLATION_REGULATIONS)
+
+    def test_legacy_legal_forms_maps_to_forms_templates(self):
+        response = self.api.post(
+            self.list_url,
+            {
+                "title": "POA template",
+                "category": "legal_forms",
+                "file": _pdf("poa.pdf"),
+            },
+            format="multipart",
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data["category"], "forms_templates")
+
+    def test_canonical_category_accepted(self):
+        response = self.api.post(
+            self.list_url,
+            {
+                "title": "Employment Agreement",
+                "category": Document.DocumentCategory.CONTRACTS_AGREEMENTS,
+                "file": _pdf("contract.pdf"),
+            },
+            format="multipart",
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data["category"], "contracts_agreements")
+
+    def test_unknown_category_rejected_on_create(self):
+        response = self.api.post(
+            self.list_url,
+            {
+                "title": "Unclassified",
+                "category": "other",
+                "file": _pdf("other.pdf"),
+            },
+            format="multipart",
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_unknown_existing_category_preserved_on_update(self):
+        doc = Document.objects.create(
+            title="Manual other",
+            category="other",
+            file=_pdf("manual.pdf"),
+            cabinet=self.cabinet,
+            created_by=self.user,
+        )
+        response = self.api.patch(
+            f"{self.list_url}{doc.pk}/",
+            {"title": "Manual other updated"},
+            format="json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        doc.refresh_from_db()
+        self.assertEqual(doc.title, "Manual other updated")
+        self.assertEqual(doc.category, "other")
+
+    def test_filter_by_canonical_category(self):
+        Document.objects.create(
+            title="NDA",
+            category=Document.DocumentCategory.CONTRACTS_AGREEMENTS,
+            file=_pdf("nda.pdf"),
+            cabinet=self.cabinet,
+            created_by=self.user,
+        )
+        Document.objects.create(
+            title="Judgment",
+            category=Document.DocumentCategory.CASE_LAW_JURISPRUDENCE,
+            file=_pdf("judgment.pdf"),
+            cabinet=self.cabinet,
+            created_by=self.user,
+        )
+        response = self.api.get(
+            self.list_url,
+            {"all": "true", "category": "contracts_agreements"},
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        titles = {item["title"] for item in response.data}
+        self.assertIn("NDA", titles)
+        self.assertNotIn("Judgment", titles)
+
 

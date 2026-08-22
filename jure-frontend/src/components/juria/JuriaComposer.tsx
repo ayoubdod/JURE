@@ -8,6 +8,18 @@ import type { JuriaMode } from '@/types/juria';
 import { useAppTranslation } from '@/i18n';
 
 const ACCEPT = '.pdf,.doc,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+const ASK_LANG_KEY = 'jure.juria.askLang';
+type AskLang = 'fr' | 'ar' | 'darija';
+
+function readAskLang(): AskLang {
+  try {
+    const v = localStorage.getItem(ASK_LANG_KEY);
+    if (v === 'ar' || v === 'darija' || v === 'fr') return v;
+  } catch {
+    /* ignore */
+  }
+  return 'fr';
+}
 
 export function JuriaComposer({
   mode,
@@ -24,9 +36,11 @@ export function JuriaComposer({
   showCaseLink = true,
   attachment,
   onAttachmentChange,
+  variant = 'docked',
+  askLang: askLangProp,
+  onAskLangChange,
 }: {
   mode: JuriaMode;
-  /** Conversation mode is fixed server-side; hide mode switcher when true. */
   modeReadOnly?: boolean;
   onModeChange: (m: JuriaMode) => void;
   value: string;
@@ -40,19 +54,32 @@ export function JuriaComposer({
   showCaseLink?: boolean;
   attachment?: File | null;
   onAttachmentChange?: (f: File | null) => void;
+  variant?: 'docked' | 'hero';
+  askLang?: AskLang;
+  onAskLangChange?: (lang: AskLang) => void;
 }) {
   const { t } = useAppTranslation();
   const ta = useRef<HTMLTextAreaElement>(null);
   const [localFile, setLocalFile] = useState<File | null>(null);
+  const [localLang, setLocalLang] = useState<AskLang>(readAskLang);
   const file = attachment !== undefined ? attachment : localFile;
   const setFile = onAttachmentChange ?? setLocalFile;
+  const askLang = askLangProp ?? localLang;
+  const setAskLang = (lang: AskLang) => {
+    onAskLangChange?.(lang);
+    setLocalLang(lang);
+    try {
+      localStorage.setItem(ASK_LANG_KEY, lang);
+    } catch {
+      /* ignore */
+    }
+  };
 
   useEffect(() => {
     const el = ta.current;
     if (!el) return;
     el.style.height = 'auto';
-    const lines = Math.min(6, Math.max(1, el.value.split('\n').length));
-    el.style.height = `${Math.min(lines * 22 + 20, 160)}px`;
+    el.style.height = `${Math.min(Math.max(el.scrollHeight, 44), 140)}px`;
   }, [value]);
 
   const pickFile = () => {
@@ -71,32 +98,38 @@ export function JuriaComposer({
     input.click();
   };
 
-  const modes: JuriaMode[] = ['CHAT', 'CONTRACT_ANALYSIS', 'LEGAL_RESEARCH', 'DOCUMENT_DRAFTING'];
+  const modes: JuriaMode[] = ['LEGAL_RESEARCH', 'CONTRACT_ANALYSIS', 'DOCUMENT_DRAFTING', 'CHAT'];
+  const langs: AskLang[] = ['fr', 'ar', 'darija'];
+  const hero = variant === 'hero';
 
   return (
     <div
       className={cn(
-        'border-t border-slate-200 bg-white/95 backdrop-blur dark:border-slate-800 dark:bg-slate-950/95',
-        compact ? 'p-2' : 'p-3 sm:p-4',
-        !compact && 'pb-[max(0.75rem,env(safe-area-inset-bottom))]'
+        hero
+          ? 'rounded-2xl border border-slate-200/90 bg-white p-3 shadow-[0_1px_2px_rgba(15,23,42,0.04)] dark:border-slate-800 dark:bg-slate-950'
+          : cn(
+              'bg-transparent',
+              compact ? 'p-2' : 'px-3 pb-[max(0.65rem,env(safe-area-inset-bottom))] pt-2 sm:px-4 sm:pb-3'
+            )
       )}
     >
       {file && (
         <div className="mb-2 flex items-center gap-2">
-          <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-1 text-[11px] dark:bg-slate-800">
-            📎 {file.name}
+          <span className="inline-flex max-w-full items-center gap-1 truncate rounded-full bg-slate-100 px-2 py-1 text-[11px] dark:bg-slate-800">
+            <span className="truncate">{file.name}</span>
             <button type="button" className="rounded p-0.5 hover:bg-slate-200 dark:hover:bg-slate-700" onClick={() => setFile(null)}>
               <X className="h-3 w-3" />
             </button>
           </span>
         </div>
       )}
-      <div className="flex gap-2">
+
+      <div className="flex items-end gap-1.5 rounded-2xl border border-slate-200 bg-white px-1.5 py-1.5 shadow-[0_1px_2px_rgba(15,23,42,0.04)] dark:border-slate-700 dark:bg-slate-900 sm:gap-2 sm:px-2 sm:py-2">
         <button
           type="button"
-          className="mt-2 shrink-0 rounded-lg p-2.5 min-h-11 min-w-11 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"
+          className="mb-0.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"
           onClick={pickFile}
-          aria-label="Joindre un fichier"
+          aria-label={t.juria.attachFile}
         >
           <Paperclip className="h-5 w-5" />
         </button>
@@ -112,57 +145,89 @@ export function JuriaComposer({
             }
           }}
           disabled={disabled}
-          placeholder={t.juria.modes[mode].placeholder}
-          className="min-h-[44px] flex-1 resize-none rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+          enterKeyHint="send"
+          placeholder={hero ? t.juria.askPlaceholder : t.juria.modes[mode].placeholder}
+          className="max-h-[140px] min-h-[44px] flex-1 resize-none bg-transparent py-2.5 text-[16px] leading-5 text-slate-900 focus:outline-none sm:text-sm dark:text-slate-100"
         />
         <Button
           type="button"
-          className="mt-2 shrink-0 bg-indigo-600 hover:bg-indigo-700"
+          size="icon"
+          className="mb-0.5 h-11 w-11 shrink-0 rounded-xl bg-[#64499D] hover:bg-[#4D3680]"
           disabled={disabled || (!value.trim() && !file)}
           onClick={onSend}
+          aria-label={t.juria.send}
         >
           <Send className="h-4 w-4" />
         </Button>
       </div>
 
-      <div className="mt-2 flex flex-wrap items-center gap-2">
+      <div className="mt-1.5 flex items-center gap-1.5 overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {modeReadOnly ?
-          <span className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-2 py-1 text-[11px] text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
-            <span>{JURIA_MODE_VISUAL[mode].icon}</span>
+          <span className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-2 py-1.5 text-[11px] text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
+            {(() => {
+              const Icon = JURIA_MODE_VISUAL[mode].Icon;
+              return <Icon className="h-3.5 w-3.5 text-[#64499D]" />;
+            })()}
             <span className="font-medium">{t.juria.modes[mode].shortLabel}</span>
           </span>
-        : <div className="inline-flex rounded-lg border border-slate-200 bg-slate-50 p-0.5 dark:border-slate-700 dark:bg-slate-900">
-            {modes.map((m) => (
-              <button
-                key={m}
-                type="button"
-                onClick={() => onModeChange(m)}
-                className={cn(
-                  'rounded-md px-2 py-1 text-[11px] font-medium transition',
-                  mode === m
-                    ? 'bg-white text-indigo-700 shadow-sm dark:bg-slate-800 dark:text-indigo-300'
-                    : 'text-slate-600 hover:text-slate-900 dark:text-slate-400'
-                )}
-                title={t.juria.modes[m].label}
-              >
-                {JURIA_MODE_VISUAL[m].icon}
-              </button>
-            ))}
+        : <div className="inline-flex shrink-0 rounded-lg border border-slate-200 bg-slate-50 p-0.5 dark:border-slate-700 dark:bg-slate-900">
+            {modes.map((m) => {
+              const Icon = JURIA_MODE_VISUAL[m].Icon;
+              return (
+                <button
+                  key={m}
+                  type="button"
+                  onClick={() => onModeChange(m)}
+                  className={cn(
+                    'inline-flex h-8 min-w-8 items-center justify-center gap-1 rounded-md px-2 text-[11px] font-medium transition',
+                    mode === m
+                      ? 'bg-white text-[#64499D] shadow-sm dark:bg-slate-800'
+                      : 'text-slate-500 hover:text-slate-800 dark:text-slate-400'
+                  )}
+                  title={t.juria.modes[m].label}
+                >
+                  <Icon className="h-3.5 w-3.5" />
+                  <span className="hidden md:inline">{t.juria.modes[m].shortLabel}</span>
+                </button>
+              );
+            })}
           </div>
         }
+
+        <div className="inline-flex shrink-0 rounded-lg border border-slate-200 p-0.5 text-[11px] dark:border-slate-700">
+          {langs.map((lang) => (
+            <button
+              key={lang}
+              type="button"
+              onClick={() => setAskLang(lang)}
+              className={cn(
+                'h-8 min-w-8 rounded-md px-2 font-medium transition',
+                askLang === lang ? 'bg-[#64499D]/10 text-[#64499D]' : 'text-slate-500 hover:text-slate-800'
+              )}
+            >
+              {t.juria.askLang[lang]}
+            </button>
+          ))}
+        </div>
+
         {showCaseLink &&
           (linkedCase ? (
-            <span className="inline-flex items-center gap-1 rounded-full bg-indigo-50 px-2 py-1 text-[11px] text-indigo-800 dark:bg-indigo-950/50 dark:text-indigo-200">
-              #{linkedCase.reference ?? '—'} — {linkedCase.title ?? ''}
+            <span className="inline-flex max-w-[min(100%,16rem)] shrink-0 items-center gap-1 truncate rounded-full bg-[#64499D]/10 px-2 py-1.5 text-[11px] text-[#4D3680] dark:bg-[#64499D]/20 dark:text-[#CFC2FF]">
+              {t.juria.context.label}: #{linkedCase.reference ?? '—'}
+              {linkedCase.title ? ` — ${linkedCase.title}` : ''}
               {onUnlinkCase && (
-                <button type="button" className="ml-1 rounded p-0.5 hover:bg-indigo-100 dark:hover:bg-indigo-900" onClick={onUnlinkCase}>
+                <button type="button" className="ms-0.5 rounded p-0.5 hover:bg-[#64499D]/15" onClick={onUnlinkCase}>
                   <X className="h-3 w-3" />
                 </button>
               )}
             </span>
           ) : (
-            <CaseLinkDropdown compact onSelect={onLinkCase} />
+            <div className="shrink-0">
+              <CaseLinkDropdown compact onSelect={onLinkCase} />
+            </div>
           ))}
+
+        <p className="ms-auto hidden shrink-0 text-[10px] text-slate-400 lg:block">{t.juria.keyboardHint}</p>
       </div>
     </div>
   );

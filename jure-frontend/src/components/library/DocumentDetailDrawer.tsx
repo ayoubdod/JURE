@@ -42,6 +42,12 @@ import { isAxiosError } from 'axios';
 import { cn } from '@/lib/utils';
 import { API_ORIGIN } from '@/config/api';
 import { useAppTranslation } from '@/i18n';
+import {
+  inferLegalArea,
+  mergeAreaIntoTags,
+  splitDocumentTags,
+  type LegalAreaId,
+} from '@/lib/libraryTaxonomy';
 
 export interface DocumentDetailDrawerRef {
   open: (doc: API.Document) => void;
@@ -66,8 +72,9 @@ const DocumentDetailDrawer = forwardRef<
   const [open, setOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [legalArea, setLegalArea] = useState<LegalAreaId | ''>('');
   const { toast } = useToast();
-  const { t, tf } = useAppTranslation();
+  const { t, tf, enumLabel, enumOptions } = useAppTranslation();
 
   const form = useForm<Partial<API.DocumentUpdateForm>>({
     resolver: yupResolver(schema) as never,
@@ -76,10 +83,12 @@ const DocumentDetailDrawer = forwardRef<
   useImperativeHandle(ref, () => ({
     open: (doc: API.Document) => {
       setCurrentDoc(doc);
+      const { area, userTags } = splitDocumentTags(doc.tags);
+      setLegalArea(area || inferLegalArea(doc) || '');
       form.reset({
         title: doc.title,
-        category: doc.category,
-        tags: doc.tags,
+        category: doc.category as API.DocumentCategory,
+        tags: userTags,
         description: doc.description,
       });
       setIsEditing(false);
@@ -137,16 +146,14 @@ const DocumentDetailDrawer = forwardRef<
         updateData.title = data.title;
       if (data.category !== undefined && data.category !== currentDoc.category)
         updateData.category = data.category as API.DocumentCategory;
+      const nextTags = mergeAreaIntoTags(data.tags || [], legalArea || null);
+      if (JSON.stringify(nextTags) !== JSON.stringify(currentDoc.tags || []))
+        updateData.tags = nextTags;
       if (
         data.description !== undefined &&
         (data.description || '') !== (currentDoc.description || '')
       )
         updateData.description = data.description;
-      if (
-        data.tags !== undefined &&
-        JSON.stringify(data.tags) !== JSON.stringify(currentDoc.tags)
-      )
-        updateData.tags = data.tags;
 
       if (Object.keys(updateData).length <= 1) {
         toast({ title: 'No changes', description: 'Nothing to save.' });
@@ -213,8 +220,13 @@ const DocumentDetailDrawer = forwardRef<
 
   const shared = Boolean(currentDoc.is_shared);
   const categoryLabel =
-    DocumentCategory.options.find((c) => c.value === currentDoc.category)
-      ?.label || currentDoc.category;
+    enumLabel('documentCategory', currentDoc.category) ||
+    DocumentCategory.getLabel(currentDoc.category) ||
+    t.library.unclassifiedCategory;
+  const areaLabel =
+    (legalArea && enumLabel('documentLegalArea', legalArea)) ||
+    (inferLegalArea(currentDoc) &&
+      enumLabel('documentLegalArea', inferLegalArea(currentDoc)!));
 
   return (
     <Sheet
@@ -343,7 +355,27 @@ const DocumentDetailDrawer = forwardRef<
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      {DocumentCategory.options.map((c) => (
+                      {enumOptions('documentCategory').map((c) => (
+                        <SelectItem key={c.value} value={c.value}>
+                          {c.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <label className="text-[11px] font-medium text-slate-500 dark:text-slate-400 block mb-1.5">
+                    {t.document.update.areaLabel}
+                  </label>
+                  <Select
+                    value={legalArea || undefined}
+                    onValueChange={(v) => setLegalArea(v as LegalAreaId)}
+                  >
+                    <SelectTrigger className="h-8 text-[13px] border-slate-200 dark:border-slate-700">
+                      <SelectValue placeholder={t.document.update.areaPlaceholder} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {enumOptions('documentLegalArea').map((c) => (
                         <SelectItem key={c.value} value={c.value}>
                           {c.label}
                         </SelectItem>
@@ -380,6 +412,16 @@ const DocumentDetailDrawer = forwardRef<
                     {categoryLabel}
                   </dd>
                 </div>
+                {areaLabel ? (
+                  <div>
+                    <dt className="text-[11px] text-slate-500 dark:text-slate-400 mb-0.5">
+                      {t.document.update.areaLabel}
+                    </dt>
+                    <dd className="text-[#0F172A] dark:text-[#F8FAFC]">
+                      {areaLabel}
+                    </dd>
+                  </div>
+                ) : null}
                 <div>
                   <dt className="text-[11px] text-slate-500 dark:text-slate-400 mb-0.5">
                     Size
@@ -410,13 +452,13 @@ const DocumentDetailDrawer = forwardRef<
                     </dd>
                   </div>
                 )}
-                {currentDoc.tags && currentDoc.tags.length > 0 && (
+                {splitDocumentTags(currentDoc.tags).userTags.length > 0 && (
                   <div>
                     <dt className="text-[11px] text-slate-500 dark:text-slate-400 mb-0.5">
                       Tags
                     </dt>
                     <dd className="flex flex-wrap gap-1">
-                      {currentDoc.tags.map((tag) => (
+                      {splitDocumentTags(currentDoc.tags).userTags.map((tag) => (
                         <span
                           key={tag}
                           className="px-1.5 py-0.5 text-[11px] rounded border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 text-slate-600 dark:text-slate-300"

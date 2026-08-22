@@ -1,4 +1,5 @@
 from django.db.models import OuterRef, Subquery
+from django.shortcuts import get_object_or_404
 from rest_framework import generics, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -25,6 +26,15 @@ def get_case_for_user(user, case_id: int | None) -> Case | None:
         return Case.objects.get(pk=case_id, cabinet=cab)
     except Case.DoesNotExist:
         return None
+
+
+def get_user_conversation(user, conversation_id, *, restore_archived: bool = False) -> JuriaConversation:
+    """Return the current user's conversation, or 404. Optionally un-archive for writes."""
+    conv = get_object_or_404(JuriaConversation.objects.filter(user=user), pk=conversation_id)
+    if restore_archived and conv.is_archived:
+        conv.is_archived = False
+        conv.save(update_fields=["is_archived", "updated_at"])
+    return conv
 
 
 class JuriaConversationListCreateView(JuriaEnabledMixin, generics.ListCreateAPIView):
@@ -81,6 +91,16 @@ class JuriaConversationListCreateView(JuriaEnabledMixin, generics.ListCreateAPIV
             linked_case=case,
             title=title.strip(),
         )
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        detail = JuriaConversationDetailSerializer(
+            serializer.instance, context=self.get_serializer_context()
+        )
+        headers = self.get_success_headers(detail.data)
+        return Response(detail.data, status=status.HTTP_201_CREATED, headers=headers)
 
 
 class JuriaConversationDetailDestroyView(JuriaEnabledMixin, generics.RetrieveDestroyAPIView):

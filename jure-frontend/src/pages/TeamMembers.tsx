@@ -1,6 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
-  Search,
   Plus,
   MoreHorizontal,
   Mail,
@@ -68,6 +67,8 @@ import { getCabinetMemberRouteId, getMemberWorkloadDisplay } from '@/utils/cabin
 import { isCabinetMemberOnline } from '@/lib/presence';
 import { useOnlineIds } from '@/hooks/useOnlinePresence';
 import { cn } from '@/lib/utils';
+import CompactSearch from '@/components/common/CompactSearch';
+import MobileFilterSheet, { FilterField } from '@/components/common/MobileFilterSheet';
 import { formatDate, useAppTranslation } from '@/i18n';
 import type { Lang } from '@/i18n';
 import { useShortcutAction } from '@/context/ShortcutsContext';
@@ -809,7 +810,7 @@ const TeamMembers: React.FC = () => {
             );
           })}
         </div>
-        <div className="flex flex-wrap items-center gap-4 rounded-lg border border-slate-200/80 dark:border-slate-800 bg-slate-50/80 px-4 py-3 text-[12px] text-slate-600 dark:text-slate-400">
+        <div className="flex flex-wrap items-center gap-4 rounded-lg border border-slate-200/80 bg-slate-50/80 px-4 py-3 text-[12px] text-slate-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400">
           <span className="inline-flex items-center gap-1.5">
             <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" aria-hidden />
             {t.team.workloadLegend.low}
@@ -889,101 +890,72 @@ const TeamMembers: React.FC = () => {
 
         {/* Sticky work controls */}
         <div className="ws-toolbar-sticky sticky top-0 z-30 bg-slate-50/95 dark:bg-slate-950/95 border-b border-slate-200/90 dark:border-slate-800 pt-1">
-          <div className="rounded-lg border border-slate-200/90 dark:border-slate-800 bg-white/95 dark:bg-slate-950/90 px-2 py-2 sm:px-3">
-            <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
-              <div className="relative min-w-[min(100%,12rem)] flex-1 sm:min-w-[14rem] sm:flex-[1.4]">
-                <Search
-                  size={14}
-                  className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400"
-                />
-                <input
-                  ref={searchInputRef}
-                  type="search"
-                  placeholder={t.team.searchPlaceholder}
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Escape') {
-                      setSearchTerm('');
-                      (e.target as HTMLInputElement).blur();
-                    }
-                  }}
-                  className={cn(
-                    'h-9 w-full rounded-md border bg-white pl-8 pr-8 text-[13px] text-slate-900 dark:bg-slate-950 dark:text-white',
-                    'border-slate-200 dark:border-slate-700',
-                    'focus:border-[#6D54B5] focus:outline-none focus:ring-2 focus:ring-[#6D54B5]/25',
-                    searchTerm.trim() && 'ring-1 ring-[#6D54B5]/25 border-[#6D54B5]/40'
-                  )}
-                  aria-label={t.team.searchAria}
-                />
-                {searchTerm.trim() ? (
-                  <button
-                    type="button"
-                    className="absolute right-1.5 top-1/2 -translate-y-1/2 rounded p-1 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 min-h-[28px] min-w-[28px] flex items-center justify-center"
-                    onClick={() => setSearchTerm('')}
-                    aria-label={t.team.clearSearch}
-                  >
-                    <X className="h-3.5 w-3.5" />
-                  </button>
-                ) : null}
-              </div>
+          <div className="rounded-lg border border-slate-200/90 bg-white/95 px-2 py-2 dark:border-slate-800 dark:bg-slate-950/90 sm:px-3">
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <CompactSearch
+                value={searchTerm}
+                onChange={setSearchTerm}
+                placeholder={t.team.searchPlaceholder}
+                ariaLabel={t.team.searchAria}
+                clearAriaLabel={t.team.clearSearch}
+                inputRef={searchInputRef}
+              />
 
-              <Select
-                value={roleFilter || 'all'}
-                onValueChange={(v) => setRoleFilter(v === 'all' ? '' : (v as API.Role))}
+              <MobileFilterSheet
+                title={t.common.filter}
+                count={(roleFilter ? 1 : 0) + (statusFilter ? 1 : 0)}
+                footer={
+                  roleFilter || statusFilter ? (
+                    <Button variant="ghost" size="sm" className="h-9 w-full text-[12px]" onClick={resetFilters}>
+                      {t.team.reset}
+                    </Button>
+                  ) : null
+                }
               >
-                <SelectTrigger
-                  className={cn(
-                    'h-9 w-[130px] rounded-md border-slate-200 text-[12px] dark:border-slate-700',
-                    roleFilter && 'ring-1 ring-[#6D54B5]/25 border-[#6D54B5]/40'
-                  )}
+                <FilterField label={t.team.filters.role}>
+                <Select
+                  value={roleFilter || 'all'}
+                  onValueChange={(v) => setRoleFilter(v === 'all' ? '' : (v as API.Role))}
                 >
-                  <SelectValue placeholder={t.team.filters.role} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">{t.team.filters.allRoles}</SelectItem>
-                  {ROLE_OPTIONS.filter(Boolean).map((r) => (
-                    <SelectItem key={r} value={r}>
-                      {roleLabel(r as API.Role)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              <Select
-                value={statusFilter || 'all'}
-                onValueChange={(v) => setStatusFilter(v === 'all' ? '' : v)}
-              >
-                <SelectTrigger
-                  className={cn(
-                    'h-9 w-[130px] rounded-md border-slate-200 text-[12px] dark:border-slate-700',
-                    statusFilter && 'ring-1 ring-[#6D54B5]/25 border-[#6D54B5]/40'
-                  )}
+                  <SelectTrigger className="h-9 w-full rounded-md text-[12px]">
+                    <SelectValue placeholder={t.team.filters.role} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">{t.team.filters.allRoles}</SelectItem>
+                    {ROLE_OPTIONS.filter(Boolean).map((r) => (
+                      <SelectItem key={r} value={r}>
+                        {roleLabel(r as API.Role)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                </FilterField>
+                <FilterField label={t.team.filters.status}>
+                <Select
+                  value={statusFilter || 'all'}
+                  onValueChange={(v) => setStatusFilter(v === 'all' ? '' : v)}
                 >
-                  <SelectValue placeholder={t.team.filters.status} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">{t.team.filters.allStatuses}</SelectItem>
-                  {STATUS_OPTIONS.filter(Boolean).map((s) => (
-                    <SelectItem key={s} value={s}>
-                      {s === 'active'
-                        ? t.team.status.active
-                        : s === 'offline'
-                          ? t.team.status.offline
-                          : t.team.status.pending}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              {hasActiveFilters && (
-                <Button variant="ghost" size="sm" className="h-9 text-[12px] px-2" onClick={resetFilters}>
-                  {t.team.reset}
-                </Button>
-              )}
+                  <SelectTrigger className="h-9 w-full rounded-md text-[12px]">
+                    <SelectValue placeholder={t.team.filters.status} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">{t.team.filters.allStatuses}</SelectItem>
+                    {STATUS_OPTIONS.filter(Boolean).map((s) => (
+                      <SelectItem key={s} value={s}>
+                        {s === 'active'
+                          ? t.team.status.active
+                          : s === 'offline'
+                            ? t.team.status.offline
+                            : t.team.status.pending}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                </FilterField>
+              </MobileFilterSheet>
 
               <div
-                className="inline-flex md:hidden items-center rounded-md border border-slate-200 dark:border-slate-700 bg-slate-100/80 p-0.5 ml-auto"
+                className="inline-flex md:hidden items-center rounded-md border border-slate-200 dark:border-slate-700 bg-slate-100/80 dark:bg-slate-900 p-0.5 ml-auto"
                 role="group"
                 aria-label={t.team.views.aria}
               >
@@ -993,7 +965,7 @@ const TeamMembers: React.FC = () => {
                   className={cn(
                     'inline-flex items-center rounded-md px-2.5 py-1.5 text-[11px] font-semibold',
                     viewMode !== 'workload'
-                      ? 'bg-white dark:bg-slate-950 shadow-sm ring-1 ring-slate-200/80'
+                      ? 'bg-white text-slate-900 shadow-sm ring-1 ring-slate-200/80 dark:bg-slate-800 dark:text-white dark:ring-slate-600'
                       : 'text-slate-600 dark:text-slate-400'
                   )}
                   aria-pressed={viewMode !== 'workload'}
@@ -1006,7 +978,7 @@ const TeamMembers: React.FC = () => {
                   className={cn(
                     'inline-flex items-center rounded-md px-2.5 py-1.5 text-[11px] font-semibold',
                     viewMode === 'workload'
-                      ? 'bg-white dark:bg-slate-950 shadow-sm ring-1 ring-slate-200/80'
+                      ? 'bg-white text-slate-900 shadow-sm ring-1 ring-slate-200/80 dark:bg-slate-800 dark:text-white dark:ring-slate-600'
                       : 'text-slate-600 dark:text-slate-400'
                   )}
                   aria-pressed={viewMode === 'workload'}

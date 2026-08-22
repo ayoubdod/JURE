@@ -8,7 +8,6 @@ import React, {
 } from 'react';
 import { useNavigate } from 'react-router';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import {
   Select,
   SelectContent,
@@ -17,7 +16,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import {
-  Search,
   Plus,
   Briefcase,
   LayoutGrid,
@@ -38,6 +36,8 @@ import ClientProfilePreview, { ClientProfilePreviewRef } from '@/components/clie
 import userIcon from '@/assets/icons/userIcon.png';
 import { useDebounce } from '@/hooks/use-debounce';
 import { cn } from '@/lib/utils';
+import CompactSearch from '@/components/common/CompactSearch';
+import MobileFilterSheet, { FilterField } from '@/components/common/MobileFilterSheet';
 import { useAppTranslation } from '@/i18n';
 import { useShortcutAction } from '@/context/ShortcutsContext';
 import '@/styles/workspace-list.css';
@@ -714,96 +714,74 @@ const Clients: React.FC = () => {
                 })}
           </section>
 
-          <div className="sticky top-0 z-30 mt-5 rounded-xl border border-slate-200/90 bg-white/95 px-3 py-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)] backdrop-blur-md dark:border-slate-800 dark:bg-slate-950/95 sm:px-4">
-            <div className="flex min-w-0 flex-wrap items-center gap-2">
-              <div className="relative min-w-[min(100%,12rem)] flex-1 sm:min-w-[16rem] sm:flex-[1.6]">
-                <Search
-                  className="pointer-events-none absolute start-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400"
-                  aria-hidden
-                />
-                <Input
-                  ref={searchInputRef}
-                  type="search"
-                  placeholder={t.clients.searchPlaceholderWide}
-                  className={cn(
-                    'h-9 rounded-md ps-8 pe-8 text-[13px]',
-                    searchTerm.trim() && 'border-[#64499D]/30 ring-1 ring-[#64499D]/20'
-                  )}
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Escape') {
-                      setSearchTerm('');
-                      (e.target as HTMLInputElement).blur();
-                    }
-                  }}
-                  aria-label={t.clients.searchAria}
-                />
-                <span className="pointer-events-none absolute inset-y-0 start-8 hidden items-center text-[13px] text-transparent md:flex">
-                  {/* wide placeholder overlay via native placeholder below md; custom above */}
-                </span>
-                {searchTerm.trim() !== '' && (
-                  <button
-                    type="button"
-                    className="absolute end-1.5 top-1/2 flex min-h-[28px] min-w-[28px] -translate-y-1/2 items-center justify-center rounded p-1 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
-                    onClick={() => setSearchTerm('')}
-                    aria-label={t.clients.clearSearch}
-                  >
-                    <X className="h-3.5 w-3.5" />
-                  </button>
-                )}
-              </div>
+          <div className="sticky top-0 z-30 mt-5 rounded-xl border border-slate-200/90 bg-white/95 px-3 py-2 shadow-[0_1px_2px_rgba(0,0,0,0.04)] backdrop-blur-md dark:border-slate-800 dark:bg-slate-950/95 sm:px-4 sm:py-3">
+            <div className="flex min-w-0 items-center gap-1.5 sm:gap-2">
+              <CompactSearch
+                value={searchTerm}
+                onChange={setSearchTerm}
+                placeholder={t.clients.searchPlaceholderWide}
+                ariaLabel={t.clients.searchAria}
+                clearAriaLabel={t.clients.clearSearch}
+                inputRef={searchInputRef}
+              />
 
-              <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as StatusFilter)}>
-                <SelectTrigger
-                  className={cn(
-                    'h-9 w-[118px] rounded-md text-[12px]',
-                    statusFilter !== 'all' && 'border-[#64499D]/40 ring-1 ring-[#64499D]/25'
-                  )}
-                  aria-label={t.clients.filters.status}
-                >
-                  <SelectValue placeholder={t.clients.filters.status} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">{t.clients.filters.allStatuses}</SelectItem>
-                  <SelectItem value="active">{t.clients.filters.active}</SelectItem>
-                  <SelectItem value="inactive">{t.clients.filters.inactive}</SelectItem>
-                </SelectContent>
-              </Select>
-
-              <Select value={typeFilter} onValueChange={(v) => setTypeFilter(v as TypeFilter)}>
-                <SelectTrigger
-                  className={cn(
-                    'h-9 w-[128px] rounded-md text-[12px]',
-                    typeFilter !== 'all' && 'border-[#64499D]/40 ring-1 ring-[#64499D]/25'
-                  )}
-                  aria-label={t.clients.filters.type}
-                >
-                  <SelectValue placeholder={t.clients.filters.type} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">{t.clients.filters.allTypes}</SelectItem>
-                  <SelectItem value="INDIVIDUAL">{t.clients.filters.individual}</SelectItem>
-                  <SelectItem value="COMPANY">{t.clients.filters.company}</SelectItem>
-                </SelectContent>
-              </Select>
-
-              <Select value={casesFilter} onValueChange={(v) => setCasesFilter(v as CasesFilter)}>
-                <SelectTrigger
-                  className={cn(
-                    'h-9 w-[132px] rounded-md text-[12px]',
-                    casesFilter !== 'all' && 'border-[#64499D]/40 ring-1 ring-[#64499D]/25'
-                  )}
-                  aria-label={t.clients.filters.cases}
-                >
-                  <SelectValue placeholder={t.clients.filters.cases} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">{t.clients.filters.allCases}</SelectItem>
-                  <SelectItem value="with">{t.clients.filters.withCases}</SelectItem>
-                  <SelectItem value="without">{t.clients.filters.withoutCases}</SelectItem>
-                </SelectContent>
-              </Select>
+              <MobileFilterSheet
+                title={t.clients.filters.applied}
+                count={(statusFilter !== 'all' ? 1 : 0) + (typeFilter !== 'all' ? 1 : 0) + (casesFilter !== 'all' ? 1 : 0)}
+                footer={
+                  statusFilter !== 'all' || typeFilter !== 'all' || casesFilter !== 'all' ? (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-9 w-full text-[12px]"
+                      onClick={() => {
+                        setStatusFilter('all');
+                        setTypeFilter('all');
+                        setCasesFilter('all');
+                      }}
+                    >
+                      {t.clients.filters.clearAll}
+                    </Button>
+                  ) : null
+                }
+              >
+                <FilterField label={t.clients.filters.status}>
+                <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as StatusFilter)}>
+                  <SelectTrigger className="h-9 w-full rounded-md text-[12px]" aria-label={t.clients.filters.status}>
+                    <SelectValue placeholder={t.clients.filters.status} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">{t.clients.filters.allStatuses}</SelectItem>
+                    <SelectItem value="active">{t.clients.filters.active}</SelectItem>
+                    <SelectItem value="inactive">{t.clients.filters.inactive}</SelectItem>
+                  </SelectContent>
+                </Select>
+                </FilterField>
+                <FilterField label={t.clients.filters.type}>
+                <Select value={typeFilter} onValueChange={(v) => setTypeFilter(v as TypeFilter)}>
+                  <SelectTrigger className="h-9 w-full rounded-md text-[12px]" aria-label={t.clients.filters.type}>
+                    <SelectValue placeholder={t.clients.filters.type} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">{t.clients.filters.allTypes}</SelectItem>
+                    <SelectItem value="INDIVIDUAL">{t.clients.filters.individual}</SelectItem>
+                    <SelectItem value="COMPANY">{t.clients.filters.company}</SelectItem>
+                  </SelectContent>
+                </Select>
+                </FilterField>
+                <FilterField label={t.clients.filters.cases}>
+                <Select value={casesFilter} onValueChange={(v) => setCasesFilter(v as CasesFilter)}>
+                  <SelectTrigger className="h-9 w-full rounded-md text-[12px]" aria-label={t.clients.filters.cases}>
+                    <SelectValue placeholder={t.clients.filters.cases} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">{t.clients.filters.allCases}</SelectItem>
+                    <SelectItem value="with">{t.clients.filters.withCases}</SelectItem>
+                    <SelectItem value="without">{t.clients.filters.withoutCases}</SelectItem>
+                  </SelectContent>
+                </Select>
+                </FilterField>
+              </MobileFilterSheet>
 
               <div
                 className="ms-auto hidden items-center rounded-md border border-slate-200 bg-slate-100/80 p-0.5 dark:border-slate-700 dark:bg-slate-900/50 md:inline-flex"

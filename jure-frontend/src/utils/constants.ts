@@ -1,6 +1,7 @@
 import { API_ORIGIN } from '@/config/api';
 import { translateEnum } from '@/i18n/enums';
 import { detectInitialLanguage } from '@/i18n/locale';
+import { normalizeDocumentCategory } from '@/lib/libraryTaxonomy';
 
 export type Option = {
     label:string;
@@ -101,7 +102,7 @@ export class TaskStatus {
   static readonly options: Option[] = [
     { label: 'To Do', value: TaskStatus.TODO },
     { label: 'In Progress', value: TaskStatus.IN_PROGRESS },
-    { label: 'Done', value: TaskStatus.DONE },
+    { label: 'Completed', value: TaskStatus.DONE },
     { label: 'Cancelled', value: TaskStatus.CANCELLED },
   ];
 
@@ -130,26 +131,67 @@ export class AddressTypes {
 }
 
 export class DocumentCategory {
-    static readonly LAW = 'law';
-    static readonly TEMPLATES = 'templates';
-    static readonly CONTRACTS = 'contracts';
-    static readonly RESEARCH = 'research';
-    static readonly LEGAL_FORMS = 'legal_forms';
-    static readonly TRAINING = 'training';
-    static readonly EVIDENCE = 'evidence';
+    static readonly LEGISLATION_REGULATIONS = 'legislation_regulations';
+    static readonly CASE_LAW_JURISPRUDENCE = 'case_law_jurisprudence';
+    static readonly CONTRACTS_AGREEMENTS = 'contracts_agreements';
+    static readonly PLEADINGS_PROCEEDINGS = 'pleadings_proceedings';
+    static readonly FORMS_TEMPLATES = 'forms_templates';
+    static readonly LEGAL_RESEARCH_OPINIONS = 'legal_research_opinions';
+    static readonly CORPORATE_GOVERNANCE = 'corporate_governance';
+    static readonly COMPLIANCE_POLICIES = 'compliance_policies';
+    static readonly EVIDENCE_CASE_MATERIALS = 'evidence_case_materials';
+    static readonly TRAINING_KNOWLEDGE = 'training_knowledge';
 
     static readonly options: Option[] = [
-        { label: 'Law', value: DocumentCategory.LAW },
-        { label: 'Templates', value: DocumentCategory.TEMPLATES },
-        { label: 'Contracts', value: DocumentCategory.CONTRACTS },
-        { label: 'Research', value: DocumentCategory.RESEARCH },
-        { label: 'Legal Forms', value: DocumentCategory.LEGAL_FORMS },
-        { label: 'Training', value: DocumentCategory.TRAINING },
-        { label: 'Evidence', value: DocumentCategory.EVIDENCE },
+        { label: 'Legislation & Regulations', value: DocumentCategory.LEGISLATION_REGULATIONS },
+        { label: 'Case Law & Jurisprudence', value: DocumentCategory.CASE_LAW_JURISPRUDENCE },
+        { label: 'Contracts & Agreements', value: DocumentCategory.CONTRACTS_AGREEMENTS },
+        { label: 'Pleadings & Proceedings', value: DocumentCategory.PLEADINGS_PROCEEDINGS },
+        { label: 'Forms & Templates', value: DocumentCategory.FORMS_TEMPLATES },
+        { label: 'Legal Research & Opinions', value: DocumentCategory.LEGAL_RESEARCH_OPINIONS },
+        { label: 'Corporate & Governance', value: DocumentCategory.CORPORATE_GOVERNANCE },
+        { label: 'Compliance & Policies', value: DocumentCategory.COMPLIANCE_POLICIES },
+        { label: 'Evidence & Case Materials', value: DocumentCategory.EVIDENCE_CASE_MATERIALS },
+        { label: 'Training & Knowledge', value: DocumentCategory.TRAINING_KNOWLEDGE },
     ];
 
     static getLabel(value: string): string {
-        return translateEnum(detectInitialLanguage(), 'documentCategory', value) || value;
+        const normalized = normalizeDocumentCategory(value) || value;
+        return translateEnum(detectInitialLanguage(), 'documentCategory', normalized) || normalized;
+    }
+}
+
+export class LegalArea {
+    static readonly CORPORATE_COMMERCIAL = 'corporate_commercial';
+    static readonly MA_PRIVATE_EQUITY = 'ma_private_equity';
+    static readonly CONTRACTS = 'contracts';
+    static readonly LITIGATION_DISPUTE_RESOLUTION = 'litigation_dispute_resolution';
+    static readonly EMPLOYMENT_HR = 'employment_hr';
+    static readonly TAX = 'tax';
+    static readonly REGULATORY_COMPLIANCE = 'regulatory_compliance';
+    static readonly CORPORATE_GOVERNANCE = 'corporate_governance';
+    static readonly REAL_ESTATE_CONSTRUCTION = 'real_estate_construction';
+    static readonly BANKING_FINANCE = 'banking_finance';
+    static readonly IP_TECHNOLOGY_DATA = 'ip_technology_data';
+    static readonly PUBLIC_ADMINISTRATIVE = 'public_administrative';
+
+    static readonly options: Option[] = [
+        { label: 'Corporate & Commercial', value: LegalArea.CORPORATE_COMMERCIAL },
+        { label: 'M&A & Private Equity', value: LegalArea.MA_PRIVATE_EQUITY },
+        { label: 'Contracts', value: LegalArea.CONTRACTS },
+        { label: 'Litigation & Dispute Resolution', value: LegalArea.LITIGATION_DISPUTE_RESOLUTION },
+        { label: 'Employment & HR', value: LegalArea.EMPLOYMENT_HR },
+        { label: 'Tax', value: LegalArea.TAX },
+        { label: 'Regulatory & Compliance', value: LegalArea.REGULATORY_COMPLIANCE },
+        { label: 'Corporate Governance', value: LegalArea.CORPORATE_GOVERNANCE },
+        { label: 'Real Estate & Construction', value: LegalArea.REAL_ESTATE_CONSTRUCTION },
+        { label: 'Banking & Finance', value: LegalArea.BANKING_FINANCE },
+        { label: 'Intellectual Property, Technology & Data', value: LegalArea.IP_TECHNOLOGY_DATA },
+        { label: 'Public & Administrative', value: LegalArea.PUBLIC_ADMINISTRATIVE },
+    ];
+
+    static getLabel(value: string): string {
+        return translateEnum(detectInitialLanguage(), 'documentLegalArea', value) || value;
     }
 }
 

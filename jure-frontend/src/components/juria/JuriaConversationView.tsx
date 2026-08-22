@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import dayjs from 'dayjs';
-import { Bot, Download, Eye, Link2, MoreHorizontal, User } from 'lucide-react';
+import { Copy, Download, Eye, FileText, Link2, MoreHorizontal, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -13,7 +13,7 @@ import { JuriaMarkdown } from '@/components/juria/JuriaMarkdown';
 import { JuriaComposer } from '@/components/juria/JuriaComposer';
 import { DocumentDraftingSection } from '@/components/juria/DocumentDraftingSection';
 import { CaseLinkDropdown } from '@/components/juria/CaseLinkDropdown';
-import { JURIA_MODE_VISUAL } from '@/components/juria/juriaConstants';
+import { juriaModeVisual, splitJuriaSources } from '@/components/juria/juriaConstants';
 import useJuriaStore from '@/stores/juriaStore';
 import type { JuriaCaseContextPayload } from '@/types/juria';
 import { cn } from '@/lib/utils';
@@ -21,6 +21,7 @@ import { useNavigate } from 'react-router';
 import { navigateToCaseById } from '@/lib/caseRoutes';
 import { useToast } from '@/hooks/use-toast';
 import { getJuriaErrorMessage } from '@/utils/juriaErrors';
+import { useAppTranslation } from '@/i18n';
 
 export function JuriaConversationView({
   caseContext: _caseContext,
@@ -32,6 +33,7 @@ export function JuriaConversationView({
   showCaseLink?: boolean;
 }) {
   void _caseContext;
+  const { t } = useAppTranslation();
   const navigate = useNavigate();
   const { toast } = useToast();
   const conversations = useJuriaStore((s) => s.conversations);
@@ -50,6 +52,9 @@ export function JuriaConversationView({
   const [titleEdit, setTitleEdit] = useState('');
   const [attach, setAttach] = useState<File | null>(null);
   const abortRef = useRef<AbortController | null>(null);
+  const bottomRef = useRef<HTMLDivElement | null>(null);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [statusPhase, setStatusPhase] = useState<0 | 1 | 2>(0);
   const [slowHint, setSlowHint] = useState(false);
   const [showAbort, setShowAbort] = useState(false);
 
@@ -61,15 +66,24 @@ export function JuriaConversationView({
     if (!activeId || processingId !== activeId) {
       setSlowHint(false);
       setShowAbort(false);
+      setStatusPhase(0);
       return;
     }
+    const t2 = window.setTimeout(() => setStatusPhase(1), 1800);
+    const t5 = window.setTimeout(() => setStatusPhase(2), 4200);
     const t15 = window.setTimeout(() => setSlowHint(true), 15_000);
     const t20 = window.setTimeout(() => setShowAbort(true), 20_000);
     return () => {
+      window.clearTimeout(t2);
+      window.clearTimeout(t5);
       window.clearTimeout(t15);
       window.clearTimeout(t20);
     };
   }, [activeId, processingId]);
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+  }, [conv?.messages.length, processingId]);
 
   const handleSend = async () => {
     if (!conv) return;
@@ -101,7 +115,7 @@ export function JuriaConversationView({
 
   if (!conv) return null;
 
-  const meta = JURIA_MODE_VISUAL[conv.mode];
+  const meta = juriaModeVisual(conv.mode);
   const linked = conv.caseId ?
       {
         reference: conv.caseReference,
@@ -111,10 +125,17 @@ export function JuriaConversationView({
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <header className="sticky top-0 z-10 flex shrink-0 items-start justify-between gap-2 border-b border-slate-100 bg-white/95 px-4 py-3 backdrop-blur dark:border-slate-800 dark:bg-slate-950/95">
+      <header className="hidden shrink-0 items-start justify-between gap-2 border-b border-slate-100 bg-white/95 px-4 py-3 backdrop-blur lg:flex dark:border-slate-800 dark:bg-slate-950/95">
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-lg">{meta.icon}</span>
+            {(() => {
+              const Icon = meta.Icon;
+              return (
+                <span className="flex h-7 w-7 items-center justify-center rounded-md bg-[#64499D]/10 text-[#64499D]">
+                  <Icon className="h-3.5 w-3.5" />
+                </span>
+              );
+            })()}
             <input
               value={titleEdit}
               onChange={(e) => setTitleEdit(e.target.value)}
@@ -188,13 +209,13 @@ export function JuriaConversationView({
         </div>
       </header>
 
-      <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
-        <div className="mx-auto flex max-w-3xl flex-col gap-4">
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 py-3 sm:px-4 sm:py-4">
+        <div className="mx-auto flex max-w-3xl flex-col gap-3 sm:gap-4">
           {conv.messages.map((m) => (
             <div key={m.id}>
               {m.role === 'user' && (
                 <div className="flex justify-end gap-2">
-                  <div className="max-w-[85%]">
+                  <div className="max-w-[92%] sm:max-w-[85%]">
                     {m.attachment && (
                       <div className="mb-1 inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs dark:border-slate-700 dark:bg-slate-900">
                         <Link2 className="h-3.5 w-3.5 text-slate-500 dark:text-slate-400" />
@@ -202,13 +223,13 @@ export function JuriaConversationView({
                       </div>
                     )}
                     {m.content ?
-                      <div className="rounded-2xl rounded-tr-sm bg-indigo-50 px-4 py-3 text-sm text-slate-900 dark:bg-indigo-950/40 dark:text-slate-100">
+                      <div className="rounded-2xl rounded-tr-sm bg-[#64499D]/10 px-4 py-3 text-sm text-slate-900 dark:bg-[#64499D]/20 dark:text-slate-100">
                         <p className="whitespace-pre-wrap">{m.content}</p>
                       </div>
                     : null}
                     <p className="mt-1 text-right text-[10px] text-slate-400">{dayjs(m.createdAt).format('HH:mm')}</p>
                   </div>
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-200">
+                  <div className="hidden h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#64499D]/10 text-[#64499D] sm:flex dark:bg-[#64499D]/25">
                     <User className="h-4 w-4" />
                   </div>
                 </div>
@@ -224,14 +245,17 @@ export function JuriaConversationView({
 
               {m.role === 'assistant' && (
                 <div className="flex justify-start gap-2">
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-violet-500/15 text-violet-700 dark:bg-violet-500/20 dark:text-violet-300">
-                    <Bot className="h-4 w-4" />
+                  <div className="hidden h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full ring-1 ring-slate-200 sm:flex dark:ring-slate-700">
+                    <img src="/images/juria-icon.png" alt="" className="h-8 w-8 object-cover" />
                   </div>
-                  <div className="max-w-[85%] min-w-0">
+                  <div className="max-w-[92%] min-w-0 sm:max-w-[85%]">
                     {m.documentCard ?
-                      <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
-                        <p className="text-xs font-semibold text-slate-900 dark:text-white">📄 Document généré</p>
-                        <p className="mt-1 text-sm font-medium text-indigo-700 dark:text-indigo-300">{m.documentCard.typeName}</p>
+                      <div className="rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-900">
+                        <p className="flex items-center gap-1.5 text-xs font-medium text-slate-900 dark:text-white">
+                          <FileText className="h-3.5 w-3.5 text-[#64499D]" />
+                          Document généré
+                        </p>
+                        <p className="mt-1 text-sm font-medium text-[#64499D]">{m.documentCard.typeName}</p>
                         <p className="text-[11px] text-slate-500 dark:text-slate-400">
                           Généré le {dayjs(m.documentCard.generatedAt).format('DD MMM YYYY')}
                         </p>
@@ -269,11 +293,51 @@ export function JuriaConversationView({
                           : null}
                         </div>
                       </div>
-                    : (
-                      <div className="rounded-2xl rounded-tl-sm border border-slate-200 bg-white px-4 py-3 text-slate-900 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100">
-                        {m.content ? <JuriaMarkdown content={m.content} /> : null}
-                      </div>
-                    )}
+                    : (() => {
+                        const { body, sources } = splitJuriaSources(m.content || '');
+                        return (
+                          <div className="rounded-2xl rounded-tl-sm border border-slate-200 bg-white px-4 py-3 text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100">
+                            {body ? <JuriaMarkdown content={body} /> : null}
+                            {sources.length > 0 && (
+                              <div className="mt-3 border-t border-slate-100 pt-3 dark:border-slate-800">
+                                <p className="mb-2 text-[11px] font-medium uppercase tracking-wide text-slate-400">
+                                  {t.juria.sources}
+                                </p>
+                                <ul className="space-y-1.5">
+                                  {sources.map((src) => (
+                                    <li key={src} className="text-[12px] leading-snug text-slate-600 dark:text-slate-300">
+                                      {src}
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })()}
+                    <div className="mt-1.5 flex flex-wrap items-center gap-1">
+                      <button
+                        type="button"
+                        className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800"
+                        onClick={() => {
+                          void navigator.clipboard.writeText(m.content || '').then(() => {
+                            setCopiedId(m.id);
+                            window.setTimeout(() => setCopiedId(null), 1500);
+                          });
+                        }}
+                      >
+                        <Copy className="h-3 w-3" />
+                        {copiedId === m.id ? t.juria.copied : t.juria.copy}
+                      </button>
+                      <button
+                        type="button"
+                        className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800"
+                        onClick={() => setDraft('')}
+                      >
+                        {t.juria.askFollowUp}
+                      </button>
+                      <span className="ms-auto text-[10px] text-slate-400">{dayjs(m.createdAt).format('HH:mm')}</span>
+                    </div>
                     {m.suggestions && m.suggestions.length > 0 && (
                       <div className="mt-2 flex gap-2 overflow-x-auto pb-1">
                         {m.suggestions.map((s) => (
@@ -281,14 +345,13 @@ export function JuriaConversationView({
                             key={s}
                             type="button"
                             onClick={() => setDraft(s)}
-                            className="shrink-0 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-[11px] text-slate-700 hover:border-indigo-300 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                            className="shrink-0 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-[11px] text-slate-700 hover:border-[#64499D]/40 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
                           >
                             {s}
                           </button>
                         ))}
                       </div>
                     )}
-                    <p className="mt-1 text-[10px] text-slate-400">{dayjs(m.createdAt).format('HH:mm')}</p>
                   </div>
                 </div>
               )}
@@ -297,18 +360,24 @@ export function JuriaConversationView({
 
           {processingId === conv.id && (
             <div className="flex gap-2">
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-violet-500/15 dark:bg-violet-500/20 text-violet-700 dark:text-violet-300">
-                <Bot className="h-4 w-4" />
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full ring-1 ring-slate-200 dark:ring-slate-700">
+                <img src="/images/juria-icon.png" alt="" className="h-8 w-8 object-cover" />
               </div>
               <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 dark:border-slate-700 dark:bg-slate-900">
                 <div className="flex items-center gap-2">
                   <div className="flex gap-1">
-                    <span className="h-2 w-2 animate-bounce rounded-full bg-slate-400 [animation-delay:-0.2s]" />
-                    <span className="h-2 w-2 animate-bounce rounded-full bg-slate-400 [animation-delay:-0.1s]" />
-                    <span className="h-2 w-2 animate-bounce rounded-full bg-slate-400" />
+                    <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#64499D]" />
+                    <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#64499D]/70 [animation-delay:150ms]" />
+                    <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#64499D]/40 [animation-delay:300ms]" />
                   </div>
-                  <span className="text-sm text-slate-600 dark:text-slate-300">
-                    {slowHint ? 'Juria prend plus de temps que prévu...' : 'Juria analyse votre demande...'}
+                  <span className="text-[13px] text-slate-500 dark:text-slate-300">
+                    {slowHint
+                      ? 'Juria prend plus de temps que prévu...'
+                      : statusPhase === 0
+                        ? t.juria.statusSearching
+                        : statusPhase === 1
+                          ? t.juria.statusAnalyzing
+                          : t.juria.statusPreparing}
                   </span>
                 </div>
                 {showAbort && (
@@ -319,6 +388,7 @@ export function JuriaConversationView({
               </div>
             </div>
           )}
+          <div ref={bottomRef} />
         </div>
       </div>
 
@@ -328,30 +398,33 @@ export function JuriaConversationView({
         </div>
       )}
 
-      <JuriaComposer
-        mode={conv.mode}
-        modeReadOnly
-        onModeChange={() => {}}
-        value={draft}
-        onChange={setDraft}
-        onSend={handleSend}
-        disabled={processingId === conv.id}
-        linkedCase={linked}
-        onLinkCase={(c) => {
-          void createLinkedConversation(c).catch((e) =>
-            toast({
-              title: 'Impossible de créer la conversation liée',
-              description: getJuriaErrorMessage(e),
-              variant: 'destructive',
-            })
-          );
-        }}
-        onUnlinkCase={() => linkCase(conv.id, null)}
-        compact={compact}
-        showCaseLink={showCaseLink}
-        attachment={attach}
-        onAttachmentChange={setAttach}
-      />
+      <div className="shrink-0 border-t border-slate-200 bg-white/95 backdrop-blur-md dark:border-slate-800 dark:bg-slate-950/95">
+        <p className="hidden px-4 pt-2 text-center text-[10px] leading-relaxed text-slate-400 sm:block">{t.juria.disclaimer}</p>
+        <JuriaComposer
+          mode={conv.mode}
+          modeReadOnly
+          onModeChange={() => {}}
+          value={draft}
+          onChange={setDraft}
+          onSend={handleSend}
+          disabled={processingId === conv.id}
+          linkedCase={linked}
+          onLinkCase={(c) => {
+            void createLinkedConversation(c).catch((e) =>
+              toast({
+                title: 'Impossible de créer la conversation liée',
+                description: getJuriaErrorMessage(e),
+                variant: 'destructive',
+              })
+            );
+          }}
+          onUnlinkCase={() => linkCase(conv.id, null)}
+          compact={compact}
+          showCaseLink={showCaseLink}
+          attachment={attach}
+          onAttachmentChange={setAttach}
+        />
+      </div>
     </div>
   );
 }

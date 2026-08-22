@@ -8,7 +8,7 @@ import React, {
   useState,
   startTransition,
 } from 'react';
-import { FolderTree, Plus, Upload } from 'lucide-react';
+import { FolderTree, PanelLeftClose, PanelLeftOpen, Plus, Upload, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { useToast } from '@/hooks/use-toast';
@@ -39,6 +39,8 @@ import {
   computeSmartMetrics,
   semanticFilter,
   matchesCollection,
+  matchesCategory,
+  matchesArea,
   getFavorites,
   toggleFavorite,
   COLLECTIONS,
@@ -48,6 +50,12 @@ import {
   type MobileKnowledgeTab,
   type KnowledgeSearchHandle,
 } from '@/components/library/knowledge-hub';
+import {
+  DOCUMENT_CATEGORY_IDS,
+  LEGAL_AREA_IDS,
+  type DocumentCategoryId,
+  type LegalAreaId,
+} from '@/lib/libraryTaxonomy';
 import { cn } from '@/lib/utils';
 import { importWithRetry } from '@/lib/chunkLoad';
 import { useAppTranslation } from '@/i18n';
@@ -68,6 +76,24 @@ const KnowledgeAIView = lazy(() =>
 
 type SortKey = 'date' | 'name' | 'size' | 'score';
 
+const COLLECTIONS_COLLAPSED_KEY = 'jure.library.collectionsCollapsed';
+
+function FilterChip({ label, onRemove }: { label: string; onRemove: () => void }) {
+  return (
+    <span className="inline-flex max-w-[16rem] shrink-0 items-center gap-1 rounded-full border border-slate-200 bg-slate-50 py-0.5 ps-2 pe-1 text-[11px] font-medium text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
+      <span className="truncate">{label}</span>
+      <button
+        type="button"
+        onClick={onRemove}
+        className="flex h-5 w-5 items-center justify-center rounded-full text-slate-400 hover:bg-slate-200 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-100"
+        aria-label={label}
+      >
+        <X className="h-3 w-3" />
+      </button>
+    </span>
+  );
+}
+
 function parseDocuments(data: unknown): API.Document[] {
   if (Array.isArray(data)) return data;
   if (data && typeof data === 'object' && 'results' in data) {
@@ -86,9 +112,11 @@ const ViewFallback = () => (
 );
 
 const Library = () => {
-  const { t, tf } = useAppTranslation();
+  const { t, tf, enumLabel } = useAppTranslation();
   const [searchTerm, setSearchTerm] = useState('');
   const [collection, setCollection] = useState<CollectionId>('all');
+  const [categoryFilter, setCategoryFilter] = useState<DocumentCategoryId | null>(null);
+  const [areaFilter, setAreaFilter] = useState<LegalAreaId | null>(null);
   const [viewMode, setViewMode] = useState<KnowledgeViewMode>('table');
   const [libraryItems, setLibraryItems] = useState<API.Document[]>([]);
   const [loading, setLoading] = useState(true);
@@ -99,7 +127,26 @@ const Library = () => {
   const [folderSheetOpen, setFolderSheetOpen] = useState(false);
   const [aiSheetOpen, setAiSheetOpen] = useState(false);
   const [mobileTab, setMobileTab] = useState<MobileKnowledgeTab>('browse');
+  const [collectionsCollapsed, setCollectionsCollapsed] = useState(() => {
+    try {
+      return localStorage.getItem(COLLECTIONS_COLLAPSED_KEY) === '1';
+    } catch {
+      return false;
+    }
+  });
   const { toast } = useToast();
+
+  const toggleCollectionsCollapsed = useCallback(() => {
+    setCollectionsCollapsed((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem(COLLECTIONS_COLLAPSED_KEY, next ? '1' : '0');
+      } catch {
+        /* ignore quota / private mode */
+      }
+      return next;
+    });
+  }, []);
 
   const createModalRef = useRef<DocumentCreateModalRef>(null);
   const updateModalRef = useRef<DocumentUpdateModalRef>(null);
@@ -160,21 +207,51 @@ const Library = () => {
     return counts;
   }, [enriched, favorites]);
 
+  const scopedForTaxonomy = useMemo(
+    () => enriched.filter((d) => matchesCollection(d, collection, favorites)),
+    [enriched, collection, favorites]
+  );
+
+  const categoryCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const id of DOCUMENT_CATEGORY_IDS) {
+      counts[id] = scopedForTaxonomy.filter((d) => matchesCategory(d, id)).length;
+    }
+    return counts;
+  }, [scopedForTaxonomy]);
+
+  const areaCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const id of LEGAL_AREA_IDS) {
+      counts[id] = scopedForTaxonomy.filter((d) => matchesArea(d, id)).length;
+    }
+    return counts;
+  }, [scopedForTaxonomy]);
+
+  const populatedCategoryCount = useMemo(
+    () => DOCUMENT_CATEGORY_IDS.filter((id) => (categoryCounts[id] ?? 0) > 0).length,
+    [categoryCounts]
+  );
+
   const metrics = useMemo(
     () =>
       computeSmartMetrics(
         enriched.filter((d) => !d.is_shared),
-        COLLECTIONS.filter((c) => c.group === 'core' && c.id !== 'all' && c.id !== 'public')
-          .length
+        populatedCategoryCount
       ),
-    [enriched]
+    [enriched, populatedCategoryCount]
   );
+
+  const filtersActive = Boolean(searchTerm || categoryFilter || areaFilter || collection !== 'all');
 
   const filteredItems = useMemo(() => {
     const byCollection = enriched.filter((d) =>
       matchesCollection(d, collection, favorites)
     );
-    const searched = semanticFilter(byCollection, searchTerm);
+    const byTaxonomy = byCollection.filter(
+      (d) => matchesCategory(d, categoryFilter) && matchesArea(d, areaFilter)
+    );
+    const searched = semanticFilter(byTaxonomy, searchTerm);
     return [...searched].sort((a, b) => {
       let comparison = 0;
       if (sortBy === 'date') {
@@ -189,7 +266,7 @@ const Library = () => {
       }
       return sortOrder === 'asc' ? comparison : -comparison;
     });
-  }, [enriched, collection, favorites, searchTerm, sortBy, sortOrder]);
+  }, [enriched, collection, favorites, categoryFilter, areaFilter, searchTerm, sortBy, sortOrder]);
 
   const handleSelect = useCallback((doc: EnrichedDocument) => {
     startTransition(() => {
@@ -286,6 +363,13 @@ const Library = () => {
     fetchDocuments();
   };
 
+  const clearAllFilters = () => {
+    setSearchTerm('');
+    setCollection('all');
+    setCategoryFilter(null);
+    setAreaFilter(null);
+  };
+
   const toggleSort = (key: SortKey) => {
     if (sortBy === key) {
       setSortOrder((o) => (o === 'asc' ? 'desc' : 'asc'));
@@ -358,20 +442,51 @@ const Library = () => {
     <>
       <div className="relative flex h-full min-h-0 flex-col overflow-hidden bg-slate-50 dark:bg-slate-950">
         <div className="flex min-h-0 flex-1 overflow-hidden">
-          {/* Collections — desktop (persistent) */}
+          {/* Collections — desktop (collapsible) */}
           <aside
             className={cn(
-              'hidden w-52 shrink-0 flex-col border-r border-slate-200/80 bg-white/80 dark:border-slate-800 dark:bg-slate-950/50 lg:flex',
-              'xl:w-56'
+              'hidden shrink-0 flex-col overflow-hidden border-r border-slate-200/80 bg-white/80 dark:border-slate-800 dark:bg-slate-950/50 lg:flex',
+              'transition-[width] duration-200 ease-in-out',
+              collectionsCollapsed ? 'w-12' : 'w-60 xl:w-72'
             )}
+            aria-label={t.library.collections}
           >
-            <div className="min-h-0 flex-1 overflow-y-auto p-2.5">
+            <div
+              className={cn(
+                'flex shrink-0 items-center border-b border-slate-200/80 dark:border-slate-800',
+                collectionsCollapsed ? 'justify-center px-1 py-1.5' : 'justify-end px-1.5 py-1'
+              )}
+            >
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
+                onClick={toggleCollectionsCollapsed}
+                aria-expanded={!collectionsCollapsed}
+                aria-label={
+                  collectionsCollapsed ? t.library.expandCollections : t.library.collapseCollections
+                }
+              >
+                {collectionsCollapsed ? (
+                  <PanelLeftOpen className="h-4 w-4 rtl:rotate-180" />
+                ) : (
+                  <PanelLeftClose className="h-4 w-4 rtl:rotate-180" />
+                )}
+              </Button>
+            </div>
+            <div className={cn('min-h-0 flex-1 overflow-y-auto', collectionsCollapsed ? 'p-1' : 'p-2.5')}>
               <CollectionsSidebar
-                selected={collection}
-                onSelect={setCollection}
-                documents={enriched}
-                favorites={favorites}
-                counts={collectionCounts}
+                selectedCollection={collection}
+                selectedCategory={categoryFilter}
+                selectedArea={areaFilter}
+                onSelectCollection={setCollection}
+                onSelectCategory={setCategoryFilter}
+                onSelectArea={setAreaFilter}
+                collectionCounts={collectionCounts}
+                categoryCounts={categoryCounts}
+                areaCounts={areaCounts}
+                collapsed={collectionsCollapsed}
               />
             </div>
           </aside>
@@ -382,18 +497,28 @@ const Library = () => {
               className="w-[min(100vw,18rem)] p-0 sm:max-w-xs lg:hidden"
             >
               <SheetHeader className="border-b border-slate-200 px-4 py-3 dark:border-slate-800">
-                <SheetTitle className="text-sm">{t.library.collections}</SheetTitle>
+                <SheetTitle className="text-sm">{t.library.categories}</SheetTitle>
               </SheetHeader>
               <div className="h-[calc(100%-3.5rem)] overflow-y-auto p-3">
                 <CollectionsSidebar
-                  selected={collection}
-                  onSelect={(id) => {
+                  selectedCollection={collection}
+                  selectedCategory={categoryFilter}
+                  selectedArea={areaFilter}
+                  onSelectCollection={(id) => {
                     setCollection(id);
                     setFolderSheetOpen(false);
                   }}
-                  documents={enriched}
-                  favorites={favorites}
-                  counts={collectionCounts}
+                  onSelectCategory={(id) => {
+                    setCategoryFilter(id);
+                    setFolderSheetOpen(false);
+                  }}
+                  onSelectArea={(id) => {
+                    setAreaFilter(id);
+                    setFolderSheetOpen(false);
+                  }}
+                  collectionCounts={collectionCounts}
+                  categoryCounts={categoryCounts}
+                  areaCounts={areaCounts}
                 />
               </div>
             </SheetContent>
@@ -454,13 +579,52 @@ const Library = () => {
                     <Button
                       type="button"
                       size="sm"
-                      className="ml-auto hidden h-9 shrink-0 gap-1.5 rounded-md bg-[#64499D] px-3 text-[12px] font-semibold text-white hover:bg-[#4D3680] md:inline-flex"
+                      className="ms-auto hidden h-9 shrink-0 gap-1.5 rounded-md bg-[#64499D] px-3 text-[12px] font-semibold text-white hover:bg-[#4D3680] md:inline-flex"
                       onClick={handleAddNew}
                     >
                       <Upload className="h-3.5 w-3.5" />
                       {t.library.upload}
                     </Button>
                   </div>
+                  {filtersActive ? (
+                    <div className="mt-2 flex min-w-0 items-center gap-1.5 overflow-x-auto pb-0.5">
+                      {collection !== 'all' ? (
+                        <FilterChip
+                          label={
+                            collection === 'public'
+                              ? t.library.publicLibrary
+                              : COLLECTIONS.find((c) => c.id === collection)?.label || collection
+                          }
+                          onRemove={() => setCollection('all')}
+                        />
+                      ) : null}
+                      {categoryFilter ? (
+                        <FilterChip
+                          label={enumLabel('documentCategory', categoryFilter)}
+                          onRemove={() => setCategoryFilter(null)}
+                        />
+                      ) : null}
+                      {areaFilter ? (
+                        <FilterChip
+                          label={enumLabel('documentLegalArea', areaFilter)}
+                          onRemove={() => setAreaFilter(null)}
+                        />
+                      ) : null}
+                      {searchTerm ? (
+                        <FilterChip
+                          label={searchTerm}
+                          onRemove={() => setSearchTerm('')}
+                        />
+                      ) : null}
+                      <button
+                        type="button"
+                        onClick={clearAllFilters}
+                        className="shrink-0 px-1.5 text-[11px] font-medium text-[#64499D] hover:underline dark:text-[#CFC2FF]"
+                      >
+                        {t.library.clearAllFilters}
+                      </button>
+                    </div>
+                  ) : null}
                 </div>
               </div>
 
@@ -476,7 +640,7 @@ const Library = () => {
                   </div>
                 ) : filteredItems.length === 0 ? (
                   <KnowledgeEmptyState
-                    filtered={Boolean(searchTerm) || collection !== 'all'}
+                    filtered={filtersActive}
                     onUpload={handleAddNew}
                   />
                 ) : viewMode === 'grid' ? (

@@ -1,16 +1,16 @@
-import { Search, X, RefreshCw } from 'lucide-react';
-import { Input } from '@/components/ui/input';
+import { RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import ServerSelect from '@/components/common/ServerSelect';
+import CompactSearch from '@/components/common/CompactSearch';
+import MobileFilterSheet, { FilterField } from '@/components/common/MobileFilterSheet';
 import { cn } from '@/lib/utils';
 import { useAppTranslation } from '@/i18n';
 import type { CalendarEventTypeFilter } from '@/lib/calendarEvents';
 
-const selectClass = 'h-9 w-[132px] text-xs sm:text-[13px] rounded-lg border-slate-200 dark:border-slate-700';
+const sheetSelectClass =
+  'h-9 w-full max-w-none text-xs sm:text-[13px] rounded-lg border-slate-200 dark:border-slate-700';
 const activeSelect = 'ring-2 ring-primary/30 border-primary/40 bg-primary/[0.04]';
-const serverSelectClass =
-  'h-9 min-w-[140px] max-w-[180px] text-xs sm:text-[13px] rounded-lg border-slate-200 dark:border-slate-700';
 
 export type CalendarFiltersValue = {
   search: string;
@@ -21,6 +21,17 @@ export type CalendarFiltersValue = {
   caseId: string;
   clientId: string;
 };
+
+function extraFilterCount(value: CalendarFiltersValue) {
+  return [
+    value.eventType !== 'all',
+    value.status !== 'all',
+    value.priority !== 'all',
+    value.assignedTo !== 'all',
+    value.caseId !== 'all',
+    value.clientId !== 'all',
+  ].filter(Boolean).length;
+}
 
 export default function CalendarFilters({
   value,
@@ -35,38 +46,16 @@ export default function CalendarFilters({
 }) {
   const { t, enumLabel } = useAppTranslation();
   const cal = t.calendar;
+  const extraCount = extraFilterCount(value);
   const patch = (partial: Partial<CalendarFiltersValue>) => onChange({ ...value, ...partial });
   const personLabel = (c: { first_name?: string; last_name?: string; email?: string }) =>
     `${c.first_name || ''} ${c.last_name || ''}`.trim() || c.email || '—';
 
-  return (
-    <div className="rounded-xl border border-slate-200/90 dark:border-slate-800 bg-white/90 dark:bg-slate-950/80 shadow-[0_1px_3px_rgba(0,0,0,0.04)] px-3 py-3 sm:px-4">
-      <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-        <div className="relative flex-1 min-w-[160px] max-w-md">
-          <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-          <Input
-            placeholder={cal.searchPlaceholder}
-            value={value.search}
-            onChange={(e) => patch({ search: e.target.value })}
-            className={cn(
-              'h-9 pl-9 pr-9 text-sm rounded-lg border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950',
-              value.search.trim() !== '' && 'ring-2 ring-primary/25 border-primary/35'
-            )}
-          />
-          {value.search.trim() !== '' && (
-            <button
-              type="button"
-              className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800"
-              onClick={() => patch({ search: '' })}
-              aria-label={cal.clearSearch}
-            >
-              <X className="w-4 h-4" />
-            </button>
-          )}
-        </div>
-
+  const filterControls = () => (
+      <>
+        <FilterField label={cal.filterEventType}>
         <Select value={value.eventType} onValueChange={(v) => patch({ eventType: v as CalendarEventTypeFilter })}>
-          <SelectTrigger className={cn(selectClass, value.eventType !== 'all' && activeSelect)}>
+          <SelectTrigger className={cn(sheetSelectClass, value.eventType !== 'all' && activeSelect)}>
             <SelectValue placeholder={cal.filterEventType} />
           </SelectTrigger>
           <SelectContent>
@@ -78,9 +67,11 @@ export default function CalendarFilters({
             <SelectItem value="consultations">{cal.filterConsultations}</SelectItem>
           </SelectContent>
         </Select>
+        </FilterField>
 
+        <FilterField label={cal.filterStatus}>
         <Select value={value.status} onValueChange={(v) => patch({ status: v })}>
-          <SelectTrigger className={cn(selectClass, 'w-[118px]', value.status !== 'all' && activeSelect)}>
+          <SelectTrigger className={cn(sheetSelectClass, value.status !== 'all' && activeSelect)}>
             <SelectValue placeholder={cal.filterStatus} />
           </SelectTrigger>
           <SelectContent>
@@ -92,9 +83,11 @@ export default function CalendarFilters({
             <SelectItem value="scheduled">{cal.statusScheduled}</SelectItem>
           </SelectContent>
         </Select>
+        </FilterField>
 
+        <FilterField label={cal.filterPriority}>
         <Select value={value.priority} onValueChange={(v) => patch({ priority: v })}>
-          <SelectTrigger className={cn(selectClass, 'w-[108px]', value.priority !== 'all' && activeSelect)}>
+          <SelectTrigger className={cn(sheetSelectClass, value.priority !== 'all' && activeSelect)}>
             <SelectValue placeholder={cal.filterPriority} />
           </SelectTrigger>
           <SelectContent>
@@ -104,7 +97,9 @@ export default function CalendarFilters({
             <SelectItem value="high">{enumLabel('taskPriority', 'high')}</SelectItem>
           </SelectContent>
         </Select>
+        </FilterField>
 
+        <FilterField label={cal.filterAssignee}>
         <ServerSelect
           link="/cabinets/members/all/"
           value={value.assignedTo || undefined}
@@ -114,8 +109,10 @@ export default function CalendarFilters({
           labelKey={personLabel}
           valueKey="id"
           cleanable
-          className={cn(serverSelectClass, value.assignedTo !== 'all' && activeSelect)}
+          className={cn(sheetSelectClass, value.assignedTo !== 'all' && activeSelect)}
         />
+        </FilterField>
+        <FilterField label={cal.filterCase}>
         <ServerSelect
           link="/cases/?page_size=100"
           value={value.caseId || undefined}
@@ -125,8 +122,10 @@ export default function CalendarFilters({
           labelKey={(c: { title?: string; reference?: string }) => c.reference || c.title || '—'}
           valueKey="id"
           cleanable
-          className={cn(serverSelectClass, value.caseId !== 'all' && activeSelect)}
+          className={cn(sheetSelectClass, value.caseId !== 'all' && activeSelect)}
         />
+        </FilterField>
+        <FilterField label={cal.filterClient}>
         <ServerSelect
           link="/clients/clients/?page_size=100"
           value={value.clientId || undefined}
@@ -136,19 +135,63 @@ export default function CalendarFilters({
           labelKey={personLabel}
           valueKey="id"
           cleanable
-          className={cn(serverSelectClass, value.clientId !== 'all' && activeSelect)}
+          className={cn(sheetSelectClass, value.clientId !== 'all' && activeSelect)}
         />
+        </FilterField>
+      </>
+    );
 
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-9 w-9 rounded-lg shrink-0"
-          onClick={onRefresh}
-          disabled={loading}
-          aria-label={cal.refresh}
+  const refreshButton = (
+    <Button
+      variant="ghost"
+      size="icon"
+      className="h-9 w-9 shrink-0 rounded-lg"
+      onClick={onRefresh}
+      disabled={loading}
+      aria-label={cal.refresh}
+    >
+      <RefreshCw className={cn('h-4 w-4', loading && 'animate-spin')} />
+    </Button>
+  );
+
+  return (
+    <div className="relative rounded-xl border border-slate-200/90 bg-white/90 px-2.5 py-2 shadow-[0_1px_3px_rgba(0,0,0,0.04)] dark:border-slate-800 dark:bg-slate-950/80 sm:px-4 sm:py-3">
+      <div className="flex items-center gap-1.5 sm:gap-2">
+        <CompactSearch
+          value={value.search}
+          onChange={(search) => patch({ search })}
+          placeholder={cal.searchPlaceholder}
+          clearAriaLabel={cal.clearSearch}
+        />
+        <MobileFilterSheet
+          title={t.common.filter}
+          count={extraCount}
+          footer={
+            extraCount > 0 ? (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-9 w-full text-[12px]"
+                onClick={() =>
+                  onChange({
+                    ...value,
+                    eventType: 'all',
+                    status: 'all',
+                    priority: 'all',
+                    assignedTo: 'all',
+                    caseId: 'all',
+                    clientId: 'all',
+                  })
+                }
+              >
+                {t.common.clearFilters}
+              </Button>
+            ) : null
+          }
         >
-          <RefreshCw className={cn('h-4 w-4', loading && 'animate-spin')} />
-        </Button>
+          {filterControls()}
+        </MobileFilterSheet>
+        {refreshButton}
       </div>
     </div>
   );

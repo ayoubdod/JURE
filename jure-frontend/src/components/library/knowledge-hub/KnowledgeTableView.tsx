@@ -20,7 +20,8 @@ import {
 } from '@/components/ui/table';
 import { DocumentCategory } from '@/utils/constants';
 import { cn } from '@/lib/utils';
-import { formatFileSize, isPlatformShared, riskStyles } from './knowledgeUtils';
+import { formatFileSize, isPlatformShared } from './knowledgeUtils';
+import { fileFormatLabel } from '@/lib/libraryTaxonomy';
 import type { EnrichedDocument } from './types';
 import { useAppTranslation } from '@/i18n';
 
@@ -62,12 +63,11 @@ const KnowledgeTableView = memo(function KnowledgeTableView({
   onDelete,
   onCopy,
 }: Props) {
-  const { t } = useAppTranslation();
+  const { t, enumLabel } = useAppTranslation();
   const headers: { key: SortKey | null; label: string; className?: string }[] = [
-    { key: 'name', label: 'Knowledge asset' },
-    { key: null, label: 'Category', className: 'w-28' },
-    { key: 'score', label: 'Score', className: 'w-20' },
-    { key: null, label: 'Risk', className: 'w-24' },
+    { key: 'name', label: 'Document' },
+    { key: null, label: t.document.create.categoryLabel, className: 'w-40' },
+    { key: null, label: t.library.legalAreas, className: 'w-44' },
     { key: 'size', label: 'Size', className: 'w-20' },
     { key: 'date', label: 'Modified', className: 'w-28' },
     { key: null, label: '', className: 'w-28' },
@@ -105,9 +105,14 @@ const KnowledgeTableView = memo(function KnowledgeTableView({
         <TableBody>
           {items.map((item) => {
             const category =
-              DocumentCategory.options.find((c) => c.value === item.category)?.label ||
+              enumLabel('documentCategory', item.category) ||
+              DocumentCategory.getLabel(item.category) ||
               item.category;
+            const areaLabel = item.legalArea
+              ? enumLabel('documentLegalArea', item.legalArea)
+              : null;
             const shared = isPlatformShared(item);
+            const format = fileFormatLabel(item.file);
             return (
               <TableRow
                 key={item.id}
@@ -137,26 +142,24 @@ const KnowledgeTableView = memo(function KnowledgeTableView({
                       </p>
                       <p className="truncate text-[10px] text-slate-400">
                         {shared ? `${t.library.publicLibrary} · ` : ''}
-                        {item.insight.aiIndexed ? 'AI Indexed' : 'Pending'} · {item.insight.language}
+                        {format || item.insight.language}
                       </p>
                     </div>
                   </div>
                 </TableCell>
-                <TableCell className="px-3 py-2 text-[11px] text-slate-600 dark:text-slate-300">
-                  {category}
-                </TableCell>
-                <TableCell className="px-3 py-2 text-[12px] font-semibold tabular-nums text-[#64499D] dark:text-[#CFC2FF]">
-                  {item.insight.knowledgeScore}
+                <TableCell className="px-3 py-2">
+                  <span className="inline-flex max-w-full truncate rounded-md border border-slate-200/80 bg-slate-50 px-1.5 py-0.5 text-[10px] font-medium text-slate-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">
+                    {category}
+                  </span>
                 </TableCell>
                 <TableCell className="px-3 py-2">
-                  <span
-                    className={cn(
-                      'rounded px-1.5 py-0.5 text-[10px] font-medium capitalize',
-                      riskStyles(item.insight.riskLevel)
-                    )}
-                  >
-                    {item.insight.riskLevel}
-                  </span>
+                  {areaLabel ? (
+                    <span className="inline-flex max-w-full truncate rounded-md border border-[#64499D]/20 bg-[#64499D]/08 px-1.5 py-0.5 text-[10px] font-medium text-[#64499D] dark:text-[#CFC2FF]">
+                      {areaLabel}
+                    </span>
+                  ) : (
+                    <span className="text-[11px] text-slate-300">—</span>
+                  )}
                 </TableCell>
                 <TableCell className="px-3 py-2 text-[11px] text-slate-500">
                   {formatFileSize(item.size)}

@@ -43,6 +43,7 @@ import { cn } from '@/lib/utils';
 import { NAV_SHORTCUT_BY_PATH } from '@/shortcuts/catalog';
 import { HintKbd } from '@/components/shortcuts/Kbd';
 import { useShortcutAction } from '@/context/ShortcutsContext';
+import { JURIA_ENABLED } from '@/config/features';
 
 /** Collapsed desktop rail width. Keep in sync with DashboardLayout `--sidebar-rail-width`. */
 export const SIDEBAR_RAIL_WIDTH = '3rem'; // 48px
@@ -67,7 +68,8 @@ type NavChild = {
 
 type NavItem = {
   id: string;
-  icon: React.ElementType;
+  icon?: React.ElementType;
+  imgSrc?: string;
   label: string;
   /** When set, clicking the row navigates here. Omitted for menu-only groups (Office). */
   path?: string;
@@ -86,6 +88,22 @@ const railIconButtonClass = (active: boolean, expanded: boolean) =>
       ? 'bg-jure-600 dark:bg-jure-500 text-white'
       : 'text-muted-foreground dark:text-white hover:text-jure-600 dark:hover:text-white hover:bg-jure-50 dark:hover:bg-jure-600/10',
   );
+
+function NavGlyph({ item, size = 16 }: { item: Pick<NavItem, 'icon' | 'imgSrc' | 'label'>; size?: number }) {
+  if (item.imgSrc) {
+    return (
+      <img
+        src={item.imgSrc}
+        alt=""
+        className="shrink-0 rounded-[3px] object-contain"
+        style={{ width: size, height: size }}
+      />
+    );
+  }
+  const Icon = item.icon;
+  if (!Icon) return null;
+  return <Icon size={size} strokeWidth={1.75} className="shrink-0" />;
+}
 
 const Sidebar = ({ activeTab, setActiveTab, expanded, onExpandedChange }: SidebarProps) => {
   const navigate = useNavigate();
@@ -122,6 +140,17 @@ const Sidebar = ({ activeTab, setActiveTab, expanded, onExpandedChange }: Sideba
         ],
       },
       { id: 'library', icon: BookOpen, label: t.sidebar.library, path: '/dashboard/library', badge: null },
+      ...(JURIA_ENABLED
+        ? [
+            {
+              id: 'juria',
+              imgSrc: '/images/juria-icon.png',
+              label: t.sidebar.legalAi,
+              path: '/dashboard/juria',
+              badge: null,
+            } satisfies NavItem,
+          ]
+        : []),
       { id: 'calendar', icon: Calendar, label: t.sidebar.calendar, path: '/dashboard/calendar', badge: null },
       { id: 'tasks', icon: CheckSquare, label: t.sidebar.tasks, path: '/dashboard/tasks', badge: null },
       {
@@ -259,6 +288,12 @@ const Sidebar = ({ activeTab, setActiveTab, expanded, onExpandedChange }: Sideba
         location.pathname.startsWith('/dashboard/appointment')
       );
     }
+    if (path === '/dashboard/juria') {
+      return (
+        location.pathname.startsWith('/dashboard/juria') ||
+        location.pathname.startsWith('/dashboard/legal-ai')
+      );
+    }
     return location.pathname === path || location.pathname.startsWith(`${path}/`);
   };
 
@@ -290,7 +325,6 @@ const Sidebar = ({ activeTab, setActiveTab, expanded, onExpandedChange }: Sideba
   );
 
   const renderMobileNavButton = (item: NavItem) => {
-    const Icon = item.icon;
     const active = isItemActive(item);
     const hasChildren = Boolean(item.children?.length);
     const isExpanded = Boolean(expandedIds[item.id]);
@@ -316,7 +350,7 @@ const Sidebar = ({ activeTab, setActiveTab, expanded, onExpandedChange }: Sideba
             )}
             aria-current={active && !hasChildren ? 'page' : undefined}
           >
-            <Icon size={16} className="shrink-0" />
+            <NavGlyph item={item} size={16} />
             <span className="flex-1 text-start">{item.label}</span>
             {item.badge != null && renderBadge(item.badge)}
           </button>
@@ -601,7 +635,7 @@ const Sidebar = ({ activeTab, setActiveTab, expanded, onExpandedChange }: Sideba
         aria-current={active ? 'page' : undefined}
         aria-label={item.label}
       >
-        <Icon size={16} strokeWidth={1.75} className="shrink-0" />
+        <NavGlyph item={item} size={16} />
         {railExpanded && (
           <>
             <span className="min-w-0 flex-1 truncate text-start text-xs font-medium">

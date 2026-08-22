@@ -19,7 +19,7 @@ class Task(TimeStampedModel):
     class TaskStatus(models.TextChoices):
         TODO = 'todo', _('To Do')
         IN_PROGRESS = 'in_progress', _('In Progress')
-        DONE = 'done', _('Done')
+        DONE = 'done', _('Completed')
         CANCELLED = 'cancelled', _('Cancelled')
 
     title = models.CharField(max_length=255)

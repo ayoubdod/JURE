@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { useDebounce } from '@/hooks/use-debounce';
 import { apiGetCases } from '@/services/case/api';
 import { cn } from '@/lib/utils';
+import { useAppTranslation } from '@/i18n';
 
 export function CaseLinkDropdown({
   onSelect,
@@ -16,6 +17,7 @@ export function CaseLinkDropdown({
   compact?: boolean;
   align?: 'start' | 'end';
 }) {
+  const { t } = useAppTranslation();
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState('');
   const debounced = useDebounce(q, 300);
@@ -48,7 +50,7 @@ export function CaseLinkDropdown({
           className={cn('gap-1.5 text-slate-600', compact && 'h-8 px-2 text-xs')}
         >
           <Link2 className="h-3.5 w-3.5" />
-          Lier au dossier
+          {t.juria.linkMatter}
         </Button>
       </PopoverTrigger>
       <PopoverContent align={align} className="w-72 p-2">

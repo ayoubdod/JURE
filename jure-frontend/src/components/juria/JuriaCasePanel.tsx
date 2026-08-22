@@ -82,11 +82,25 @@ export function JuriaCasePanel({ caseItem }: { caseItem: API.Case }) {
                   })
                 );
               }}
-              onPickStarter={(text) => {
+              onPickStarter={(text, mode) => {
                 void (async () => {
                   try {
-                    const id = await create('CHAT', linked);
+                    const id = await create(mode ?? 'CHAT', linked);
                     await sendMessage(id, text);
+                  } catch (e) {
+                    toast({
+                      title: 'Erreur',
+                      description: getJuriaErrorMessage(e),
+                      variant: 'destructive',
+                    });
+                  }
+                })();
+              }}
+              onAsk={(text, file, _caseLink, mode) => {
+                void (async () => {
+                  try {
+                    const id = await create(mode ?? 'CHAT', linked);
+                    await sendMessage(id, text, file);
                   } catch (e) {
                     toast({
                       title: 'Erreur',

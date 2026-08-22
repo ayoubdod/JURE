@@ -1,13 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <testsuites>
-	<testsuite name="library.tests.DocumentAdminFormTests-20260821162313" tests="2" file="library/tests.py" time="0.007" timestamp="2026-08-21T16:23:13" failures="0" errors="0" skipped="0">
-		<testcase classname="library.tests.DocumentAdminFormTests" name="test_tags_are_optional" time="0.002" timestamp="2026-08-21T16:23:13" file="library\tests.py" line="208"/>
-		<testcase classname="library.tests.DocumentAdminFormTests" name="test_tags_input_creates_missing_tags" time="0.005" timestamp="2026-08-21T16:23:13" file="library\tests.py" line="203"/>
-	</testsuite>
-	<testsuite name="library.tests.DocumentBulkUploadTests-20260821162313" tests="4" file="library/tests.py" time="6.830" timestamp="2026-08-21T16:23:20" failures="0" errors="0" skipped="0">
-		<testcase classname="library.tests.DocumentBulkUploadTests" name="test_bulk_upload_page_loads" time="2.520" timestamp="2026-08-21T16:23:16" file="library\tests.py" line="252"/>
-		<testcase classname="library.tests.DocumentBulkUploadTests" name="test_bulk_upload_post_creates_documents" time="1.667" timestamp="2026-08-21T16:23:18" file="library\tests.py" line="258"/>
-		<testcase classname="library.tests.DocumentBulkUploadTests" name="test_create_many_shared_documents" time="1.223" timestamp="2026-08-21T16:23:19" file="library\tests.py" line="233"/>
-		<testcase classname="library.tests.DocumentBulkUploadTests" name="test_title_from_filename" time="1.419" timestamp="2026-08-21T16:23:20" file="library\tests.py" line="227"/>
+	<testsuite name="library.tests.CanonicalCategoryTests-20260822004158" tests="6" file="library/tests.py" time="9.361" timestamp="2026-08-22T00:42:07" failures="0" errors="0" skipped="0">
+		<testcase classname="library.tests.CanonicalCategoryTests" name="test_canonical_category_accepted" time="1.684" timestamp="2026-08-22T00:41:59" file="library\tests.py" line="313"/>
+		<testcase classname="library.tests.CanonicalCategoryTests" name="test_filter_by_canonical_category" time="1.455" timestamp="2026-08-22T00:42:01" file="library\tests.py" line="356"/>
+		<testcase classname="library.tests.CanonicalCategoryTests" name="test_legacy_category_is_remapped_on_create" time="1.373" timestamp="2026-08-22T00:42:02" file="library\tests.py" line="285"/>
+		<testcase classname="library.tests.CanonicalCategoryTests" name="test_legacy_legal_forms_maps_to_forms_templates" time="1.476" timestamp="2026-08-22T00:42:04" file="library\tests.py" line="300"/>
+		<testcase classname="library.tests.CanonicalCategoryTests" name="test_unknown_category_rejected_on_create" time="1.510" timestamp="2026-08-22T00:42:05" file="library\tests.py" line="326"/>
+		<testcase classname="library.tests.CanonicalCategoryTests" name="test_unknown_existing_category_preserved_on_update" time="1.863" timestamp="2026-08-22T00:42:07" file="library\tests.py" line="338"/>
 	</testsuite>
 </testsuites>

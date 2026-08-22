@@ -4,6 +4,7 @@ import * as SelectPrimitive from "@radix-ui/react-select"
 import { Check, ChevronDown, ChevronUp } from "lucide-react"
 
 import { cn } from "@/lib/utils"
+import { useInFilterPanel } from "@/components/common/filterPanelContext"
 
 const Select = SelectPrimitive.Root
 
@@ -69,7 +70,9 @@ SelectScrollDownButton.displayName =
 const SelectContent = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof SelectPrimitive.Content>
->(({ className, children, position = "popper", ...props }, ref) => (
+>(({ className, children, position = "popper", ...props }, ref) => {
+  const inFilterPanel = useInFilterPanel()
+  return (
   <SelectPrimitive.Portal>
     <SelectPrimitive.Content
       ref={ref}
@@ -80,6 +83,9 @@ const SelectContent = React.forwardRef<
         className
       )}
       position={position}
+      side="bottom"
+      align="start"
+      avoidCollisions={!inFilterPanel}
       {...props}
     >
       <SelectScrollUpButton />
@@ -87,7 +93,7 @@ const SelectContent = React.forwardRef<
         className={cn(
           "p-1",
           position === "popper" &&
-            "h-[var(--radix-select-trigger-height)] w-full min-w-[var(--radix-select-trigger-width)]"
+            "w-full min-w-[var(--radix-select-trigger-width)]"
         )}
       >
         {children}
@@ -95,7 +101,8 @@ const SelectContent = React.forwardRef<
       <SelectScrollDownButton />
     </SelectPrimitive.Content>
   </SelectPrimitive.Portal>
-))
+  )
+})
 SelectContent.displayName = SelectPrimitive.Content.displayName
 
 const SelectLabel = React.forwardRef<

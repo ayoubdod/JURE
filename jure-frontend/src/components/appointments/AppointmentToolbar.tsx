@@ -1,14 +1,14 @@
-import { Search, X } from 'lucide-react';
-import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import ServerSelect from '@/components/common/ServerSelect';
+import CompactSearch from '@/components/common/CompactSearch';
+import MobileFilterSheet, { FilterField } from '@/components/common/MobileFilterSheet';
 import { cn } from '@/lib/utils';
 import { useAppTranslation } from '@/i18n';
 
-const selectClass = 'h-9 w-[132px] text-xs sm:text-[13px] rounded-lg border-slate-200 dark:border-slate-700';
+const sheetSelectClass =
+  'h-9 w-full max-w-none text-xs sm:text-[13px] rounded-lg border-slate-200 dark:border-slate-700';
 const activeSelect = 'ring-2 ring-primary/30 border-primary/40 bg-primary/[0.04]';
-const serverSelectClass =
-  'h-9 min-w-[140px] max-w-[180px] text-xs sm:text-[13px] rounded-lg border-slate-200 dark:border-slate-700';
 
 export type AppointmentFiltersValue = {
   search: string;
@@ -32,34 +32,28 @@ export default function AppointmentToolbar({
   const personLabel = (c: { first_name?: string; last_name?: string; email?: string }) =>
     `${c.first_name || ''} ${c.last_name || ''}`.trim() || c.email || '—';
 
-  return (
-    <div className="rounded-xl border border-slate-200/90 dark:border-slate-800 bg-white/90 dark:bg-slate-950/80 shadow-[0_1px_3px_rgba(0,0,0,0.04)] px-3 py-3 sm:px-4">
-      <div className="flex flex-wrap items-center gap-2">
-        <div className="relative flex-1 min-w-[160px] max-w-md">
-          <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-          <Input
-            placeholder={a.searchPlaceholder}
-            value={value.search}
-            onChange={(e) => patch({ search: e.target.value })}
-            className={cn(
-              'h-9 pl-9 pr-9 text-sm rounded-lg border-slate-200 dark:border-slate-700',
-              value.search.trim() && 'ring-2 ring-primary/25 border-primary/35'
-            )}
-          />
-          {value.search.trim() && (
-            <button
-              type="button"
-              className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
-              onClick={() => patch({ search: '' })}
-              aria-label={t.common.close}
-            >
-              <X className="h-4 w-4" />
-            </button>
-          )}
-        </div>
+  const extraCount = [
+    value.period !== 'upcoming',
+    value.status !== 'all',
+    value.assignedTo !== 'all',
+    value.clientId !== 'all',
+    value.caseId !== 'all',
+  ].filter(Boolean).length;
 
+  const clearExtra = () =>
+    patch({
+      status: 'all',
+      period: 'upcoming',
+      assignedTo: 'all',
+      caseId: 'all',
+      clientId: 'all',
+    });
+
+  const filterControls = () => (
+      <>
+        <FilterField label={a.filterPeriod}>
         <Select value={value.period} onValueChange={(v) => patch({ period: v })}>
-          <SelectTrigger className={cn(selectClass, value.period !== 'all' && activeSelect)}>
+          <SelectTrigger className={cn(sheetSelectClass, value.period !== 'all' && value.period !== 'upcoming' && activeSelect)}>
             <SelectValue placeholder={a.filterPeriod} />
           </SelectTrigger>
           <SelectContent>
@@ -70,9 +64,11 @@ export default function AppointmentToolbar({
             <SelectItem value="upcoming">{a.periodUpcoming}</SelectItem>
           </SelectContent>
         </Select>
+        </FilterField>
 
+        <FilterField label={a.filterStatus}>
         <Select value={value.status} onValueChange={(v) => patch({ status: v })}>
-          <SelectTrigger className={cn(selectClass, 'w-[118px]', value.status !== 'all' && activeSelect)}>
+          <SelectTrigger className={cn(sheetSelectClass, value.status !== 'all' && activeSelect)}>
             <SelectValue placeholder={a.filterStatus} />
           </SelectTrigger>
           <SelectContent>
@@ -82,7 +78,9 @@ export default function AppointmentToolbar({
             <SelectItem value="cancelled">{t.calendar.appointmentModal.statusCancelled}</SelectItem>
           </SelectContent>
         </Select>
+        </FilterField>
 
+        <FilterField label={a.filterAssignee}>
         <ServerSelect
           link="/cabinets/members/all/"
           value={value.assignedTo || undefined}
@@ -91,8 +89,10 @@ export default function AppointmentToolbar({
           labelKey={personLabel}
           valueKey="id"
           cleanable
-          className={cn(serverSelectClass, value.assignedTo !== 'all' && activeSelect)}
+          className={cn(sheetSelectClass, value.assignedTo !== 'all' && activeSelect)}
         />
+        </FilterField>
+        <FilterField label={a.filterClient}>
         <ServerSelect
           link="/clients/clients/?page_size=100"
           value={value.clientId || undefined}
@@ -101,8 +101,10 @@ export default function AppointmentToolbar({
           labelKey={personLabel}
           valueKey="id"
           cleanable
-          className={cn(serverSelectClass, value.clientId !== 'all' && activeSelect)}
+          className={cn(sheetSelectClass, value.clientId !== 'all' && activeSelect)}
         />
+        </FilterField>
+        <FilterField label={a.filterCase}>
         <ServerSelect
           link="/cases/?page_size=100"
           value={value.caseId || undefined}
@@ -111,8 +113,34 @@ export default function AppointmentToolbar({
           labelKey={(c: { title?: string; reference?: string }) => c.reference || c.title || '—'}
           valueKey="id"
           cleanable
-          className={cn(serverSelectClass, value.caseId !== 'all' && activeSelect)}
+          className={cn(sheetSelectClass, value.caseId !== 'all' && activeSelect)}
         />
+        </FilterField>
+      </>
+    );
+
+  return (
+    <div className="relative rounded-xl border border-slate-200/90 bg-white/90 px-2.5 py-2 shadow-[0_1px_3px_rgba(0,0,0,0.04)] dark:border-slate-800 dark:bg-slate-950/80 sm:px-4 sm:py-3">
+      <div className="flex items-center gap-1.5 sm:gap-2">
+        <CompactSearch
+          value={value.search}
+          onChange={(search) => patch({ search })}
+          placeholder={a.searchPlaceholder}
+        />
+
+        <MobileFilterSheet
+          title={a.filters}
+          count={extraCount}
+          footer={
+            extraCount > 0 ? (
+              <Button variant="ghost" size="sm" className="h-9 w-full text-[12px]" onClick={clearExtra}>
+                {a.clearFilters}
+              </Button>
+            ) : null
+          }
+        >
+          {filterControls()}
+        </MobileFilterSheet>
       </div>
     </div>
   );

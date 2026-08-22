@@ -70,6 +70,7 @@ class JuriaMessageNestedSerializer(serializers.ModelSerializer):
 class JuriaConversationDetailSerializer(serializers.ModelSerializer):
     linked_case_id = serializers.IntegerField(read_only=True, allow_null=True)
     messages = JuriaMessageNestedSerializer(many=True, read_only=True)
+    last_message_preview = serializers.SerializerMethodField()
 
     class Meta:
         model = JuriaConversation
@@ -82,7 +83,14 @@ class JuriaConversationDetailSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
             "messages",
+            "last_message_preview",
         )
+
+    def get_last_message_preview(self, obj: JuriaConversation) -> str | None:
+        last = obj.messages.order_by("-created_at").first() if hasattr(obj, "messages") else None
+        if not last:
+            return None
+        return (last.content or "")[:200]
 
 
 class JuriaConversationCreateSerializer(serializers.ModelSerializer):
@@ -91,7 +99,8 @@ class JuriaConversationCreateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = JuriaConversation
-        fields = ("mode", "linked_case_id", "title")
+        fields = ("id", "mode", "linked_case_id", "title")
+        read_only_fields = ("id",)
 
     def validate(self, attrs):
         linked = attrs.get("linked_case_id")

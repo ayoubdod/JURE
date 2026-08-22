@@ -403,11 +403,16 @@ TURN_CREDENTIAL_TTL = env.int("TURN_CREDENTIAL_TTL", default=86400)
 # --------------------------------------------------------------------------------------
 # Juria AI
 # --------------------------------------------------------------------------------------
+# Provider: "deepseek" (OpenAI-compatible chat) or "juria" (legacy custom API).
+JURIA_PROVIDER = env.str("JURIA_PROVIDER", default="deepseek").strip().lower()
 JURIA_API_URL = env.str("JURIA_API_URL", default="https://api.juria.ma/v1").rstrip("/")
 JURIA_API_KEY = env.str("JURIA_API_KEY", default="")
 JURIA_MAX_TOKENS = env.int("JURIA_MAX_TOKENS", default=4000)
-JURIA_TIMEOUT_SECONDS = env.int("JURIA_TIMEOUT_SECONDS", default=60)
+JURIA_TIMEOUT_SECONDS = env.int("JURIA_TIMEOUT_SECONDS", default=90)
 JURIA_ENABLED = env.bool("JURIA_ENABLED", default=False)
+DEEPSEEK_API_URL = env.str("DEEPSEEK_API_URL", default="https://api.deepseek.com").rstrip("/")
+DEEPSEEK_API_KEY = env.str("DEEPSEEK_API_KEY", default="")
+DEEPSEEK_MODEL = env.str("DEEPSEEK_MODEL", default="deepseek-chat")
 
 # --------------------------------------------------------------------------------------
 # Logging

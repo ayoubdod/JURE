@@ -720,7 +720,7 @@ html.dark .fc-button-group > .fc-button:hover:not(.fc-button-active) {
 }
 
 .fc-calendar-card .fc-day-today-jure {
-  background: rgba(79, 70, 229, 0.07) !important;
+  background: rgb(238 242 255) !important;
 }
 
 .fc-calendar-card .fc-day-today-jure .fc-daygrid-day-number {
@@ -729,7 +729,7 @@ html.dark .fc-button-group > .fc-button:hover:not(.fc-button-active) {
 }
 
 .fc-calendar-card .fc-day-weekend-jure {
-  background: rgba(148, 163, 184, 0.06) !important;
+  background: rgb(248 250 252) !important;
 }
 
 .fc-calendar-card .fc-event-overdue-strike .fc-event-title {
@@ -799,10 +799,18 @@ html.dark .fc-button-group > .fc-button:hover:not(.fc-button-active) {
   border-radius: 0.375rem !important;
   text-transform: none;
   letter-spacing: 0.02em;
+  overflow: hidden !important;
 }
 
+.fc-calendar-card .fc-button::before,
+.fc-calendar-card .fc-button::after,
+.fc-calendar-card .fc-today-button::before,
 .fc-calendar-card .fc-today-button::after {
+  content: none !important;
   display: none !important;
+  background: none !important;
+  width: 0 !important;
+  height: 0 !important;
 }
 
 /* View switcher — tight segmented control */
@@ -890,5 +898,199 @@ html.dark .fc-button-group > .fc-button:hover:not(.fc-button-active) {
   background: rgb(129 99 186) !important;
   color: rgb(255 255 255) !important;
 }
+
+/* Compact mobile chrome — global .fc-header-toolbar { flex-direction: column } would
+   stack prev/next, title, and views into three tall rows and hide the agenda. */
+@media (max-width: 768px) {
+  .fc-calendar-card .fc-header-toolbar {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 0.375rem !important;
+    padding: 0.375rem 0.5rem !important;
+  }
+
+  .fc-calendar-card .fc-toolbar-chunk {
+    margin: 0 !important;
+  }
+
+  .fc-calendar-card .fc-toolbar-chunk:nth-child(2) {
+    flex: 1 1 auto;
+    min-width: 0;
+    justify-content: center;
+  }
+
+  .fc-calendar-card .fc-toolbar-chunk:last-child {
+    flex: 1 1 100%;
+    justify-content: flex-end;
+  }
+
+  .fc-calendar-card .fc-toolbar-title {
+    font-size: 0.8125rem !important;
+    order: 0 !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .fc-calendar-card .fc-list-day-cushion {
+    padding: 0.375rem 0.75rem;
+  }
+
+  .fc-calendar-card .fc-list-event-title {
+    font-size: 0.8125rem;
+  }
+
+  .fc-calendar-card .fc-list-event-time {
+    font-size: 0.75rem;
+  }
+}
+
+/* Dark mode — weekend cells used a translucent overlay, so the white
+   .fc-daygrid sheet showed through and date numbers became white-on-white. */
+.dark .fc-calendar-card,
+html.dark .fc-calendar-card {
+  background: rgb(15 23 42);
+  border-color: rgb(30 41 59);
+}
+
+.dark .fc-calendar-card .fc,
+.dark .fc-calendar-card .fc-view-harness,
+.dark .fc-calendar-card .fc-scrollgrid,
+.dark .fc-calendar-card .fc-daygrid,
+.dark .fc-calendar-card .fc-daygrid-body,
+.dark .fc-calendar-card .fc-timegrid,
+.dark .fc-calendar-card .fc-list,
+html.dark .fc-calendar-card .fc,
+html.dark .fc-calendar-card .fc-daygrid,
+html.dark .fc-calendar-card .fc-timegrid,
+html.dark .fc-calendar-card .fc-list {
+  background: rgb(2 6 23) !important;
+  border-color: rgb(30 41 59) !important;
+}
+
+.dark .fc-calendar-card .fc-header-toolbar,
+html.dark .fc-calendar-card .fc-header-toolbar {
+  background: rgb(15 23 42) !important;
+  border-bottom-color: rgb(30 41 59) !important;
+}
+
+.dark .fc-calendar-card .fc-theme-standard td,
+.dark .fc-calendar-card .fc-theme-standard th,
+.dark .fc-calendar-card .fc-scrollgrid,
+.dark .fc-calendar-card .fc-scrollgrid td,
+.dark .fc-calendar-card .fc-scrollgrid th,
+html.dark .fc-calendar-card .fc-theme-standard td,
+html.dark .fc-calendar-card .fc-theme-standard th {
+  border-color: rgb(30 41 59) !important;
+}
+
+.dark .fc-calendar-card .fc-col-header-cell,
+html.dark .fc-calendar-card .fc-col-header-cell {
+  background: rgb(15 23 42) !important;
+  color: rgb(148 163 184) !important;
+  border-color: rgb(30 41 59) !important;
+}
+
+.dark .fc-calendar-card .fc-col-header-cell .fc-col-header-cell-cushion,
+html.dark .fc-calendar-card .fc-col-header-cell .fc-col-header-cell-cushion {
+  color: rgb(148 163 184) !important;
+}
+
+.dark .fc-calendar-card .fc-daygrid-day,
+html.dark .fc-calendar-card .fc-daygrid-day {
+  background: rgb(2 6 23) !important;
+  border-color: rgb(30 41 59) !important;
+}
+
+.dark .fc-calendar-card .fc-day-weekend-jure,
+.dark .fc-calendar-card .fc-day-sat,
+.dark .fc-calendar-card .fc-day-sun,
+html.dark .fc-calendar-card .fc-day-weekend-jure,
+html.dark .fc-calendar-card .fc-day-sat,
+html.dark .fc-calendar-card .fc-day-sun {
+  background: rgb(15 23 42) !important;
+}
+
+.dark .fc-calendar-card .fc-daygrid-day:hover,
+html.dark .fc-calendar-card .fc-daygrid-day:hover {
+  background: rgb(30 41 59) !important;
+}
+
+.dark .fc-calendar-card .fc-daygrid-day-number,
+html.dark .fc-calendar-card .fc-daygrid-day-number {
+  color: rgb(226 232 240) !important;
+}
+
+.dark .fc-calendar-card .fc-day-other .fc-daygrid-day-number,
+html.dark .fc-calendar-card .fc-day-other .fc-daygrid-day-number {
+  color: rgb(100 116 139) !important;
+}
+
+.dark .fc-calendar-card .fc-day-today-jure,
+html.dark .fc-calendar-card .fc-day-today-jure {
+  background: rgb(49 39 74) !important;
+}
+
+.dark .fc-calendar-card .fc-day-today-jure .fc-daygrid-day-number,
+html.dark .fc-calendar-card .fc-day-today-jure .fc-daygrid-day-number {
+  background: rgb(100 73 157) !important;
+  color: rgb(255 255 255) !important;
+}
+
+.dark .fc-calendar-card .fc-timegrid-slot,
+.dark .fc-calendar-card .fc-timegrid-axis,
+html.dark .fc-calendar-card .fc-timegrid-slot,
+html.dark .fc-calendar-card .fc-timegrid-axis {
+  background: rgb(2 6 23) !important;
+  border-color: rgb(30 41 59) !important;
+  color: rgb(148 163 184) !important;
+}
+
+.dark .fc-calendar-card .fc-list-day-cushion,
+html.dark .fc-calendar-card .fc-list-day-cushion {
+  background: rgb(15 23 42) !important;
+  color: rgb(226 232 240) !important;
+}
+
+.dark .fc-calendar-card .fc-list-event,
+html.dark .fc-calendar-card .fc-list-event {
+  background: rgb(2 6 23) !important;
+}
+
+.dark .fc-calendar-card .fc-list-event:hover,
+.dark .fc-calendar-card .fc-list-event:hover td,
+html.dark .fc-calendar-card .fc-list-event:hover,
+html.dark .fc-calendar-card .fc-list-event:hover td {
+  background: rgb(30 41 59) !important;
+}
+
+.dark .fc-calendar-card .fc-list-event-title,
+.dark .fc-calendar-card .fc-list-event-time,
+html.dark .fc-calendar-card .fc-list-event-title,
+html.dark .fc-calendar-card .fc-list-event-time {
+  color: rgb(226 232 240) !important;
+}
+
+.dark .fc-calendar-card .fc-popover,
+html.dark .fc-calendar-card .fc-popover {
+  background: rgb(15 23 42) !important;
+  border-color: rgb(51 65 85) !important;
+  color: rgb(226 232 240) !important;
+}
+
+.dark .fc-calendar-card .fc-popover-header,
+html.dark .fc-calendar-card .fc-popover-header {
+  background: rgb(30 41 59) !important;
+  color: rgb(226 232 240) !important;
+}
+
+.dark .fc-calendar-card .fc-more-link,
+html.dark .fc-calendar-card .fc-more-link {
+  color: rgb(196 181 253) !important;
+}
+
 
 

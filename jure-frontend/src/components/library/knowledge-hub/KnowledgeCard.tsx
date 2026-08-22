@@ -17,7 +17,8 @@ import { Button } from '@/components/ui/button';
 import { getFileType } from '@/utils/functions';
 import { DocumentCategory } from '@/utils/constants';
 import { cn } from '@/lib/utils';
-import { formatFileSize, isPlatformShared, riskStyles } from './knowledgeUtils';
+import { formatFileSize, isPlatformShared } from './knowledgeUtils';
+import { fileFormatLabel } from '@/lib/libraryTaxonomy';
 import type { EnrichedDocument } from './types';
 import { useAppTranslation } from '@/i18n';
 
@@ -65,10 +66,14 @@ const KnowledgeCard = memo(function KnowledgeCard({
   onCopy,
   onToggleFavorite,
 }: Props) {
-  const { t } = useAppTranslation();
+  const { t, enumLabel, lang } = useAppTranslation();
   const shared = isPlatformShared(doc);
   const category =
-    DocumentCategory.options.find((c) => c.value === doc.category)?.label || doc.category;
+    enumLabel('documentCategory', doc.category) ||
+    DocumentCategory.getLabel(doc.category) ||
+    t.library.unclassifiedCategory;
+  const areaLabel = doc.legalArea ? enumLabel('documentLegalArea', doc.legalArea) : null;
+  const format = fileFormatLabel(doc.file);
   const { insight } = doc;
 
   return (
@@ -129,45 +134,33 @@ const KnowledgeCard = memo(function KnowledgeCard({
         <span className="rounded-md border border-slate-200/80 bg-slate-50 px-1.5 py-0.5 text-[10px] font-medium text-slate-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">
           {category}
         </span>
+        {areaLabel ? (
+          <span className="rounded-md border border-[#64499D]/20 bg-[#64499D]/08 px-1.5 py-0.5 text-[10px] font-medium text-[#64499D] dark:text-[#CFC2FF]">
+            {areaLabel}
+          </span>
+        ) : null}
         {shared ? (
           <span className="rounded-md border border-[#64499D]/25 bg-[#64499D]/10 px-1.5 py-0.5 text-[10px] font-semibold text-[#64499D] dark:text-[#CFC2FF]">
             {t.library.publicLibraryBadge}
           </span>
         ) : null}
-        {insight.aiIndexed ? (
-          <span className="rounded-md border border-[#64499D]/20 bg-[#64499D]/08 px-1.5 py-0.5 text-[10px] font-medium text-[#64499D] dark:text-[#CFC2FF]">
-            AI Indexed
+        {format ? (
+          <span className="rounded-md border border-slate-200/80 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-slate-500 dark:border-slate-700 dark:text-slate-400">
+            {format}
           </span>
-        ) : (
-          <span className="rounded-md border border-amber-500/20 bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-medium text-amber-700 dark:text-amber-400">
-            Pending
-          </span>
-        )}
-        <span
-          className={cn(
-            'rounded-md border px-1.5 py-0.5 text-[10px] font-medium capitalize',
-            riskStyles(insight.riskLevel)
-          )}
-        >
-          {insight.riskLevel} risk
-        </span>
-        <span className="rounded-md border border-slate-200/80 px-1.5 py-0.5 text-[10px] text-slate-500 dark:text-slate-400 dark:border-slate-700">
-          {insight.language}
-        </span>
+        ) : null}
       </div>
 
       <div className="mt-auto flex items-center justify-between border-t border-slate-100 pt-2 dark:border-slate-800/80">
         <div className="flex flex-col gap-0.5 min-w-0">
           <span className="text-[10px] text-slate-400 truncate">
-            {new Date(doc.modified).toLocaleDateString(undefined, {
-              month: 'short',
+            {new Date(doc.modified).toLocaleDateString(lang === 'ar' ? 'ar' : lang === 'fr' ? 'fr' : 'en-GB', {
               day: 'numeric',
+              month: 'short',
               year: 'numeric',
             })}
             <span className="mx-1 text-slate-300">·</span>
             {formatFileSize(doc.size)}
-            <span className="mx-1 text-slate-300">·</span>
-            Score {insight.knowledgeScore}
           </span>
         </div>
         <div

@@ -2,13 +2,6 @@ export type KnowledgeViewMode = 'grid' | 'table' | 'timeline' | 'graph' | 'ai';
 
 export type CollectionId =
   | 'all'
-  | 'law'
-  | 'templates'
-  | 'contracts'
-  | 'research'
-  | 'legal_forms'
-  | 'training'
-  | 'evidence'
   | 'recent'
   | 'favorites'
   | 'ai_generated'
@@ -38,6 +31,8 @@ export type KnowledgeInsight = {
 
 export type EnrichedDocument = API.Document & {
   insight: KnowledgeInsight;
+  legalArea: API.LegalArea | null;
+  displayCategory: string;
 };
 
 export type SmartMetrics = {
