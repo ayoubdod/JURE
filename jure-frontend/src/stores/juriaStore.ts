@@ -10,6 +10,8 @@ import {
   apiJuriaListAllConversations,
   apiJuriaSendMessage,
   apiJuriaUsage,
+  isJuriaConversationId,
+  normalizeJuriaConversationId,
 } from '@/services/juria/api';
 import { mapApiDetailToConversation, mapApiListItemToConversation, mapApiMessageToJuria } from '@/utils/juriaMappers';
 import { getJuriaErrorMessage, isJuriaDisabledError } from '@/utils/juriaErrors';
@@ -69,6 +71,33 @@ interface JuriaStoreState {
   downloadDocumentToFile: (messageId: string, filename?: string) => Promise<void>;
 }
 
+let listFetchId = 0;
+
+function mergeConversationLists(local: JuriaConversation[], incoming: JuriaConversation[]): JuriaConversation[] {
+  const byId = new Map<string, JuriaConversation>();
+  for (const c of incoming) {
+    if (!c.id) continue;
+    const prev = local.find((x) => x.id === c.id);
+    byId.set(
+      c.id,
+      prev
+        ? {
+            ...c,
+            messages: prev.messages.length > 0 ? prev.messages : c.messages,
+            caseReference: prev.caseReference ?? c.caseReference,
+            caseTitle: prev.caseTitle ?? c.caseTitle,
+            lastMessagePreview: c.lastMessagePreview ?? prev.lastMessagePreview,
+          }
+        : c
+    );
+  }
+  for (const c of local) {
+    if (!c.id || c.archived || byId.has(c.id)) continue;
+    byId.set(c.id, c);
+  }
+  return [...byId.values()].sort((a, b) => (a.updatedAt < b.updatedAt ? 1 : -1));
+}
+
 const useJuriaStore = create<JuriaStoreState>()(
   persist(
     (set, get) => ({
@@ -94,48 +123,45 @@ const useJuriaStore = create<JuriaStoreState>()(
       },
 
       loadConversations: async (filters) => {
+        const fetchId = ++listFetchId;
         set({ listLoading: true, juriaUnavailable: false });
         try {
           const items = await apiJuriaListAllConversations({ ...filters, is_archived: filters?.is_archived ?? false });
-          const mapped = items.map((item) => {
-            const existing = get().conversations.find((c) => c.id === item.id);
-            if (existing && existing.messages.length > 0) {
-              return {
-                ...mapApiListItemToConversation(item),
-                messages: existing.messages,
-                caseReference: existing.caseReference,
-                caseTitle: existing.caseTitle,
-              };
-            }
-            return {
-              ...mapApiListItemToConversation(item),
-              caseReference: existing?.caseReference,
-              caseTitle: existing?.caseTitle,
-            };
-          });
-          set({ conversations: mapped });
+          if (fetchId !== listFetchId) return;
+          const mapped = items.map(mapApiListItemToConversation).filter((c) => isJuriaConversationId(c.id));
+          set({ conversations: mergeConversationLists(get().conversations, mapped) });
         } catch (e) {
+          if (fetchId !== listFetchId) return;
           if (isJuriaDisabledError(e)) set({ juriaUnavailable: true });
           throw e;
         } finally {
-          set({ listLoading: false });
+          if (fetchId === listFetchId) set({ listLoading: false });
         }
       },
 
       loadConversationDetail: async (id) => {
+        const nid = normalizeJuriaConversationId(id);
+        if (!nid) {
+          set({ activeConversationId: null, detailLoading: false });
+          return;
+        }
         set({ detailLoading: true, juriaUnavailable: false });
         try {
-          const detail = await apiJuriaGetConversation(id);
+          const detail = await apiJuriaGetConversation(nid);
           const conv = mapApiDetailToConversation(detail);
-          const prev = get().conversations.find((c) => c.id === id);
+          const prev = get().conversations.find((c) => c.id === nid);
           if (prev?.caseReference) {
             conv.caseReference = prev.caseReference;
             conv.caseTitle = prev.caseTitle;
           }
+          if (prev?.messages.length && conv.messages.length === 0) {
+            conv.messages = prev.messages;
+          }
           set((s) => ({
-            conversations: s.conversations.some((c) => c.id === id)
-              ? s.conversations.map((c) => (c.id === id ? conv : c))
-              : [conv, ...s.conversations.filter((c) => c.id !== id)],
+            conversations: s.conversations.some((c) => c.id === nid)
+              ? s.conversations.map((c) => (c.id === nid ? { ...conv, id: nid } : c))
+              : [{ ...conv, id: nid }, ...s.conversations.filter((c) => c.id !== nid)],
+            activeConversationId: nid,
           }));
         } catch (e) {
           if (isJuriaDisabledError(e)) set({ juriaUnavailable: true });
@@ -154,11 +180,17 @@ const useJuriaStore = create<JuriaStoreState>()(
       },
 
       setActiveConversation: (id) => {
-        set({ activeConversationId: id });
-        if (id) void get().loadConversationDetail(id);
+        const next = normalizeJuriaConversationId(id);
+        set({ activeConversationId: next });
+        if (next) {
+          void get().loadConversationDetail(next).catch(() => {
+            /* keep the conversation selected even if history fetch fails */
+          });
+        }
       },
 
       createConversation: async (mode, caseLink) => {
+        listFetchId += 1;
         set({ juriaUnavailable: false });
         const detail = await apiJuriaCreateConversation({
           mode,
@@ -166,16 +198,23 @@ const useJuriaStore = create<JuriaStoreState>()(
           title: '',
         });
         const conv = mapApiDetailToConversation(detail);
+        const id = normalizeJuriaConversationId(conv.id);
+        if (!id) {
+          throw new Error('Conversation créée sans identifiant.');
+        }
+        conv.id = id;
+        conv.archived = false;
+        conv.updatedAt = conv.updatedAt || new Date().toISOString();
         if (caseLink) {
           conv.caseReference = caseLink.reference;
           conv.caseTitle = caseLink.title;
         }
         set((s) => ({
-          conversations: [conv, ...s.conversations.filter((c) => c.id !== conv.id)],
-          activeConversationId: conv.id,
+          conversations: [conv, ...s.conversations.filter((c) => c.id !== id)],
+          activeConversationId: id,
         }));
-        await get().loadUsage();
-        return conv.id;
+        void get().loadUsage();
+        return id;
       },
 
       createLinkedConversation: async (caseLink) => {
@@ -238,10 +277,16 @@ const useJuriaStore = create<JuriaStoreState>()(
           set((s) => ({
             conversations: s.conversations.map((c) => {
               if (c.id !== conversationId) return c;
+              const nextTitle =
+                c.title && c.title !== 'Conversation'
+                  ? c.title
+                  : (msgText.replace(/^📎\s*/, '').slice(0, 60) || c.title);
               return {
                 ...c,
+                title: nextTitle,
                 messages: [...c.messages, userMsg, asstMsg],
                 updatedAt: new Date().toISOString(),
+                lastMessagePreview: asstMsg.content?.slice(0, 72) || c.lastMessagePreview,
               };
             }),
           }));

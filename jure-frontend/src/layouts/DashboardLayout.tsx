@@ -171,7 +171,7 @@ const DashboardLayout = () => {
                         : isFinance
                           ? 'flex-1 min-h-0 overflow-hidden overflow-x-hidden p-2.5 sm:p-4 lg:p-5 pt-3 sm:pt-4'
                           : isJuria
-                            ? 'flex-1 min-h-0 overflow-hidden overflow-x-hidden p-1.5 sm:p-3 lg:p-5 pt-1.5 sm:pt-3'
+                            ? 'flex-1 min-h-0 overflow-hidden overflow-x-hidden p-0'
                             : isLibrary
                               ? 'flex-1 min-h-0 overflow-hidden overflow-x-hidden p-0'
                               : 'flex-1 overflow-x-hidden p-2.5 sm:p-4 lg:p-5 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-3 sm:pt-4'

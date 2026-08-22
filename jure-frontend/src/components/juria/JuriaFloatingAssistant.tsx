@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router';
-import { ExternalLink, Sparkles, X } from 'lucide-react';
+import { ExternalLink, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { JuriaComposer } from '@/components/juria/JuriaComposer';
@@ -188,12 +188,12 @@ export function JuriaFloatingAssistant() {
               type="button"
               onClick={() => setOpen((v) => !v)}
               className={cn(
-                'relative flex h-[52px] w-[52px] items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-violet-500 text-white shadow-[0_4px_16px_rgba(99,102,241,0.4)] transition hover:brightness-105',
+                'relative flex h-[52px] w-[52px] items-center justify-center overflow-hidden rounded-[14px] bg-white shadow-[0_4px_16px_rgba(100,73,157,0.35)] transition hover:brightness-105',
                 'animate-juria-fab-breathe'
               )}
-              aria-label="Juria"
+              aria-label="Demander à Juria"
             >
-              <Sparkles className="h-6 w-6" />
+              <img src="/images/juria-icon.png" alt="" className="h-full w-full object-cover" />
               {processingId && (
                 <span className="absolute right-1.5 top-1.5 h-2.5 w-2.5 animate-pulse rounded-full bg-amber-400 ring-2 ring-white" />
               )}

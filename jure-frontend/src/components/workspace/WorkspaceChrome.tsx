@@ -13,12 +13,18 @@ export function WorkspacePageHeader({
   actions?: React.ReactNode;
 }) {
   return (
-    <div className="flex flex-wrap items-start justify-between gap-3 px-0 pt-3 pb-1">
+    <div className="flex flex-wrap items-center justify-between gap-2 px-0 pt-2 pb-1 sm:gap-3 sm:pt-3">
       <div className="min-w-0">
-        <h1 className="text-xl font-semibold tracking-tight text-slate-900 dark:text-white">{title}</h1>
-        <p className="mt-0.5 max-w-2xl text-[13px] text-slate-500 dark:text-slate-400">{subtitle}</p>
+        <h1 className="text-lg font-semibold tracking-tight text-slate-900 dark:text-white sm:text-xl">{title}</h1>
+        <p className="mt-0.5 max-w-2xl text-[13px] text-slate-500 dark:text-slate-400 hidden sm:block">
+          {subtitle}
+        </p>
       </div>
-      {actions ? <div className="flex shrink-0 items-center gap-2">{actions}</div> : null}
+      {actions ? (
+        <div className="flex min-w-0 items-center justify-end gap-2 max-sm:flex-1 max-sm:basis-full">
+          {actions}
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -41,7 +47,7 @@ export function WorkspaceKpiStrip({
 }) {
   return (
     <div
-      className="ws-kpi-strip flex gap-2 overflow-x-auto snap-x snap-mandatory px-1 sm:px-0 py-2"
+      className="ws-kpi-strip grid grid-cols-2 gap-2 px-0 py-2 sm:flex sm:overflow-x-auto sm:snap-x sm:snap-mandatory"
       role="region"
       aria-label={ariaLabel}
     >
@@ -49,9 +55,9 @@ export function WorkspaceKpiStrip({
         <div
           key={item.key}
           className={cn(
-            'snap-start shrink-0 flex items-center gap-2 rounded-md border border-slate-200/90 dark:border-slate-800',
-            'bg-white dark:bg-slate-950 border-l-[3px] px-2.5 py-1.5 min-w-[5.75rem]',
-            'sm:flex-1 sm:min-w-0',
+            'flex min-w-0 items-center gap-2 rounded-md border border-slate-200/90 dark:border-slate-800',
+            'bg-white dark:bg-slate-950 border-l-[3px] px-2.5 py-1.5',
+            'sm:snap-start sm:flex-1 sm:shrink-0 sm:min-w-[5.75rem]',
             item.accent
           )}
         >

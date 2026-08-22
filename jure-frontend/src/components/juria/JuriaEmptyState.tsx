@@ -1,71 +1,147 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { JURIA_MODE_VISUAL } from '@/components/juria/juriaConstants';
+import { JuriaComposer } from '@/components/juria/JuriaComposer';
 import type { JuriaMode } from '@/types/juria';
 import { useAppTranslation } from '@/i18n';
+import { cn } from '@/lib/utils';
+
+const ACTION_ORDER: { mode: JuriaMode; action: 'research' | 'analyze' | 'draft' | 'ask' }[] = [
+  { mode: 'LEGAL_RESEARCH', action: 'research' },
+  { mode: 'CONTRACT_ANALYSIS', action: 'analyze' },
+  { mode: 'DOCUMENT_DRAFTING', action: 'draft' },
+  { mode: 'CHAT', action: 'ask' },
+];
 
 export function JuriaEmptyState({
   onPickMode,
   onPickStarter,
+  onAsk,
 }: {
   onPickMode: (mode: JuriaMode) => void;
-  onPickStarter: (text: string) => void;
+  onPickStarter: (text: string, mode?: JuriaMode) => void;
+  onAsk?: (
+    text: string,
+    file?: File | null,
+    caseLink?: { id: number; reference?: string; title?: string },
+    mode?: JuriaMode
+  ) => void;
 }) {
   const { t } = useAppTranslation();
-  const modes: JuriaMode[] = ['CONTRACT_ANALYSIS', 'LEGAL_RESEARCH', 'DOCUMENT_DRAFTING', 'CHAT'];
-  const starters = [
-    t.juria.quickStarters.analyzeLease,
-    t.juria.quickStarters.draftFormalNotice,
-    t.juria.quickStarters.whatIsDoc,
-    t.juria.quickStarters.summarizeVat,
-    t.juria.quickStarters.draftSarlBylaws,
+  const [draft, setDraft] = useState('');
+  const [file, setFile] = useState<File | null>(null);
+  const [mode, setMode] = useState<JuriaMode>('CHAT');
+  const [linkedCase, setLinkedCase] = useState<{ id: number; reference?: string; title?: string } | null>(null);
+
+  const chips = [
+    { text: t.juria.quickStarters.analyzeContract, mode: 'CONTRACT_ANALYSIS' as const },
+    { text: t.juria.quickStarters.searchMoroccan, mode: 'LEGAL_RESEARCH' as const },
+    { text: t.juria.quickStarters.summarizeDoc, mode: 'CHAT' as const },
+    { text: t.juria.quickStarters.draftFormalNotice, mode: 'DOCUMENT_DRAFTING' as const },
+    { text: t.juria.quickStarters.compareClauses, mode: 'CONTRACT_ANALYSIS' as const },
+    { text: t.juria.quickStarters.analyzeCaseLaw, mode: 'LEGAL_RESEARCH' as const },
   ];
 
+  const submit = () => {
+    const text = draft.trim();
+    if (!text && !file) return;
+    onAsk?.(text, file, linkedCase ?? undefined, mode);
+  };
+
   return (
-    <div className="flex flex-1 flex-col items-center justify-center px-6 py-10">
-      <div className="mb-8 flex flex-col items-center text-center">
-        <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-600 shadow-lg shadow-indigo-500/30 animate-[logo-breathe_2.8s_ease-in-out_infinite]">
-          <span className="text-3xl font-bold text-white">J</span>
+    <div className="flex min-h-0 flex-1 flex-col">
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+        <div className="mx-auto flex w-full max-w-3xl flex-col px-4 py-5 sm:px-8 sm:py-10">
+          <div className="mb-5 flex flex-col items-center text-center sm:mb-8">
+            <img
+              src="/images/juria-icon.png"
+              alt=""
+              className="mb-3 h-10 w-10 rounded-[12px] object-contain shadow-sm ring-1 ring-slate-200/80 sm:mb-4 sm:h-12 sm:w-12 dark:ring-slate-700"
+            />
+            <div className="flex items-center gap-2">
+              <h1 className="text-[14px] font-semibold tracking-[0.14em] text-slate-800 dark:text-white">JURIA</h1>
+              <span className="rounded-full bg-[#64499D]/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-[#64499D]">
+                {t.juria.beta}
+              </span>
+            </div>
+            <h2 className="mt-3 max-w-lg text-lg font-medium leading-snug tracking-tight text-slate-900 dark:text-white sm:mt-4 sm:text-[22px]">
+              {t.juria.headline}
+            </h2>
+            <p className="mt-2 hidden max-w-xl text-[13px] leading-relaxed text-slate-500 sm:block dark:text-slate-400">
+              {t.juria.subtitle}
+            </p>
+            <p className="mt-1.5 max-w-sm text-[12px] leading-relaxed text-slate-500 sm:hidden dark:text-slate-400">
+              {t.juria.howCanIHelp}
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2 sm:gap-2.5">
+            {ACTION_ORDER.map(({ mode: m, action }) => {
+              const visual = JURIA_MODE_VISUAL[m];
+              const Icon = visual.Icon;
+              return (
+                <button
+                  key={m}
+                  type="button"
+                  onClick={() => onPickMode(m)}
+                  className="group flex min-h-[72px] flex-col gap-2 rounded-xl border border-slate-200/90 bg-white p-2.5 text-start transition hover:border-[#64499D]/35 hover:bg-[#FBF9FF] sm:min-h-0 sm:flex-row sm:gap-3 sm:p-3.5 dark:border-slate-800 dark:bg-slate-950 dark:hover:border-[#64499D]/40 dark:hover:bg-[#64499D]/5"
+                >
+                  <span className={cn('flex h-8 w-8 shrink-0 items-center justify-center rounded-lg sm:h-9 sm:w-9', visual.iconWrap)}>
+                    <Icon className="h-4 w-4" />
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block text-[10px] font-medium uppercase tracking-[0.08em] text-slate-400">
+                      {t.juria.actions[action]}
+                    </span>
+                    <span className="mt-0.5 block text-[12px] font-medium text-slate-900 sm:text-[13px] dark:text-white">
+                      {t.juria.modes[m].label}
+                    </span>
+                    <span className="mt-0.5 hidden text-[12px] leading-relaxed text-slate-500 sm:block dark:text-slate-400">
+                      {t.juria.modes[m].desc}
+                    </span>
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+
+          <p className="mx-auto mt-6 hidden max-w-lg text-center text-[11px] leading-relaxed text-slate-400 sm:block dark:text-slate-500">
+            {t.juria.disclaimer}
+          </p>
         </div>
-        <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">{t.juria.name}</h2>
-        <p className="mt-1 max-w-md text-sm text-slate-600 dark:text-slate-300">
-          {t.juria.tagline}
-        </p>
-        <span className="mt-3 inline-flex items-center rounded-full bg-indigo-100 px-2.5 py-0.5 text-[11px] font-semibold text-indigo-700 ring-1 ring-indigo-200/80 dark:bg-indigo-950/60 dark:text-indigo-200 dark:ring-indigo-800">
-          {t.juria.beta}
-        </span>
       </div>
 
-      <div className="grid w-full max-w-2xl grid-cols-1 gap-3 sm:grid-cols-2">
-        {modes.map((mode) => {
-          const visual = JURIA_MODE_VISUAL[mode];
-          const m = t.juria.modes[mode];
-          return (
-            <button
-              key={mode}
-              type="button"
-              onClick={() => onPickMode(mode)}
-              className="group flex flex-col rounded-2xl border border-slate-200 bg-white p-4 text-left shadow-sm transition hover:border-indigo-300 hover:shadow-md dark:border-slate-800 dark:bg-slate-900/80 dark:hover:border-indigo-700"
-            >
-              <span className="text-2xl">{visual.icon}</span>
-              <span className="mt-2 text-sm font-semibold text-slate-900 dark:text-white">{m.label}</span>
-              <span className="mt-1 text-xs leading-relaxed text-slate-600 dark:text-slate-400">{m.desc}</span>
-            </button>
-          );
-        })}
-      </div>
-
-      <div className="mt-8 flex w-full max-w-2xl flex-wrap justify-center gap-2">
-        {starters.map((q) => (
-          <button
-            key={q}
-            type="button"
-            onClick={() => onPickStarter(q)}
-            className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs text-slate-700 transition hover:border-indigo-300 hover:bg-indigo-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-indigo-600"
-          >
-            {q}
-          </button>
-        ))}
-      </div>
+      {onAsk ? (
+        <div className="shrink-0 border-t border-slate-200 bg-white/95 backdrop-blur-md dark:border-slate-800 dark:bg-slate-950/95">
+          <div className="mx-auto w-full max-w-3xl">
+            <div className="flex gap-1.5 overflow-x-auto px-3 pt-2.5 pb-1 [-ms-overflow-style:none] [scrollbar-width:none] sm:flex-wrap sm:justify-center sm:overflow-visible sm:px-4 [&::-webkit-scrollbar]:hidden">
+              {chips.map((chip) => (
+                <button
+                  key={chip.text}
+                  type="button"
+                  onClick={() => onPickStarter(chip.text, chip.mode)}
+                  className="shrink-0 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-[12px] text-slate-600 transition hover:border-[#64499D]/30 hover:text-[#64499D] dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"
+                >
+                  {chip.text}
+                </button>
+              ))}
+            </div>
+            <JuriaComposer
+              variant="docked"
+              mode={mode}
+              onModeChange={setMode}
+              value={draft}
+              onChange={setDraft}
+              onSend={submit}
+              linkedCase={linkedCase ?? undefined}
+              onLinkCase={(c) => setLinkedCase(c)}
+              onUnlinkCase={() => setLinkedCase(null)}
+              attachment={file}
+              onAttachmentChange={setFile}
+              showCaseLink
+            />
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

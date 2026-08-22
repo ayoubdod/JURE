@@ -11,13 +11,11 @@ import { useDebounce } from '@/hooks/use-debounce';
 import './Cases.css';
 import {
   Plus,
-  Search,
   List,
   LayoutGrid,
   ChevronRight,
   Calendar,
   AlertTriangle,
-  X,
   Scale,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -38,7 +36,8 @@ import CaseDeleteModal, { CaseDeleteModalRef } from '@/components/case/CaseDelet
 import CaseViewModal, { CaseViewModalRef } from '@/components/case/CaseViewModal';
 import CaseCard from '@/components/case/CaseCard';
 import MatterWorkspaceCard from '@/components/case/MatterWorkspaceCard';
-import { Input } from '@/components/ui/input';
+import CompactSearch from '@/components/common/CompactSearch';
+import MobileFilterSheet from '@/components/common/MobileFilterSheet';
 import PaginationComponent from '@/components/common/Pagination';
 import {
   Popover,
@@ -542,6 +541,139 @@ const Cases = () => {
     setCurrentPage(1);
   };
 
+  const extraFilterCount =
+    (caseTypeFilter !== 'ALL' ? 1 : 0) +
+    (statusFilters.length > 0 ? 1 : 0) +
+    (clientIdFilter != null ? 1 : 0);
+
+  const renderCaseFilters = (fullWidth: boolean) => (
+    <>
+      <Select
+        value={caseTypeFilter}
+        onValueChange={(v) => {
+          updateUrlFilters({ [Q.type]: v === 'ALL' ? null : v });
+          setCurrentPage(1);
+        }}
+      >
+        <SelectTrigger
+          className={cn(
+            'h-9 text-[12px] rounded-md border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 focus:ring-2 focus:ring-primary/25',
+            fullWidth ? 'w-full' : 'w-[132px] sm:w-[148px]',
+            caseTypeFilter !== 'ALL' && 'ring-1 ring-primary/30 border-primary/40 bg-primary/[0.04]'
+          )}
+        >
+          <SelectValue placeholder={t.cases.filters.matterType} />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="ALL">{t.cases.filters.allTypes}</SelectItem>
+          <SelectItem value="CONSULTATION">{t.cases.filters.consultation}</SelectItem>
+          <SelectItem value="LITIGATION">{t.cases.filters.litigation}</SelectItem>
+          <SelectItem value="ADMINISTRATIVE">{t.cases.filters.administrative}</SelectItem>
+        </SelectContent>
+      </Select>
+
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button
+            variant="outline"
+            size="sm"
+            className={cn(
+              'h-9 rounded-md px-2.5 text-[12px] border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 focus-visible:ring-2 focus-visible:ring-primary/25',
+              fullWidth && 'w-full justify-between',
+              statusFilters.length > 0 && 'ring-1 ring-primary/30 border-primary/40 bg-primary/[0.04]'
+            )}
+          >
+            {t.cases.filters.status}
+            {statusFilters.length > 0 ? ` (${statusFilters.length})` : ''} ▾
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-64 p-2" align="start">
+          <div className="space-y-2 max-h-[280px] overflow-y-auto">
+            <div>
+              <p className="text-[10px] uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
+                {t.cases.filters.general}
+              </p>
+              <div className="flex flex-wrap gap-1">
+                {GENERAL_STATUSES.map((s) => (
+                  <Button
+                    key={s}
+                    variant={statusFilters.includes(s) ? 'default' : 'outline'}
+                    size="sm"
+                    className="h-7 text-[11px]"
+                    onClick={() => handleStatusToggle(s)}
+                  >
+                    {enumPretty(s)}
+                  </Button>
+                ))}
+              </div>
+            </div>
+            {caseTypeFilter === 'CONSULTATION' && (
+              <div>
+                <p className="text-[10px] uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
+                  {t.cases.filters.consultation}
+                </p>
+                <div className="flex flex-wrap gap-1">
+                  {CONSULTATION_STATUSES.map((s) => (
+                    <Button
+                      key={s}
+                      variant={statusFilters.includes(s) ? 'default' : 'outline'}
+                      size="sm"
+                      className="h-7 text-[11px]"
+                      onClick={() => handleStatusToggle(s)}
+                    >
+                      {enumPretty(s)}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            )}
+            <div>
+              <p className="text-[10px] uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
+                {t.cases.filters.litigation} / {t.cases.typeLabels.admin}
+              </p>
+              <div className="flex flex-wrap gap-1">
+                {LITIGATION_ADMIN_STATUSES.map((s) => (
+                  <Button
+                    key={s}
+                    variant={statusFilters.includes(s) ? 'default' : 'outline'}
+                    size="sm"
+                    className="h-7 text-[11px]"
+                    onClick={() => handleStatusToggle(s)}
+                  >
+                    {enumPretty(s)}
+                  </Button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </PopoverContent>
+      </Popover>
+
+      <div className={fullWidth ? 'w-full' : 'w-[160px] sm:w-[180px]'}>
+        <ServerSelect
+          link="/clients/clients/"
+          value={clientIdFilter ?? undefined}
+          onChange={(v) => {
+            updateUrlFilters({ [Q.clientId]: v != null ? String(v) : null });
+            setCurrentPage(1);
+          }}
+          placeholder={t.cases.clientPlaceholder}
+          searchPlaceholder={t.cases.searchClient}
+          labelKey={(c: { first_name?: string; last_name?: string; email?: string }) =>
+            `${c.first_name || ''} ${c.last_name || ''}`.trim() || c.email || t.cases.unnamed
+          }
+          valueKey="id"
+          cleanable
+          className={cn(
+            'h-9 text-[12px] rounded-md border-slate-200 dark:border-slate-700',
+            fullWidth && 'w-full max-w-none',
+            clientIdFilter != null && 'ring-1 ring-primary/30 border-primary/40 bg-primary/[0.04]'
+          )}
+        />
+      </div>
+    </>
+  );
+
   const refresh = () => {
     setRefreshTrigger((t) => t + 1);
     fetchAllCasesForStats();
@@ -885,176 +1017,29 @@ const Cases = () => {
             'px-0 pt-1 pb-0'
           )}
         >
-          <div className="rounded-lg border border-slate-200/90 dark:border-slate-800 bg-white/95 dark:bg-slate-950/90 px-2 py-2 sm:px-3">
-            <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
-              {/* Search first — primary */}
-              <div className="relative flex-1 min-w-[min(100%,12rem)] sm:min-w-[14rem] order-1 sm:order-none sm:flex-[1.4]">
-                <Search
-                  className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400"
-                  aria-hidden
-                />
-                <Input
-                  ref={searchInputRef}
-                  type="search"
-                  placeholder={t.cases.searchPlaceholder}
-                  className={cn(
-                    'h-9 pl-8 pr-8 text-[13px] rounded-md border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950',
-                    'focus-visible:ring-2 focus-visible:ring-primary/25',
-                    searchTerm.trim() !== '' && 'ring-1 ring-primary/25 border-primary/30'
-                  )}
-                  value={searchTerm}
-                  onChange={(e) => updateUrlFilters({ [Q.search]: e.target.value || null })}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Escape') {
-                      updateUrlFilters({ [Q.search]: null });
-                      (e.target as HTMLInputElement).blur();
-                    }
-                  }}
-                  aria-label={t.cases.searchAria}
-                />
-                {searchTerm.trim() !== '' && (
-                  <button
-                    type="button"
-                    className="absolute right-1.5 top-1/2 -translate-y-1/2 rounded p-1 text-slate-400 hover:text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 min-h-[28px] min-w-[28px] flex items-center justify-center"
-                    onClick={() => updateUrlFilters({ [Q.search]: null })}
-                    aria-label={t.cases.clearSearch}
-                  >
-                    <X className="w-3.5 h-3.5" />
-                  </button>
-                )}
-              </div>
-
-              <Select
-                value={caseTypeFilter}
-                onValueChange={(v) => {
-                  updateUrlFilters({ [Q.type]: v === 'ALL' ? null : v });
-                  setCurrentPage(1);
-                }}
+          <div className="relative rounded-lg border border-slate-200/90 dark:border-slate-800 bg-white/95 dark:bg-slate-950/90 px-2 py-2 sm:px-3">
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <CompactSearch
+                value={searchTerm}
+                onChange={(v) => updateUrlFilters({ [Q.search]: v || null })}
+                placeholder={t.cases.searchPlaceholder}
+                ariaLabel={t.cases.searchAria}
+                clearAriaLabel={t.cases.clearSearch}
+                inputRef={searchInputRef}
+              />
+              <MobileFilterSheet
+                title={t.common.filter}
+                count={extraFilterCount}
+                footer={
+                  extraFilterCount > 0 ? (
+                    <Button variant="ghost" size="sm" className="h-9 w-full text-[12px]" onClick={resetFilters}>
+                      {t.cases.reset}
+                    </Button>
+                  ) : null
+                }
               >
-                <SelectTrigger
-                  className={cn(
-                    'h-9 w-[132px] sm:w-[148px] text-[12px] rounded-md border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 focus:ring-2 focus:ring-primary/25',
-                    caseTypeFilter !== 'ALL' && 'ring-1 ring-primary/30 border-primary/40 bg-primary/[0.04]'
-                  )}
-                >
-                  <SelectValue placeholder={t.cases.filters.matterType} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="ALL">{t.cases.filters.allTypes}</SelectItem>
-                  <SelectItem value="CONSULTATION">{t.cases.filters.consultation}</SelectItem>
-                  <SelectItem value="LITIGATION">{t.cases.filters.litigation}</SelectItem>
-                  <SelectItem value="ADMINISTRATIVE">{t.cases.filters.administrative}</SelectItem>
-                </SelectContent>
-              </Select>
-
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className={cn(
-                      'h-9 rounded-md px-2.5 text-[12px] border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 focus-visible:ring-2 focus-visible:ring-primary/25',
-                      statusFilters.length > 0 && 'ring-1 ring-primary/30 border-primary/40 bg-primary/[0.04]'
-                    )}
-                  >
-                    {t.cases.filters.status}
-                    {statusFilters.length > 0 ? ` (${statusFilters.length})` : ''} ▾
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-64 p-2" align="start">
-                  <div className="space-y-2 max-h-[280px] overflow-y-auto">
-                    <div>
-                      <p className="text-[10px] uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
-                        {t.cases.filters.general}
-                      </p>
-                      <div className="flex flex-wrap gap-1">
-                        {GENERAL_STATUSES.map((s) => (
-                          <Button
-                            key={s}
-                            variant={statusFilters.includes(s) ? 'default' : 'outline'}
-                            size="sm"
-                            className="h-7 text-[11px]"
-                            onClick={() => handleStatusToggle(s)}
-                          >
-                            {enumPretty(s)}
-                          </Button>
-                        ))}
-                      </div>
-                    </div>
-                    {caseTypeFilter === 'CONSULTATION' && (
-                      <div>
-                        <p className="text-[10px] uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
-                          {t.cases.filters.consultation}
-                        </p>
-                        <div className="flex flex-wrap gap-1">
-                          {CONSULTATION_STATUSES.map((s) => (
-                            <Button
-                              key={s}
-                              variant={statusFilters.includes(s) ? 'default' : 'outline'}
-                              size="sm"
-                              className="h-7 text-[11px]"
-                              onClick={() => handleStatusToggle(s)}
-                            >
-                              {enumPretty(s)}
-                            </Button>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                    <div>
-                      <p className="text-[10px] uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
-                        {t.cases.filters.litigation} / {t.cases.typeLabels.admin}
-                      </p>
-                      <div className="flex flex-wrap gap-1">
-                        {LITIGATION_ADMIN_STATUSES.map((s) => (
-                          <Button
-                            key={s}
-                            variant={statusFilters.includes(s) ? 'default' : 'outline'}
-                            size="sm"
-                            className="h-7 text-[11px]"
-                            onClick={() => handleStatusToggle(s)}
-                          >
-                            {enumPretty(s)}
-                          </Button>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                </PopoverContent>
-              </Popover>
-
-              <div className="w-full min-[480px]:w-[160px] sm:w-[180px]">
-                <ServerSelect
-                  link="/clients/clients/"
-                  value={clientIdFilter ?? undefined}
-                  onChange={(v) => {
-                    updateUrlFilters({ [Q.clientId]: v != null ? String(v) : null });
-                    setCurrentPage(1);
-                  }}
-                  placeholder={t.cases.clientPlaceholder}
-                  searchPlaceholder={t.cases.searchClient}
-                  labelKey={(c: { first_name?: string; last_name?: string; email?: string }) =>
-                    `${c.first_name || ''} ${c.last_name || ''}`.trim() || c.email || t.cases.unnamed
-                  }
-                  valueKey="id"
-                  cleanable
-                  className={cn(
-                    'h-9 text-[12px] rounded-md border-slate-200 dark:border-slate-700',
-                    clientIdFilter != null && 'ring-1 ring-primary/30 border-primary/40 bg-primary/[0.04]'
-                  )}
-                />
-              </div>
-
-              {hasActiveFilters && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-9 text-[12px] text-slate-600 dark:text-slate-400 px-2"
-                  onClick={resetFilters}
-                >
-                  {t.cases.reset}
-                </Button>
-              )}
+                {renderCaseFilters(true)}
+              </MobileFilterSheet>
 
               <div
                 className="ml-auto hidden items-center rounded-md border border-slate-200 bg-slate-100/80 p-0.5 dark:border-slate-700 dark:bg-slate-900/50 md:inline-flex"

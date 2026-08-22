@@ -5,7 +5,7 @@ from django.http import QueryDict
 
 from commons.models import Tag
 from core.utils import is_valid_slug
-from .models import Document
+from .models import Document, normalize_document_category
 
 logger = logging.getLogger(__name__)
 
@@ -149,7 +149,11 @@ class DocumentSerializer(serializers.ModelSerializer):
                             data['tags'] = [tags_value] if tags_value else []
                     elif not isinstance(tags_value, list):
                         data['tags'] = [tags_value] if tags_value else []
-        
+
+        if isinstance(data, dict) and data.get('category'):
+            data = dict(data)
+            data['category'] = normalize_document_category(data.get('category'))
+
         return super().to_internal_value(data)
     
     def validate_tags(self, value: list[str] | None):
@@ -168,14 +172,19 @@ class DocumentSerializer(serializers.ModelSerializer):
         return value
     
     def validate_category(self, value):
-        """Validate category is a valid choice."""
-        if value:
-            valid_categories = [choice[0] for choice in Document.DocumentCategory.choices]
-            if value not in valid_categories:
-                raise serializers.ValidationError(
-                    f"Invalid category. Must be one of: {', '.join(valid_categories)}"
-                )
-        return value
+        """Validate category is a canonical choice. Legacy slugs are remapped, not rejected."""
+        if not value:
+            return value
+        value = normalize_document_category(value)
+        valid_categories = [choice[0] for choice in Document.DocumentCategory.choices]
+        if value in valid_categories:
+            return value
+        # Preserve unknown existing values so unmapped rows are not destroyed on edit.
+        if self.instance and getattr(self.instance, 'category', None) == value:
+            return value
+        raise serializers.ValidationError(
+            f"Invalid category. Must be one of: {', '.join(valid_categories)}"
+        )
     
     def create(self, validated_data):
         """

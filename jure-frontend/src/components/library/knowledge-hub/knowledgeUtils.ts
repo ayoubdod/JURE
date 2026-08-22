@@ -1,4 +1,10 @@
 import { DocumentCategory } from '@/utils/constants';
+import {
+  inferLegalArea,
+  normalizeDocumentCategory,
+  type DocumentCategoryId,
+  type LegalAreaId,
+} from '@/lib/libraryTaxonomy';
 import type {
   CollectionId,
   EnrichedDocument,
@@ -177,10 +183,16 @@ export function buildInsight(doc: API.Document): KnowledgeInsight {
 }
 
 export function enrichDocuments(documents: API.Document[]): EnrichedDocument[] {
-  return documents.map((doc) => ({
-    ...doc,
-    insight: buildInsight(doc),
-  }));
+  return documents.map((doc) => {
+    const category = normalizeDocumentCategory(doc.category);
+    const normalized = { ...doc, category };
+    return {
+      ...normalized,
+      insight: buildInsight(normalized),
+      legalArea: inferLegalArea(normalized),
+      displayCategory: category,
+    };
+  });
 }
 
 export function computeSmartMetrics(
@@ -288,8 +300,8 @@ export function semanticFilter(docs: EnrichedDocument[], query: string): Enriche
       }
       if (/nda|gdpr|arbitration|expir|litigation|contract|clause|sign/.test(q)) {
         if (doc.insight.riskLevel !== 'low') score += 1;
-        if (doc.category === 'contracts' && /contract|nda|expir/.test(q)) score += 2;
-        if (doc.category === 'evidence' && /litigation/.test(q)) score += 2;
+        if (doc.category === 'contracts_agreements' && /contract|nda|expir/.test(q)) score += 2;
+        if (doc.category === 'evidence_case_materials' && /litigation/.test(q)) score += 2;
         if (/gdpr|arbitration|clause/.test(q) && doc.insight.keyClauses.length) score += 2;
       }
       return { doc, score };
@@ -328,16 +340,22 @@ export type CollectionDef = {
 };
 
 export const COLLECTIONS: CollectionDef[] = [
-  { id: 'all', label: 'Collections', group: 'core' },
+  { id: 'all', label: 'Library', group: 'core' },
   { id: 'public', label: 'Public library', group: 'core' },
-  { id: 'contracts', label: 'Contracts', group: 'core' },
-  { id: 'law', label: 'Corporate', group: 'core' },
-  { id: 'evidence', label: 'Litigation', group: 'core' },
-  { id: 'legal_forms', label: 'HR & Forms', group: 'core' },
-  { id: 'research', label: 'Tax & Research', group: 'core' },
-  { id: 'templates', label: 'Compliance', group: 'core' },
-  { id: 'training', label: 'Governance', group: 'core' },
   { id: 'ai_generated', label: 'AI Generated', group: 'smart' },
   { id: 'favorites', label: 'Favorites', group: 'smart' },
   { id: 'recent', label: 'Recent', group: 'smart' },
 ];
+
+export function matchesCategory(
+  doc: EnrichedDocument,
+  category: DocumentCategoryId | null
+): boolean {
+  if (!category) return true;
+  return normalizeDocumentCategory(doc.category) === category;
+}
+
+export function matchesArea(doc: EnrichedDocument, area: LegalAreaId | null): boolean {
+  if (!area) return true;
+  return doc.legalArea === area;
+}

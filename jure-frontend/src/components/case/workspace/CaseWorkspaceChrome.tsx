@@ -1,9 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Filter, Plus, Scale, Search, X } from 'lucide-react';
+import { Plus, Scale } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import PaginationComponent from '@/components/common/Pagination';
+import CompactSearch from '@/components/common/CompactSearch';
+import MobileFilterSheet from '@/components/common/MobileFilterSheet';
 import { cn } from '@/lib/utils';
 import { useAppTranslation } from '@/i18n';
 import '@/pages/Cases.css';
@@ -224,78 +224,30 @@ export default function CaseWorkspaceChrome({
             'px-0 pt-1 pb-0'
           )}
         >
-          <div className="rounded-lg border border-slate-200/90 dark:border-slate-800 bg-white/95 dark:bg-slate-950/90 px-2 py-2 sm:px-3">
-            <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
-              <div className="relative flex-1 min-w-[min(100%,12rem)] sm:min-w-[14rem] sm:flex-[1.4]">
-                <Search
-                  className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400"
-                  aria-hidden
-                />
-                <Input
-                  ref={searchInputRef}
-                  type="search"
-                  placeholder={searchPlaceholder}
-                  className={cn(
-                    'h-9 pl-8 pr-8 text-[13px] rounded-md border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950',
-                    'focus-visible:ring-2 focus-visible:ring-primary/25',
-                    searchValue.trim() !== '' && 'ring-1 ring-primary/25 border-primary/30'
-                  )}
-                  value={searchValue}
-                  onChange={(e) => onSearchChange(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Escape') {
-                      onSearchChange('');
-                      (e.target as HTMLInputElement).blur();
-                    }
-                  }}
-                  aria-label={t.cases.searchAria}
-                />
-                {searchValue.trim() !== '' && (
-                  <button
-                    type="button"
-                    className="absolute right-1.5 top-1/2 -translate-y-1/2 rounded p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 min-h-[28px] min-w-[28px] flex items-center justify-center"
-                    onClick={() => onSearchChange('')}
-                    aria-label={t.cases.clearSearch}
-                  >
-                    <X className="w-3.5 h-3.5" />
-                  </button>
-                )}
-              </div>
+          <div className="rounded-lg border border-slate-200/90 bg-white/95 px-2 py-2 dark:border-slate-800 dark:bg-slate-950/90 sm:px-3">
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <CompactSearch
+                value={searchValue}
+                onChange={onSearchChange}
+                placeholder={searchPlaceholder}
+                ariaLabel={t.cases.searchAria}
+                clearAriaLabel={t.cases.clearSearch}
+                inputRef={searchInputRef}
+              />
 
-              <div className="hidden md:flex flex-wrap items-center gap-1.5">{renderFilters()}</div>
-
-              <Sheet>
-                <SheetTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className={cn(
-                      'md:hidden h-9 rounded-md px-2.5 text-[12px]',
-                      hasActiveFilters && 'ring-1 ring-primary/30 border-primary/40 bg-primary/[0.04]'
-                    )}
-                  >
-                    <Filter className="w-3.5 h-3.5 mr-1.5" />
-                    {ws.filters}
-                  </Button>
-                </SheetTrigger>
-                <SheetContent side="bottom" className="max-h-[80vh] overflow-y-auto">
-                  <SheetHeader>
-                    <SheetTitle>{ws.filters}</SheetTitle>
-                  </SheetHeader>
-                  <div className="mt-4 flex flex-col gap-2">{renderFilters()}</div>
-                </SheetContent>
-              </Sheet>
-
-              {hasActiveFilters && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-9 text-[12px] text-slate-600 dark:text-slate-400 px-2"
-                  onClick={onResetFilters}
-                >
-                  {t.cases.reset}
-                </Button>
-              )}
+              <MobileFilterSheet
+                title={ws.filters}
+                count={hasActiveFilters ? 1 : 0}
+                footer={
+                  hasActiveFilters ? (
+                    <Button variant="ghost" size="sm" className="h-9 w-full text-[12px]" onClick={onResetFilters}>
+                      {t.cases.reset}
+                    </Button>
+                  ) : null
+                }
+              >
+                {renderFilters()}
+              </MobileFilterSheet>
             </div>
           </div>
         </div>

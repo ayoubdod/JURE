@@ -4,7 +4,6 @@ import time
 
 from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
-from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
@@ -15,13 +14,14 @@ from juria.models import JuriaConversation, JuriaMessage, record_juria_usage
 from juria.serializers.message_serializer import JuriaMessageCreateSerializer
 from juria.services.juria_api_service import (
     JuriaAPIError,
+    JuriaDocumentError,
     JuriaTimeoutError,
     analyze_document,
     send_chat_message,
 )
 from juria.serializers.conversation_serializer import build_case_context
-from juria.views.conversation_views import get_case_for_user
-from juria.views.mixins import JuriaEnabledMixin
+from juria.views.conversation_views import get_case_for_user, get_user_conversation
+from juria.views.mixins import JuriaEnabledMixin, juria_error_http_status
 
 
 def auto_title_from_first_message(text: str) -> str:
@@ -91,10 +91,7 @@ class JuriaConversationMessageCreateView(JuriaEnabledMixin, APIView):
         file_name_in = (ser.validated_data.get("file_name") or "").strip()
         upload = request.FILES.get("file")
 
-        conv = get_object_or_404(
-            JuriaConversation.objects.filter(user=request.user, is_archived=False),
-            pk=conversation_id,
-        )
+        conv = get_user_conversation(request.user, conversation_id, restore_archived=True)
 
         case_context = None
         if conv.linked_case_id:
@@ -184,6 +181,14 @@ class JuriaConversationMessageCreateView(JuriaEnabledMixin, APIView):
                     tokens_delta=tokens,
                     research_queries_delta=research_delta,
                 )
+        except JuriaDocumentError as exc:
+            if attachment_rel:
+                try:
+                    default_storage.delete(attachment_rel)
+                except Exception:
+                    pass
+            user_msg.delete()
+            return Response({"error": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
         except JuriaTimeoutError:
             if attachment_rel:
                 try:
@@ -195,7 +200,7 @@ class JuriaConversationMessageCreateView(JuriaEnabledMixin, APIView):
                 {"error": "Juria is taking too long. Please retry."},
                 status=status.HTTP_504_GATEWAY_TIMEOUT,
             )
-        except JuriaAPIError:
+        except JuriaAPIError as exc:
             if attachment_rel:
                 try:
                     default_storage.delete(attachment_rel)
@@ -203,8 +208,8 @@ class JuriaConversationMessageCreateView(JuriaEnabledMixin, APIView):
                     pass
             user_msg.delete()
             return Response(
-                {"error": "Juria API unavailable. Please try again."},
-                status=status.HTTP_502_BAD_GATEWAY,
+                {"error": str(exc)},
+                status=juria_error_http_status(exc),
             )
 
         assistant_msg = JuriaMessage.objects.create(

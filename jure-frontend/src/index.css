@@ -123,6 +123,53 @@
   }
 }
 
+/* Slim overlay scrollbars — hidden on touch; purple hairline on desktop hover. */
+@media (pointer: coarse) {
+  * {
+    scrollbar-width: none;
+  }
+
+  *::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+    display: none;
+  }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
+  }
+
+  *:hover {
+    scrollbar-color: hsl(var(--jure-primary) / 0.7) transparent;
+  }
+
+  *::-webkit-scrollbar {
+    width: 2px;
+    height: 2px;
+  }
+
+  *::-webkit-scrollbar-track,
+  *::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+
+  *::-webkit-scrollbar-thumb {
+    background-color: transparent;
+    border-radius: 9999px;
+  }
+
+  *:hover::-webkit-scrollbar-thumb {
+    background-color: hsl(var(--jure-primary) / 0.55);
+  }
+
+  *:hover::-webkit-scrollbar-thumb:hover {
+    background-color: hsl(var(--jure-primary) / 0.85);
+  }
+}
+
 @keyframes floating-gradient {
   0%, 100% { background-position: 0% 50%; }
   50% { background-position: 100% 50%; }

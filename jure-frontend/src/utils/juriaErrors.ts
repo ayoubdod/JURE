@@ -9,7 +9,7 @@ export function getJuriaErrorMessage(err: unknown): string {
   if (status === 503) {
     return typeof data?.detail === 'string' ? data.detail : 'Juria est indisponible pour le moment.';
   }
-  if (status === 502) {
+  if (status === 401 || status === 402 || status === 429 || status === 502) {
     return data?.error ?? "Juria API indisponible. Réessayez plus tard.";
   }
   if (status === 504) {

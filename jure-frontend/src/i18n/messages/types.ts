@@ -325,11 +325,13 @@ export interface AppMessages {
       sectionDetails: string;
       titleLabel: string;
       categoryLabel: string;
+      areaLabel: string;
       descriptionLabel: string;
       fileLabel: string;
       tagsLabel: string;
       titlePlaceholder: string;
       categoryPlaceholder: string;
+      areaPlaceholder: string;
       descriptionPlaceholder: string;
       titleRequired: string;
       categoryRequired: string;
@@ -350,10 +352,12 @@ export interface AppMessages {
       sectionInfo: string;
       titleLabel: string;
       categoryLabel: string;
+      areaLabel: string;
       descriptionLabel: string;
       tagsLabel: string;
       titlePlaceholder: string;
       categoryPlaceholder: string;
+      areaPlaceholder: string;
       descriptionPlaceholder: string;
       currentFile: string;
       view: string;
@@ -843,10 +847,18 @@ export interface AppMessages {
     };
     resultsCount: string;
     collections: string;
+    categories: string;
+    legalAreas: string;
+    clearAllFilters: string;
+    activeFilters: string;
+    unclassifiedCategory: string;
+    documentsCount: string;
     publicLibrary: string;
     publicLibraryBadge: string;
     addToMyLibrary: string;
     openCollections: string;
+    collapseCollections: string;
+    expandCollections: string;
     openCopilot: string;
     copilot: string;
     mobile: {
@@ -999,6 +1011,8 @@ export interface AppMessages {
     taskStatus: Record<string, string>;
     addressType: Record<string, string>;
     documentCategory: Record<string, string>;
+    documentLegalArea: Record<string, string>;
+    documentCategoryDescription: Record<string, string>;
 
     invoiceStatus: Record<string, string>;
     paymentMethod: Record<string, string>;
@@ -1901,6 +1915,7 @@ export interface AppMessages {
       todo: string;
       inProgress: string;
       done: string;
+      cancelled: string;
     };
     empty: {
       title: string;
@@ -2187,6 +2202,8 @@ export interface AppMessages {
     newAppointment: string;
     goToCalendar: string;
     searchPlaceholder: string;
+    filters: string;
+    clearFilters: string;
     filterStatus: string;
     filterAssignee: string;
     filterClient: string;
@@ -2236,6 +2253,7 @@ export interface AppMessages {
     loadErrorTitle: string;
     loadErrorDescription: string;
     hideAnnouncement: string;
+    announcementKicker: string;
     fromLastMonth: string;
     noPreviousData: string;
     kpiUnavailable: string;
@@ -3111,21 +3129,58 @@ export interface AppMessages {
     name: string;
     beta: string;
     tagline: string;
+    headline: string;
+    subtitle: string;
+    howCanIHelp: string;
+    disclaimer: string;
+    askPlaceholder: string;
     searchPlaceholder: string;
     newConversation: string;
     loading: string;
     emptyConversations: string;
+    emptyConversationsHint: string;
     newConversationPreview: string;
     rename: string;
     renamePrompt: string;
     archive: string;
     delete: string;
     usageThisMonth: string;
+    usageStats: string;
+    copy: string;
+    copied: string;
+    export: string;
+    askFollowUp: string;
+    viewSources: string;
+    sources: string;
+    statusSearching: string;
+    statusAnalyzing: string;
+    statusPreparing: string;
+    attachFile: string;
+    send: string;
+    keyboardHint: string;
+    linkMatter: string;
+    context: {
+      label: string;
+      general: string;
+      matter: string;
+      document: string;
+    };
+    askLang: {
+      fr: string;
+      ar: string;
+      darija: string;
+    };
     modes: {
       CHAT: { label: string; shortLabel: string; desc: string; placeholder: string };
       CONTRACT_ANALYSIS: { label: string; shortLabel: string; desc: string; placeholder: string };
       LEGAL_RESEARCH: { label: string; shortLabel: string; desc: string; placeholder: string };
       DOCUMENT_DRAFTING: { label: string; shortLabel: string; desc: string; placeholder: string };
+    };
+    actions: {
+      research: string;
+      analyze: string;
+      draft: string;
+      ask: string;
     };
     quickStarters: {
       analyzeLease: string;
@@ -3133,6 +3188,11 @@ export interface AppMessages {
       whatIsDoc: string;
       summarizeVat: string;
       draftSarlBylaws: string;
+      analyzeContract: string;
+      searchMoroccan: string;
+      summarizeDoc: string;
+      compareClauses: string;
+      analyzeCaseLaw: string;
     };
     groups: {
       today: string;

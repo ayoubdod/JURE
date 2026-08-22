@@ -51,12 +51,14 @@ function resolveAnnouncementMediaUrl(url: string | null | undefined): string | n
   return `${base}${u.startsWith('/') ? '' : '/'}${u}`;
 }
 const ANNOUNCEMENT_GLASS =
-  'relative overflow-hidden rounded-2xl border border-white/25 dark:border-white/15 ' +
-  'bg-gradient-to-br from-[#7B5CB8]/80 via-[#64499D]/70 to-[#4ECDC4]/40 ' +
-  'dark:from-[#7B5CB8]/60 dark:via-[#64499D]/55 dark:to-[#4ECDC4]/30 ' +
-  'backdrop-blur-xl shadow-[0_8px_32px_rgba(100,73,157,0.28)] ' +
-  'before:pointer-events-none before:absolute before:inset-0 before:bg-gradient-to-br ' +
-  'before:from-white/30 before:via-white/5 before:to-transparent';
+  'relative overflow-hidden rounded-2xl border border-white/20 dark:border-white/10 ' +
+  'bg-gradient-to-br from-[#5B3F96] via-[#64499D] to-[#2F6F73] ' +
+  'dark:from-[#4A3480] dark:via-[#3E2D71] dark:to-[#1F4F52] ' +
+  'shadow-[0_12px_40px_-12px_rgba(100,73,157,0.55)] ' +
+  'before:pointer-events-none before:absolute before:inset-0 before:bg-[radial-gradient(120%_80%_at_100%_0%,rgba(78,205,196,0.28),transparent_55%)]';
+
+const ANNOUNCEMENT_TITLE = 'text-[15px] font-semibold tracking-tight text-white';
+const ANNOUNCEMENT_BODY = 'mt-1.5 text-[13px] leading-relaxed text-white/80';
 
 const ANNOUNCEMENT_STYLES: Record<
   DashboardAnnouncement['type'],
@@ -65,30 +67,30 @@ const ANNOUNCEMENT_STYLES: Record<
   INFO: {
     card: ANNOUNCEMENT_GLASS,
     iconWrap:
-      'w-8 h-8 rounded-lg bg-white/20 border border-white/30 backdrop-blur-md flex items-center justify-center shrink-0 shadow-sm',
-    title: 'text-sm font-semibold text-white drop-shadow-sm',
-    body: 'text-sm text-white/85 leading-relaxed mt-1',
+      'flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-white/25 bg-white/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.25)]',
+    title: ANNOUNCEMENT_TITLE,
+    body: ANNOUNCEMENT_BODY,
   },
   SUCCESS: {
     card: ANNOUNCEMENT_GLASS,
     iconWrap:
-      'w-8 h-8 rounded-lg bg-emerald-400/25 border border-white/30 backdrop-blur-md flex items-center justify-center shrink-0 shadow-sm',
-    title: 'text-sm font-semibold text-white drop-shadow-sm',
-    body: 'text-sm text-white/85 leading-relaxed mt-1',
+      'flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-emerald-200/30 bg-emerald-400/20 shadow-[inset_0_1px_0_rgba(255,255,255,0.25)]',
+    title: ANNOUNCEMENT_TITLE,
+    body: ANNOUNCEMENT_BODY,
   },
   WARNING: {
     card: ANNOUNCEMENT_GLASS,
     iconWrap:
-      'w-8 h-8 rounded-lg bg-amber-400/25 border border-white/30 backdrop-blur-md flex items-center justify-center shrink-0 shadow-sm',
-    title: 'text-sm font-semibold text-white drop-shadow-sm',
-    body: 'text-sm text-white/85 leading-relaxed mt-1',
+      'flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-amber-200/30 bg-amber-400/20 shadow-[inset_0_1px_0_rgba(255,255,255,0.25)]',
+    title: ANNOUNCEMENT_TITLE,
+    body: ANNOUNCEMENT_BODY,
   },
   IMPORTANT: {
     card: ANNOUNCEMENT_GLASS,
     iconWrap:
-      'w-8 h-8 rounded-lg bg-rose-400/30 border border-white/30 backdrop-blur-md flex items-center justify-center shrink-0 shadow-sm',
-    title: 'text-sm font-semibold text-white drop-shadow-sm',
-    body: 'text-sm text-white/85 leading-relaxed mt-1',
+      'flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-rose-200/35 bg-rose-400/25 shadow-[inset_0_1px_0_rgba(255,255,255,0.25)]',
+    title: ANNOUNCEMENT_TITLE,
+    body: ANNOUNCEMENT_BODY,
   },
 };
 
@@ -402,64 +404,68 @@ const Dashboard = () => {
           const style = ANNOUNCEMENT_STYLES[displayAnnouncement.type] ?? ANNOUNCEMENT_STYLES.INFO;
           const mediaUrl = resolveAnnouncementMediaUrl(displayAnnouncement.media_url);
           const hasMedia = Boolean(mediaUrl && displayAnnouncement.media_kind);
+          const isImage = hasMedia && displayAnnouncement.media_kind === 'IMAGE';
+          const isVideo = hasMedia && displayAnnouncement.media_kind === 'VIDEO';
           return (
             <div className={style.card}>
-              <div className="relative z-10 p-3 sm:p-4">
-                <div className="flex items-start gap-2.5">
-                  <div className={style.iconWrap}>
-                    <Megaphone size={16} className="text-white" />
-                  </div>
-                  <div className="flex min-w-0 flex-1 items-start gap-2.5">
-                    <div className="min-w-0 flex-1">
-                      <h3 className={style.title}>
-                        {displayAnnouncement.title}
-                      </h3>
-                      {displayAnnouncement.message ? (
-                        <p className={style.body}>
-                          {displayAnnouncement.message}
-                        </p>
-                      ) : null}
-                    </div>
-                    {hasMedia && mediaUrl && displayAnnouncement.media_kind === 'IMAGE' && (
-                      <a
-                        href={mediaUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="shrink-0 overflow-hidden rounded-md border border-white/25 bg-white/15 backdrop-blur-sm shadow-sm"
-                        title={displayAnnouncement.title}
-                      >
-                        <img
-                          src={mediaUrl}
-                          alt=""
-                          className="h-24 w-40 object-cover sm:h-28 sm:w-48"
-                          loading="lazy"
-                        />
-                      </a>
-                    )}
-                    {hasMedia && mediaUrl && displayAnnouncement.media_kind === 'VIDEO' && (
-                      <div className="shrink-0 overflow-hidden rounded-md border border-white/25 bg-black/20 backdrop-blur-sm">
-                        <video
-                          src={mediaUrl}
-                          controls
-                          preload="metadata"
-                          className="h-24 w-44 object-cover sm:h-28 sm:w-52"
-                        >
-                          <track kind="captions" />
-                        </video>
-                      </div>
-                    )}
-                  </div>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="shrink-0 h-7 w-7 text-white/70 hover:text-white hover:bg-white/15"
-                    onClick={handleHideAnnouncement}
-                    aria-label={d.hideAnnouncement}
-                    title={d.hideAnnouncement}
+              <div
+                aria-hidden
+                className="pointer-events-none absolute inset-0 opacity-[0.13] [background-image:linear-gradient(to_right,rgba(255,255,255,0.22)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.22)_1px,transparent_1px)] [background-size:22px_22px]"
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="absolute end-2 top-2 z-20 h-8 w-8 rounded-full border border-white/20 bg-black/25 text-white/85 backdrop-blur-md hover:bg-black/40 hover:text-white"
+                onClick={handleHideAnnouncement}
+                aria-label={d.hideAnnouncement}
+                title={d.hideAnnouncement}
+              >
+                <X size={14} />
+              </Button>
+              <div className="relative z-10 flex flex-col sm:flex-row sm:items-stretch">
+                {isImage && mediaUrl ? (
+                  <a
+                    href={mediaUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="relative block aspect-[16/9] overflow-hidden border-b border-white/15 sm:order-2 sm:aspect-auto sm:w-[220px] sm:shrink-0 sm:border-b-0 sm:border-s"
+                    title={displayAnnouncement.title}
                   >
-                    <X size={15} />
-                  </Button>
+                    <img
+                      src={mediaUrl}
+                      alt=""
+                      className="h-full w-full object-cover"
+                      loading="lazy"
+                    />
+                    <span className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#3E2D71]/50 to-transparent sm:from-[#3E2D71]/20" />
+                  </a>
+                ) : null}
+                {isVideo && mediaUrl ? (
+                  <div className="relative aspect-[16/9] overflow-hidden border-b border-white/15 bg-black/30 sm:order-2 sm:aspect-auto sm:w-[220px] sm:shrink-0 sm:border-b-0 sm:border-s">
+                    <video
+                      src={mediaUrl}
+                      controls
+                      preload="metadata"
+                      className="h-full w-full object-cover"
+                    >
+                      <track kind="captions" />
+                    </video>
+                  </div>
+                ) : null}
+                <div className="min-w-0 flex-1 px-3.5 pb-3.5 pt-3 sm:order-1 sm:px-4 sm:py-4">
+                  <div className="flex items-center gap-2.5 pe-8">
+                    <div className={style.iconWrap}>
+                      <Megaphone size={15} className="text-white" />
+                    </div>
+                    <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-cyan-100/80">
+                      {d.announcementKicker}
+                    </span>
+                  </div>
+                  <h3 className={`${style.title} mt-2.5`}>{displayAnnouncement.title}</h3>
+                  {displayAnnouncement.message ? (
+                    <p className={style.body}>{displayAnnouncement.message}</p>
+                  ) : null}
                 </div>
               </div>
             </div>

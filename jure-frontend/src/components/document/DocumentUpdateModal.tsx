@@ -8,7 +8,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { AlignJustify, FileText, Loader2, Tags, Type, X, Archive, Image, Video, Radio, File, Download, Eye } from 'lucide-react';
+import { AlignJustify, Briefcase, FileText, Loader2, Tags, Type, X, Archive, Image, Video, Radio, File, Download, Eye } from 'lucide-react';
 import { apiUpdateDocument } from '@/services/library/api';
 import * as yup from 'yup';
 import { Resolver, useForm } from 'react-hook-form';
@@ -23,6 +23,7 @@ import TagsInput from '../TagsInput';
 import { useToast } from '@/hooks/use-toast';
 import { devError, devWarn } from '@/utils/devLog';
 import { useAppTranslation } from '@/i18n';
+import { mergeAreaIntoTags, splitDocumentTags, type LegalAreaId } from '@/lib/libraryTaxonomy';
 
 export interface DocumentUpdateModalRef {
   show: (instance: API.Document) => void;
@@ -47,6 +48,7 @@ const DocumentUpdateModal = forwardRef<DocumentUpdateModalRef, DocumentUpdateMod
   const [instance, setInstance] = useState<API.Document | null>(null);
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [legalArea, setLegalArea] = useState<LegalAreaId | ''>('');
   const { toast } = useToast();
 
   const mainForm = useForm<API.DocumentUpdateForm>({
@@ -55,18 +57,21 @@ const DocumentUpdateModal = forwardRef<DocumentUpdateModalRef, DocumentUpdateMod
 
   const show = (instance: API.Document) => {
     setInstance(instance);
+    const { area, userTags } = splitDocumentTags(instance.tags);
 
     mainForm.reset({
       title: instance.title,
-      category: instance.category,
-      tags: instance.tags,
+      category: instance.category as API.DocumentCategory,
+      tags: userTags,
       description: instance.description,
     });
+    setLegalArea(area || '');
     setIsOpen(true);
   }
 
   const hide = () => {
     setIsOpen(false);
+    setLegalArea('');
     mainForm.reset();
   }
 
@@ -123,13 +128,13 @@ const DocumentUpdateModal = forwardRef<DocumentUpdateModalRef, DocumentUpdateMod
         hasChanges = true;
       }
       
-      // Compare tags arrays
-      if (data.tags !== undefined) {
-        const tagsChanged = JSON.stringify(data.tags || []) !== JSON.stringify(instance.tags || []);
-        if (tagsChanged) {
-          updateData.tags = data.tags;
-          hasChanges = true;
-        }
+      // Compare tags arrays including persisted legal-area tag
+      const nextTags = mergeAreaIntoTags(data.tags || [], legalArea || null);
+      const originalTags = instance.tags || [];
+      const tagsChanged = JSON.stringify(nextTags) !== JSON.stringify(originalTags);
+      if (tagsChanged) {
+        updateData.tags = nextTags;
+        hasChanges = true;
       }
       
       // Compare description (handle null/empty string)
@@ -514,6 +519,28 @@ const DocumentUpdateModal = forwardRef<DocumentUpdateModalRef, DocumentUpdateMod
                     {mainForm.formState.errors.category.message}
                   </p>
                 )}
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-slate-700 dark:text-slate-300 flex items-center gap-2">
+                  <Briefcase className="w-4 h-4" />
+                  {m.areaLabel}
+                </label>
+                <Select
+                  value={legalArea || undefined}
+                  onValueChange={(val: LegalAreaId) => setLegalArea(val)}
+                >
+                  <SelectTrigger className="h-11 border-slate-300 dark:border-slate-700 focus:border-[#64499D] focus:ring-[#64499D]">
+                    <SelectValue placeholder={m.areaPlaceholder} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {enumOptions('documentLegalArea').map((area) => (
+                      <SelectItem key={area.value} value={area.value}>
+                        {area.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 

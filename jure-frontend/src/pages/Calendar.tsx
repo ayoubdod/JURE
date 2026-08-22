@@ -301,30 +301,32 @@ const CalendarPage: React.FC = () => {
   ];
 
   return (
-    <div ref={setCalendarHolderEl} className="relative h-full flex flex-col min-h-0 bg-slate-50 dark:bg-slate-950 overflow-hidden px-3 sm:px-4">
+    <div ref={setCalendarHolderEl} className="relative h-full flex flex-col min-h-0 bg-slate-50 dark:bg-slate-950 overflow-hidden px-2 sm:px-4">
       <WorkspacePageHeader
         title={cal.title}
         subtitle={cal.subtitle}
         actions={
-          <div className="flex flex-wrap items-center justify-end gap-2">
+          <div className="flex w-full items-center justify-end gap-1.5 sm:w-auto sm:gap-2">
             <Button
               type="button"
               size="sm"
               variant="outline"
-              className="h-9 px-3 text-[12px] font-semibold rounded-md"
+              className="h-8 flex-1 px-2 text-[11px] font-semibold rounded-md sm:h-9 sm:flex-none sm:px-3 sm:text-[12px]"
               onClick={openCreateTask}
             >
-              <Plus className="w-4 h-4 mr-1.5" strokeWidth={2.5} />
-              {t.tasks.newTask}
+              <Plus className="w-3.5 h-3.5 mr-1 sm:w-4 sm:h-4 sm:mr-1.5" strokeWidth={2.5} />
+              <span className="sm:hidden">{cal.addTask}</span>
+              <span className="hidden sm:inline">{t.tasks.newTask}</span>
             </Button>
             <Button
               type="button"
               size="sm"
-              className="h-9 px-3 text-[12px] font-semibold rounded-md shadow-sm shadow-primary/15"
+              className="h-8 flex-1 px-2 text-[11px] font-semibold rounded-md shadow-sm shadow-primary/15 sm:h-9 sm:flex-none sm:px-3 sm:text-[12px]"
               onClick={openCreateAppointment}
             >
-              <Plus className="w-4 h-4 mr-1.5" strokeWidth={2.5} />
-              {t.appointments.newAppointment}
+              <Plus className="w-3.5 h-3.5 mr-1 sm:w-4 sm:h-4 sm:mr-1.5" strokeWidth={2.5} />
+              <span className="sm:hidden">{cal.addAppointment}</span>
+              <span className="hidden sm:inline">{t.appointments.newAppointment}</span>
             </Button>
           </div>
         }
@@ -332,11 +334,11 @@ const CalendarPage: React.FC = () => {
 
       <WorkspaceKpiStrip items={kpiItems} loading={loading} ariaLabel={cal.title} />
 
-      <div className="shrink-0 py-2">
+      <div className="shrink-0 py-1.5 sm:py-2">
         <CalendarFilters value={filters} onChange={setFilters} loading={loading} onRefresh={refreshEvents} />
       </div>
 
-      <div className={cn('flex-1 min-h-0 overflow-hidden pb-3', loadError && 'flex items-center justify-center')}>
+      <div className={cn('flex-1 min-h-0 overflow-hidden pb-2 sm:pb-3', loadError && 'flex items-center justify-center')}>
         {loadError ? (
           <WorkspaceErrorState
             title={cal.loadError}

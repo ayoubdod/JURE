@@ -1,24 +1,34 @@
+import type { LucideIcon } from 'lucide-react';
+import { FileSearch, MessageSquare, PenLine, Search } from 'lucide-react';
 import type { JuriaMode } from '@/types/juria';
+
+export function juriaModeVisual(mode: string | undefined) {
+  return JURIA_MODE_VISUAL[(mode as JuriaMode)] ?? JURIA_MODE_VISUAL.CHAT;
+}
 
 export const JURIA_MODE_VISUAL: Record<
   JuriaMode,
-  { icon: string; segmentClass: string }
+  { Icon: LucideIcon; accent: string; iconWrap: string }
 > = {
-  CHAT: {
-    icon: '💬',
-    segmentClass: 'text-indigo-600',
+  LEGAL_RESEARCH: {
+    Icon: Search,
+    accent: 'text-[#64499D]',
+    iconWrap: 'bg-[#64499D]/10 text-[#64499D]',
   },
   CONTRACT_ANALYSIS: {
-    icon: '📄',
-    segmentClass: 'text-blue-600',
-  },
-  LEGAL_RESEARCH: {
-    icon: '🔍',
-    segmentClass: 'text-emerald-600',
+    Icon: FileSearch,
+    accent: 'text-slate-700 dark:text-slate-200',
+    iconWrap: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200',
   },
   DOCUMENT_DRAFTING: {
-    icon: '📝',
-    segmentClass: 'text-purple-600',
+    Icon: PenLine,
+    accent: 'text-slate-700 dark:text-slate-200',
+    iconWrap: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200',
+  },
+  CHAT: {
+    Icon: MessageSquare,
+    accent: 'text-slate-700 dark:text-slate-200',
+    iconWrap: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200',
   },
 };
 
@@ -95,3 +105,15 @@ export const DOCUMENT_DRAFT_TYPES: {
   { id: 'conclusions', apiType: 'CONCLUSIONS', icon: '📑' },
   { id: 'autre', apiType: 'AUTRE', icon: '🔄' },
 ];
+
+export function splitJuriaSources(content: string): { body: string; sources: string[] } {
+  const match = content.match(/\n(?:#{1,3}\s*)?(?:sources|المصادر|références|citations)\s*[:：]?\s*\n/i);
+  if (!match || match.index == null) return { body: content, sources: [] };
+  const body = content.slice(0, match.index).trim();
+  const rest = content.slice(match.index + match[0].length);
+  const sources = rest
+    .split('\n')
+    .map((line) => line.replace(/^[-*•]\s+/, '').replace(/^\d+[.)]\s+/, '').trim())
+    .filter((line) => line.length > 0 && !/^#{1,3}\s/.test(line));
+  return { body, sources };
+}

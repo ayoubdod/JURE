@@ -8,12 +8,20 @@ import listPlugin from '@fullcalendar/list';
 import { CalendarDays, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { formatTime, useAppTranslation } from '@/i18n';
+import { useIsMobile } from '@/hooks/use-mobile';
 import {
   type CalendarEvent,
   isTaskAppointmentOverdue,
   pillColorForCalendarEvent,
 } from '@/lib/calendarEvents';
 import CalendarLegend from '@/components/calendar/CalendarLegend';
+
+const MOBILE_TOOLBAR = { start: 'prev,next', center: 'title', end: 'today listWeek,dayGridMonth' };
+const DESKTOP_TOOLBAR = {
+  start: 'prev,next today',
+  center: 'title',
+  end: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek',
+};
 
 export default function CalendarView({
   calendarRef,
@@ -76,7 +84,7 @@ export default function CalendarView({
     api.setOption('buttonText', fcButtonText);
   }, [calendarRef, lang, fcButtonText]);
 
-  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+  const isMobile = useIsMobile();
 
   return (
     <div className="h-full flex flex-col min-h-0 rounded-xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900/50 shadow-[0_4px_14px_rgba(15,23,42,0.06)] overflow-hidden">
@@ -85,18 +93,10 @@ export default function CalendarView({
           ref={calendarRef as any}
           plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin, listPlugin]}
           initialView={isMobile ? 'listWeek' : 'dayGridMonth'}
-          headerToolbar={
-            isMobile
-              ? { start: 'prev,next', center: 'title', end: 'today listWeek dayGridMonth' }
-              : {
-                  start: 'prev,next today',
-                  center: 'title',
-                  end: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek',
-                }
-          }
+          headerToolbar={isMobile ? MOBILE_TOOLBAR : DESKTOP_TOOLBAR}
           buttonText={fcButtonText}
           locale={lang}
-          titleFormat={{ year: 'numeric', month: 'long' }}
+          titleFormat={isMobile ? { year: 'numeric', month: 'short' } : { year: 'numeric', month: 'long' }}
           height="100%"
           events={fcEvents}
           eventClick={onEventClick}
@@ -119,25 +119,20 @@ export default function CalendarView({
             const api = calendarRef.current?.getApi();
             if (!api) return;
             const mobile = window.innerWidth < 768;
+            api.setOption('headerToolbar', mobile ? MOBILE_TOOLBAR : DESKTOP_TOOLBAR);
             api.setOption(
-              'headerToolbar',
-              mobile
-                ? { start: 'prev,next', center: 'title', end: 'today listWeek dayGridMonth' }
-                : {
-                    start: 'prev,next today',
-                    center: 'title',
-                    end: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek',
-                  }
+              'titleFormat',
+              mobile ? { year: 'numeric', month: 'short' } : { year: 'numeric', month: 'long' }
             );
             if (mobile) {
-              if (api.view.type !== 'listWeek') api.changeView('listWeek');
+              if (api.view.type !== 'listWeek' && api.view.type !== 'dayGridMonth') api.changeView('listWeek');
             } else if (api.view.type === 'listWeek') {
               api.changeView('dayGridMonth');
             }
           }}
           viewDidMount={() => {
             const api = calendarRef.current?.getApi();
-            if (api && window.innerWidth < 768 && api.view.type !== 'listWeek') {
+            if (api && window.innerWidth < 768 && api.view.type !== 'listWeek' && api.view.type !== 'dayGridMonth') {
               api.changeView('listWeek');
             }
           }}

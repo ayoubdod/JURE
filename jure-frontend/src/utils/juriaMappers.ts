@@ -1,14 +1,23 @@
 import type { JuriaApiConversationDetail, JuriaApiConversationListItem, JuriaApiMessage } from '@/services/juria/types';
+import { normalizeJuriaConversationId } from '@/services/juria/api';
 import type { JuriaConversation, JuriaMessage, JuriaMode } from '@/types/juria';
 
+const MODES: JuriaMode[] = ['CHAT', 'CONTRACT_ANALYSIS', 'LEGAL_RESEARCH', 'DOCUMENT_DRAFTING'];
+
+function mapMode(mode: unknown): JuriaMode {
+  const m = String(mode || '').toUpperCase() as JuriaMode;
+  return MODES.includes(m) ? m : 'CHAT';
+}
+
 export function mapApiListItemToConversation(item: JuriaApiConversationListItem): JuriaConversation {
+  const id = normalizeJuriaConversationId(item.id) ?? String(item.id ?? '');
   return {
-    id: item.id,
-    title: item.title || 'Conversation',
-    mode: item.mode as JuriaMode,
+    id,
+    title: (item.title || '').trim() || 'Conversation',
+    mode: mapMode(item.mode),
     caseId: item.linked_case_id ?? undefined,
-    archived: item.is_archived,
-    updatedAt: item.updated_at,
+    archived: Boolean(item.is_archived),
+    updatedAt: item.updated_at || new Date().toISOString(),
     createdAt: item.created_at,
     messages: [],
     lastMessagePreview: item.last_message_preview,

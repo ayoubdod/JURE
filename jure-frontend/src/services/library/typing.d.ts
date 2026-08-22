@@ -1,9 +1,34 @@
 declare namespace API {
-    type DocumentCategory = 'law' | 'templates' | 'contracts' | 'research' | 'legal_forms' | 'training' | 'evidence';
+    type DocumentCategory =
+        | 'legislation_regulations'
+        | 'case_law_jurisprudence'
+        | 'contracts_agreements'
+        | 'pleadings_proceedings'
+        | 'forms_templates'
+        | 'legal_research_opinions'
+        | 'corporate_governance'
+        | 'compliance_policies'
+        | 'evidence_case_materials'
+        | 'training_knowledge';
+
+    type LegalArea =
+        | 'corporate_commercial'
+        | 'ma_private_equity'
+        | 'contracts'
+        | 'litigation_dispute_resolution'
+        | 'employment_hr'
+        | 'tax'
+        | 'regulatory_compliance'
+        | 'corporate_governance'
+        | 'real_estate_construction'
+        | 'banking_finance'
+        | 'ip_technology_data'
+        | 'public_administrative';
+
     type Document = {
         id: number;
         title: string;
-        category: DocumentCategory;
+        category: DocumentCategory | string;
         tags: string[]; // Array of tag slugs
         description: string | null;
         file: string; // File URL or path

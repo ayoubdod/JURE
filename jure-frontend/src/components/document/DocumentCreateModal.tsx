@@ -36,6 +36,7 @@ import { cn } from '@/lib/utils';
 import { Label } from '@/components/ui/label';
 import { useAppTranslation } from '@/i18n';
 import { useToast } from '@/hooks/use-toast';
+import { mergeAreaIntoTags, type LegalAreaId } from '@/lib/libraryTaxonomy';
 
 const INPUT_CLASS =
   'h-10 rounded-lg border-slate-200 bg-white text-[13.5px] shadow-none transition-all duration-200 dark:border-zinc-700 dark:bg-zinc-950 focus-visible:ring-2 focus-visible:ring-[#64499D]/25 focus-visible:ring-offset-0 focus-visible:border-[#64499D]';
@@ -82,6 +83,7 @@ const DocumentCreateModal = forwardRef<DocumentCreateModalRef, DocumentCreateMod
     const [isOpen, setIsOpen] = useState(false);
     const [submitPhase, setSubmitPhase] = useState<'idle' | 'loading' | 'success'>('idle');
     const [isDragging, setIsDragging] = useState(false);
+    const [legalArea, setLegalArea] = useState<LegalAreaId | ''>('');
 
     const isBusy = submitPhase !== 'idle';
 
@@ -107,6 +109,7 @@ const DocumentCreateModal = forwardRef<DocumentCreateModalRef, DocumentCreateMod
 
     const resetLocalState = () => {
       mainForm.reset(DEFAULT_VALUES);
+      setLegalArea('');
       setSubmitPhase('idle');
       setIsDragging(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
@@ -159,7 +162,7 @@ const DocumentCreateModal = forwardRef<DocumentCreateModalRef, DocumentCreateMod
         const res = await apiCreateDocument({
           title: data.title.trim(),
           category: data.category,
-          tags: data.tags || [],
+          tags: mergeAreaIntoTags(data.tags || [], legalArea || null),
           description: data.description?.trim() || null,
           file,
         });
@@ -323,6 +326,24 @@ const DocumentCreateModal = forwardRef<DocumentCreateModalRef, DocumentCreateMod
                             {enumOptions('documentCategory').map((category) => (
                               <SelectItem key={category.value} value={category.value}>
                                 {category.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </Field>
+                      <Field id={`${formId}-area`} label={m.areaLabel}>
+                        <Select
+                          value={legalArea || undefined}
+                          onValueChange={(val: LegalAreaId) => setLegalArea(val)}
+                          disabled={isBusy}
+                        >
+                          <SelectTrigger id={`${formId}-area`} className={SELECT_CLASS}>
+                            <SelectValue placeholder={m.areaPlaceholder} />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {enumOptions('documentLegalArea').map((area) => (
+                              <SelectItem key={area.value} value={area.value}>
+                                {area.label}
                               </SelectItem>
                             ))}
                           </SelectContent>

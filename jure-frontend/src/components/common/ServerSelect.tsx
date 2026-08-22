@@ -2,7 +2,7 @@
 'use client'
 
 import * as React from 'react'
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useState, useMemo, useRef } from 'react'
 import axiosInstance from '@/utils/axiosInstance'
 import { devError } from '@/utils/devLog'
 import { cn } from '@/lib/utils'
@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/popover"
 import { Button } from "@/components/ui/button"
 import { CheckIcon, ChevronDownIcon, Loader2, RefreshCw, X } from 'lucide-react'
+import { useInFilterPanel } from '@/components/common/filterPanelContext'
 
 interface ServerSelectOption {
   [key: string]: any
@@ -61,8 +62,19 @@ export default function ServerSelect({
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [open, setOpen] = useState(false)
+  const wrapRef = useRef<HTMLDivElement>(null)
+  const inlineMenu = useInFilterPanel()
 
   searchPlaceholder = searchPlaceholder || `Search options...`
+
+  useEffect(() => {
+    if (!open || !inlineMenu) return
+    const onPointerDown = (e: PointerEvent) => {
+      if (!wrapRef.current?.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('pointerdown', onPointerDown)
+    return () => document.removeEventListener('pointerdown', onPointerDown)
+  }, [open, inlineMenu])
 
   const fetchData = async () => {
     try {
@@ -136,76 +148,105 @@ export default function ServerSelect({
     </div>
   )
 
-  return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <Button
-          variant="outline"
-          role="combobox"
-          aria-expanded={open}
-          className={cn("w-full justify-between", className)}
-          disabled={disabled || loading}
-          {...(id && { id })}
-        >
-          {getSelectedLabel}
-          <div className="flex items-center gap-1">
-            {cleanable && value && (
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="h-6 w-6 p-0 hover:bg-transparent"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  onChange?.(undefined)
+  const optionList = (
+    <Command className="h-auto">
+      <CommandInput placeholder={searchPlaceholder} />
+      <CommandList className={inlineMenu ? 'max-h-44' : undefined}>
+        <CommandEmpty>No option found</CommandEmpty>
+        <CommandGroup>
+          {allOptions.map((option) => {
+            const optionValue = typeof valueKey === 'function'
+              ? valueKey(option)
+              : option[valueKey]
+            const optionLabel = typeof labelKey === 'function'
+              ? labelKey(option)
+              : option[labelKey] || ''
+            const isSelected = String(value) === String(optionValue)
+
+            return (
+              <CommandItem
+                key={optionValue}
+                value={optionLabel}
+                onSelect={() => {
+                  onChange?.(optionValue)
                   setOpen(false)
                 }}
+                disabled={option.disabled}
               >
-                <X className="size-3" />
-              </Button>
-            )}
-            <ChevronDownIcon className="size-4 shrink-0 opacity-50" />
-          </div>
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className="w-full p-0" align="start">
-        <Command>
-          <CommandInput placeholder={searchPlaceholder} />
-          <CommandList>
-            <CommandEmpty>No option found</CommandEmpty>
-            <CommandGroup>
-              {allOptions.map((option) => {
-                const optionValue = typeof valueKey === 'function'
-                  ? valueKey(option)
-                  : option[valueKey]
-                const optionLabel = typeof labelKey === 'function'
-                  ? labelKey(option)
-                  : option[labelKey] || ''
-                const isSelected = String(value) === String(optionValue)
+                <CheckIcon
+                  className={cn(
+                    "mr-2 size-4",
+                    isSelected ? "opacity-100" : "opacity-0"
+                  )}
+                />
+                {optionLabel}
+              </CommandItem>
+            )
+          })}
+        </CommandGroup>
+      </CommandList>
+    </Command>
+  )
 
-                return (
-                  <CommandItem
-                    key={optionValue}
-                    value={optionLabel}
-                    onSelect={() => {
-                      onChange?.(optionValue)
-                      setOpen(false)
-                    }}
-                    disabled={option.disabled}
-                  >
-                    <CheckIcon
-                      className={cn(
-                        "mr-2 size-4",
-                        isSelected ? "opacity-100" : "opacity-0"
-                      )}
-                    />
-                    {optionLabel}
-                  </CommandItem>
-                )
-              })}
-            </CommandGroup>
-          </CommandList>
-        </Command>
+  const triggerButton = (
+    <Button
+      type="button"
+      variant="outline"
+      role="combobox"
+      aria-expanded={open}
+      className={cn("w-full justify-between", className)}
+      disabled={disabled || loading}
+      {...(id && { id })}
+      onClick={inlineMenu ? () => setOpen((v) => !v) : undefined}
+    >
+      <span className="min-w-0 truncate text-start">{getSelectedLabel}</span>
+      <div className="flex items-center gap-1">
+        {cleanable && value && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="h-6 w-6 p-0 hover:bg-transparent"
+            onClick={(e) => {
+              e.stopPropagation()
+              onChange?.(undefined)
+              setOpen(false)
+            }}
+          >
+            <X className="size-3" />
+          </Button>
+        )}
+        <ChevronDownIcon className="size-4 shrink-0 opacity-50" />
+      </div>
+    </Button>
+  )
+
+  if (inlineMenu) {
+    return (
+      <div ref={wrapRef} className="relative w-full">
+        {triggerButton}
+        {open ? (
+          <div className="absolute start-0 top-[calc(100%+4px)] z-[90] w-full overflow-hidden rounded-md border border-slate-200 bg-white shadow-lg dark:border-slate-700 dark:bg-slate-950">
+            {optionList}
+          </div>
+        ) : null}
+      </div>
+    )
+  }
+
+  return (
+    <Popover modal={false} open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        {triggerButton}
+      </PopoverTrigger>
+      <PopoverContent
+        side="bottom"
+        align="start"
+        sideOffset={4}
+        avoidCollisions={false}
+        className="z-[80] w-[var(--radix-popover-trigger-width)] p-0"
+      >
+        {optionList}
       </PopoverContent>
     </Popover>
   )
