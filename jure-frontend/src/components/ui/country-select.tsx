@@ -61,13 +61,13 @@ const CountrySelect = ({
           type="button"
           variant="outline"
           className={cn(
-            "flex w-full justify-between gap-2 px-3 py-2",
+            "flex w-full min-w-0 justify-between gap-2 overflow-hidden px-3 py-2",
             !selectedCountry && "text-muted-foreground",
             className
           )}
           disabled={disabled}
         >
-          <div className="flex items-center gap-2">
+          <div className="flex min-w-0 flex-1 items-center gap-2">
             {selectedCountry && (
               <FlagComponent
                 country={selectedCountry}

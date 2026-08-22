@@ -8,6 +8,12 @@ from django.db.models.functions import Coalesce
 from django.utils import timezone
 from django_extensions.db.models import TimeStampedModel
 
+from jurisdictions.constants import VisibilityScope
+from jurisdictions.scoping import (
+    announcements_visible_to_cabinet_q,
+    validate_visibility_scope,
+)
+
 IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp", ".svg"}
 VIDEO_EXTENSIONS = {".mp4", ".webm", ".ogg", ".mov", ".m4v"}
 
@@ -33,9 +39,9 @@ class Announcement(TimeStampedModel):
     """
     Platform broadcast shown on the cabinet dashboard.
 
-    Targeting is many-to-many: only users whose cabinet is in
-    ``target_cabinets`` may receive the announcement. An empty
-    target set means nobody receives it (no implicit global).
+    Visibility is GLOBAL (all jurisdictions), JURISDICTION (one country),
+    or CABINET (explicit target_cabinets). Empty cabinet targeting means
+    nobody receives a CABINET-scoped announcement.
     """
 
     class AnnouncementType(models.TextChoices):
@@ -156,9 +162,38 @@ class Announcement(TimeStampedModel):
         related_name="announcements",
         blank=True,
     )
+    visibility_scope = models.CharField(
+        max_length=16,
+        choices=VisibilityScope.choices,
+        default=VisibilityScope.CABINET,
+        db_index=True,
+    )
+    jurisdiction = models.ForeignKey(
+        "jurisdictions.Jurisdiction",
+        on_delete=models.PROTECT,
+        related_name="announcements",
+        null=True,
+        blank=True,
+    )
 
     class Meta:
         ordering = ["-created"]
+        indexes = [
+            models.Index(
+                fields=["visibility_scope", "jurisdiction"],
+                name="dash_ann_scope_jur_idx",
+            ),
+        ]
+        constraints = [
+            models.CheckConstraint(
+                name="announcement_scope_jurisdiction_consistent",
+                condition=(
+                    Q(visibility_scope=VisibilityScope.GLOBAL, jurisdiction__isnull=True)
+                    | Q(visibility_scope=VisibilityScope.JURISDICTION, jurisdiction__isnull=False)
+                    | Q(visibility_scope=VisibilityScope.CABINET)
+                ),
+            ),
+        ]
 
     def __str__(self):
         return self.title
@@ -212,9 +247,17 @@ class Announcement(TimeStampedModel):
             raise ValidationError(
                 {"link_url": "A URL is required when a learn-more label is set."}
             )
+        if self.visibility_scope == VisibilityScope.GLOBAL:
+            self.jurisdiction = None
+        validate_visibility_scope(
+            visibility_scope=self.visibility_scope,
+            jurisdiction=self.jurisdiction,
+        )
         self.sync_status_and_active()
 
     def save(self, *args, **kwargs):
+        if self.visibility_scope == VisibilityScope.GLOBAL:
+            self.jurisdiction = None
         if self.media:
             self.media_kind = self.detect_media_kind(self.media.name)
         else:
@@ -235,7 +278,8 @@ class Announcement(TimeStampedModel):
     @classmethod
     def active_for_cabinet(cls, cabinet, *, at=None, exclude_ids=None):
         """
-        Announcements that are active, in schedule, and target ``cabinet``.
+        Announcements that are active, in schedule, and visible to ``cabinet``:
+        GLOBAL + cabinet jurisdiction + cabinet-targeted private rows.
         Ordered by type priority then newest first.
         """
         if cabinet is None:
@@ -244,7 +288,7 @@ class Announcement(TimeStampedModel):
         qs = (
             cls.objects.filter(is_active=True, status__in=cls.LIVE_STATUSES)
             .filter(cls.scheduled_q(at))
-            .filter(target_cabinets=cabinet)
+            .filter(announcements_visible_to_cabinet_q(cabinet))
             .distinct()
         )
         if exclude_ids:

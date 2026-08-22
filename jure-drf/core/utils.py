@@ -74,4 +74,12 @@ def get_user_cabinet(user):
     return None
 
 
+def get_user_jurisdiction(user):
+    """Jurisdiction of the user's active cabinet, or None."""
+    cabinet = get_user_cabinet(user)
+    if cabinet is None:
+        return None
+    return getattr(cabinet, "jurisdiction", None)
+
+
 

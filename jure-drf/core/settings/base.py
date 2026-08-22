@@ -116,6 +116,7 @@ INSTALLED_APPS = [
     "clients",
     "cases",
     "cabinets",
+    "jurisdictions",
     "lawyers",
     "subscriptions",
     "library",

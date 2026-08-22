@@ -1,10 +1,12 @@
 from django.db import models
+from django.db.models import Q
 from django_extensions.db.models import TimeStampedModel
 from django.utils.translation import gettext_lazy as _
 from cabinets.models import Cabinet
 from commons.models import Tag
 from users.models import User
-# Create your models here.
+from jurisdictions.constants import VisibilityScope
+from jurisdictions.scoping import validate_visibility_scope
 
 # Legacy category values → canonical slugs. Applied on write and in data migration.
 LEGACY_CATEGORY_MAP = {
@@ -46,6 +48,19 @@ class Document(TimeStampedModel):
     file = models.FileField(upload_to='documents/')
 
     cabinet = models.ForeignKey(Cabinet, on_delete=models.CASCADE, related_name='documents', null=True, blank=True)
+    visibility_scope = models.CharField(
+        max_length=16,
+        choices=VisibilityScope.choices,
+        default=VisibilityScope.CABINET,
+        db_index=True,
+    )
+    jurisdiction = models.ForeignKey(
+        'jurisdictions.Jurisdiction',
+        on_delete=models.PROTECT,
+        related_name='documents',
+        null=True,
+        blank=True,
+    )
     created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='documents', null=True, blank=True)
     updated_by = models.ForeignKey(
         User,
@@ -73,12 +88,50 @@ class Document(TimeStampedModel):
         db_index=True,
     )
 
+    class Meta:
+        indexes = [
+            models.Index(fields=["visibility_scope", "jurisdiction"], name="library_doc_scope_jur_idx"),
+        ]
+        constraints = [
+            models.CheckConstraint(
+                name="library_document_scope_jurisdiction_consistent",
+                condition=(
+                    Q(visibility_scope=VisibilityScope.GLOBAL, jurisdiction__isnull=True)
+                    | Q(visibility_scope=VisibilityScope.JURISDICTION, jurisdiction__isnull=False)
+                    | Q(visibility_scope=VisibilityScope.CABINET)
+                ),
+            ),
+        ]
+
     def __str__(self):
         return self.title
 
-    def save(self, *args, **kwargs):
-        if self.is_shared:
+    def sync_visibility_fields(self):
+        """Keep is_shared / cabinet / jurisdiction aligned with visibility_scope."""
+        if self.is_shared and self.visibility_scope == VisibilityScope.CABINET:
+            self.visibility_scope = VisibilityScope.GLOBAL
+        if self.visibility_scope == VisibilityScope.GLOBAL:
+            self.jurisdiction = None
             self.cabinet = None
+            self.is_shared = True
+        elif self.visibility_scope == VisibilityScope.JURISDICTION:
+            self.cabinet = None
+            self.is_shared = True
+        else:
+            self.is_shared = False
+
+    def clean(self):
+        super().clean()
+        validate_visibility_scope(
+            visibility_scope=self.visibility_scope,
+            jurisdiction=self.jurisdiction,
+            cabinet=self.cabinet,
+            require_cabinet=self.visibility_scope == VisibilityScope.CABINET,
+        )
+        self.sync_visibility_fields()
+
+    def save(self, *args, **kwargs):
+        self.sync_visibility_fields()
         if self.category:
             self.category = normalize_document_category(self.category)
         super().save(*args, **kwargs)

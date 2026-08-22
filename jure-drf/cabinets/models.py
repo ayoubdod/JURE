@@ -25,6 +25,10 @@ def validate_ice_length(value):
 
 
 class Cabinet(TimeStampedModel):
+    class PracticeType(models.TextChoices):
+        LAW_OFFICE = "LAW_OFFICE", _("Law Office")
+        LAW_FIRM = "LAW_FIRM", _("Law Firm")
+
     owner: models.OneToOneField['User'] = models.OneToOneField(
         'users.User', on_delete=models.CASCADE, related_name='owned_cabinet'
     )
@@ -36,6 +40,21 @@ class Cabinet(TimeStampedModel):
     business_address = models.CharField(max_length=255)
     founded_date = models.DateField(blank=True, null=True)
     structure_type = models.CharField(_('structure type'), max_length=100, blank=True, null=True)
+    practice_type = models.CharField(
+        _('practice type'),
+        max_length=20,
+        choices=PracticeType.choices,
+        blank=True,
+        null=True,
+        db_index=True,
+    )
+    jurisdiction = models.ForeignKey(
+        'jurisdictions.Jurisdiction',
+        on_delete=models.PROTECT,
+        related_name='cabinets',
+        null=True,
+        blank=True,
+    )
     team_size = models.PositiveIntegerField(_('team size'), default=1)
     website = models.URLField(blank=True, null=True)
     logo = models.ImageField(_('logo'), upload_to=cabinet_logo_upload_to, null=True, blank=True)

@@ -2,6 +2,7 @@ import os
 
 from django import forms
 from django.contrib import admin, messages
+from django.core.exceptions import ValidationError
 from django.db import models, transaction
 from django.http import HttpResponseRedirect
 from django.template.response import TemplateResponse
@@ -13,6 +14,9 @@ from unfold.widgets import UnfoldAdminFileFieldWidget
 
 from commons.models import Tag
 from core.utils import is_valid_slug
+from jurisdictions.constants import VisibilityScope
+from jurisdictions.models import Jurisdiction
+from jurisdictions.scoping import validate_visibility_scope
 
 from .models import Document
 
@@ -48,12 +52,18 @@ def create_documents_from_uploads(
     *,
     files,
     category: str,
-    is_shared: bool,
+    is_shared: bool = None,
+    visibility_scope: str = None,
+    jurisdiction=None,
     description: str,
     tag_slugs: list[str],
     created_by,
 ) -> list[Document]:
     tags = resolve_tags(tag_slugs)
+    if visibility_scope is None:
+        visibility_scope = VisibilityScope.GLOBAL if is_shared else VisibilityScope.CABINET
+    if visibility_scope == VisibilityScope.GLOBAL:
+        jurisdiction = None
     created: list[Document] = []
     with transaction.atomic():
         for uploaded in files:
@@ -61,7 +71,9 @@ def create_documents_from_uploads(
                 title=title_from_filename(getattr(uploaded, "name", "")),
                 category=category,
                 description=description or "",
-                is_shared=bool(is_shared),
+                visibility_scope=visibility_scope,
+                jurisdiction=jurisdiction,
+                is_shared=visibility_scope != VisibilityScope.CABINET,
                 created_by=created_by,
             )
             doc.file = uploaded
@@ -87,7 +99,7 @@ class DocumentAdminForm(forms.ModelForm):
 
     class Meta:
         model = Document
-        exclude = ("tags",)
+        exclude = ("tags", "is_shared")
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -98,9 +110,43 @@ class DocumentAdminForm(forms.ModelForm):
         if "status" in self.fields:
             self.fields["status"].required = False
             self.fields["status"].initial = self.fields["status"].initial or Document.DocumentStatus.PUBLISHED
+        if "visibility_scope" in self.fields:
+            self.fields["visibility_scope"].widget = forms.RadioSelect()
+            self.fields["visibility_scope"].choices = [
+                (VisibilityScope.GLOBAL, _("Global")),
+                (VisibilityScope.JURISDICTION, _("Jurisdiction")),
+                (VisibilityScope.CABINET, _("Cabinet")),
+            ]
+        if "jurisdiction" in self.fields:
+            self.fields["jurisdiction"].queryset = Jurisdiction.objects.order_by("code")
+            self.fields["jurisdiction"].required = False
 
     def clean_tags_input(self):
         return parse_tag_slugs(self.cleaned_data.get("tags_input") or "")
+
+    def clean(self):
+        cleaned = super().clean()
+        scope = cleaned.get("visibility_scope") or VisibilityScope.GLOBAL
+        if scope == VisibilityScope.GLOBAL:
+            cleaned["jurisdiction"] = None
+            cleaned["cabinet"] = None
+        elif scope == VisibilityScope.JURISDICTION:
+            if not cleaned.get("jurisdiction"):
+                self.add_error("jurisdiction", _("Select a jurisdiction for jurisdiction-specific content."))
+            cleaned["cabinet"] = None
+        elif scope == VisibilityScope.CABINET and not cleaned.get("cabinet"):
+            self.add_error("cabinet", _("Cabinet content requires a cabinet."))
+        else:
+            try:
+                validate_visibility_scope(
+                    visibility_scope=scope,
+                    jurisdiction=cleaned.get("jurisdiction"),
+                    cabinet=cleaned.get("cabinet"),
+                    require_cabinet=scope == VisibilityScope.CABINET,
+                )
+            except ValidationError as exc:
+                self.add_error(None, exc)
+        return cleaned
 
 
 class MultipleFileInput(forms.ClearableFileInput):
@@ -139,6 +185,23 @@ class DocumentBulkUploadForm(forms.Form):
         label=_("Add to public library"),
         help_text=_("If checked, every cabinet sees these files in Library → Public library, not in their own collections."),
     )
+    visibility_scope = forms.ChoiceField(
+        label=_("Content scope"),
+        choices=(
+            (VisibilityScope.GLOBAL, _("Global")),
+            (VisibilityScope.JURISDICTION, _("Jurisdiction")),
+        ),
+        initial=VisibilityScope.GLOBAL,
+        required=False,
+        widget=forms.RadioSelect,
+        help_text=_("Global is visible to every jurisdiction. Jurisdiction-specific content is visible only in that market."),
+    )
+    jurisdiction = forms.ModelChoiceField(
+        label=_("Jurisdiction"),
+        queryset=Jurisdiction.objects.filter(status="ACTIVE").order_by("code"),
+        required=False,
+        help_text=_("Required when scope is Jurisdiction. Hidden when Global."),
+    )
     tags_input = forms.CharField(
         required=False,
         label=_("Tags"),
@@ -151,8 +214,23 @@ class DocumentBulkUploadForm(forms.Form):
         widget=forms.Textarea(attrs={"rows": 3}),
     )
 
+    class Media:
+        js = ("jurisdictions/js/scope_widget.js",)
+
     def clean_tags_input(self):
         return parse_tag_slugs(self.cleaned_data.get("tags_input") or "")
+
+    def clean(self):
+        cleaned = super().clean()
+        scope = cleaned.get("visibility_scope") or VisibilityScope.GLOBAL
+        if scope == VisibilityScope.GLOBAL:
+            cleaned["jurisdiction"] = None
+        elif scope == VisibilityScope.JURISDICTION and not cleaned.get("jurisdiction"):
+            self.add_error(
+                "jurisdiction",
+                _("Select a jurisdiction for jurisdiction-specific content."),
+            )
+        return cleaned
 
 
 @admin.register(Document)
@@ -162,12 +240,26 @@ class DocumentAdmin(ModelAdmin):
     formfield_overrides = {
         models.FileField: {"widget": UnfoldAdminFileFieldWidget},
     }
-    list_display = ["title", "category", "status", "is_shared", "cabinet", "created_by", "created", "modified"]
-    list_filter = ["status", "is_shared", "category", "tags", "created"]
+    list_display = [
+        "title",
+        "category",
+        "status",
+        "visibility_scope",
+        "jurisdiction",
+        "is_shared",
+        "cabinet",
+        "created_by",
+        "created",
+        "modified",
+    ]
+    list_filter = ["status", "visibility_scope", "jurisdiction", "is_shared", "category", "tags", "created"]
     search_fields = ["title", "description"]
     readonly_fields = ["created", "modified", "updated_by"]
     raw_id_fields = ["cabinet", "created_by", "updated_by"]
     actions = ("archive_documents", "restore_documents")
+    class Media:
+        js = ("jurisdictions/js/scope_widget.js",)
+
     fieldsets = (
         (None, {
             "fields": (
@@ -176,14 +268,14 @@ class DocumentAdmin(ModelAdmin):
                 "description",
                 "file",
                 "tags_input",
-                "is_shared",
+                "visibility_scope",
+                "jurisdiction",
                 "status",
             ),
             "description": (
-                "To publish for every cabinet, tick “Add to public library”. "
-                "Those files appear only in Public library, not in a cabinet’s own collections. "
-                "Archived files are hidden from the JURE library. "
-                "Tags are optional — type them here, they are created if missing. "
+                "Global documents are visible in every jurisdiction. "
+                "Jurisdiction documents are visible only to cabinets in that market. "
+                "Cabinet documents are private. "
                 "To upload several files at once, use “Upload library files”."
             ),
         }),
@@ -191,8 +283,7 @@ class DocumentAdmin(ModelAdmin):
             "fields": ("cabinet", "created_by", "updated_by", "created", "modified"),
             "classes": ("collapse",),
             "description": (
-                "Leave cabinet empty for public library documents. "
-                "Cabinet is cleared automatically when a document is in the public library."
+                "Leave cabinet empty for Global or Jurisdiction library documents."
             ),
         }),
     )
@@ -221,7 +312,8 @@ class DocumentAdmin(ModelAdmin):
                 created = create_documents_from_uploads(
                     files=files,
                     category=form.cleaned_data["category"],
-                    is_shared=form.cleaned_data["is_shared"],
+                    visibility_scope=form.cleaned_data["visibility_scope"],
+                    jurisdiction=form.cleaned_data.get("jurisdiction"),
                     description=form.cleaned_data.get("description") or "",
                     tag_slugs=form.cleaned_data.get("tags_input") or [],
                     created_by=request.user,
@@ -234,7 +326,7 @@ class DocumentAdmin(ModelAdmin):
                     reverse("admin:library_document_changelist")
                 )
         else:
-            form = DocumentBulkUploadForm(initial={"is_shared": True})
+            form = DocumentBulkUploadForm(initial={"visibility_scope": VisibilityScope.GLOBAL})
 
         context = {
             **self.admin_site.each_context(request),
@@ -250,8 +342,7 @@ class DocumentAdmin(ModelAdmin):
         )
 
     def save_model(self, request, obj, form, change):
-        if obj.is_shared:
-            obj.cabinet = None
+        obj.sync_visibility_fields()
         if not obj.created_by_id:
             obj.created_by = request.user
         obj.updated_by = request.user

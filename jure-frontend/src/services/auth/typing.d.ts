@@ -13,6 +13,17 @@ declare namespace API {
         /** Timestamp when logo was last updated; used for cache-busting display */
         logo_version?: number
         structure_type?: string
+        practice_type?: string
+        cabinet_id?: number | null
+        jurisdiction?: {
+            id: number
+            code: string
+            name: string
+            country_code: string
+            legal_system: string
+            default_language: string
+            status: string
+        } | null
         business_address?: string
         team_size?: string
         website?: string
@@ -75,13 +86,14 @@ declare namespace API {
         password1: string
         password2: string
 
-        // Profile - Step 2
+        // Profile - Step 4
         trade_name: string
         logo?: File
-
-        // Qualifications - Step 3
-        structure_type: string
         business_address: string
+
+        // Workspace
+        practice_type: string
+        jurisdiction: string
 
         // Organisation Details - Step 4
         team_size: string

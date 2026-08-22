@@ -56,6 +56,9 @@ export interface AppMessages {
   auth: {
     signInTitle: string;
     signInSubtitle: string;
+    signInHeroEyebrow: string;
+    signInHeroTitle: string;
+    signInHeroFooter: string;
     emailLabel: string;
     emailPlaceholder: string;
     emailOrPhoneLabel: string;
@@ -140,11 +143,33 @@ export interface AppMessages {
     // Sign up
     signup: {
       steps: {
+        jurisdiction: { title: string; description: string };
+        practice: { title: string; description: string };
         personal: { title: string; description: string };
         profile: { title: string; description: string };
-        qualifications: { title: string; description: string };
         organization: { title: string; description: string };
         consent: { title: string; description: string };
+      };
+      shell: {
+        badge: string;
+        heading: string;
+        subtitle: string;
+      };
+      jurisdiction: {
+        headerTitle: string;
+        headerSubtitle: string;
+        continue: string;
+        stepIndicator: string;
+        loadError: string;
+      };
+      practice: {
+        headerTitle: string;
+        headerSubtitle: string;
+        lawOfficeHint: string;
+        lawFirmHint: string;
+        back: string;
+        continue: string;
+        stepIndicator: string;
       };
       personal: {
         headerTitle: string;
@@ -177,6 +202,9 @@ export interface AppMessages {
         tradeNameSection: string;
         tradeName: string;
         tradeNamePlaceholder: string;
+        addressSection: string;
+        address: string;
+        addressPlaceholder: string;
         logoSection: string;
         logoHint: string;
         logoSelected: string;
@@ -258,6 +286,10 @@ export interface AppMessages {
         publicAdmin: string;
         other: string;
       };
+      practiceTypes: {
+        lawOffice: string;
+        lawFirm: string;
+      };
       teamSizes: {
         justMe: string;
         twoToFive: string;
@@ -306,6 +338,9 @@ export interface AppMessages {
         addressMax: string;
         teamSizeRequired: string;
         websiteInvalid: string;
+        jurisdictionRequired: string;
+        practiceTypeRequired: string;
+        practiceTypeInvalid: string;
         acceptTerms: string;
         acceptDataProcessing: string;
       };
@@ -812,6 +847,7 @@ export interface AppMessages {
   };
   library: {
     title: string;
+    yourLegalLibrary: string;
     assetsCount: string;
     upload: string;
     uploadDocuments: string;

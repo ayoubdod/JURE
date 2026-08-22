@@ -62,6 +62,7 @@ import { useAppTranslation } from '@/i18n';
 import { useShortcutAction } from '@/context/ShortcutsContext';
 import { isAxiosError } from 'axios';
 import { devError } from '@/utils/devLog';
+import useUserStore from '@/stores/userStore';
 import '@/styles/workspace-list.css';
 
 const KnowledgeTimelineView = lazy(() =>
@@ -113,6 +114,7 @@ const ViewFallback = () => (
 
 const Library = () => {
   const { t, tf, enumLabel } = useAppTranslation();
+  const jurisdictionName = useUserStore((s) => s.user?.jurisdiction?.name);
   const [searchTerm, setSearchTerm] = useState('');
   const [collection, setCollection] = useState<CollectionId>('all');
   const [categoryFilter, setCategoryFilter] = useState<DocumentCategoryId | null>(null);
@@ -528,6 +530,14 @@ const Library = () => {
           <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
             <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden">
               <div className="px-3 pt-2 sm:px-4">
+                {jurisdictionName ? (
+                  <p className="mb-1.5 text-[11px] font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                    {t.library.yourLegalLibrary}
+                    <span className="ms-1.5 font-semibold normal-case tracking-normal text-slate-700 dark:text-slate-200">
+                      {jurisdictionName}
+                    </span>
+                  </p>
+                ) : null}
                 <SmartMetricsBar metrics={metrics} />
               </div>
 

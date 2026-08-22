@@ -133,8 +133,15 @@ def draft_document(
     document_type: str,
     parameters: dict[str, Any],
     case_context: dict[str, Any] | None = None,
+    *,
+    jurisdiction_code: str | None = None,
+    legal_system: str | None = None,
+    language: str | None = None,
 ) -> dict[str, Any]:
     """Generate a legal document via the configured provider."""
+    code = (jurisdiction_code or "MA").upper()
+    system = legal_system or ("moroccan" if code == "MA" else "")
+    lang = language or "fr"
     if provider_name() == "deepseek":
         label = DRAFT_TYPE_LABELS.get(document_type, document_type.replace("_", " ").lower())
         param_lines = []
@@ -173,9 +180,9 @@ def draft_document(
         {
             "document_type": document_type,
             "parameters": parameters,
-            "jurisdiction": "MA",
-            "language": "fr",
-            "legal_system": "moroccan",
+            "jurisdiction": code,
+            "language": lang,
+            "legal_system": system or "moroccan",
             "context": build_system_prompt("DOCUMENT_DRAFTING", case_context),
         },
         "draft",

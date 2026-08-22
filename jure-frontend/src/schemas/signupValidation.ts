@@ -2,26 +2,8 @@ import * as yup from 'yup';
 import type { AppMessages } from '@/i18n/messages/types';
 import { interpolate } from '@/i18n/format';
 
-/** Stable API values (French) — labels come from i18n. */
-export const STRUCTURE_TYPE_VALUES = [
-  "Cabinet d'avocat",
-  "Société d'avocat",
-  'Société privée',
-  'Association',
-  'Administration publique',
-  'Autre',
-] as const;
-
-export type StructureTypeValue = (typeof STRUCTURE_TYPE_VALUES)[number];
-
-export const STRUCTURE_TYPE_KEYS = [
-  'lawFirm',
-  'lawCompany',
-  'privateCompany',
-  'association',
-  'publicAdmin',
-  'other',
-] as const;
+export const PRACTICE_TYPE_VALUES = ['LAW_OFFICE', 'LAW_FIRM'] as const;
+export type PracticeTypeValue = (typeof PRACTICE_TYPE_VALUES)[number];
 
 export type SignUpData = {
   first_name: string;
@@ -33,10 +15,11 @@ export type SignUpData = {
   password2: string;
   trade_name: string;
   logo: File | null | undefined;
-  structure_type: string;
   business_address: string;
   team_size: string;
   website?: string | null | undefined;
+  jurisdiction: string;
+  practice_type: string;
   accept_terms: boolean;
   accept_data_processing: boolean;
 };
@@ -121,11 +104,6 @@ export function createSignupValidationSchema(signup: SignupMessages) {
 
     logo: fileSchema(v, false),
 
-    structure_type: yup
-      .string()
-      .required(v.structureRequired)
-      .oneOf([...STRUCTURE_TYPE_VALUES], v.structureInvalid),
-
     business_address: yup
       .string()
       .required(v.addressRequired)
@@ -135,6 +113,13 @@ export function createSignupValidationSchema(signup: SignupMessages) {
     team_size: yup.string().required(v.teamSizeRequired),
 
     website: yup.string().url(v.websiteInvalid).optional(),
+
+    jurisdiction: yup.string().required(v.jurisdictionRequired),
+
+    practice_type: yup
+      .string()
+      .required(v.practiceTypeRequired)
+      .oneOf([...PRACTICE_TYPE_VALUES], v.practiceTypeInvalid),
 
     accept_terms: yup
       .boolean()
@@ -154,6 +139,8 @@ export function createSignupStepSchemas(signup: SignupMessages) {
   const signupValidationSchema = createSignupValidationSchema(signup);
   return {
     signupValidationSchema,
+    stepJurisdictionSchema: signupValidationSchema.pick(['jurisdiction']),
+    stepPracticeSchema: signupValidationSchema.pick(['practice_type']),
     step1ValidationSchema: signupValidationSchema.pick([
       'first_name',
       'last_name',
@@ -163,8 +150,7 @@ export function createSignupStepSchemas(signup: SignupMessages) {
       'password1',
       'password2',
     ]),
-    step2ValidationSchema: signupValidationSchema.pick(['trade_name', 'logo']),
-    step3ValidationSchema: signupValidationSchema.pick(['structure_type', 'business_address']),
+    step2ValidationSchema: signupValidationSchema.pick(['trade_name', 'logo', 'business_address']),
     step4ValidationSchema: signupValidationSchema.pick(['team_size', 'website']),
     step5ValidationSchema: signupValidationSchema.pick([
       'accept_terms',
@@ -210,6 +196,9 @@ export const signupValidationSchema = createSignupValidationSchema(
       addressMax: 'Max',
       teamSizeRequired: 'Required',
       websiteInvalid: 'Invalid',
+      jurisdictionRequired: 'Required',
+      practiceTypeRequired: 'Required',
+      practiceTypeInvalid: 'Invalid',
       acceptTerms: 'Required',
       acceptDataProcessing: 'Required',
     },
@@ -226,10 +215,9 @@ export const step1ValidationSchema = signupValidationSchema.pick([
   'password2',
 ]);
 
-export const step2ValidationSchema = signupValidationSchema.pick(['trade_name', 'logo']);
-
-export const step3ValidationSchema = signupValidationSchema.pick([
-  'structure_type',
+export const step2ValidationSchema = signupValidationSchema.pick([
+  'trade_name',
+  'logo',
   'business_address',
 ]);
 

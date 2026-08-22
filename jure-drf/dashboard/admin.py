@@ -7,6 +7,9 @@ from django.utils.html import format_html
 from unfold.admin import ModelAdmin
 from unfold.widgets import UnfoldAdminFileFieldWidget
 
+from jurisdictions.constants import VisibilityScope
+from jurisdictions.models import Jurisdiction
+
 from .models import ActivityLog, Announcement
 
 
@@ -15,6 +18,7 @@ class AnnouncementAdminForm(forms.ModelForm):
         model = Announcement
         fields = "__all__"
         widgets = {
+            "visibility_scope": forms.RadioSelect,
             "link_label": forms.TextInput(
                 attrs={"placeholder": "Learn more"}
             ),
@@ -25,6 +29,29 @@ class AnnouncementAdminForm(forms.ModelForm):
                 }
             ),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if "visibility_scope" in self.fields:
+            self.fields["visibility_scope"].choices = [
+                (VisibilityScope.GLOBAL, "Global"),
+                (VisibilityScope.JURISDICTION, "Jurisdiction"),
+                (VisibilityScope.CABINET, "Cabinet"),
+            ]
+            if not self.instance.pk:
+                self.fields["visibility_scope"].initial = VisibilityScope.GLOBAL
+        if "jurisdiction" in self.fields:
+            self.fields["jurisdiction"].queryset = Jurisdiction.objects.order_by("code")
+            self.fields["jurisdiction"].required = False
+
+    def clean(self):
+        cleaned = super().clean()
+        scope = cleaned.get("visibility_scope") or VisibilityScope.GLOBAL
+        if scope == VisibilityScope.GLOBAL:
+            cleaned["jurisdiction"] = None
+        elif scope == VisibilityScope.JURISDICTION and not cleaned.get("jurisdiction"):
+            self.add_error("jurisdiction", "Select a jurisdiction for jurisdiction-specific content.")
+        return cleaned
 
 
 class TargetCabinetListFilter(admin.SimpleListFilter):
@@ -83,6 +110,8 @@ class AnnouncementAdmin(ModelAdmin):
         "announcement_type",
         "status",
         "priority",
+        "visibility_scope",
+        "jurisdiction",
         "is_active",
         "has_learn_more",
         "has_media",
@@ -96,6 +125,8 @@ class AnnouncementAdmin(ModelAdmin):
     list_filter = (
         "status",
         "is_active",
+        "visibility_scope",
+        "jurisdiction",
         "announcement_type",
         "priority",
         "media_kind",
@@ -116,12 +147,16 @@ class AnnouncementAdmin(ModelAdmin):
         "is_active",
         "dashboard_preview",
     )
+    class Media:
+        js = ("jurisdictions/js/scope_widget.js",)
+
     date_hierarchy = "created"
     actions = ("publish_announcements", "archive_announcements", "move_to_draft")
     fieldsets = (
         (None, {
             "description": (
-                "Cabinets only see Published (or Scheduled) announcements that target them. "
+                "Global announcements are visible to every jurisdiction. "
+                "Jurisdiction announcements are visible only to cabinets in that market. "
                 "Draft and Archived never appear on the dashboard. "
                 "Add an optional Learn more URL so the dashboard can open an in-app page "
                 "or an HTTPS link."
@@ -139,6 +174,13 @@ class AnnouncementAdmin(ModelAdmin):
                 "is_active",
             ),
         }),
+        ("Content scope", {
+            "fields": ("visibility_scope", "jurisdiction"),
+            "description": (
+                "Choose Global for one record visible everywhere. "
+                "Choose Jurisdiction and pick Morocco or Qatar for market-specific updates."
+            ),
+        }),
         ("Schedule", {
             "fields": ("start_date", "end_date"),
             "description": (
@@ -146,11 +188,12 @@ class AnnouncementAdmin(ModelAdmin):
                 "A future start date is saved as Scheduled. Leave end empty to never expire."
             ),
         }),
-        ("Targeting", {
+        ("Cabinet targeting", {
             "fields": ("target_cabinets",),
+            "classes": ("collapse",),
             "description": (
-                "Select one or more cabinets. Users only see announcements "
-                "targeting their cabinet. Leaving this empty means nobody sees it."
+                "Only used for Cabinet-scoped announcements. "
+                "Leave empty for Global and Jurisdiction content."
             ),
         }),
         ("Preview", {
