@@ -27,6 +27,7 @@ import {
   type LegalAreaId,
 } from '@/lib/libraryTaxonomy';
 import { useAppTranslation } from '@/i18n';
+import useUserStore from '@/stores/userStore';
 
 const COLLECTION_ICONS: Record<CollectionId, React.ElementType> = {
   all: BookOpen,
@@ -77,6 +78,7 @@ const CollectionsSidebar: React.FC<Props> = ({
   className,
 }) => {
   const { t, dir, enumLabel, tf } = useAppTranslation();
+  const jurisdictionName = useUserStore((s) => s.user?.jurisdiction?.name);
   const groups = useMemo(() => {
     const core = COLLECTIONS.filter((c) => c.group === 'core');
     const smart = COLLECTIONS.filter((c) => c.group === 'smart');
@@ -100,7 +102,10 @@ const CollectionsSidebar: React.FC<Props> = ({
     const Icon = COLLECTION_ICONS[item.id];
     const isSelected = selectedCollection === item.id;
     const count = collectionCounts[item.id] ?? 0;
-    const label = item.id === 'public' ? t.library.publicLibrary : item.id === 'all' ? t.library.title : item.label;
+    const publicLabel = jurisdictionName
+      ? `${t.library.publicLibrary} · ${jurisdictionName}`
+      : t.library.publicLibrary;
+    const label = item.id === 'public' ? publicLabel : item.id === 'all' ? t.library.title : item.label;
     const button = (
       <button
         type="button"

@@ -267,6 +267,37 @@
   }
 }
 
+.landing-hero-device {
+  position: relative;
+  isolation: isolate;
+}
+
+.landing-hero-device__glow {
+  position: absolute;
+  inset: 10% 6% 16%;
+  border-radius: 46%;
+  background: radial-gradient(ellipse at center, rgba(100, 73, 157, 0.5), transparent 68%);
+  filter: blur(36px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.dark .landing-hero-device__glow {
+  background: radial-gradient(ellipse at center, rgba(139, 111, 209, 0.45), transparent 68%);
+}
+
+.landing-hero-device__img {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: auto;
+  filter: drop-shadow(0 28px 50px rgba(62, 45, 113, 0.28));
+}
+
+.dark .landing-hero-device__img {
+  filter: drop-shadow(0 28px 56px rgba(0, 0, 0, 0.5));
+}
+
 @media (prefers-reduced-motion: reduce) {
   .landing-mesh__grid,
   .landing-mesh__aurora,

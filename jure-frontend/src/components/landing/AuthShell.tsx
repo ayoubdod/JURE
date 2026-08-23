@@ -4,6 +4,7 @@ import { Home } from "lucide-react";
 import LangSwitcher from "@/components/common/LangSwitcher";
 import ThemeToggle from "@/components/ThemeToggle";
 import MeshBackdrop from "@/components/landing/MeshBackdrop";
+import JureLogo from "@/components/common/JureLogo";
 import "@/components/landing/landing.css";
 
 type AuthShellProps = {
@@ -31,13 +32,7 @@ const AuthShell: React.FC<AuthShellProps> = ({
             }`}
           >
             <Link to="/" className="flex items-center gap-2 shrink-0 min-w-0">
-              <img
-                src="/images/jure-logo.png"
-                alt="JURE"
-                className="h-8 sm:h-10 w-auto max-w-[100px] sm:max-w-none object-contain"
-                loading="eager"
-                decoding="async"
-              />
+              <JureLogo className="h-7 sm:h-8 w-auto" />
             </Link>
 
             <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">

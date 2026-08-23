@@ -1,9 +1,10 @@
 import React from 'react';
+import JureLogo from '@/components/common/JureLogo';
 
 interface LogoLoadingProps {
   /** Use full-screen centered layout (default: true) */
   fullScreen?: boolean;
-  /** Custom logo URL (default: Jure logo) */
+  /** Custom logo URL (default: cropped Jure wordmark) */
   logoUrl?: string;
   /** Size of the logo: 'sm' | 'md' | 'lg' */
   size?: 'sm' | 'md' | 'lg';
@@ -12,26 +13,33 @@ interface LogoLoadingProps {
 }
 
 const sizeClasses = {
-  sm: 'h-12 w-auto',
-  md: 'h-16 w-auto',
+  sm: 'h-14 w-auto',
+  md: 'h-20 w-auto',
   lg: 'h-24 w-auto',
 };
 
+const DEFAULT_LOGO = '/images/jure-wordmark.png';
+
 const LogoLoading = ({
   fullScreen = true,
-  logoUrl = '/images/jure-logo.png',
+  logoUrl = DEFAULT_LOGO,
   size = 'lg',
   message,
 }: LogoLoadingProps) => {
+  const useBrandMark = logoUrl === DEFAULT_LOGO || logoUrl === '/images/jure-logo.png';
   const content = (
     <div className="flex flex-col items-center justify-center gap-6">
       {/* Logo with pulse + subtle scale animation */}
       <div className="relative">
-        <img
-          src={logoUrl}
-          alt="Loading"
-          className={`${sizeClasses[size]} object-contain animate-logo-breathe`}
-        />
+        {useBrandMark ? (
+          <JureLogo alt="Loading" className={`${sizeClasses[size]} animate-logo-breathe`} />
+        ) : (
+          <img
+            src={logoUrl}
+            alt="Loading"
+            className={`${sizeClasses[size]} object-contain animate-logo-breathe`}
+          />
+        )}
         {/* Animated loading dots */}
         <div className="flex justify-center gap-1.5 mt-6">
           <span

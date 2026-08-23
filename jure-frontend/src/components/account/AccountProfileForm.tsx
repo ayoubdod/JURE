@@ -9,6 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { PhoneInput } from '@/components/ui/phone-input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { apiUpdateUser, apiUpdateUserImage, apiUpdateCabinet } from '@/services/auth/api';
 import { apiGetMyCabinetMember } from '@/services/cabinet-member/api';
@@ -16,12 +17,23 @@ import useUserStore from '@/stores/userStore';
 import { getRemoteFieldsValidation } from '@/utils/functions';
 import { cn } from '@/lib/utils';
 import { useAppTranslation } from '@/i18n';
+import { PRACTICE_TYPE_VALUES } from '@/schemas/signupValidation';
 import {
   ACCOUNT_INPUT_CLASS,
   ACCOUNT_PRIMARY_BTN,
   Field,
   FormSection,
 } from './formUi';
+
+const TEAM_SIZE_BUCKETS = [1, 5, 10, 20, 50, 100] as const;
+
+function normalizeTeamSize(value?: string | number | null) {
+  if (value == null || value === '') return '';
+  const n = Number(value);
+  if (!Number.isFinite(n)) return String(value);
+  const match = TEAM_SIZE_BUCKETS.find((bucket) => n <= bucket);
+  return String(match ?? 100);
+}
 
 type ProfileFormData = {
   first_name: string;
@@ -33,8 +45,7 @@ type ProfileFormData = {
 
 type CabinetFormData = {
   trade_name?: string;
-  firm_name?: string;
-  structure_type?: string;
+  practice_type?: string;
   business_address?: string;
   team_size?: string;
   website?: string;
@@ -94,8 +105,7 @@ export default function AccountProfileForm() {
     () =>
       yup.object({
         trade_name: yup.string().min(2, t.settings.validation.tradeNameMin),
-        firm_name: yup.string().min(2, t.settings.validation.firmNameMin),
-        structure_type: yup.string(),
+        practice_type: yup.string().oneOf([...PRACTICE_TYPE_VALUES, '']).optional(),
         business_address: yup.string(),
         team_size: yup.string(),
         website: yup.string().test('url', t.settings.validation.invalidUrl, (value) => {
@@ -127,10 +137,9 @@ export default function AccountProfileForm() {
     resolver: yupResolver(cabinetSchema) as never,
     defaultValues: {
       trade_name: user?.trade_name || '',
-      firm_name: user?.firm_name || '',
-      structure_type: user?.structure_type || '',
+      practice_type: user?.practice_type || '',
       business_address: user?.business_address || '',
-      team_size: user?.team_size || '',
+      team_size: normalizeTeamSize(user?.team_size),
       website: user?.website || '',
     },
   });
@@ -146,10 +155,9 @@ export default function AccountProfileForm() {
     });
     cabinetForm.reset({
       trade_name: user.trade_name || '',
-      firm_name: user.firm_name || '',
-      structure_type: user.structure_type || '',
+      practice_type: user.practice_type || '',
       business_address: user.business_address || '',
-      team_size: user.team_size || '',
+      team_size: normalizeTeamSize(user.team_size),
       website: user.website || '',
     });
     setPhotoUrl(user.image || '');
@@ -197,7 +205,13 @@ export default function AccountProfileForm() {
 
   const handleCabinetInfoSubmit = async (data: CabinetFormData) => {
     try {
-      const { firm_name: _firmName, ...cabinetPayload } = data;
+      const cabinetPayload: API.CabinetUpdateForm = {
+        trade_name: data.trade_name,
+        business_address: data.business_address,
+        team_size: data.team_size,
+        website: data.website,
+        ...(data.practice_type ? { practice_type: data.practice_type } : {}),
+      };
       const response = await apiUpdateCabinet(cabinetPayload);
       const cabinet = response.data;
       const logoVersion = cabinet.logo ? Date.now() : undefined;
@@ -206,7 +220,7 @@ export default function AccountProfileForm() {
           user: {
             ...user,
             trade_name: cabinet.trade_name ?? user.trade_name,
-            structure_type: cabinet.structure_type ?? user.structure_type,
+            practice_type: cabinet.practice_type ?? user.practice_type,
             business_address: cabinet.business_address ?? user.business_address,
             team_size: cabinet.team_size != null ? String(cabinet.team_size) : user.team_size,
             website: cabinet.website ?? user.website,
@@ -365,10 +379,9 @@ export default function AccountProfileForm() {
     });
     cabinetForm.reset({
       trade_name: user?.trade_name || '',
-      firm_name: user?.firm_name || '',
-      structure_type: user?.structure_type || '',
+      practice_type: user?.practice_type || '',
       business_address: user?.business_address || '',
-      team_size: user?.team_size || '',
+      team_size: normalizeTeamSize(user?.team_size),
       website: user?.website || '',
     });
   };
@@ -555,17 +568,53 @@ export default function AccountProfileForm() {
               </div>
             </div>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <Field id="jurisdiction" label={t.settings.jurisdiction} hint={t.settings.jurisdictionLockedHint}>
+                <Input
+                  id="jurisdiction"
+                  className={cn(ACCOUNT_INPUT_CLASS, 'cursor-not-allowed bg-slate-50 text-slate-500 dark:bg-zinc-900')}
+                  value={user?.jurisdiction?.name || user?.jurisdiction?.code || '—'}
+                  disabled
+                  readOnly
+                />
+              </Field>
+              <Field id="practice_type" label={t.settings.practiceType} error={cabinetForm.formState.errors.practice_type?.message}>
+                <Select
+                  value={cabinetForm.watch('practice_type') || undefined}
+                  onValueChange={(value) =>
+                    cabinetForm.setValue('practice_type', value, { shouldDirty: true, shouldValidate: true })
+                  }
+                >
+                  <SelectTrigger id="practice_type" className={cn(ACCOUNT_INPUT_CLASS, 'w-full justify-between')}>
+                    <SelectValue placeholder={t.auth.signup.practice.headerTitle} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={PRACTICE_TYPE_VALUES[0]}>{t.auth.signup.practiceTypes.lawOffice}</SelectItem>
+                    <SelectItem value={PRACTICE_TYPE_VALUES[1]}>{t.auth.signup.practiceTypes.lawFirm}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </Field>
               <Field id="trade_name" label={t.settings.tradeName} error={cabinetForm.formState.errors.trade_name?.message}>
                 <Input id="trade_name" className={ACCOUNT_INPUT_CLASS} placeholder={t.settings.tradeNamePlaceholder} {...cabinetForm.register('trade_name')} />
               </Field>
-              <Field id="firm_name" label={t.settings.firmName} error={cabinetForm.formState.errors.firm_name?.message}>
-                <Input id="firm_name" className={ACCOUNT_INPUT_CLASS} placeholder={t.settings.firmNamePlaceholder} {...cabinetForm.register('firm_name')} />
-              </Field>
-              <Field id="structure_type" label={t.settings.structureType} error={cabinetForm.formState.errors.structure_type?.message}>
-                <Input id="structure_type" className={ACCOUNT_INPUT_CLASS} placeholder={t.settings.structureTypePlaceholder} {...cabinetForm.register('structure_type')} />
-              </Field>
               <Field id="team_size" label={t.settings.teamSize} error={cabinetForm.formState.errors.team_size?.message}>
-                <Input id="team_size" className={ACCOUNT_INPUT_CLASS} placeholder={t.settings.teamSizePlaceholder} {...cabinetForm.register('team_size')} />
+                <Select
+                  value={cabinetForm.watch('team_size') || undefined}
+                  onValueChange={(value) =>
+                    cabinetForm.setValue('team_size', value, { shouldDirty: true, shouldValidate: true })
+                  }
+                >
+                  <SelectTrigger id="team_size" className={cn(ACCOUNT_INPUT_CLASS, 'w-full justify-between')}>
+                    <SelectValue placeholder={t.auth.signup.organization.teamPlaceholder} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="1">{t.auth.signup.teamSizes.justMe}</SelectItem>
+                    <SelectItem value="5">{t.auth.signup.teamSizes.twoToFive}</SelectItem>
+                    <SelectItem value="10">{t.auth.signup.teamSizes.sixToTen}</SelectItem>
+                    <SelectItem value="20">{t.auth.signup.teamSizes.elevenToTwenty}</SelectItem>
+                    <SelectItem value="50">{t.auth.signup.teamSizes.twentyOneToFifty}</SelectItem>
+                    <SelectItem value="100">{t.auth.signup.teamSizes.moreThanFifty}</SelectItem>
+                  </SelectContent>
+                </Select>
               </Field>
               <Field id="business_address" label={t.settings.businessAddress} error={cabinetForm.formState.errors.business_address?.message} className="sm:col-span-2">
                 <Textarea

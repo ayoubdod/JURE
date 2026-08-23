@@ -9,6 +9,7 @@ import { getMarketingDict } from "@/marketing/i18n";
 import { getRoute } from "@/marketing/routes";
 import { swapLocaleInPath } from "@/marketing/MarketingLocale";
 import { track, MarketingEvents } from "@/lib/analytics";
+import JureLogo from "@/components/common/JureLogo";
 import "@/components/landing/landing.css";
 
 export type MarketingLang = MarketingLocale;
@@ -179,13 +180,7 @@ const MarketingShell: React.FC<MarketingShellProps> = ({
             aria-label="main navigation"
           >
             <Link to={localePath(lang)} className="shrink-0 min-w-0" onClick={closeMobile}>
-              <img
-                src="/images/jure-logo.png"
-                alt="JURE"
-                className="w-[100px] sm:w-[140px] h-8 sm:h-10 object-contain"
-                loading="eager"
-                decoding="async"
-              />
+              <JureLogo className="h-7 sm:h-8 w-auto" />
             </Link>
 
             <div className="hidden lg:flex items-center gap-5 text-sm font-medium">
@@ -269,13 +264,7 @@ const MarketingShell: React.FC<MarketingShellProps> = ({
           <div className={`grid grid-cols-2 md:grid-cols-5 gap-8 ${isRtl ? "text-right" : ""}`}>
             <div className="col-span-2 md:col-span-1">
               <Link to={localePath(lang)}>
-                <img
-                  src="/images/jure-logo.png"
-                  alt="JURE"
-                  className="w-[120px] h-8 object-contain mb-3"
-                  loading="lazy"
-                  decoding="async"
-                />
+                <JureLogo inverted className="mb-3 h-7 w-auto" />
               </Link>
               <p className="text-sm text-slate-400">{dict.footer.tagline}</p>
             </div>

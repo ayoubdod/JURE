@@ -43,9 +43,8 @@ declare namespace API {
 
     type CabinetUpdateForm = {
         trade_name?: string
-        firm_name?: string
         logo?: File
-        structure_type?: string
+        practice_type?: string
         business_address?: string
         team_size?: string
         website?: string
@@ -59,11 +58,12 @@ declare namespace API {
     type CabinetUpdateResponse = {
         logo?: string
         trade_name?: string
-        firm_name?: string
-        structure_type?: string
+        practice_type?: string
         business_address?: string
         team_size?: string | number
         website?: string
+        jurisdiction?: number | null
+        jurisdiction_code?: string | null
     }
 
     type ChangePasswordForm = {

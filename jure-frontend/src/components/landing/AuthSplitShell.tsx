@@ -3,6 +3,7 @@ import { Link } from 'react-router';
 import { Home } from 'lucide-react';
 import LangSwitcher from '@/components/common/LangSwitcher';
 import ThemeToggle from '@/components/ThemeToggle';
+import JureLogo from '@/components/common/JureLogo';
 import { useAppTranslation } from '@/i18n';
 
 type AuthSplitShellProps = {
@@ -26,7 +27,7 @@ const AuthSplitShell = ({ eyebrow, heading, subtitle, footer, children }: AuthSp
           <div className="pointer-events-none absolute bottom-[-4rem] start-1/4 h-56 w-56 rounded-full bg-white/10" />
 
           <Link to="/" className="relative z-10 inline-flex items-center">
-            <img src="/images/jure-logo.png" alt="JURE" className="h-8 w-auto brightness-0 invert" />
+            <JureLogo inverted className="h-8 w-auto" />
           </Link>
 
           <div className="relative z-10 mt-16 max-w-sm">
@@ -45,7 +46,7 @@ const AuthSplitShell = ({ eyebrow, heading, subtitle, footer, children }: AuthSp
         <section className="flex min-w-0 flex-1 flex-col">
           <header className="flex items-center justify-between gap-2 px-5 pt-4 sm:px-8 sm:pt-5">
             <Link to="/" className="inline-flex items-center lg:hidden">
-              <img src="/images/jure-logo.png" alt="JURE" className="h-7 w-auto" />
+              <JureLogo className="h-7 w-auto" />
             </Link>
             <div className="ms-auto flex items-center gap-1.5">
               <LangSwitcher />

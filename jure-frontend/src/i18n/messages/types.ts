@@ -474,6 +474,9 @@ export interface AppMessages {
     bioPlaceholder: string;
     organizationTitle: string;
     organizationDescription: string;
+    jurisdiction: string;
+    jurisdictionLockedHint: string;
+    practiceType: string;
     changeLogo: string;
     uploadLogo: string;
     logoHint: string;

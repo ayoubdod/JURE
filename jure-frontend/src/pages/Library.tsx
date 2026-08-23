@@ -530,9 +530,9 @@ const Library = () => {
           <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
             <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden">
               <div className="px-3 pt-2 sm:px-4">
-                {jurisdictionName ? (
+                {collection === 'public' && jurisdictionName ? (
                   <p className="mb-1.5 text-[11px] font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                    {t.library.yourLegalLibrary}
+                    {t.library.publicLibrary}
                     <span className="ms-1.5 font-semibold normal-case tracking-normal text-slate-700 dark:text-slate-200">
                       {jurisdictionName}
                     </span>
@@ -602,7 +602,9 @@ const Library = () => {
                         <FilterChip
                           label={
                             collection === 'public'
-                              ? t.library.publicLibrary
+                              ? jurisdictionName
+                                ? `${t.library.publicLibrary} · ${jurisdictionName}`
+                                : t.library.publicLibrary
                               : COLLECTIONS.find((c) => c.id === collection)?.label || collection
                           }
                           onRemove={() => setCollection('all')}
