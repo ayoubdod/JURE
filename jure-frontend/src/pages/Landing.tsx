@@ -74,35 +74,57 @@ const Landing: React.FC = () => {
       <RouteSeo routeKey="home" lang={lang} jsonLd={jsonLd} />
 
       {/* ============ HERO ============ */}
-      <section className="relative max-w-7xl mx-auto px-4 sm:px-6 pt-10 sm:pt-16 pb-10 sm:pb-20 overflow-x-clip">
-        <div className="grid items-center gap-10 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1.15fr)] lg:gap-6 xl:gap-10">
+      <section className="relative max-w-7xl mx-auto px-4 sm:px-6 pt-6 sm:pt-16 pb-8 sm:pb-20">
+        <div className="landing-hero-grid">
           <motion.div
-            className={dir === "rtl" ? "text-right" : "text-start"}
+            className={`landing-hero-grid__intro ${dir === "rtl" ? "text-right" : "text-start"}`}
             initial={reduce ? false : { opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
           >
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full landing-glass text-xs font-semibold text-[#64499D] dark:text-[#CFC2FF] mb-5">
-              <Sparkles className="w-3.5 h-3.5" />
-              {t.hero.eyebrow}
-            </span>
-
-            <h1 className="text-4xl sm:text-5xl xl:text-[3.4rem] font-bold leading-[1.08] text-slate-900 dark:text-white max-w-xl">
+            <h1 className="text-[1.75rem] sm:text-5xl xl:text-[3.4rem] font-bold leading-[1.12] sm:leading-[1.08] text-slate-900 dark:text-white max-w-xl">
               {t.hero.h1a}{" "}
               <span className="landing-hero-shimmer bg-gradient-to-r from-[#64499D] via-[#8B6FD1] to-[#64499D] bg-clip-text text-transparent">
                 {t.hero.h1b}
               </span>
             </h1>
 
-            <p className="mt-4 text-base sm:text-lg font-semibold text-slate-800 dark:text-slate-100 max-w-xl">
+            <p className="mt-3 sm:mt-4 text-sm sm:text-lg font-semibold text-slate-800 dark:text-slate-100 max-w-xl">
               {t.hero.verbs}
             </p>
+          </motion.div>
 
-            <p className="mt-3 max-w-xl text-sm sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed">
+          <motion.div
+            className="landing-hero-grid__visual"
+            initial={reduce ? false : { opacity: 0, y: 24, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ duration: 0.7, delay: reduce ? 0 : 0.12, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <div className="landing-hero-device">
+              <div className="landing-hero-device__glow" aria-hidden />
+              <img
+                src="/images/hero-laptop.png"
+                alt={t.hero.imageAlt}
+                className="landing-hero-device__img"
+                width={1024}
+                height={682}
+                fetchPriority="high"
+                decoding="async"
+              />
+            </div>
+          </motion.div>
+
+          <motion.div
+            className={`landing-hero-grid__actions ${dir === "rtl" ? "text-right" : "text-start"}`}
+            initial={reduce ? false : { opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.55, delay: reduce ? 0 : 0.08, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <p className="max-w-xl text-sm sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed">
               {t.hero.subtitle}
             </p>
 
-            <div className="mt-7 flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-3">
+            <div className="mt-5 sm:mt-7 flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-3">
               <Button
                 asChild
                 size="lg"
@@ -137,35 +159,15 @@ const Landing: React.FC = () => {
               </Link>
             </div>
 
-            <div className="mt-6 flex flex-wrap gap-2">
+            <div className="mt-5 sm:mt-6 grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
               {t.hero.trustChips.map((chip) => (
                 <span
                   key={chip}
-                  className="text-[11px] sm:text-xs font-medium px-3 py-1 rounded-full bg-[#64499D]/8 text-[#64499D] dark:bg-[#64499D]/20 dark:text-[#CFC2FF]"
+                  className="flex items-center justify-center sm:inline-flex text-center sm:text-start text-[11px] sm:text-xs font-medium px-2.5 sm:px-3 py-1.5 sm:py-1 rounded-full bg-[#64499D]/8 text-[#64499D] dark:bg-[#64499D]/20 dark:text-[#CFC2FF] leading-snug min-h-[2.5rem] sm:min-h-0"
                 >
                   {chip}
                 </span>
               ))}
-            </div>
-          </motion.div>
-
-          <motion.div
-            className="relative lg:-me-8 xl:-me-16"
-            initial={reduce ? false : { opacity: 0, y: 24, scale: 0.98 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ duration: 0.7, delay: reduce ? 0 : 0.12, ease: [0.22, 1, 0.36, 1] }}
-          >
-            <div className="landing-hero-device">
-              <div className="landing-hero-device__glow" aria-hidden />
-              <img
-                src="/images/hero-laptop.png"
-                alt={t.hero.imageAlt}
-                className="landing-hero-device__img"
-                width={1024}
-                height={682}
-                fetchPriority="high"
-                decoding="async"
-              />
             </div>
           </motion.div>
         </div>

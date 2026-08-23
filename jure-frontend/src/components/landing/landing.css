@@ -267,6 +267,72 @@
   }
 }
 
+.landing-hero-grid {
+  display: grid;
+  gap: 1.25rem;
+  align-items: center;
+}
+
+.landing-hero-grid__intro,
+.landing-hero-grid__actions,
+.landing-hero-grid__visual {
+  min-width: 0;
+}
+
+.landing-hero-grid__visual {
+  width: 100%;
+  max-width: 17.5rem;
+  margin-inline: auto;
+  padding-inline: 0.25rem;
+}
+
+@media (min-width: 640px) {
+  .landing-hero-grid {
+    gap: 2.5rem;
+  }
+
+  .landing-hero-grid__visual {
+    max-width: 32rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .landing-hero-grid {
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, 1.15fr);
+    grid-template-areas:
+      "intro visual"
+      "actions visual";
+    column-gap: 1.5rem;
+    row-gap: 0;
+    align-items: center;
+  }
+
+  .landing-hero-grid__intro {
+    grid-area: intro;
+  }
+
+  .landing-hero-grid__actions {
+    grid-area: actions;
+    padding-top: 0.75rem;
+  }
+
+  .landing-hero-grid__visual {
+    grid-area: visual;
+    max-width: none;
+    margin-inline-end: -2rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  .landing-hero-grid {
+    column-gap: 2.5rem;
+  }
+
+  .landing-hero-grid__visual {
+    margin-inline-end: -4rem;
+  }
+}
+
 .landing-hero-device {
   position: relative;
   isolation: isolate;
@@ -289,6 +355,7 @@
 .landing-hero-device__img {
   position: relative;
   z-index: 1;
+  display: block;
   width: 100%;
   height: auto;
   filter: drop-shadow(0 28px 50px rgba(62, 45, 113, 0.28));
@@ -296,6 +363,27 @@
 
 .dark .landing-hero-device__img {
   filter: drop-shadow(0 28px 56px rgba(0, 0, 0, 0.5));
+}
+
+/* Mobile: full device, inset from the screen edges, black PNG canvas knocked out. */
+@media (max-width: 1023px) {
+  .landing-hero-device__glow {
+    inset: 18% 12% 22%;
+    filter: blur(24px);
+  }
+
+  .landing-hero-device__img {
+    width: 100%;
+    height: auto;
+    margin-inline: auto;
+    object-fit: contain;
+    object-position: center;
+    filter: drop-shadow(0 14px 24px rgba(62, 45, 113, 0.2));
+  }
+
+  html:not(.dark) .landing-hero-device__img {
+    mix-blend-mode: multiply;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

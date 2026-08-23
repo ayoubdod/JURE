@@ -58,7 +58,7 @@ export const fr: AppMessages = {
     signInSubtitle: 'Connectez-vous à votre compte pour continuer.',
     signInHeroEyebrow: 'Vous pouvez facilement',
     signInHeroTitle: 'Accélérez votre travail juridique avec JURE',
-    signInHeroFooter: 'Cabinets et sociétés d’avocats · Maroc · Qatar',
+    signInHeroFooter: 'Cabinets et sociétés d’avocats.',
     emailLabel: 'Email',
     emailPlaceholder: 'exemple@email.com',
     emailOrPhoneLabel: 'Email ou téléphone',

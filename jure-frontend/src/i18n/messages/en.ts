@@ -58,7 +58,7 @@ export const en: AppMessages = {
     signInSubtitle: 'Please log in to your account to continue.',
     signInHeroEyebrow: 'You can easily',
     signInHeroTitle: 'Speed up your legal work with JURE',
-    signInHeroFooter: 'Law offices and law firms · Morocco · Qatar',
+    signInHeroFooter: 'Law offices and law firms.',
     emailLabel: 'Email',
     emailPlaceholder: 'you@example.com',
     emailOrPhoneLabel: 'Email or phone',
