@@ -1,7 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router";
-import { Menu, X } from "lucide-react";
+import { Globe, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import ThemeToggle from "@/components/ThemeToggle";
 import MeshBackdrop from "@/components/landing/MeshBackdrop";
 import { isMarketingLocale, localePath, type MarketingLocale } from "@/marketing/site";
@@ -54,36 +60,34 @@ const LangSwitcher: React.FC<{
   pathname: string;
   onNavigate: (to: string, next: MarketingLang) => void;
 }> = ({ lang, pathname, onNavigate }) => (
-  <div className="inline-flex overflow-hidden rounded-lg border border-[#64499D]/20 bg-white/50 backdrop-blur-sm dark:border-[#8B6FD1]/30 dark:bg-slate-900/40" dir="ltr">
-    {(["fr", "en", "ar"] as MarketingLang[]).map((code) => {
-      const href = swapLocaleInPath(pathname, code);
-      return (
-        <Link
+  <DropdownMenu>
+    <DropdownMenuTrigger asChild>
+      <Button
+        type="button"
+        variant="outline"
+        size="icon"
+        className="h-9 w-9 shrink-0 border-[#64499D]/20 dark:border-[#8B6FD1]/30 text-slate-700 dark:text-slate-200 hover:bg-[#F4F1FF]/80 dark:hover:bg-[#64499D]/20"
+        aria-label={MARKETING_LANG_LABELS[lang]}
+        title={MARKETING_LANG_LABELS[lang]}
+      >
+        <Globe className="h-4 w-4" />
+      </Button>
+    </DropdownMenuTrigger>
+    <DropdownMenuContent align="end" className="min-w-[9rem]">
+      {(["fr", "en", "ar"] as MarketingLang[]).map((code) => (
+        <DropdownMenuItem
           key={code}
-          to={href}
-          title={MARKETING_LANG_LABELS[code]}
-          aria-label={MARKETING_LANG_LABELS[code]}
-          aria-current={lang === code ? "true" : undefined}
-          onClick={(e) => {
-            if (code === lang) {
-              e.preventDefault();
-              return;
-            }
-            e.preventDefault();
-            onNavigate(href, code);
+          onClick={() => {
+            if (code === lang) return;
+            onNavigate(swapLocaleInPath(pathname, code), code);
           }}
-          className={`px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm transition-colors whitespace-nowrap ${
-            lang === code
-              ? "bg-[#64499D] text-white"
-              : "text-slate-700 dark:text-slate-200 hover:bg-[#F4F1FF] dark:hover:bg-[#64499D]/20"
-          }`}
+          className={code === lang ? "font-medium text-[#64499D] dark:text-[#CFC2FF]" : ""}
         >
-          <span className="sm:hidden">{code.toUpperCase()}</span>
-          <span className="hidden sm:inline">{MARKETING_LANG_LABELS[code]}</span>
-        </Link>
-      );
-    })}
-  </div>
+          {MARKETING_LANG_LABELS[code]}
+        </DropdownMenuItem>
+      ))}
+    </DropdownMenuContent>
+  </DropdownMenu>
 );
 
 const NAV_ITEMS: Array<{ key: Exclude<MarketingNavKey, "none">; slug: string }> = [
