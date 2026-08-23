@@ -23,11 +23,11 @@ import {
   Users,
 } from "lucide-react";
 import MarketingShell from "@/components/landing/MarketingShell";
+import JureLogo from "@/components/common/JureLogo";
 import Reveal from "@/components/landing/Reveal";
 import WorkflowDiagram from "@/components/landing/WorkflowDiagram";
 import FaqSection from "@/components/landing/FaqSection";
 import {
-  CaseWorkspaceFrame,
   ChatFrame,
   JuriaFrame,
   LibraryFrame,
@@ -74,88 +74,103 @@ const Landing: React.FC = () => {
       <RouteSeo routeKey="home" lang={lang} jsonLd={jsonLd} />
 
       {/* ============ HERO ============ */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 pt-12 sm:pt-20 pb-8 text-center">
-        <motion.div
-          initial={reduce ? false : { opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
-        >
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full landing-glass text-xs font-semibold text-[#64499D] dark:text-[#CFC2FF] mb-6">
-            <Sparkles className="w-3.5 h-3.5" />
-            {t.hero.eyebrow}
-          </span>
-
-          <h1 className="text-4xl sm:text-6xl font-bold leading-[1.08] text-slate-900 dark:text-white max-w-4xl mx-auto">
-            {t.hero.h1a}{" "}
-            <span className="landing-hero-shimmer bg-gradient-to-r from-[#64499D] via-[#8B6FD1] to-[#64499D] bg-clip-text text-transparent">
-              {t.hero.h1b}
-            </span>
-          </h1>
-
-          <p className="mt-5 text-base sm:text-xl font-semibold text-slate-800 dark:text-slate-100">
-            {t.hero.verbs}
-          </p>
-
-          <p className="mt-4 max-w-2xl mx-auto text-sm sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed">
-            {t.hero.subtitle}
-          </p>
-
-          <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
-            <Button
-              asChild
-              size="lg"
-              className="w-full sm:w-auto bg-gradient-to-r from-[#64499D] to-[#4D3680] hover:from-[#4D3680] hover:to-[#3E2D71] text-white px-8 shadow-lg shadow-[#64499D]/25"
-            >
-              <Link
-                to={path("demo")}
-                onClick={() => track(MarketingEvents.HeroPrimaryCta, { source: "hero", lang })}
-              >
-                {t.hero.ctaPrimary}
-                <ArrowRight className="w-4 h-4 ms-2 rtl:rotate-180" />
-              </Link>
-            </Button>
-            <Button
-              asChild
-              size="lg"
-              variant="outline"
-              className="w-full sm:w-auto border-[#64499D]/30 text-[#64499D] hover:bg-[#64499D]/10 dark:text-[#CFC2FF] dark:hover:bg-[#64499D]/20 px-8"
-            >
-              <Link
-                to={path("features")}
-                onClick={() => track(MarketingEvents.HeroSecondaryCta, { source: "hero", lang })}
-              >
-                {t.hero.ctaSecondary}
-              </Link>
-            </Button>
-          </div>
-
-          <p className="mt-4">
-            <Link
-              to={path("pricing")}
-              className="text-sm font-semibold text-[#64499D] dark:text-[#CFC2FF] hover:underline"
-            >
-              {t.hero.ctaPricing}
-            </Link>
-          </p>
-
-          <div className="mt-7 flex flex-wrap items-center justify-center gap-2">
-            {t.hero.trustChips.map((chip) => (
-              <span
-                key={chip}
-                className="text-[11px] sm:text-xs font-medium px-3 py-1 rounded-full bg-[#64499D]/8 text-[#64499D] dark:bg-[#64499D]/20 dark:text-[#CFC2FF]"
-              >
-                {chip}
+      <section className="relative max-w-7xl mx-auto px-4 sm:px-6 pt-6 sm:pt-16 pb-8 sm:pb-20">
+        <div className="landing-hero-grid">
+          <motion.div
+            className={`landing-hero-grid__intro ${dir === "rtl" ? "text-right" : "text-start"}`}
+            initial={reduce ? false : { opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <h1 className="text-[1.75rem] sm:text-5xl xl:text-[3.4rem] font-bold leading-[1.12] sm:leading-[1.08] text-slate-900 dark:text-white max-w-xl">
+              {t.hero.h1a}{" "}
+              <span className="landing-hero-shimmer bg-gradient-to-r from-[#64499D] via-[#8B6FD1] to-[#64499D] bg-clip-text text-transparent">
+                {t.hero.h1b}
               </span>
-            ))}
-          </div>
-        </motion.div>
-      </section>
+            </h1>
 
-      {/* ============ PRODUCT VISUAL ============ */}
-      <section className="max-w-5xl mx-auto px-4 sm:px-6 pb-16 sm:pb-24">
-        <Reveal>
-          <CaseWorkspaceFrame lang={lang} />
-        </Reveal>
+            <p className="mt-3 sm:mt-4 text-sm sm:text-lg font-semibold text-slate-800 dark:text-slate-100 max-w-xl">
+              {t.hero.verbs}
+            </p>
+          </motion.div>
+
+          <motion.div
+            className="landing-hero-grid__visual"
+            initial={reduce ? false : { opacity: 0, y: 24, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ duration: 0.7, delay: reduce ? 0 : 0.12, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <div className="landing-hero-device">
+              <div className="landing-hero-device__glow" aria-hidden />
+              <img
+                src="/images/hero-laptop.png"
+                alt={t.hero.imageAlt}
+                className="landing-hero-device__img"
+                width={1024}
+                height={682}
+                fetchPriority="high"
+                decoding="async"
+              />
+            </div>
+          </motion.div>
+
+          <motion.div
+            className={`landing-hero-grid__actions ${dir === "rtl" ? "text-right" : "text-start"}`}
+            initial={reduce ? false : { opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.55, delay: reduce ? 0 : 0.08, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <p className="max-w-xl text-sm sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed">
+              {t.hero.subtitle}
+            </p>
+
+            <div className="mt-5 sm:mt-7 flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-3">
+              <Button
+                asChild
+                size="lg"
+                className="w-full sm:w-auto bg-gradient-to-r from-[#64499D] to-[#4D3680] hover:from-[#4D3680] hover:to-[#3E2D71] text-white px-8 shadow-lg shadow-[#64499D]/25"
+              >
+                <Link
+                  to={path("demo")}
+                  onClick={() => track(MarketingEvents.HeroPrimaryCta, { source: "hero", lang })}
+                >
+                  {t.hero.ctaPrimary}
+                  <ArrowRight className="w-4 h-4 ms-2 rtl:rotate-180" />
+                </Link>
+              </Button>
+              <Button
+                asChild
+                size="lg"
+                variant="outline"
+                className="w-full sm:w-auto border-[#64499D]/30 text-[#64499D] hover:bg-[#64499D]/10 dark:text-[#CFC2FF] dark:hover:bg-[#64499D]/20 px-8"
+              >
+                <Link
+                  to={path("features")}
+                  onClick={() => track(MarketingEvents.HeroSecondaryCta, { source: "hero", lang })}
+                >
+                  {t.hero.ctaSecondary}
+                </Link>
+              </Button>
+              <Link
+                to={path("pricing")}
+                className="sm:ms-1 text-center sm:text-start text-sm font-semibold text-[#64499D] dark:text-[#CFC2FF] hover:underline py-2"
+              >
+                {t.hero.ctaPricing}
+              </Link>
+            </div>
+
+            <div className="mt-5 sm:mt-6 grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
+              {t.hero.trustChips.map((chip) => (
+                <span
+                  key={chip}
+                  className="flex items-center justify-center sm:inline-flex text-center sm:text-start text-[11px] sm:text-xs font-medium px-2.5 sm:px-3 py-1.5 sm:py-1 rounded-full bg-[#64499D]/8 text-[#64499D] dark:bg-[#64499D]/20 dark:text-[#CFC2FF] leading-snug min-h-[2.5rem] sm:min-h-0"
+                >
+                  {chip}
+                </span>
+              ))}
+            </div>
+          </motion.div>
+        </div>
       </section>
 
       {/* ============ THE PROBLEM → ONE WORKSPACE ============ */}
@@ -200,13 +215,7 @@ const Landing: React.FC = () => {
               </div>
               <div className="landing-glass landing-panel-glow rounded-2xl px-6 py-7 text-center">
                 <div className="flex justify-center mb-3">
-                  <img
-                    src="/images/jure-logo.png"
-                    alt="JURE"
-                    className="h-8 object-contain"
-                    loading="lazy"
-                    decoding="async"
-                  />
+                  <JureLogo className="h-8 w-auto" />
                 </div>
                 <div className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white">
                   {t.problem.convergenceTitle}

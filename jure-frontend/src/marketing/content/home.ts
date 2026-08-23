@@ -18,6 +18,7 @@ export interface HomeContent {
     ctaSecondary: string;
     ctaPricing: string;
     trustChips: string[];
+    imageAlt: string;
   };
   problem: {
     title: string;
@@ -89,6 +90,7 @@ const en: HomeContent = {
       "Built for legal teams",
       "FR · EN · AR",
     ],
+    imageAlt: "JURE legal workspace shown on a laptop",
   },
   problem: {
     title: "Legal work is fragmented. Your tools shouldn't be.",
@@ -242,6 +244,7 @@ const fr: HomeContent = {
       "Conçu pour les équipes juridiques",
       "FR · EN · AR",
     ],
+    imageAlt: "L’espace de travail juridique JURE sur un ordinateur portable",
   },
   problem: {
     title: "Le travail juridique est fragmenté. Vos outils ne devraient pas l'être.",
@@ -395,6 +398,7 @@ const ar: HomeContent = {
       "مصمم للفرق القانونية",
       "FR · EN · AR",
     ],
+    imageAlt: "مساحة عمل JURE القانونية على جهاز محمول",
   },
   problem: {
     title: "العمل القانوني مشتت. أدواتك لا ينبغي أن تكون كذلك.",

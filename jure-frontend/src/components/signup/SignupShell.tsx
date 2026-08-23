@@ -3,6 +3,7 @@ import { Link } from 'react-router';
 import { Check, Home } from 'lucide-react';
 import LangSwitcher from '@/components/common/LangSwitcher';
 import ThemeToggle from '@/components/ThemeToggle';
+import JureLogo from '@/components/common/JureLogo';
 import { cn } from '@/lib/utils';
 import { useAppTranslation } from '@/i18n';
 
@@ -33,11 +34,7 @@ const SignupShell = ({ currentStep, steps, children }: SignupShellProps) => {
           <div className="pointer-events-none absolute end-10 bottom-40 h-24 w-24 rounded-full bg-white/10" />
 
           <Link to="/" className="relative z-10 inline-flex items-center gap-2">
-            <img
-              src="/images/jure-logo.png"
-              alt="JURE"
-              className="h-8 w-auto brightness-0 invert"
-            />
+            <JureLogo inverted className="h-8 w-auto" />
           </Link>
 
           <div className="relative z-10 mt-14 max-w-sm">
@@ -96,7 +93,7 @@ const SignupShell = ({ currentStep, steps, children }: SignupShellProps) => {
               to="/"
               className="inline-flex items-center gap-2 lg:hidden"
             >
-              <img src="/images/jure-logo.png" alt="JURE" className="h-7 w-auto" />
+              <JureLogo className="h-7 w-auto" />
             </Link>
             <div className="ms-auto flex items-center gap-1.5">
               <LangSwitcher />

@@ -44,6 +44,7 @@ import { NAV_SHORTCUT_BY_PATH } from '@/shortcuts/catalog';
 import { HintKbd } from '@/components/shortcuts/Kbd';
 import { useShortcutAction } from '@/context/ShortcutsContext';
 import { JURIA_ENABLED } from '@/config/features';
+import JureLogo from '@/components/common/JureLogo';
 
 /** Collapsed desktop rail width. Keep in sync with DashboardLayout `--sidebar-rail-width`. */
 export const SIDEBAR_RAIL_WIDTH = '3rem'; // 48px
@@ -786,7 +787,7 @@ const Sidebar = ({ activeTab, setActiveTab, expanded, onExpandedChange }: Sideba
         >
           <SheetHeader className="shrink-0 border-b border-border px-3 py-3 text-start">
             <div className="flex items-center gap-2.5 pe-8">
-              <img src="/images/jure-logo.png" alt="JURE" className="h-8 w-auto" />
+              <JureLogo className="h-7 w-auto" />
             </div>
             <SheetTitle className="sr-only">{t.sidebar.dashboard}</SheetTitle>
             <SheetDescription className="sr-only">{t.sidebar.office}</SheetDescription>
@@ -824,25 +825,17 @@ const Sidebar = ({ activeTab, setActiveTab, expanded, onExpandedChange }: Sideba
               aria-label="Main navigation"
               data-state={railExpanded ? 'expanded' : 'collapsed'}
             >
-              {/* Logo */}
+              {/* Logo — full wordmark when expanded, J mark when collapsed */}
               <div
                 className={cn(
-                  'mb-3 flex h-10 shrink-0 items-center px-2',
-                  railExpanded ? 'justify-start' : 'justify-center',
+                  'mb-3 flex shrink-0 items-center',
+                  railExpanded ? 'h-10 justify-start px-2' : 'h-9 justify-center px-0',
                 )}
               >
                 {railExpanded ? (
-                  <img
-                    src="/images/jure-logo.png"
-                    alt="JURE"
-                    className="h-8 w-auto max-w-full object-contain object-left"
-                  />
+                  <JureLogo className="h-7 w-auto" />
                 ) : (
-                  <img
-                    src="/favicon.png"
-                    alt="JURE"
-                    className="h-6 w-6 object-contain"
-                  />
+                  <JureLogo mark className="h-7 w-7" />
                 )}
               </div>
 
