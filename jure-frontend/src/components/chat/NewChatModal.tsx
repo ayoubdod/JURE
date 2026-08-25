@@ -11,6 +11,9 @@ import { cn } from '@/lib/utils';
 import { useAppTranslation } from '@/i18n';
 import { isCabinetMemberOnline } from '@/lib/presence';
 import { useOnlineIds } from '@/hooks/useOnlinePresence';
+import { getUserIdFromCabinetMember } from '@/utils/cabinetMemberHelpers';
+import { findDirectConversationWithPeer } from '@/components/chat/conversationUtils';
+import useUserStore from '@/stores/userStore';
 import {
   CREATE_CANCEL_CLASS,
   CREATE_FOOTER_CLASS,
@@ -29,15 +32,19 @@ export interface NewChatModalRef {
 export interface NewChatModalProps {
   onCreateConversation?: (conversation: API.Conversation) => void;
   onClose?: () => void;
+  existingConversations?: API.Conversation[];
+  currentUserEmail?: string | null;
 }
 
 const NewChatModal = forwardRef<NewChatModalRef, NewChatModalProps>(
-  ({ onCreateConversation, onClose }, ref) => {
+  ({ onCreateConversation, onClose, existingConversations = [], currentUserEmail }, ref) => {
     const { t, tf } = useAppTranslation();
+    const currentUser = useUserStore((s) => s.user);
     const onlineIds = useOnlineIds();
     const copy = t.conversations.newChatModal;
     const formId = useId();
     const searchRef = useRef<HTMLInputElement>(null);
+    const inFlightRef = useRef(false);
 
     const [isOpen, setIsOpen] = useState(false);
     const [activeTab, setActiveTab] = useState<'direct' | 'group'>('direct');
@@ -83,13 +90,29 @@ const NewChatModal = forwardRef<NewChatModalRef, NewChatModalProps>(
 
     useImperativeHandle(ref, () => ({ show, hide }));
 
+    const existingDirectWith = (member: API.CabinetMember) =>
+      findDirectConversationWithPeer(
+        existingConversations,
+        { userId: getUserIdFromCabinetMember(member), email: member.email },
+        currentUserEmail
+      );
+
     const handlePick = async (member: API.CabinetMember) => {
-      if (isBusy) return;
+      if (isBusy || inFlightRef.current || isSelf(member)) return;
+      inFlightRef.current = true;
       setSelectedMemberId(member.id);
       setSubmitPhase('loading');
       try {
+        const existing = existingDirectWith(member);
+        if (existing) {
+          onCreateConversation?.(existing);
+          setIsOpen(false);
+          setSubmitPhase('idle');
+          return;
+        }
+        const peerId = getUserIdFromCabinetMember(member) ?? member.id;
         const res = await apiCreateConversation({
-          participants: [member.id],
+          participants: [peerId],
           title: `${member.first_name} ${member.last_name}`,
           type: 'direct',
         });
@@ -98,8 +121,15 @@ const NewChatModal = forwardRef<NewChatModalRef, NewChatModalProps>(
         setIsOpen(false);
         setSubmitPhase('idle');
       } catch {
+        const existing = existingDirectWith(member);
+        if (existing) {
+          onCreateConversation?.(existing);
+          setIsOpen(false);
+        }
         setSubmitPhase('idle');
         setSelectedMemberId(null);
+      } finally {
+        inFlightRef.current = false;
       }
     };
 
@@ -111,11 +141,16 @@ const NewChatModal = forwardRef<NewChatModalRef, NewChatModalProps>(
     };
 
     const handleCreateGroup = async () => {
-      if (selectedMembers.length < 1 || isBusy) return;
+      if (selectedMembers.length < 1 || isBusy || inFlightRef.current) return;
+      inFlightRef.current = true;
       setSubmitPhase('loading');
       try {
+        const participantIds = selectedMembers.map((id) => {
+          const member = members.find((m) => m.id === id);
+          return member ? (getUserIdFromCabinetMember(member) ?? member.id) : id;
+        });
         const res = await apiCreateConversation({
-          participants: selectedMembers,
+          participants: participantIds,
           title: groupTitle || tf(copy.defaultGroupTitle, { count: selectedMembers.length }),
           type: 'group',
         });
@@ -126,10 +161,23 @@ const NewChatModal = forwardRef<NewChatModalRef, NewChatModalProps>(
         setSubmitPhase('idle');
       } catch {
         setSubmitPhase('idle');
+      } finally {
+        inFlightRef.current = false;
       }
     };
 
+    const isSelf = (member: API.CabinetMember) => {
+      const myId = currentUser?.id;
+      const myEmail = (currentUserEmail || currentUser?.email || '').trim().toLowerCase();
+      if (myId != null) {
+        const userId = getUserIdFromCabinetMember(member);
+        if (userId === myId || member.id === myId) return true;
+      }
+      return Boolean(myEmail) && member.email.trim().toLowerCase() === myEmail;
+    };
+
     const filtered = members.filter((member) => {
+      if (isSelf(member)) return false;
       const q = search.toLowerCase();
       return (
         member.first_name.toLowerCase().includes(q) ||
@@ -257,6 +305,7 @@ const NewChatModal = forwardRef<NewChatModalRef, NewChatModalProps>(
                               : selectedMembers.includes(member.id);
 
                           if (activeTab === 'direct') {
+                            const alreadyOpen = Boolean(existingDirectWith(member));
                             return (
                               <button
                                 key={member.id}
@@ -285,6 +334,10 @@ const NewChatModal = forwardRef<NewChatModalRef, NewChatModalProps>(
                                 </span>
                                 {isBusy && selectedMemberId === member.id ? (
                                   <Loader2 className="h-4 w-4 shrink-0 animate-spin text-[#64499D]" />
+                                ) : alreadyOpen ? (
+                                  <span className="shrink-0 rounded-full bg-[#F7F4FF] px-2 py-0.5 text-[10px] font-semibold text-[#64499D] ring-1 ring-[#64499D]/15 dark:bg-[#64499D]/20 dark:text-[#CFC2FF] dark:ring-[#8B6FD1]/30">
+                                    {copy.alreadyOpenBadge}
+                                  </span>
                                 ) : null}
                               </button>
                             );

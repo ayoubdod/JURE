@@ -1059,7 +1059,21 @@ const ConversationsPage: React.FC = () => {
 
       <NewChatModal
         ref={newChatModalRef}
+        existingConversations={[...conversations, ...archivedConversations]}
+        currentUserEmail={user?.email}
         onCreateConversation={(conversation) => {
+          const alreadyListed =
+            conversations.some((c) => c.id === conversation.id) ||
+            archivedConversations.some((c) => c.id === conversation.id);
+          if (alreadyListed) {
+            toast({
+              title: t.conversations.alreadyOpenTitle,
+              description: t.conversations.alreadyOpenDescription,
+            });
+          }
+          if (archivedConversations.some((c) => c.id === conversation.id)) {
+            setShowArchived(true);
+          }
           selectConversation(conversation.id);
           loadConversations(undefined, true);
         }}

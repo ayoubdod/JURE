@@ -22,6 +22,7 @@ from django.conf.urls.static import static
 from django.views.static import serve as static_serve
 from django.views.decorators.cache import never_cache
 from users.views import setup_password_by_token
+from users.auth_views import SingleSessionLoginView
 
 from drf_spectacular.views import (
     SpectacularAPIView,
@@ -35,6 +36,8 @@ urlpatterns = [
     path('', root, name='root'),
     path('admin/', admin.site.urls),
     # path('accounts/', include('allauth.urls')),
+    # Single-session login must be registered before the stock dj-rest-auth include.
+    path('api/v1/dj-rest-auth/login/', SingleSessionLoginView.as_view(), name='rest_login'),
     path('api/v1/dj-rest-auth/', include('dj_rest_auth.urls')),
     path('api/v1/dj-rest-auth/registration/', include('dj_rest_auth.registration.urls')),
 

@@ -1331,6 +1331,10 @@ export const fr: AppMessages = {
     title: 'Déconnexion pour inactivité',
     description: 'Vous êtes resté inactif pendant 15 minutes. Nous vous avons déconnecté pour protéger votre compte.',
   },
+  sessionReplaced: {
+    title: 'Connexion ailleurs',
+    description: 'Votre compte a été connecté depuis un autre endroit, cette session a été fermée.',
+  },
   shortcuts: {
     paletteTitle: 'Palette de commandes',
     palettePlaceholder: 'Rechercher une commande…',
@@ -3077,6 +3081,8 @@ export const fr: AppMessages = {
     changeIconMenu: "Changer l'icône",
     deleteConversation: 'Supprimer la conversation',
     callInProgress: 'Appel en cours',
+    alreadyOpenTitle: 'Cette conversation est déjà ouverte',
+    alreadyOpenDescription: 'Vous avez déjà cette discussion ouverte.',
     sending: 'Envoi…',
     edited: 'Modifié',
     today: "Aujourd'hui",
@@ -3122,6 +3128,7 @@ export const fr: AppMessages = {
       createGroup: 'Créer le groupe',
       creating: 'Création…',
       defaultGroupTitle: 'Groupe ({count} membres)',
+      alreadyOpenBadge: 'Déjà ouverte',
     },
     deleteMessage: {
       title: 'Supprimer ce message ?',

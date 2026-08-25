@@ -24,10 +24,15 @@ PRESENCE_GROUP = "chat-presence"
 def get_user_from_token(token):
     """Resolve the Django user for a JWT access token, or None if invalid."""
     try:
+        from users.session import session_version_matches
+
         validated_token = UntypedToken(token)
         user_id = validated_token["user_id"]
-        return User.objects.get(id=user_id)
-    except (InvalidToken, TokenError, User.DoesNotExist):
+        user = User.objects.get(id=user_id)
+        if not session_version_matches(user, validated_token):
+            return None
+        return user
+    except (InvalidToken, TokenError, User.DoesNotExist, KeyError):
         return None
 
 
@@ -165,6 +170,16 @@ class ChatConsumer(CallSignalingMixin, AsyncJsonWebsocketConsumer):
                 "payload": body,
             }
         )
+
+    async def session_replaced(self, event):
+        """Forced logout when the account signs in from another place."""
+        await self.send_json(
+            {
+                "type": "session.replaced",
+                "payload": event.get("payload") or {"code": "session_replaced"},
+            }
+        )
+        await self.close(code=4008)
 
     async def message_new(self, event):
         await self.send_json(

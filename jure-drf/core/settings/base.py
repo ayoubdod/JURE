@@ -101,6 +101,7 @@ INSTALLED_APPS = [
     "phonenumber_field",
     "rest_framework",
     "rest_framework.authtoken",
+    "rest_framework_simplejwt.token_blacklist",
     "corsheaders",
     "dj_rest_auth",
     "dj_rest_auth.registration",
@@ -214,6 +215,7 @@ REST_AUTH = {
     "LOGIN_SERIALIZER": "users.serializers.CustomLoginSerializer",
     "PASSWORD_RESET_SERIALIZER": "users.serializers.PasswordResetSerializer",
     "PASSWORD_RESET_CONFIRM_SERIALIZER": "users.serializers.PasswordResetConfirmSerializer",
+    "JWT_TOKEN_CLAIMS_SERIALIZER": "users.tokens.SessionTokenObtainPairSerializer",
     "JWT_AUTH_HTTPONLY": False,
     "OLD_PASSWORD_FIELD_ENABLED": True,
     "LOGOUT_ON_PASSWORD_CHANGE": True,
@@ -232,7 +234,7 @@ REST_FRAMEWORK = {
         "rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly",
     ],
     "DEFAULT_AUTHENTICATION_CLASSES": (
-        "dj_rest_auth.jwt_auth.JWTCookieAuthentication",
+        "users.authentication.SessionJWTCookieAuthentication",
     ),
     "DEFAULT_PARSER_CLASSES": [
         "rest_framework.parsers.MultiPartParser",

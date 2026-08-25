@@ -288,6 +288,12 @@ const ChatWindow = forwardRef<
       } catch {
         return;
       }
+      if (data.type === 'session.replaced') {
+        import('@/utils/sessionReplaced').then(({ handleSessionReplaced }) => {
+          handleSessionReplaced();
+        });
+        return;
+      }
       const currConvId = connectedConversationIdRef.current;
       if (currConvId !== convId) return;
 

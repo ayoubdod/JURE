@@ -1319,6 +1319,10 @@ export const ar: AppMessages = {
     title: 'تم تسجيل الخروج بسبب عدم النشاط',
     description: 'كنت غير نشط لمدة 15 دقيقة، لذلك تم تسجيل خروجك لحماية حسابك.',
   },
+  sessionReplaced: {
+    title: 'تم تسجيل الدخول من مكان آخر',
+    description: 'تم تسجيل الدخول إلى حسابك من مكان آخر، لذلك أُغلقت هذه الجلسة.',
+  },
   shortcuts: {
     paletteTitle: 'لوحة الأوامر',
     palettePlaceholder: 'ابحث عن أمر…',
@@ -3057,6 +3061,8 @@ export const ar: AppMessages = {
     changeIconMenu: 'تغيير الأيقونة',
     deleteConversation: 'حذف المحادثة',
     callInProgress: 'مكالمة جارية',
+    alreadyOpenTitle: 'هذه المحادثة مفتوحة بالفعل',
+    alreadyOpenDescription: 'لديك هذه المحادثة مفتوحة مسبقاً.',
     sending: 'جارٍ الإرسال…',
     edited: 'معدّلة',
     today: 'اليوم',
@@ -3102,6 +3108,7 @@ export const ar: AppMessages = {
       createGroup: 'إنشاء مجموعة',
       creating: 'جارٍ الإنشاء…',
       defaultGroupTitle: 'محادثة جماعية ({count} أعضاء)',
+      alreadyOpenBadge: 'مفتوحة بالفعل',
     },
     deleteMessage: {
       title: 'حذف هذه الرسالة؟',

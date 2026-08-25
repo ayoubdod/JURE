@@ -44,6 +44,10 @@ class ConversationConsumer(AsyncJsonWebsocketConsumer):
             self.room_name,
             self.channel_name,
         )
+        user = self.scope.get("user")
+        if user and getattr(user, "is_authenticated", False):
+            self.user_personal_group = f"user_{user.id}"
+            await self.channel_layer.group_add(self.user_personal_group, self.channel_name)
 
         await self.accept()
 
@@ -55,6 +59,20 @@ class ConversationConsumer(AsyncJsonWebsocketConsumer):
                 self.room_name,
                 self.channel_name,
             )
+        if hasattr(self, "user_personal_group"):
+            await self.channel_layer.group_discard(
+                self.user_personal_group,
+                self.channel_name,
+            )
+
+    async def session_replaced(self, event):
+        await self.send_json(
+            {
+                "type": "session.replaced",
+                "payload": event.get("payload") or {"code": "session_replaced"},
+            }
+        )
+        await self.close(code=4008)
 
     async def call_incoming(self, event):
         user = self.scope.get("user")

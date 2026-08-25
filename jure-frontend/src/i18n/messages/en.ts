@@ -1319,6 +1319,10 @@ export const en: AppMessages = {
     title: 'Signed out due to inactivity',
     description: 'You were inactive for 15 minutes, so we signed you out to protect your account.',
   },
+  sessionReplaced: {
+    title: 'Signed in elsewhere',
+    description: 'Your account was signed in from another place, so this session was closed.',
+  },
   shortcuts: {
     paletteTitle: 'Command palette',
     palettePlaceholder: 'Search commands…',
@@ -3059,6 +3063,8 @@ export const en: AppMessages = {
     changeIconMenu: 'Change icon',
     deleteConversation: 'Delete conversation',
     callInProgress: 'Call in progress',
+    alreadyOpenTitle: 'This conversation is already open',
+    alreadyOpenDescription: 'You already have this chat open.',
     sending: 'Sending…',
     edited: 'Edited',
     today: 'Today',
@@ -3104,6 +3110,7 @@ export const en: AppMessages = {
       createGroup: 'Create group',
       creating: 'Creating…',
       defaultGroupTitle: 'Group chat ({count} members)',
+      alreadyOpenBadge: 'Already open',
     },
     deleteMessage: {
       title: 'Delete this message?',

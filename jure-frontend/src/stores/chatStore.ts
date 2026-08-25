@@ -187,6 +187,11 @@ const useChatStore = create<ChatStore>()(
                   set({ lastConversationUpdated: data.payload });
                 }
                 break;
+              case 'session.replaced':
+                import('@/utils/sessionReplaced').then(({ handleSessionReplaced }) => {
+                  handleSessionReplaced();
+                });
+                break;
 
               default:
                 if (!data.type?.startsWith('call.')) {
@@ -204,8 +209,15 @@ const useChatStore = create<ChatStore>()(
             isConnecting: false, 
             ws: null,
             user: null,
-            connectionError: event.code !== 1000 ? `Connection closed: ${event.reason || 'Unknown error'}` : null
+            connectionError: event.code !== 1000 && event.code !== 4008
+              ? `Connection closed: ${event.reason || 'Unknown error'}`
+              : null
           });
+          if (event.code === 4008) {
+            import('@/utils/sessionReplaced').then(({ handleSessionReplaced }) => {
+              handleSessionReplaced();
+            });
+          }
         };
 
         ws.onerror = (error) => {

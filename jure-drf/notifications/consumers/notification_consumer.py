@@ -71,6 +71,15 @@ class NotificationConsumer(AsyncJsonWebsocketConsumer):
     async def call_missed(self, event):
         return
 
+    async def session_replaced(self, event):
+        await self.send_json(
+            {
+                "type": "session.replaced",
+                "payload": event.get("payload") or {"code": "session_replaced"},
+            }
+        )
+        await self.close(code=4008)
+
     async def receive_json(self, content, **kwargs):
         if not isinstance(content, dict):
             return

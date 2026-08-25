@@ -1177,6 +1177,10 @@ export interface AppMessages {
     title: string;
     description: string;
   };
+  sessionReplaced: {
+    title: string;
+    description: string;
+  };
   shortcuts: {
     paletteTitle: string;
     palettePlaceholder: string;
@@ -2894,6 +2898,8 @@ export interface AppMessages {
     changeIconMenu: string;
     deleteConversation: string;
     callInProgress: string;
+    alreadyOpenTitle: string;
+    alreadyOpenDescription: string;
     sending: string;
     edited: string;
     today: string;
@@ -2939,6 +2945,7 @@ export interface AppMessages {
       createGroup: string;
       creating: string;
       defaultGroupTitle: string;
+      alreadyOpenBadge: string;
     };
     deleteMessage: {
       title: string;

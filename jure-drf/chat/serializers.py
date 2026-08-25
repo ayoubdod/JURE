@@ -217,46 +217,55 @@ class ConversationSerializer(serializers.ModelSerializer):
             creator = self.context.get('request').user
 
             if participant.id == creator.id:
-                raise serializers.ValidationError("You can only create a direct conversation with yourself")
-            
-            old_conversation = Conversation.objects.filter(type=Conversation.Type.DIRECT).filter(participants=creator).filter(participants=participant).first()
-            if old_conversation and ConversationMembership.objects.get(conversation=old_conversation, user=creator).is_deleted == False:
-                raise serializers.ValidationError("You already have a direct conversation with this participant")
-        
+                raise serializers.ValidationError("You cannot create a direct conversation with yourself")
+
         return attrs
 
     def create(self, validated_data):
-        participants = validated_data.pop("participants",[])
-
+        participants = validated_data.pop("participants", [])
+        creator = self.context.get("request").user
         instance = None
 
-        if validated_data.get("type") == Conversation.Type.DIRECT:
+        if validated_data.get("type") == Conversation.Type.DIRECT and participants:
             participant = participants[0]
-            creator = self.context.get('request').user
-            instance = Conversation.objects.filter(type=Conversation.Type.DIRECT).filter(participants=creator).filter(participants=participant).first()
-        
-        if instance is None:
-            instance = super().create(validated_data)
+            with transaction.atomic():
+                # One in-flight create per user pair so two clicks cannot open two DMs.
+                list(
+                    User.objects.select_for_update().filter(
+                        pk__in=sorted({creator.id, participant.id})
+                    )
+                )
+                instance = (
+                    Conversation.objects.filter(type=Conversation.Type.DIRECT)
+                    .filter(participants=creator)
+                    .filter(participants=participant)
+                    .first()
+                )
+                if instance is None:
+                    instance = super().create(validated_data)
+                self._ensure_direct_memberships(instance, participants, creator)
+            return instance
 
+        instance = super().create(validated_data)
+        self._ensure_direct_memberships(instance, participants, creator)
+        return instance
+
+    def _ensure_direct_memberships(self, instance, participants, creator):
         for participant in participants:
-            m,c =ConversationMembership.objects.get_or_create(
+            membership, _ = ConversationMembership.objects.get_or_create(
                 conversation=instance,
                 user=participant,
             )
-            m.is_deleted = False
-            m.save()
-        
+            membership.is_deleted = False
+            membership.save()
+
         admin_member, _ = ConversationMembership.objects.get_or_create(
             conversation=instance,
-            user=self.context.get('request').user,
+            user=creator,
         )
-
         admin_member.is_admin = True
         admin_member.is_deleted = False
         admin_member.save()
-
-        
-        return instance
     
     def update(self, instance: Conversation, validated_data) -> Conversation:
         validated_data.pop("participants", [])

@@ -71,6 +71,12 @@ const useCallsWsStore = create<CallsWsStore>((set, get) => ({
       ws.onmessage = (event) => {
         try {
           const data = JSON.parse(event.data) as CallsWsMessage;
+          if (data.type === 'session.replaced') {
+            import('@/utils/sessionReplaced').then(({ handleSessionReplaced }) => {
+              handleSessionReplaced();
+            });
+            return;
+          }
           notify(data);
         } catch (e) {
           devError('[calls ws] invalid JSON', e);
@@ -82,6 +88,11 @@ const useCallsWsStore = create<CallsWsStore>((set, get) => ({
           devWarn(
             '[calls ws] closed with 4001 (auth failed). Use ?token=<JWT> on the URL or a valid auth cookie.'
           );
+        }
+        if (ev.code === 4008) {
+          import('@/utils/sessionReplaced').then(({ handleSessionReplaced }) => {
+            handleSessionReplaced();
+          });
         }
         set({ ws: null, isConnected: false, isConnecting: false });
         if (!settled) {

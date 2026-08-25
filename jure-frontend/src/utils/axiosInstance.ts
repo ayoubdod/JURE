@@ -2,6 +2,7 @@ import useUserStore from '@/stores/userStore';
 import axios, { type InternalAxiosRequestConfig } from 'axios';
 import { API_BASE } from '@/config/api';
 import { devError } from '@/utils/devLog';
+import { handleSessionReplaced, isSessionReplacedError } from '@/utils/sessionReplaced';
 
 type RetryConfig = InternalAxiosRequestConfig & { _retry?: boolean };
 
@@ -39,6 +40,11 @@ axiosInstance.interceptors.response.use(
   async (error) => {
     devError('API error:', error.config?.url, error.response?.status, error.response?.data, error.message);
 
+    if (isSessionReplacedError(error)) {
+      handleSessionReplaced();
+      return Promise.reject(error);
+    }
+
     const originalRequest = error.config as RetryConfig | undefined;
     const status = error.response?.status;
     const refreshToken = useUserStore.getState().refreshToken;
@@ -63,8 +69,12 @@ axiosInstance.interceptors.response.use(
         return axiosInstance(originalRequest);
       } catch (refreshError) {
         devError('Refresh failed:', refreshError);
-        useUserStore.getState().logout();
-        redirectToSignIn();
+        if (isSessionReplacedError(refreshError)) {
+          handleSessionReplaced();
+        } else {
+          useUserStore.getState().logout();
+          redirectToSignIn();
+        }
         return Promise.reject(refreshError);
       }
     }

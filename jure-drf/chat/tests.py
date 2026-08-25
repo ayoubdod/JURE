@@ -5,6 +5,7 @@ from django.urls import reverse
 from rest_framework.test import APITestCase, APIClient
 from rest_framework import status
 from .models import Conversation, ConversationMembership, Message, ReadReceipt
+from .serializers import ConversationSerializer, MessageSerializer
 
 User = get_user_model()
 
@@ -312,4 +313,46 @@ class ChatSerializersTest(TestCase):
         self.assertEqual(data['content'], 'Test message')
         self.assertEqual(data['senderId'], self.user1.id)
         self.assertEqual(data['conversationId'], conv.id)
+
+
+class DirectConversationReuseTests(TestCase):
+    def setUp(self):
+        self.user1 = User.objects.create_user(
+            email='reuse1@test.com',
+            password='testpass123',
+            first_name='User',
+            last_name='One',
+            phone='+212600000011',
+            country='MA',
+        )
+        self.user2 = User.objects.create_user(
+            email='reuse2@test.com',
+            password='testpass123',
+            first_name='User',
+            last_name='Two',
+            phone='+212600000012',
+            country='MA',
+        )
+
+    def _save_direct(self, creator, other):
+        from rest_framework.test import APIRequestFactory
+
+        request = APIRequestFactory().post('/')
+        request.user = creator
+        serializer = ConversationSerializer(
+            data={
+                'type': Conversation.Type.DIRECT,
+                'participants': [other.id],
+                'title': f'{other.first_name} {other.last_name}',
+            },
+            context={'request': request},
+        )
+        self.assertTrue(serializer.is_valid(), serializer.errors)
+        return serializer.save()
+
+    def test_second_direct_create_reuses_existing(self):
+        first = self._save_direct(self.user1, self.user2)
+        second = self._save_direct(self.user1, self.user2)
+        self.assertEqual(first.id, second.id)
+        self.assertEqual(Conversation.objects.filter(type=Conversation.Type.DIRECT).count(), 1)
 
