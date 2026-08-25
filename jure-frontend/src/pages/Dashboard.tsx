@@ -385,6 +385,14 @@ const Dashboard = () => {
         due_date: task.due_date,
         estimated_hours: task.estimated_hours,
         assigned_to: assignedId,
+        assignee_ids:
+          Array.isArray(task.assignees) && task.assignees.length
+            ? task.assignees.map((u) => u.id).filter(Boolean)
+            : Array.isArray(task.assignee_ids) && task.assignee_ids.length
+              ? task.assignee_ids
+              : assignedId != null
+                ? [assignedId]
+                : [],
         client: clientId,
       });
 

@@ -8,6 +8,11 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import ServerSelect from '@/components/common/ServerSelect';
+import TeamMemberMultiSelect from '@/components/calendar/TeamMemberMultiSelect';
+import CalendarAttachmentField, {
+  type PendingAttachment,
+  uploadCalendarAttachments,
+} from '@/components/calendar/CalendarAttachmentField';
 import { apiCreateTask } from '@/services/task/api';
 import * as yup from 'yup';
 import { Resolver, useForm } from 'react-hook-form';
@@ -54,6 +59,7 @@ const DEFAULT_VALUES: API.TaskCreateForm = {
   due_date: '',
   estimated_hours: '',
   assigned_to: undefined,
+  assignee_ids: [],
   client: undefined,
   case: undefined,
 };
@@ -82,6 +88,9 @@ const TaskCreateModal = forwardRef<TaskCreateModalRef, TaskCreateModalProps>(({ 
   const [isOpen, setIsOpen] = useState(false);
   const [submitPhase, setSubmitPhase] = useState<'idle' | 'loading' | 'success'>('idle');
   const [lockedCase, setLockedCase] = useState<{ id: number; label: string } | null>(null);
+  const [pendingFiles, setPendingFiles] = useState<PendingAttachment[]>([]);
+  const [assigneeIds, setAssigneeIds] = useState<number[]>([]);
+  const [uploadingAttachments, setUploadingAttachments] = useState(false);
 
   const isBusy = submitPhase !== 'idle';
 
@@ -94,7 +103,11 @@ const TaskCreateModal = forwardRef<TaskCreateModalRef, TaskCreateModalProps>(({ 
         status: yup.string().required(t.tasks.validation.statusRequired),
         due_date: yup.string().required(t.tasks.validation.dueDateRequired),
         estimated_hours: yup.string().optional(),
-        assigned_to: yup.string().required(t.tasks.validation.assignedToRequired),
+        assignee_ids: yup
+          .array()
+          .of(yup.number().required())
+          .min(1, t.tasks.validation.assigneesRequired)
+          .required(t.tasks.validation.assigneesRequired),
         client: yup.string().optional(),
         case: yup.string().optional(),
       }),
@@ -109,6 +122,9 @@ const TaskCreateModal = forwardRef<TaskCreateModalRef, TaskCreateModalProps>(({ 
   const resetLocalState = (opts?: TaskCreateModalOpenOptions) => {
     setLockedCase(null);
     mainForm.reset(DEFAULT_VALUES);
+    setAssigneeIds([]);
+    setPendingFiles([]);
+    setUploadingAttachments(false);
     setSubmitPhase('idle');
     scrollRef.current?.scrollTo({ top: 0 });
     if (opts?.relatedCaseId != null) {
@@ -133,9 +149,29 @@ const TaskCreateModal = forwardRef<TaskCreateModalRef, TaskCreateModalProps>(({ 
   useImperativeHandle(ref, () => ({ show, hide }));
 
   const handleSubmit = async (data: API.TaskCreateForm) => {
+    if (!assigneeIds.length) {
+      mainForm.setError('assignee_ids', { message: t.tasks.validation.assigneesRequired });
+      return;
+    }
     setSubmitPhase('loading');
     try {
-      const res = await apiCreateTask(data);
+      const payload: API.TaskCreateForm = {
+        ...data,
+        assignee_ids: assigneeIds,
+        assigned_to: assigneeIds[0],
+      };
+      const res = await apiCreateTask(payload);
+      if (pendingFiles.length) {
+        setUploadingAttachments(true);
+        try {
+          await uploadCalendarAttachments(
+            `/tasks/tasks/${res.data.id}/attachments/`,
+            pendingFiles.map((p) => p.file)
+          );
+        } finally {
+          setUploadingAttachments(false);
+        }
+      }
       setSubmitPhase('success');
       toast({
         title: m.createdTitle,
@@ -148,6 +184,7 @@ const TaskCreateModal = forwardRef<TaskCreateModalRef, TaskCreateModalProps>(({ 
       setSubmitPhase('idle');
     } catch (err) {
       setSubmitPhase('idle');
+      setUploadingAttachments(false);
       if (isAxiosError(err)) {
         const remoteValidation = getRemoteFieldsValidation(err);
         const keys = Object.keys(remoteValidation);
@@ -165,7 +202,7 @@ const TaskCreateModal = forwardRef<TaskCreateModalRef, TaskCreateModalProps>(({ 
       'description',
       'priority',
       'status',
-      'assigned_to',
+      'assignee_ids',
       'due_date',
     ];
     const first = order.find((key) => mainForm.formState.errors[key]);
@@ -321,23 +358,22 @@ const TaskCreateModal = forwardRef<TaskCreateModalRef, TaskCreateModalProps>(({ 
             <CreateFormSection index="03" title={m.assignmentTimeline}>
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <CreateFormField
-                  id={`${formId}-assigned_to`}
+                  id={`${formId}-assignee_ids`}
                   label={m.assignTo}
                   required
-                  error={fieldError('assigned_to')}
+                  error={fieldError('assignee_ids')}
+                  className="sm:col-span-2"
                 >
-                  <ServerSelect
-                    id={`${formId}-assigned_to`}
-                    link="/cabinets/members/select_list"
-                    value={mainForm.watch('assigned_to')}
-                    onChange={(val) =>
-                      mainForm.setValue('assigned_to', val, { shouldValidate: true, shouldDirty: true })
-                    }
-                    labelKey="email"
-                    placeholder={m.selectAssignee}
-                    cleanable
+                  <TeamMemberMultiSelect
+                    id={`${formId}-assignee_ids`}
+                    value={assigneeIds}
+                    onChange={(ids) => {
+                      setAssigneeIds(ids);
+                      mainForm.setValue('assignee_ids', ids, { shouldValidate: true, shouldDirty: true });
+                      mainForm.setValue('assigned_to', ids[0], { shouldDirty: true });
+                    }}
                     disabled={isBusy}
-                    className={CREATE_SERVER_SELECT_CLASS}
+                    placeholder={m.selectAssignees}
                   />
                 </CreateFormField>
                 <CreateFormField
@@ -345,6 +381,7 @@ const TaskCreateModal = forwardRef<TaskCreateModalRef, TaskCreateModalProps>(({ 
                   label={m.dueDate}
                   required
                   error={fieldError('due_date')}
+                  className="sm:col-span-2"
                 >
                   <Input
                     id={`${formId}-due_date`}
@@ -405,6 +442,15 @@ const TaskCreateModal = forwardRef<TaskCreateModalRef, TaskCreateModalProps>(({ 
                   />
                 </CreateFormField>
               </div>
+            </CreateFormSection>
+
+            <CreateFormSection index="05" title={m.attachments}>
+              <CalendarAttachmentField
+                pending={pendingFiles}
+                onPendingChange={setPendingFiles}
+                disabled={isBusy}
+                uploading={uploadingAttachments}
+              />
             </CreateFormSection>
           </div>
         </div>

@@ -137,6 +137,7 @@ SITE_ID = 1
 # Middleware
 # --------------------------------------------------------------------------------------
 MIDDLEWARE = [
+    "core.middleware.PDFHeadersMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -148,7 +149,6 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "allauth.account.middleware.AccountMiddleware",
     "django.middleware.locale.LocaleMiddleware",
-    "core.middleware.PDFHeadersMiddleware",
 ]
 
 # --------------------------------------------------------------------------------------
@@ -274,7 +274,9 @@ MODELTRANSLATION_LANGUAGES = ("fr", "en", "ar")
 STATIC_ROOT = BASE_DIR / "staticfiles"
 STATIC_URL = "/static/"
 STATICFILES_DIRS = [BASE_DIR / "static"]
-MEDIA_ROOT = BASE_DIR / "media"
+# Local default: repo /media. On Railway the container disk is wiped on every
+# deploy — mount a Volume and set MEDIA_ROOT to that mount path (e.g. /data/media).
+MEDIA_ROOT = Path(env.str("MEDIA_ROOT", default=str(BASE_DIR / "media")))
 MEDIA_URL = "/media/"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"

@@ -6,7 +6,7 @@ import ScheduleAppointmentDialog, { ScheduleAppointmentDialogRef } from '@/compo
 import AppointmentUpdateModal, { AppointmentUpdateModalRef } from '@/components/AppointmentUpdateModal';
 import { AppointmentDetailPanel } from '@/components/calendar/EmbeddedDetailPanels';
 import AppointmentToolbar, { type AppointmentFiltersValue } from '@/components/appointments/AppointmentToolbar';
-import AppointmentList from '@/components/appointments/AppointmentList';
+import AppointmentList, { type AppointmentViewMode } from '@/components/appointments/AppointmentList';
 import PaginationComponent from '@/components/common/Pagination';
 import {
   WorkspaceEmptyState,
@@ -28,6 +28,7 @@ import { navigateToCaseById } from '@/lib/caseRoutes';
 import '@/styles/workspace-list.css';
 
 const PAGE_SIZE_KEY = 'jure.appointments.pageSize';
+const VIEW_STORAGE_KEY = 'jure.appointments.viewMode';
 
 const DEFAULT_FILTERS: AppointmentFiltersValue = {
   search: '',
@@ -47,6 +48,15 @@ function readPageSize(): number {
   }
 }
 
+function readStoredView(): AppointmentViewMode {
+  try {
+    const v = localStorage.getItem(VIEW_STORAGE_KEY);
+    return v === 'grid' ? 'grid' : 'list';
+  } catch {
+    return 'list';
+  }
+}
+
 const AppointmentsPage: React.FC = () => {
   const { t } = useAppTranslation();
   const navigate = useNavigate();
@@ -54,6 +64,7 @@ const AppointmentsPage: React.FC = () => {
   const a = t.appointments;
 
   const [filters, setFilters] = useState<AppointmentFiltersValue>(DEFAULT_FILTERS);
+  const [viewMode, setViewMode] = useState<AppointmentViewMode>(readStoredView);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(readPageSize);
   const [items, setItems] = useState<Appointment[]>([]);
@@ -75,6 +86,14 @@ const AppointmentsPage: React.FC = () => {
   }, []);
 
   useShortcutAction('create-appointment', openCreate);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(VIEW_STORAGE_KEY, viewMode);
+    } catch {
+      /* ignore */
+    }
+  }, [viewMode]);
 
   useEffect(() => {
     const raw = searchParams.get('appointment');
@@ -238,7 +257,12 @@ const AppointmentsPage: React.FC = () => {
         />
         <WorkspaceKpiStrip items={kpiItems} loading={statsLoading} ariaLabel={a.title} />
         <div className="py-2">
-          <AppointmentToolbar value={filters} onChange={setFilters} />
+          <AppointmentToolbar
+            value={filters}
+            onChange={setFilters}
+            viewMode={viewMode}
+            onViewModeChange={setViewMode}
+          />
         </div>
         <div className="pb-3">
           <AppointmentList
@@ -247,6 +271,7 @@ const AppointmentsPage: React.FC = () => {
             empty={emptyState}
             error={loadError ? errorState : null}
             onOpen={(item) => setDetailId(item.id)}
+            viewMode={viewMode}
           />
         </div>
       </div>

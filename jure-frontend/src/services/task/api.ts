@@ -46,3 +46,15 @@ export const apiDeleteTask = (id: number)=>{
     return axiosInstance.delete<API.Task>(`/tasks/tasks/${id}/`);
 }
 
+export const apiUploadTaskAttachments = (id: number, files: File[]) => {
+  const form = new FormData();
+  files.forEach((f) => form.append('files', f));
+  return axiosInstance.post<API.TaskAttachment[]>(`/tasks/tasks/${id}/attachments/`, form, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
+};
+
+export const apiDeleteTaskAttachment = (taskId: number, attachmentId: number) => {
+  return axiosInstance.delete(`/tasks/tasks/${taskId}/attachments/${attachmentId}/`);
+};
+

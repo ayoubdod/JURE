@@ -1,3 +1,4 @@
+import { List, LayoutGrid } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import ServerSelect from '@/components/common/ServerSelect';
@@ -5,6 +6,7 @@ import CompactSearch from '@/components/common/CompactSearch';
 import MobileFilterSheet, { FilterField } from '@/components/common/MobileFilterSheet';
 import { cn } from '@/lib/utils';
 import { useAppTranslation } from '@/i18n';
+import type { AppointmentViewMode } from '@/components/appointments/AppointmentList';
 
 const sheetSelectClass =
   'h-9 w-full max-w-none text-xs sm:text-[13px] rounded-lg border-slate-200 dark:border-slate-700';
@@ -22,9 +24,13 @@ export type AppointmentFiltersValue = {
 export default function AppointmentToolbar({
   value,
   onChange,
+  viewMode,
+  onViewModeChange,
 }: {
   value: AppointmentFiltersValue;
   onChange: (next: AppointmentFiltersValue) => void;
+  viewMode: AppointmentViewMode;
+  onViewModeChange: (mode: AppointmentViewMode) => void;
 }) {
   const { t } = useAppTranslation();
   const a = t.appointments;
@@ -141,6 +147,35 @@ export default function AppointmentToolbar({
         >
           {filterControls()}
         </MobileFilterSheet>
+
+        <div
+          className="ms-auto hidden items-center rounded-md border border-slate-200 bg-slate-100/80 p-0.5 dark:border-slate-700 dark:bg-slate-900/50 sm:inline-flex"
+          role="group"
+          aria-label={a.aria.viewMode}
+        >
+          {(['list', 'grid'] as const).map((mode) => (
+            <button
+              key={mode}
+              type="button"
+              onClick={() => onViewModeChange(mode)}
+              className={cn(
+                'inline-flex items-center gap-1 rounded-md px-2.5 py-1.5 text-[11px] font-semibold transition-colors',
+                viewMode === mode
+                  ? 'bg-white text-slate-900 shadow-sm ring-1 ring-slate-200/80 dark:bg-slate-800 dark:text-white dark:ring-slate-700'
+                  : 'text-slate-600 hover:bg-white/60 dark:text-slate-400 dark:hover:bg-slate-800/60'
+              )}
+              aria-pressed={viewMode === mode}
+              aria-label={mode === 'list' ? a.aria.listView : a.aria.gridView}
+            >
+              {mode === 'list' ? (
+                <List className="h-3.5 w-3.5" />
+              ) : (
+                <LayoutGrid className="h-3.5 w-3.5" />
+              )}
+              <span className="hidden lg:inline">{mode === 'list' ? a.viewList : a.viewGrid}</span>
+            </button>
+          ))}
+        </div>
       </div>
     </div>
   );

@@ -34,7 +34,16 @@ const DocumentPreviewModal = forwardRef<DocumentPreviewModalRef>((_, ref) => {
   const renderPreview = () => {
     if (!currentDocument) return null;
     const fileUrl = getFileUrl(currentDocument.file);
-    const type = currentDocument.file.split('.').pop()?.toLowerCase();
+    let type = '';
+    try {
+      const path = /^https?:\/\//i.test(fileUrl)
+        ? new URL(fileUrl).pathname
+        : fileUrl.split('?')[0];
+      const base = path.split('/').pop() || path;
+      type = (base.includes('.') ? base.split('.').pop() : '')?.toLowerCase() || '';
+    } catch {
+      type = currentDocument.file.split('.').pop()?.toLowerCase() || '';
+    }
 
     if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(type || '')) {
       return (

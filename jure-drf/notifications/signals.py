@@ -2,7 +2,7 @@ import copy
 import logging
 
 from django.core.cache import cache
-from django.db.models.signals import post_save, pre_save
+from django.db.models.signals import m2m_changed, post_save, pre_save
 from django.dispatch import receiver
 
 from cases.models import Case
@@ -51,20 +51,59 @@ def _task_pre_save(sender, instance, **kwargs):
         instance._notify_prev = None
 
 
+def _task_assignee_ids(task: Task) -> list[int]:
+    ids = list(task.assignees.values_list("id", flat=True))
+    if task.assigned_to_id and task.assigned_to_id not in ids:
+        ids.append(task.assigned_to_id)
+    # Preserve order, drop falsy.
+    seen: set[int] = set()
+    unique: list[int] = []
+    for uid in ids:
+        if uid and uid not in seen:
+            seen.add(uid)
+            unique.append(uid)
+    return unique
+
+
+def _notify_task_assigned(task: Task, recipient_ids) -> None:
+    unique = []
+    seen = set()
+    for uid in recipient_ids or []:
+        if uid and uid not in seen:
+            seen.add(uid)
+            unique.append(uid)
+    if not unique:
+        return
+    create_bulk_notifications(
+        unique,
+        notification_type=NotificationType.TASK_ASSIGNED,
+        title="Nouvelle tâche assignée",
+        message=f'La tâche "{task.title}" vous a été assignée.',
+        related_task_id=task.id,
+        related_case_id=task.case_id,
+        action_url=task_action_url(task.id),
+        priority=NotificationPriority.MEDIUM,
+    )
+
+
+@receiver(m2m_changed, sender=Task.assignees.through)
+def on_task_assignees_changed(sender, instance, action, pk_set, **kwargs):
+    if action != "post_add" or not pk_set:
+        return
+    try:
+        _notify_task_assigned(instance, pk_set)
+    except Exception:
+        logger.exception("on_task_assignees_changed notification failed")
+
+
 @receiver(post_save, sender=Task)
 def on_task_saved(sender, instance: Task, created, **kwargs):
     try:
-        if created and instance.assigned_to_id:
-            create_notification(
-                recipient_id=instance.assigned_to_id,
-                notification_type=NotificationType.TASK_ASSIGNED,
-                title="Nouvelle tâche assignée",
-                message=f'La tâche "{instance.title}" vous a été assignée.',
-                related_task_id=instance.id,
-                related_case_id=instance.case_id,
-                action_url=task_action_url(instance.id),
-                priority=NotificationPriority.MEDIUM,
-            )
+        if created:
+            # Assignees are usually set after save; m2m_changed handles TASK_ASSIGNED.
+            # Legacy writes that only set assigned_to still notify here.
+            if instance.assigned_to_id and not instance.assignees.exists():
+                _notify_task_assigned(instance, [instance.assigned_to_id])
             return
 
         prev = getattr(instance, "_notify_prev", None)
@@ -72,25 +111,30 @@ def on_task_saved(sender, instance: Task, created, **kwargs):
             return
 
         if prev.get("assigned_to_id") != instance.assigned_to_id and instance.assigned_to_id:
-            create_notification(
-                recipient_id=instance.assigned_to_id,
-                notification_type=NotificationType.TASK_ASSIGNED,
-                title="Nouvelle tâche assignée",
-                message=f'La tâche "{instance.title}" vous a été assignée.',
-                related_task_id=instance.id,
-                related_case_id=instance.case_id,
-                action_url=task_action_url(instance.id),
-                priority=NotificationPriority.MEDIUM,
-            )
+            already = set(instance.assignees.values_list("id", flat=True))
+            if instance.assigned_to_id not in already:
+                _notify_task_assigned(instance, [instance.assigned_to_id])
 
+        recipients = _task_assignee_ids(instance)
         if (
-            instance.assigned_to_id
+            recipients
             and prev.get("status") != instance.status
             and instance.status == Task.TaskStatus.DONE
         ):
-            # Task model has no created_by; skip TASK_COMPLETED per data model.
-            pass
-        elif instance.assigned_to_id:
+            if instance.created_by_id and instance.created_by_id not in recipients:
+                create_notification(
+                    recipient_id=instance.created_by_id,
+                    notification_type=NotificationType.TASK_COMPLETED,
+                    title="Tâche terminée",
+                    message=f'La tâche "{instance.title}" a été marquée comme terminée.',
+                    related_task_id=instance.id,
+                    related_case_id=instance.case_id,
+                    action_url=task_action_url(instance.id),
+                    priority=NotificationPriority.MEDIUM,
+                )
+            return
+
+        if recipients:
             assignment_changed = prev.get("assigned_to_id") != instance.assigned_to_id
             status_changed = prev.get("status") != instance.status
             other_changed = any(
@@ -103,8 +147,8 @@ def on_task_saved(sender, instance: Task, created, **kwargs):
                 )
             )
             if not assignment_changed and (other_changed or (status_changed and instance.status != Task.TaskStatus.DONE)):
-                create_notification(
-                    recipient_id=instance.assigned_to_id,
+                create_bulk_notifications(
+                    recipients,
                     notification_type=NotificationType.TASK_UPDATED,
                     title="Tâche mise à jour",
                     message=f'La tâche "{instance.title}" a été modifiée.',

@@ -20,14 +20,20 @@ export type CalendarEvent = {
   allDay?: boolean;
   status?: string;
   priority?: string;
-  assigned_to?: { id: number; email: string; first_name: string; last_name: string } | null;
+  assigned_to?: { id: number; email: string; first_name: string; last_name: string; image?: string } | null;
   assigned_to_details?: { id: number; email: string; first_name: string; last_name: string; image?: string } | null;
+  assignees?: Array<{ id: number; email: string; first_name: string; last_name: string; image?: string }>;
   created_by_details?: { id: number; email: string; first_name: string; last_name: string; image?: string } | null;
   created_by?: number;
   case_id?: number | null;
   case_title?: string;
   relatedCase?: RelatedCaseRef;
   client?: string | { id: number; email: string; first_name: string; last_name: string };
+  meeting_type?: 'in_person' | 'video' | string | null;
+  location?: string | null;
+  conversation_id?: number | null;
+  conversation_title?: string | null;
+  attachment_count?: number;
   raw?: Record<string, unknown>;
 };
 
@@ -97,12 +103,21 @@ export function calendarListMember(
 
 export function eventMemberFilterId(event: CalendarEvent): number | undefined {
   const e = event as CalendarEvent & { created_by?: number };
+  if (Array.isArray(e.assignees) && e.assignees[0]?.id != null) return e.assignees[0].id;
   if (e.assigned_to_details?.id != null) return e.assigned_to_details.id;
   if (typeof e.assigned_to === 'object' && e.assigned_to?.id != null) return e.assigned_to.id;
   if (typeof e.assigned_to === 'number') return e.assigned_to;
   if (e.type === 'appointment' && e.created_by_details?.id != null) return e.created_by_details.id;
   if (e.type === 'appointment' && typeof e.created_by === 'number') return e.created_by;
   return undefined;
+}
+
+export function eventAssignees(
+  event: CalendarEvent
+): Array<{ id?: number; first_name?: string; last_name?: string; email?: string }> {
+  if (Array.isArray(event.assignees) && event.assignees.length) return event.assignees;
+  const one = calendarListMember(event);
+  return one ? [one] : [];
 }
 
 export function getCountdownDays(iso: string): number | null {

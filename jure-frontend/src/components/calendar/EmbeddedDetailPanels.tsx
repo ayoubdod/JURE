@@ -3,14 +3,19 @@
 import React, { useEffect, useState } from 'react';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
-import { CheckSquare, Clock, Edit, Loader2, MapPin, X } from 'lucide-react';
+import { Ban, Check, CheckSquare, Clock, Edit, ExternalLink, Loader2, MapPin, Video, X } from 'lucide-react';
 import { apiGetTask } from '@/services/task/api';
-import { apiGetAppointment, Appointment } from '@/services/appointment/api';
+import { apiGetAppointment, apiUpdateAppointment, Appointment } from '@/services/appointment/api';
 import { TaskPriority, TaskStatus } from '@/utils/constants';
 import { cn } from '@/lib/utils';
 import UserAvatar, { getPersonImage } from '@/components/common/UserAvatar';
 import { useCabinetMemberDirectory } from '@/hooks/useCabinetMemberDirectory';
 import { useAppTranslation } from '@/i18n';
+import { useNavigate } from 'react-router';
+import { taskAssigneeUsers } from '@/lib/workspacePeople';
+import { CalendarAttachmentList } from '@/components/calendar/CalendarAttachmentField';
+import { eventBus } from '@/utils/eventBus';
+import { useToast } from '@/hooks/use-toast';
 
 export const SHEET_PANEL =
   'flex flex-col gap-0 !p-0 border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 shadow-xl [&>button]:hidden !absolute !right-0 !top-0 !h-full !w-[min(100%,420px)] !max-w-[420px] !sm:max-w-[420px]';
@@ -59,14 +64,12 @@ function appointmentStatusBadgeClass(s?: string): string {
   return 'bg-slate-500/15 text-slate-600 dark:text-slate-400 ring-slate-500/30';
 }
 
-/** Backend often sends FK in `assigned_to` and the expanded user in `assigned_to_details`. */
-function taskAssigneeUser(task: API.Task | null): API.User | null {
-  if (!task) return null;
-  const details = task.assigned_to_details;
-  if (details && typeof details === 'object' && (details as API.User).email) return details;
-  const raw = task.assigned_to as unknown;
-  if (raw && typeof raw === 'object' && raw !== null && 'email' in raw) return raw as API.User;
-  return null;
+/** Show Join Conference only while the appointment is still live / joinable. */
+function canShowJoinConference(appointment: Appointment): boolean {
+  if (appointment.status !== 'scheduled') return false;
+  const end = new Date(appointment.end_at).getTime();
+  if (Number.isNaN(end) || end < Date.now()) return false;
+  return Boolean(appointment.conversation || appointment.jure_conversation || appointment.conference_url);
 }
 
 export function TaskDetailPanel({
@@ -90,7 +93,7 @@ export function TaskDetailPanel({
   /** Optional quick-complete handler (e.g. dashboard). Hidden when task is already done. */
   onComplete?: (task: API.Task) => void | Promise<void>;
 }) {
-  const { enumPretty } = useAppTranslation();
+  const { enumPretty, t } = useAppTranslation();
   const lookupCabinet = useCabinetMemberDirectory();
   const [task, setTask] = useState<API.Task | null>(null);
   const [loading, setLoading] = useState(false);
@@ -122,26 +125,11 @@ export function TaskDetailPanel({
   const showRelatedCaseLink =
     relatedCaseId != null && (contextCaseId == null || relatedCaseId !== contextCaseId);
 
+  const assigneeUsers = task ? taskAssigneeUsers(task) : [];
   const dueIso = task?.due_date || null;
   const days = dueIso ? getCountdownDays(dueIso) : null;
   const overdue = days != null && days < 0;
   const tone = countdownTone(days, overdue);
-  const assignee = task ? taskAssigneeUser(task) : null;
-  const rawAssigned = task?.assigned_to as unknown;
-  const assigneeUserId =
-    assignee?.id ??
-    (typeof rawAssigned === 'number' ? rawAssigned : undefined) ??
-    (task?.assigned_to_details as API.User | undefined)?.id;
-  const cabinetRow = assigneeUserId != null ? lookupCabinet(assigneeUserId) : undefined;
-  const assigneeAvatarUrl = getPersonImage(assignee as unknown as Record<string, unknown>) ?? cabinetRow?.image;
-  const assigneeLabel =
-    assignee && `${assignee.first_name || ''} ${assignee.last_name || ''}`.trim()
-      ? `${assignee.first_name || ''} ${assignee.last_name || ''}`.trim() || assignee.email
-      : cabinetRow
-        ? `${cabinetRow.first_name} ${cabinetRow.last_name}`.trim() || cabinetRow.email
-        : assigneeUserId != null
-          ? '—'
-          : 'Unassigned';
 
   return (
     <Sheet modal={false} open={open} onOpenChange={onOpenChange}>
@@ -205,17 +193,34 @@ export function TaskDetailPanel({
               </section>
 
               <section>
-                <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400 mb-2">Assignment &amp; timeline</p>
-                <div className="flex items-center gap-2 text-sm">
-                  <UserAvatar
-                    size="sm"
-                    image={assigneeAvatarUrl}
-                    firstName={assignee?.first_name ?? cabinetRow?.first_name}
-                    lastName={assignee?.last_name ?? cabinetRow?.last_name}
-                    email={assignee?.email ?? cabinetRow?.email}
-                  />
-                  <span className="text-slate-700 dark:text-slate-300">{assigneeLabel}</span>
-                </div>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400 mb-2">
+                  {t.calendar.assignedTo}
+                </p>
+                {assigneeUsers.length ? (
+                  <div className="space-y-2">
+                    {assigneeUsers.map((person) => {
+                      const cab = person.id != null ? lookupCabinet(person.id) : undefined;
+                      const label =
+                        `${person.first_name || ''} ${person.last_name || ''}`.trim() ||
+                        person.email ||
+                        (cab ? `${cab.first_name} ${cab.last_name}`.trim() || cab.email : '—');
+                      return (
+                        <div key={person.id || label} className="flex items-center gap-2 text-sm">
+                          <UserAvatar
+                            size="sm"
+                            image={getPersonImage(person as unknown as Record<string, unknown>) ?? cab?.image}
+                            firstName={person.first_name ?? cab?.first_name}
+                            lastName={person.last_name ?? cab?.last_name}
+                            email={person.email ?? cab?.email}
+                          />
+                          <span className="text-slate-700 dark:text-slate-300">{label}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <p className="text-sm text-slate-500">{t.tasks.modal.unassigned}</p>
+                )}
                 {dueIso && (
                   <div className="mt-2 flex flex-wrap items-center gap-2 text-sm">
                     <span
@@ -234,6 +239,15 @@ export function TaskDetailPanel({
                   </div>
                 )}
               </section>
+
+              {!!task.attachments?.length && (
+                <section>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400 mb-2">
+                    {t.calendar.attachments.title}
+                  </p>
+                  <CalendarAttachmentList attachments={task.attachments} />
+                </section>
+              )}
 
               {(showRelatedCaseLink || (task.client && typeof task.client === 'object')) && (
                 <section>
@@ -334,14 +348,19 @@ export function AppointmentDetailPanel({
   onOpenCase: (id: number) => void;
   contextCaseId?: number | null;
 }) {
-  const { enumPretty } = useAppTranslation();
+  const { enumPretty, t, tf } = useAppTranslation();
+  const { toast } = useToast();
+  const navigate = useNavigate();
   const lookupCabinet = useCabinetMemberDirectory();
   const [appointment, setAppointment] = useState<Appointment | null>(null);
   const [loading, setLoading] = useState(false);
+  const [statusUpdating, setStatusUpdating] = useState<'done' | 'cancelled' | null>(null);
+  const m = t.calendar.appointmentModal;
 
   useEffect(() => {
     if (open && appointmentId) {
       setLoading(true);
+      setStatusUpdating(null);
       apiGetAppointment(appointmentId)
         .then((r) => setAppointment(r.data))
         .catch(() => setAppointment(null))
@@ -428,13 +447,79 @@ export function AppointmentDetailPanel({
                     {durationMin} min
                   </span>
                 )}
-                {appointment.location ? (
-                  <p className="mt-3 flex items-start gap-2 text-sm text-slate-600 dark:text-slate-400">
-                    <MapPin className="h-4 w-4 shrink-0 mt-0.5" />
-                    {appointment.location}
-                  </p>
-                ) : null}
+                {(() => {
+                  const meetingType =
+                    appointment.meeting_type ||
+                    (appointment.conversation || appointment.jure_conversation ? 'video' : 'in_person');
+                  if (meetingType === 'video') {
+                    if (!canShowJoinConference(appointment)) return null;
+                    const convTitle =
+                      appointment.jure_conversation?.display_name ||
+                      appointment.jure_conversation?.title ||
+                      (appointment.conversation ? `Conversation #${appointment.conversation}` : '');
+                    const joinUrl =
+                      appointment.conference_url ||
+                      (appointment.conversation
+                        ? `/dashboard/conversations?selected=${appointment.conversation}`
+                        : null);
+                    return (
+                      <div className="mt-3 rounded-lg border border-emerald-200/80 dark:border-emerald-900/50 bg-emerald-50/50 dark:bg-emerald-950/20 px-3 py-2.5 space-y-2">
+                        <p className="flex items-center gap-2 text-sm font-medium text-emerald-800 dark:text-emerald-300">
+                          <Video className="h-4 w-4" />
+                          {m.jureVideoConference}
+                        </p>
+                        {convTitle ? (
+                          <p className="text-sm text-slate-700 dark:text-slate-300">{convTitle}</p>
+                        ) : null}
+                        {joinUrl ? (
+                          <Button
+                            type="button"
+                            size="sm"
+                            className="rounded-lg"
+                            onClick={() => navigate(joinUrl)}
+                          >
+                            <Video className="h-4 w-4 me-1.5" />
+                            {t.calendar.joinConference}
+                          </Button>
+                        ) : null}
+                      </div>
+                    );
+                  }
+                  if (!appointment.location) return null;
+                  const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(appointment.location)}`;
+                  return (
+                    <div className="mt-3 space-y-2">
+                      <p className="flex items-start gap-2 text-sm text-slate-600 dark:text-slate-400">
+                        <MapPin className="h-4 w-4 shrink-0 mt-0.5" />
+                        <span>
+                          <span className="block font-medium text-slate-800 dark:text-slate-200">
+                            {t.calendar.inPerson}
+                          </span>
+                          {appointment.location}
+                        </span>
+                      </p>
+                      <a
+                        href={mapsUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 text-xs font-medium text-[#64499D] hover:underline"
+                      >
+                        <ExternalLink className="h-3.5 w-3.5" />
+                        {t.calendar.openInMaps}
+                      </a>
+                    </div>
+                  );
+                })()}
               </section>
+
+              {!!appointment.attachments?.length && (
+                <section>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400 mb-2">
+                    {t.calendar.attachments.title}
+                  </p>
+                  <CalendarAttachmentList attachments={appointment.attachments} />
+                </section>
+              )}
 
               <section>
                 <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400 mb-2">People</p>
@@ -459,7 +544,28 @@ export function AppointmentDetailPanel({
                     </div>
                   </div>
                 )}
-                {clientName && (
+                {!!appointment.attendees?.length && (
+                  <div className="mb-3 space-y-2">
+                    <p className="text-[10px] font-medium uppercase tracking-wider text-slate-500">
+                      {t.calendar.appointmentModal.teamMembers}
+                    </p>
+                    {appointment.attendees.map((person) => (
+                      <div key={person.id} className="flex items-center gap-2">
+                        <UserAvatar
+                          size="sm"
+                          image={getPersonImage(person as unknown as Record<string, unknown>)}
+                          firstName={person.first_name}
+                          lastName={person.last_name}
+                          email={person.email}
+                        />
+                        <p className="text-sm text-slate-800 dark:text-slate-200">
+                          {`${person.first_name || ''} ${person.last_name || ''}`.trim() || person.email}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {clientName && (appointment.participant_scope !== 'team' || appointment.client) && (
                   <div className="flex items-center gap-2 mb-2">
                     {appointment.client_details && (
                       <UserAvatar
@@ -505,15 +611,97 @@ export function AppointmentDetailPanel({
           )}
         </div>
 
-        <footer className="sticky bottom-0 z-20 flex shrink-0 items-center justify-between gap-2 border-t border-slate-200 dark:border-slate-800 bg-slate-50/95 dark:bg-slate-950/95 backdrop-blur-sm px-4 py-3">
+        <footer className="sticky bottom-0 z-20 flex shrink-0 flex-col gap-2 border-t border-slate-200 dark:border-slate-800 bg-slate-50/95 dark:bg-slate-950/95 backdrop-blur-sm px-4 py-3">
           <span className="text-xs text-slate-500 dark:text-slate-400 truncate">
             {appointment ? new Date(appointment.start_at).toLocaleString() : ''}
           </span>
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex flex-wrap items-center justify-end gap-2">
             <Button type="button" variant="ghost" size="sm" onClick={() => onOpenChange(false)}>
-              Close
+              {t.common.close}
             </Button>
-            {appointment && (
+            {appointment && appointment.status === 'scheduled' ? (
+              <>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="rounded-lg"
+                  disabled={statusUpdating != null}
+                  onClick={async () => {
+                    setStatusUpdating('done');
+                    try {
+                      const res = await apiUpdateAppointment({ id: appointment.id, status: 'done' });
+                      setAppointment(res.data);
+                      eventBus.emit('appointment-updated');
+                      toast({
+                        title: m.markedDoneTitle,
+                        description: tf(m.markedDoneDescription, { title: appointment.title }),
+                      });
+                    } catch {
+                      toast({
+                        title: m.statusUpdateFailed,
+                        variant: 'destructive',
+                      });
+                    } finally {
+                      setStatusUpdating(null);
+                    }
+                  }}
+                >
+                  {statusUpdating === 'done' ? (
+                    <Loader2 className="h-4 w-4 me-1.5 animate-spin" />
+                  ) : (
+                    <Check className="h-4 w-4 me-1.5" />
+                  )}
+                  {m.markCompleted}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="rounded-lg text-rose-700 hover:text-rose-800 dark:text-rose-300"
+                  disabled={statusUpdating != null}
+                  onClick={async () => {
+                    setStatusUpdating('cancelled');
+                    try {
+                      const res = await apiUpdateAppointment({ id: appointment.id, status: 'cancelled' });
+                      setAppointment(res.data);
+                      eventBus.emit('appointment-updated');
+                      toast({
+                        title: m.markedCancelledTitle,
+                        description: tf(m.markedCancelledDescription, { title: appointment.title }),
+                      });
+                    } catch {
+                      toast({
+                        title: m.statusUpdateFailed,
+                        variant: 'destructive',
+                      });
+                    } finally {
+                      setStatusUpdating(null);
+                    }
+                  }}
+                >
+                  {statusUpdating === 'cancelled' ? (
+                    <Loader2 className="h-4 w-4 me-1.5 animate-spin" />
+                  ) : (
+                    <Ban className="h-4 w-4 me-1.5" />
+                  )}
+                  {m.markCancelled}
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  className="rounded-lg"
+                  disabled={statusUpdating != null}
+                  onClick={() => {
+                    onOpenChange(false);
+                    onEdit(appointment);
+                  }}
+                >
+                  <Edit className="h-4 w-4 me-1.5" />
+                  Edit Appointment
+                </Button>
+              </>
+            ) : appointment ? (
               <Button
                 size="sm"
                 className="rounded-lg"
@@ -522,10 +710,10 @@ export function AppointmentDetailPanel({
                   onEdit(appointment);
                 }}
               >
-                <Edit className="h-4 w-4 mr-1.5" />
+                <Edit className="h-4 w-4 me-1.5" />
                 Edit Appointment
               </Button>
-            )}
+            ) : null}
           </div>
         </footer>
       </SheetContent>

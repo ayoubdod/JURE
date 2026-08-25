@@ -13,6 +13,9 @@ export function displayPersonName(person: PersonLike, fallback = '—'): string 
 
 export function taskAssigneeUser(task: API.Task | null): API.User | null {
   if (!task) return null;
+  if (Array.isArray(task.assignees) && task.assignees[0] && typeof task.assignees[0] === 'object') {
+    return task.assignees[0];
+  }
   const details = task.assigned_to_details;
   if (details && typeof details === 'object' && (details as API.User).email) return details as API.User;
   const raw = task.assigned_to as unknown;
@@ -25,7 +28,30 @@ export function taskAssigneeId(task: API.Task | null): number | undefined {
   const user = taskAssigneeUser(task);
   if (user?.id != null) return user.id;
   if (typeof task.assigned_to === 'number') return task.assigned_to;
+  if (Array.isArray(task.assignee_ids) && task.assignee_ids[0] != null) return Number(task.assignee_ids[0]);
   return undefined;
+}
+
+export function taskAssigneeUsers(task: API.Task | null): API.User[] {
+  if (!task) return [];
+  if (Array.isArray(task.assignees) && task.assignees.length) {
+    return task.assignees.filter((u): u is API.User => !!u && typeof u === 'object');
+  }
+  const single = taskAssigneeUser(task);
+  return single ? [single] : [];
+}
+
+export function taskAssigneeIds(task: API.Task | null): number[] {
+  if (!task) return [];
+  if (Array.isArray(task.assignee_ids) && task.assignee_ids.length) {
+    return task.assignee_ids.map(Number).filter(Boolean);
+  }
+  const fromUsers = taskAssigneeUsers(task)
+    .map((u) => u.id)
+    .filter((id): id is number => id != null);
+  if (fromUsers.length) return fromUsers;
+  const one = taskAssigneeId(task);
+  return one != null ? [one] : [];
 }
 
 export function taskClientUser(task: API.Task | null): { id?: number; first_name?: string; last_name?: string; email?: string } | null {

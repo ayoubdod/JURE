@@ -29,6 +29,10 @@ else
   exit 1
 fi
 
+# Uploaded files (profile photos, cabinet logos, library docs) live here.
+# On Railway this must be a persistent Volume mount, not the image's /app/media.
+mkdir -p "${MEDIA_ROOT:-/app/media}"
+
 python manage.py migrate --noinput
 
 python manage.py collectstatic --noinput

@@ -2,6 +2,19 @@ declare namespace API {
   type TaskPriority = 'low' | 'medium' | 'high';
   type TaskStatus = 'todo' | 'in_progress' | 'done' | 'cancelled';
 
+  type TaskAttachment = {
+    id: number;
+    name: string;
+    original_name?: string;
+    mime?: string;
+    size: number;
+    url?: string;
+    preview_url?: string;
+    uploaded_by?: number | null;
+    uploaded_by_details?: API.User | null;
+    created?: string;
+  };
+
   type Task = {
     id: number;
     title: string;
@@ -12,11 +25,16 @@ declare namespace API {
     estimated_hours: string | null;
     assigned_to: number | API.User | null;
     assigned_to_details: API.User | null;
+    assignee_ids?: number[];
+    assignees?: API.User[];
+    attachments?: TaskAttachment[];
     client: number | API.User | null;
     client_details: API.User | API.Client | null;
     case?: number | null;
     case_title?: string;
     created?: string;
+    created_by?: number | null;
+    created_by_details?: API.User | null;
   };
 
   type TaskCreateForm = {
@@ -27,8 +45,9 @@ declare namespace API {
     due_date?: string | null;
     estimated_hours?: string | null;
     assigned_to?: number | null;
+    assignee_ids?: number[];
     client?: number | null;
-    case?: string | number; 
+    case?: string | number;
   };
 
   type TaskCreateFormRemoteValidation = {
@@ -44,8 +63,9 @@ declare namespace API {
     due_date?: string | null;
     estimated_hours?: string | null;
     assigned_to?: number | null;
+    assignee_ids?: number[];
     client?: number | null;
-    case?: string | number; 
+    case?: string | number;
   };
 
   type TaskUpdateFormRemoteValidation = {

@@ -9,6 +9,7 @@ import {
   MapPin,
   Plus,
   User,
+  Video,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -82,7 +83,7 @@ export function RelatedTasksAppointmentsSection({
   showAppointments = true,
   bare = false,
 }: RelatedTasksAppointmentsSectionProps) {
-  const { enumPretty } = useAppTranslation();
+  const { enumPretty, t } = useAppTranslation();
   const rel = caseItem._related;
   const tasks = showTasks ? (rel?.tasks ?? []) : [];
   const appointments = showAppointments ? ((rel?.appointments ?? []) as Appointment[]) : [];
@@ -282,7 +283,12 @@ export function RelatedTasksAppointmentsSection({
                       </p>
                       <div className="mt-1.5 flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-600 dark:text-slate-400">
                         <div className="min-w-0 space-y-0.5">
-                          {a.location ? (
+                          {a.meeting_type === 'video' || (!a.location && a.conversation) ? (
+                            <span className="flex items-center gap-1">
+                              <Video className="h-3 w-3 shrink-0 opacity-70" aria-hidden />
+                              <span>{t.calendar.jureConference}</span>
+                            </span>
+                          ) : a.location ? (
                             <span className="flex items-start gap-1">
                               <MapPin className="h-3 w-3 shrink-0 mt-0.5 opacity-70" aria-hidden />
                               <span className="break-words">{a.location}</span>

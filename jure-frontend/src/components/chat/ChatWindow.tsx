@@ -5,6 +5,7 @@ import DeleteMessageModal from './DeleteMessageModal';
 import ForwardConversationPicker from './ForwardConversationPicker';
 import ConversationHeader from './ConversationHeader';
 import ConversationEmptyState from './ConversationEmptyState';
+import AppointmentMeetingBanner from './AppointmentMeetingBanner';
 import useUserStore from '@/stores/userStore';
 import useChatStore from '@/stores/chatStore';
 import {
@@ -60,6 +61,8 @@ const ChatWindow = forwardRef<
   conversation?: API.Conversation;
   onCallVoice?: () => void;
   onCallVideo?: () => void;
+  /** Join a scheduled appointment conference (may join an active call or start one). */
+  onJoinMeeting?: () => void;
   /** True while a voice/video call session is active (outgoing, ringing, or connected). */
   callInProgress?: boolean;
   onJoinActiveCall?: () => void;
@@ -94,6 +97,7 @@ const ChatWindow = forwardRef<
   conversation,
   onCallVoice,
   onCallVideo,
+  onJoinMeeting,
   callInProgress = false,
   onJoinActiveCall,
   onRecallMissedCall,
@@ -474,6 +478,16 @@ const ChatWindow = forwardRef<
         onUnlinkConversationCase={onUnlinkConversationCase}
         onOpenLinkedCase={onOpenLinkedCase}
       />
+
+      {conversation.active_or_upcoming_appointment || conversation.is_temporary ? (
+        <AppointmentMeetingBanner
+          appointment={conversation.active_or_upcoming_appointment}
+          isTemporaryChat={conversation.is_temporary}
+          callInProgress={callInProgress}
+          onJoin={onJoinMeeting}
+          onOpenAppointment={onOpenSharedAppointment}
+        />
+      ) : null}
 
       {activeCall &&
       conversation?.id === activeCall.conversationId &&

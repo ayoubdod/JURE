@@ -3,6 +3,33 @@
  * Labels live in i18n (`enums.documentCategory`, `enums.documentLegalArea`).
  */
 
+export const LIBRARY_RESOURCE_TYPE_IDS = [
+  'law',
+  'code',
+  'regulation',
+  'decree',
+  'circular',
+  'case_law',
+  'court_decision',
+  'administrative_decision',
+  'treaty',
+  'convention',
+  'directive',
+  'legal_commentary',
+  'legal_article',
+  'legal_guide',
+  'template',
+  'legal_form',
+  'report',
+  'research_paper',
+  'regulatory_update',
+  'other',
+] as const;
+
+export type LibraryResourceTypeId = (typeof LIBRARY_RESOURCE_TYPE_IDS)[number];
+
+export const LIBRARY_LANGUAGES = ['en', 'fr', 'ar'] as const;
+
 export const DOCUMENT_CATEGORY_IDS = [
   'legislation_regulations',
   'case_law_jurisprudence',

@@ -115,6 +115,7 @@ class CustomUserDetailsSerializer(UserDetailsSerializer):
     )
     cabinet_id = serializers.SerializerMethodField()
     jurisdiction = serializers.SerializerMethodField()
+    is_platform_admin = serializers.SerializerMethodField()
 
     class Meta:
         extra_fields = []
@@ -138,10 +139,12 @@ class CustomUserDetailsSerializer(UserDetailsSerializer):
             'practice_type',
             'cabinet_id',
             'jurisdiction',
+            'role',
+            'is_platform_admin',
             'accept_terms',
             'accept_data_processing',
         ]
-        read_only_fields = ('email', 'cabinet_id', 'jurisdiction')
+        read_only_fields = ('email', 'cabinet_id', 'jurisdiction', 'role', 'is_platform_admin')
 
     def to_representation(self, instance):
         """Build absolute URL for logo in response."""
@@ -162,6 +165,9 @@ class CustomUserDetailsSerializer(UserDetailsSerializer):
         if cabinet is None:
             return None
         return serialize_jurisdiction(getattr(cabinet, "jurisdiction", None))
+
+    def get_is_platform_admin(self, obj):
+        return bool(getattr(obj, "is_staff", False) or getattr(obj, "is_superuser", False))
 
     def update(self, instance, validated_data):
         """Update user and sync cabinet fields (logo, etc.) to the cabinet."""

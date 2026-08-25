@@ -5,6 +5,7 @@ import { renderAsync } from 'docx-preview';
 import { API_ORIGIN } from '@/config/api';
 import { getFileType } from '@/utils/functions';
 import { cn } from '@/lib/utils';
+import useUserStore from '@/stores/userStore';
 
 const IMAGE_TYPES = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp'];
 const VIDEO_TYPES = ['mp4', 'webm', 'ogg', 'mov'];
@@ -21,8 +22,35 @@ interface FilePreviewerProps {
   resolveUrl?: (url: string) => string;
 }
 
-const getFileExtension = (fileName: string): string =>
-  fileName.split('.').pop()?.toLowerCase() || '';
+/** Extension from a URL or path, ignoring query/hash and host dots (127.0.0.1). */
+const getFileExtension = (fileName: string): string => {
+  if (!fileName) return '';
+  let path = fileName;
+  try {
+    if (/^https?:\/\//i.test(fileName)) {
+      path = new URL(fileName).pathname;
+    }
+  } catch {
+    /* keep path */
+  }
+  const clean = path.split('?')[0].split('#')[0];
+  const base = clean.split('/').pop() || clean;
+  const ext = base.includes('.') ? base.split('.').pop() : '';
+  return (ext || '').toLowerCase();
+};
+
+const fileBasename = (fileName: string, fallback = 'document'): string => {
+  const clean = fileName.split('?')[0].split('#')[0];
+  const base = clean.split('/').pop();
+  return base || fallback;
+};
+
+function fetchMedia(url: string) {
+  const token = useUserStore.getState().accessToken;
+  const headers: HeadersInit = {};
+  if (token) headers.Authorization = `Bearer ${token}`;
+  return fetch(url, { credentials: 'include', headers });
+}
 
 const UnsupportedFallback: React.FC<{
   fileUrl: string;
@@ -86,14 +114,21 @@ export const FilePreviewer: React.FC<FilePreviewerProps> = ({
   title,
   className,
   resolveUrl = (url) => {
-    if (!url || url.startsWith('http://') || url.startsWith('https://')) return url;
-    return url.startsWith('/') ? `${API_ORIGIN}${url}` : `${API_ORIGIN}/${url}`;
+    if (!url) return '';
+    if (url.startsWith('http://') || url.startsWith('https://')) return url;
+    if (url.startsWith('/media/') || url.startsWith('/')) {
+      return `${API_ORIGIN}${url}`;
+    }
+    if (url.startsWith('media/')) return `${API_ORIGIN}/${url}`;
+    return `${API_ORIGIN}/media/${url}`;
   },
 }) => {
   const resolvedUrl = resolveUrl(fileUrl);
-  const ext = getFileExtension(fileName);
+  const ext = getFileExtension(fileName || fileUrl);
   const [imageError, setImageError] = useState(false);
   const [pdfError, setPdfError] = useState(false);
+  const [pdfSrc, setPdfSrc] = useState<string | null>(null);
+  const [pdfLoading, setPdfLoading] = useState(false);
   const [docxError, setDocxError] = useState(false);
   const [docxLoading, setDocxLoading] = useState(false);
   const docxContainerRef = useRef<HTMLDivElement>(null);
@@ -104,34 +139,78 @@ export const FilePreviewer: React.FC<FilePreviewerProps> = ({
   const handleDownload = () => {
     const a = window.document.createElement('a');
     a.href = resolvedUrl;
-    a.download = title || fileName || 'download';
+    a.download = title || fileBasename(fileName || fileUrl) || 'download';
     a.target = '_blank';
     a.rel = 'noopener';
     a.click();
   };
 
+  // PDF: fetch as blob so the iframe is same-origin (X-Frame-Options cannot blank it).
+  useEffect(() => {
+    if (!PDF_TYPES.includes(ext) || !resolvedUrl) return;
+    let cancelled = false;
+    let objectUrl: string | null = null;
+    setPdfLoading(true);
+    setPdfError(false);
+    setPdfSrc(null);
+    fetchMedia(resolvedUrl)
+      .then((res) => {
+        if (!res.ok) throw new Error(`Failed to fetch PDF (${res.status})`);
+        return res.blob();
+      })
+      .then((blob) => {
+        if (cancelled) return;
+        const typed =
+          blob.type && blob.type.includes('pdf')
+            ? blob
+            : new Blob([blob], { type: 'application/pdf' });
+        objectUrl = URL.createObjectURL(typed);
+        setPdfSrc(objectUrl);
+      })
+      .catch(() => {
+        if (!cancelled) setPdfError(true);
+      })
+      .finally(() => {
+        if (!cancelled) setPdfLoading(false);
+      });
+    return () => {
+      cancelled = true;
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [resolvedUrl, ext]);
+
   // DOCX: fetch and render
   useEffect(() => {
-    if (!DOCX_TYPES.includes(ext) || docxError) return;
+    if (!DOCX_TYPES.includes(ext) || docxError || !resolvedUrl) return;
     const container = docxContainerRef.current;
     if (!container) return;
+    let cancelled = false;
     setDocxLoading(true);
     container.innerHTML = '';
-    fetch(resolvedUrl, { credentials: 'include' })
+    fetchMedia(resolvedUrl)
       .then((res) => {
         if (!res.ok) throw new Error('Failed to fetch');
         return res.arrayBuffer();
       })
-      .then((buffer) => renderAsync(buffer, container, undefined, { inWrapper: true }))
-      .catch(() => setDocxError(true))
-      .finally(() => setDocxLoading(false));
+      .then((buffer) => {
+        if (cancelled || !docxContainerRef.current) return;
+        return renderAsync(buffer, docxContainerRef.current, undefined, { inWrapper: true });
+      })
+      .catch(() => {
+        if (!cancelled) setDocxError(true);
+      })
+      .finally(() => {
+        if (!cancelled) setDocxLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [resolvedUrl, ext, docxError]);
 
   // Reset zoom when file changes
   useEffect(() => {
     setImageZoom(1);
     setImageError(false);
-    setPdfError(false);
     setDocxError(false);
   }, [resolvedUrl, fileName]);
 
@@ -220,13 +299,19 @@ export const FilePreviewer: React.FC<FilePreviewerProps> = ({
           className
         )}
       >
-        <iframe
-          src={`${resolvedUrl}#toolbar=1&navpanes=0&scrollbar=1`}
-          className="w-full h-[min(70dvh,560px)] sm:h-[400px] border-0 touch-pan-x touch-pan-y"
-          title={title || 'PDF'}
-          onError={() => setPdfError(true)}
-          style={{ WebkitOverflowScrolling: 'touch' }}
-        />
+        {pdfLoading && !pdfSrc ? (
+          <div className="flex h-[min(70dvh,560px)] sm:h-[400px] items-center justify-center text-[13px] text-slate-500">
+            Loading preview…
+          </div>
+        ) : (
+          <iframe
+            src={pdfSrc ? `${pdfSrc}#toolbar=1&navpanes=0&scrollbar=1` : `${resolvedUrl}#toolbar=1&navpanes=0&scrollbar=1`}
+            className="w-full h-[min(70dvh,560px)] sm:h-[400px] border-0 touch-pan-x touch-pan-y"
+            title={title || 'PDF'}
+            onError={() => setPdfError(true)}
+            style={{ WebkitOverflowScrolling: 'touch' }}
+          />
+        )}
         <div className="flex flex-wrap justify-end gap-2 p-2 border-t border-slate-200 dark:border-slate-800">
           <Button
             variant="outline"

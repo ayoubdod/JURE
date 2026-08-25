@@ -214,6 +214,11 @@ export const ConversationListItem: React.FC<{
             >
               {displayName}
             </span>
+            {conversation.is_temporary ? (
+              <span className="shrink-0 rounded-full bg-amber-50 px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-wide text-amber-800 ring-1 ring-amber-200 dark:bg-amber-950/40 dark:text-amber-200 dark:ring-amber-800">
+                {t.calendar.appointmentModal.meetingChatBadge}
+              </span>
+            ) : null}
           </div>
           <span
             className={cn(

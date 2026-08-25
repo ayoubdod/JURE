@@ -10,6 +10,7 @@ import {
   isTaskOverdue,
   taskAssigneeId,
   taskAssigneeUser,
+  taskAssigneeUsers,
   taskCaseId,
   taskClientUser,
 } from '@/lib/workspacePeople';
@@ -84,6 +85,7 @@ export const TaskTableRow = memo(function TaskTableRow({
   const { t, lang, enumLabel } = useAppTranslation();
   const lookup = useCabinetMemberDirectory();
   const assignee = taskAssigneeUser(task);
+  const assigneeUsers = taskAssigneeUsers(task);
   const assigneeId = taskAssigneeId(task);
   const cab = assigneeId != null ? lookup(assigneeId) : undefined;
   const client = taskClientUser(task);
@@ -113,17 +115,28 @@ export const TaskTableRow = memo(function TaskTableRow({
       </td>
       <td className="px-3 py-3">
         <div className="flex items-center gap-2 min-w-0">
-          {assignee || cab ? (
+          {assigneeUsers.length || cab ? (
             <>
-              <UserAvatar
-                size="xs"
-                image={getPersonImage(assignee as unknown as Record<string, unknown>) ?? cab?.image}
-                firstName={assignee?.first_name ?? cab?.first_name}
-                lastName={assignee?.last_name ?? cab?.last_name}
-                email={assignee?.email ?? cab?.email}
-              />
+              <div className="flex -space-x-1.5 rtl:space-x-reverse shrink-0">
+                {assigneeUsers.slice(0, 3).map((person) => {
+                  const row = person.id != null ? lookup(person.id) : undefined;
+                  return (
+                    <UserAvatar
+                      key={person.id || person.email}
+                      size="xs"
+                      className="ring-2 ring-white dark:ring-slate-950"
+                      image={getPersonImage(person as unknown as Record<string, unknown>) ?? row?.image}
+                      firstName={person.first_name ?? row?.first_name}
+                      lastName={person.last_name ?? row?.last_name}
+                      email={person.email ?? row?.email}
+                    />
+                  );
+                })}
+              </div>
               <span className="text-xs text-slate-600 dark:text-slate-400 truncate">
-                {displayPersonName(assignee || cab)}
+                {assigneeUsers.length > 1
+                  ? `${assigneeUsers.length}`
+                  : displayPersonName(assigneeUsers[0] || assignee || cab)}
               </span>
             </>
           ) : (
