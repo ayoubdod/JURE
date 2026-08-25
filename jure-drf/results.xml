@@ -1,22 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <testsuites>
-	<testsuite name="library.tests.DocumentAdminFormTests-20260822175057" tests="2" file="library/tests.py" time="0.007" timestamp="2026-08-22T17:50:57" failures="0" errors="0" skipped="0">
-		<testcase classname="library.tests.DocumentAdminFormTests" name="test_tags_are_optional" time="0.004" timestamp="2026-08-22T17:50:57" file="library\tests.py" line="209"/>
-		<testcase classname="library.tests.DocumentAdminFormTests" name="test_tags_input_creates_missing_tags" time="0.003" timestamp="2026-08-22T17:50:57" file="library\tests.py" line="204"/>
-	</testsuite>
-	<testsuite name="library.tests.DocumentBulkUploadTests-20260822175057" tests="4" file="library/tests.py" time="5.544" timestamp="2026-08-22T17:51:03" failures="0" errors="0" skipped="0">
-		<testcase classname="library.tests.DocumentBulkUploadTests" name="test_bulk_upload_page_loads" time="1.734" timestamp="2026-08-22T17:50:59" file="library\tests.py" line="253"/>
-		<testcase classname="library.tests.DocumentBulkUploadTests" name="test_bulk_upload_post_creates_documents" time="1.308" timestamp="2026-08-22T17:51:00" file="library\tests.py" line="259"/>
-		<testcase classname="library.tests.DocumentBulkUploadTests" name="test_create_many_shared_documents" time="1.343" timestamp="2026-08-22T17:51:01" file="library\tests.py" line="234"/>
-		<testcase classname="library.tests.DocumentBulkUploadTests" name="test_title_from_filename" time="1.158" timestamp="2026-08-22T17:51:03" file="library\tests.py" line="228"/>
-	</testsuite>
-	<testsuite name="library.tests.SharedLibraryApiTests-20260822175057" tests="7" file="library/tests.py" time="17.339" timestamp="2026-08-22T17:51:20" failures="0" errors="0" skipped="0">
-		<testcase classname="library.tests.SharedLibraryApiTests" name="test_cabinet_cannot_edit_or_delete_shared" time="2.612" timestamp="2026-08-22T17:51:05" file="library\tests.py" line="135"/>
-		<testcase classname="library.tests.SharedLibraryApiTests" name="test_cannot_copy_private_document" time="2.390" timestamp="2026-08-22T17:51:08" file="library\tests.py" line="175"/>
-		<testcase classname="library.tests.SharedLibraryApiTests" name="test_copy_shared_into_cabinet" time="2.418" timestamp="2026-08-22T17:51:10" file="library\tests.py" line="162"/>
-		<testcase classname="library.tests.SharedLibraryApiTests" name="test_create_via_api_is_never_shared" time="2.456" timestamp="2026-08-22T17:51:12" file="library\tests.py" line="145"/>
-		<testcase classname="library.tests.SharedLibraryApiTests" name="test_list_includes_own_and_shared_not_other_cabinet" time="2.578" timestamp="2026-08-22T17:51:15" file="library\tests.py" line="112"/>
-		<testcase classname="library.tests.SharedLibraryApiTests" name="test_other_cabinet_cannot_see_private_copy" time="2.496" timestamp="2026-08-22T17:51:18" file="library\tests.py" line="180"/>
-		<testcase classname="library.tests.SharedLibraryApiTests" name="test_shared_save_clears_cabinet" time="2.389" timestamp="2026-08-22T17:51:20" file="library\tests.py" line="100"/>
+	<testsuite name="chat.tests.DirectConversationReuseTests-20260825204901" tests="1" file="chat/tests.py" time="3.186" timestamp="2026-08-25T20:49:04" failures="0" errors="0" skipped="0">
+		<testcase classname="chat.tests.DirectConversationReuseTests" name="test_second_direct_create_reuses_existing" time="3.186" timestamp="2026-08-25T20:49:04" file="chat\tests.py" line="353"/>
 	</testsuite>
 </testsuites>

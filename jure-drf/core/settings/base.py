@@ -101,6 +101,7 @@ INSTALLED_APPS = [
     "phonenumber_field",
     "rest_framework",
     "rest_framework.authtoken",
+    "rest_framework_simplejwt.token_blacklist",
     "corsheaders",
     "dj_rest_auth",
     "dj_rest_auth.registration",
@@ -137,6 +138,7 @@ SITE_ID = 1
 # Middleware
 # --------------------------------------------------------------------------------------
 MIDDLEWARE = [
+    "core.middleware.PDFHeadersMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -148,7 +150,6 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "allauth.account.middleware.AccountMiddleware",
     "django.middleware.locale.LocaleMiddleware",
-    "core.middleware.PDFHeadersMiddleware",
 ]
 
 # --------------------------------------------------------------------------------------
@@ -214,6 +215,7 @@ REST_AUTH = {
     "LOGIN_SERIALIZER": "users.serializers.CustomLoginSerializer",
     "PASSWORD_RESET_SERIALIZER": "users.serializers.PasswordResetSerializer",
     "PASSWORD_RESET_CONFIRM_SERIALIZER": "users.serializers.PasswordResetConfirmSerializer",
+    "JWT_TOKEN_CLAIMS_SERIALIZER": "users.tokens.SessionTokenObtainPairSerializer",
     "JWT_AUTH_HTTPONLY": False,
     "OLD_PASSWORD_FIELD_ENABLED": True,
     "LOGOUT_ON_PASSWORD_CHANGE": True,
@@ -232,7 +234,7 @@ REST_FRAMEWORK = {
         "rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly",
     ],
     "DEFAULT_AUTHENTICATION_CLASSES": (
-        "dj_rest_auth.jwt_auth.JWTCookieAuthentication",
+        "users.authentication.SessionJWTCookieAuthentication",
     ),
     "DEFAULT_PARSER_CLASSES": [
         "rest_framework.parsers.MultiPartParser",
@@ -274,7 +276,9 @@ MODELTRANSLATION_LANGUAGES = ("fr", "en", "ar")
 STATIC_ROOT = BASE_DIR / "staticfiles"
 STATIC_URL = "/static/"
 STATICFILES_DIRS = [BASE_DIR / "static"]
-MEDIA_ROOT = BASE_DIR / "media"
+# Local default: repo /media. On Railway the container disk is wiped on every
+# deploy — mount a Volume and set MEDIA_ROOT to that mount path (e.g. /data/media).
+MEDIA_ROOT = Path(env.str("MEDIA_ROOT", default=str(BASE_DIR / "media")))
 MEDIA_URL = "/media/"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"

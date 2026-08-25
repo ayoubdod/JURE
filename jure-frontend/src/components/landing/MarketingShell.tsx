@@ -126,6 +126,7 @@ const MarketingShell: React.FC<MarketingShellProps> = ({
   const location = useLocation();
   const params = useParams<{ lang?: string }>();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [navScrolled, setNavScrolled] = useState(false);
   const year = new Date().getFullYear();
 
   // URL is the source of truth for the locale; fall back to the page prop
@@ -140,6 +141,13 @@ const MarketingShell: React.FC<MarketingShellProps> = ({
       document.body.style.overflow = "";
     };
   }, [mobileOpen]);
+
+  useEffect(() => {
+    const onScroll = () => setNavScrolled(window.scrollY > 20);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   const closeMobile = () => setMobileOpen(false);
 
@@ -177,10 +185,18 @@ const MarketingShell: React.FC<MarketingShellProps> = ({
       </a>
       <MeshBackdrop />
 
-      <header className="relative z-30">
-        <div className="max-w-7xl mx-auto px-3 sm:px-6 pt-3">
+      <header
+        className={`landing-nav sticky top-0 z-30 transition-[padding,background-color,backdrop-filter,box-shadow,border-color] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+          navScrolled ? "landing-nav--scrolled" : ""
+        }`}
+      >
+        <div className="max-w-7xl mx-auto px-3 sm:px-6">
           <nav
-            className="landing-glass rounded-2xl px-3 sm:px-6 py-2.5 sm:py-3 flex items-center justify-between gap-2 sm:gap-3"
+            className={`landing-nav__bar flex items-center justify-between gap-2 sm:gap-3 transition-[min-height,padding] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+              navScrolled
+                ? "min-h-16 py-2 sm:py-2.5"
+                : "min-h-20 py-3 sm:py-3.5"
+            }`}
             aria-label="main navigation"
           >
             <Link to={localePath(lang)} className="shrink-0 min-w-0" onClick={closeMobile}>

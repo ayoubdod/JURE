@@ -24,6 +24,8 @@ declare namespace API {
             default_language: string
             status: string
         } | null
+        role?: string
+        is_platform_admin?: boolean
         business_address?: string
         team_size?: string
         website?: string

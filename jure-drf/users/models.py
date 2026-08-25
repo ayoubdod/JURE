@@ -171,6 +171,13 @@ class User(AbstractUser):
         help_text='MAD per hour — used for hourly fee calculation.',
     )
 
+    # Incremented on each successful login so only the latest JWT session remains valid.
+    session_version = models.PositiveIntegerField(
+        _('session version'),
+        default=0,
+        help_text=_('Bumped on login to invalidate older access/refresh tokens.'),
+    )
+
     
     addresses : QuerySet['UserAddress']
     client_cases : QuerySet['Case']

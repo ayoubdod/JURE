@@ -61,6 +61,7 @@ declare namespace API {
     icon_preset_emoji?: string | null;
     archived?: boolean;
     is_pinned?: boolean;
+    is_temporary?: boolean;
     other_participant?: { full_name?: string; first_name?: string; last_name?: string; image?: string; [k: string]: unknown };
     memberships: ConversationMembership[];
     readonly latest_message: Message;
@@ -68,6 +69,15 @@ declare namespace API {
     created: string;
     linkedCase?: LinkedCaseSummary | null;
     linked_case?: LinkedCaseSummary | null;
+    active_or_upcoming_appointment?: {
+      id: number;
+      title: string;
+      start_at: string;
+      end_at: string;
+      conference_url?: string | null;
+      joinable?: boolean;
+      is_temporary_chat?: boolean;
+    } | null;
   }
 
   type ConversationUpdateForm = {

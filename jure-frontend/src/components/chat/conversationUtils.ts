@@ -35,6 +35,27 @@ export function linkedCaseDotClass(lc: API.LinkedCaseSummary): string {
   return 'bg-slate-400';
 }
 
+/** Existing 1:1 thread with this teammate, if any. */
+export function findDirectConversationWithPeer(
+  conversations: API.Conversation[],
+  peer: { userId?: number | null; email?: string | null },
+  currentEmail?: string | null
+): API.Conversation | undefined {
+  const email = (peer.email ?? '').trim().toLowerCase();
+  const userId = peer.userId ?? null;
+  return conversations.find((c) => {
+    if (c.type !== 'direct') return false;
+    const op = c.other_participant as { id?: number; email?: string } | undefined;
+    if (userId != null && op?.id === userId) return true;
+    if (email && (op?.email ?? '').toLowerCase() === email) return true;
+    const membership = getDirectPeer(c, currentEmail);
+    const person = membership ? getMemberPerson(membership) : undefined;
+    if (userId != null && person?.id === userId) return true;
+    if (email && (person?.email ?? '').toLowerCase() === email) return true;
+    return false;
+  });
+}
+
 export function getDirectPeer(
   c: API.Conversation,
   currentEmail?: string | null

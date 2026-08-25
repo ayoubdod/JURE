@@ -104,7 +104,10 @@ const DocumentDetailDrawer = forwardRef<
     if (!fileUrl) return '';
     if (fileUrl.startsWith('http://') || fileUrl.startsWith('https://'))
       return fileUrl;
-    return fileUrl.startsWith('/') ? `${API_ORIGIN}${fileUrl}` : `${API_ORIGIN}/${fileUrl}`;
+    if (fileUrl.startsWith('/media/') || fileUrl.startsWith('/'))
+      return `${API_ORIGIN}${fileUrl}`;
+    if (fileUrl.startsWith('media/')) return `${API_ORIGIN}/${fileUrl}`;
+    return `${API_ORIGIN}/media/${fileUrl}`;
   };
 
   const resolveFileUrl = (url: string) => getFileUrl(url);
@@ -239,7 +242,7 @@ const DocumentDetailDrawer = forwardRef<
       <SheetContent
         side="right"
         className={cn(
-          'w-full sm:max-w-md p-0 flex flex-col overflow-hidden',
+          'w-full sm:max-w-2xl lg:max-w-3xl p-0 flex flex-col overflow-hidden',
           'bg-[#F8FAFC] dark:bg-[#0F172A]',
           'border-l border-slate-200 dark:border-slate-800'
         )}
@@ -248,9 +251,9 @@ const DocumentDetailDrawer = forwardRef<
           <SheetTitle className="text-[13px] font-semibold text-[#0F172A] dark:text-[#F8FAFC]">
             {currentDoc.title}
           </SheetTitle>
-          {shared ? (
+          {shared || currentDoc.source_library ? (
             <p className="text-[11px] text-[#64499D] dark:text-[#CFC2FF]">
-              {t.library.publicLibrary}
+              {currentDoc.source_library || t.library.publicLibrary}
             </p>
           ) : null}
         </SheetHeader>
@@ -258,12 +261,23 @@ const DocumentDetailDrawer = forwardRef<
         <div className="flex-1 overflow-y-auto">
           {/* Universal File Previewer */}
           <div className="p-6 border-b border-slate-200 dark:border-slate-800">
-            <FilePreviewer
-              fileUrl={currentDoc.file}
-              fileName={currentDoc.file}
-              title={currentDoc.title}
-              resolveUrl={resolveFileUrl}
-            />
+            {currentDoc.file ? (
+              <FilePreviewer
+                fileUrl={currentDoc.file}
+                fileName={currentDoc.file || currentDoc.title}
+                title={currentDoc.title}
+                resolveUrl={resolveFileUrl}
+              />
+            ) : currentDoc.external_url ? (
+              <a
+                href={currentDoc.external_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center text-[13px] font-medium text-[#64499D] underline-offset-2 hover:underline"
+              >
+                {currentDoc.external_url}
+              </a>
+            ) : null}
           </div>
 
           {/* Metadata */}

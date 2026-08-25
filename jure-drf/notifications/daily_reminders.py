@@ -70,6 +70,11 @@ def send_daily_deadline_reminders() -> None:
     _remind_calculated_legal_deadlines(today)
     _remind_invoices_overdue(today)
     _remind_unread_messages(today)
+    try:
+        from tasks.meeting_chat import cleanup_expired_temporary_meeting_chats
+        cleanup_expired_temporary_meeting_chats()
+    except Exception:
+        logger.exception('Failed to cleanup temporary meeting chats')
 
 
 def _add_days(d, n):
@@ -78,48 +83,65 @@ def _add_days(d, n):
     return d + timedelta(days=n)
 
 
+def _task_recipient_ids(task: Task) -> list[int]:
+    ids = list(task.assignees.values_list("id", flat=True))
+    if task.assigned_to_id and task.assigned_to_id not in ids:
+        ids.append(task.assigned_to_id)
+    out: list[int] = []
+    seen = set()
+    for uid in ids:
+        if uid and uid not in seen:
+            seen.add(uid)
+            out.append(uid)
+    return out
+
+
 def _remind_tasks_3d(today, in_3) -> None:
-    qs = Task.objects.filter(
-        due_date=in_3,
-        assigned_to__isnull=False,
-    ).exclude(status__in=[Task.TaskStatus.DONE, Task.TaskStatus.CANCELLED])
-    for task in qs.select_related("assigned_to", "case"):
-        uid = task.assigned_to_id
-        if _dedupe_today(uid, NotificationType.TASK_DUE_REMINDER_3DAYS, task=task):
-            continue
-        create_notification(
-            recipient_id=uid,
-            notification_type=NotificationType.TASK_DUE_REMINDER_3DAYS,
-            title="Tâche à échéance dans 3 jours",
-            message=f'La tâche "{task.title}" est due le {task.due_date}.',
-            priority=NotificationPriority.MEDIUM,
-            related_task_id=task.id,
-            related_case_id=task.case_id,
-            action_url=task_action_url(task.id),
-            send_email=True,
-        )
+    qs = (
+        Task.objects.filter(due_date=in_3)
+        .exclude(status__in=[Task.TaskStatus.DONE, Task.TaskStatus.CANCELLED])
+        .prefetch_related("assignees")
+        .select_related("assigned_to", "case")
+    )
+    for task in qs:
+        for uid in _task_recipient_ids(task):
+            if _dedupe_today(uid, NotificationType.TASK_DUE_REMINDER_3DAYS, task=task):
+                continue
+            create_notification(
+                recipient_id=uid,
+                notification_type=NotificationType.TASK_DUE_REMINDER_3DAYS,
+                title="Tâche à échéance dans 3 jours",
+                message=f'La tâche "{task.title}" est due le {task.due_date}.',
+                priority=NotificationPriority.MEDIUM,
+                related_task_id=task.id,
+                related_case_id=task.case_id,
+                action_url=task_action_url(task.id),
+                send_email=True,
+            )
 
 
 def _remind_tasks_overdue(today) -> None:
-    qs = Task.objects.filter(
-        due_date__lt=today,
-        assigned_to__isnull=False,
-    ).exclude(status__in=[Task.TaskStatus.DONE, Task.TaskStatus.CANCELLED])
-    for task in qs.select_related("assigned_to"):
-        uid = task.assigned_to_id
-        if _dedupe_today(uid, NotificationType.TASK_OVERDUE, task=task):
-            continue
-        create_notification(
-            recipient_id=uid,
-            notification_type=NotificationType.TASK_OVERDUE,
-            title="Tâche en retard",
-            message=f'La tâche "{task.title}" est en retard (échéance {task.due_date}).',
-            priority=NotificationPriority.URGENT,
-            related_task_id=task.id,
-            related_case_id=task.case_id,
-            action_url=task_action_url(task.id),
-            send_email=True,
-        )
+    qs = (
+        Task.objects.filter(due_date__lt=today)
+        .exclude(status__in=[Task.TaskStatus.DONE, Task.TaskStatus.CANCELLED])
+        .prefetch_related("assignees")
+        .select_related("assigned_to", "case")
+    )
+    for task in qs:
+        for uid in _task_recipient_ids(task):
+            if _dedupe_today(uid, NotificationType.TASK_OVERDUE, task=task):
+                continue
+            create_notification(
+                recipient_id=uid,
+                notification_type=NotificationType.TASK_OVERDUE,
+                title="Tâche en retard",
+                message=f'La tâche "{task.title}" est en retard (échéance {task.due_date}).',
+                priority=NotificationPriority.URGENT,
+                related_task_id=task.id,
+                related_case_id=task.case_id,
+                action_url=task_action_url(task.id),
+                send_email=True,
+            )
 
 
 def _appointment_recipient_ids(appt: Appointment) -> list[int]:

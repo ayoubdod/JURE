@@ -293,14 +293,27 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
             else setUnreadCount(0);
             return;
           }
+
+          if (type === 'session.replaced') {
+            import('@/utils/sessionReplaced').then(({ handleSessionReplaced }) => {
+              handleSessionReplaced();
+            });
+            return;
+          }
         } catch (e) {
           devError('notifications ws message', e);
         }
       };
 
-      ws.onclose = () => {
+      ws.onclose = (ev) => {
         setWsConnected(false);
         wsRef.current = null;
+        if (ev.code === 4008) {
+          import('@/utils/sessionReplaced').then(({ handleSessionReplaced }) => {
+            handleSessionReplaced();
+          });
+          return;
+        }
         if (manualCloseRef.current || !isLoggedIn || !accessToken) return;
         const attempt = reconnectAttemptRef.current;
         const delay = Math.min(30000, 1000 * Math.pow(2, attempt));

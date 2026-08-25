@@ -70,7 +70,7 @@ const ConversationsPage: React.FC = () => {
   const { toast } = useToast();
 
   // Call UI lives in DashboardLayout <CallShell />; this page only initiates calls.
-  const { callState, initiateCall, joinActiveCall } = useWebRtcCall();
+  const { callState, initiateCall, joinActiveCall, enterMeetingRoom } = useWebRtcCall();
   const [groupCallPicker, setGroupCallPicker] = useState<{
     open: boolean;
     kind: GroupCallKind;
@@ -230,6 +230,7 @@ const ConversationsPage: React.FC = () => {
   );
 
   // Deep link: ?selected=<id> (e.g. notification). Strip param after apply so list refetches don't reset activeId.
+  // Optional ?join=video|voice auto-starts/joins the conference once the conversation is active.
   useEffect(() => {
     const selected =
       searchParams.get('selected') || searchParams.get('conversation') || searchParams.get('c');
@@ -243,6 +244,7 @@ const ConversationsPage: React.FC = () => {
       next.delete('selected');
       next.delete('conversation');
       next.delete('c');
+      // keep join briefly for the follow-up effect
       setSearchParams(next, { replace: true });
     };
     if (inActive) {
@@ -524,6 +526,25 @@ const ConversationsPage: React.FC = () => {
     setGroupCallPicker({ open: true, kind: 'video' });
   };
 
+  // After deep-link selection, honor ?join=video|voice once conversation is active.
+  useEffect(() => {
+    const join = searchParams.get('join');
+    if (!join || !activeId || !activeConversation || activeConversation.id !== activeId) return;
+    if (join !== 'video' && join !== 'voice') return;
+    if (callState.status !== 'idle') {
+      const next = new URLSearchParams(searchParams);
+      next.delete('join');
+      setSearchParams(next, { replace: true });
+      return;
+    }
+    const next = new URLSearchParams(searchParams);
+    next.delete('join');
+    setSearchParams(next, { replace: true });
+    if (join === 'video') handleStartVideoCall();
+    else handleStartVoiceCall();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeId, activeConversation?.id, searchParams, callState.status]);
+
   const handleJoinActiveCall = () => {
     if (!activeId) return;
     const active = useConversationCallPresenceStore.getState().activeByConversation[activeId];
@@ -552,6 +573,28 @@ const ConversationsPage: React.FC = () => {
         activeConversation?.display_name?.trim() ||
         activeConversation?.title?.trim() ||
         t.conversations.call.groupCallTitle,
+    });
+  };
+
+  /** Appointment "Join Conference": enter the meeting room (no outbound ring). */
+  const handleJoinMeetingConference = () => {
+    if (!activeId || !activeConversation || callState.status !== 'idle') return;
+    const active = useConversationCallPresenceStore.getState().activeByConversation[activeId];
+    if (active && active.joinedIds.length > 0 && active.groupName) {
+      handleJoinActiveCall();
+      return;
+    }
+    const title =
+      activeConversation.active_or_upcoming_appointment?.title ||
+      activeConversation.display_name?.trim() ||
+      activeConversation.title?.trim() ||
+      t.conversations.call.groupCallTitle;
+    enterMeetingRoom({
+      conversationId: activeId,
+      kind: 'video',
+      remoteUser: groupCallCandidates[0] ?? null,
+      remoteUsers: groupCallCandidates,
+      displayTitle: title,
     });
   };
 
@@ -832,6 +875,7 @@ const ConversationsPage: React.FC = () => {
           }}
           onCallVoice={handleStartVoiceCall}
           onCallVideo={handleStartVideoCall}
+          onJoinMeeting={handleJoinMeetingConference}
           callInProgress={callInProgress}
           onJoinActiveCall={handleJoinActiveCall}
           onRecallMissedCall={handleRecallMissedCall}
@@ -1015,7 +1059,21 @@ const ConversationsPage: React.FC = () => {
 
       <NewChatModal
         ref={newChatModalRef}
+        existingConversations={[...conversations, ...archivedConversations]}
+        currentUserEmail={user?.email}
         onCreateConversation={(conversation) => {
+          const alreadyListed =
+            conversations.some((c) => c.id === conversation.id) ||
+            archivedConversations.some((c) => c.id === conversation.id);
+          if (alreadyListed) {
+            toast({
+              title: t.conversations.alreadyOpenTitle,
+              description: t.conversations.alreadyOpenDescription,
+            });
+          }
+          if (archivedConversations.some((c) => c.id === conversation.id)) {
+            setShowArchived(true);
+          }
           selectConversation(conversation.id);
           loadConversations(undefined, true);
         }}

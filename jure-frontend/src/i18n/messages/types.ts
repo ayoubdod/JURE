@@ -926,6 +926,91 @@ export interface AppMessages {
     };
     loadingAria: string;
     countAria: string;
+    hub: {
+      subtitle: string;
+      tabMy: string;
+      tabLocal: string;
+      tabInternational: string;
+      tabMyHint: string;
+      tabLocalHint: string;
+      tabInternationalHint: string;
+      searchPlaceholder: string;
+      lastAdded: string;
+      recentlyAdded: string;
+      allResources: string;
+      addResource: string;
+      publishLocal: string;
+      publishInternational: string;
+      publishResource: string;
+      viewGrid: string;
+      viewList: string;
+      sortLabel: string;
+      sortNewest: string;
+      sortOldest: string;
+      sortTitle: string;
+      newBadge: string;
+      addedToday: string;
+      addedDaysAgo: string;
+      newDaysLeft: string;
+      emptyMy: string;
+      emptyMyRecent: string;
+      emptyLocalRecent: string;
+      emptyLocalAll: string;
+      emptyInternationalRecent: string;
+      emptyInternationalAll: string;
+      open: string;
+      preview: string;
+      download: string;
+      favorite: string;
+      unfavorite: string;
+      edit: string;
+      delete: string;
+      addToMy: string;
+      moreActions: string;
+      fieldTitle: string;
+      fieldDescription: string;
+      fieldType: string;
+      fieldCategory: string;
+      fieldLanguage: string;
+      fieldCountry: string;
+      fieldJurisdiction: string;
+      fieldFile: string;
+      fieldUrl: string;
+      fieldAuthor: string;
+      fieldAuthority: string;
+      fieldSource: string;
+      fieldReference: string;
+      fieldKeywords: string;
+      fieldTags: string;
+      fieldPublication: string;
+      fieldEffective: string;
+      dropFile: string;
+      requiredFileOrUrl: string;
+      personalFormHint: string;
+      localFormHint: string;
+      internationalFormHint: string;
+      filterAllTypes: string;
+      filterAllLanguages: string;
+      readerPageOf: string;
+      readerClose: string;
+      readerNext: string;
+      readerPrev: string;
+      readerThumbnails: string;
+      readerLoading: string;
+      readerOpening: string;
+      readerFailed: string;
+      readerUnsupported: string;
+      readerDetails: string;
+      readerBack: string;
+      readerZoomIn: string;
+      readerZoomOut: string;
+      readerFit: string;
+      readerReset: string;
+      readerDownloadDocument: string;
+      readerCloseDetails: string;
+      readerAddedDate: string;
+      readerAddedBy: string;
+    };
   };
   profile: {
     loading: string;
@@ -1060,6 +1145,7 @@ export interface AppMessages {
     announcementStatus: Record<string, string>;
     announcementPriority: Record<string, string>;
     documentStatus: Record<string, string>;
+    libraryResourceType: Record<string, string>;
   };
   errors: {
     generic: string;
@@ -1088,6 +1174,10 @@ export interface AppMessages {
     cancel: string;
   };
   sessionIdle: {
+    title: string;
+    description: string;
+  };
+  sessionReplaced: {
     title: string;
     description: string;
   };
@@ -2043,6 +2133,9 @@ export interface AppMessages {
       selectPriority: string;
       selectStatus: string;
       selectAssignee: string;
+      selectAssignees: string;
+      searchTeamMembers: string;
+      assignedToCount: string;
       selectCase: string;
       selectClient: string;
       estimatedHoursPlaceholder: string;
@@ -2050,6 +2143,7 @@ export interface AppMessages {
       notSet: string;
       unassigned: string;
       notFound: string;
+      attachments: string;
     };
     validation: {
       titleRequired: string;
@@ -2058,6 +2152,7 @@ export interface AppMessages {
       statusRequired: string;
       dueDateRequired: string;
       assignedToRequired: string;
+      assigneesRequired: string;
     };
   };
   calendar: {
@@ -2115,6 +2210,33 @@ export interface AppMessages {
     minutesShort: string;
     emptyPeriod: string;
     scheduleAppointment: string;
+    inPerson: string;
+    jureConference: string;
+    joinConference: string;
+    openInMaps: string;
+    assignedTo: string;
+    attachments: {
+      title: string;
+      addFiles: string;
+      dropHint: string;
+      browse: string;
+      remove: string;
+      open: string;
+      none: string;
+    };
+    teamPicker: {
+      searchPlaceholder: string;
+      empty: string;
+      remove: string;
+      open: string;
+      assignedCount: string;
+    };
+    conversationPicker: {
+      placeholder: string;
+      searchPlaceholder: string;
+      empty: string;
+      selected: string;
+    };
     legend: {
       task: string;
       appointment: string;
@@ -2165,7 +2287,28 @@ export interface AppMessages {
       appointmentInfo: string;
       scheduleDetails: string;
       clientAndCase: string;
+      participants: string;
+      participantScope: string;
+      scopeTeam: string;
+      scopeWithClient: string;
+      teamMembers: string;
+      selectTeamMembers: string;
+      client: string;
       locationDetails: string;
+      meetingType: string;
+      meetingTypeInPerson: string;
+      meetingTypeVideo: string;
+      conversationMode: string;
+      conversationExisting: string;
+      conversationCreatePermanent: string;
+      conversationCreateTemporary: string;
+      conversationTitle: string;
+      conversationTitlePlaceholder: string;
+      address: string;
+      jureConversation: string;
+      jureVideoConference: string;
+      openJureConference: string;
+      attachments: string;
       appointmentTitle: string;
       date: string;
       time: string;
@@ -2177,6 +2320,7 @@ export interface AppMessages {
       relatedCase: string;
       titlePlaceholder: string;
       locationPlaceholder: string;
+      addressPlaceholder: string;
       notesPlaceholder: string;
       selectClient: string;
       selectCase: string;
@@ -2190,6 +2334,11 @@ export interface AppMessages {
         startRequired: string;
         endRequired: string;
         statusRequired: string;
+        addressRequired: string;
+        conversationRequired: string;
+        meetingTypeRequired: string;
+        attendeesRequired: string;
+        clientRequired: string;
       };
     };
     appointmentModal: {
@@ -2206,6 +2355,38 @@ export interface AppMessages {
       scheduleDetails: string;
       locationDetails: string;
       relatedInformation: string;
+      participants: string;
+      participantScope: string;
+      scopeTeam: string;
+      scopeWithClient: string;
+      teamMembers: string;
+      selectTeamMembers: string;
+      meetingType: string;
+      meetingTypeInPerson: string;
+      meetingTypeVideo: string;
+      conversationMode: string;
+      conversationExisting: string;
+      conversationCreatePermanent: string;
+      conversationCreateTemporary: string;
+      conversationTitle: string;
+      conversationTitlePlaceholder: string;
+      address: string;
+      jureConversation: string;
+      jureVideoConference: string;
+      joinConference: string;
+      joinMeeting: string;
+      meetingChatBadge: string;
+      openAppointment: string;
+      markCompleted: string;
+      markCancelled: string;
+      reschedule: string;
+      markedDoneTitle: string;
+      markedDoneDescription: string;
+      markedCancelledTitle: string;
+      markedCancelledDescription: string;
+      statusUpdateFailed: string;
+      openInMaps: string;
+      attachments: string;
       appointmentTitle: string;
       status: string;
       description: string;
@@ -2222,6 +2403,7 @@ export interface AppMessages {
       case: string;
       titlePlaceholder: string;
       locationPlaceholder: string;
+      addressPlaceholder: string;
       notesPlaceholder: string;
       selectStatus: string;
       selectClient: string;
@@ -2238,6 +2420,10 @@ export interface AppMessages {
       durationHour: string;
       durationHours: string;
       notSet: string;
+      validation: {
+        attendeesRequired: string;
+        clientRequired: string;
+      };
     };
   };
   appointments: {
@@ -2268,10 +2454,12 @@ export interface AppMessages {
       cancelled: string;
     };
     columns: {
+      when: string;
       date: string;
       time: string;
       title: string;
       type: string;
+      participants: string;
       client: string;
       case: string;
       assignee: string;
@@ -2290,6 +2478,13 @@ export interface AppMessages {
       filteredHint: string;
     };
     meeting: string;
+    viewList: string;
+    viewGrid: string;
+    aria: {
+      viewMode: string;
+      listView: string;
+      gridView: string;
+    };
   };
   dashboard: {
     greeting: string;
@@ -2703,6 +2898,8 @@ export interface AppMessages {
     changeIconMenu: string;
     deleteConversation: string;
     callInProgress: string;
+    alreadyOpenTitle: string;
+    alreadyOpenDescription: string;
     sending: string;
     edited: string;
     today: string;
@@ -2748,6 +2945,7 @@ export interface AppMessages {
       createGroup: string;
       creating: string;
       defaultGroupTitle: string;
+      alreadyOpenBadge: string;
     };
     deleteMessage: {
       title: string;

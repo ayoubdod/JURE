@@ -186,9 +186,21 @@ def _create_resource_permission_class(resource: str):
 # Pre-built permission classes for each resource
 HasCasesPermission = _create_resource_permission_class('cases')
 HasClientsPermission = _create_resource_permission_class('clients')
-HasLibraryPermission = _create_resource_permission_class('library')
+_HasLibraryCabinetPermission = _create_resource_permission_class('library')
 HasConversationsPermission = _create_resource_permission_class('conversations')
 HasTasksPermission = _create_resource_permission_class('tasks')
+
+
+class HasLibraryPermission(_HasLibraryCabinetPermission):
+    """Cabinet RBAC for library, plus platform staff for shared publishing."""
+
+    def has_permission(self, request, view):
+        user = request.user
+        if getattr(user, 'is_authenticated', False) and (
+            getattr(user, 'is_staff', False) or getattr(user, 'is_superuser', False)
+        ):
+            return True
+        return super().has_permission(request, view)
 
 
 CONTENT_MANAGER_ROLES = frozenset({'OWNER', 'ADMIN'})
@@ -204,6 +216,13 @@ def can_manage_content(user) -> bool:
     if hasattr(user, 'owned_cabinet') and user.owned_cabinet:
         role = role or 'OWNER'
     return role in CONTENT_MANAGER_ROLES
+
+
+def can_publish_shared_library(user) -> bool:
+    """Only platform administrators may publish Local or International library resources."""
+    if not getattr(user, 'is_authenticated', False):
+        return False
+    return bool(getattr(user, 'is_staff', False) or getattr(user, 'is_superuser', False))
 
 
 class CanManageContent(BasePermission):

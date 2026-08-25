@@ -1,46 +1,74 @@
 import axiosInstance from "@/utils/axiosInstance";
 import { getFormDataFromObject } from "@/utils/functions";
 
-export const apiGetDocuments = (params?: {
+export type LibraryTab = 'my' | 'local' | 'international';
+
+export type LibraryQuery = {
     all?: boolean;
     search?: string;
     category?: string;
+    resource_type?: string;
+    language?: string;
+    country?: string;
+    source?: string;
+    tags?: string;
+    jurisdiction?: number | string;
     page?: number;
     page_size?: number;
     ordering?: string;
-})=>{
+    recent?: boolean;
+};
+
+export const apiGetDocuments = (params?: LibraryQuery) => {
     return axiosInstance.get<API.Document[] | API.Paginated<API.Document>>('/library/documents/', { params });
-}
+};
 
-export const apiGetDocument = (id: number)=>{
+export const apiGetLibrary = (tab: LibraryTab, params?: LibraryQuery) => {
+    return axiosInstance.get<API.LibraryListResponse>(`/library/${tab}/`, { params });
+};
+
+export const apiGetDocument = (id: number) => {
     return axiosInstance.get<API.Document>(`/library/documents/${id}/`);
-}
+};
 
-export const apiCreateDocument = (data: API.DocumentCreateForm)=>{
-    return axiosInstance.post<API.Document>(`/library/documents/`, getFormDataFromObject(data));
-}
+export const apiCreateDocument = (data: API.DocumentCreateForm) => {
+    return axiosInstance.post<API.Document>(`/library/my/`, getFormDataFromObject(data));
+};
 
-export const apiUpdateDocument = (data: API.DocumentUpdateForm & { id: number })=>{
+export const apiPublishLocalResource = (data: API.DocumentCreateForm) => {
+    return axiosInstance.post<API.Document>(`/library/admin/local/`, getFormDataFromObject(data));
+};
+
+export const apiPublishInternationalResource = (data: API.DocumentCreateForm) => {
+    return axiosInstance.post<API.Document>(`/library/admin/international/`, getFormDataFromObject(data));
+};
+
+export const apiUpdateDocument = (data: API.DocumentUpdateForm & { id: number }) => {
     const { id, ...updateFields } = data;
-    // Safer file check - avoid instanceof errors
-    const hasFile = updateFields.file && 
-                    typeof File !== 'undefined' && 
+    const hasFile = updateFields.file &&
+                    typeof File !== 'undefined' &&
                     updateFields.file instanceof File;
-    
-    // Remove id from payload if it exists (it's in the URL)
     const payloadData = { ...updateFields };
-    
     const payload = hasFile ? getFormDataFromObject(payloadData) : payloadData;
-
-    // For FormData, let axios set Content-Type automatically (with boundary)
-    // For JSON, axios will set application/json automatically
     return axiosInstance.patch<API.Document>(`/library/documents/${id}/`, payload);
-}
+};
 
-export const apiDeleteDocument = (id: number)=>{
-    return axiosInstance.delete<API.Document>(`/library/documents/${id}/`);
-}
+export const apiDeleteDocument = (id: number) => {
+    return axiosInstance.delete(`/library/documents/${id}/`);
+};
 
-export const apiCopySharedDocument = (id: number)=>{
-    return axiosInstance.post<API.Document>(`/library/documents/${id}/copy-to-cabinet/`);
-}
+export const apiCopySharedDocument = (id: number) => {
+    return axiosInstance.post<API.Document>(`/library/documents/${id}/add-to-my-library/`);
+};
+
+export const apiAddToMyLibrary = (id: number) => {
+    return axiosInstance.post<API.Document>(`/library/documents/${id}/add-to-my-library/`);
+};
+
+export const apiFavoriteDocument = (id: number) => {
+    return axiosInstance.post<API.Document>(`/library/documents/${id}/favorite/`);
+};
+
+export const apiUnfavoriteDocument = (id: number) => {
+    return axiosInstance.delete<API.Document>(`/library/documents/${id}/favorite/`);
+};

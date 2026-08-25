@@ -43,6 +43,21 @@ const SignIn = () => {
     }
   }, [searchParams, toast, navigate, t.auth.emailVerifiedTitle, t.auth.emailVerifiedDescription]);
 
+  useEffect(() => {
+    try {
+      if (sessionStorage.getItem('jure-session-replaced') === '1') {
+        sessionStorage.removeItem('jure-session-replaced');
+        toast({
+          title: t.sessionReplaced.title,
+          description: t.sessionReplaced.description,
+          variant: 'destructive',
+        });
+      }
+    } catch {
+      // ignore
+    }
+  }, [toast, t.sessionReplaced.title, t.sessionReplaced.description]);
+
   const getLoginErrorMessage = (error: unknown): string => {
     if (!isAxiosError(error) || error.response?.status !== 400) return t.auth.loginErrorDescription;
     const data = error.response?.data;

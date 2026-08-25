@@ -28,3 +28,12 @@ class CallConsumer(CallSignalingMixin, AsyncJsonWebsocketConsumer):
     async def notification_new(self, event):
         # Same personal group as NotificationConsumer (`user_{id}`); ignore here.
         return
+
+    async def session_replaced(self, event):
+        await self.send_json(
+            {
+                "type": "session.replaced",
+                "payload": event.get("payload") or {"code": "session_replaced"},
+            }
+        )
+        await self.close(code=4008)

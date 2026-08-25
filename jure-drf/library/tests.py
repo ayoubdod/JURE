@@ -163,28 +163,29 @@ class SharedLibraryApiTests(APITestCase):
         url = f"{self.list_url}{self.shared.pk}/copy-to-cabinet/"
         response = self.client_a.post(url)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertFalse(response.data["is_shared"])
-        self.assertEqual(response.data["title"], "JURE template")
-        copy = Document.objects.get(pk=response.data["id"])
-        self.assertEqual(copy.cabinet_id, self.cab_a.pk)
-        self.assertFalse(copy.is_shared)
-        self.assertNotEqual(copy.pk, self.shared.pk)
-        self.assertTrue(copy.file)
-        self.assertNotEqual(copy.file.name, self.shared.file.name)
+        self.assertEqual(response.data["id"], self.shared.pk)
+        self.assertTrue(response.data["is_in_my_library"])
+        from library.models import LibrarySave
+        self.assertTrue(
+            LibrarySave.objects.filter(cabinet=self.cab_a, document=self.shared).exists()
+        )
 
     def test_cannot_copy_private_document(self):
         url = f"{self.list_url}{self.private_a.pk}/copy-to-cabinet/"
         response = self.client_a.post(url)
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["id"], self.private_a.pk)
 
     def test_other_cabinet_cannot_see_private_copy(self):
         copy_url = f"{self.list_url}{self.shared.pk}/copy-to-cabinet/"
         copied = self.client_a.post(copy_url)
         self.assertEqual(copied.status_code, status.HTTP_201_CREATED)
-        listed = self.client_b.get(self.list_url, {"all": "true"})
-        ids = {item["id"] for item in listed.data}
+        listed = self.client_b.get("/api/v1/library/my/", {"all": "true"})
+        ids = {item["id"] for item in listed.data["results"]}
         self.assertNotIn(copied.data["id"], ids)
-        self.assertIn(self.shared.pk, ids)
+        shared_list = self.client_b.get(self.list_url, {"all": "true"})
+        shared_ids = {item["id"] for item in shared_list.data}
+        self.assertIn(self.shared.pk, shared_ids)
 
 
 class DocumentAdminFormTests(TestCase):
@@ -419,6 +420,266 @@ class LibraryDocumentStatusTests(APITestCase):
         item = next(x for x in response.data if x["id"] == self.doc.id)
         self.assertIn("created_by_name", item)
         self.assertTrue(item["created_by_name"])
+
+
+class LibraryHubScopeTests(APITestCase):
+    def setUp(self):
+        from datetime import timedelta
+        from django.utils import timezone
+        from jurisdictions.constants import VisibilityScope
+        from jurisdictions.models import Jurisdiction
+        from library.models import LibraryFavorite, LibrarySave
+
+        self.LibraryFavorite = LibraryFavorite
+        self.LibrarySave = LibrarySave
+        self.ma, _ = Jurisdiction.objects.get_or_create(
+            code="MA",
+            defaults={
+                "name": "Morocco",
+                "country_code": "MA",
+                "legal_system": "civil_law",
+                "default_language": "fr",
+                "status": "ACTIVE",
+            },
+        )
+        self.qa, _ = Jurisdiction.objects.get_or_create(
+            code="QA",
+            defaults={
+                "name": "Qatar",
+                "country_code": "QA",
+                "legal_system": "mixed",
+                "default_language": "ar",
+                "status": "ACTIVE",
+            },
+        )
+        self.user_ma, self.cab_ma = _create_cabinet_lawyer(
+            "hub-ma@test.com", "+33641003001", "Hub MA"
+        )
+        self.cab_ma.jurisdiction = self.ma
+        self.cab_ma.save(update_fields=["jurisdiction"])
+        self.user_qa, self.cab_qa = _create_cabinet_lawyer(
+            "hub-qa@test.com", "+33641003002", "Hub QA"
+        )
+        self.cab_qa.jurisdiction = self.qa
+        self.cab_qa.save(update_fields=["jurisdiction"])
+        self.staff = User.objects.create_user(
+            email="hub-staff@test.com",
+            password="testpass123",
+            first_name="Platform",
+            last_name="Admin",
+            phone="+33641003003",
+            country="MA",
+            is_staff=True,
+        )
+        self.client_ma = _auth_client(self.user_ma)
+        self.client_qa = _auth_client(self.user_qa)
+        self.client_staff = _auth_client(self.staff)
+
+        self.personal = Document.objects.create(
+            title="Cabinet memo",
+            category=Document.DocumentCategory.LEGAL_RESEARCH_OPINIONS,
+            file=_pdf("memo.pdf"),
+            visibility_scope=VisibilityScope.CABINET,
+            cabinet=self.cab_ma,
+            created_by=self.user_ma,
+        )
+        self.local_ma = Document.objects.create(
+            title="Moroccan Commercial Code",
+            category=Document.DocumentCategory.LEGISLATION_REGULATIONS,
+            resource_type=Document.ResourceType.CODE,
+            file=_pdf("ma-code.pdf"),
+            visibility_scope=VisibilityScope.JURISDICTION,
+            jurisdiction=self.ma,
+            is_shared=True,
+            language="fr",
+            country="MA",
+        )
+        self.local_qa = Document.objects.create(
+            title="Qatar Labour Law",
+            category=Document.DocumentCategory.LEGISLATION_REGULATIONS,
+            resource_type=Document.ResourceType.LAW,
+            file=_pdf("qa-law.pdf"),
+            visibility_scope=VisibilityScope.JURISDICTION,
+            jurisdiction=self.qa,
+            is_shared=True,
+            language="ar",
+            country="QA",
+        )
+        self.international = Document.objects.create(
+            title="CISG Convention",
+            category=Document.DocumentCategory.LEGISLATION_REGULATIONS,
+            resource_type=Document.ResourceType.CONVENTION,
+            file=_pdf("cisg.pdf"),
+            visibility_scope=VisibilityScope.GLOBAL,
+            is_shared=True,
+            language="en",
+        )
+        stale = Document.objects.create(
+            title="Old Moroccan circular",
+            category=Document.DocumentCategory.LEGISLATION_REGULATIONS,
+            resource_type=Document.ResourceType.CIRCULAR,
+            file=_pdf("old.pdf"),
+            visibility_scope=VisibilityScope.JURISDICTION,
+            jurisdiction=self.ma,
+            is_shared=True,
+        )
+        Document.objects.filter(pk=stale.pk).update(created=timezone.now() - timedelta(days=8))
+        self.stale_local = Document.objects.get(pk=stale.pk)
+
+    def _titles(self, response, key="results"):
+        payload = response.data
+        rows = payload[key] if isinstance(payload, dict) else payload
+        return {item["title"] for item in rows}
+
+    def test_my_library_is_cabinet_only_until_saved(self):
+        response = self.client_ma.get("/api/v1/library/my/", {"all": "true"})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        titles = self._titles(response)
+        self.assertIn("Cabinet memo", titles)
+        self.assertNotIn("Moroccan Commercial Code", titles)
+        self.assertNotIn("CISG Convention", titles)
+
+    def test_local_library_is_jurisdiction_isolated(self):
+        ma = self.client_ma.get("/api/v1/library/local/", {"all": "true"})
+        qa = self.client_qa.get("/api/v1/library/local/", {"all": "true"})
+        self.assertEqual(ma.status_code, status.HTTP_200_OK)
+        self.assertEqual(qa.status_code, status.HTTP_200_OK)
+        ma_titles = self._titles(ma)
+        qa_titles = self._titles(qa)
+        self.assertIn("Moroccan Commercial Code", ma_titles)
+        self.assertIn("Old Moroccan circular", ma_titles)
+        self.assertNotIn("Qatar Labour Law", ma_titles)
+        self.assertNotIn("Cabinet memo", ma_titles)
+        self.assertIn("Qatar Labour Law", qa_titles)
+        self.assertNotIn("Moroccan Commercial Code", qa_titles)
+
+    def test_morocco_cannot_retrieve_qatar_local_resource(self):
+        response = self.client_ma.get(f"/api/v1/library/documents/{self.local_qa.pk}/")
+        self.assertIn(response.status_code, (status.HTTP_404_NOT_FOUND, status.HTTP_403_FORBIDDEN))
+
+    def test_international_visible_to_all_cabinets(self):
+        ma = self.client_ma.get("/api/v1/library/international/", {"all": "true"})
+        qa = self.client_qa.get("/api/v1/library/international/", {"all": "true"})
+        self.assertIn("CISG Convention", self._titles(ma))
+        self.assertIn("CISG Convention", self._titles(qa))
+        self.assertNotIn("Moroccan Commercial Code", self._titles(ma))
+
+    def test_last_added_is_seven_days_and_does_not_delete(self):
+        response = self.client_ma.get("/api/v1/library/local/", {"all": "true"})
+        recent_titles = {item["title"] for item in response.data["recent"]}
+        self.assertIn("Moroccan Commercial Code", recent_titles)
+        self.assertNotIn("Old Moroccan circular", recent_titles)
+        all_titles = self._titles(response)
+        self.assertIn("Old Moroccan circular", all_titles)
+        self.assertTrue(Document.objects.filter(pk=self.stale_local.pk).exists())
+        recent_item = next(x for x in response.data["results"] if x["title"] == "Moroccan Commercial Code")
+        self.assertTrue(recent_item["is_recent"])
+        stale_item = next(x for x in response.data["results"] if x["title"] == "Old Moroccan circular")
+        self.assertFalse(stale_item["is_recent"])
+
+    def test_regular_user_cannot_publish_local_or_international(self):
+        local = self.client_ma.post(
+            "/api/v1/library/admin/local/",
+            {
+                "title": "Unauthorized local",
+                "category": Document.DocumentCategory.LEGISLATION_REGULATIONS,
+                "resource_type": Document.ResourceType.LAW,
+                "file": _pdf("nope.pdf"),
+                "language": "fr",
+                "jurisdiction": self.ma.pk,
+            },
+            format="multipart",
+        )
+        international = self.client_ma.post(
+            "/api/v1/library/admin/international/",
+            {
+                "title": "Unauthorized intl",
+                "category": Document.DocumentCategory.LEGISLATION_REGULATIONS,
+                "file": _pdf("nope2.pdf"),
+                "language": "en",
+            },
+            format="multipart",
+        )
+        self.assertEqual(local.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(international.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_platform_admin_can_publish_local_and_international(self):
+        local = self.client_staff.post(
+            "/api/v1/library/admin/local/",
+            {
+                "title": "Dahir on companies",
+                "category": Document.DocumentCategory.LEGISLATION_REGULATIONS,
+                "resource_type": Document.ResourceType.DECREE,
+                "description": "Official text",
+                "file": _pdf("dahir.pdf"),
+                "language": "fr",
+                "jurisdiction": self.ma.pk,
+            },
+            format="multipart",
+        )
+        self.assertEqual(local.status_code, status.HTTP_201_CREATED, local.data)
+        self.assertEqual(local.data["scope"], "LOCAL")
+        self.assertTrue(local.data["is_recent"])
+        self.assertEqual(local.data["jurisdiction"], self.ma.pk)
+
+        intl = self.client_staff.post(
+            "/api/v1/library/admin/international/",
+            {
+                "title": "UNCITRAL Model Law",
+                "category": Document.DocumentCategory.LEGAL_RESEARCH_OPINIONS,
+                "resource_type": Document.ResourceType.LEGAL_GUIDE,
+                "file": _pdf("uncitral.pdf"),
+                "language": "en",
+                "country": "International",
+            },
+            format="multipart",
+        )
+        self.assertEqual(intl.status_code, status.HTTP_201_CREATED, intl.data)
+        self.assertEqual(intl.data["scope"], "INTERNATIONAL")
+        self.assertTrue(intl.data["is_recent"])
+
+        ma_local = self.client_ma.get("/api/v1/library/local/", {"all": "true"})
+        qa_local = self.client_qa.get("/api/v1/library/local/", {"all": "true"})
+        self.assertIn("Dahir on companies", self._titles(ma_local))
+        self.assertNotIn("Dahir on companies", self._titles(qa_local))
+        intl_list = self.client_qa.get("/api/v1/library/international/", {"all": "true"})
+        self.assertIn("UNCITRAL Model Law", self._titles(intl_list))
+
+    def test_favorite_and_add_to_my_library_are_references(self):
+        fav = self.client_ma.post(f"/api/v1/library/documents/{self.local_ma.pk}/favorite/")
+        self.assertEqual(fav.status_code, status.HTTP_200_OK)
+        self.assertTrue(fav.data["is_favorited"])
+        self.assertEqual(self.LibraryFavorite.objects.filter(user=self.user_ma, document=self.local_ma).count(), 1)
+
+        add = self.client_ma.post(f"/api/v1/library/documents/{self.local_ma.pk}/add-to-my-library/")
+        self.assertEqual(add.status_code, status.HTTP_201_CREATED)
+        self.assertTrue(add.data["is_in_my_library"])
+        self.assertEqual(Document.objects.filter(title="Moroccan Commercial Code").count(), 1)
+        self.assertTrue(self.LibrarySave.objects.filter(cabinet=self.cab_ma, document=self.local_ma).exists())
+
+        my_lib = self.client_ma.get("/api/v1/library/my/", {"all": "true"})
+        self.assertIn("Moroccan Commercial Code", self._titles(my_lib))
+        saved = next(x for x in my_lib.data["results"] if x["title"] == "Moroccan Commercial Code")
+        self.assertIn("Local Library", saved["source_library"])
+
+    def test_personal_create_stays_cabinet_scoped(self):
+        response = self.client_ma.post(
+            "/api/v1/library/my/",
+            {
+                "title": "Internal checklist",
+                "category": Document.DocumentCategory.FORMS_TEMPLATES,
+                "resource_type": Document.ResourceType.TEMPLATE,
+                "file": _pdf("check.pdf"),
+                "language": "fr",
+            },
+            format="multipart",
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
+        self.assertEqual(response.data["scope"], "PERSONAL")
+        self.assertFalse(response.data["is_shared"])
+        qa = self.client_qa.get("/api/v1/library/my/", {"all": "true"})
+        self.assertNotIn("Internal checklist", self._titles(qa))
+
 
 
 

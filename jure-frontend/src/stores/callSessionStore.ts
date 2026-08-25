@@ -207,6 +207,7 @@ let callingDeadline: number | null = null;
 let terminalTimer: ReturnType<typeof setTimeout> | null = null;
 let callingAnim: number | null = null;
 let connecting = false;
+let openMeetingRoom = false;
 let lastIncomingDedupe: { key: string; t: number } | null = null;
 let statsTimer: ReturnType<typeof setInterval> | null = null;
 let soundStatus: CallStatus | null = null;
@@ -512,6 +513,14 @@ interface CallSessionStore {
     remoteUsers?: CallRemoteUser[];
     displayTitle?: string | null;
   }) => boolean;
+  /** Enter an appointment meeting room without ringing other participants. */
+  enterMeetingRoom: (opts: {
+    conversationId: number;
+    kind?: CallKind;
+    remoteUser?: CallRemoteUser | null;
+    remoteUsers?: CallRemoteUser[];
+    displayTitle?: string | null;
+  }) => boolean;
   acceptIncoming: () => void;
   rejectIncoming: () => void;
   endCall: () => void;
@@ -610,6 +619,7 @@ function resetIdle() {
   callStartMs = null;
   callingDeadline = null;
   callMode = 'direct';
+  openMeetingRoom = false;
   knownRemoteUsers.clear();
   void stopCallSounds();
   soundStatus = null;
@@ -1114,6 +1124,31 @@ function onWsMessage(data: WebSocketMessage | CallsWsMessage) {
     return;
   }
 
+  if (type === 'call.entered') {
+    // Open meeting room: enter the stage immediately without ringing anyone.
+    const gn = String(m.groupName ?? m.group_name ?? '');
+    if (!gn) return;
+    groupName = gn;
+    callMode = 'conference';
+    openMeetingRoom = true;
+    ingestParticipantProfiles(m.participants ?? m.participantProfiles);
+    setUiState((prev) => ({
+      ...prev,
+      status: prev.status === 'idle' ? 'connecting' : prev.status === 'calling' ? 'connecting' : prev.status,
+      groupName: gn,
+      conversationId: Number(m.conversationId ?? m.conversation_id) || prev.conversationId,
+      kind: m.kind != null ? normalizeKind(m.kind) : prev.kind,
+      mode: 'conference',
+      displayTitle: prev.displayTitle || 'Meeting',
+    }));
+    void (async () => {
+      await ensureConferenceLocalMedia();
+      await flushPendingConferenceOffers();
+      markCallActive();
+    })();
+    return;
+  }
+
   if (type === 'call.offer') {
     const offerSid = Number(m.senderId ?? m.sender_id);
     if (Number.isFinite(offerSid) && myId != null && offerSid === myId) return;
@@ -1524,6 +1559,55 @@ export const useCallSessionStore = create<CallSessionStore>((set, get) => ({
     return true;
   },
 
+  enterMeetingRoom: ({
+    conversationId: convId,
+    kind = 'video',
+    remoteUser = null,
+    remoteUsers,
+    displayTitle = null,
+  }) => {
+    if (get().ui.status !== 'idle') return false;
+    void unlockRemoteAudioPlayback();
+    callMode = 'conference';
+    openMeetingRoom = true;
+    role = 'caller';
+    conversationId = convId;
+    groupName = null;
+    knownRemoteUsers.clear();
+    if (remoteUser) rememberRemoteUser(remoteUser);
+    (remoteUsers ?? []).forEach((u) => rememberRemoteUser(u));
+    setUiState({
+      ...initialUi(),
+      status: 'connecting',
+      conversationId: convId,
+      groupName: null,
+      kind,
+      mode: 'conference',
+      remoteUser,
+      displayTitle: displayTitle?.trim() || 'Meeting',
+      peers: [],
+    });
+    void (async () => {
+      await useCallsWsStore.getState().connect().catch(() => {});
+      useChatStore.getState().connect().catch(() => {});
+      const ok = sendCallSignal(
+        {
+          type: 'call.enter_room',
+          conversationId: convId,
+          kind,
+          mode: 'conference',
+        },
+        convId
+      );
+      if (!ok) {
+        devError('[call] call.enter_room not sent');
+        setUiState(initialUi());
+        openMeetingRoom = false;
+      }
+    })();
+    return true;
+  },
+
   acceptIncoming: () => {
     if (get().ui.status !== 'ringing' || !groupName) return;
     // Gesture-scoped unlock — remote play() after ICE must stay allowed.
@@ -1782,6 +1866,7 @@ export function useWebRtcCall() {
   const ui = useCallSessionStore((s) => s.ui);
   const initiateCall = useCallSessionStore((s) => s.initiateCall);
   const joinActiveCall = useCallSessionStore((s) => s.joinActiveCall);
+  const enterMeetingRoom = useCallSessionStore((s) => s.enterMeetingRoom);
   const acceptIncoming = useCallSessionStore((s) => s.acceptIncoming);
   const rejectIncoming = useCallSessionStore((s) => s.rejectIncoming);
   const endCall = useCallSessionStore((s) => s.endCall);
@@ -1798,6 +1883,7 @@ export function useWebRtcCall() {
     callState: ui,
     initiateCall,
     joinActiveCall,
+    enterMeetingRoom,
     acceptIncoming,
     rejectIncoming,
     endCall,

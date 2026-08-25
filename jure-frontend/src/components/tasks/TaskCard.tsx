@@ -9,6 +9,7 @@ import {
   isTaskOverdue,
   taskAssigneeId,
   taskAssigneeUser,
+  taskAssigneeUsers,
   taskClientUser,
 } from '@/lib/workspacePeople';
 import { useCabinetMemberDirectory } from '@/hooks/useCabinetMemberDirectory';
@@ -25,6 +26,7 @@ export default memo(function TaskCard({
   const { t, lang, enumLabel } = useAppTranslation();
   const lookup = useCabinetMemberDirectory();
   const assignee = taskAssigneeUser(task);
+  const assigneeUsers = taskAssigneeUsers(task);
   const assigneeId = taskAssigneeId(task);
   const cab = assigneeId != null ? lookup(assigneeId) : undefined;
   const client = taskClientUser(task);
@@ -72,18 +74,31 @@ export default memo(function TaskCard({
           {client ? `${t.tasks.columns.client}: ${displayPersonName(client)}` : null}
         </p>
       )}
-      {(assignee || cab) && (
-        <div className="mt-2 flex items-center gap-2">
-          <UserAvatar
-            size="xs"
-            image={getPersonImage(assignee as unknown as Record<string, unknown>) ?? cab?.image}
-            firstName={assignee?.first_name ?? cab?.first_name}
-            lastName={assignee?.last_name ?? cab?.last_name}
-            email={assignee?.email ?? cab?.email}
-          />
-          <span className="text-[11px] text-slate-600 dark:text-slate-400 truncate">
-            {displayPersonName(assignee || cab)}
-          </span>
+      {(assigneeUsers.length > 0 || cab) && (
+        <div className="mt-2 flex items-center gap-1.5">
+          <div className="flex -space-x-1.5 rtl:space-x-reverse">
+            {assigneeUsers.slice(0, 3).map((person) => {
+              const row = person.id != null ? lookup(person.id) : undefined;
+              return (
+                <UserAvatar
+                  key={person.id || person.email}
+                  size="xs"
+                  className="ring-2 ring-white dark:ring-slate-950"
+                  image={getPersonImage(person as unknown as Record<string, unknown>) ?? row?.image}
+                  firstName={person.first_name ?? row?.first_name}
+                  lastName={person.last_name ?? row?.last_name}
+                  email={person.email ?? row?.email}
+                />
+              );
+            })}
+          </div>
+          {assigneeUsers.length > 3 ? (
+            <span className="text-[10px] font-medium text-slate-500">+{assigneeUsers.length - 3}</span>
+          ) : assigneeUsers.length === 1 ? (
+            <span className="text-[11px] text-slate-600 dark:text-slate-400 truncate">
+              {displayPersonName(assigneeUsers[0] || cab)}
+            </span>
+          ) : null}
         </div>
       )}
     </button>

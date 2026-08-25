@@ -35,6 +35,16 @@ class Conversation(TimeStampedModel):
     )
     linked_case_at = models.DateTimeField(null=True, blank=True)
 
+    # Meeting-only group chats created for a video appointment (deleted when the meeting ends).
+    is_temporary = models.BooleanField(default=False)
+    temporary_for_appointment = models.OneToOneField(
+        "tasks.Appointment",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="temporary_conversation",
+    )
+
     # Group icon: preset (emoji/key) or custom upload. Use icon_image if set, else icon_preset.
     icon_preset = models.CharField(max_length=50, blank=True, default="group")
     icon_image = models.ImageField(upload_to=conversation_icon_upload_to, null=True, blank=True)

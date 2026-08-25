@@ -9,6 +9,8 @@ from django.http import parse_cookie
 from rest_framework_simplejwt.tokens import AccessToken
 from rest_framework_simplejwt.exceptions import TokenError
 
+from users.session import session_version_matches
+
 User = get_user_model()
 
 
@@ -39,7 +41,7 @@ class WebSocketAuthMiddleware(BaseMiddleware):
       - query string: ?token=...
       - header: Authorization: Bearer <token>
       - Cookie header (dj-rest-auth access cookie or "access" / "access_token")
-    Sets scope['user'].
+    Sets scope['user']. Rejects superseded single-session tokens.
     """
     async def __call__(self, scope, receive, send):
         user = AnonymousUser()
@@ -64,7 +66,13 @@ class WebSocketAuthMiddleware(BaseMiddleware):
                 access = AccessToken(token)
                 user_id = access.get("user_id")
                 if user_id:
-                    user = await self._get_user(user_id)
+                    candidate = await self._get_user(user_id)
+                    if (
+                        candidate
+                        and not isinstance(candidate, AnonymousUser)
+                        and session_version_matches(candidate, access)
+                    ):
+                        user = candidate
             except (TokenError, KeyError):
                 user = AnonymousUser()
 

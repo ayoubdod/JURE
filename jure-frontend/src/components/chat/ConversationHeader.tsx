@@ -124,6 +124,11 @@ const ConversationHeader: React.FC<{
         <div className="min-w-0">
           <p className="truncate text-[14px] font-semibold tracking-tight text-slate-900 dark:text-slate-100">
             {displayName}
+            {conversation.is_temporary ? (
+              <span className="ms-2 align-middle rounded-full bg-amber-50 px-1.5 py-0.5 text-[10px] font-medium text-amber-800 ring-1 ring-amber-200 dark:bg-amber-950/40 dark:text-amber-200 dark:ring-amber-800">
+                {t.calendar.appointmentModal.meetingChatBadge}
+              </span>
+            ) : null}
           </p>
           <p
             className={cn(

@@ -18,7 +18,7 @@ from jurisdictions.constants import VisibilityScope
 from jurisdictions.models import Jurisdiction
 from jurisdictions.scoping import validate_visibility_scope
 
-from .models import Document
+from .models import Document, LibraryFavorite, LibrarySave
 
 
 def parse_tag_slugs(raw: str) -> list[str]:
@@ -120,6 +120,13 @@ class DocumentAdminForm(forms.ModelForm):
         if "jurisdiction" in self.fields:
             self.fields["jurisdiction"].queryset = Jurisdiction.objects.order_by("code")
             self.fields["jurisdiction"].required = False
+        if "resource_type" in self.fields:
+            self.fields["resource_type"].required = False
+            self.fields["resource_type"].initial = self.fields["resource_type"].initial or Document.ResourceType.OTHER
+        if "file" in self.fields:
+            self.fields["file"].required = False
+        if "external_url" in self.fields:
+            self.fields["external_url"].required = False
 
     def clean_tags_input(self):
         return parse_tag_slugs(self.cleaned_data.get("tags_input") or "")
@@ -146,6 +153,10 @@ class DocumentAdminForm(forms.ModelForm):
                 )
             except ValidationError as exc:
                 self.add_error(None, exc)
+        uploaded = cleaned.get("file") or (self.instance.file if self.instance and self.instance.pk else None)
+        url = (cleaned.get("external_url") or "").strip()
+        if not uploaded and not url:
+            self.add_error("file", _("Upload a document or provide an external URL."))
         return cleaned
 
 
@@ -242,18 +253,30 @@ class DocumentAdmin(ModelAdmin):
     }
     list_display = [
         "title",
+        "resource_type",
         "category",
         "status",
         "visibility_scope",
         "jurisdiction",
+        "language",
         "is_shared",
         "cabinet",
         "created_by",
         "created",
         "modified",
     ]
-    list_filter = ["status", "visibility_scope", "jurisdiction", "is_shared", "category", "tags", "created"]
-    search_fields = ["title", "description"]
+    list_filter = [
+        "status",
+        "visibility_scope",
+        "jurisdiction",
+        "resource_type",
+        "is_shared",
+        "category",
+        "language",
+        "tags",
+        "created",
+    ]
+    search_fields = ["title", "description", "author", "source", "keywords", "reference_number"]
     readonly_fields = ["created", "modified", "updated_by"]
     raw_id_fields = ["cabinet", "created_by", "updated_by"]
     actions = ("archive_documents", "restore_documents")
@@ -265,8 +288,20 @@ class DocumentAdmin(ModelAdmin):
             "fields": (
                 "title",
                 "category",
+                "resource_type",
+                "legal_area",
                 "description",
                 "file",
+                "external_url",
+                "language",
+                "country",
+                "author",
+                "issuing_authority",
+                "source",
+                "reference_number",
+                "publication_date",
+                "effective_date",
+                "keywords",
                 "tags_input",
                 "visibility_scope",
                 "jurisdiction",
@@ -371,3 +406,17 @@ class DocumentAdmin(ModelAdmin):
         super().save_related(request, form, formsets, change)
         slugs = form.cleaned_data.get("tags_input") or []
         form.instance.tags.set(resolve_tags(slugs))
+
+
+@admin.register(LibraryFavorite)
+class LibraryFavoriteAdmin(ModelAdmin):
+    list_display = ["user", "document", "created"]
+    search_fields = ["user__email", "document__title"]
+    raw_id_fields = ["user", "document"]
+
+
+@admin.register(LibrarySave)
+class LibrarySaveAdmin(ModelAdmin):
+    list_display = ["cabinet", "document", "added_by", "created"]
+    search_fields = ["cabinet__trade_name", "document__title"]
+    raw_id_fields = ["cabinet", "document", "added_by"]

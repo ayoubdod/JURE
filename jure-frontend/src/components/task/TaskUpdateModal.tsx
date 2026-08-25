@@ -8,7 +8,15 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import ServerSelect from '@/components/common/ServerSelect';
+import TeamMemberMultiSelect from '@/components/calendar/TeamMemberMultiSelect';
+import CalendarAttachmentField, {
+  type CalendarAttachment,
+  type PendingAttachment,
+  uploadCalendarAttachments,
+  deleteCalendarAttachment,
+} from '@/components/calendar/CalendarAttachmentField';
 import { apiUpdateTask } from '@/services/task/api';
+import { taskAssigneeIds } from '@/lib/workspacePeople';
 import * as yup from 'yup';
 import { Resolver, useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
@@ -60,6 +68,7 @@ function toDateInput(value?: string | null) {
 }
 
 function valuesFromTask(instance: API.Task): API.TaskUpdateForm {
+  const ids = taskAssigneeIds(instance);
   return {
     id: instance.id,
     title: instance.title,
@@ -68,7 +77,8 @@ function valuesFromTask(instance: API.Task): API.TaskUpdateForm {
     status: instance.status,
     due_date: toDateInput(instance.due_date),
     estimated_hours: instance.estimated_hours?.toString() ?? '',
-    assigned_to: relationId(instance.assigned_to) ?? instance.assigned_to_details?.id,
+    assigned_to: ids[0] ?? relationId(instance.assigned_to) ?? instance.assigned_to_details?.id,
+    assignee_ids: ids,
     client: relationId(instance.client) ?? (instance.client_details as { id?: number } | null)?.id,
     case: instance.case ?? undefined,
   };
@@ -94,6 +104,11 @@ const TaskUpdateModal = forwardRef<TaskUpdateModalRef, TaskUpdateModalProps>(({ 
   const [instance, setInstance] = useState<API.Task | null>(null);
   const [isOpen, setIsOpen] = useState(false);
   const [submitPhase, setSubmitPhase] = useState<'idle' | 'loading' | 'success'>('idle');
+  const [assigneeIds, setAssigneeIds] = useState<number[]>([]);
+  const [existingAttachments, setExistingAttachments] = useState<CalendarAttachment[]>([]);
+  const [pendingFiles, setPendingFiles] = useState<PendingAttachment[]>([]);
+  const [removedAttachmentIds, setRemovedAttachmentIds] = useState<number[]>([]);
+  const [uploadingAttachments, setUploadingAttachments] = useState(false);
 
   const isBusy = submitPhase !== 'idle';
 
@@ -106,7 +121,11 @@ const TaskUpdateModal = forwardRef<TaskUpdateModalRef, TaskUpdateModalProps>(({ 
         status: yup.string().required(t.tasks.validation.statusRequired),
         due_date: yup.string().required(t.tasks.validation.dueDateRequired),
         estimated_hours: yup.string().optional(),
-        assigned_to: yup.string().required(t.tasks.validation.assignedToRequired),
+        assignee_ids: yup
+          .array()
+          .of(yup.number().required())
+          .min(1, t.tasks.validation.assigneesRequired)
+          .required(t.tasks.validation.assigneesRequired),
         client: yup.string().optional(),
         case: yup.string().optional(),
       }),
@@ -120,7 +139,12 @@ const TaskUpdateModal = forwardRef<TaskUpdateModalRef, TaskUpdateModalProps>(({ 
   const show = (next: API.Task) => {
     setInstance(next);
     setSubmitPhase('idle');
-    mainForm.reset(valuesFromTask(next));
+    const values = valuesFromTask(next);
+    setAssigneeIds(values.assignee_ids || []);
+    setExistingAttachments((next.attachments || []) as CalendarAttachment[]);
+    setPendingFiles([]);
+    setRemovedAttachmentIds([]);
+    mainForm.reset(values);
     scrollRef.current?.scrollTo({ top: 0 });
     setIsOpen(true);
   };
@@ -134,12 +158,32 @@ const TaskUpdateModal = forwardRef<TaskUpdateModalRef, TaskUpdateModalProps>(({ 
 
   const handleSubmit = async (data: API.TaskUpdateForm) => {
     if (!instance) return;
+    if (!assigneeIds.length) {
+      mainForm.setError('assignee_ids', { message: t.tasks.validation.assigneesRequired });
+      return;
+    }
     setSubmitPhase('loading');
     try {
       const res = await apiUpdateTask({
         ...data,
         id: instance.id,
+        assignee_ids: assigneeIds,
+        assigned_to: assigneeIds[0],
       });
+      setUploadingAttachments(true);
+      try {
+        for (const id of removedAttachmentIds) {
+          await deleteCalendarAttachment(`/tasks/tasks/${instance.id}/attachments/${id}/`);
+        }
+        if (pendingFiles.length) {
+          await uploadCalendarAttachments(
+            `/tasks/tasks/${instance.id}/attachments/`,
+            pendingFiles.map((p) => p.file)
+          );
+        }
+      } finally {
+        setUploadingAttachments(false);
+      }
       setSubmitPhase('success');
       toast({
         title: m.updatedTitle,
@@ -152,6 +196,7 @@ const TaskUpdateModal = forwardRef<TaskUpdateModalRef, TaskUpdateModalProps>(({ 
       setSubmitPhase('idle');
     } catch (err) {
       setSubmitPhase('idle');
+      setUploadingAttachments(false);
       devError('Error updating task:', err);
       if (isAxiosError(err)) {
         const remoteValidation = getRemoteFieldsValidation(err);
@@ -170,7 +215,7 @@ const TaskUpdateModal = forwardRef<TaskUpdateModalRef, TaskUpdateModalProps>(({ 
       'description',
       'priority',
       'status',
-      'assigned_to',
+      'assignee_ids',
       'due_date',
     ];
     const first = order.find((key) => mainForm.formState.errors[key]);
@@ -326,23 +371,22 @@ const TaskUpdateModal = forwardRef<TaskUpdateModalRef, TaskUpdateModalProps>(({ 
             <CreateFormSection index="03" title={m.assignmentTimeline}>
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <CreateFormField
-                  id={`${formId}-assigned_to`}
+                  id={`${formId}-assignee_ids`}
                   label={m.assignTo}
                   required
-                  error={fieldError('assigned_to')}
+                  error={fieldError('assignee_ids')}
+                  className="sm:col-span-2"
                 >
-                  <ServerSelect
-                    id={`${formId}-assigned_to`}
-                    link="/cabinets/members/select_list"
-                    value={mainForm.watch('assigned_to')}
-                    onChange={(val) =>
-                      mainForm.setValue('assigned_to', val, { shouldValidate: true, shouldDirty: true })
-                    }
-                    labelKey="email"
-                    placeholder={m.selectAssignee}
-                    cleanable
+                  <TeamMemberMultiSelect
+                    id={`${formId}-assignee_ids`}
+                    value={assigneeIds}
+                    onChange={(ids) => {
+                      setAssigneeIds(ids);
+                      mainForm.setValue('assignee_ids', ids, { shouldValidate: true, shouldDirty: true });
+                      mainForm.setValue('assigned_to', ids[0], { shouldDirty: true });
+                    }}
                     disabled={isBusy}
-                    className={CREATE_SERVER_SELECT_CLASS}
+                    placeholder={m.selectAssignees}
                   />
                 </CreateFormField>
                 <CreateFormField
@@ -350,6 +394,7 @@ const TaskUpdateModal = forwardRef<TaskUpdateModalRef, TaskUpdateModalProps>(({ 
                   label={m.dueDate}
                   required
                   error={fieldError('due_date')}
+                  className="sm:col-span-2"
                 >
                   <Input
                     id={`${formId}-due_date`}
@@ -395,6 +440,17 @@ const TaskUpdateModal = forwardRef<TaskUpdateModalRef, TaskUpdateModalProps>(({ 
                   />
                 </CreateFormField>
               </div>
+            </CreateFormSection>
+
+            <CreateFormSection index="05" title={m.attachments}>
+              <CalendarAttachmentField
+                existing={existingAttachments.filter((a) => !removedAttachmentIds.includes(a.id))}
+                pending={pendingFiles}
+                onPendingChange={setPendingFiles}
+                onRemoveExisting={(id) => setRemovedAttachmentIds((prev) => [...prev, id])}
+                disabled={isBusy}
+                uploading={uploadingAttachments}
+              />
             </CreateFormSection>
           </div>
         </div>

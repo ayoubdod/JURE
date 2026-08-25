@@ -168,6 +168,11 @@ def _conference_call_group(call_id: int) -> str:
     return f"call_conf_{int(call_id)}"
 
 
+def _meeting_room_group(conversation_id: int) -> str:
+    """Stable group for appointment / open conference rooms (no ringing)."""
+    return f"call_meeting_{int(conversation_id)}"
+
+
 def _call_state_cache_key(group_name: str) -> str:
     return f"webrtc_call:{group_name}"
 
@@ -385,6 +390,8 @@ class CallSignalingMixin:
             await self._handle_leave(content)
         elif msg_type == "call.join":
             await self._handle_join(content)
+        elif msg_type == "call.enter_room":
+            await self._handle_enter_room(content)
         elif msg_type == "call.end":
             await self._handle_end(content)
         else:
@@ -542,6 +549,117 @@ class CallSignalingMixin:
         return ConversationMembership.objects.filter(
             conversation_id=conversation_id, user_id=user_id, is_deleted=False
         ).exists()
+
+    @database_sync_to_async
+    def _conversation_member_ids(self, conversation_id: int) -> list[int]:
+        return list(
+            ConversationMembership.objects.filter(
+                conversation_id=conversation_id,
+                is_deleted=False,
+            )
+            .values_list("user_id", flat=True)
+            .distinct()
+        )
+
+    async def _handle_enter_room(self, content: dict):
+        """
+        Enter an open conference room for a conversation (appointment meetings).
+
+        Does not ring other participants — the user joins the room immediately.
+        If the room already exists, behave like a late join.
+        """
+        conv_id = content.get("conversationId", content.get("conversation_id"))
+        if conv_id is None:
+            await self.send_json({"type": "error", "message": "conversationId required"})
+            return
+        try:
+            conv_id = int(conv_id)
+        except (TypeError, ValueError):
+            await self.send_json({"type": "error", "message": "invalid ids"})
+            return
+
+        uid = int(self.user.id)
+        if not await self._user_in_conversation(conv_id, uid):
+            await self.send_json({"type": "error", "message": "not a participant"})
+            return
+
+        kind = _normalize_call_kind(content.get("kind") or "video")
+        group_name = _meeting_room_group(conv_id)
+        key = _call_state_cache_key(group_name)
+        state = await asyncio.to_thread(cache.get, key)
+
+        if state and state.get("status") in ("active", "ringing"):
+            # Late join existing open room
+            await self._handle_join({**content, "groupName": group_name})
+            state = await asyncio.to_thread(cache.get, key)
+            if not state:
+                return
+            profiles = await self._participant_profiles(_participant_ids(state))
+            await self.send_json(
+                {
+                    "type": "call.entered",
+                    "groupName": group_name,
+                    "conversationId": conv_id,
+                    "kind": state.get("kind", kind),
+                    "mode": "conference",
+                    "openRoom": True,
+                    "callId": state.get("callId"),
+                    "joinedIds": _joined_ids(state),
+                    "participantIds": _participant_ids(state),
+                    "participants": profiles,
+                }
+            )
+            return
+
+        members = await self._conversation_member_ids(conv_id)
+        if uid not in members:
+            members.append(uid)
+        if len(members) > MAX_CONFERENCE_PARTICIPANTS:
+            # Keep room open for conversation members; cap joined count on join instead.
+            members = members[:MAX_CONFERENCE_PARTICIPANTS]
+            if uid not in members:
+                members[-1] = uid
+
+        call_id = await _persist_call_started_async(conv_id, uid, members, kind)
+        if not call_id:
+            await self.send_json({"type": "error", "message": "could not create call"})
+            return
+
+        state = {
+            "mode": "conference",
+            "meetingRoom": True,
+            "callerId": uid,
+            "participantIds": members,
+            "joinedIds": [uid],
+            "ringingIds": [],
+            "status": "active",
+            "startedAt": timezone.now().isoformat(),
+            "conversationId": conv_id,
+            "kind": kind,
+            "callId": call_id,
+            "answered": False,
+        }
+        await asyncio.to_thread(cache.set, key, state, CALL_STATE_TTL)
+        await _index_call_for_conversation(conv_id, group_name)
+        await self.channel_layer.group_add(group_name, self.channel_name)
+        self.call_groups_joined.add(group_name)
+        await self._broadcast_room_active(conv_id, state, group_name)
+
+        profiles = await self._participant_profiles(members)
+        await self.send_json(
+            {
+                "type": "call.entered",
+                "groupName": group_name,
+                "conversationId": conv_id,
+                "kind": kind,
+                "mode": "conference",
+                "openRoom": True,
+                "callId": call_id,
+                "joinedIds": [uid],
+                "participantIds": members,
+                "participants": profiles,
+            }
+        )
 
     async def _handle_initiate(self, content: dict):
         conv_id = content.get("conversationId", content.get("conversation_id"))

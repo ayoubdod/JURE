@@ -42,6 +42,17 @@ export interface HomeContent {
     docToMatter: { title: string; steps: string[] };
     questionToResearch: { title: string; steps: string[]; note: string };
   };
+  showcase: {
+    eyebrow: string;
+    title: string;
+    body: string;
+  };
+  trust: {
+    title: string;
+    subtitle: string;
+    stats: Array<{ value: number; suffix: string; label: string }>;
+    logoLabels: string[];
+  };
   security: {
     title: string;
     body: string;
@@ -53,6 +64,15 @@ export interface HomeContent {
     firms: { title: string; body: string };
     departments: { title: string; body: string };
     lawyers: { title: string; body: string };
+  };
+  floats: {
+    notification: string;
+    deadline: string;
+    caseStatus: string;
+    client: string;
+    document: string;
+    aiSuggestion: string;
+    calendar: string;
   };
   insights: {
     title: string;
@@ -218,9 +238,33 @@ const en: HomeContent = {
       },
     ],
   },
+  showcase: {
+    eyebrow: "Product",
+    title: "One workspace. Full visibility.",
+    body: "See every matter, deadline and document in a single, calm interface — designed for how lawyers actually work.",
+  },
+  trust: {
+    title: "Built for firms that take trust seriously",
+    subtitle: "Precision, confidentiality and clarity — from the first login.",
+    stats: [
+      { value: 3, suffix: "", label: "Languages · FR · EN · AR" },
+      { value: 1, suffix: "", label: "Workspace for the whole firm" },
+      { value: 100, suffix: "%", label: "Human review on AI output" },
+    ],
+    logoLabels: ["Law firms", "Legal departments", "Solo practitioners"],
+  },
+  floats: {
+    notification: "New task assigned",
+    deadline: "Hearing in 3 days",
+    caseStatus: "Case · Active",
+    client: "Atlas Textile SARL",
+    document: "Lease agreement.pdf",
+    aiSuggestion: "Juria · Clause review ready",
+    calendar: "Thu · Commercial Court",
+  },
   finalCta: {
-    title: "We're building JURE with the first firms.",
-    body: "JURE is in active development with early legal teams. Join now to shape the platform — your feedback drives what we build next.",
+    title: "Spend less time managing.\nMore time practicing law.",
+    body: "JURE brings matters, documents, deadlines and collaboration into one LegalTech workspace — so your team can focus on the work that matters.",
     primary: "Start with JURE",
     secondary: "See JURE in action",
     tagline: "LegalTech for modern legal teams — built responsibly.",
@@ -372,9 +416,33 @@ const fr: HomeContent = {
       },
     ],
   },
+  showcase: {
+    eyebrow: "Produit",
+    title: "Un seul espace. Une vision claire.",
+    body: "Retrouvez chaque dossier, échéance et document dans une interface calme — conçue pour le quotidien des avocats.",
+  },
+  trust: {
+    title: "Conçu pour les cabinets qui prennent la confiance au sérieux",
+    subtitle: "Précision, confidentialité et clarté — dès la première connexion.",
+    stats: [
+      { value: 3, suffix: "", label: "Langues · FR · EN · AR" },
+      { value: 1, suffix: "", label: "Espace de travail pour tout le cabinet" },
+      { value: 100, suffix: "%", label: "Relecture humaine sur l'IA" },
+    ],
+    logoLabels: ["Cabinets d'avocats", "Directions juridiques", "Indépendants"],
+  },
+  floats: {
+    notification: "Nouvelle tâche assignée",
+    deadline: "Audience dans 3 jours",
+    caseStatus: "Dossier · Actif",
+    client: "Atlas Textile SARL",
+    document: "Contrat de bail.pdf",
+    aiSuggestion: "Juria · Analyse prête",
+    calendar: "Jeu · Tribunal de commerce",
+  },
   finalCta: {
-    title: "Nous construisons JURE avec les premiers cabinets.",
-    body: "JURE est en développement actif avec des équipes juridiques pionnières. Rejoignez-nous pour façonner la plateforme — vos retours orientent ce que nous construisons.",
+    title: "Passez moins de temps à gérer.\nPlus de temps à pratiquer le droit.",
+    body: "JURE réunit dossiers, documents, échéances et collaboration dans un seul espace LegalTech — pour que votre équipe se concentre sur l'essentiel.",
     primary: "Commencer avec JURE",
     secondary: "Voir JURE en action",
     tagline: "La LegalTech pour les équipes juridiques modernes — construite de manière responsable.",
@@ -525,9 +593,33 @@ const ar: HomeContent = {
       },
     ],
   },
+  showcase: {
+    eyebrow: "المنتج",
+    title: "مساحة واحدة. رؤية كاملة.",
+    body: "اطّلع على كل ملف وموعد ومستند في واجهة هادئة — مصممة لطريقة عمل المحامين فعليًا.",
+  },
+  trust: {
+    title: "مبنية للمكاتب التي تأخذ الثقة على محمل الجد",
+    subtitle: "دقة وسرية ووضوح — من أول تسجيل دخول.",
+    stats: [
+      { value: 3, suffix: "", label: "لغات · FR · EN · AR" },
+      { value: 1, suffix: "", label: "مساحة عمل للمكتب بأكمله" },
+      { value: 100, suffix: "%", label: "مراجعة بشرية لمخرجات الذكاء الاصطناعي" },
+    ],
+    logoLabels: ["مكاتب المحاماة", "الإدارات القانونية", "المحامون المستقلون"],
+  },
+  floats: {
+    notification: "مهمة جديدة مُسندة",
+    deadline: "جلسة خلال 3 أيام",
+    caseStatus: "ملف · نشط",
+    client: "أطلس للنسيج ش.ذ.م.م",
+    document: "عقد الإيجار.pdf",
+    aiSuggestion: "جوريا · المراجعة جاهزة",
+    calendar: "خميس · المحكمة التجارية",
+  },
   finalCta: {
-    title: "نبني JURE مع المكاتب الأولى.",
-    body: "JURE في تطوير نشط مع فرق قانونية رائدة. انضم الآن لتشكيل المنصة — ملاحظاتك توجه ما نبنيه.",
+    title: "اقضِ وقتًا أقل في الإدارة.\nووقتًا أكثر في ممارسة القانون.",
+    body: "تجمع JURE الملفات والمستندات والمواعيد والتعاون في مساحة LegalTech واحدة — ليركّز فريقك على العمل الأهم.",
     primary: "ابدأ مع JURE",
     secondary: "شاهد JURE عمليًا",
     tagline: "LegalTech للفرق القانونية الحديثة — مبنية بمسؤولية.",

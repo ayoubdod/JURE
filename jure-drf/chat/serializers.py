@@ -58,6 +58,9 @@ def build_shared_item_payload(message: Message) -> tuple[dict | None, str]:
         if not t:
             return None, Message.MessageType.TEXT
         due = t.due_date.isoformat() if t.due_date else None
+        primary = t.assigned_to
+        if primary is None:
+            primary = t.assignees.first()
         return {
             "type": "TASK",
             "id": str(t.id),
@@ -67,7 +70,7 @@ def build_shared_item_payload(message: Message) -> tuple[dict | None, str]:
             "reference": None,
             "dueDate": due,
             "caseType": None,
-            "assignedTo": _assigned_to_chat_preview(t.assigned_to),
+            "assignedTo": _assigned_to_chat_preview(primary),
         }, mt
 
     if mt == Message.MessageType.SHARED_APPOINTMENT:
@@ -167,6 +170,7 @@ class ConversationSerializer(serializers.ModelSerializer):
     icon_url = serializers.SerializerMethodField()
     icon_preset_emoji = serializers.SerializerMethodField()
     linkedCase = serializers.SerializerMethodField()
+    active_or_upcoming_appointment = serializers.SerializerMethodField()
 
     created_by = serializers.HiddenField(default=serializers.CurrentUserDefault())
     participants = serializers.PrimaryKeyRelatedField(many=True, queryset=User.objects.all(), write_only=True)
@@ -191,9 +195,12 @@ class ConversationSerializer(serializers.ModelSerializer):
             "archived",
             "is_pinned",
             "linkedCase",
+            "is_temporary",
+            "active_or_upcoming_appointment",
             "created_by",
             "created",
         )
+        read_only_fields = ("is_temporary",)
     
 
     def validate(self, _attrs):
@@ -210,46 +217,55 @@ class ConversationSerializer(serializers.ModelSerializer):
             creator = self.context.get('request').user
 
             if participant.id == creator.id:
-                raise serializers.ValidationError("You can only create a direct conversation with yourself")
-            
-            old_conversation = Conversation.objects.filter(type=Conversation.Type.DIRECT).filter(participants=creator).filter(participants=participant).first()
-            if old_conversation and ConversationMembership.objects.get(conversation=old_conversation, user=creator).is_deleted == False:
-                raise serializers.ValidationError("You already have a direct conversation with this participant")
-        
+                raise serializers.ValidationError("You cannot create a direct conversation with yourself")
+
         return attrs
 
     def create(self, validated_data):
-        participants = validated_data.pop("participants",[])
-
+        participants = validated_data.pop("participants", [])
+        creator = self.context.get("request").user
         instance = None
 
-        if validated_data.get("type") == Conversation.Type.DIRECT:
+        if validated_data.get("type") == Conversation.Type.DIRECT and participants:
             participant = participants[0]
-            creator = self.context.get('request').user
-            instance = Conversation.objects.filter(type=Conversation.Type.DIRECT).filter(participants=creator).filter(participants=participant).first()
-        
-        if instance is None:
-            instance = super().create(validated_data)
+            with transaction.atomic():
+                # One in-flight create per user pair so two clicks cannot open two DMs.
+                list(
+                    User.objects.select_for_update().filter(
+                        pk__in=sorted({creator.id, participant.id})
+                    )
+                )
+                instance = (
+                    Conversation.objects.filter(type=Conversation.Type.DIRECT)
+                    .filter(participants=creator)
+                    .filter(participants=participant)
+                    .first()
+                )
+                if instance is None:
+                    instance = super().create(validated_data)
+                self._ensure_direct_memberships(instance, participants, creator)
+            return instance
 
+        instance = super().create(validated_data)
+        self._ensure_direct_memberships(instance, participants, creator)
+        return instance
+
+    def _ensure_direct_memberships(self, instance, participants, creator):
         for participant in participants:
-            m,c =ConversationMembership.objects.get_or_create(
+            membership, _ = ConversationMembership.objects.get_or_create(
                 conversation=instance,
                 user=participant,
             )
-            m.is_deleted = False
-            m.save()
-        
+            membership.is_deleted = False
+            membership.save()
+
         admin_member, _ = ConversationMembership.objects.get_or_create(
             conversation=instance,
-            user=self.context.get('request').user,
+            user=creator,
         )
-
         admin_member.is_admin = True
         admin_member.is_deleted = False
         admin_member.save()
-
-        
-        return instance
     
     def update(self, instance: Conversation, validated_data) -> Conversation:
         validated_data.pop("participants", [])
@@ -364,6 +380,43 @@ class ConversationSerializer(serializers.ModelSerializer):
             "title": c.title,
             "caseType": c.case_type,
             "status": c.status,
+        }
+
+    def get_active_or_upcoming_appointment(self, obj: Conversation):
+        """Return joinable or upcoming scheduled video appointment linked to this conversation."""
+        from datetime import timedelta
+
+        from django.utils import timezone
+
+        now = timezone.now()
+        early = now + timedelta(minutes=15)
+        qs = (
+            Appointment.objects.filter(
+                conversation=obj,
+                meeting_type=Appointment.MeetingType.VIDEO,
+                status=Appointment.Status.SCHEDULED,
+            )
+            .filter(end_at__gte=now)
+            .order_by('start_at')
+        )
+        appt = qs.first()
+        if appt is None:
+            return None
+        # Include if already joinable (start-15m .. end) or still upcoming (planned)
+        joinable = appt.is_joinable(now=now, early_minutes=15)
+        upcoming = appt.start_at > early
+        if not joinable and not (appt.start_at > now):
+            # past join window but somehow end_at still future — still show if within end
+            if appt.end_at < now:
+                return None
+        return {
+            'id': appt.id,
+            'title': appt.title,
+            'start_at': appt.start_at.isoformat(),
+            'end_at': appt.end_at.isoformat(),
+            'conference_url': appt.conference_path(),
+            'joinable': joinable or (appt.start_at <= early and appt.end_at >= now),
+            'is_temporary_chat': bool(obj.is_temporary),
         }
 
 

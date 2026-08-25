@@ -5,37 +5,36 @@ import useUserStore from '@/stores/userStore';
 import { useToast } from '@/hooks/use-toast';
 import LogoLoading from '@/components/common/LogoLoading';
 import { devError } from '@/utils/devLog';
+import {
+  clearSessionValidationCache,
+  getValidatedToken,
+  getValidationPromise,
+  setValidatedToken,
+  setValidationPromise,
+} from '@/utils/sessionValidationCache';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
   requireAuth?: boolean;
 }
 
-/** Deduplicate /api/me across remounted route guards for the same token. */
-let validatedToken: string | null = null;
-let validationPromise: Promise<boolean> | null = null;
-
-const clearSessionValidationCache = () => {
-  validatedToken = null;
-  validationPromise = null;
-};
-
 const validateSession = (
   accessToken: string,
   setUser: (user: API.User) => void,
   onInvalid: () => void,
 ): Promise<boolean> => {
-  if (validatedToken === accessToken) {
+  if (getValidatedToken() === accessToken) {
     return Promise.resolve(true);
   }
-  if (validationPromise) {
-    return validationPromise;
+  const existing = getValidationPromise();
+  if (existing) {
+    return existing;
   }
 
-  validationPromise = apiGetMe()
+  const validationPromise = apiGetMe()
     .then((response) => {
       setUser(response.data);
-      validatedToken = accessToken;
+      setValidatedToken(accessToken);
       return true;
     })
     .catch((error) => {
@@ -45,9 +44,10 @@ const validateSession = (
       return false;
     })
     .finally(() => {
-      validationPromise = null;
+      setValidationPromise(null);
     });
 
+  setValidationPromise(validationPromise);
   return validationPromise;
 };
 
