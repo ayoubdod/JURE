@@ -363,18 +363,16 @@ const Terms: React.FC = () => {
       <RouteSeo routeKey="terms" lang={lang} />
       <section className="max-w-7xl mx-auto px-4 sm:px-6 pt-8 sm:pt-14 pb-10 md:pt-24 md:pb-12">
         <Reveal className="max-w-4xl mx-auto text-center min-w-0">
-          <h1 className="font-display text-[2rem] leading-[1.15] sm:text-4xl md:text-5xl font-bold tracking-tight break-words">
-            <span className="landing-hero-shimmer bg-gradient-to-r from-slate-900 via-[#64499D] to-slate-900 dark:from-white dark:via-[#8B6FD1] dark:to-white bg-clip-text text-transparent">
-              {t.hero.titleA}
-            </span>
+          <h1 className="font-display text-[2rem] leading-[1.15] sm:text-4xl md:text-5xl font-bold tracking-tight break-words text-[#64499D] dark:text-white">
+            {t.hero.titleA}
           </h1>
-          <p className="mt-4 text-base sm:text-lg text-slate-600 dark:text-slate-300 break-words">{t.hero.subtitle}</p>
-          <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">{t.hero.lastUpdated}: {lastUpdated}</p>
+          <p className="mt-4 text-base sm:text-lg text-neutral-600 dark:text-neutral-300 break-words">{t.hero.subtitle}</p>
+          <p className="mt-2 text-sm text-neutral-500">{t.hero.lastUpdated}: {lastUpdated}</p>
           <div className="mt-8 flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center w-full sm:w-auto">
-            <Button onClick={() => go("/contact")} className="w-full sm:w-auto px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg bg-gradient-to-r from-[#64499D] to-[#4D3680]">
+            <Button onClick={() => go("/contact")} className="w-full sm:w-auto px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg landing-btn-primary">
               {t.hero.ctaPrimary} <ArrowRight className="ms-2 h-4 w-4" />
             </Button>
-            <Button variant="outline" onClick={() => go("/demo")} className="w-full sm:w-auto px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg border-[#64499D]/30">
+            <Button variant="outline" onClick={() => go("/demo")} className="w-full sm:w-auto px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg border-[#A58CF4]/30">
               {t.hero.ctaSecondary}
             </Button>
           </div>
@@ -387,7 +385,7 @@ const Terms: React.FC = () => {
             <Reveal key={i} delay={Math.min(i * 0.04, 0.24)} subtle>
               <div className="landing-glass landing-glass-glow rounded-2xl p-5 sm:p-6 h-full min-w-0">
                 <div className="flex items-center gap-3 mb-3 min-w-0">
-                  <div className="w-11 h-11 rounded-xl grid place-items-center text-white shrink-0" style={{ background: "#64499D" }}>
+                  <div className="w-11 h-11 rounded-xl grid place-items-center text-white shrink-0" style={{ background: "#A58CF4" }}>
                     {row.icon}
                   </div>
                   <h3 className="font-display text-xl font-semibold break-words">{row.sec.title}</h3>

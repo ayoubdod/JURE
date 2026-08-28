@@ -21,6 +21,7 @@ import CommandPalette from '@/components/shortcuts/CommandPalette'
 import ShortcutsHelpDialog from '@/components/shortcuts/ShortcutsHelpDialog'
 import QuickCreateHost from '@/components/shortcuts/QuickCreateHost'
 import { useIdleLogout } from '@/hooks/useIdleLogout'
+import AuroraBackground, { auroraForAppPath } from '@/components/common/AuroraBackground'
 
 const isDashboardIndex = (path: string) =>
   path === '/dashboard' || path === '/dashboard/'
@@ -126,11 +127,12 @@ const DashboardLayout = () => {
         <div
           className={
             fillViewport
-              ? 'flex h-screen overflow-hidden bg-slate-50 dark:bg-slate-950'
-              : 'flex min-h-screen flex-col bg-slate-50 dark:bg-slate-950'
+              ? 'relative flex h-screen overflow-hidden bg-[#FAF9FD] dark:bg-[#0c0a14]'
+              : 'relative flex min-h-screen flex-col bg-[#FAF9FD] dark:bg-[#0c0a14]'
           }
           style={{ ['--sidebar-rail-width' as string]: sidebarWidth }}
         >
+          <AuroraBackground intensity={auroraForAppPath(location.pathname)} />
           <Sidebar
             activeTab={activeTab}
             setActiveTab={setActiveTab}
@@ -140,7 +142,7 @@ const DashboardLayout = () => {
 
           <div
             className={cn(
-              'flex min-w-0 flex-1 flex-col transition-[margin] duration-300 ease-in-out lg:ms-[var(--sidebar-rail-width)]',
+              'relative z-[1] flex min-w-0 flex-1 flex-col transition-[margin] duration-300 ease-in-out lg:ms-[var(--sidebar-rail-width)]',
               fillViewport && 'min-h-0 overflow-hidden',
             )}
           >

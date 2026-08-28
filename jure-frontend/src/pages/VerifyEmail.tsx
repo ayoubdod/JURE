@@ -8,6 +8,7 @@ import { Loader2, XCircle, ArrowRight, Mail } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { isAxiosError } from 'axios';
 import { useAppTranslation } from '@/i18n';
+import { AuroraPage } from '@/components/common/AuroraBackground';
 
 const VerifyEmail: React.FC = () => {
   const navigate = useNavigate();
@@ -60,7 +61,7 @@ const VerifyEmail: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background p-4">
+      <AuroraPage className="flex items-center justify-center p-4">
         <Card className="w-full max-w-md">
           <CardContent className="pt-6">
             <div className="text-center space-y-4">
@@ -74,7 +75,7 @@ const VerifyEmail: React.FC = () => {
             </div>
           </CardContent>
         </Card>
-      </div>
+      </AuroraPage>
     );
   }
 
@@ -82,7 +83,7 @@ const VerifyEmail: React.FC = () => {
     const pendingEmail = localStorage.getItem('pendingVerificationEmail');
 
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background p-4">
+      <AuroraPage className="flex items-center justify-center p-4">
         <Card className="w-full max-w-md">
           <CardHeader>
             <div className="flex justify-center mb-4">
@@ -119,7 +120,7 @@ const VerifyEmail: React.FC = () => {
             </Button>
           </CardContent>
         </Card>
-      </div>
+      </AuroraPage>
     );
   }
 

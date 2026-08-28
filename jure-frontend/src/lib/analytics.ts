@@ -52,4 +52,5 @@ export const MarketingEvents = {
   LanguageSwitch: "marketing.language.switch",
   IntentPageCta: "marketing.intent_page.cta",
   InsightOpened: "marketing.insight.opened",
+  SitelinkClick: "marketing.sitelink.click",
 } as const;

@@ -28,6 +28,7 @@ import {
 import MarketingShell from "@/components/landing/MarketingShell";
 import Reveal from "@/components/landing/Reveal";
 import FaqSection from "@/components/landing/FaqSection";
+import SitelinkList from "@/components/landing/SitelinkList";
 import FloatingChip from "@/components/landing/FloatingChip";
 import MediaSlot from "@/components/landing/MediaSlot";
 import {
@@ -42,6 +43,7 @@ import { HOME_CONTENT } from "@/marketing/content/home";
 import {
   faqPageJsonLd,
   organizationJsonLd,
+  siteNavigationJsonLd,
   softwareApplicationJsonLd,
   webSiteJsonLd,
 } from "@/marketing/structuredData";
@@ -102,7 +104,7 @@ const FeatureRow: React.FC<{
         duration={0.7}
       >
         <div className={rtl ? "text-right" : "text-start"}>
-          <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#64499D] dark:text-[#CFC2FF] mb-3">
+          <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#A58CF4] mb-3">
             {icon} {index}
             {badge && (
               <span className="ms-1 px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400 uppercase tracking-wide text-[9px]">
@@ -110,16 +112,16 @@ const FeatureRow: React.FC<{
               </span>
             )}
           </span>
-          <h3 className="text-xl sm:text-3xl font-bold text-slate-900 dark:text-white tracking-tight">
+          <h3 className="text-xl sm:text-3xl font-bold text-[#64499D] dark:text-white tracking-tight">
             {title}
           </h3>
-          <p className="mt-3 text-sm sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed">
+          <p className="mt-3 text-sm sm:text-base text-neutral-600 dark:text-neutral-300 leading-relaxed">
             {body}
           </p>
           <Link
             to={linkTo}
             onClick={onLink}
-            className="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold text-[#64499D] dark:text-[#CFC2FF] hover:underline"
+            className="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold text-[#A58CF4] hover:underline"
           >
             {linkLabel} <ArrowRight className="w-4 h-4 rtl:rotate-180" />
           </Link>
@@ -210,6 +212,7 @@ const Landing: React.FC = () => {
     organizationJsonLd(lang),
     webSiteJsonLd(lang),
     softwareApplicationJsonLd(lang),
+    siteNavigationJsonLd(lang),
     faqPageJsonLd(t.faq.entries),
   ];
 
@@ -230,7 +233,7 @@ const Landing: React.FC = () => {
         duration={4.4}
       >
         <div className="landing-float-chip__card flex items-center gap-2">
-          <Bell className="w-3.5 h-3.5 text-[#64499D]" />
+          <Bell className="w-3.5 h-3.5 text-[#A58CF4]" />
           <span>{t.floats.notification}</span>
         </div>
       </FloatingChip>
@@ -240,7 +243,7 @@ const Landing: React.FC = () => {
         duration={4.8}
       >
         <div className="landing-float-chip__card flex items-center gap-2">
-          <Calendar className="w-3.5 h-3.5 text-[#64499D]" />
+          <Calendar className="w-3.5 h-3.5 text-[#A58CF4]" />
           <span>{t.floats.deadline}</span>
         </div>
       </FloatingChip>
@@ -250,7 +253,7 @@ const Landing: React.FC = () => {
         duration={5}
       >
         <div className="landing-float-chip__card flex items-center gap-2">
-          <Sparkles className="w-3.5 h-3.5 text-[#64499D]" />
+          <Sparkles className="w-3.5 h-3.5 text-[#A58CF4]" />
           <span>{t.floats.aiSuggestion}</span>
         </div>
       </FloatingChip>
@@ -260,7 +263,7 @@ const Landing: React.FC = () => {
         duration={3.8}
       >
         <div className="landing-float-chip__card flex items-center gap-2">
-          <FileText className="w-3.5 h-3.5 text-[#64499D]" />
+          <FileText className="w-3.5 h-3.5 text-[#A58CF4]" />
           <span>{t.floats.document}</span>
         </div>
       </FloatingChip>
@@ -278,24 +281,24 @@ const Landing: React.FC = () => {
       >
         <motion.div style={{ y: heroY }} className="text-center">
           <motion.p
-            className="text-xs sm:text-sm font-semibold tracking-[0.18em] uppercase text-[#64499D] dark:text-[#CFC2FF] mb-4"
+            className="landing-kicker text-xs sm:text-sm mb-4"
             {...enter(0)}
           >
             {t.hero.eyebrow}
           </motion.p>
 
           <motion.h1
-            className="text-[1.85rem] sm:text-5xl xl:text-[3.35rem] font-bold leading-[1.12] sm:leading-[1.08] text-slate-900 dark:text-white max-w-3xl mx-auto tracking-tight"
+            className="text-[1.85rem] sm:text-5xl xl:text-[3.35rem] font-bold leading-[1.12] sm:leading-[1.08] text-[#64499D] dark:text-white max-w-3xl mx-auto tracking-tight"
             {...enter(0.1)}
           >
             {t.hero.h1a}{" "}
-            <span className="landing-hero-shimmer bg-gradient-to-r from-[#64499D] via-[#8B6FD1] to-[#64499D] bg-clip-text text-transparent">
+            <span className="landing-hero-shimmer bg-gradient-to-r from-[#A58CF4] via-[#C4B0EF] to-[#A58CF4] bg-clip-text text-transparent">
               {t.hero.h1b}
             </span>
           </motion.h1>
 
           <motion.p
-            className="mt-4 sm:mt-5 text-sm sm:text-lg text-slate-600 dark:text-slate-300 max-w-2xl mx-auto leading-relaxed"
+            className="mt-4 sm:mt-5 text-sm sm:text-lg text-neutral-600 dark:text-neutral-300 max-w-2xl mx-auto leading-relaxed"
             {...enter(0.18)}
           >
             {t.hero.subtitle}
@@ -308,7 +311,7 @@ const Landing: React.FC = () => {
             <Button
               asChild
               size="lg"
-              className="landing-cta-btn w-full sm:w-auto bg-gradient-to-r from-[#64499D] to-[#4D3680] hover:from-[#4D3680] hover:to-[#3E2D71] text-white px-8 shadow-lg shadow-[#64499D]/25"
+              className="landing-cta-btn landing-btn-primary w-full sm:w-auto px-8"
             >
               <Link
                 to={path("demo")}
@@ -322,7 +325,7 @@ const Landing: React.FC = () => {
               asChild
               size="lg"
               variant="outline"
-              className="w-full sm:w-auto border-[#64499D]/30 text-[#64499D] hover:bg-[#64499D]/10 dark:text-[#CFC2FF] dark:hover:bg-[#64499D]/20 px-8"
+              className="landing-btn-secondary w-full sm:w-auto px-8"
             >
               <Link
                 to={path("features")}
@@ -342,12 +345,17 @@ const Landing: React.FC = () => {
             {t.hero.trustChips.map((chip) => (
               <span
                 key={chip}
-                className="text-[11px] sm:text-xs font-medium px-3 py-1.5 rounded-full bg-[#64499D]/8 text-[#64499D] dark:bg-[#64499D]/20 dark:text-[#CFC2FF]"
+                className="landing-chip text-[11px] sm:text-xs"
               >
                 {chip}
               </span>
             ))}
           </motion.div>
+        </motion.div>
+
+        <motion.div className="mt-8 sm:mt-10 max-w-3xl mx-auto" {...enter(0.34)}>
+          <h2 className="sr-only">{t.sitelinks.title}</h2>
+          <SitelinkList lang={lang} label={t.sitelinks.title} />
         </motion.div>
 
         <motion.div
@@ -374,13 +382,13 @@ const Landing: React.FC = () => {
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
           <Reveal x={rtl ? 30 : -30}>
             <div className={rtl ? "text-right" : "text-start"}>
-              <h2 className="text-2xl sm:text-4xl font-bold text-slate-900 dark:text-white leading-tight tracking-tight">
+              <h2 className="text-2xl sm:text-4xl font-bold text-[#64499D] dark:text-white leading-tight tracking-tight">
                 {t.problem.title}
               </h2>
-              <p className="mt-4 text-sm sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed">
+              <p className="mt-4 text-sm sm:text-base text-neutral-600 dark:text-neutral-300 leading-relaxed">
                 {t.problem.body1}
               </p>
-              <p className="mt-4 text-base sm:text-lg font-semibold text-[#64499D] dark:text-[#CFC2FF]">
+              <p className="mt-4 text-base sm:text-lg font-semibold text-[#A58CF4]">
                 {t.problem.body2}
               </p>
             </div>
@@ -391,17 +399,17 @@ const Landing: React.FC = () => {
                 {t.problem.fragments.map((fragment) => (
                   <div
                     key={fragment}
-                    className="px-2 py-2.5 rounded-xl border border-dashed border-slate-300 dark:border-slate-600 text-center text-[11px] sm:text-xs font-medium text-slate-500 dark:text-slate-400 bg-white/40 dark:bg-slate-900/40"
+                    className="px-2 py-2.5 rounded-xl border border-dashed border-[#64499D]/15 dark:border-white/15 text-center text-[11px] sm:text-xs font-medium text-neutral-500 dark:text-neutral-400 bg-white dark:bg-[#111]"
                   >
                     {fragment}
                   </div>
                 ))}
               </div>
-              <div className="landing-glass landing-panel-glow rounded-2xl px-6 py-8 text-center">
-                <div className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white">
+              <div className="landing-band rounded-2xl px-6 py-8 text-center">
+                <div className="relative text-lg sm:text-xl font-bold text-white">
                   {t.problem.convergenceTitle}
                 </div>
-                <div className="mt-1 text-xs sm:text-sm text-slate-500 dark:text-slate-400">
+                <div className="relative mt-1 text-xs sm:text-sm text-white/60">
                   {t.problem.convergenceSub}
                 </div>
               </div>
@@ -431,13 +439,13 @@ const Landing: React.FC = () => {
             style={{ opacity: showcaseTextOpacity, x: showcaseTextX }}
             className={rtl ? "text-right" : "text-start"}
           >
-            <span className="text-xs font-semibold tracking-[0.16em] uppercase text-[#64499D] dark:text-[#CFC2FF]">
+            <span className="landing-kicker text-xs">
               {t.showcase.eyebrow}
             </span>
-            <h2 className="mt-3 text-2xl sm:text-4xl font-bold text-slate-900 dark:text-white tracking-tight">
+            <h2 className="mt-3 text-2xl sm:text-4xl font-bold text-[#64499D] dark:text-white tracking-tight">
               {t.showcase.title}
             </h2>
-            <p className="mt-4 text-sm sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed">
+            <p className="mt-4 text-sm sm:text-base text-neutral-600 dark:text-neutral-300 leading-relaxed">
               {t.showcase.body}
             </p>
           </motion.div>
@@ -448,10 +456,10 @@ const Landing: React.FC = () => {
       <section className="max-w-7xl mx-auto px-4 sm:px-6 py-16 sm:py-28 space-y-24 sm:space-y-32">
         <div className="text-center max-w-3xl mx-auto">
           <Reveal>
-            <h2 className="text-2xl sm:text-4xl font-bold text-slate-900 dark:text-white tracking-tight">
+            <h2 className="text-2xl sm:text-4xl font-bold text-[#64499D] dark:text-white tracking-tight">
               {t.pillars.title}
             </h2>
-            <p className="mt-3 text-sm sm:text-base text-slate-600 dark:text-slate-300">
+            <p className="mt-3 text-sm sm:text-base text-neutral-600 dark:text-neutral-300">
               {t.pillars.subtitle}
             </p>
           </Reveal>
@@ -508,7 +516,7 @@ const Landing: React.FC = () => {
                   duration={4.2}
                 >
                   <div className="landing-float-chip__card flex items-center gap-2">
-                    <FileText className="w-3.5 h-3.5 text-[#64499D]" />
+                    <FileText className="w-3.5 h-3.5 text-[#A58CF4]" />
                     {t.floats.document}
                   </div>
                 </FloatingChip>
@@ -544,7 +552,7 @@ const Landing: React.FC = () => {
                   duration={4.6}
                 >
                   <div className="landing-float-chip__card flex items-center gap-2">
-                    <Users className="w-3.5 h-3.5 text-[#64499D]" />
+                    <Users className="w-3.5 h-3.5 text-[#A58CF4]" />
                     {t.floats.client}
                   </div>
                 </FloatingChip>
@@ -576,15 +584,15 @@ const Landing: React.FC = () => {
                 <h2 className="text-2xl sm:text-4xl font-bold text-white tracking-tight">
                   {t.pillars.ai.title}
                 </h2>
-                <p className="mt-4 text-sm sm:text-base text-slate-300 leading-relaxed">
+                <p className="mt-4 text-sm sm:text-base text-white/70 leading-relaxed">
                   {t.pillars.ai.body}
                 </p>
-                <p className="mt-4 text-sm font-semibold text-[#CFC2FF]">
+                <p className="mt-4 text-sm font-semibold text-[#A58CF4]">
                   {t.pillars.ai.disclaimer}
                 </p>
                 <Button
                   asChild
-                  className="mt-6 bg-white text-[#3E2D71] hover:bg-slate-100 landing-cta-btn"
+                  className="mt-6 landing-cta-btn landing-btn-on-dark"
                 >
                   <Link to={path("juria")}>
                     {t.pillars.ai.link}
@@ -622,10 +630,10 @@ const Landing: React.FC = () => {
       <section className="max-w-6xl mx-auto px-4 sm:px-6 py-16 sm:py-24">
         <Reveal>
           <div className="text-center max-w-2xl mx-auto mb-12">
-            <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white tracking-tight">
+            <h2 className="text-2xl sm:text-3xl font-bold text-[#64499D] dark:text-white tracking-tight">
               {t.trust.title}
             </h2>
-            <p className="mt-3 text-sm sm:text-base text-slate-600 dark:text-slate-300">
+            <p className="mt-3 text-sm sm:text-base text-neutral-600 dark:text-neutral-300">
               {t.trust.subtitle}
             </p>
           </div>
@@ -635,11 +643,11 @@ const Landing: React.FC = () => {
           {t.trust.stats.map((stat, i) => (
             <TrustItem key={stat.label} delay={i * 0.08}>
               <div className="text-center px-4 py-6">
-                <div className="text-3xl sm:text-4xl font-bold text-[#64499D] dark:text-[#CFC2FF] tabular-nums tracking-tight">
+                <div className="text-3xl sm:text-4xl font-bold text-[#64499D] dark:text-white tabular-nums tracking-tight">
                   {stat.value}
-                  {stat.suffix}
+                  <span className="text-[#A58CF4]">{stat.suffix}</span>
                 </div>
-                <div className="mt-2 text-sm text-slate-600 dark:text-slate-300">
+                <div className="mt-2 text-sm text-neutral-600 dark:text-neutral-300">
                   {stat.label}
                 </div>
               </div>
@@ -650,9 +658,9 @@ const Landing: React.FC = () => {
         <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4">
           {t.trust.logoLabels.map((label, i) => (
             <TrustItem key={label} delay={0.24 + i * 0.08}>
-              <div className="landing-logo-slot px-5 py-3 rounded-xl text-xs sm:text-sm font-medium text-slate-500 dark:text-slate-400">
+              <div className="landing-logo-slot px-5 py-3 rounded-xl text-xs sm:text-sm font-medium text-neutral-500">
                 {label}
-                <span className="block text-[10px] font-mono text-slate-400 mt-1 opacity-70">
+                <span className="block text-[10px] font-mono text-neutral-400 mt-1 opacity-70">
                   logo-{i + 1}.svg
                 </span>
               </div>
@@ -664,19 +672,19 @@ const Landing: React.FC = () => {
       {/* ============ SECURITY ============ */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 py-10 sm:py-16">
         <Reveal scale={0.98}>
-          <div className="rounded-3xl bg-gradient-to-br from-[#2A1F4A] via-[#3E2D71] to-[#2A1F4A] text-white px-6 sm:px-12 py-10 sm:py-14 relative overflow-hidden">
+          <div className="landing-band rounded-3xl text-white px-6 sm:px-12 py-10 sm:py-14">
             <div className="relative grid lg:grid-cols-2 gap-8 items-center">
               <div className={rtl ? "text-right" : "text-start"}>
-                <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#CFC2FF] mb-3">
+                <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#A58CF4] mb-3">
                   <ShieldCheck className="w-4 h-4" />
                 </span>
                 <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">
                   {t.security.title}
                 </h2>
-                <p className="mt-3 text-sm sm:text-base text-slate-300 leading-relaxed">
+                <p className="mt-3 text-sm sm:text-base text-white/70 leading-relaxed">
                   {t.security.body}
                 </p>
-                <Button asChild className="mt-5 bg-white text-[#3E2D71] hover:bg-slate-100">
+                <Button asChild className="mt-5 landing-btn-on-dark">
                   <Link
                     to={path("security")}
                     onClick={() =>
@@ -696,7 +704,7 @@ const Landing: React.FC = () => {
                       key={item}
                       className="flex items-center gap-3 px-4 py-3.5 rounded-xl bg-white/8 border border-white/12"
                     >
-                      <Icon className="w-5 h-5 text-[#CFC2FF] shrink-0" />
+                      <Icon className="w-5 h-5 text-[#A58CF4] shrink-0" />
                       <span className="text-sm font-medium">{item}</span>
                     </div>
                   );
@@ -710,7 +718,7 @@ const Landing: React.FC = () => {
       {/* ============ AUDIENCES ============ */}
       <section className="max-w-6xl mx-auto px-4 sm:px-6 py-14 sm:py-20">
         <Reveal>
-          <h2 className="text-center text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white tracking-tight mb-10">
+          <h2 className="text-center text-2xl sm:text-3xl font-bold text-[#64499D] dark:text-white tracking-tight mb-10">
             {t.audiences.title}
           </h2>
         </Reveal>
@@ -723,15 +731,15 @@ const Landing: React.FC = () => {
             <Reveal key={title} delay={i * 0.08} subtle>
               <Link
                 to={path(href)}
-                className={`landing-glass landing-glass-glow rounded-2xl p-6 h-full w-full text-start hover:ring-1 hover:ring-[#64499D]/30 transition block ${
+                className={`group landing-glass landing-glass-glow rounded-2xl p-6 h-full w-full text-start block ${
                   rtl ? "text-right" : ""
                 }`}
               >
-                <span className="w-10 h-10 rounded-xl bg-[#64499D]/10 dark:bg-[#64499D]/25 text-[#64499D] dark:text-[#CFC2FF] flex items-center justify-center mb-4">
+                <span className="landing-icon w-10 h-10 rounded-xl flex items-center justify-center mb-4">
                   <Icon className="w-5 h-5" />
                 </span>
-                <h3 className="text-lg font-bold text-slate-900 dark:text-white">{title}</h3>
-                <p className="mt-2 text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                <h3 className="text-lg font-bold text-[#64499D] dark:text-white">{title}</h3>
+                <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-300 leading-relaxed">
                   {body}
                 </p>
               </Link>
@@ -765,17 +773,17 @@ const FinalCta: React.FC<{
         animate={inView ? { opacity: 1, scale: 1 } : undefined}
         transition={{ duration: 0.7, ease: EASE }}
       >
-        <h2 className="text-2xl sm:text-4xl font-bold text-slate-900 dark:text-white tracking-tight whitespace-pre-line">
+        <h2 className="text-2xl sm:text-4xl font-bold text-[#64499D] dark:text-white tracking-tight whitespace-pre-line">
           {t.finalCta.title}
         </h2>
-        <p className="mt-4 max-w-xl mx-auto text-sm sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed">
+        <p className="mt-4 max-w-xl mx-auto text-sm sm:text-base text-neutral-600 dark:text-neutral-300 leading-relaxed">
           {t.finalCta.body}
         </p>
         <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
           <Button
             asChild
             size="lg"
-            className="landing-cta-btn w-full sm:w-auto bg-gradient-to-r from-[#64499D] to-[#4D3680] hover:from-[#4D3680] hover:to-[#3E2D71] text-white px-8 shadow-lg shadow-[#64499D]/25"
+            className="landing-cta-btn landing-btn-primary w-full sm:w-auto px-8"
           >
             <Link
               to="/signup"
@@ -788,7 +796,7 @@ const FinalCta: React.FC<{
             asChild
             size="lg"
             variant="outline"
-            className="w-full sm:w-auto border-[#64499D]/30 text-[#64499D] hover:bg-[#64499D]/10 dark:text-[#CFC2FF] dark:hover:bg-[#64499D]/20 px-8"
+            className="landing-btn-secondary w-full sm:w-auto px-8"
           >
             <Link
               to={path("demo")}
@@ -800,7 +808,7 @@ const FinalCta: React.FC<{
             </Link>
           </Button>
         </div>
-        <p className="mt-6 text-xs text-slate-400 dark:text-slate-500">{t.finalCta.tagline}</p>
+        <p className="mt-6 text-xs text-neutral-400">{t.finalCta.tagline}</p>
       </motion.div>
     </section>
   );

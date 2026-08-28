@@ -13,6 +13,7 @@ import {
   organizationJsonLd,
   webSiteJsonLd,
   softwareApplicationJsonLd,
+  siteNavigationJsonLd,
   articleJsonLd,
   faqPageJsonLd,
 } from "../src/marketing/structuredData";
@@ -102,6 +103,7 @@ function buildManifest(): Record<string, ManifestEntry> {
         ...(route.key === "home" || route.key === "features"
           ? [softwareApplicationJsonLd(locale)]
           : []),
+        ...(route.key === "home" ? [siteNavigationJsonLd(locale)] : []),
         ...(snippet?.faqs?.length ? [faqPageJsonLd(snippet.faqs)] : []),
       ];
       manifest[localePath(locale, route.slug)] = {

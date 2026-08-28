@@ -45,15 +45,15 @@ const WorkflowDiagram: React.FC<WorkflowDiagramProps> = ({
           <div
             className={`landing-glass rounded-xl px-3.5 py-2.5 flex items-center gap-2.5 w-full md:w-auto md:flex-1 min-w-0 ${
               step.emphasis
-                ? "border-[#64499D]/40 dark:border-[#8B6FD1]/50 bg-[#64499D]/5 dark:bg-[#64499D]/20"
+                ? "border-[#A58CF4]/40 dark:border-[#A58CF4]/50 bg-[#A58CF4]/5 dark:bg-[#A58CF4]/20"
                 : ""
             }`}
           >
             <span
               className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${
                 step.emphasis
-                  ? "bg-[#64499D] text-white"
-                  : "bg-[#64499D]/10 text-[#64499D] dark:bg-[#64499D]/25 dark:text-[#CFC2FF]"
+                  ? "bg-[#A58CF4] text-white"
+                  : "bg-[#A58CF4]/10 text-[#A58CF4] dark:bg-[#A58CF4]/25 dark:text-[#A58CF4]"
               }`}
             >
               <Icon className="w-3.5 h-3.5" />
@@ -73,7 +73,7 @@ const WorkflowDiagram: React.FC<WorkflowDiagramProps> = ({
 
         const arrow =
           i < steps.length - 1 ? (
-            <span className="flex items-center justify-center text-[#64499D]/50 dark:text-[#8B6FD1]/60 shrink-0 md:px-1">
+            <span className="flex items-center justify-center text-[#A58CF4]/50 dark:text-[#A58CF4]/60 shrink-0 md:px-1">
               {horizontal ? (
                 <>
                   <ArrowRight className="w-4 h-4 hidden md:block rtl:rotate-180" />

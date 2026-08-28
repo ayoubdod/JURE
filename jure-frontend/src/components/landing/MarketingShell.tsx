@@ -9,7 +9,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import ThemeToggle from "@/components/ThemeToggle";
-import MeshBackdrop from "@/components/landing/MeshBackdrop";
 import { isMarketingLocale, localePath, type MarketingLocale } from "@/marketing/site";
 import { getMarketingDict } from "@/marketing/i18n";
 import { getRoute } from "@/marketing/routes";
@@ -66,7 +65,7 @@ const LangSwitcher: React.FC<{
         type="button"
         variant="outline"
         size="icon"
-        className="h-9 w-9 shrink-0 border-[#64499D]/20 dark:border-[#8B6FD1]/30 text-slate-700 dark:text-slate-200 hover:bg-[#F4F1FF]/80 dark:hover:bg-[#64499D]/20"
+        className="h-9 w-9 shrink-0 border-[#64499D]/15 dark:border-white/20 text-[#64499D] dark:text-white hover:bg-[#64499D]/5 dark:hover:bg-white/10"
         aria-label={MARKETING_LANG_LABELS[lang]}
         title={MARKETING_LANG_LABELS[lang]}
       >
@@ -81,7 +80,7 @@ const LangSwitcher: React.FC<{
             if (code === lang) return;
             onNavigate(swapLocaleInPath(pathname, code), code);
           }}
-          className={code === lang ? "font-medium text-[#64499D] dark:text-[#CFC2FF]" : ""}
+          className={code === lang ? "font-medium text-[#A58CF4]" : ""}
         >
           {MARKETING_LANG_LABELS[code]}
         </DropdownMenuItem>
@@ -160,8 +159,8 @@ const MarketingShell: React.FC<MarketingShellProps> = ({
 
   const navCls = (key: MarketingNavKey) =>
     activeNav === key
-      ? "text-[#64499D] dark:text-[#CFC2FF] font-semibold"
-      : "hover:text-[#64499D] dark:hover:text-[#8B6FD1] transition-colors";
+      ? "text-[#A58CF4] font-semibold"
+      : "text-[#64499D]/80 dark:text-white/80 hover:text-[#A58CF4] transition-colors";
 
   const navLabel = (key: Exclude<MarketingNavKey, "none">) => dict.nav[key];
 
@@ -176,14 +175,13 @@ const MarketingShell: React.FC<MarketingShellProps> = ({
   );
 
   return (
-    <div className="landing-root min-h-screen relative overflow-x-hidden text-slate-900 dark:text-slate-100 bg-gradient-to-br from-white via-[#FBF9FF] to-slate-50 dark:from-slate-950 dark:via-[#0c0a14] dark:to-slate-900">
+    <div className="landing-root min-h-screen relative overflow-x-hidden text-[#64499D] dark:text-white bg-white dark:bg-[#64499D]">
       <a
         href="#main-content"
-        className="sr-only focus:fixed focus:left-3 focus:top-3 focus:z-50 focus:m-0 focus:inline-flex focus:h-auto focus:w-auto focus:overflow-visible focus:whitespace-normal focus:rounded-lg focus:bg-white focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-[#64499D] focus:shadow focus:outline-none focus:ring-2 focus:ring-[#64499D]"
+        className="sr-only focus:fixed focus:left-3 focus:top-3 focus:z-50 focus:m-0 focus:inline-flex focus:h-auto focus:w-auto focus:overflow-visible focus:whitespace-normal focus:rounded-lg focus:bg-white focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-[#A58CF4] focus:shadow focus:outline-none focus:ring-2 focus:ring-[#A58CF4]"
       >
         Skip to content
       </a>
-      <MeshBackdrop />
 
       <header
         className={`landing-nav sticky top-0 z-30 transition-[padding,background-color,backdrop-filter,box-shadow,border-color] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${
@@ -224,9 +222,8 @@ const MarketingShell: React.FC<MarketingShellProps> = ({
               <ThemeToggle label={dict.themeToggle.label} title={dict.themeToggle.title} />
               <Button
                 asChild
-                variant="outline"
                 size="sm"
-                className="border-[#64499D]/30 text-[#64499D] hover:bg-[#64499D]/10 dark:text-[#CFC2FF] dark:hover:bg-[#64499D]/20 hidden sm:inline-flex"
+                className="landing-btn-primary hidden sm:inline-flex"
               >
                 <Link to="/signin">{dict.auth.signin}</Link>
               </Button>
@@ -234,7 +231,7 @@ const MarketingShell: React.FC<MarketingShellProps> = ({
                 type="button"
                 variant="outline"
                 size="icon"
-                className="lg:hidden h-9 w-9 border-[#64499D]/30 text-[#64499D] dark:text-[#CFC2FF]"
+                className="lg:hidden h-9 w-9 border-[#64499D]/15 dark:border-white/20 text-[#64499D] dark:text-white"
                 aria-expanded={mobileOpen}
                 aria-controls="marketing-mobile-menu"
                 aria-label={mobileOpen ? "Close menu" : "Open menu"}
@@ -255,8 +252,8 @@ const MarketingShell: React.FC<MarketingShellProps> = ({
                   key={item.key}
                   to={localePath(lang, item.slug)}
                   onClick={closeMobile}
-                  className={`w-full text-start px-3 py-3 rounded-xl text-sm font-medium hover:bg-[#64499D]/10 dark:hover:bg-[#64499D]/20 transition-colors ${
-                    activeNav === item.key ? "text-[#64499D] dark:text-[#CFC2FF]" : ""
+                  className={`w-full text-start px-3 py-3 rounded-xl text-sm font-medium hover:bg-[#64499D]/5 dark:hover:bg-white/8 transition-colors ${
+                    activeNav === item.key ? "text-[#A58CF4]" : ""
                   }`}
                 >
                   {navLabel(item.key)}
@@ -264,7 +261,7 @@ const MarketingShell: React.FC<MarketingShellProps> = ({
               ))}
               <Button
                 asChild
-                className="mt-2 w-full bg-gradient-to-r from-[#64499D] to-[#4D3680] text-white"
+                className="mt-2 w-full landing-btn-primary"
               >
                 <Link to="/signin" onClick={closeMobile}>
                   {dict.auth.signin}
@@ -279,7 +276,7 @@ const MarketingShell: React.FC<MarketingShellProps> = ({
         {children}
       </main>
 
-      <footer className="relative z-10 border-t border-[#64499D]/15 dark:border-[#8B6FD1]/20 bg-slate-950/95 dark:bg-black text-white py-10 sm:py-14 backdrop-blur-md mt-8">
+      <footer className="relative z-10 landing-band py-10 sm:py-14 mt-8 rounded-none">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className={`grid grid-cols-2 md:grid-cols-5 gap-8 ${isRtl ? "text-right" : ""}`}>
             <div className="col-span-2 md:col-span-1">

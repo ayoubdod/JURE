@@ -26,7 +26,7 @@ import { RouteSeo } from "@/marketing/Seo";
 /**
  * Features Page
  * - Shared MarketingShell (nav / lang / theme / footer)
- * - Visual language aligned with Landing (glass, reveal, brand #64499D)
+ * - Visual language aligned with Landing (glass, reveal, brand #A58CF4)
  * - Only shipped capabilities are presented as available; planned work lives
  *   under an explicit "Coming soon" section.
  */
@@ -421,7 +421,7 @@ const STRINGS: Record<Lang, FeaturesStrings> = {
 };
 
 const HIGHLIGHT_ICONS = [Sparkles, Briefcase, BookOpen, CalendarClock, MessageSquare, Landmark, KeyRound, Globe];
-const HIGHLIGHT_ACCENTS = ["#64499D", "#4D3680", "#3E2D71", "#8B6FD1", "#6D5AB6", "#64499D", "#4D3680", "#3E2D71"];
+const HIGHLIGHT_ACCENTS = ["#A58CF4", "#4D3680", "#3E2D71", "#A58CF4", "#6D5AB6", "#A58CF4", "#4D3680", "#3E2D71"];
 
 const Features: React.FC = () => {
   const navigate = useNavigate();
@@ -432,10 +432,10 @@ const Features: React.FC = () => {
   const go = (to: string) => navigate(to);
 
   const deepCards = [
-    { key: "ai", icon: Sparkles, accent: "#64499D", data: t.deep.ai },
+    { key: "ai", icon: Sparkles, accent: "#A58CF4", data: t.deep.ai },
     { key: "matters", icon: FileText, accent: "#4D3680", data: t.deep.matters },
     { key: "documents", icon: BookOpen, accent: "#3E2D71", data: t.deep.documents },
-    { key: "collab", icon: Users, accent: "#8B6FD1", data: t.deep.collab },
+    { key: "collab", icon: Users, accent: "#A58CF4", data: t.deep.collab },
   ];
 
   return (
@@ -445,22 +445,14 @@ const Features: React.FC = () => {
       {/* Hero */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 pt-8 sm:pt-14 pb-10 sm:pb-12 md:pt-24 md:pb-16">
         <Reveal className="text-center max-w-4xl mx-auto min-w-0">
-          <h1 className="font-display text-[2rem] leading-[1.15] sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight break-words">
-            <span className="landing-hero-shimmer bg-gradient-to-r from-slate-900 via-[#64499D] to-slate-900 dark:from-white dark:via-[#8B6FD1] dark:to-white bg-clip-text text-transparent">
-              {t.hero.titleA}
-            </span>
+          <h1 className="font-display text-[2rem] leading-[1.15] sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight break-words text-[#64499D] dark:text-white">
+            {t.hero.titleA}
             <br />
-            <span className="relative inline-block mt-1 max-w-full">
-              <span
-                aria-hidden
-                className="absolute inset-0 blur-2xl opacity-40 dark:opacity-50 bg-gradient-to-r from-[#64499D] to-[#8B6FD1]"
-              />
-              <span className="relative bg-gradient-to-r from-[#64499D] via-[#8B6FD1] to-[#4D3680] bg-clip-text text-transparent">
-                {t.hero.titleB}
-              </span>
+            <span className="landing-hero-shimmer bg-gradient-to-r from-[#A58CF4] via-[#C4B0EF] to-[#A58CF4] bg-clip-text text-transparent">
+              {t.hero.titleB}
             </span>
           </h1>
-          <p className="mt-6 text-base sm:text-lg md:text-xl text-slate-600 dark:text-slate-300 leading-relaxed break-words">
+          <p className="mt-6 text-base sm:text-lg md:text-xl text-neutral-600 dark:text-neutral-300 leading-relaxed break-words">
             {t.hero.subtitle}
           </p>
 
@@ -472,7 +464,7 @@ const Features: React.FC = () => {
             <Button
               onClick={() => go(path("demo"))}
               size="lg"
-              className="w-full sm:w-auto px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg font-medium shadow-lg hover:shadow-[0_0_32px_-6px_rgba(100,73,157,0.55)] transition-shadow bg-gradient-to-r from-[#64499D] to-[#4D3680] hover:from-[#4D3680] hover:to-[#3E2D71] text-white"
+              className="landing-cta-btn landing-btn-primary w-full sm:w-auto px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg font-medium"
             >
               {t.hero.ctaPrimary}
               <ArrowRight className={`ms-2 h-5 w-5 ${isRtl ? "rotate-180" : ""}`} />
@@ -481,13 +473,13 @@ const Features: React.FC = () => {
               onClick={() => go(path("contact"))}
               variant="outline"
               size="lg"
-              className="w-full sm:w-auto px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg border-[#64499D]/25 dark:border-[#8B6FD1]/30 text-slate-800 dark:text-slate-100 hover:bg-[#F4F1FF]/80 dark:hover:bg-[#64499D]/15 backdrop-blur-sm"
+              className="landing-btn-secondary w-full sm:w-auto px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg"
             >
               {t.hero.ctaSecondary}
             </Button>
           </div>
 
-          <p className="mt-6 text-sm text-slate-500 dark:text-slate-400">{t.hero.trust}</p>
+          <p className="mt-6 text-sm text-neutral-500">{t.hero.trust}</p>
         </Reveal>
       </section>
 
@@ -502,7 +494,7 @@ const Features: React.FC = () => {
                 icon={<Icon className="w-6 h-6" />}
                 title={it.title}
                 description={it.desc}
-                accent={HIGHLIGHT_ACCENTS[idx] || "#64499D"}
+                accent={HIGHLIGHT_ACCENTS[idx] || "#A58CF4"}
                 delay={idx * 0.04}
               />
             );
@@ -520,8 +512,8 @@ const Features: React.FC = () => {
             return (
               <Reveal key={card.key} delay={i * 0.06}>
                 <div
-                  className={`landing-glass landing-glass-glow rounded-2xl p-5 sm:p-7 h-full min-w-0 ${
-                    card.key === "ai" ? "cursor-pointer hover:ring-1 hover:ring-[#64499D]/40 transition" : ""
+                  className={`landing-glass landing-glass-glow rounded-2xl p-5 sm:p-7 h-full min-w-0 group ${
+                    card.key === "ai" ? "cursor-pointer" : ""
                   }`}
                   onClick={card.key === "ai" ? () => go(path("juria")) : undefined}
                   role={card.key === "ai" ? "link" : undefined}
@@ -534,10 +526,7 @@ const Features: React.FC = () => {
                       : undefined
                   }
                 >
-                  <div
-                    className="w-12 h-12 rounded-xl flex items-center justify-center mb-4 text-white"
-                    style={{ background: card.accent }}
-                  >
+                  <div className="landing-icon w-12 h-12 rounded-xl flex items-center justify-center mb-4">
                     <Icon className="w-6 h-6" />
                   </div>
                   <div className="flex flex-wrap items-center gap-2 mb-2">
@@ -550,11 +539,11 @@ const Features: React.FC = () => {
                       </span>
                     )}
                   </div>
-                  <p className="text-slate-600 dark:text-slate-400 mb-5 leading-relaxed break-words">{card.data.desc}</p>
-                  <ul className="space-y-2.5 text-slate-700 dark:text-slate-300">
+                  <p className="text-neutral-600 dark:text-neutral-400 mb-5 leading-relaxed break-words">{card.data.desc}</p>
+                  <ul className="space-y-2.5 text-neutral-700 dark:text-neutral-300">
                     {card.data.bullets.map((b, bi) => (
                       <li key={bi} className="flex items-start gap-2">
-                        <Check className="w-5 h-5 text-[#64499D] dark:text-[#8B6FD1] shrink-0 mt-0.5" />
+                        <Check className="w-5 h-5 text-[#A58CF4] dark:text-[#A58CF4] shrink-0 mt-0.5" />
                         <span>{b}</span>
                       </li>
                     ))}
@@ -571,19 +560,19 @@ const Features: React.FC = () => {
         <Reveal>
           <div className={`landing-glass rounded-2xl sm:rounded-3xl p-6 sm:p-8 md:p-10 min-w-0 ${isRtl ? "text-right" : "text-start"}`}>
             <div className="flex items-center gap-3 mb-3 min-w-0">
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#64499D] to-[#4D3680] flex items-center justify-center text-white shrink-0">
+              <div className="landing-icon w-12 h-12 rounded-xl flex items-center justify-center shrink-0">
                 <Clock className="w-6 h-6" />
               </div>
               <h2 className="font-display text-xl sm:text-2xl font-bold break-words">{t.comingSoon.title}</h2>
             </div>
-            <p className="text-sm sm:text-base text-slate-600 dark:text-slate-300 mb-6 break-words">
+            <p className="text-sm sm:text-base text-neutral-600 dark:text-neutral-300 mb-6 break-words">
               {t.comingSoon.note}
             </p>
             <div className="flex flex-wrap gap-2">
               {t.comingSoon.items.map((item) => (
                 <span
                   key={item}
-                  className="px-3 py-1.5 rounded-full border border-dashed border-[#64499D]/30 dark:border-[#8B6FD1]/30 text-sm text-slate-600 dark:text-slate-300"
+                  className="px-3 py-1.5 rounded-full border border-dashed border-[#64499D]/15 dark:border-white/15 text-sm text-neutral-600 dark:text-neutral-300"
                 >
                   {item}
                 </span>
@@ -596,22 +585,12 @@ const Features: React.FC = () => {
       {/* CTA */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 pb-16 sm:pb-24">
         <Reveal>
-          <div className="relative rounded-2xl sm:rounded-3xl p-6 sm:p-10 md:p-14 text-white overflow-hidden landing-panel-glow bg-gradient-to-br from-[#64499D] via-[#4D3680] to-[#3E2D71]">
-            <div
-              aria-hidden
-              className="pointer-events-none absolute inset-0 opacity-30"
-              style={{
-                backgroundImage:
-                  "linear-gradient(rgba(255,255,255,0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.08) 1px, transparent 1px)",
-                backgroundSize: "40px 40px",
-                maskImage: "radial-gradient(ellipse 80% 70% at 50% 50%, black, transparent)",
-              }}
-            />
+          <div className="relative rounded-2xl sm:rounded-3xl p-6 sm:p-10 md:p-14 text-white overflow-hidden landing-band">
             <div className="relative text-center max-w-3xl mx-auto min-w-0">
               <h3 className="font-display text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight mb-3 break-words">
                 {t.cta.title}
               </h3>
-              <p className="text-purple-100 text-base sm:text-lg break-words">{t.cta.subtitle}</p>
+              <p className="text-white/70 text-base sm:text-lg break-words">{t.cta.subtitle}</p>
 
               <div
                 className={`mt-8 flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center w-full sm:w-auto ${
@@ -620,7 +599,7 @@ const Features: React.FC = () => {
               >
                 <Button
                   size="lg"
-                  className="w-full sm:w-auto px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg font-medium bg-white text-slate-900 hover:bg-slate-100 shadow-lg"
+                  className="w-full sm:w-auto px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg font-medium landing-btn-on-dark"
                   onClick={() => go(path("demo"))}
                 >
                   {t.cta.primary}
@@ -628,7 +607,7 @@ const Features: React.FC = () => {
                 <Button
                   size="lg"
                   variant="outline"
-                  className="w-full sm:w-auto px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg font-medium border-white/70 text-white hover:bg-white/10"
+                  className="w-full sm:w-auto px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg font-medium landing-btn-ghost-dark"
                   onClick={() => go(path("contact"))}
                 >
                   {t.cta.secondary}

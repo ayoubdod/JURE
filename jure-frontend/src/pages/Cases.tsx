@@ -957,7 +957,7 @@ const Cases = () => {
   return (
     <div
       ref={setCasesHolderEl}
-      className="relative h-full min-h-0 flex flex-col overflow-hidden bg-slate-50 dark:bg-slate-950"
+      className="relative h-full min-h-0 flex flex-col overflow-hidden bg-transparent"
     >
       <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden">
         <div className="px-0 pt-3 pb-1">
@@ -1013,7 +1013,7 @@ const Cases = () => {
         <div
           className={cn(
             'cases-toolbar-sticky sticky top-0 z-30',
-            'bg-slate-50/95 dark:bg-slate-950/95 border-b border-slate-200/90 dark:border-slate-800',
+            'bg-[#FAF9FD]/90 dark:bg-[#0c0a14]/90 border-b border-slate-200/90 dark:border-slate-800',
             'px-0 pt-1 pb-0'
           )}
         >

@@ -209,10 +209,10 @@ const Pricing: React.FC = () => {
       <RouteSeo routeKey="pricing" lang={lang} jsonLd={jsonLd} />
 
       <section className="max-w-4xl mx-auto px-4 sm:px-6 pt-12 sm:pt-16 pb-8 text-center">
-        <h1 className="text-3xl sm:text-5xl font-bold tracking-tight text-slate-900 dark:text-white">
+        <h1 className="text-3xl sm:text-5xl font-bold tracking-tight text-[#64499D] dark:text-white">
           {t.h1}
         </h1>
-        <p className="mt-5 max-w-2xl mx-auto text-sm sm:text-lg text-slate-600 dark:text-slate-300">
+        <p className="mt-5 max-w-2xl mx-auto text-sm sm:text-lg text-neutral-600 dark:text-neutral-300">
           {t.subtitle}
         </p>
       </section>
@@ -244,7 +244,7 @@ const Pricing: React.FC = () => {
                   </li>
                 ))}
                 <li className="flex items-start gap-2.5 text-sm text-slate-700 dark:text-slate-200">
-                  <Sparkles className="w-4 h-4 text-[#64499D] dark:text-[#8B6FD1] mt-0.5 shrink-0" />
+                  <Sparkles className="w-4 h-4 text-[#A58CF4] dark:text-[#A58CF4] mt-0.5 shrink-0" />
                   {t.aiNote}
                 </li>
               </ul>
@@ -257,7 +257,7 @@ const Pricing: React.FC = () => {
                   track(MarketingEvents.SignupCta, { source: "pricing", lang });
                   navigate("/signup");
                 }}
-                className="w-full sm:w-auto bg-gradient-to-r from-[#64499D] to-[#4D3680] hover:from-[#4D3680] hover:to-[#3E2D71] text-white px-8"
+                className="w-full sm:w-auto landing-btn-primary px-8"
               >
                 {t.ctaStart}
                 <ArrowRight className="w-4 h-4 ms-2 rtl:rotate-180" />
@@ -269,7 +269,7 @@ const Pricing: React.FC = () => {
                   track(MarketingEvents.ContactCta, { source: "pricing", lang });
                   navigate(path("contact"));
                 }}
-                className="w-full sm:w-auto border-[#64499D]/30 text-[#64499D] hover:bg-[#64499D]/10 dark:text-[#CFC2FF] dark:hover:bg-[#64499D]/20 px-8"
+                className="w-full sm:w-auto landing-btn-secondary px-8"
               >
                 {t.ctaTalk}
               </Button>
@@ -280,7 +280,7 @@ const Pricing: React.FC = () => {
 
       <section className="max-w-5xl mx-auto px-4 sm:px-6 py-10 pb-16">
         <Reveal>
-          <Card className="bg-white/90 dark:bg-slate-900/70 border-slate-200 dark:border-slate-700">
+          <Card className="bg-white dark:bg-[#111] border-[#64499D]/10 dark:border-white/10">
             <CardHeader>
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>

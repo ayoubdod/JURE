@@ -114,7 +114,7 @@ const IntentPage: React.FC<IntentPageProps> = ({ routeKey }) => {
         <button
           type="button"
           onClick={() => navigate(path())}
-          className="hover:text-[#64499D] dark:hover:text-[#CFC2FF]"
+          className="hover:text-[#A58CF4] dark:hover:text-[#A58CF4]"
         >
           {homeRoute.label[lang]}
         </button>
@@ -134,7 +134,7 @@ const IntentPage: React.FC<IntentPageProps> = ({ routeKey }) => {
           <Button
             size="lg"
             onClick={() => goDemo("header")}
-            className="w-full sm:w-auto bg-gradient-to-r from-[#64499D] to-[#4D3680] hover:from-[#4D3680] hover:to-[#3E2D71] text-white px-8"
+            className="w-full sm:w-auto landing-btn-primary px-8"
           >
             {dict.cta.seeInAction}
             <ArrowRight className="w-4 h-4 ms-2 rtl:rotate-180" />
@@ -147,7 +147,7 @@ const IntentPage: React.FC<IntentPageProps> = ({ routeKey }) => {
         <Reveal>
           <div className={rtlText}>
             <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-              <BookOpen className="w-5 h-5 text-[#64499D] dark:text-[#8B6FD1] shrink-0" />
+              <BookOpen className="w-5 h-5 text-[#A58CF4] dark:text-[#A58CF4] shrink-0" />
               {content.definition.title}
             </h2>
             <p className="mt-3 text-sm sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed">
@@ -181,7 +181,7 @@ const IntentPage: React.FC<IntentPageProps> = ({ routeKey }) => {
               <ul className="mt-4 space-y-2.5">
                 {content.approach.points.map((point) => (
                   <li key={point} className="flex items-start gap-2.5 text-sm text-slate-700 dark:text-slate-200">
-                    <CheckCircle2 className="w-4 h-4 text-[#64499D] dark:text-[#8B6FD1] mt-0.5 shrink-0" />
+                    <CheckCircle2 className="w-4 h-4 text-[#A58CF4] dark:text-[#A58CF4] mt-0.5 shrink-0" />
                     {point}
                   </li>
                 ))}
@@ -236,7 +236,7 @@ const IntentPage: React.FC<IntentPageProps> = ({ routeKey }) => {
           <div
             className={`landing-glass rounded-2xl p-6 sm:p-8 flex flex-col sm:flex-row items-start gap-4 ${rtlText}`}
           >
-            <span className="w-10 h-10 rounded-xl bg-[#64499D]/10 dark:bg-[#64499D]/25 text-[#64499D] dark:text-[#CFC2FF] flex items-center justify-center shrink-0">
+            <span className="w-10 h-10 rounded-xl bg-[#A58CF4]/10 dark:bg-[#A58CF4]/25 text-[#A58CF4] dark:text-[#A58CF4] flex items-center justify-center shrink-0">
               <ShieldCheck className="w-5 h-5" />
             </span>
             <div className="flex-1">
@@ -252,7 +252,7 @@ const IntentPage: React.FC<IntentPageProps> = ({ routeKey }) => {
                   track(MarketingEvents.SecurityCta, { source: `intent_${routeKey}`, lang });
                   navigate(path("security"));
                 }}
-                className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-[#64499D] dark:text-[#CFC2FF] hover:underline"
+                className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-[#A58CF4] dark:text-[#A58CF4] hover:underline"
               >
                 {dict.cta.exploreSecurity} <ArrowRight className="w-4 h-4 rtl:rotate-180" />
               </button>
@@ -274,7 +274,7 @@ const IntentPage: React.FC<IntentPageProps> = ({ routeKey }) => {
                 key={key}
                 type="button"
                 onClick={() => navigate(path(rel.slug))}
-                className="px-3.5 py-1.5 rounded-full landing-glass text-xs font-medium text-[#64499D] dark:text-[#CFC2FF] hover:border-[#64499D]/40 transition-colors"
+                className="px-3.5 py-1.5 rounded-full landing-glass text-xs font-medium text-[#A58CF4] dark:text-[#A58CF4] hover:border-[#A58CF4]/40 transition-colors"
               >
                 {rel.label[lang]}
               </button>
@@ -297,7 +297,7 @@ const IntentPage: React.FC<IntentPageProps> = ({ routeKey }) => {
               <Button
                 size="lg"
                 onClick={() => goDemo("footer")}
-                className="w-full sm:w-auto bg-gradient-to-r from-[#64499D] to-[#4D3680] hover:from-[#4D3680] hover:to-[#3E2D71] text-white px-8"
+                className="w-full sm:w-auto landing-btn-primary px-8"
               >
                 {dict.cta.seeInAction}
               </Button>
@@ -308,7 +308,7 @@ const IntentPage: React.FC<IntentPageProps> = ({ routeKey }) => {
                   track(MarketingEvents.ContactCta, { source: `intent_${routeKey}`, lang });
                   navigate(path("contact"));
                 }}
-                className="w-full sm:w-auto border-[#64499D]/30 text-[#64499D] hover:bg-[#64499D]/10 dark:text-[#CFC2FF] dark:hover:bg-[#64499D]/20 px-8"
+                className="w-full sm:w-auto landing-btn-secondary px-8"
               >
                 {dict.cta.talkToTeam}
               </Button>

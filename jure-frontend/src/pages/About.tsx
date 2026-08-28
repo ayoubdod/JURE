@@ -21,7 +21,7 @@ import { RouteSeo } from "@/marketing/Seo";
 /**
  * About Page
  * - Shared MarketingShell (nav / lang / theme / footer)
- * - Visual language aligned with Landing (glass, reveal, brand #64499D)
+ * - Visual language aligned with Landing (glass, reveal, brand #A58CF4)
  */
 
 type Lang = "fr" | "en" | "ar";
@@ -239,12 +239,7 @@ const useI18n = () => {
 };
 
 const AvatarCircle: React.FC<{ initials: string }> = ({ initials }) => (
-  <div
-    className="w-14 h-14 rounded-full grid place-items-center text-white font-semibold shrink-0"
-    style={{
-      background: "linear-gradient(135deg, #64499D 0%, #4D3680 50%, #3E2D71 100%)",
-    }}
-  >
+  <div className="w-14 h-14 rounded-full grid place-items-center text-white font-semibold shrink-0 bg-[#64499D] dark:bg-white dark:text-[#64499D]">
     {initials}
   </div>
 );
@@ -258,7 +253,7 @@ const About: React.FC = () => {
   const go = (to: string) => navigate(to);
 
   const impactIcons = [BookOpen, Shield, Users, Award];
-  const impactAccents = ["#64499D", "#4D3680", "#3E2D71", "#8B6FD1"];
+  const impactAccents = ["#A58CF4", "#4D3680", "#3E2D71", "#A58CF4"];
 
   return (
     <MarketingShell
@@ -277,22 +272,14 @@ const About: React.FC = () => {
       {/* Hero */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 pt-8 sm:pt-14 pb-10 sm:pb-12 md:pt-24 md:pb-20">
         <Reveal className="text-center max-w-4xl mx-auto min-w-0">
-          <h1 className="font-display text-[2rem] leading-[1.15] sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight break-words">
-            <span className="landing-hero-shimmer bg-gradient-to-r from-slate-900 via-[#64499D] to-slate-900 dark:from-white dark:via-[#8B6FD1] dark:to-white bg-clip-text text-transparent">
-              {t.hero.titleA}
-            </span>
+          <h1 className="font-display text-[2rem] leading-[1.15] sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight break-words text-[#64499D] dark:text-white">
+            {t.hero.titleA}
             <br />
-            <span className="relative inline-block mt-1 max-w-full">
-              <span
-                aria-hidden
-                className="absolute inset-0 blur-2xl opacity-40 dark:opacity-50 bg-gradient-to-r from-[#64499D] to-[#8B6FD1]"
-              />
-              <span className="relative bg-gradient-to-r from-[#64499D] via-[#8B6FD1] to-[#4D3680] bg-clip-text text-transparent">
-                {t.hero.titleB}
-              </span>
+            <span className="landing-hero-shimmer bg-gradient-to-r from-[#A58CF4] via-[#C4B0EF] to-[#A58CF4] bg-clip-text text-transparent">
+              {t.hero.titleB}
             </span>
           </h1>
-          <p className="mt-6 text-base sm:text-lg md:text-xl text-slate-600 dark:text-slate-300 leading-relaxed break-words">
+          <p className="mt-6 text-base sm:text-lg md:text-xl text-neutral-600 dark:text-neutral-300 leading-relaxed break-words">
             {t.hero.subtitle}
           </p>
 
@@ -304,7 +291,7 @@ const About: React.FC = () => {
             <Button
               onClick={() => go("/contact")}
               size="lg"
-              className="w-full sm:w-auto px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg font-medium shadow-lg hover:shadow-[0_0_32px_-6px_rgba(100,73,157,0.55)] transition-shadow bg-gradient-to-r from-[#64499D] to-[#4D3680] hover:from-[#4D3680] hover:to-[#3E2D71] text-white"
+              className="landing-cta-btn landing-btn-primary w-full sm:w-auto px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg font-medium"
             >
               {t.hero.ctaContact}
               <ArrowRight className={`ms-2 h-5 w-5 ${isRtl ? "rotate-180" : ""}`} />
@@ -313,66 +300,57 @@ const About: React.FC = () => {
               onClick={() => go("/demo")}
               variant="outline"
               size="lg"
-              className="w-full sm:w-auto px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg border-[#64499D]/25 dark:border-[#8B6FD1]/30 text-slate-800 dark:text-slate-100 hover:bg-[#F4F1FF]/80 dark:hover:bg-[#64499D]/15 backdrop-blur-sm"
+              className="landing-btn-secondary w-full sm:w-auto px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg"
             >
               {t.hero.ctaDemo}
             </Button>
           </div>
 
-          <p className="mt-6 text-sm text-slate-500 dark:text-slate-400">{t.hero.trustLine}</p>
+          <p className="mt-6 text-sm text-neutral-500">{t.hero.trustLine}</p>
         </Reveal>
 
         {/* Pillars */}
         <div className="mt-12 sm:mt-16 grid grid-cols-1 md:grid-cols-3 gap-5 md:gap-6">
           <Reveal delay={0}>
-            <div className="landing-glass landing-glass-glow rounded-2xl p-5 sm:p-7 h-full min-w-0">
-              <div
-                className="w-12 h-12 rounded-xl flex items-center justify-center mb-4 text-white"
-                style={{ background: "#64499D" }}
-              >
+            <div className="landing-glass landing-glass-glow rounded-2xl p-5 sm:p-7 h-full min-w-0 group">
+              <div className="landing-icon w-12 h-12 rounded-xl flex items-center justify-center mb-4">
                 <Target className="w-6 h-6" />
               </div>
               <h3 className="font-display text-xl sm:text-2xl font-bold tracking-tight mb-2 break-words">
                 {t.pillars.mission.title}
               </h3>
-              <p className="text-slate-600 dark:text-slate-400 leading-relaxed break-words">
+              <p className="text-neutral-600 dark:text-neutral-400 leading-relaxed break-words">
                 {t.pillars.mission.desc}
               </p>
             </div>
           </Reveal>
 
           <Reveal delay={0.06}>
-            <div className="landing-glass landing-glass-glow rounded-2xl p-5 sm:p-7 h-full min-w-0">
-              <div
-                className="w-12 h-12 rounded-xl flex items-center justify-center mb-4 text-white"
-                style={{ background: "#4D3680" }}
-              >
+            <div className="landing-glass landing-glass-glow rounded-2xl p-5 sm:p-7 h-full min-w-0 group">
+              <div className="landing-icon w-12 h-12 rounded-xl flex items-center justify-center mb-4">
                 <Zap className="w-6 h-6" />
               </div>
               <h3 className="font-display text-xl sm:text-2xl font-bold tracking-tight mb-2 break-words">
                 {t.pillars.vision.title}
               </h3>
-              <p className="text-slate-600 dark:text-slate-400 leading-relaxed break-words">
+              <p className="text-neutral-600 dark:text-neutral-400 leading-relaxed break-words">
                 {t.pillars.vision.desc}
               </p>
             </div>
           </Reveal>
 
           <Reveal delay={0.12}>
-            <div className="landing-glass landing-glass-glow rounded-2xl p-5 sm:p-7 h-full min-w-0">
-              <div
-                className="w-12 h-12 rounded-xl flex items-center justify-center mb-4 text-white"
-                style={{ background: "#3E2D71" }}
-              >
+            <div className="landing-glass landing-glass-glow rounded-2xl p-5 sm:p-7 h-full min-w-0 group">
+              <div className="landing-icon w-12 h-12 rounded-xl flex items-center justify-center mb-4">
                 <Heart className="w-6 h-6" />
               </div>
               <h3 className="font-display text-xl sm:text-2xl font-bold tracking-tight mb-3 break-words">
                 {t.pillars.values.title}
               </h3>
-              <ul className="space-y-2 text-slate-700 dark:text-slate-300">
+              <ul className="space-y-2 text-neutral-700 dark:text-neutral-300">
                 {t.pillars.values.items.map((v: string, i: number) => (
                   <li key={i} className="flex items-start gap-2">
-                    <Check className="w-5 h-5 text-[#64499D] dark:text-[#8B6FD1] shrink-0 mt-0.5" />
+                    <Check className="w-5 h-5 text-[#A58CF4] dark:text-[#A58CF4] shrink-0 mt-0.5" />
                     <span>{v}</span>
                   </li>
                 ))}
@@ -401,7 +379,7 @@ const About: React.FC = () => {
                 icon={<Icon className="w-6 h-6" />}
                 title={it.title}
                 description={it.desc}
-                accent={impactAccents[idx] || "#64499D"}
+                accent={impactAccents[idx] || "#A58CF4"}
                 delay={idx * 0.04}
               />
             );
@@ -412,15 +390,7 @@ const About: React.FC = () => {
       {/* Timeline */}
       <section className="max-w-6xl mx-auto px-4 sm:px-6 pb-14 sm:pb-16 md:pb-20">
         <Reveal>
-          <div className="relative rounded-2xl sm:rounded-3xl p-6 sm:p-8 md:p-12 text-white overflow-hidden landing-panel-glow bg-gradient-to-br from-slate-900 via-slate-900 to-[#2A1F4A]">
-            <div
-              aria-hidden
-              className="pointer-events-none absolute inset-0 opacity-40"
-              style={{
-                background:
-                  "radial-gradient(ellipse 60% 50% at 20% 0%, rgba(100,73,157,0.55), transparent), radial-gradient(ellipse 50% 40% at 90% 100%, rgba(139,111,209,0.35), transparent)",
-              }}
-            />
+          <div className="relative rounded-2xl sm:rounded-3xl p-6 sm:p-8 md:p-12 text-white overflow-hidden landing-band">
             <h2 className="relative font-display text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight mb-8 sm:mb-10 text-center break-words">
               {t.timeline.title}
             </h2>
@@ -429,12 +399,12 @@ const About: React.FC = () => {
               {t.timeline.items.map((step: { when: string; what: string }, i: number) => (
                 <div key={i} className="flex-1">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl grid place-items-center bg-white/10 landing-glass border-0">
+                    <div className="w-10 h-10 rounded-xl grid place-items-center bg-white/10 border border-white/15">
                       <span className="text-lg font-semibold">{i + 1}</span>
                     </div>
                     <div className="font-display text-xl font-semibold">{step.when}</div>
                   </div>
-                  <p className="mt-3 text-slate-200 leading-relaxed">{step.what}</p>
+                  <p className="mt-3 text-white/70 leading-relaxed">{step.what}</p>
                 </div>
               ))}
             </div>
@@ -448,7 +418,7 @@ const About: React.FC = () => {
           <h2 className="font-display text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight mb-2 break-words">
             {t.team.title}
           </h2>
-          <p className="text-slate-600 dark:text-slate-300 break-words">{t.team.subtitle}</p>
+          <p className="text-neutral-600 dark:text-neutral-300 break-words">{t.team.subtitle}</p>
         </Reveal>
 
         <div className="mt-8 sm:mt-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6">
@@ -460,10 +430,10 @@ const About: React.FC = () => {
                     <AvatarCircle initials={m.initials} />
                     <div className={`min-w-0 ${isRtl ? "text-end" : "text-start"}`}>
                       <h3 className="font-display text-lg font-semibold tracking-tight break-words">{m.name}</h3>
-                      <p className="text-sm text-slate-500 dark:text-slate-400 break-words">{m.role}</p>
+                      <p className="text-sm text-neutral-500 break-words">{m.role}</p>
                     </div>
                   </div>
-                  <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                  <p className="text-sm text-neutral-600 dark:text-neutral-300 leading-relaxed">
                     {lang === "fr" &&
                       "Focalisé sur des solutions concrètes, du discovery au déploiement sécurisé."}
                     {lang === "en" &&
@@ -480,22 +450,12 @@ const About: React.FC = () => {
       {/* CTA */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 pb-16 sm:pb-24">
         <Reveal>
-          <div className="relative rounded-2xl sm:rounded-3xl p-6 sm:p-10 md:p-14 text-white overflow-hidden landing-panel-glow bg-gradient-to-br from-[#64499D] via-[#4D3680] to-[#3E2D71]">
-            <div
-              aria-hidden
-              className="pointer-events-none absolute inset-0 opacity-30"
-              style={{
-                backgroundImage:
-                  "linear-gradient(rgba(255,255,255,0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.08) 1px, transparent 1px)",
-                backgroundSize: "40px 40px",
-                maskImage: "radial-gradient(ellipse 80% 70% at 50% 50%, black, transparent)",
-              }}
-            />
+          <div className="relative rounded-2xl sm:rounded-3xl p-6 sm:p-10 md:p-14 text-white overflow-hidden landing-band">
             <div className="relative text-center max-w-3xl mx-auto min-w-0">
               <h3 className="font-display text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight mb-3 break-words">
                 {t.cta.title}
               </h3>
-              <p className="text-purple-100 text-base sm:text-lg break-words">{t.cta.subtitle}</p>
+              <p className="text-white/70 text-base sm:text-lg break-words">{t.cta.subtitle}</p>
 
               <div
                 className={`mt-8 flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center w-full sm:w-auto ${
@@ -504,7 +464,7 @@ const About: React.FC = () => {
               >
                 <Button
                   size="lg"
-                  className="w-full sm:w-auto px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg font-medium bg-white text-slate-900 hover:bg-slate-100 shadow-lg"
+                  className="w-full sm:w-auto px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg font-medium landing-btn-on-dark"
                   onClick={() => go("/contact")}
                 >
                   {t.cta.primary}
@@ -512,7 +472,7 @@ const About: React.FC = () => {
                 <Button
                   size="lg"
                   variant="outline"
-                  className="w-full sm:w-auto px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg font-medium border-white/70 text-white hover:bg-white/10"
+                  className="w-full sm:w-auto px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg font-medium landing-btn-ghost-dark"
                   onClick={() => go("/demo")}
                 >
                   {t.cta.secondary}

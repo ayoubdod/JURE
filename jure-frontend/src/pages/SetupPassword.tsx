@@ -11,6 +11,7 @@ import clsx from 'clsx';
 import { useTheme } from '@/hooks/useTheme';
 import { isAxiosError } from 'axios';
 import LangSwitcher from '@/components/common/LangSwitcher';
+import { AuroraPage } from '@/components/common/AuroraBackground';
 import { useAppTranslation } from '@/i18n';
 
 interface SetupPasswordFormData {
@@ -58,7 +59,7 @@ const SetupPassword = () => {
 
   if (!token) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4 bg-background">
+      <AuroraPage className="flex items-center justify-center p-4">
         <div className="w-full max-w-md">
           <div className="flex items-center justify-between mb-6">
             <div className="flex-1 text-center">
@@ -94,12 +95,12 @@ const SetupPassword = () => {
             © {new Date().getFullYear()} Jure. {t.auth.footerRights}
           </div>
         </div>
-      </div>
+      </AuroraPage>
     );
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-background">
+    <AuroraPage className="flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="flex items-center justify-between mb-6">
           <div className="flex-1 text-center">
@@ -211,7 +212,7 @@ const SetupPassword = () => {
           © {new Date().getFullYear()} Jure. {t.auth.footerRights}
         </div>
       </div>
-    </div>
+    </AuroraPage>
   );
 };
 

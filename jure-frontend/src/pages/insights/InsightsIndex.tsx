@@ -74,7 +74,7 @@ const InsightsIndex: React.FC = () => {
         <button
           type="button"
           onClick={() => navigate(path())}
-          className="hover:text-[#64499D] dark:hover:text-[#CFC2FF]"
+          className="hover:text-[#A58CF4] dark:hover:text-[#A58CF4]"
         >
           {homeRoute.label[lang]}
         </button>
@@ -93,7 +93,7 @@ const InsightsIndex: React.FC = () => {
           {t.topics.map((topic) => (
             <span
               key={topic}
-              className="text-[11px] sm:text-xs font-medium px-3 py-1 rounded-full bg-[#64499D]/8 text-[#64499D] dark:bg-[#64499D]/20 dark:text-[#CFC2FF]"
+              className="text-[11px] sm:text-xs font-medium px-3 py-1 rounded-full bg-[#A58CF4]/8 text-[#A58CF4] dark:bg-[#A58CF4]/20 dark:text-[#A58CF4]"
             >
               {topic}
             </span>
@@ -124,7 +124,7 @@ const InsightsIndex: React.FC = () => {
                 <p className="mt-3 text-sm sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed">
                   {article.description[lang]}
                 </p>
-                <span className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-[#64499D] dark:text-[#CFC2FF]">
+                <span className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-[#A58CF4] dark:text-[#A58CF4]">
                   {t.read} <ArrowRight className="w-4 h-4 rtl:rotate-180" />
                 </span>
               </button>

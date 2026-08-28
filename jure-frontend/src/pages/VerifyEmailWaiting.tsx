@@ -9,6 +9,7 @@ import { Mail, Clock, RefreshCw, CheckCircle2, ArrowRight, Loader2 } from 'lucid
 import { useToast } from '@/hooks/use-toast';
 import { isAxiosError } from 'axios';
 import { useAppTranslation } from '@/i18n';
+import { AuroraPage } from '@/components/common/AuroraBackground';
 
 const VerifyEmailWaiting: React.FC = () => {
   const navigate = useNavigate();
@@ -105,7 +106,7 @@ const VerifyEmailWaiting: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
+    <AuroraPage className="flex items-center justify-center p-4">
       <div className="w-full max-w-2xl">
         <Card className="shadow-xl">
           <CardHeader className="text-center space-y-4">
@@ -177,7 +178,7 @@ const VerifyEmailWaiting: React.FC = () => {
           </CardContent>
         </Card>
       </div>
-    </div>
+    </AuroraPage>
   );
 };
 

@@ -8,6 +8,7 @@
  */
 import { SITE_URL, ORG, absoluteUrl, canonicalUrl, type MarketingLocale } from "./site";
 import type { InsightArticleMeta } from "./routes";
+import { getSitelinks } from "./sitelinks";
 
 type JsonLd = Record<string, unknown>;
 
@@ -20,32 +21,70 @@ const ORG_DESCRIPTION: Record<MarketingLocale, string> = {
   ar: "JURE منصة LegalTech للفرق القانونية الحديثة، تجمع البحث القانوني المدعوم بالذكاء الاصطناعي وإدارة القضايا وسير عمل المستندات والتعاون الآمن في مساحة عمل واحدة.",
 };
 
+const ORG_DISAMBIGUATION: Record<MarketingLocale, string> = {
+  en: "JURE is legal practice management software for law firms — not the Latin phrase de jure.",
+  fr: "JURE est un logiciel de gestion de cabinet d'avocats — à ne pas confondre avec l'expression latine de jure.",
+  ar: "JURE برنامج إدارة مكاتب المحاماة — وليس العبارة اللاتينية de jure.",
+};
+
 export function organizationJsonLd(locale: MarketingLocale): JsonLd {
   return {
     "@context": "https://schema.org",
     "@type": "Organization",
     "@id": ORG_ID,
     name: ORG.name,
+    alternateName: [...ORG.alternateNames],
     legalName: ORG.legalName,
     url: SITE_URL,
-    logo: absoluteUrl(ORG.logoPath),
+    logo: {
+      "@type": "ImageObject",
+      url: absoluteUrl(ORG.logoPath),
+      width: ORG.logoWidth,
+      height: ORG.logoHeight,
+    },
+    image: absoluteUrl(ORG.logoPath),
     email: ORG.email,
     description: ORG_DESCRIPTION[locale],
+    disambiguatingDescription: ORG_DISAMBIGUATION[locale],
     foundingLocation: { "@type": "Place", name: ORG.foundingCountry },
     ...(ORG.sameAs.length > 0 ? { sameAs: ORG.sameAs } : {}),
   };
 }
 
 export function webSiteJsonLd(locale: MarketingLocale): JsonLd {
+  const sitelinks = getSitelinks(locale);
   return {
     "@context": "https://schema.org",
     "@type": "WebSite",
     "@id": WEBSITE_ID,
     name: ORG.name,
+    alternateName: [...ORG.alternateNames],
     url: SITE_URL,
     inLanguage: ["en", "fr", "ar"],
     description: ORG_DESCRIPTION[locale],
     publisher: { "@id": ORG_ID },
+    hasPart: sitelinks.map((link) => ({
+      "@type": "WebPage",
+      name: link.name,
+      description: link.description,
+      url: link.url,
+    })),
+  };
+}
+
+/** Homepage-only sitelink hints. Google still decides whether to show them. */
+export function siteNavigationJsonLd(locale: MarketingLocale): JsonLd {
+  return {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    name: ORG.name,
+    itemListElement: getSitelinks(locale).map((link, index) => ({
+      "@type": "SiteNavigationElement",
+      position: index + 1,
+      name: link.name,
+      description: link.description,
+      url: link.url,
+    })),
   };
 }
 
@@ -100,8 +139,10 @@ export function softwareApplicationJsonLd(locale: MarketingLocale): JsonLd {
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
     name: ORG.name,
+    alternateName: [...ORG.alternateNames],
     applicationCategory: "BusinessApplication",
     applicationSubCategory: "Legal practice management software",
+    brand: { "@id": ORG_ID },
     operatingSystem: "Web",
     url: SITE_URL,
     description: APP_DESCRIPTION[locale],

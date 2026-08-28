@@ -257,7 +257,6 @@ const STRINGS: Record<Lang, SecurityStrings> = {
 const AVAILABLE_ICONS = [Building2, KeyRound, RefreshCw, MailCheck, Lock, Globe, ShieldCheck, Landmark];
 const ROADMAP_ICONS = [FileClock, Database, Fingerprint, Archive];
 const PRINCIPLE_ICONS = [KeyRound, Building2, UserCheck, Eye];
-const ACCENTS = ["#64499D", "#4D3680", "#3E2D71", "#8B6FD1"];
 
 const Security: React.FC = () => {
   const navigate = useNavigate();
@@ -272,16 +271,14 @@ const Security: React.FC = () => {
       {/* Hero */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 pt-8 sm:pt-14 pb-10 sm:pb-12 md:pt-20 md:pb-16">
         <Reveal className="text-center max-w-3xl mx-auto min-w-0">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full landing-glass text-xs font-medium text-[#64499D] dark:text-[#CFC2FF] mb-6">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full landing-glass text-xs font-medium text-[#A58CF4] mb-6">
             <Shield className="w-3.5 h-3.5" />
             {t.badge}
           </div>
-          <h1 className="font-display text-[2rem] leading-[1.15] sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight break-words">
-            <span className="landing-hero-shimmer bg-gradient-to-r from-slate-900 via-[#64499D] to-slate-900 dark:from-white dark:via-[#8B6FD1] dark:to-white bg-clip-text text-transparent">
-              {t.hero.title}
-            </span>
+          <h1 className="font-display text-[2rem] leading-[1.15] sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight break-words text-[#64499D] dark:text-white">
+            {t.hero.title}
           </h1>
-          <p className="mt-6 text-base sm:text-lg text-slate-600 dark:text-slate-300 leading-relaxed break-words">
+          <p className="mt-6 text-base sm:text-lg text-neutral-600 dark:text-neutral-300 leading-relaxed break-words">
             {t.hero.intro}
           </p>
         </Reveal>
@@ -293,25 +290,21 @@ const Security: React.FC = () => {
       <section className="max-w-7xl mx-auto px-4 sm:px-6 pb-14 sm:pb-16">
         <Reveal className="text-center max-w-2xl mx-auto mb-8 sm:mb-10">
           <h2 className="font-display text-2xl sm:text-3xl font-bold break-words">{t.available.title}</h2>
-          <p className="mt-3 text-sm sm:text-base text-slate-600 dark:text-slate-300 break-words">
+          <p className="mt-3 text-sm sm:text-base text-neutral-600 dark:text-neutral-300 break-words">
             {t.available.subtitle}
           </p>
         </Reveal>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
           {t.available.items.map((item, i) => {
             const Icon = AVAILABLE_ICONS[i] || Shield;
-            const accent = ACCENTS[i % ACCENTS.length];
             return (
               <Reveal key={item.title} delay={i * 0.04}>
-                <div className={`landing-glass landing-glass-glow rounded-2xl p-5 sm:p-6 h-full min-w-0 ${isRtl ? "text-right" : "text-start"}`}>
-                  <div
-                    className="w-11 h-11 rounded-xl flex items-center justify-center text-white mb-4"
-                    style={{ background: accent }}
-                  >
+                <div className={`group landing-glass landing-glass-glow rounded-2xl p-5 sm:p-6 h-full min-w-0 ${isRtl ? "text-right" : "text-start"}`}>
+                  <div className="landing-icon w-11 h-11 rounded-xl flex items-center justify-center mb-4">
                     <Icon className="w-5 h-5" />
                   </div>
                   <h3 className="font-display text-lg font-semibold mb-2 break-words">{item.title}</h3>
-                  <p className="text-slate-600 dark:text-slate-300 text-sm leading-relaxed break-words">{item.desc}</p>
+                  <p className="text-neutral-600 dark:text-neutral-300 text-sm leading-relaxed break-words">{item.desc}</p>
                 </div>
               </Reveal>
             );
@@ -324,24 +317,24 @@ const Security: React.FC = () => {
         <Reveal>
           <div className={`landing-glass rounded-2xl sm:rounded-3xl p-6 sm:p-8 md:p-10 min-w-0 ${isRtl ? "text-right" : "text-start"}`}>
             <div className="flex items-center gap-3 mb-3 min-w-0">
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#64499D] to-[#4D3680] flex items-center justify-center text-white shrink-0">
+              <div className="landing-icon w-12 h-12 rounded-xl flex items-center justify-center shrink-0">
                 <FileClock className="w-6 h-6" />
               </div>
               <h2 className="font-display text-xl sm:text-2xl font-bold break-words">{t.roadmap.title}</h2>
             </div>
-            <p className="text-sm sm:text-base text-slate-600 dark:text-slate-300 mb-6 break-words">{t.roadmap.note}</p>
+            <p className="text-sm sm:text-base text-neutral-600 dark:text-neutral-300 mb-6 break-words">{t.roadmap.note}</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {t.roadmap.items.map((item, i) => {
                 const Icon = ROADMAP_ICONS[i] || FileClock;
                 return (
                   <div
                     key={item.title}
-                    className="flex items-start gap-3 rounded-xl border border-dashed border-[#64499D]/30 dark:border-[#8B6FD1]/30 p-4 min-w-0"
+                    className="flex items-start gap-3 rounded-xl border border-dashed border-[#64499D]/15 dark:border-white/15 p-4 min-w-0"
                   >
-                    <Icon className="w-5 h-5 text-[#64499D] dark:text-[#8B6FD1] shrink-0 mt-0.5" />
+                    <Icon className="w-5 h-5 text-[#A58CF4] dark:text-[#A58CF4] shrink-0 mt-0.5" />
                     <div className="min-w-0">
                       <div className="font-semibold text-sm sm:text-base break-words">{item.title}</div>
-                      <p className="text-slate-600 dark:text-slate-300 text-sm leading-relaxed break-words">
+                      <p className="text-neutral-600 dark:text-neutral-300 text-sm leading-relaxed break-words">
                         {item.desc}
                       </p>
                     </div>
@@ -363,12 +356,12 @@ const Security: React.FC = () => {
             const Icon = PRINCIPLE_ICONS[i] || Shield;
             return (
               <Reveal key={item.title} delay={i * 0.05}>
-                <div className={`landing-glass rounded-2xl p-5 sm:p-6 h-full min-w-0 ${isRtl ? "text-right" : "text-start"}`}>
-                  <span className="w-10 h-10 rounded-xl bg-[#64499D]/10 dark:bg-[#64499D]/25 text-[#64499D] dark:text-[#CFC2FF] flex items-center justify-center mb-4">
+                <div className={`landing-glass rounded-2xl p-5 sm:p-6 h-full min-w-0 group ${isRtl ? "text-right" : "text-start"}`}>
+                  <span className="landing-icon w-10 h-10 rounded-xl flex items-center justify-center mb-4">
                     <Icon className="w-5 h-5" />
                   </span>
                   <h3 className="font-display text-base sm:text-lg font-semibold mb-1.5 break-words">{item.title}</h3>
-                  <p className="text-slate-600 dark:text-slate-300 text-sm leading-relaxed break-words">{item.desc}</p>
+                  <p className="text-neutral-600 dark:text-neutral-300 text-sm leading-relaxed break-words">{item.desc}</p>
                 </div>
               </Reveal>
             );
@@ -379,12 +372,12 @@ const Security: React.FC = () => {
       {/* CTA */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 pb-16 sm:pb-24">
         <Reveal>
-          <div className="rounded-2xl sm:rounded-3xl p-6 sm:p-10 md:p-12 text-white landing-panel-glow bg-gradient-to-br from-slate-900 via-[#2A1F4A] to-[#64499D] text-center min-w-0">
-            <h2 className="font-display text-2xl sm:text-3xl md:text-4xl font-bold mb-3 break-words">{t.cta.title}</h2>
-            <p className="text-slate-300 text-base sm:text-lg mb-8 break-words">{t.cta.subtitle}</p>
+          <div className="rounded-2xl sm:rounded-3xl p-6 sm:p-10 md:p-12 text-white landing-band text-center min-w-0">
+            <h2 className="relative font-display text-2xl sm:text-3xl md:text-4xl font-bold mb-3 break-words">{t.cta.title}</h2>
+            <p className="relative text-white/70 text-base sm:text-lg mb-8 break-words">{t.cta.subtitle}</p>
             <Button
               size="lg"
-              className="w-full sm:w-auto px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg bg-white text-slate-900 hover:bg-slate-100"
+              className="relative w-full sm:w-auto px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg landing-btn-on-dark"
               onClick={() => navigate(path("contact"))}
             >
               {t.cta.primary}

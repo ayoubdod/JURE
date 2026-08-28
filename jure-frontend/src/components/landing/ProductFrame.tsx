@@ -175,10 +175,10 @@ const Chrome: React.FC<{ title: string; children: React.ReactNode; className?: s
     role="img"
     aria-label={title}
   >
-    <div className="flex items-center gap-2 px-4 py-2.5 border-b border-[#64499D]/10 dark:border-[#8B6FD1]/15 bg-white/40 dark:bg-slate-950/40">
-      <span className="w-2.5 h-2.5 rounded-full bg-[#64499D]/30" />
-      <span className="w-2.5 h-2.5 rounded-full bg-[#64499D]/20" />
-      <span className="w-2.5 h-2.5 rounded-full bg-[#64499D]/10" />
+    <div className="flex items-center gap-2 px-4 py-2.5 border-b border-[#A58CF4]/10 dark:border-[#A58CF4]/15 bg-white/40 dark:bg-slate-950/40">
+      <span className="w-2.5 h-2.5 rounded-full bg-[#A58CF4]/30" />
+      <span className="w-2.5 h-2.5 rounded-full bg-[#A58CF4]/20" />
+      <span className="w-2.5 h-2.5 rounded-full bg-[#A58CF4]/10" />
       <span className="ms-2 text-xs font-medium text-slate-500 dark:text-slate-400 truncate">
         {title}
       </span>
@@ -197,13 +197,13 @@ const SideNav: React.FC<{ t: Record<string, string>; active: string }> = ({ t, a
     { key: "calendar", icon: Calendar },
   ];
   return (
-    <div className="hidden sm:flex flex-col gap-1 p-3 border-e border-[#64499D]/10 dark:border-[#8B6FD1]/15 min-w-[130px] bg-white/30 dark:bg-slate-950/30">
+    <div className="hidden sm:flex flex-col gap-1 p-3 border-e border-[#A58CF4]/10 dark:border-[#A58CF4]/15 min-w-[130px] bg-white/30 dark:bg-slate-950/30">
       {items.map(({ key, icon: Icon }) => (
         <div
           key={key}
           className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[11px] font-medium ${
             key === active
-              ? "bg-[#64499D]/10 text-[#64499D] dark:bg-[#64499D]/25 dark:text-[#CFC2FF]"
+              ? "bg-[#A58CF4]/10 text-[#A58CF4] dark:bg-[#A58CF4]/25 dark:text-[#A58CF4]"
               : "text-slate-500 dark:text-slate-400"
           }`}
         >
@@ -237,14 +237,14 @@ export const CaseWorkspaceFrame: React.FC<{ lang: Lang; className?: string }> = 
               <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
                 {t.statusActive}
               </span>
-              <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-[#64499D]/10 text-[#64499D] dark:text-[#CFC2FF]">
+              <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-[#A58CF4]/10 text-[#A58CF4] dark:text-[#A58CF4]">
                 {t.litigation}
               </span>
             </div>
           </div>
 
-          <div className="flex gap-3 text-[11px] font-medium border-b border-[#64499D]/10 dark:border-[#8B6FD1]/15 pb-1.5">
-            <span className="text-[#64499D] dark:text-[#CFC2FF] border-b-2 border-[#64499D] pb-1 -mb-2">
+          <div className="flex gap-3 text-[11px] font-medium border-b border-[#A58CF4]/10 dark:border-[#A58CF4]/15 pb-1.5">
+            <span className="text-[#A58CF4] dark:text-[#A58CF4] border-b-2 border-[#A58CF4] pb-1 -mb-2">
               {t.tabDocuments}
             </span>
             <span className="text-slate-400">{t.tabTasks}</span>
@@ -255,9 +255,9 @@ export const CaseWorkspaceFrame: React.FC<{ lang: Lang; className?: string }> = 
             {[t.doc1, t.doc2, t.doc3].map((doc) => (
               <div
                 key={doc}
-                className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-white/50 dark:bg-slate-900/50 border border-[#64499D]/8 dark:border-[#8B6FD1]/10"
+                className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-white/50 dark:bg-slate-900/50 border border-[#A58CF4]/8 dark:border-[#A58CF4]/10"
               >
-                <FileText className="w-3.5 h-3.5 text-[#64499D] dark:text-[#8B6FD1] shrink-0" />
+                <FileText className="w-3.5 h-3.5 text-[#A58CF4] dark:text-[#A58CF4] shrink-0" />
                 <span className="text-[11px] truncate">{doc}</span>
               </div>
             ))}
@@ -267,9 +267,9 @@ export const CaseWorkspaceFrame: React.FC<{ lang: Lang; className?: string }> = 
             {[t.task1, t.task2].map((task, i) => (
               <div
                 key={task}
-                className="flex items-start gap-2 px-2.5 py-2 rounded-lg bg-white/50 dark:bg-slate-900/50 border border-[#64499D]/8 dark:border-[#8B6FD1]/10"
+                className="flex items-start gap-2 px-2.5 py-2 rounded-lg bg-white/50 dark:bg-slate-900/50 border border-[#A58CF4]/8 dark:border-[#A58CF4]/10"
               >
-                <CheckCircle2 className="w-3.5 h-3.5 text-[#64499D] dark:text-[#8B6FD1] mt-0.5 shrink-0" />
+                <CheckCircle2 className="w-3.5 h-3.5 text-[#A58CF4] dark:text-[#A58CF4] mt-0.5 shrink-0" />
                 <div className="min-w-0">
                   <div className="text-[11px] font-medium truncate">{task}</div>
                   <div className="text-[10px] text-slate-500 dark:text-slate-400 flex items-center gap-1">
@@ -280,15 +280,15 @@ export const CaseWorkspaceFrame: React.FC<{ lang: Lang; className?: string }> = 
             ))}
           </div>
 
-          <div className="flex flex-wrap items-center justify-between gap-2 px-2.5 py-2 rounded-lg bg-[#64499D]/5 dark:bg-[#64499D]/15 border border-[#64499D]/15 dark:border-[#8B6FD1]/20">
-            <div className="flex items-center gap-2 text-[11px] font-medium text-[#64499D] dark:text-[#CFC2FF]">
+          <div className="flex flex-wrap items-center justify-between gap-2 px-2.5 py-2 rounded-lg bg-[#A58CF4]/5 dark:bg-[#A58CF4]/15 border border-[#A58CF4]/15 dark:border-[#A58CF4]/20">
+            <div className="flex items-center gap-2 text-[11px] font-medium text-[#A58CF4] dark:text-[#A58CF4]">
               <Calendar className="w-3.5 h-3.5" /> {t.deadline} — 02/10
             </div>
             <div className="flex items-center gap-1">
               {["SA", "MK", "YB"].map((ini) => (
                 <span
                   key={ini}
-                  className="w-5 h-5 rounded-full bg-[#64499D] text-white text-[8px] font-semibold flex items-center justify-center ring-2 ring-white dark:ring-slate-900 -ms-1 first:ms-0"
+                  className="w-5 h-5 rounded-full bg-[#A58CF4] text-white text-[8px] font-semibold flex items-center justify-center ring-2 ring-white dark:ring-slate-900 -ms-1 first:ms-0"
                 >
                   {ini}
                 </span>
@@ -310,7 +310,7 @@ export const LibraryFrame: React.FC<{ lang: Lang; className?: string }> = ({ lan
       <div className="flex text-slate-700 dark:text-slate-200">
         <SideNav t={t} active="library" />
         <div className="flex-1 p-4 space-y-3 min-w-0">
-          <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-white/60 dark:bg-slate-900/60 border border-[#64499D]/10 dark:border-[#8B6FD1]/15">
+          <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-white/60 dark:bg-slate-900/60 border border-[#A58CF4]/10 dark:border-[#A58CF4]/15">
             <Search className="w-3.5 h-3.5 text-slate-400 shrink-0" />
             <span className="text-[11px] text-slate-400">{t.searchDocs}</span>
           </div>
@@ -320,8 +320,8 @@ export const LibraryFrame: React.FC<{ lang: Lang; className?: string }> = ({ lan
                 key={cat}
                 className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${
                   i === 0
-                    ? "bg-[#64499D] text-white"
-                    : "bg-[#64499D]/10 text-[#64499D] dark:bg-[#64499D]/20 dark:text-[#CFC2FF]"
+                    ? "bg-[#A58CF4] text-white"
+                    : "bg-[#A58CF4]/10 text-[#A58CF4] dark:bg-[#A58CF4]/20 dark:text-[#A58CF4]"
                 }`}
               >
                 {cat}
@@ -332,13 +332,13 @@ export const LibraryFrame: React.FC<{ lang: Lang; className?: string }> = ({ lan
             {[t.doc1, t.doc2, t.doc3].map((doc) => (
               <div
                 key={doc}
-                className="p-2.5 rounded-lg bg-white/50 dark:bg-slate-900/50 border border-[#64499D]/8 dark:border-[#8B6FD1]/10 space-y-1.5"
+                className="p-2.5 rounded-lg bg-white/50 dark:bg-slate-900/50 border border-[#A58CF4]/8 dark:border-[#A58CF4]/10 space-y-1.5"
               >
-                <FileText className="w-4 h-4 text-[#64499D] dark:text-[#8B6FD1]" />
+                <FileText className="w-4 h-4 text-[#A58CF4] dark:text-[#A58CF4]" />
                 <div className="text-[10px] font-medium leading-tight line-clamp-2">{doc}</div>
                 <div className="flex items-center justify-between text-[9px] text-slate-400">
                   <span>{t.updated} 08/09</span>
-                  <span className="text-[#64499D] dark:text-[#CFC2FF]">{t.preview}</span>
+                  <span className="text-[#A58CF4] dark:text-[#A58CF4]">{t.preview}</span>
                 </div>
               </div>
             ))}
@@ -357,23 +357,23 @@ export const ChatFrame: React.FC<{ lang: Lang; className?: string }> = ({ lang, 
       <div className="flex text-slate-700 dark:text-slate-200">
         <SideNav t={t} active="messages" />
         <div className="flex-1 p-4 space-y-3 min-w-0">
-          <div className="flex items-center justify-between gap-2 pb-2 border-b border-[#64499D]/10 dark:border-[#8B6FD1]/15">
+          <div className="flex items-center justify-between gap-2 pb-2 border-b border-[#A58CF4]/10 dark:border-[#A58CF4]/15">
             <div className="flex items-center gap-2 min-w-0">
-              <span className="w-6 h-6 rounded-full bg-[#64499D]/15 text-[#64499D] dark:text-[#CFC2FF] text-[9px] font-bold flex items-center justify-center shrink-0">
+              <span className="w-6 h-6 rounded-full bg-[#A58CF4]/15 text-[#A58CF4] dark:text-[#A58CF4] text-[9px] font-bold flex items-center justify-center shrink-0">
                 LT
               </span>
               <span className="text-[12px] font-semibold truncate">{t.convTitle}</span>
             </div>
-            <span className="flex items-center gap-1 text-[10px] font-medium text-[#64499D] dark:text-[#CFC2FF]">
+            <span className="flex items-center gap-1 text-[10px] font-medium text-[#A58CF4] dark:text-[#A58CF4]">
               <Phone className="w-3 h-3" /> {t.call}
             </span>
           </div>
 
           <div className="space-y-2">
-            <div className="max-w-[85%] px-3 py-2 rounded-2xl rounded-ss-sm bg-white/60 dark:bg-slate-900/60 border border-[#64499D]/8 dark:border-[#8B6FD1]/10 text-[11px]">
+            <div className="max-w-[85%] px-3 py-2 rounded-2xl rounded-ss-sm bg-white/60 dark:bg-slate-900/60 border border-[#A58CF4]/8 dark:border-[#A58CF4]/10 text-[11px]">
               {t.msg1}
             </div>
-            <div className="max-w-[85%] ms-auto px-3 py-2 rounded-2xl rounded-se-sm bg-[#64499D] text-white text-[11px] space-y-1.5">
+            <div className="max-w-[85%] ms-auto px-3 py-2 rounded-2xl rounded-se-sm bg-[#A58CF4] text-white text-[11px] space-y-1.5">
               <div>{t.msg2}</div>
               <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-white/15 text-[10px]">
                 <Paperclip className="w-3 h-3" /> {t.msgAttachment}
@@ -381,9 +381,9 @@ export const ChatFrame: React.FC<{ lang: Lang; className?: string }> = ({ lang, 
             </div>
           </div>
 
-          <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-full bg-white/60 dark:bg-slate-900/60 border border-[#64499D]/10 dark:border-[#8B6FD1]/15">
+          <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-full bg-white/60 dark:bg-slate-900/60 border border-[#A58CF4]/10 dark:border-[#A58CF4]/15">
             <span className="text-[11px] text-slate-400 flex-1 truncate">{t.typeMessage}</span>
-            <Send className="w-3.5 h-3.5 text-[#64499D] dark:text-[#8B6FD1] shrink-0" />
+            <Send className="w-3.5 h-3.5 text-[#A58CF4] dark:text-[#A58CF4] shrink-0" />
           </div>
         </div>
       </div>
@@ -399,7 +399,7 @@ export const JuriaFrame: React.FC<{ lang: Lang; className?: string }> = ({ lang,
       <div className="p-4 space-y-3 text-slate-700 dark:text-slate-200">
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
-            <span className="w-6 h-6 rounded-full bg-gradient-to-br from-[#64499D] to-[#8B6FD1] flex items-center justify-center shrink-0">
+            <span className="w-6 h-6 rounded-full bg-gradient-to-br from-[#A58CF4] to-[#A58CF4] flex items-center justify-center shrink-0">
               <Sparkles className="w-3 h-3 text-white" />
             </span>
             <span className="text-[12px] font-semibold">{t.juriaTitle}</span>
@@ -409,21 +409,21 @@ export const JuriaFrame: React.FC<{ lang: Lang; className?: string }> = ({ lang,
           </span>
         </div>
 
-        <div className="max-w-[90%] ms-auto px-3 py-2 rounded-2xl rounded-se-sm bg-[#64499D] text-white text-[11px]">
+        <div className="max-w-[90%] ms-auto px-3 py-2 rounded-2xl rounded-se-sm bg-[#A58CF4] text-white text-[11px]">
           {t.juriaPrompt}
         </div>
 
-        <div className="max-w-[92%] px-3 py-2.5 rounded-2xl rounded-ss-sm bg-white/60 dark:bg-slate-900/60 border border-[#64499D]/10 dark:border-[#8B6FD1]/15 space-y-1.5">
-          <div className="text-[11px] font-semibold text-[#64499D] dark:text-[#CFC2FF]">
+        <div className="max-w-[92%] px-3 py-2.5 rounded-2xl rounded-ss-sm bg-white/60 dark:bg-slate-900/60 border border-[#A58CF4]/10 dark:border-[#A58CF4]/15 space-y-1.5">
+          <div className="text-[11px] font-semibold text-[#A58CF4] dark:text-[#A58CF4]">
             {t.juriaAnswerTitle}
           </div>
           {[t.juriaPoint1, t.juriaPoint2, t.juriaPoint3].map((point) => (
             <div key={point} className="flex items-start gap-1.5 text-[10.5px] leading-snug">
-              <span className="w-1 h-1 rounded-full bg-[#8B6FD1] mt-1.5 shrink-0" />
+              <span className="w-1 h-1 rounded-full bg-[#A58CF4] mt-1.5 shrink-0" />
               {point}
             </div>
           ))}
-          <div className="text-[9px] text-slate-400 pt-1 border-t border-[#64499D]/10 dark:border-[#8B6FD1]/15">
+          <div className="text-[9px] text-slate-400 pt-1 border-t border-[#A58CF4]/10 dark:border-[#A58CF4]/15">
             {t.aiDisclaimer}
           </div>
         </div>

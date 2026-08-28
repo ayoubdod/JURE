@@ -192,16 +192,14 @@ const Contact: React.FC = () => {
       <RouteSeo routeKey="contact" lang={lang} />
       <section className="max-w-7xl mx-auto px-4 sm:px-6 pt-8 sm:pt-12 pb-14 sm:pb-16 md:pt-20 md:pb-20">
         <Reveal className="text-center max-w-3xl mx-auto min-w-0">
-          <h1 className="font-display text-[2rem] leading-[1.15] sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight break-words">
-            <span className="landing-hero-shimmer bg-gradient-to-r from-slate-900 via-[#64499D] to-slate-900 dark:from-white dark:via-[#8B6FD1] dark:to-white bg-clip-text text-transparent">
-              {t.hero.title}
-            </span>
+          <h1 className="font-display text-[2rem] leading-[1.15] sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight break-words text-[#64499D] dark:text-white">
+            {t.hero.title}
           </h1>
-          <p className="mt-4 text-base sm:text-lg text-slate-600 dark:text-slate-300 break-words">{t.hero.subtitle}</p>
+          <p className="mt-4 text-base sm:text-lg text-neutral-600 dark:text-neutral-300 break-words">{t.hero.subtitle}</p>
           <div className="mt-6 flex justify-center gap-3">
             <a
               href={`mailto:${CONTACT_INBOX}`}
-              className="inline-flex items-center gap-2 text-sm underline underline-offset-4 hover:text-[#64499D] dark:hover:text-[#8B6FD1] transition-colors"
+              className="inline-flex items-center gap-2 text-sm underline underline-offset-4 hover:text-[#A58CF4] transition-colors"
             >
               <Mail className="w-4 h-4" /> {t.hero.alt}
             </a>
@@ -222,7 +220,7 @@ const Contact: React.FC = () => {
                     value={form.name}
                     onChange={onChange}
                     required
-                    className="mt-1 bg-white/60 dark:bg-slate-900/40 border-[#64499D]/20 dark:border-[#8B6FD1]/25"
+                    className="mt-1 bg-white dark:bg-[#111] border-[#64499D]/15 dark:border-white/15"
                   />
                 </div>
                 <div>
@@ -233,7 +231,7 @@ const Contact: React.FC = () => {
                     value={form.email}
                     onChange={onChange}
                     required
-                    className="mt-1 bg-white/60 dark:bg-slate-900/40 border-[#64499D]/20 dark:border-[#8B6FD1]/25"
+                    className="mt-1 bg-white dark:bg-[#111] border-[#64499D]/15 dark:border-white/15"
                   />
                 </div>
                 <div>
@@ -242,7 +240,7 @@ const Contact: React.FC = () => {
                     name="company"
                     value={form.company}
                     onChange={onChange}
-                    className="mt-1 bg-white/60 dark:bg-slate-900/40 border-[#64499D]/20 dark:border-[#8B6FD1]/25"
+                    className="mt-1 bg-white dark:bg-[#111] border-[#64499D]/15 dark:border-white/15"
                   />
                 </div>
                 <div>
@@ -251,7 +249,7 @@ const Contact: React.FC = () => {
                     name="subject"
                     value={form.subject}
                     onChange={onChange}
-                    className="mt-1 bg-white/60 dark:bg-slate-900/40 border-[#64499D]/20 dark:border-[#8B6FD1]/25"
+                    className="mt-1 bg-white dark:bg-[#111] border-[#64499D]/15 dark:border-white/15"
                   />
                 </div>
                 <div className="md:col-span-2">
@@ -262,7 +260,7 @@ const Contact: React.FC = () => {
                     value={form.message}
                     onChange={onChange}
                     required
-                    className="mt-1 bg-white/60 dark:bg-slate-900/40 border-[#64499D]/20 dark:border-[#8B6FD1]/25"
+                    className="mt-1 bg-white dark:bg-[#111] border-[#64499D]/15 dark:border-white/15"
                   />
                 </div>
                 <label
@@ -275,7 +273,7 @@ const Contact: React.FC = () => {
                     name="consent"
                     checked={form.consent}
                     onChange={onChange}
-                    className="accent-[#64499D]"
+                    className="accent-[#A58CF4]"
                   />
                   {t.form.consent}
                 </label>
@@ -283,7 +281,7 @@ const Contact: React.FC = () => {
                   <Button
                     type="submit"
                     disabled={sending}
-                    className="w-full sm:w-auto px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg bg-gradient-to-r from-[#64499D] to-[#4D3680] hover:from-[#4D3680] hover:to-[#3E2D71] text-white shadow-lg hover:shadow-[0_0_28px_-6px_rgba(100,73,157,0.55)]"
+                    className="w-full sm:w-auto px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg landing-btn-primary"
                   >
                     <Send className={`w-4 h-4 ${isRtl ? "ms-2" : "me-2"}`} /> {sending ? t.form.sending : t.hero.cta}
                   </Button>
@@ -299,25 +297,25 @@ const Contact: React.FC = () => {
               <p className="text-slate-500 dark:text-slate-400 text-sm mb-6">JURE</p>
               <div className="space-y-4">
                 <div className={`flex items-center gap-3 ${isRtl ? "flex-row-reverse" : ""}`}>
-                  <div className="w-10 h-10 rounded-xl bg-[#64499D]/15 dark:bg-[#64499D]/25 flex items-center justify-center shrink-0">
-                    <Mail className="w-5 h-5 text-[#64499D] dark:text-[#8B6FD1]" />
+                  <div className="landing-icon w-10 h-10 rounded-xl flex items-center justify-center shrink-0">
+                    <Mail className="w-5 h-5" />
                   </div>
                   <a
                     href={`mailto:${CONTACT_INBOX}`}
-                    className="underline underline-offset-4 hover:text-[#64499D] dark:hover:text-[#8B6FD1] transition-colors"
+                    className="underline underline-offset-4 hover:text-[#A58CF4] transition-colors"
                   >
                     {t.info.email}
                   </a>
                 </div>
                 <div className={`flex items-center gap-3 ${isRtl ? "flex-row-reverse" : ""}`}>
-                  <div className="w-10 h-10 rounded-xl bg-[#64499D]/15 dark:bg-[#64499D]/25 flex items-center justify-center shrink-0">
-                    <Phone className="w-5 h-5 text-[#64499D] dark:text-[#8B6FD1]" />
+                  <div className="landing-icon w-10 h-10 rounded-xl flex items-center justify-center shrink-0">
+                    <Phone className="w-5 h-5" />
                   </div>
                   <span>{t.info.phone}</span>
                 </div>
                 <div className={`flex items-center gap-3 ${isRtl ? "flex-row-reverse" : ""}`}>
-                  <div className="w-10 h-10 rounded-xl bg-[#64499D]/15 dark:bg-[#64499D]/25 flex items-center justify-center shrink-0">
-                    <MapPin className="w-5 h-5 text-[#64499D] dark:text-[#8B6FD1]" />
+                  <div className="landing-icon w-10 h-10 rounded-xl flex items-center justify-center shrink-0">
+                    <MapPin className="w-5 h-5" />
                   </div>
                   <span>{t.info.address}</span>
                 </div>
@@ -325,7 +323,7 @@ const Contact: React.FC = () => {
                   <Button
                     variant="outline"
                     onClick={() => navigate("/status")}
-                    className="w-full border-[#64499D]/25 dark:border-[#8B6FD1]/30 hover:bg-[#F4F1FF]/80 dark:hover:bg-[#64499D]/15"
+                    className="w-full landing-btn-secondary"
                   >
                     {lang === "fr" ? "Voir le statut" : lang === "ar" ? "عرض الحالة" : "View Status"}
                     <ArrowRight className={`w-4 h-4 ${isRtl ? "me-2 rotate-180" : "ms-2"}`} />
