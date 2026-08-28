@@ -153,12 +153,10 @@ const StatusSubscribe: React.FC = () => {
       <RouteSeo routeKey="statusSubscribe" lang={lang} />
       <section className="max-w-7xl mx-auto px-4 sm:px-6 pt-8 sm:pt-12 pb-16 sm:pb-20 md:pt-20">
         <Reveal className="text-center max-w-3xl mx-auto min-w-0">
-          <h1 className="font-display text-[2rem] leading-[1.15] sm:text-4xl md:text-5xl font-bold tracking-tight break-words">
-            <span className="landing-hero-shimmer bg-gradient-to-r from-slate-900 via-[#64499D] to-slate-900 dark:from-white dark:via-[#8B6FD1] dark:to-white bg-clip-text text-transparent">
-              {t.hero.title}
-            </span>
+          <h1 className="font-display text-[2rem] leading-[1.15] sm:text-4xl md:text-5xl font-bold tracking-tight break-words text-[#64499D] dark:text-white">
+            {t.hero.title}
           </h1>
-          <p className="mt-3 text-slate-600 dark:text-slate-300 break-words">{t.hero.subtitle}</p>
+          <p className="mt-3 text-neutral-600 dark:text-neutral-300 break-words">{t.hero.subtitle}</p>
         </Reveal>
 
         <div className="landing-divider my-8 sm:my-10 max-w-md mx-auto" />
@@ -167,7 +165,7 @@ const StatusSubscribe: React.FC = () => {
           <form onSubmit={submit} className="max-w-3xl mx-auto">
             <div className="landing-glass landing-panel-glow rounded-2xl p-5 sm:p-6 md:p-8 space-y-6 min-w-0">
               <div className="flex items-center gap-2 min-w-0">
-                <Bell className="w-5 h-5 text-[#64499D] dark:text-[#CFC2FF] shrink-0" />
+                <Bell className="w-5 h-5 text-[#A58CF4] dark:text-[#A58CF4] shrink-0" />
                 <h2 className="font-display text-xl font-semibold break-words">{t.hero.title}</h2>
               </div>
               <p className="text-sm text-slate-500 dark:text-slate-400 -mt-2 break-words">{t.hero.subtitle}</p>
@@ -176,7 +174,7 @@ const StatusSubscribe: React.FC = () => {
                 <label className="text-sm">{t.form.email}</label>
                 <div className="mt-1 flex gap-2 flex-col sm:flex-row">
                   <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="min-w-0" />
-                  <Button type="submit" disabled={sending} className="w-full sm:w-auto px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg bg-gradient-to-r from-[#64499D] to-[#4D3680]">
+                  <Button type="submit" disabled={sending} className="w-full sm:w-auto px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg landing-btn-primary">
                     <Mail className="w-4 h-4 me-2" /> {sending ? t.form.sending : t.form.submit}
                   </Button>
                 </div>
@@ -192,8 +190,8 @@ const StatusSubscribe: React.FC = () => {
                       onClick={() => setFreq(v)}
                       className={`px-4 py-3 rounded-xl border text-sm transition-colors break-words ${
                         freq === v
-                          ? "border-[#64499D] bg-[#64499D]/10 dark:bg-[#64499D]/20"
-                          : "border-[#64499D]/15 dark:border-[#8B6FD1]/20 landing-glass"
+                          ? "border-[#A58CF4] bg-[#A58CF4]/10 dark:bg-[#A58CF4]/20"
+                          : "border-[#A58CF4]/15 dark:border-[#A58CF4]/20 landing-glass"
                       }`}
                     >
                       {v==="instant"?t.form.instant:v==="daily"?t.form.daily:t.form.weekly}
@@ -225,8 +223,8 @@ const ToggleTile: React.FC<{ on: boolean; icon: React.ReactNode; label: string; 
     onClick={onClick}
     className={`px-3 py-3 rounded-xl border text-sm flex items-center justify-center gap-2 transition-colors ${
       on
-        ? "border-[#64499D] bg-[#64499D]/10 dark:bg-[#64499D]/20"
-        : "border-[#64499D]/15 dark:border-[#8B6FD1]/20 landing-glass"
+        ? "border-[#A58CF4] bg-[#A58CF4]/10 dark:bg-[#A58CF4]/20"
+        : "border-[#A58CF4]/15 dark:border-[#A58CF4]/20 landing-glass"
     }`}
   >
     {icon} {label}

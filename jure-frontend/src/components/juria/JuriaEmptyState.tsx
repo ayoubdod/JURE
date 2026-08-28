@@ -83,7 +83,7 @@ export function JuriaEmptyState({
                   key={m}
                   type="button"
                   onClick={() => onPickMode(m)}
-                  className="group flex min-h-[72px] flex-col gap-2 rounded-xl border border-slate-200/90 bg-white p-2.5 text-start transition hover:border-[#64499D]/35 hover:bg-[#FBF9FF] sm:min-h-0 sm:flex-row sm:gap-3 sm:p-3.5 dark:border-slate-800 dark:bg-slate-950 dark:hover:border-[#64499D]/40 dark:hover:bg-[#64499D]/5"
+                  className="group flex min-h-[72px] flex-col gap-2 rounded-xl border border-slate-200/90 bg-white/85 p-2.5 text-start backdrop-blur-sm transition hover:border-[#64499D]/35 hover:bg-[#FBF9FF] sm:min-h-0 sm:flex-row sm:gap-3 sm:p-3.5 dark:border-slate-800 dark:bg-slate-950/80 dark:hover:border-[#64499D]/40 dark:hover:bg-[#64499D]/5"
                 >
                   <span className={cn('flex h-8 w-8 shrink-0 items-center justify-center rounded-lg sm:h-9 sm:w-9', visual.iconWrap)}>
                     <Icon className="h-4 w-4" />

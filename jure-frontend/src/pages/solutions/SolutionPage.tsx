@@ -60,7 +60,7 @@ const SolutionPage: React.FC<SolutionPageProps> = ({ routeKey }) => {
 
       <section className="max-w-7xl mx-auto px-4 sm:px-6 pt-12 sm:pt-16 pb-10">
         <nav className={`flex items-center gap-1.5 text-xs text-slate-500 mb-8 ${rtlText}`} aria-label="Breadcrumb">
-          <button type="button" onClick={() => navigate(path(""))} className="hover:text-[#64499D]">
+          <button type="button" onClick={() => navigate(path(""))} className="hover:text-[#A58CF4]">
             {homeRoute.label[lang]}
           </button>
           <ChevronRight className="w-3.5 h-3.5 rtl:rotate-180" />
@@ -79,7 +79,7 @@ const SolutionPage: React.FC<SolutionPageProps> = ({ routeKey }) => {
               <Button
                 size="lg"
                 onClick={goDemo}
-                className="bg-gradient-to-r from-[#64499D] to-[#4D3680] text-white"
+                className="landing-btn-primary"
               >
                 {lang === "fr" ? "Voir JURE en action" : lang === "ar" ? "شاهد JURE عمليًا" : "See JURE in action"}
                 <ArrowRight className="w-4 h-4 ms-2 rtl:rotate-180" />
@@ -123,7 +123,7 @@ const SolutionPage: React.FC<SolutionPageProps> = ({ routeKey }) => {
         <ul className="space-y-3">
           {content.points.map((p) => (
             <li key={p} className={`flex items-start gap-2 ${rtlText}`}>
-              <CheckCircle2 className="w-5 h-5 text-[#64499D] shrink-0 mt-0.5" />
+              <CheckCircle2 className="w-5 h-5 text-[#A58CF4] shrink-0 mt-0.5" />
               <span className="text-slate-700 dark:text-slate-200">{p}</span>
             </li>
           ))}
@@ -164,7 +164,7 @@ const SolutionPage: React.FC<SolutionPageProps> = ({ routeKey }) => {
       <section className="max-w-4xl mx-auto px-4 sm:px-6 py-16 text-center">
         <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white">{content.cta.title}</h2>
         <p className="mt-3 text-slate-600 dark:text-slate-300 max-w-2xl mx-auto">{content.cta.body}</p>
-        <Button size="lg" onClick={goDemo} className="mt-8 bg-gradient-to-r from-[#64499D] to-[#4D3680] text-white">
+        <Button size="lg" onClick={goDemo} className="mt-8 landing-btn-primary">
           {lang === "fr" ? "Voir JURE en action" : lang === "ar" ? "شاهد JURE عمليًا" : "See JURE in action"}
         </Button>
       </section>

@@ -42,14 +42,14 @@ export const MARKETING_ROUTES: MarketingRoute[] = [
     changefreq: "weekly",
     label: { en: "Home", fr: "Accueil", ar: "الرئيسية" },
     title: {
-      en: "JURE | AI-Powered LegalTech Platform for Modern Legal Teams",
-      fr: "JURE | Plateforme LegalTech et IA pour les équipes juridiques",
-      ar: "JURE | منصة LegalTech والذكاء الاصطناعي للفرق القانونية الحديثة",
+      en: "JURE | Legal Practice Management Software",
+      fr: "JURE | Logiciel de gestion de cabinet d'avocats",
+      ar: "JURE | برنامج إدارة مكاتب المحاماة",
     },
     description: {
-      en: "JURE is a LegalTech platform for law firms and legal teams, combining AI-powered legal research, case management, document workflows and secure collaboration in one workspace. Built for modern legal teams across Morocco, MENA and Africa.",
-      fr: "JURE est une plateforme LegalTech pour cabinets d'avocats et équipes juridiques, qui réunit recherche juridique assistée par IA, gestion de dossiers, flux documentaires et collaboration sécurisée. Conçue pour les équipes modernes au Maroc, au Moyen-Orient et en Afrique.",
-      ar: "JURE منصة LegalTech لمكاتب المحاماة والفرق القانونية، تجمع البحث القانوني المدعوم بالذكاء الاصطناعي وإدارة القضايا وسير عمل المستندات والتعاون الآمن في مساحة واحدة. صُممت للفرق القانونية الحديثة في المغرب ومنطقة الشرق الأوسط وشمال أفريقيا وأفريقيا.",
+      en: "Run your law firm on JURE — legal practice management software with AI-powered research, matter management, documents, billing and team collaboration built in.",
+      fr: "Gérez votre cabinet avec JURE — logiciel de gestion de cabinet avec recherche juridique assistée par IA, dossiers, documents, facturation et collaboration d'équipe.",
+      ar: "أدِر مكتبك مع JURE — برنامج إدارة مكاتب المحاماة يجمع البحث القانوني بالذكاء الاصطناعي وإدارة الملفات والمستندات والفوترة وتعاون الفريق.",
     },
   },
   {

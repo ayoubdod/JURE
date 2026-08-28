@@ -103,7 +103,7 @@ export default function JuriaPage() {
   }
 
   return (
-    <div className="flex h-full min-h-0 w-full overflow-hidden bg-white dark:bg-slate-950">
+    <div className="flex h-full min-h-0 w-full overflow-hidden bg-transparent">
       {/* Desktop / tablet sidebar */}
       <div className={cn(tabletSidebarOpen ? 'hidden md:contents' : 'hidden lg:contents')}>
         <JuriaSidebar />
@@ -121,7 +121,7 @@ export default function JuriaPage() {
         </SheetContent>
       </Sheet>
 
-      <div className="flex min-h-0 min-w-0 flex-1 flex-col bg-[#FCFCFE] dark:bg-slate-950">
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col bg-transparent">
         <div className="flex shrink-0 items-center gap-1 border-b border-slate-100 px-2 py-1 lg:hidden dark:border-slate-800">
           <Button
             type="button"

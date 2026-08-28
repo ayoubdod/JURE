@@ -3,7 +3,7 @@ import { Link } from "react-router";
 import { Home } from "lucide-react";
 import LangSwitcher from "@/components/common/LangSwitcher";
 import ThemeToggle from "@/components/ThemeToggle";
-import MeshBackdrop from "@/components/landing/MeshBackdrop";
+import AuroraBackground from "@/components/common/AuroraBackground";
 import JureLogo from "@/components/common/JureLogo";
 import "@/components/landing/landing.css";
 
@@ -21,8 +21,8 @@ const AuthShell: React.FC<AuthShellProps> = ({
   wide = false,
 }) => {
   return (
-    <div className="landing-root min-h-screen relative overflow-x-hidden text-slate-900 dark:text-slate-100 bg-gradient-to-br from-white via-[#FBF9FF] to-slate-50 dark:from-slate-950 dark:via-[#0c0a14] dark:to-slate-900">
-      <MeshBackdrop />
+    <div className="landing-root min-h-screen relative overflow-x-hidden text-slate-900 dark:text-slate-100 bg-[#FAF9FD] dark:bg-[#0c0a14]">
+      <AuroraBackground intensity="medium" />
 
       <div className="relative z-10 min-h-screen flex flex-col min-w-0">
         <header className="px-3 sm:px-6 pt-3 sm:pt-4">
@@ -41,7 +41,7 @@ const AuthShell: React.FC<AuthShellProps> = ({
               {homeLabel && (
                 <Link
                   to="/"
-                  className="hidden sm:inline-flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-300 hover:text-[#64499D] dark:hover:text-[#CFC2FF] transition-colors ms-1"
+                  className="hidden sm:inline-flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-300 hover:text-[#A58CF4] dark:hover:text-[#A58CF4] transition-colors ms-1"
                 >
                   <Home className="w-3.5 h-3.5" />
                   {homeLabel}

@@ -21,8 +21,13 @@ export const SITE_URL = (env.VITE_SITE_URL || "https://jure.ma").replace(/\/+$/,
 export const ORG = {
   name: "JURE",
   legalName: "JURE",
+  /** Names people actually search, e.g. "jure legal" vs the Latin "de jure". */
+  alternateNames: ["JURE Legal", "JURE LegalTech", "Plateforme JURE"] as const,
   email: "contact@jure.ma",
-  logoPath: "/images/jure-logo.png",
+  /** Square icon Google can use in Search / Knowledge Panel (min 112×112). */
+  logoPath: "/apple-touch-icon.png",
+  logoWidth: 180,
+  logoHeight: 180,
   /** Only list profiles that actually exist. None verified yet. */
   sameAs: [] as string[],
   foundingCountry: "Morocco",

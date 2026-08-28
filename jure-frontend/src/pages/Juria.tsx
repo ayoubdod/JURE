@@ -51,7 +51,7 @@ const JuriaPage: React.FC = () => {
 
       <section className="max-w-7xl mx-auto px-4 sm:px-6 pt-12 sm:pt-16 pb-10">
         <nav className={`flex items-center gap-1.5 text-xs text-slate-500 mb-8 ${rtlText}`} aria-label="Breadcrumb">
-          <button type="button" onClick={() => navigate(path(""))} className="hover:text-[#64499D]">
+          <button type="button" onClick={() => navigate(path(""))} className="hover:text-[#A58CF4]">
             {homeRoute.label[lang]}
           </button>
           <ChevronRight className="w-3.5 h-3.5 rtl:rotate-180" />
@@ -60,7 +60,7 @@ const JuriaPage: React.FC = () => {
 
         <div className="grid lg:grid-cols-2 gap-10 lg:gap-14 items-center">
           <div className={rtlText}>
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full landing-glass text-xs font-semibold text-[#64499D] dark:text-[#CFC2FF] mb-5">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full landing-glass text-xs font-semibold text-[#A58CF4] mb-5">
               <Sparkles className="w-3.5 h-3.5" />
               {t.eyebrow}
             </span>
@@ -70,17 +70,17 @@ const JuriaPage: React.FC = () => {
             <p className="mt-5 text-base sm:text-lg text-slate-600 dark:text-slate-300 leading-relaxed">
               {t.intro}
             </p>
-            <p className="mt-4 text-sm font-medium text-[#64499D] dark:text-[#CFC2FF]">{t.disclaimer}</p>
+            <p className="mt-4 text-sm font-medium text-[#A58CF4] dark:text-[#A58CF4]">{t.disclaimer}</p>
             <div className="mt-8 flex flex-col sm:flex-row gap-3">
               <Button
                 size="lg"
                 onClick={goDemo}
-                className="bg-gradient-to-r from-[#64499D] to-[#4D3680] text-white"
+                className="landing-btn-primary"
               >
                 {t.ctaPrimary}
                 <ArrowRight className="w-4 h-4 ms-2 rtl:rotate-180" />
               </Button>
-              <Button size="lg" variant="outline" onClick={() => navigate(path("legal-ai"))}>
+              <Button size="lg" variant="outline" className="landing-btn-secondary" onClick={() => navigate(path("legal-ai"))}>
                 {t.ctaSecondary}
               </Button>
             </div>
@@ -123,7 +123,7 @@ const JuriaPage: React.FC = () => {
         <ol className="space-y-4">
           {t.howSteps.map((step, i) => (
             <li key={step} className={`flex items-start gap-3 ${rtlText}`}>
-              <span className="flex-shrink-0 w-7 h-7 rounded-full bg-[#64499D]/15 text-[#64499D] text-sm font-bold flex items-center justify-center">
+              <span className="flex-shrink-0 w-7 h-7 rounded-full bg-[#A58CF4]/15 text-[#A58CF4] text-sm font-bold flex items-center justify-center">
                 {i + 1}
               </span>
               <span className="text-slate-700 dark:text-slate-200 pt-0.5">{step}</span>
@@ -135,11 +135,11 @@ const JuriaPage: React.FC = () => {
       <FaqSection title={t.faqsTitle} entries={t.faqs} />
 
       <section className="max-w-4xl mx-auto px-4 sm:px-6 py-16 text-center">
-        <CheckCircle2 className="w-10 h-10 text-[#64499D] mx-auto mb-4" />
+        <CheckCircle2 className="w-10 h-10 text-[#A58CF4] mx-auto mb-4" />
         <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white">{t.ctaTitle}</h2>
         <p className="mt-3 text-slate-600 dark:text-slate-300 max-w-2xl mx-auto">{t.ctaBody}</p>
         <div className="mt-8 flex flex-col sm:flex-row justify-center gap-3">
-          <Button size="lg" onClick={goDemo} className="bg-gradient-to-r from-[#64499D] to-[#4D3680] text-white">
+          <Button size="lg" onClick={goDemo} className="landing-btn-primary">
             {t.ctaPrimary}
           </Button>
           <Button size="lg" variant="outline" onClick={() => navigate(path("features"))}>

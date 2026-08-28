@@ -20,6 +20,9 @@ export interface HomeContent {
     trustChips: string[];
     imageAlt: string;
   };
+  sitelinks: {
+    title: string;
+  };
   problem: {
     title: string;
     body1: string;
@@ -112,6 +115,9 @@ const en: HomeContent = {
     ],
     imageAlt: "JURE legal workspace shown on a laptop",
   },
+  sitelinks: {
+    title: "Explore JURE",
+  },
   problem: {
     title: "Legal work is fragmented. Your tools shouldn't be.",
     body1:
@@ -199,7 +205,7 @@ const en: HomeContent = {
       {
         question: "What is JURE?",
         answer:
-          "JURE is a LegalTech platform for modern legal teams: one secure workspace where law firms and legal teams manage matters, clients, documents, tasks, deadlines and collaboration, with Juria — JURE's AI legal assistant — available in early access.",
+          "JURE is legal practice management software for modern legal teams — a LegalTech platform, not the Latin phrase de jure. Law firms use one secure workspace to manage matters, clients, documents, tasks, deadlines and collaboration, with Juria — JURE's AI legal assistant — available in early access.",
       },
       {
         question: "What is a LegalTech platform?",
@@ -290,6 +296,9 @@ const fr: HomeContent = {
     ],
     imageAlt: "L’espace de travail juridique JURE sur un ordinateur portable",
   },
+  sitelinks: {
+    title: "Explorer JURE",
+  },
   problem: {
     title: "Le travail juridique est fragmenté. Vos outils ne devraient pas l'être.",
     body1:
@@ -377,7 +386,7 @@ const fr: HomeContent = {
       {
         question: "Qu'est-ce que JURE ?",
         answer:
-          "JURE est une plateforme LegalTech pour les équipes juridiques modernes : un espace de travail sécurisé où cabinets et équipes juridiques gèrent dossiers, clients, documents, tâches, échéances et collaboration, avec Juria — l'assistant IA juridique de JURE — disponible en accès anticipé.",
+          "JURE est un logiciel de gestion de cabinet pour les équipes juridiques modernes — une plateforme LegalTech, à ne pas confondre avec l'expression latine de jure. Les cabinets gèrent dossiers, clients, documents, tâches, échéances et collaboration dans un seul espace sécurisé, avec Juria — l'assistant IA juridique de JURE — en accès anticipé.",
       },
       {
         question: "Qu'est-ce qu'une plateforme LegalTech ?",
@@ -468,6 +477,9 @@ const ar: HomeContent = {
     ],
     imageAlt: "مساحة عمل JURE القانونية على جهاز محمول",
   },
+  sitelinks: {
+    title: "استكشف JURE",
+  },
   problem: {
     title: "العمل القانوني مشتت. أدواتك لا ينبغي أن تكون كذلك.",
     body1:
@@ -554,7 +566,7 @@ const ar: HomeContent = {
       {
         question: "ما هي JURE؟",
         answer:
-          "JURE منصة LegalTech للفرق القانونية الحديثة: مساحة عمل آمنة واحدة تدير فيها مكاتب المحاماة والفرق القانونية الملفات والعملاء والمستندات والمهام والمواعيد والتعاون، مع جوريا — مساعد الذكاء الاصطناعي القانوني من JURE — المتاح في مرحلة الوصول المبكر.",
+          "JURE برنامج إدارة مكاتب المحاماة للفرق القانونية الحديثة — منصة LegalTech، وليست العبارة اللاتينية de jure. تدير المكاتب الملفات والعملاء والمستندات والمهام والمواعيد والتعاون في مساحة عمل آمنة واحدة، مع جوريا — مساعد الذكاء الاصطناعي القانوني من JURE — في مرحلة الوصول المبكر.",
       },
       {
         question: "ما هي منصة LegalTech؟",

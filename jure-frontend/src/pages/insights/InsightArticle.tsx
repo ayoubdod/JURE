@@ -82,7 +82,7 @@ const InsightArticle: React.FC = () => {
         <button
           type="button"
           onClick={() => navigate(path())}
-          className="hover:text-[#64499D] dark:hover:text-[#CFC2FF]"
+          className="hover:text-[#A58CF4] dark:hover:text-[#A58CF4]"
         >
           {homeRoute.label[lang]}
         </button>
@@ -90,7 +90,7 @@ const InsightArticle: React.FC = () => {
         <button
           type="button"
           onClick={() => navigate(path("insights"))}
-          className="hover:text-[#64499D] dark:hover:text-[#CFC2FF]"
+          className="hover:text-[#A58CF4] dark:hover:text-[#A58CF4]"
         >
           {insightsRoute.label[lang]}
         </button>
@@ -112,7 +112,7 @@ const InsightArticle: React.FC = () => {
         </header>
 
         <div
-          className={`mt-10 prose prose-slate dark:prose-invert max-w-none prose-headings:font-bold prose-a:text-[#64499D] dark:prose-a:text-[#CFC2FF] prose-headings:scroll-mt-24 ${
+          className={`mt-10 prose prose-slate dark:prose-invert max-w-none prose-headings:font-bold prose-a:text-[#A58CF4] dark:prose-a:text-[#A58CF4] prose-headings:scroll-mt-24 ${
             dir === "rtl" ? "text-right" : ""
           }`}
         >
@@ -127,11 +127,11 @@ const InsightArticle: React.FC = () => {
           )}
         </div>
 
-        <div className="mt-12 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-[#64499D]/10 dark:border-[#8B6FD1]/15 pt-8">
+        <div className="mt-12 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-[#A58CF4]/10 dark:border-[#A58CF4]/15 pt-8">
           <button
             type="button"
             onClick={() => navigate(path("insights"))}
-            className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#64499D] dark:text-[#CFC2FF] hover:underline"
+            className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#A58CF4] dark:text-[#A58CF4] hover:underline"
           >
             <ArrowLeft className="w-4 h-4 rtl:rotate-180" /> {t.back}
           </button>
@@ -140,7 +140,7 @@ const InsightArticle: React.FC = () => {
               track(MarketingEvents.DemoOpened, { source: `article_${slug}`, lang });
               navigate(path("demo"));
             }}
-            className="bg-gradient-to-r from-[#64499D] to-[#4D3680] hover:from-[#4D3680] hover:to-[#3E2D71] text-white"
+            className="landing-btn-primary"
           >
             {t.cta}
           </Button>

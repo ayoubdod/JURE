@@ -10,6 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { apiResetPassword } from '@/services/auth/api';
 import { useAppTranslation } from '@/i18n';
 import LangSwitcher from '@/components/common/LangSwitcher';
+import { AuroraPage } from '@/components/common/AuroraBackground';
 import clsx from 'clsx';
 
 interface ForgotPasswordFormData {
@@ -54,7 +55,7 @@ const ForgotPassword = () => {
   };
 
   return (
-    <div className={clsx('min-h-screen flex items-center justify-center p-4', isDarkMode ? 'bg-[#0f1117]' : 'bg-white dark:bg-slate-950')}>
+    <AuroraPage className="flex items-center justify-center p-4">
       <div className="absolute top-4 end-4 flex items-center gap-2">
         <LangSwitcher />
         <Button
@@ -141,7 +142,7 @@ const ForgotPassword = () => {
           © {new Date().getFullYear()} Jure. {t.auth.footerRights}
         </div>
       </div>
-    </div>
+    </AuroraPage>
   );
 };
 

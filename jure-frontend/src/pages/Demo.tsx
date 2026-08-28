@@ -27,7 +27,6 @@ import {
   CheckSquare,
   Sparkles,
 } from "lucide-react";
-import MeshBackdrop from "@/components/landing/MeshBackdrop";
 import Reveal from "@/components/landing/Reveal";
 import { RouteSeo } from "@/marketing/Seo";
 import "@/components/landing/landing.css";
@@ -437,7 +436,7 @@ const ThemeToggle: React.FC<{ label?: string; title?: string }> = ({ label, titl
       onClick={toggle}
       variant="outline"
       size="icon"
-      className="border-[#64499D]/20 dark:border-[#8B6FD1]/30"
+      className="border-[#A58CF4]/20 dark:border-[#A58CF4]/30"
       aria-label={label || "Toggle theme"}
       title={title || "Toggle theme"}
     >
@@ -450,15 +449,15 @@ const LangSwitcher: React.FC<{ lang: Lang; onChange: (l: Lang) => void }> = ({
   lang,
   onChange,
 }) => (
-  <div className="inline-flex overflow-hidden rounded-lg border border-[#64499D]/20 bg-white/50 backdrop-blur-sm dark:border-[#8B6FD1]/30 dark:bg-slate-900/40" dir="ltr">
+  <div className="inline-flex overflow-hidden rounded-lg border border-[#A58CF4]/20 bg-white/50 backdrop-blur-sm dark:border-[#A58CF4]/30 dark:bg-slate-900/40" dir="ltr">
     {(["fr", "en", "ar"] as Lang[]).map((code) => (
       <button
         key={code}
         onClick={() => onChange(code)}
         className={`px-2.5 py-1.5 text-xs sm:text-sm transition-colors ${
           lang === code
-            ? "bg-[#64499D] text-white"
-            : "text-slate-700 dark:text-slate-200 hover:bg-[#F4F1FF] dark:hover:bg-[#64499D]/20"
+            ? "bg-[#A58CF4] text-white"
+            : "text-slate-700 dark:text-slate-200 hover:bg-[#F4F1FF] dark:hover:bg-[#A58CF4]/20"
         }`}
       >
         {code.toUpperCase()}
@@ -472,7 +471,7 @@ const MockPane: React.FC<{ children: React.ReactNode; className?: string }> = ({
   className = "",
 }) => (
   <div
-    className={`rounded-xl p-4 sm:p-5 min-h-[280px] sm:min-h-[320px] bg-gradient-to-br from-white/80 to-[#F4F1FF]/60 dark:from-slate-900/70 dark:to-[#2A1F4A]/40 border border-[#64499D]/10 dark:border-[#8B6FD1]/20 ${className}`}
+    className={`rounded-xl p-4 sm:p-5 min-h-[280px] sm:min-h-[320px] bg-gradient-to-br from-white/80 to-[#F4F1FF]/60 dark:from-slate-900/70 dark:to-[#2A1F4A]/40 border border-[#A58CF4]/10 dark:border-[#A58CF4]/20 ${className}`}
   >
     {children}
   </div>
@@ -489,7 +488,7 @@ const SoftCard: React.FC<{ children: React.ReactNode; className?: string; delay?
       initial={reduce ? false : { opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay, duration: 0.35 }}
-      className={`rounded-xl bg-white/90 dark:bg-slate-900/70 border border-[#64499D]/10 dark:border-[#8B6FD1]/15 p-3 sm:p-4 shadow-sm ${className}`}
+      className={`rounded-xl bg-white/90 dark:bg-slate-900/70 border border-[#A58CF4]/10 dark:border-[#A58CF4]/15 p-3 sm:p-4 shadow-sm ${className}`}
     >
       {children}
     </motion.div>
@@ -526,18 +525,18 @@ function StepMock({ stepId, m, isRtl }: { stepId: string; m: any; isRtl: boolean
             </div>
             <div className="space-y-3">
               <SoftCard delay={0.1}>
-                <Calendar className="w-5 h-5 text-[#64499D] dark:text-[#8B6FD1] mb-2" />
+                <Calendar className="w-5 h-5 text-[#A58CF4] dark:text-[#A58CF4] mb-2" />
                 <p className="text-sm font-medium">{m.rdvToday}</p>
                 <p className="text-xs text-slate-500 dark:text-slate-400">{m.nextAt}</p>
               </SoftCard>
               <SoftCard delay={0.16}>
-                <MessageSquare className="w-5 h-5 text-[#64499D] dark:text-[#8B6FD1] mb-2" />
+                <MessageSquare className="w-5 h-5 text-[#A58CF4] dark:text-[#A58CF4] mb-2" />
                 <p className="text-sm font-medium">{m.newMessages}</p>
               </SoftCard>
             </div>
             <SoftCard
               delay={0.12}
-              className="!bg-gradient-to-br from-[#64499D] to-[#4D3680] text-white !border-transparent"
+              className="!bg-gradient-to-br from-[#A58CF4] to-[#4D3680] text-white !border-transparent"
             >
               <div className="flex items-center gap-2 mb-3">
                 <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center landing-bot-pulse">
@@ -546,7 +545,7 @@ function StepMock({ stepId, m, isRtl }: { stepId: string; m: any; isRtl: boolean
                 <span className="font-display font-semibold">Juria</span>
               </div>
               <p className="text-xs text-white/90 mb-3">{m.juriaReady}</p>
-              <span className="inline-flex text-[11px] font-medium bg-white text-[#64499D] px-3 py-1.5 rounded-lg">
+              <span className="inline-flex text-[11px] font-medium bg-white text-[#A58CF4] px-3 py-1.5 rounded-lg">
                 {m.start}
               </span>
             </SoftCard>
@@ -563,8 +562,8 @@ function StepMock({ stepId, m, isRtl }: { stepId: string; m: any; isRtl: boolean
                 key={mode}
                 className={`text-[10px] sm:text-xs px-2.5 py-1 rounded-full border ${
                   i === 1
-                    ? "bg-[#64499D] text-white border-transparent"
-                    : "border-[#64499D]/25 dark:border-[#8B6FD1]/30 text-slate-600 dark:text-slate-300"
+                    ? "bg-[#A58CF4] text-white border-transparent"
+                    : "border-[#A58CF4]/25 dark:border-[#A58CF4]/30 text-slate-600 dark:text-slate-300"
                 }`}
               >
                 {mode}
@@ -574,7 +573,7 @@ function StepMock({ stepId, m, isRtl }: { stepId: string; m: any; isRtl: boolean
           <div className="space-y-3">
             <SoftCard className={isRtl ? "" : ""}>
               <div className={`flex gap-2 ${isRtl ? "flex-row-reverse" : ""}`}>
-                <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[#8B6FD1] to-[#64499D] flex items-center justify-center text-white text-[10px] font-bold shrink-0">
+                <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[#A58CF4] to-[#A58CF4] flex items-center justify-center text-white text-[10px] font-bold shrink-0">
                   U
                 </div>
                 <p className="text-xs text-slate-700 dark:text-slate-200">{m.userAsk}</p>
@@ -582,7 +581,7 @@ function StepMock({ stepId, m, isRtl }: { stepId: string; m: any; isRtl: boolean
             </SoftCard>
             <SoftCard
               delay={0.15}
-              className="bg-gradient-to-r from-[#64499D] to-[#4D3680] text-white border-0"
+              className="bg-gradient-to-r from-[#A58CF4] to-[#4D3680] text-white border-0"
             >
               <div className={`flex gap-2 ${isRtl ? "flex-row-reverse" : ""}`}>
                 <div className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center shrink-0 landing-bot-pulse">
@@ -592,7 +591,7 @@ function StepMock({ stepId, m, isRtl }: { stepId: string; m: any; isRtl: boolean
               </div>
             </SoftCard>
             <SoftCard delay={0.25} className="flex items-center gap-3 max-w-xs">
-              <FileText className="w-8 h-8 text-[#64499D] dark:text-[#8B6FD1]" />
+              <FileText className="w-8 h-8 text-[#A58CF4] dark:text-[#A58CF4]" />
               <div>
                 <p className="text-xs font-medium">bail_commercial.pdf</p>
                 <p className="text-[10px] text-slate-500">PDF · 240 KB</p>
@@ -630,7 +629,7 @@ function StepMock({ stepId, m, isRtl }: { stepId: string; m: any; isRtl: boolean
               <div className="grid grid-cols-3 gap-2">
                 {[
                   [m.docs, "12", "bg-sky-500"],
-                  [m.tasks, "5", "bg-[#64499D]"],
+                  [m.tasks, "5", "bg-[#A58CF4]"],
                   [m.notes, "8", "bg-emerald-500"],
                 ].map(([label, n, dot]) => (
                   <div
@@ -648,8 +647,8 @@ function StepMock({ stepId, m, isRtl }: { stepId: string; m: any; isRtl: boolean
                 <Users className="w-5 h-5 text-slate-400 mb-2" />
                 <p className="text-xs font-medium mb-2">{m.team}</p>
                 <div className="flex -space-x-1 rtl:space-x-reverse">
-                  <div className="w-6 h-6 rounded-full bg-[#64499D] border-2 border-white dark:border-slate-900" />
-                  <div className="w-6 h-6 rounded-full bg-[#8B6FD1] border-2 border-white dark:border-slate-900" />
+                  <div className="w-6 h-6 rounded-full bg-[#A58CF4] border-2 border-white dark:border-slate-900" />
+                  <div className="w-6 h-6 rounded-full bg-[#A58CF4] border-2 border-white dark:border-slate-900" />
                   <div className="w-6 h-6 rounded-full bg-[#4D3680] border-2 border-white dark:border-slate-900" />
                 </div>
               </SoftCard>
@@ -669,7 +668,7 @@ function StepMock({ stepId, m, isRtl }: { stepId: string; m: any; isRtl: boolean
           <div className="grid sm:grid-cols-2 gap-3">
             <SoftCard>
               <div className={`flex items-center gap-3 ${isRtl ? "flex-row-reverse" : ""}`}>
-                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#64499D] to-[#8B6FD1] flex items-center justify-center text-white">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#A58CF4] to-[#A58CF4] flex items-center justify-center text-white">
                   <UserCheck className="w-6 h-6" />
                 </div>
                 <div>
@@ -680,11 +679,11 @@ function StepMock({ stepId, m, isRtl }: { stepId: string; m: any; isRtl: boolean
               <p className="text-xs text-slate-600 dark:text-slate-300 mt-3">{m.lastContact}</p>
             </SoftCard>
             <SoftCard delay={0.1}>
-              <Briefcase className="w-5 h-5 text-[#64499D] dark:text-[#8B6FD1] mb-2" />
+              <Briefcase className="w-5 h-5 text-[#A58CF4] dark:text-[#A58CF4] mb-2" />
               <p className="text-xs font-medium mb-2">{m.caseTitle}</p>
               <div className="space-y-1.5">
                 <div className="h-1.5 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden">
-                  <div className="h-full w-2/3 bg-gradient-to-r from-[#64499D] to-[#8B6FD1]" />
+                  <div className="h-full w-2/3 bg-gradient-to-r from-[#A58CF4] to-[#A58CF4]" />
                 </div>
                 <p className="text-[10px] text-slate-500">{m.inProgress}</p>
               </div>
@@ -692,15 +691,15 @@ function StepMock({ stepId, m, isRtl }: { stepId: string; m: any; isRtl: boolean
             <SoftCard delay={0.15} className="sm:col-span-2">
               <div className="grid grid-cols-3 gap-3 text-center text-xs">
                 <div>
-                  <p className="font-display text-lg font-bold text-[#64499D] dark:text-[#CFC2FF]">12</p>
+                  <p className="font-display text-lg font-bold text-[#A58CF4] dark:text-[#A58CF4]">12</p>
                   <p className="text-slate-500">{m.docs}</p>
                 </div>
                 <div>
-                  <p className="font-display text-lg font-bold text-[#64499D] dark:text-[#CFC2FF]">5</p>
+                  <p className="font-display text-lg font-bold text-[#A58CF4] dark:text-[#A58CF4]">5</p>
                   <p className="text-slate-500">{m.tasks}</p>
                 </div>
                 <div>
-                  <p className="font-display text-lg font-bold text-[#64499D] dark:text-[#CFC2FF]">3</p>
+                  <p className="font-display text-lg font-bold text-[#A58CF4] dark:text-[#A58CF4]">3</p>
                   <p className="text-slate-500">{m.hearingShort}</p>
                 </div>
               </div>
@@ -718,7 +717,7 @@ function StepMock({ stepId, m, isRtl }: { stepId: string; m: any; isRtl: boolean
               <div className="rounded-lg bg-slate-100 dark:bg-slate-800 px-3 py-2 text-xs text-slate-500 mb-2">
                 {m.searchPlaceholder}
               </div>
-              <Button size="sm" className="w-full bg-[#64499D] hover:bg-[#4D3680] text-xs h-8">
+              <Button size="sm" className="w-full bg-[#A58CF4] hover:bg-[#4D3680] text-xs h-8">
                 <Search className="w-3.5 h-3.5" />
               </Button>
             </SoftCard>
@@ -731,7 +730,7 @@ function StepMock({ stepId, m, isRtl }: { stepId: string; m: any; isRtl: boolean
                 const I = Icon as React.FC<{ className?: string }>;
                 return (
                   <SoftCard key={String(label)} delay={0.08 * i}>
-                    <I className="w-5 h-5 text-[#64499D] dark:text-[#8B6FD1] mb-2" />
+                    <I className="w-5 h-5 text-[#A58CF4] dark:text-[#A58CF4] mb-2" />
                     <p className="text-xs font-medium">{label as string}</p>
                     <p className="text-[10px] text-slate-500">
                       {count as string} {m.files}
@@ -751,7 +750,7 @@ function StepMock({ stepId, m, isRtl }: { stepId: string; m: any; isRtl: boolean
           <div className="space-y-2">
             {[
               { time: "09:30", label: m.taskDue, icon: CheckSquare, color: "text-amber-500" },
-              { time: "14:30", label: m.appointment, icon: UserCheck, color: "text-[#64499D]" },
+              { time: "14:30", label: m.appointment, icon: UserCheck, color: "text-[#A58CF4]" },
               { time: "16:00", label: m.hearingShort, icon: ScaleIcon, color: "text-emerald-500" },
             ].map((row, i) => (
               <SoftCard key={row.time} delay={0.08 * i} className="flex items-center gap-3">
@@ -771,7 +770,7 @@ function StepMock({ stepId, m, isRtl }: { stepId: string; m: any; isRtl: boolean
             <SoftCard>
               <div className="flex items-center justify-between mb-3">
                 <p className="text-xs font-semibold">{m.inbox}</p>
-                <span className="text-[10px] bg-[#64499D]/15 text-[#64499D] dark:text-[#CFC2FF] px-2 py-0.5 rounded-full">
+                <span className="text-[10px] bg-[#A58CF4]/15 text-[#A58CF4] dark:text-[#A58CF4] px-2 py-0.5 rounded-full">
                   7 {m.unread}
                 </span>
               </div>
@@ -783,7 +782,7 @@ function StepMock({ stepId, m, isRtl }: { stepId: string; m: any; isRtl: boolean
                   >
                     <div
                       className={`w-7 h-7 rounded-full flex items-center justify-center text-white text-[10px] font-bold ${
-                        i === 0 ? "bg-[#64499D]" : "bg-[#8B6FD1]"
+                        i === 0 ? "bg-[#A58CF4]" : "bg-[#A58CF4]"
                       }`}
                     >
                       {name.slice(0, 1)}
@@ -798,7 +797,7 @@ function StepMock({ stepId, m, isRtl }: { stepId: string; m: any; isRtl: boolean
               <p className="text-xs font-semibold mb-3">{m.team}</p>
               <div className="space-y-3">
                 <div className={`flex items-center gap-2 ${isRtl ? "flex-row-reverse" : ""}`}>
-                  <div className="w-8 h-8 rounded-full bg-[#64499D] text-white text-[10px] font-bold flex items-center justify-center">
+                  <div className="w-8 h-8 rounded-full bg-[#A58CF4] text-white text-[10px] font-bold flex items-center justify-center">
                     AH
                   </div>
                   <div className="flex-1 min-w-0">
@@ -808,7 +807,7 @@ function StepMock({ stepId, m, isRtl }: { stepId: string; m: any; isRtl: boolean
                   <span className="w-2 h-2 rounded-full bg-emerald-400" title={m.online} />
                 </div>
                 <div className={`flex items-center gap-2 ${isRtl ? "flex-row-reverse" : ""}`}>
-                  <div className="w-8 h-8 rounded-full bg-[#8B6FD1] text-white text-[10px] font-bold flex items-center justify-center">
+                  <div className="w-8 h-8 rounded-full bg-[#A58CF4] text-white text-[10px] font-bold flex items-center justify-center">
                     SB
                   </div>
                   <div className="flex-1 min-w-0">
@@ -828,7 +827,7 @@ function StepMock({ stepId, m, isRtl }: { stepId: string; m: any; isRtl: boolean
         <MockPane>
           <div className="grid sm:grid-cols-3 gap-3 mb-3">
             <SoftCard>
-              <Wallet className="w-5 h-5 text-[#64499D] dark:text-[#8B6FD1] mb-2" />
+              <Wallet className="w-5 h-5 text-[#A58CF4] dark:text-[#A58CF4] mb-2" />
               <p className="text-[10px] text-slate-500">{m.revenue}</p>
               <p className="font-display text-xl font-bold">48 200 €</p>
             </SoftCard>
@@ -919,9 +918,8 @@ const Demo: React.FC = () => {
   const highlightIcons = useMemo(() => HIGHLIGHT_ICONS, []);
 
   return (
-    <div className="landing-root min-h-screen relative overflow-x-hidden text-slate-900 dark:text-slate-100 bg-gradient-to-br from-white via-[#FBF9FF] to-slate-50 dark:from-slate-950 dark:via-[#0c0a14] dark:to-slate-900">
+    <div className="landing-root min-h-screen relative overflow-x-hidden text-[#64499D] dark:text-white bg-white dark:bg-[#64499D]">
       <RouteSeo routeKey="demo" lang={lang} />
-      <MeshBackdrop />
 
       <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 py-5 sm:py-8 overflow-x-hidden">
         {/* Header */}
@@ -931,7 +929,7 @@ const Demo: React.FC = () => {
               onClick={() => navigate(`/${lang}`)}
               variant="outline"
               size="sm"
-              className="border-[#64499D]/25 text-[#64499D] dark:text-[#CFC2FF] hover:bg-[#64499D]/10 shrink-0 px-2.5 sm:px-3"
+              className="landing-btn-secondary shrink-0 px-2.5 sm:px-3"
             >
               <ArrowLeft className={`w-4 h-4 me-1.5 sm:me-2 ${isRtl ? "rotate-180" : ""}`} />
               <span className="truncate max-w-[8rem] sm:max-w-none">{t.back}</span>
@@ -944,12 +942,10 @@ const Demo: React.FC = () => {
           </div>
 
           <div className="w-full min-[480px]:w-auto min-[480px]:flex-1 text-center min-w-0 px-1">
-            <h1 className="font-display text-lg sm:text-2xl md:text-3xl font-bold tracking-tight break-words">
-              <span className="landing-hero-shimmer bg-gradient-to-r from-[#64499D] via-[#8B6FD1] to-[#4D3680] bg-clip-text text-transparent">
-                {t.title}
-              </span>
+            <h1 className="font-display text-lg sm:text-2xl md:text-3xl font-bold tracking-tight break-words text-[#64499D] dark:text-white">
+              {t.title}
             </h1>
-            <p className="text-slate-600 dark:text-slate-300 text-xs sm:text-sm mt-1 max-w-md mx-auto break-words">
+            <p className="text-neutral-600 dark:text-neutral-300 text-xs sm:text-sm mt-1 max-w-md mx-auto break-words">
               {t.subtitle}
             </p>
           </div>
@@ -960,7 +956,7 @@ const Demo: React.FC = () => {
             <Button
               onClick={() => navigate("/signin")}
               size="sm"
-              className="bg-gradient-to-r from-[#64499D] to-[#4D3680] hover:from-[#4D3680] hover:to-[#3E2D71] text-white hidden sm:inline-flex"
+              className="landing-btn-primary hidden sm:inline-flex"
             >
               {t.cta}
             </Button>
@@ -978,9 +974,9 @@ const Demo: React.FC = () => {
               aria-current={index === currentStep ? "step" : undefined}
               className={`h-2.5 rounded-full transition-all duration-300 ${
                 index === currentStep
-                  ? "w-8 bg-[#64499D] shadow-[0_0_12px_rgba(100,73,157,0.55)]"
+                  ? "w-8 bg-[#A58CF4] shadow-[0_0_12px_rgba(100,73,157,0.55)]"
                   : index < currentStep
-                    ? "w-2.5 bg-[#8B6FD1]"
+                    ? "w-2.5 bg-[#A58CF4]"
                     : "w-2.5 bg-slate-300 dark:bg-slate-600"
               }`}
             />
@@ -988,14 +984,14 @@ const Demo: React.FC = () => {
         </div>
 
         {/* Main stage */}
-        <Card className="landing-glass border-0 shadow-none overflow-hidden ring-1 ring-[#64499D]/12 dark:ring-[#8B6FD1]/20">
-          <CardHeader className="border-b border-[#64499D]/10 dark:border-[#8B6FD1]/15 bg-gradient-to-r from-[#F4F1FF]/80 to-transparent dark:from-[#64499D]/15 dark:to-transparent pb-4">
+        <Card className="landing-glass border-0 shadow-none overflow-hidden ring-1 ring-[#A58CF4]/12 dark:ring-[#A58CF4]/20">
+          <CardHeader className="border-b border-[#A58CF4]/10 dark:border-[#A58CF4]/15 bg-gradient-to-r from-[#F4F1FF]/80 to-transparent dark:from-[#A58CF4]/15 dark:to-transparent pb-4">
             <div
               className={`flex flex-col sm:flex-row items-center gap-4 text-center sm:text-start ${
                 isRtl ? "sm:flex-row-reverse sm:text-end" : ""
               }`}
             >
-              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#64499D] to-[#4D3680] flex items-center justify-center text-white shrink-0 shadow-[0_0_24px_-4px_rgba(100,73,157,0.6)]">
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#A58CF4] to-[#4D3680] flex items-center justify-center text-white shrink-0 shadow-[0_0_24px_-4px_rgba(100,73,157,0.6)]">
                 {STEP_ICONS[active.id]}
               </div>
               <div className="flex-1 min-w-0">
@@ -1010,7 +1006,7 @@ const Demo: React.FC = () => {
             </div>
             <div className="w-full bg-slate-200/80 dark:bg-slate-800 rounded-full h-1.5 mt-4 overflow-hidden">
               <div
-                className="h-full rounded-full bg-gradient-to-r from-[#64499D] to-[#8B6FD1] transition-[width] duration-200 ease-linear"
+                className="h-full rounded-full bg-gradient-to-r from-[#A58CF4] to-[#A58CF4] transition-[width] duration-200 ease-linear"
                 style={{ width: `${progress}%` }}
               />
             </div>
@@ -1038,7 +1034,7 @@ const Demo: React.FC = () => {
                 onClick={() => goStep(Math.max(0, currentStep - 1))}
                 variant="outline"
                 disabled={currentStep === 0}
-                className="border-[#64499D]/20"
+                className="border-[#A58CF4]/20"
               >
                 <ArrowLeft className={`w-4 h-4 me-2 ${isRtl ? "rotate-180" : ""}`} />
                 {t.prev}
@@ -1053,7 +1049,7 @@ const Demo: React.FC = () => {
                   }}
                   variant="outline"
                   size="icon"
-                  className="border-[#64499D]/20"
+                  className="border-[#A58CF4]/20"
                   aria-label="restart"
                 >
                   <RotateCcw className="w-4 h-4" />
@@ -1061,7 +1057,7 @@ const Demo: React.FC = () => {
                 <Button
                   onClick={() => setIsPlaying((p) => !p)}
                   size="icon"
-                  className="bg-gradient-to-r from-[#64499D] to-[#4D3680] hover:from-[#4D3680] hover:to-[#3E2D71]"
+                  className="landing-btn-primary"
                   aria-label={isPlaying ? "pause" : "play"}
                 >
                   {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
@@ -1072,7 +1068,7 @@ const Demo: React.FC = () => {
                 onClick={() => goStep(Math.min(stepCount - 1, currentStep + 1))}
                 variant="outline"
                 disabled={currentStep === stepCount - 1}
-                className="border-[#64499D]/20"
+                className="border-[#A58CF4]/20"
               >
                 {t.next}
                 <ArrowRight className={`w-4 h-4 ms-2 ${isRtl ? "rotate-180" : ""}`} />
@@ -1088,7 +1084,7 @@ const Demo: React.FC = () => {
             return (
               <Reveal key={h.title} delay={i * 0.06}>
                 <div className="landing-glass landing-glass-glow rounded-2xl p-5 sm:p-6 text-center h-full min-w-0">
-                  <Icon className="w-10 h-10 text-[#64499D] dark:text-[#8B6FD1] mx-auto mb-3" />
+                  <Icon className="w-10 h-10 text-[#A58CF4] dark:text-[#A58CF4] mx-auto mb-3" />
                   <h3 className="font-display font-semibold mb-2 break-words">{h.title}</h3>
                   <p className="text-slate-600 dark:text-slate-300 text-sm leading-relaxed break-words">{h.desc}</p>
                 </div>
@@ -1100,7 +1096,7 @@ const Demo: React.FC = () => {
         <div className="text-center sm:hidden">
           <Button
             onClick={() => navigate("/signin")}
-            className="bg-gradient-to-r from-[#64499D] to-[#4D3680] text-white w-full"
+            className="landing-btn-primary w-full"
           >
             {t.cta}
           </Button>

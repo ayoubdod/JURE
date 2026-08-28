@@ -105,17 +105,15 @@ const Docs: React.FC = () => {
       <RouteSeo routeKey="docs" lang={lang} />
       <section className="max-w-7xl mx-auto px-4 sm:px-6 pt-8 sm:pt-12 pb-16 sm:pb-20 md:pt-20">
         <Reveal className="text-center max-w-3xl mx-auto min-w-0">
-          <h1 className="font-display text-[2rem] leading-[1.15] sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight break-words">
-            <span className="landing-hero-shimmer bg-gradient-to-r from-slate-900 via-[#64499D] to-slate-900 dark:from-white dark:via-[#8B6FD1] dark:to-white bg-clip-text text-transparent">
-              {t.hero.title}
-            </span>
+          <h1 className="font-display text-[2rem] leading-[1.15] sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight break-words text-[#64499D] dark:text-white">
+            {t.hero.title}
           </h1>
-          <p className="mt-3 text-slate-600 dark:text-slate-300 break-words">{t.hero.subtitle}</p>
+          <p className="mt-3 text-neutral-600 dark:text-neutral-300 break-words">{t.hero.subtitle}</p>
           <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-center w-full sm:w-auto">
-            <Button onClick={() => navigate("/status")} variant="outline" className="w-full sm:w-auto px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg border-[#64499D]/30">
+            <Button onClick={() => navigate("/status")} variant="outline" className="w-full sm:w-auto px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg landing-btn-secondary">
               {t.cta.status}
             </Button>
-            <Button onClick={() => navigate("/contact")} className="w-full sm:w-auto px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg bg-gradient-to-r from-[#64499D] to-[#4D3680]">
+            <Button onClick={() => navigate("/contact")} className="w-full sm:w-auto px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg landing-btn-primary">
               {t.cta.contact} <ArrowRight className="w-4 h-4 ms-2" />
             </Button>
           </div>
@@ -129,7 +127,7 @@ const Docs: React.FC = () => {
               <div className="landing-glass landing-glass-glow rounded-2xl p-5 sm:p-6 h-full flex flex-col min-w-0">
                 <div
                   className="w-12 h-12 rounded-xl grid place-items-center text-white"
-                  style={{ background: "#64499D" }}
+                  style={{ background: "#A58CF4" }}
                 >
                   {tile.icon}
                 </div>
@@ -138,7 +136,7 @@ const Docs: React.FC = () => {
                 <Button
                   variant="outline"
                   onClick={() => navigate("/docs")}
-                  className="w-full mt-4 border-[#64499D]/25 hover:bg-[#64499D]/10"
+                  className="w-full mt-4 border-[#A58CF4]/25 hover:bg-[#A58CF4]/10"
                 >
                   {t.cta.open}
                 </Button>

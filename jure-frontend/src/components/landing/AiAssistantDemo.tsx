@@ -83,13 +83,13 @@ const AiAssistantDemo: React.FC<AiAssistantDemoProps> = ({ copy, dir }) => {
       className={cn(
         "landing-glass border-0 shadow-none h-fit",
         "lg:sticky lg:top-24",
-        "ring-1 ring-[#64499D]/15 dark:ring-[#8B6FD1]/25",
+        "ring-1 ring-[#A58CF4]/15 dark:ring-[#A58CF4]/25",
         "shadow-[0_0_40px_-12px_rgba(100,73,157,0.35)] dark:shadow-[0_0_48px_-10px_rgba(139,111,209,0.4)]"
       )}
     >
       <CardHeader className="pb-3">
         <div className="flex items-center gap-3">
-          <div className="relative w-10 h-10 bg-gradient-to-br from-[#64499D] to-[#4D3680] rounded-xl flex items-center justify-center flex-shrink-0 landing-bot-pulse">
+          <div className="relative w-10 h-10 bg-gradient-to-br from-[#A58CF4] to-[#4D3680] rounded-xl flex items-center justify-center flex-shrink-0 landing-bot-pulse">
             <Sparkles className="w-5 h-5 text-white" />
           </div>
           <div className="flex-1 min-w-0">
@@ -100,7 +100,7 @@ const AiAssistantDemo: React.FC<AiAssistantDemoProps> = ({ copy, dir }) => {
               {copy.desc}
             </CardDescription>
           </div>
-          <span className="hidden sm:inline-flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-[#64499D] dark:text-[#CFC2FF] font-medium">
+          <span className="hidden sm:inline-flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-[#A58CF4] dark:text-[#A58CF4] font-medium">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 motion-safe:animate-pulse" />
             Live
           </span>
@@ -110,11 +110,11 @@ const AiAssistantDemo: React.FC<AiAssistantDemoProps> = ({ copy, dir }) => {
         <div className="space-y-3 max-h-[500px] overflow-y-auto">
           {/* AI greeting */}
           <div className={cn("flex gap-2", dir === "rtl" && "flex-row-reverse")}>
-            <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[#64499D] to-[#4D3680] flex items-center justify-center flex-shrink-0 landing-bot-pulse">
+            <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[#A58CF4] to-[#4D3680] flex items-center justify-center flex-shrink-0 landing-bot-pulse">
               <Bot className="w-3.5 h-3.5 text-white" />
             </div>
             <div className="flex-1 min-w-0">
-              <div className="p-3 rounded-xl text-xs bg-white/70 dark:bg-slate-800/80 border border-[#64499D]/10 dark:border-[#8B6FD1]/20">
+              <div className="p-3 rounded-xl text-xs bg-white/70 dark:bg-slate-800/80 border border-[#A58CF4]/10 dark:border-[#A58CF4]/20">
                 <p className="text-slate-900 dark:text-slate-100">{copy.greeting}</p>
                 <ul className="mt-1.5 space-y-0.5 text-slate-700 dark:text-slate-300">
                   {copy.features.map((feature, index) => (
@@ -130,7 +130,7 @@ const AiAssistantDemo: React.FC<AiAssistantDemoProps> = ({ copy, dir }) => {
                     initial={reduce ? false : { opacity: 0, y: 6, scale: 0.96 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     transition={{ delay: 0.35 + index * 0.12, duration: 0.35 }}
-                    className="px-2.5 py-1 bg-white/80 dark:bg-slate-800/90 border border-[#64499D]/20 dark:border-[#8B6FD1]/30 rounded-full text-[10px] text-slate-600 dark:text-slate-300 hover:bg-[#F4F1FF] dark:hover:bg-[#64499D]/20 hover:border-[#64499D]/40 transition-colors"
+                    className="px-2.5 py-1 bg-white/80 dark:bg-slate-800/90 border border-[#A58CF4]/20 dark:border-[#A58CF4]/30 rounded-full text-[10px] text-slate-600 dark:text-slate-300 hover:bg-[#F4F1FF] dark:hover:bg-[#A58CF4]/20 hover:border-[#A58CF4]/40 transition-colors"
                   >
                     {suggestion}
                   </motion.button>
@@ -147,11 +147,11 @@ const AiAssistantDemo: React.FC<AiAssistantDemoProps> = ({ copy, dir }) => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.35 }}
             >
-              <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[#8B6FD1] to-[#64499D] flex items-center justify-center flex-shrink-0">
+              <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[#A58CF4] to-[#A58CF4] flex items-center justify-center flex-shrink-0">
                 <Users className="w-3.5 h-3.5 text-white" />
               </div>
               <div className="flex-1 min-w-0">
-                <div className="p-3 bg-gradient-to-r from-[#64499D] to-[#4D3680] rounded-xl text-xs text-white shadow-[0_0_20px_-6px_rgba(100,73,157,0.6)]">
+                <div className="p-3 bg-gradient-to-r from-[#A58CF4] to-[#4D3680] rounded-xl text-xs text-white shadow-[0_0_20px_-6px_rgba(100,73,157,0.6)]">
                   <p>{copy.userMessage}</p>
                 </div>
               </div>
@@ -166,15 +166,15 @@ const AiAssistantDemo: React.FC<AiAssistantDemoProps> = ({ copy, dir }) => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.35 }}
             >
-              <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[#64499D] to-[#4D3680] flex items-center justify-center flex-shrink-0 landing-bot-pulse">
+              <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[#A58CF4] to-[#4D3680] flex items-center justify-center flex-shrink-0 landing-bot-pulse">
                 <Bot className="w-3.5 h-3.5 text-white" />
               </div>
               <div className="flex-1 min-w-0">
-                <div className="p-3 rounded-xl text-xs bg-white/70 dark:bg-slate-800/80 border border-[#64499D]/10 dark:border-[#8B6FD1]/20">
+                <div className="p-3 rounded-xl text-xs bg-white/70 dark:bg-slate-800/80 border border-[#A58CF4]/10 dark:border-[#A58CF4]/20">
                   <p className="text-slate-900 dark:text-slate-100 min-h-[3em]">
                     {typedResponse}
                     {!responseDone && !reduce && (
-                      <span className="inline-block w-0.5 h-3 ms-0.5 align-middle bg-[#64499D] dark:bg-[#8B6FD1] animate-pulse" />
+                      <span className="inline-block w-0.5 h-3 ms-0.5 align-middle bg-[#A58CF4] dark:bg-[#A58CF4] animate-pulse" />
                     )}
                   </p>
                 </div>
@@ -183,17 +183,17 @@ const AiAssistantDemo: React.FC<AiAssistantDemoProps> = ({ copy, dir }) => {
           )}
 
           {/* Input Area */}
-          <div className="pt-3 border-t border-[#64499D]/10 dark:border-[#8B6FD1]/20 sticky bottom-0 bg-white/60 dark:bg-slate-900/60 backdrop-blur-md">
+          <div className="pt-3 border-t border-[#A58CF4]/10 dark:border-[#A58CF4]/20 sticky bottom-0 bg-white/60 dark:bg-slate-900/60 backdrop-blur-md">
             <div className="flex gap-2">
               <input
                 type="text"
                 placeholder={copy.placeholder}
-                className="flex-1 px-3 py-2 border border-[#64499D]/20 dark:border-[#8B6FD1]/30 rounded-lg text-xs bg-white/80 dark:bg-slate-800/80 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-[#64499D] focus:border-transparent"
+                className="flex-1 px-3 py-2 border border-[#A58CF4]/20 dark:border-[#A58CF4]/30 rounded-lg text-xs bg-white/80 dark:bg-slate-800/80 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-[#A58CF4] focus:border-transparent"
                 disabled
               />
               <Button
                 size="icon"
-                className="h-9 w-9 bg-gradient-to-r from-[#64499D] to-[#4D3680] hover:from-[#4D3680] hover:to-[#3E2D71] flex-shrink-0"
+                className="h-9 w-9 bg-gradient-to-r from-[#A58CF4] to-[#4D3680] hover:from-[#4D3680] hover:to-[#3E2D71] flex-shrink-0"
                 disabled
               >
                 <Play className={cn("w-3.5 h-3.5", dir === "rtl" && "rotate-180")} />

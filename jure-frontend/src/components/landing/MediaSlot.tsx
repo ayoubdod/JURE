@@ -118,10 +118,10 @@ const MediaSlot: React.FC<MediaSlotProps> = ({
       role="img"
       aria-label={`${alt} — add ${fileName}`}
     >
-      <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#64499D]/70 dark:text-[#CFC2FF]/70">
+      <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#A58CF4]/70 dark:text-[#A58CF4]/70">
         Media slot
       </span>
-      <span className="px-3 py-1 rounded-md bg-[#64499D]/8 dark:bg-[#64499D]/20 text-xs font-mono text-[#64499D] dark:text-[#CFC2FF]">
+      <span className="px-3 py-1 rounded-md bg-[#A58CF4]/8 dark:bg-[#A58CF4]/20 text-xs font-mono text-[#A58CF4] dark:text-[#A58CF4]">
         {fileName}
       </span>
       <span className="max-w-[16rem] text-center text-[11px] text-slate-500 dark:text-slate-400 leading-snug px-4">
