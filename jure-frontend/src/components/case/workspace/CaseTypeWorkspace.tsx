@@ -37,12 +37,18 @@ import {
   assignedDisplayName,
   clientDisplayName,
   consultationOutcome,
-  courtDisplay,
   formatDuration,
   formatShortDate,
   nextLitigationDeadline,
   prettyEnum,
 } from '@/services/case/caseType';
+import {
+  COURT_SPECIALTIES,
+  JURISDICTION_LEVELS,
+  chambersForJurisdiction,
+} from '@/services/case/litigationCourt';
+import { courtLabels } from '@/components/case/workspace/litigation-detail/helpers';
+import type { AppMessages } from '@/i18n/messages/types';
 import { getCaseData, getStatusColor } from '@/utils/caseCardHelpers';
 import {
   getConsultationWorkflowStatus,
@@ -83,7 +89,23 @@ const DUTY_TYPES = [
   'OTHER',
 ] as const;
 const LITIGATION_TYPES = ['CIVIL', 'CRIMINAL', 'COMMERCIAL', 'ADMINISTRATIVE', 'LABOR', 'FAMILY'] as const;
-const CATEGORIES = ['CRIMINAL', 'CIVIL', 'ECONOMIC', 'ENVIRONMENTAL', 'SOCIAL', 'OTHER'] as const;
+
+function chamberFilterLabel(
+  jurisdiction: string,
+  chamber: string,
+  options: AppMessages['cases']['modal']['options']
+): string {
+  if (jurisdiction === 'FIRST_INSTANCE' && chamber in options.chamberFirstInstance) {
+    return options.chamberFirstInstance[chamber as keyof typeof options.chamberFirstInstance];
+  }
+  if (jurisdiction === 'APPEAL' && chamber in options.chamberAppeal) {
+    return options.chamberAppeal[chamber as keyof typeof options.chamberAppeal];
+  }
+  if (jurisdiction === 'CASSATION' && chamber in options.chamberCassation) {
+    return options.chamberCassation[chamber as keyof typeof options.chamberCassation];
+  }
+  return chamber;
+}
 
 function thClass() {
   return 'text-start py-2 px-3 text-[10px] font-semibold text-slate-500 dark:text-slate-400 whitespace-nowrap uppercase tracking-[0.08em] rtl:normal-case rtl:tracking-normal';
@@ -183,11 +205,13 @@ export default function CaseTypeWorkspace({ kind }: CaseTypeWorkspaceProps) {
   const [priority, setPriority] = useState('');
   const [dutyType, setDutyType] = useState('');
   const [institution, setInstitution] = useState('');
-  const [courtName, setCourtName] = useState('');
+  const [courtSpecialty, setCourtSpecialty] = useState('');
   const [jurisdiction, setJurisdiction] = useState('');
-  const [category, setCategory] = useState('');
+  const [chamber, setChamber] = useState('');
+  const [city, setCity] = useState('');
   const [litigationType, setLitigationType] = useState('');
   const [overdue, setOverdue] = useState(false);
+  const [upcomingHearing, setUpcomingHearing] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
 
   const caseModalRef = useRef<CaseModalRef>(null);
@@ -213,11 +237,13 @@ export default function CaseTypeWorkspace({ kind }: CaseTypeWorkspaceProps) {
         (kind === 'LITIGATION' || kind === 'ADMINISTRATIVE') && priority ? priority : undefined,
       dutyType: kind === 'ADMINISTRATIVE' && dutyType ? dutyType : undefined,
       institution: kind === 'ADMINISTRATIVE' && institution ? institution : undefined,
-      courtName: kind === 'LITIGATION' && courtName ? courtName : undefined,
+      courtSpecialty: kind === 'LITIGATION' && courtSpecialty ? courtSpecialty : undefined,
       jurisdiction: kind === 'LITIGATION' && jurisdiction ? jurisdiction : undefined,
-      category: kind === 'LITIGATION' && category ? category : undefined,
+      chamber: kind === 'LITIGATION' && chamber ? chamber : undefined,
+      city: kind === 'LITIGATION' && city.trim() ? city.trim() : undefined,
       litigationType: kind === 'LITIGATION' && litigationType ? litigationType : undefined,
       overdue: kind === 'ADMINISTRATIVE' && overdue ? true : undefined,
+      upcomingHearing: kind === 'LITIGATION' && upcomingHearing ? true : undefined,
       dateField: dateFrom || dateTo ? dateField : undefined,
       dateFrom: dateFrom || undefined,
       dateTo: dateTo || undefined,
@@ -234,11 +260,13 @@ export default function CaseTypeWorkspace({ kind }: CaseTypeWorkspaceProps) {
     priority,
     dutyType,
     institution,
-    courtName,
+    courtSpecialty,
     jurisdiction,
-    category,
+    chamber,
+    city,
     litigationType,
     overdue,
+    upcomingHearing,
     dateFrom,
     dateTo,
     dateField,
@@ -295,11 +323,13 @@ export default function CaseTypeWorkspace({ kind }: CaseTypeWorkspaceProps) {
       priority ||
       dutyType ||
       institution ||
-      courtName ||
+      courtSpecialty ||
       jurisdiction ||
-      category ||
+      chamber ||
+      city ||
       litigationType ||
       overdue ||
+      upcomingHearing ||
       dateFrom ||
       dateTo
   );
@@ -317,11 +347,13 @@ export default function CaseTypeWorkspace({ kind }: CaseTypeWorkspaceProps) {
     setPriority('');
     setDutyType('');
     setInstitution('');
-    setCourtName('');
+    setCourtSpecialty('');
     setJurisdiction('');
-    setCategory('');
+    setChamber('');
+    setCity('');
     setLitigationType('');
     setOverdue(false);
+    setUpcomingHearing(false);
     setDateFrom('');
     setDateTo('');
     setPage(1);
@@ -503,13 +535,55 @@ export default function CaseTypeWorkspace({ kind }: CaseTypeWorkspaceProps) {
       {kind === 'LITIGATION' && (
         <>
           <FilterSelect
-            value={category}
+            value={courtSpecialty}
             onChange={(v) => {
-              setCategory(v);
+              setCourtSpecialty(v);
               setPage(1);
             }}
-            placeholder={t.cases.filters.matterType}
-            options={CATEGORIES.map((s) => ({ value: s, label: enumPretty(s) }))}
+            placeholder={ws.courtSpecialty}
+            className="w-[170px]"
+            options={COURT_SPECIALTIES.map((s) => ({
+              value: s,
+              label: t.cases.modal.options.courtSpecialty[s],
+            }))}
+          />
+          <FilterSelect
+            value={jurisdiction}
+            onChange={(v) => {
+              setJurisdiction(v);
+              setChamber('');
+              setPage(1);
+            }}
+            placeholder={ws.jurisdiction}
+            className="w-[180px]"
+            options={JURISDICTION_LEVELS.map((s) => ({
+              value: s,
+              label: t.cases.modal.options.jurisdictionLevel[s],
+            }))}
+          />
+          {jurisdiction ? (
+            <FilterSelect
+              value={chamber}
+              onChange={(v) => {
+                setChamber(v);
+                setPage(1);
+              }}
+              placeholder={ws.chamber}
+              className="w-[200px]"
+              options={chambersForJurisdiction(jurisdiction).map((s) => ({
+                value: s,
+                label: chamberFilterLabel(jurisdiction, s, t.cases.modal.options),
+              }))}
+            />
+          ) : null}
+          <Input
+            value={city}
+            onChange={(e) => {
+              setCity(e.target.value);
+              setPage(1);
+            }}
+            placeholder={ws.city}
+            className="h-9 w-[140px] text-[12px]"
           />
           <FilterSelect
             value={litigationType}
@@ -529,24 +603,6 @@ export default function CaseTypeWorkspace({ kind }: CaseTypeWorkspaceProps) {
             placeholder={ws.clientRole}
             options={CLIENT_ROLES.map((s) => ({ value: s, label: enumPretty(s) }))}
           />
-          <Input
-            value={courtName}
-            onChange={(e) => {
-              setCourtName(e.target.value);
-              setPage(1);
-            }}
-            placeholder={ws.court}
-            className="h-9 w-[140px] text-[12px]"
-          />
-          <Input
-            value={jurisdiction}
-            onChange={(e) => {
-              setJurisdiction(e.target.value);
-              setPage(1);
-            }}
-            placeholder={ws.jurisdiction}
-            className="h-9 w-[140px] text-[12px]"
-          />
           <FilterSelect
             value={priority}
             onChange={(v) => {
@@ -556,6 +612,18 @@ export default function CaseTypeWorkspace({ kind }: CaseTypeWorkspaceProps) {
             placeholder={ws.priority}
             options={PRIORITIES.map((s) => ({ value: s, label: enumPretty(s) }))}
           />
+          <Button
+            type="button"
+            variant={upcomingHearing ? 'default' : 'outline'}
+            size="sm"
+            className="h-9 text-[12px]"
+            onClick={() => {
+              setUpcomingHearing((v) => !v);
+              setPage(1);
+            }}
+          >
+            {ws.upcomingHearings}
+          </Button>
         </>
       )}
       {kind === 'ADMINISTRATIVE' && (
@@ -729,6 +797,7 @@ export default function CaseTypeWorkspace({ kind }: CaseTypeWorkspaceProps) {
     const follow = getCaseData(c, 'follow_up_required') as boolean | undefined;
     const due = getCaseData(c, 'due_date') as string | undefined;
     const overdueDue = due ? new Date(due).getTime() < Date.now() && c.status !== 'CLOSED' : false;
+    const court = kind === 'LITIGATION' ? courtLabels(c, t) : null;
 
     return (
       <tr
@@ -774,8 +843,8 @@ export default function CaseTypeWorkspace({ kind }: CaseTypeWorkspaceProps) {
             <td className={tdClass()}>{clientDisplayName(c.client) || miss}</td>
             <td className={tdClass()}>{displayOrMissing(getCaseData(c, 'client_role'), miss, enumPretty)}</td>
             <td className={tdClass()}>{displayOrMissing(getCaseData(c, 'opposing_party'), miss)}</td>
-            <td className={tdClass()}>{courtDisplay(c) || miss}</td>
-            <td className={tdClass()}>{displayOrMissing(getCaseData(c, 'jurisdiction'), miss)}</td>
+            <td className={tdClass()}>{court?.composed || miss}</td>
+            <td className={tdClass()}>{court?.jurisdiction || miss}</td>
             <td className={tdClass()}>{displayOrMissing(getCaseData(c, 'court_case_number'), miss)}</td>
             <td className={tdClass()}>{assignedDisplayName(c) || miss}</td>
             <td className={tdClass()}>

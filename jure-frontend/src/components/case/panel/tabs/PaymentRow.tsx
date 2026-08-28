@@ -1,8 +1,9 @@
 import React from 'react';
-import { Trash2 } from 'lucide-react';
+import { Calendar, FileText, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { formatMAD } from '@/utils/formatMAD';
+import { useAppTranslation } from '@/i18n';
 
 type P = API.FinanceCasePayment;
 
@@ -24,6 +25,7 @@ type Props = {
 };
 
 export const PaymentRow: React.FC<Props> = ({ payment, onDelete }) => {
+  const { t } = useAppTranslation();
   return (
     <div className="rounded-xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-950 p-4 shadow-sm">
       <div className="flex items-start justify-between gap-2">
@@ -35,18 +37,22 @@ export const PaymentRow: React.FC<Props> = ({ payment, onDelete }) => {
                 methodClass[payment.method]
               )}
             >
-              {methodLabel[payment.method]}
+              {t.finance.paymentMethods[payment.method] ?? methodLabel[payment.method]}
             </span>
             <span className="font-semibold tabular-nums text-slate-900 dark:text-white">
               {formatMAD(payment.amount)}
             </span>
           </div>
           <p className="font-mono text-[12px] text-slate-600">
-            Réf: {payment.reference || '—'}
+            {t.finance.columns.reference}: {payment.reference || '—'}
           </p>
-          <p className="text-slate-600 dark:text-slate-400">📅 {payment.date}</p>
-          <p className="text-slate-700 dark:text-slate-300">
-            🧾 Facture: {payment.invoice_number || '—'}
+          <p className="flex items-center gap-1.5 text-slate-600 dark:text-slate-400">
+            <Calendar className="h-3.5 w-3.5 shrink-0" aria-hidden />
+            {payment.date}
+          </p>
+          <p className="flex items-center gap-1.5 text-slate-700 dark:text-slate-300">
+            <FileText className="h-3.5 w-3.5 shrink-0" aria-hidden />
+            {t.finance.columns.invoiceNumber}: {payment.invoice_number || '—'}
           </p>
         </div>
         {onDelete ? (

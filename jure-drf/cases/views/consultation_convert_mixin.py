@@ -38,7 +38,7 @@ class ConsultationConvertMixin:
         if not ready:
             return Response(
                 {
-                    "detail": "Consultation is not ready to convert. Set Case.status, case_specific_data.outcome, or case_specific_data.status to CONVERTED_TO_CASE.",
+                    "detail": "This consultation cannot be converted in its current state.",
                     "code": "not_ready_to_convert",
                     "fields_checked": fields_checked,
                     "status": source.status,

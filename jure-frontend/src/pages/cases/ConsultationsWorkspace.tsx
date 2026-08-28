@@ -1,5 +1,5 @@
-import CaseTypeWorkspace from '@/components/case/workspace/CaseTypeWorkspace';
+import ConsultationWorkspace from '@/components/case/workspace/ConsultationWorkspace';
 
 export default function ConsultationsWorkspace() {
-  return <CaseTypeWorkspace kind="CONSULTATION" />;
+  return <ConsultationWorkspace />;
 }

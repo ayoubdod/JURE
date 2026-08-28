@@ -55,6 +55,9 @@ import {
 } from '@/components/case/case-detail-drawer/format';
 import { ConvertedCaseLink, getConvertedToCase } from '@/components/case/conversion/ConvertedCaseLink';
 import DeadlinesCard from '@/components/dashboard/DeadlinesCard';
+import ConsultationDetailWorkspace from '@/components/case/workspace/consultation-detail/ConsultationDetailWorkspace';
+import LitigationDetailWorkspace from '@/components/case/workspace/litigation-detail/LitigationDetailWorkspace';
+import AdministrativeDetailWorkspace from '@/components/case/workspace/administrative-detail/AdministrativeDetailWorkspace';
 import ResearchNotebookCard from '@/components/dashboard/ResearchNotebookCard';
 import { FinanceTab } from '@/components/case/panel/tabs/FinanceTab';
 import { JuriaCasePanel } from '@/components/juria/JuriaCasePanel';
@@ -73,7 +76,7 @@ import { CaseTypeSelector, type ConversionTargetType } from '@/components/case/c
 import { ConversionForm } from '@/components/case/conversion/ConversionForm';
 import { canShowConvertToCase } from '@/components/case/conversion/ConvertedCaseLink';
 import { useToast } from '@/hooks/use-toast';
-import { apiGetCase, apiUpdateCase } from '@/services/case/api';
+import { apiGetCase, apiRetryConsultationEmail, apiUpdateCase, apiUploadCaseAttachment } from '@/services/case/api';
 import type { Appointment } from '@/services/appointment/api';
 
 type WorkspaceTab =
@@ -160,6 +163,25 @@ export default function CaseWorkspaceView({
   caseItem: API.Case;
   onCaseChange: (next: API.Case) => void;
 }) {
+  if (getCaseType(caseItem) === 'CONSULTATION') {
+    return <ConsultationDetailWorkspace caseItem={caseItem} onCaseChange={onCaseChange} />;
+  }
+  if (getCaseType(caseItem) === 'LITIGATION') {
+    return <LitigationDetailWorkspace caseItem={caseItem} onCaseChange={onCaseChange} />;
+  }
+  if (getCaseType(caseItem) === 'ADMINISTRATIVE') {
+    return <AdministrativeDetailWorkspace caseItem={caseItem} onCaseChange={onCaseChange} />;
+  }
+  return <CaseMatterWorkspaceView caseItem={caseItem} onCaseChange={onCaseChange} />;
+}
+
+function CaseMatterWorkspaceView({
+  caseItem,
+  onCaseChange,
+}: {
+  caseItem: API.Case;
+  onCaseChange: (next: API.Case) => void;
+}) {
   const { t, tf, enumPretty } = useAppTranslation();
   const pw = t.cases.pageWorkspace;
   const navigate = useNavigate();
@@ -212,6 +234,12 @@ export default function CaseWorkspaceView({
     else params.set('tab', next);
     setSearchParams(params, { replace: true });
   };
+
+  useEffect(() => {
+    if (activeTab !== 'consultation' && activeTab !== 'overview') return;
+    if (window.location.hash !== '#follow-ups') return;
+    requestAnimationFrame(() => document.getElementById('follow-ups')?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+  }, [activeTab, caseItem.id]);
 
   const relatedLabel = [caseItem.reference, caseItem.title].filter(Boolean).join(' — ') || `Case #${caseItem.id}`;
 
@@ -318,6 +346,11 @@ export default function CaseWorkspaceView({
                 <span className="inline-flex rounded-full bg-[#F7F4FF] px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.08em] text-[#64499D] ring-1 ring-[#64499D]/15">
                   {typeWord(type, t.cases.typeLabels)}
                 </span>
+                {type === 'CONSULTATION' && getCaseData(caseItem, 'consultation_type') ? (
+                  <span className="inline-flex rounded-full bg-slate-100 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-700 ring-1 ring-slate-200 dark:bg-zinc-800 dark:text-zinc-200 dark:ring-zinc-700">
+                    {enumPretty(String(getCaseData(caseItem, 'consultation_type')))}
+                  </span>
+                ) : null}
                 <span
                   className={cn(
                     'inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide ring-1 ring-inset',
@@ -326,6 +359,12 @@ export default function CaseWorkspaceView({
                 >
                   {enumPretty(headerStatus) || headerStatus}
                 </span>
+                {converted ? (
+                  <span className="inline-flex rounded-full bg-[#64499D]/10 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#64499D] ring-1 ring-[#64499D]/20">
+                    {t.cases.modal.consultationWorkflow.converted}
+                    {converted.reference ? ` · ${converted.reference}` : ''}
+                  </span>
+                ) : null}
               </div>
               <h1 className="mt-2 text-2xl font-semibold tracking-tight text-slate-900 dark:text-white">
                 {caseItem.title || t.cases.untitledCase}
@@ -395,6 +434,48 @@ export default function CaseWorkspaceView({
             </div>
 
             <div className="flex shrink-0 flex-wrap items-center gap-2">
+              {type === 'CONSULTATION' && canEdit ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="h-10 rounded-lg"
+                  onClick={() => caseModalRef.current?.show(undefined, { followUpOf: caseItem })}
+                >
+                  {t.cases.modal.consultationWorkflow.addFollowUp}
+                </Button>
+              ) : null}
+              {type === 'CONSULTATION' && caseItem.emailConfirmation?.status === 'FAILED' ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="h-10 rounded-lg"
+                  onClick={() => {
+                    void apiRetryConsultationEmail(caseItem.id)
+                      .then(async () => {
+                        toast({ title: t.cases.modal.consultationWorkflow.emailSent });
+                        await refreshDetail();
+                      })
+                      .catch(() => {
+                        toast({
+                          title: t.cases.modal.consultationWorkflow.emailFailed,
+                          variant: 'destructive',
+                        });
+                      });
+                  }}
+                >
+                  {t.cases.modal.consultationWorkflow.retryEmail}
+                </Button>
+              ) : null}
+              {canConvert ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="h-10 rounded-lg"
+                  onClick={() => setTypeSelectorOpen(true)}
+                >
+                  {t.cases.workspaces.consultation.actions.convert}
+                </Button>
+              ) : null}
               {canEdit ? (
                 <Button
                   type="button"
@@ -484,7 +565,13 @@ export default function CaseWorkspaceView({
               <section>
                 <SectionTitle>{pw.overview}</SectionTitle>
                 {type === 'CONSULTATION' ? (
-                  <ConsultationSection c={caseItem} onOpenCaseById={openRelated} />
+                  <ConsultationSection
+                    c={caseItem}
+                    onOpenCaseById={openRelated}
+                    onAddFollowUp={
+                      canEdit ? () => caseModalRef.current?.show(undefined, { followUpOf: caseItem }) : undefined
+                    }
+                  />
                 ) : type === 'LITIGATION' ? (
                   <LitigationSection c={caseItem} onOpenCaseById={openRelated} />
                 ) : (
@@ -503,7 +590,14 @@ export default function CaseWorkspaceView({
 
           <TabsContent value="consultation" className="mt-0 px-4 py-6 sm:px-6 lg:px-8">
             <div className="mx-auto max-w-5xl">
-              <ConsultationSection c={caseItem} onOpenCaseById={openRelated} />
+              <ConsultationSection
+                c={caseItem}
+                onOpenCaseById={openRelated}
+                anchorFollowUps
+                onAddFollowUp={
+                  canEdit ? () => caseModalRef.current?.show(undefined, { followUpOf: caseItem }) : undefined
+                }
+              />
             </div>
           </TabsContent>
 
@@ -616,11 +710,53 @@ export default function CaseWorkspaceView({
                     </li>
                   ))}
                 </ul>
-              ) : (
+              ) : null}
+              {(caseItem.attachments ?? []).length > 0 ? (
+                <ul className="space-y-2">
+                  {caseItem.attachments?.map((att) => (
+                    <li
+                      key={att.id}
+                      className="flex items-center justify-between rounded-lg border border-slate-200 bg-white px-3 py-2 text-[13px] dark:border-zinc-800 dark:bg-zinc-950"
+                    >
+                      <span className="truncate">{att.file_name}</span>
+                      {att.file_url ? (
+                        <a className="text-[12px] text-[#64499D]" href={att.file_url} target="_blank" rel="noreferrer">
+                          {t.cases.modal.consultationWorkflow.viewConsultation}
+                        </a>
+                      ) : null}
+                    </li>
+                  ))}
+                </ul>
+              ) : requiredDocs.length === 0 ? (
                 <p className="rounded-xl border border-dashed border-slate-200 px-4 py-10 text-center text-[13px] text-slate-500 dark:border-zinc-800">
                   {pw.documentsEmpty}
                 </p>
-              )}
+              ) : null}
+              {canEdit ? (
+                <label className="inline-flex h-10 cursor-pointer items-center rounded-lg border border-slate-200 px-3 text-[13px] dark:border-zinc-700">
+                  {t.cases.modal.consultationWorkflow.dropFiles}
+                  <input
+                    type="file"
+                    className="sr-only"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      e.target.value = '';
+                      if (!file) return;
+                      void apiUploadCaseAttachment(caseItem.id, file)
+                        .then(async () => {
+                          toast({ title: t.cases.modal.consultationWorkflow.attachments });
+                          await refreshDetail();
+                        })
+                        .catch(() =>
+                          toast({
+                            title: t.cases.modal.consultationWorkflow.attachmentFailed,
+                            variant: 'destructive',
+                          })
+                        );
+                    }}
+                  />
+                </label>
+              ) : null}
             </div>
           </TabsContent>
 
@@ -653,24 +789,40 @@ export default function CaseWorkspaceView({
           <TabsContent value="activity" className="mt-0 px-4 py-6 sm:px-6 lg:px-8">
             <div className="mx-auto max-w-5xl space-y-4">
               <SectionTitle>{pw.activityTitle}</SectionTitle>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <Field label={t.cases.modal.created}>
-                  <div>
-                    {formatDrawerDateTime(caseItem.created)}
-                    <p className="mt-1 text-xs font-normal text-slate-500">
-                      {formatUserDisplayName(caseItem.created_by)}
-                    </p>
-                  </div>
-                </Field>
-                <Field label={pw.activityTitle}>
-                  <div>
-                    {formatDrawerDateTime(getCaseUpdatedAtIso(caseItem))}
-                    <p className="mt-1 text-xs font-normal text-slate-500">
-                      {formatUserDisplayName(getCaseUpdatedByUser(caseItem))}
-                    </p>
-                  </div>
-                </Field>
-              </div>
+              {(caseItem.activity ?? []).length > 0 ? (
+                <ol className="space-y-3">
+                  {caseItem.activity?.map((item) => (
+                    <li key={item.id} className="rounded-lg border border-slate-200 px-3 py-2 dark:border-zinc-800">
+                      <p className="text-[13px] font-medium text-slate-800 dark:text-zinc-100">{item.message}</p>
+                      <p className="mt-1 text-[11px] text-slate-500">
+                        {item.created ? formatDrawerDateTime(item.created) : ''}
+                        {item.actor
+                          ? ` · ${[item.actor.first_name, item.actor.last_name].filter(Boolean).join(' ')}`
+                          : ''}
+                      </p>
+                    </li>
+                  ))}
+                </ol>
+              ) : (
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <Field label={t.cases.modal.created}>
+                    <div>
+                      {formatDrawerDateTime(caseItem.created)}
+                      <p className="mt-1 text-xs font-normal text-slate-500">
+                        {formatUserDisplayName(caseItem.created_by)}
+                      </p>
+                    </div>
+                  </Field>
+                  <Field label={pw.activityTitle}>
+                    <div>
+                      {formatDrawerDateTime(getCaseUpdatedAtIso(caseItem))}
+                      <p className="mt-1 text-xs font-normal text-slate-500">
+                        {formatUserDisplayName(getCaseUpdatedByUser(caseItem))}
+                      </p>
+                    </div>
+                  </Field>
+                </div>
+              )}
             </div>
           </TabsContent>
         </div>
@@ -679,6 +831,15 @@ export default function CaseWorkspaceView({
       <CaseModal
         ref={caseModalRef}
         onSuccess={(updated) => {
+          const originId = updated.parentConsultation?.id;
+          if (originId) {
+            if (originId === caseItem.id) {
+              void refreshDetail();
+              return;
+            }
+            void navigateToCaseById(navigate, originId);
+            return;
+          }
           onCaseChange(updated);
           const nextPath = caseWorkspacePath(updated);
           if (nextPath !== `${window.location.pathname}`) navigate(nextPath, { replace: true });
@@ -753,7 +914,11 @@ export default function CaseWorkspaceView({
           onSuccess={({ newCase }) => {
             setConversionFormOpen(false);
             setConversionTarget(null);
-            toast({ title: t.common.success });
+            toast({
+              title: tf(t.cases.modal.consultationWorkflow.convertSuccess, {
+                reference: newCase.reference || '',
+              }),
+            });
             navigate(caseWorkspacePath(newCase));
           }}
         />

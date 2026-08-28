@@ -20,6 +20,13 @@ export function clientDisplayName(c?: API.User | null): string {
 }
 
 export function assignedDisplayName(c: API.Case): string {
+  const many = c.assigned_attorneys;
+  if (Array.isArray(many) && many.length) {
+    return many
+      .map((u) => [u.first_name, u.last_name].filter(Boolean).join(' ').trim() || u.email || '')
+      .filter(Boolean)
+      .join(', ');
+  }
   const u = c.assigned_to as API.User | undefined;
   if (!u) return '';
   return [u.first_name, u.last_name].filter(Boolean).join(' ').trim() || u.email || '';
@@ -72,10 +79,15 @@ export function formatShortDate(iso: string | null | undefined): string {
 
 export function formatDuration(value: unknown): string {
   if (value == null || value === '') return '';
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return `${value} min`;
+  }
   const s = String(value);
+  if (s === '15min') return '15 min';
   if (s === '30min') return '30 min';
   if (s === '1h') return '60 min';
   if (s === '2h') return '120 min';
+  if (/^\d+$/.test(s)) return `${s} min`;
   return s;
 }
 

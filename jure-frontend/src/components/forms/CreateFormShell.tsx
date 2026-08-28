@@ -11,18 +11,19 @@ import { Button } from '@/components/ui/button';
 import { X, type LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Label } from '@/components/ui/label';
+import { useAppTranslation } from '@/i18n';
 
 export const CREATE_INPUT_CLASS =
   'h-10 rounded-lg border-slate-200 bg-white text-[13.5px] shadow-none transition-all duration-200 dark:border-zinc-700 dark:bg-zinc-950 focus-visible:ring-2 focus-visible:ring-[#64499D]/25 focus-visible:ring-offset-0 focus-visible:border-[#64499D]';
 
 export const CREATE_SELECT_CLASS =
-  'h-10 rounded-lg border-slate-200 bg-white text-[13.5px] shadow-none transition-all duration-200 dark:border-zinc-700 dark:bg-zinc-950 focus:ring-2 focus:ring-[#64499D]/25 focus:ring-offset-0 focus:border-[#64499D]';
+  'h-10 rounded-lg border-slate-200 bg-white text-start text-[13.5px] shadow-none transition-all duration-200 dark:border-zinc-700 dark:bg-zinc-950 focus:ring-2 focus:ring-[#64499D]/25 focus:ring-offset-0 focus:border-[#64499D] rtl:text-right';
 
 export const CREATE_TEXTAREA_CLASS =
   'min-h-[92px] rounded-lg border-slate-200 bg-white text-[13.5px] shadow-none transition-all duration-200 dark:border-zinc-700 dark:bg-zinc-950 focus-visible:ring-2 focus-visible:ring-[#64499D]/25 focus-visible:ring-offset-0 focus-visible:border-[#64499D] resize-none';
 
 export const CREATE_SERVER_SELECT_CLASS =
-  'h-10 w-full justify-between rounded-lg border-slate-200 bg-white px-3 text-[13.5px] font-normal shadow-none hover:bg-white hover:border-[#64499D]/45 dark:border-zinc-700 dark:bg-zinc-950 dark:hover:bg-zinc-950';
+  'h-10 w-full justify-between rounded-lg border-slate-200 bg-white px-3 text-start text-[13.5px] font-normal shadow-none hover:bg-white hover:border-[#64499D]/45 dark:border-zinc-700 dark:bg-zinc-950 dark:hover:bg-zinc-950';
 
 export const CREATE_FOOTER_CLASS =
   'shrink-0 flex !flex-row !flex-nowrap items-center justify-end gap-2.5 !space-x-0 border-t border-slate-200 bg-white px-6 py-3.5 dark:border-zinc-800 dark:bg-zinc-950 md:px-7';
@@ -62,6 +63,7 @@ export function CreateFormDialog({
   overlayClassName?: string;
   children: ReactNode;
 }) {
+  const { dir } = useAppTranslation();
   return (
     <Dialog
       open={open}
@@ -74,6 +76,7 @@ export function CreateFormDialog({
       <DialogPortal>
         <DialogOverlay className={cn('bg-slate-950/50', overlayClassName)} />
         <DialogPrimitive.Content
+          dir={dir}
           aria-describedby={`${formId}-description`}
           onOpenAutoFocus={(event) => {
             event.preventDefault();
@@ -82,8 +85,16 @@ export function CreateFormDialog({
           onEscapeKeyDown={(event) => {
             if (isBusy) event.preventDefault();
           }}
+          onFocusOutside={(event) => {
+            event.preventDefault();
+          }}
           onPointerDownOutside={(event) => {
             if (isBusy) event.preventDefault();
+          }}
+          onInteractOutside={(event) => {
+            if (isBusy) event.preventDefault();
+            const target = event.target as HTMLElement | null;
+            if (target?.closest?.('input[type="file"]')) event.preventDefault();
           }}
           className={cn(
             'fixed z-50 flex min-h-0 flex-col overflow-hidden border border-slate-200/90 bg-white p-0 shadow-2xl outline-none',

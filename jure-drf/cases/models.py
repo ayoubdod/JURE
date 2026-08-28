@@ -74,13 +74,40 @@ class Case(TimeStampedModel):
     status     = models.CharField(max_length=50, choices=CaseStatus.choices,   default=CaseStatus.OPEN)
     summary    = models.TextField(blank=True, null=True)
     description= models.TextField()
-    reference  = models.CharField(max_length=50, unique=True)
+    reference  = models.CharField(max_length=50, db_index=True)
     title      = models.CharField(max_length=255)
     court      = models.CharField(max_length=255)
 
     cabinet    = models.ForeignKey('cabinets.Cabinet', on_delete=models.SET_NULL, null=True, blank=True, related_name='cases')
     assigned_to= models.ForeignKey('users.User',       on_delete=models.SET_NULL, null=True, blank=True, related_name='assigned_cases')
+    assigned_attorneys = models.ManyToManyField(
+        'users.User',
+        blank=True,
+        related_name='consultation_assignments',
+        help_text='Additional attorneys assigned to this matter (primary is assigned_to).',
+    )
     client     = models.ForeignKey('users.User',       on_delete=models.SET_NULL, null=True,               related_name='client_cases')
+
+    parent_consultation = models.ForeignKey(
+        'self',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='follow_ups',
+        help_text='For follow-up consultations: the original consultation.',
+    )
+    follow_up_sequence = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        help_text='1-based follow-up index under parent_consultation (F01, F02, …).',
+    )
+    email_confirmation_status = models.CharField(
+        max_length=20,
+        blank=True,
+        default='',
+        help_text='SENT | FAILED | empty when not attempted.',
+    )
+    email_confirmation_error = models.TextField(blank=True, default='')
 
     # Conversion link: consultation -> derived case
     converted_to_case = models.ForeignKey(
@@ -117,6 +144,26 @@ class Case(TimeStampedModel):
     total_billed = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     total_paid = models.DecimalField(max_digits=12, decimal_places=2, default=0)
 
+    class Meta:
+        indexes = [
+            models.Index(fields=['cabinet', 'case_type']),
+            models.Index(fields=['cabinet', 'status']),
+            models.Index(fields=['cabinet', 'client']),
+            models.Index(fields=['parent_consultation']),
+            models.Index(fields=['converted_to_case']),
+        ]
+        constraints = [
+            models.UniqueConstraint(
+                fields=['cabinet', 'reference'],
+                name='uniq_case_cabinet_reference',
+            ),
+            models.UniqueConstraint(
+                fields=['parent_consultation', 'follow_up_sequence'],
+                condition=models.Q(parent_consultation__isnull=False),
+                name='uniq_case_follow_up_sequence',
+            ),
+        ]
+
 
 class CaseSession(TimeStampedModel):
     case = models.ForeignKey(Case, on_delete=models.CASCADE)
@@ -137,7 +184,54 @@ class CaseAttachementType(TimeStampedModel):
 
 
 class CaseAttachment(TimeStampedModel):
-    case       = models.ForeignKey(Case, on_delete=models.CASCADE)
+    case       = models.ForeignKey(Case, on_delete=models.CASCADE, related_name='attachments')
     type       = models.ForeignKey(CaseAttachementType, on_delete=models.SET_NULL, null=True, blank=True)
     other_type = models.CharField(max_length=255, blank=True, null=True)
     file       = models.FileField(upload_to='case_attachments/')
+    original_name = models.CharField(max_length=255, blank=True, default='')
+    uploaded_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='case_attachments_uploaded',
+    )
+    linked_cases = models.ManyToManyField(
+        Case,
+        blank=True,
+        related_name='shared_attachments',
+        help_text='Additional matters that may access this file without duplicating storage.',
+    )
+
+    def display_name(self) -> str:
+        return (self.original_name or "").strip() or (self.file.name.rsplit("/", 1)[-1] if self.file else "")
+
+
+class CaseReferenceSequence(models.Model):
+    """Per-cabinet yearly counters for C- / L- / A- references."""
+
+    KIND_CONSULTATION = "C"
+    KIND_LITIGATION = "L"
+    KIND_ADMINISTRATIVE = "A"
+    KIND_CHOICES = (
+        (KIND_CONSULTATION, "Consultation"),
+        (KIND_LITIGATION, "Litigation"),
+        (KIND_ADMINISTRATIVE, "Administrative"),
+    )
+
+    cabinet = models.ForeignKey(
+        "cabinets.Cabinet",
+        on_delete=models.CASCADE,
+        related_name="case_reference_sequences",
+    )
+    kind = models.CharField(max_length=1, choices=KIND_CHOICES)
+    year = models.PositiveIntegerField()
+    last_number = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["cabinet", "kind", "year"],
+                name="uniq_case_reference_sequence",
+            ),
+        ]

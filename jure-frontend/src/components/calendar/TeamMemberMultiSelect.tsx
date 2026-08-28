@@ -54,6 +54,7 @@ export default function TeamMemberMultiSelect({
   disabled,
   placeholder,
   error,
+  excludeIds,
 }: {
   id?: string;
   value: number[];
@@ -61,6 +62,7 @@ export default function TeamMemberMultiSelect({
   disabled?: boolean;
   placeholder?: string;
   error?: string;
+  excludeIds?: number[];
 }) {
   const { t, tf } = useAppTranslation();
   const m = t.calendar.teamPicker;
@@ -69,9 +71,17 @@ export default function TeamMemberMultiSelect({
   const [loading, setLoading] = useState(false);
   const [members, setMembers] = useState<TeamMemberOption[]>([]);
 
+  const excluded = useMemo(
+    () => new Set((excludeIds ?? []).map(Number).filter((n) => Number.isFinite(n) && n > 0)),
+    [excludeIds]
+  );
+
   const selectedIds = useMemo(
-    () => value.map(Number).filter((n) => Number.isFinite(n) && n > 0),
-    [value]
+    () =>
+      value
+        .map(Number)
+        .filter((n) => Number.isFinite(n) && n > 0 && !excluded.has(n)),
+    [value, excluded]
   );
 
   useEffect(() => {
@@ -98,13 +108,14 @@ export default function TeamMemberMultiSelect({
   );
 
   const filtered = useMemo(() => {
+    const available = members.filter((member) => !excluded.has(member.id));
     const q = search.trim().toLowerCase();
-    if (!q) return members;
-    return members.filter(
+    if (!q) return available;
+    return available.filter(
       (member) =>
         displayName(member).toLowerCase().includes(q) || member.email.toLowerCase().includes(q)
     );
-  }, [members, search]);
+  }, [members, search, excluded]);
 
   const emit = (nextIds: number[]) => {
     const unique = Array.from(new Set(nextIds.map(Number).filter((n) => Number.isFinite(n) && n > 0)));

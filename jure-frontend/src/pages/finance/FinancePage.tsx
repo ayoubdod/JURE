@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
-import { Plus, Download } from 'lucide-react';
+import { Plus, Download, LayoutDashboard, FileText, Wallet } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { FinanceStatsStrip } from '@/components/finance/stats/FinanceStatsStrip';
@@ -157,9 +157,11 @@ const FinancePage: React.FC = () => {
         >
           <TabsList className="mb-4 h-11 w-full max-w-md justify-start rounded-xl border border-slate-200 bg-slate-100/80 p-1 dark:border-slate-800 dark:bg-slate-900/50">
             <TabsTrigger value="dashboard" className="rounded-lg px-4 data-[state=active]:bg-white data-[state=active]:shadow-sm dark:data-[state=active]:bg-slate-800">
+              <LayoutDashboard className="me-1.5 h-3.5 w-3.5" aria-hidden />
               {t.finance.tabs.dashboard}
             </TabsTrigger>
             <TabsTrigger value="invoices" className="rounded-lg px-4 data-[state=active]:bg-white data-[state=active]:shadow-sm dark:data-[state=active]:bg-slate-800">
+              <FileText className="me-1.5 h-3.5 w-3.5" aria-hidden />
               {t.finance.tabs.invoices}
             </TabsTrigger>
             <TabsTrigger
@@ -167,6 +169,7 @@ const FinancePage: React.FC = () => {
               data-finance-tab="payments"
               className="rounded-lg px-4 data-[state=active]:bg-white data-[state=active]:shadow-sm dark:data-[state=active]:bg-slate-800"
             >
+              <Wallet className="me-1.5 h-3.5 w-3.5" aria-hidden />
               {t.finance.tabs.payments}
             </TabsTrigger>
           </TabsList>

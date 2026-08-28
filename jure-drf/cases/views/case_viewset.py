@@ -1,9 +1,10 @@
 # cases/views/case_viewset.py
 import logging
 
+from django.db.models import Count
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import filters, permissions, status, viewsets
+from rest_framework import permissions, status, viewsets
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 
@@ -16,12 +17,13 @@ from ..serializers import CaseSerializer
 from ..utils import batch_counts_tasks_appointments, fetch_case_related_payload
 from .close_mixin import CloseCaseMixin
 from .consultation_convert_mixin import ConsultationConvertMixin
-from .filters import CaseFilter
+from .consultation_workflow_mixin import ConsultationWorkflowMixin
+from .filters import CaseFilter, CaseSearchFilter
 
 logger = logging.getLogger(__name__)
 
 
-class CaseViewSet(CloseCaseMixin, ConsultationConvertMixin, viewsets.ModelViewSet):
+class CaseViewSet(CloseCaseMixin, ConsultationConvertMixin, ConsultationWorkflowMixin, viewsets.ModelViewSet):
     """
     RESTful case management. Supports caseType filter and type-specific sub-fields.
 
@@ -35,7 +37,7 @@ class CaseViewSet(CloseCaseMixin, ConsultationConvertMixin, viewsets.ModelViewSe
 
     queryset = Case.objects.all().order_by("id")
     serializer_class = CaseSerializer
-    filter_backends = [DjangoFilterBackend, CaseFilter, filters.SearchFilter]
+    filter_backends = [DjangoFilterBackend, CaseFilter, CaseSearchFilter]
     filterset_fields = ["status", "case_type", "assigned_to"]
     search_fields = [
         "title",
@@ -45,6 +47,10 @@ class CaseViewSet(CloseCaseMixin, ConsultationConvertMixin, viewsets.ModelViewSe
         "client__first_name",
         "client__last_name",
         "client__email",
+        "assigned_to__first_name",
+        "assigned_to__last_name",
+        "assigned_attorneys__first_name",
+        "assigned_attorneys__last_name",
     ]
     permission_classes = [permissions.IsAuthenticated, HasCasesPermission]
     pagination_class = NumericPagination
@@ -65,7 +71,16 @@ class CaseViewSet(CloseCaseMixin, ConsultationConvertMixin, viewsets.ModelViewSe
                 "updated_by",
                 "assigned_to",
                 "client",
+                "parent_consultation",
             )
+            .prefetch_related(
+                "assigned_attorneys",
+                "follow_ups",
+                "follow_ups__assigned_to",
+                "follow_ups__assigned_attorneys",
+                "attachments",
+            )
+            .annotate(follow_up_count=Count("follow_ups", distinct=True))
         )
 
     def perform_create(self, serializer):
@@ -92,6 +107,18 @@ class CaseViewSet(CloseCaseMixin, ConsultationConvertMixin, viewsets.ModelViewSe
 
         logger.info("Case create: cabinet=%s, assignee=%s", cab.id if cab else None, assignee.id)
         serializer.save(cabinet=cab, assigned_to=assignee, created_by=user)
+        instance = serializer.instance
+        if instance and instance.case_type == Case.CaseType.CONSULTATION:
+            from ..activity import log_consultation_activity
+            from ..email import send_consultation_confirmation
+
+            log_consultation_activity(
+                instance,
+                "consultation_created",
+                f"Consultation {instance.reference} created",
+                actor=user,
+            )
+            send_consultation_confirmation(instance, actor=user)
 
     def perform_update(self, serializer):
         """Persist update and set updated_by."""
@@ -137,6 +164,7 @@ class CaseViewSet(CloseCaseMixin, ConsultationConvertMixin, viewsets.ModelViewSe
                 "counts_map": counts_map,
                 "include_related": True,
                 "related_payload": related_payload,
+                "schedule_conflicts": self._conflicts_for(instance) if instance.case_type == Case.CaseType.CONSULTATION else None,
             },
         )
         return Response(serializer.data)
@@ -147,6 +175,12 @@ class CaseViewSet(CloseCaseMixin, ConsultationConvertMixin, viewsets.ModelViewSe
             logger.warning("Case create validation failed: %s", serializer.errors)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         self.perform_create(serializer)
+        instance = serializer.instance
+        extra_context = {}
+        if instance and instance.case_type == Case.CaseType.CONSULTATION:
+            extra_context["schedule_conflicts"] = self._conflicts_for(instance)
+            extra_context["include_related"] = True
+            serializer = self.get_serializer(instance, context={**self.get_serializer_context(), **extra_context})
         headers = self.get_success_headers(serializer.data)
         logger.info("Case created: id=%s", serializer.data.get("id"))
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)

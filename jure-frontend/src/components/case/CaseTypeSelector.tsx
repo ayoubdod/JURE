@@ -42,9 +42,8 @@ const CaseTypeSelector: React.FC<CaseTypeSelectorProps> = ({ onSelect, className
   ];
 
   return (
-    <div className={cn('space-y-3', className)}>
-      <p className="text-[13px] text-slate-500 dark:text-zinc-400">{t.cases.modal.typePrompt}</p>
-      <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+    <div className={cn(className)}>
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-3 sm:items-stretch">
         {caseTypes.map((opt) => {
           const Icon = opt.icon;
           return (
@@ -53,19 +52,19 @@ const CaseTypeSelector: React.FC<CaseTypeSelectorProps> = ({ onSelect, className
               type="button"
               onClick={() => onSelect(opt.value)}
               className={cn(
-                'flex flex-col items-start gap-2.5 rounded-xl border px-3.5 py-3.5 text-start transition-all duration-200',
+                'flex h-full min-h-0 flex-col items-start gap-2 rounded-xl border px-3 py-3 text-start transition-all duration-200',
                 'border-slate-200 bg-white hover:border-[#64499D]/40 hover:bg-[#F7F4FF] hover:shadow-sm',
                 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#64499D]/30',
                 'dark:border-zinc-800 dark:bg-zinc-950 dark:hover:border-[#8B6FD1]/40 dark:hover:bg-[#64499D]/15'
               )}
             >
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#F7F4FF] text-[#64499D] ring-1 ring-[#64499D]/15 dark:bg-[#64499D]/20 dark:text-[#CFC2FF] dark:ring-[#8B6FD1]/25">
-                <Icon className="h-4 w-4" aria-hidden />
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#F7F4FF] text-[#64499D] ring-1 ring-[#64499D]/15 dark:bg-[#64499D]/20 dark:text-[#CFC2FF] dark:ring-[#8B6FD1]/25">
+                <Icon className="h-3.5 w-3.5" aria-hidden />
               </div>
-              <span className="text-[13.5px] font-semibold text-slate-900 dark:text-zinc-100">
+              <span className="text-[13px] font-semibold leading-tight text-slate-900 dark:text-zinc-100">
                 {opt.label}
               </span>
-              <span className="text-[12px] font-normal leading-snug text-slate-500 dark:text-zinc-400">
+              <span className="text-[11.5px] font-normal leading-snug text-slate-500 dark:text-zinc-400">
                 {opt.description}
               </span>
             </button>

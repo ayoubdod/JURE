@@ -106,13 +106,11 @@ export const FinanceStatsStrip: React.FC<Props> = ({
         </div>
         <div
           className={cn(
-            'shrink-0 rounded-md border p-1.5',
-            tvaExonere
-              ? 'border-emerald-300/50 bg-emerald-500/10 text-emerald-700 dark:border-emerald-700/50 dark:text-emerald-400'
-              : 'border-red-300/50 bg-red-500/10 text-red-700 dark:border-red-700/50 dark:text-red-400'
+            'flex h-9 w-9 shrink-0 items-center justify-center rounded-lg shadow-sm',
+            tvaExonere ? 'bg-emerald-500' : 'bg-red-500'
           )}
         >
-          <Receipt className="h-3.5 w-3.5" strokeWidth={1.8} aria-hidden />
+          <Receipt size={16} className="text-white" aria-hidden />
         </div>
       </div>
     </div>
@@ -134,8 +132,8 @@ export const FinanceStatsStrip: React.FC<Props> = ({
                 <p className="mt-1 text-[10px] leading-tight text-slate-500 dark:text-slate-400">{caTotalHint}</p>
               ) : null}
             </div>
-            <div className="rounded-md border border-amber-300/50 bg-amber-500/10 p-1.5 text-amber-700 dark:border-amber-700/50 dark:text-amber-400">
-              <Coins className="h-3.5 w-3.5" strokeWidth={1.8} aria-hidden />
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-amber-500 shadow-sm">
+              <Coins size={16} className="text-white" aria-hidden />
             </div>
           </div>
         </div>
@@ -152,8 +150,8 @@ export const FinanceStatsStrip: React.FC<Props> = ({
                 <p className="mt-1 text-[10px] leading-tight text-slate-500 dark:text-slate-400">{collectedHint}</p>
               ) : null}
             </div>
-            <div className="rounded-md border border-emerald-300/50 bg-emerald-500/10 p-1.5 text-emerald-700 dark:border-emerald-700/50 dark:text-emerald-400">
-              <CheckCircle2 className="h-3.5 w-3.5" strokeWidth={1.8} aria-hidden />
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-500 shadow-sm">
+              <CheckCircle2 size={16} className="text-white" aria-hidden />
             </div>
           </div>
         </div>
@@ -177,8 +175,8 @@ export const FinanceStatsStrip: React.FC<Props> = ({
                 {formatMAD(taxAdvancesDueMad)}
               </p>
             </div>
-            <div className="rounded-md border border-orange-300/50 bg-orange-500/10 p-1.5 text-orange-700 dark:border-orange-700/50 dark:text-orange-400">
-              <Scale className="h-3.5 w-3.5" strokeWidth={1.8} aria-hidden />
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-orange-500 shadow-sm">
+              <Scale size={16} className="text-white" aria-hidden />
             </div>
           </div>
         </div>

@@ -41,6 +41,9 @@ import { cn } from '@/lib/utils';
 import { navigateToCase } from '@/lib/caseRoutes';
 import { formatDate, useAppTranslation } from '@/i18n';
 import { CaseStatus } from '@/utils/constants';
+import { getCaseType, assignedDisplayName } from '@/services/case/caseType';
+import { getCaseData } from '@/utils/caseCardHelpers';
+import { getConvertedToCase } from '@/components/case/conversion/ConvertedCaseLink';
 
 export interface ClientProfilePreviewRef {
   show: (client: API.Client) => void;
@@ -99,7 +102,7 @@ type ProfileTab = 'overview' | 'cases';
 
 const ClientProfilePreview = React.forwardRef<ClientProfilePreviewRef, ClientProfilePreviewProps>(
   ({ onUpdateSuccess, onDeleteSuccess }, ref) => {
-    const { t, tf, enumLabel, lang } = useAppTranslation();
+    const { t, tf, enumLabel, enumPretty, lang } = useAppTranslation();
     const navigate = useNavigate();
     const p = t.clients.profile;
 
@@ -188,29 +191,38 @@ const ClientProfilePreview = React.forwardRef<ClientProfilePreviewRef, ClientPro
     const ice = client?.ice?.trim();
     const fiscalIf = (client?.fiscal_if || (client as API.Client & { if?: string | null })?.if || '').trim();
 
+    const consultations = useMemo(
+      () => relatedCases.filter((c) => getCaseType(c) === 'CONSULTATION'),
+      [relatedCases]
+    );
+    const matterCases = useMemo(
+      () => relatedCases.filter((c) => getCaseType(c) !== 'CONSULTATION'),
+      [relatedCases]
+    );
+
     const caseStats = useMemo(() => {
-      const total = relatedCases.length;
-      const open = relatedCases.filter(
+      const total = matterCases.length;
+      const open = matterCases.filter(
         (c) => c.status === CaseStatus.OPEN || c.status === CaseStatus.IN_PROGRESS
       ).length;
-      const closed = relatedCases.filter((c) => c.status === CaseStatus.CLOSED).length;
-      const pending = relatedCases.filter((c) => c.status === CaseStatus.PENDING).length;
+      const closed = matterCases.filter((c) => c.status === CaseStatus.CLOSED).length;
+      const pending = matterCases.filter((c) => c.status === CaseStatus.PENDING).length;
       return { total, open, closed, pending };
-    }, [relatedCases]);
+    }, [matterCases]);
 
     const categoryCounts = useMemo(() => {
       const counts = new Map<string, number>();
-      relatedCases.forEach((c) => {
+      matterCases.forEach((c) => {
         if (!c.category) return;
         counts.set(c.category, (counts.get(c.category) || 0) + 1);
       });
       return [...counts.entries()].sort((a, b) => a[0].localeCompare(b[0]));
-    }, [relatedCases]);
+    }, [matterCases]);
 
     const filteredCases = useMemo(() => {
-      if (categoryFilter === 'all') return relatedCases;
-      return relatedCases.filter((c) => c.category === categoryFilter);
-    }, [relatedCases, categoryFilter]);
+      if (categoryFilter === 'all') return matterCases;
+      return matterCases.filter((c) => c.category === categoryFilter);
+    }, [matterCases, categoryFilter]);
 
     const joinedLabel = client?.date_joined ? formatDate(client.date_joined, lang) : '';
 
@@ -481,7 +493,76 @@ const ClientProfilePreview = React.forwardRef<ClientProfilePreviewRef, ClientPro
                 ) : null}
 
                 {client && tab === 'cases' ? (
-                  <div className="min-w-0 space-y-4">
+                  <div className="min-w-0 space-y-8">
+                    <section className="space-y-4">
+                      <div>
+                        <h3 className="text-[13px] font-semibold text-slate-800 dark:text-zinc-200">
+                          {p.consultations}
+                        </h3>
+                        <p className="mt-0.5 text-[12px] text-slate-500 dark:text-zinc-400">
+                          {casesLoading ? p.loadingCases : tf(p.casesTotal, { count: consultations.length })}
+                        </p>
+                      </div>
+                      {casesLoading ? null : consultations.length === 0 ? (
+                        <p className="rounded-xl border border-dashed border-slate-200 px-4 py-8 text-center text-[12px] text-slate-500 dark:border-zinc-800">
+                          {p.noConsultations}
+                        </p>
+                      ) : (
+                        <ul className="min-w-0 divide-y divide-slate-100 overflow-hidden rounded-xl border border-slate-200 dark:divide-zinc-800 dark:border-zinc-800">
+                          {consultations.map((caseItem) => {
+                            const converted = getConvertedToCase(caseItem);
+                            const consultDate = getCaseData(caseItem, 'consultation_date') as string | undefined;
+                            const consultType = getCaseData(caseItem, 'consultation_type') as string | undefined;
+                            const outcome =
+                              (getCaseData(caseItem, 'outcome') as string) ||
+                              (getCaseData(caseItem, 'status') as string) ||
+                              caseItem.status;
+                            return (
+                              <li key={caseItem.id} className="min-w-0">
+                                <button
+                                  type="button"
+                                  onClick={() => handleCaseClick(caseItem)}
+                                  className="flex w-full min-w-0 items-center gap-3 px-3 py-2.5 text-start transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#64499D]/30 dark:hover:bg-zinc-900"
+                                >
+                                  <div className="min-w-0 flex-1">
+                                    <p className="font-mono text-[11px] text-slate-500">{caseItem.reference}</p>
+                                    <p className="truncate text-[13px] font-medium text-slate-900 dark:text-zinc-100">
+                                      {caseItem.title || t.cases.untitledCase}
+                                    </p>
+                                    <p className="mt-0.5 truncate text-[11.5px] text-slate-500 dark:text-zinc-400">
+                                      {[
+                                        consultDate ? formatDate(consultDate, lang) : null,
+                                        consultType ? enumPretty(consultType) : null,
+                                        assignedDisplayName(caseItem) || null,
+                                      ]
+                                        .filter(Boolean)
+                                        .join(' · ')}
+                                    </p>
+                                    {converted?.reference ? (
+                                      <p className="mt-0.5 text-[11px] text-[#64499D]">
+                                        {tf(p.convertedTo, { reference: converted.reference })}
+                                      </p>
+                                    ) : null}
+                                  </div>
+                                  {outcome ? (
+                                    <span
+                                      className={cn(
+                                        'inline-flex shrink-0 items-center rounded px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wider ring-1 ring-inset',
+                                        STATUS_PILL[outcome] ||
+                                          'bg-slate-500/12 text-slate-600 ring-slate-500/25'
+                                      )}
+                                    >
+                                      {enumPretty(outcome) || outcome}
+                                    </span>
+                                  ) : null}
+                                </button>
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      )}
+                    </section>
+
                     <div className="flex min-w-0 flex-wrap items-end justify-between gap-2">
                       <div>
                         <h3 className="text-[13px] font-semibold text-slate-800 dark:text-zinc-200">{p.cases}</h3>
@@ -491,7 +572,7 @@ const ClientProfilePreview = React.forwardRef<ClientProfilePreviewRef, ClientPro
                       </div>
                     </div>
 
-                    {!casesLoading && relatedCases.length > 0 ? (
+                    {!casesLoading && matterCases.length > 0 ? (
                       <div className="grid min-w-0 grid-cols-2 gap-2 sm:grid-cols-4">
                         <StatChip label={p.statTotal} value={caseStats.total} />
                         <StatChip label={p.statOpen} value={caseStats.open} />
@@ -500,12 +581,12 @@ const ClientProfilePreview = React.forwardRef<ClientProfilePreviewRef, ClientPro
                       </div>
                     ) : null}
 
-                    {!casesLoading && relatedCases.length > 0 ? (
+                    {!casesLoading && matterCases.length > 0 ? (
                       <div className="flex min-w-0 flex-wrap gap-1.5" role="group" aria-label={p.cases}>
                         <FilterChip
                           active={categoryFilter === 'all'}
                           label={p.filterAll}
-                          count={relatedCases.length}
+                          count={matterCases.length}
                           onClick={() => setCategoryFilter('all')}
                         />
                         {categoryCounts.map(([category, count]) => (
@@ -525,7 +606,7 @@ const ClientProfilePreview = React.forwardRef<ClientProfilePreviewRef, ClientPro
                         <Loader2 className="h-5 w-5 animate-spin text-[#64499D]" />
                         <p className="text-[12px] font-medium">{p.loadingCases}</p>
                       </div>
-                    ) : relatedCases.length === 0 ? (
+                    ) : matterCases.length === 0 ? (
                       <div className="rounded-xl border border-dashed border-slate-200 px-4 py-10 text-center dark:border-zinc-800">
                         <Briefcase className="mx-auto h-6 w-6 text-slate-300 dark:text-zinc-600" aria-hidden />
                         <h3 className="mt-3 text-[13px] font-semibold text-slate-800 dark:text-zinc-200">

@@ -58,7 +58,9 @@ export const TVAStatusWidget: React.FC<Props> = ({ status }) => {
   return (
     <div className="rounded-xl border border-slate-200/90 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950">
       <p className="flex flex-wrap items-center gap-2 text-sm font-semibold text-slate-900 dark:text-white">
-        <Scale className="h-4 w-4 text-slate-500" aria-hidden />
+        <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#64499D] shadow-sm">
+          <Scale size={16} className="text-white" aria-hidden />
+        </span>
         Suivi du seuil TVA — CA cumulé depuis l&apos;ouverture
       </p>
       <div className="mt-3 flex flex-wrap items-center gap-2 text-[13px]">

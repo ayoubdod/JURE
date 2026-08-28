@@ -1,0 +1,13 @@
+{% if is_follow_up %}Follow-up consultation confirmation — {{ reference }}{% else %}Consultation confirmation — {{ reference }}{% endif %}
+
+{% if is_follow_up %}A follow-up consultation has been scheduled with {{ firm_name }}{% if parent_reference %} (following {{ parent_reference }}){% endif %}.{% else %}Your consultation has been scheduled with {{ firm_name }}.{% endif %}
+
+Reference: {{ reference }}
+Title: {{ title }}
+Type: {{ consultation_type }}
+Date & time: {{ consultation_date }}
+Duration: {{ duration_label }}
+Format: {{ format }}
+Attorney(s): {{ attorneys }}
+{% if location_value %}{{ location_label }}: {{ location_value }}{% endif %}
+{% if video_link %}Join: {{ video_link }}{% endif %}

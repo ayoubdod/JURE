@@ -311,6 +311,13 @@
   }
 }
 
+/* Closed dropdowns stay left-aligned unless the value span can grow. */
+html[dir="rtl"] button[role="combobox"] > span:first-of-type {
+  flex: 1 1 auto;
+  min-width: 0;
+  text-align: right !important;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animated-gradient,
   .pulse-glow,

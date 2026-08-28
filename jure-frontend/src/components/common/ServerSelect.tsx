@@ -22,6 +22,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { CheckIcon, ChevronDownIcon, Loader2, RefreshCw, X } from 'lucide-react'
 import { useInFilterPanel } from '@/components/common/filterPanelContext'
+import { useAppTranslation } from '@/i18n'
 
 interface ServerSelectOption {
   [key: string]: any
@@ -36,6 +37,7 @@ interface ServerSelectProps {
   valueKey?: string | ((option: ServerSelectOption) => string)
   id?: string
   nullOption?: ServerSelectOption
+  extraOptions?: ServerSelectOption[]
   className?: string
   disabled?: boolean
   searchPlaceholder?: string
@@ -46,17 +48,20 @@ export default function ServerSelect({
   link,
   value,
   onChange,
-  placeholder = "Select an option",
+  placeholder,
   labelKey = "name",
   valueKey = "id",
   id,
   nullOption,
+  extraOptions,
   className,
   disabled = false,
   searchPlaceholder,
   cleanable = false
 }: ServerSelectProps) {
-
+  const { t, dir } = useAppTranslation()
+  const resolvedPlaceholder = placeholder || t.common.selectOption
+  const resolvedSearchPlaceholder = searchPlaceholder || t.common.search
 
   const [options, setOptions] = useState<ServerSelectOption[]>([])
   const [loading, setLoading] = useState(true)
@@ -64,8 +69,6 @@ export default function ServerSelect({
   const [open, setOpen] = useState(false)
   const wrapRef = useRef<HTMLDivElement>(null)
   const inlineMenu = useInFilterPanel()
-
-  searchPlaceholder = searchPlaceholder || `Search options...`
 
   useEffect(() => {
     if (!open || !inlineMenu) return
@@ -84,7 +87,7 @@ export default function ServerSelect({
       const data = Array.isArray(response.data) ? response.data : response.data.results
       setOptions(data)
     } catch (err) {
-      setError('Server select error')
+      setError(t.common.selectError)
       devError('Error fetching options:', err)
     } finally {
       setLoading(false)
@@ -96,11 +99,23 @@ export default function ServerSelect({
   }, [link])
 
   const allOptions = useMemo(() => {
-    return [...options, ...(nullOption ? [nullOption] : [])]
-  }, [nullOption, options])
+    const extras = extraOptions ?? []
+    const seen = new Set(
+      options.map((option) =>
+        String(typeof valueKey === 'function' ? valueKey(option) : option[valueKey])
+      )
+    )
+    const mergedExtras = extras.filter((option) => {
+      const key = String(typeof valueKey === 'function' ? valueKey(option) : option[valueKey])
+      if (!key || seen.has(key)) return false
+      seen.add(key)
+      return true
+    })
+    return [...mergedExtras, ...options, ...(nullOption ? [nullOption] : [])]
+  }, [extraOptions, nullOption, options, valueKey])
 
   const getSelectedLabel = useMemo((): string => {
-    if (!value) return placeholder
+    if (!value) return resolvedPlaceholder
 
     const selectedOption = allOptions.find(option => {
       const optionValue = typeof valueKey === 'function'
@@ -109,14 +124,14 @@ export default function ServerSelect({
       return String(optionValue) === String(value)
     })
 
-    if (!selectedOption) return placeholder
+    if (!selectedOption) return resolvedPlaceholder
 
     const selectedLabel = typeof labelKey === 'function'
       ? labelKey(selectedOption)
       : selectedOption[labelKey] || ''
 
     return selectedLabel
-  }, [value, placeholder, allOptions, valueKey, labelKey])
+  }, [value, resolvedPlaceholder, allOptions, valueKey, labelKey])
 
   if (loading) {
     return (
@@ -130,7 +145,7 @@ export default function ServerSelect({
       >
         <div className="flex items-center gap-2">
           <Loader2 className="size-4 animate-spin" />
-          <span>Loading...</span>
+          <span>{t.common.loading}</span>
         </div>
       </Button>
     )
@@ -150,9 +165,9 @@ export default function ServerSelect({
 
   const optionList = (
     <Command className="h-auto">
-      <CommandInput placeholder={searchPlaceholder} />
+        <CommandInput placeholder={resolvedSearchPlaceholder} />
       <CommandList className={inlineMenu ? 'max-h-44' : undefined}>
-        <CommandEmpty>No option found</CommandEmpty>
+        <CommandEmpty>{t.common.noResults}</CommandEmpty>
         <CommandGroup>
           {allOptions.map((option) => {
             const optionValue = typeof valueKey === 'function'
@@ -175,7 +190,7 @@ export default function ServerSelect({
               >
                 <CheckIcon
                   className={cn(
-                    "mr-2 size-4",
+                    "me-2 size-4",
                     isSelected ? "opacity-100" : "opacity-0"
                   )}
                 />
@@ -196,10 +211,11 @@ export default function ServerSelect({
       aria-expanded={open}
       className={cn("w-full justify-between", className)}
       disabled={disabled || loading}
+      dir={dir}
       {...(id && { id })}
       onClick={inlineMenu ? () => setOpen((v) => !v) : undefined}
     >
-      <span className="min-w-0 truncate text-start">{getSelectedLabel}</span>
+      <span className={cn("min-w-0 flex-1 truncate", dir === "rtl" ? "text-right" : "text-start")}>{getSelectedLabel}</span>
       <div className="flex items-center gap-1">
         {cleanable && value && (
           <Button
