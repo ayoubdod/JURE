@@ -13,7 +13,7 @@
     "i18n:audit": "npx --yes tsx scripts/i18n-audit.ts"
   },
   "dependencies": {
-    "@diceui/tags-input": "^0.7.2",
+    "@diceui/tags-input": "0.7.2",
     "@emoji-mart/data": "^1.2.1",
     "@emoji-mart/react": "^1.1.1",
     "@fullcalendar/daygrid": "^6.1.19",
