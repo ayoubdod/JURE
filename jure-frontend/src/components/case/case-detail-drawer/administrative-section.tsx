@@ -40,7 +40,7 @@ export function AdministrativeSection({
   c: API.Case;
   onOpenCaseById?: (id: number) => void;
 }) {
-  const { enumPretty } = useAppTranslation();
+  const { enumPretty, t } = useAppTranslation();
   const dutyType = getCaseData(c, 'duty_type') as string | undefined;
   const priority = getCaseData(c, 'priority') as string | undefined;
   const institution =
@@ -68,7 +68,7 @@ export function AdministrativeSection({
     <div className="space-y-8">
       {origin && onOpenCaseById && (
         <section>
-          <SectionTitle>Originated from consultation</SectionTitle>
+          <SectionTitle>{t.cases.pageWorkspace.originatedFrom}</SectionTitle>
           <ConvertedCaseLink
             variant="origin"
             link={origin}

@@ -17,7 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Loader2, X, Wallet } from 'lucide-react';
+import { Loader2, X, Wallet, Banknote, Landmark, FileText } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { addPayment, getCaseFinance } from '@/services/finance/api';
 import { normalizeCaseFinancePayload } from '@/utils/normalizeCaseFinance';
@@ -202,14 +202,17 @@ export const AddPaymentModal: React.FC<Props> = ({ open, onOpenChange, caseId, i
             onValueChange={(v) => v && setMethod(v as API.FinancePaymentMethod)}
             className="mb-4 grid w-full grid-cols-3 gap-2"
           >
-            <ToggleGroupItem value="CASH" className="h-10 text-xs">
-              💵 {t.finance.paymentMethods.CASH}
+            <ToggleGroupItem value="CASH" className="h-10 gap-1.5 text-xs">
+              <Banknote className="h-3.5 w-3.5" aria-hidden />
+              {t.finance.paymentMethods.CASH}
             </ToggleGroupItem>
-            <ToggleGroupItem value="VIREMENT_BANCAIRE" className="h-10 text-xs">
-              🏦 {t.finance.paymentMethods.VIREMENT_BANCAIRE}
+            <ToggleGroupItem value="VIREMENT_BANCAIRE" className="h-10 gap-1.5 text-xs">
+              <Landmark className="h-3.5 w-3.5" aria-hidden />
+              {t.finance.paymentMethods.VIREMENT_BANCAIRE}
             </ToggleGroupItem>
-            <ToggleGroupItem value="CHEQUE" className="h-10 text-xs">
-              📄 {t.finance.paymentMethods.CHEQUE}
+            <ToggleGroupItem value="CHEQUE" className="h-10 gap-1.5 text-xs">
+              <FileText className="h-3.5 w-3.5" aria-hidden />
+              {t.finance.paymentMethods.CHEQUE}
             </ToggleGroupItem>
           </ToggleGroup>
 

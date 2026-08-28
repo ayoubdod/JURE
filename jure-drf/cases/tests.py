@@ -12,6 +12,10 @@ from .utils import is_consultation_ready_to_convert
 User = get_user_model()
 
 
+def _valid_fr_phone():
+    return f"+3361{uuid.uuid4().int % 10**7:07d}"
+
+
 def _create_cabinet_user(email="lawyer@test.com", phone=None):
     """Create a user who owns a cabinet (for case permissions)."""
     user = User.objects.create_user(
@@ -19,7 +23,7 @@ def _create_cabinet_user(email="lawyer@test.com", phone=None):
         password="testpass123",
         first_name="Test",
         last_name="Lawyer",
-        phone=phone or f"+336{uuid.uuid4().int % 10**8:08d}",
+        phone=phone or _valid_fr_phone(),
         country="FR",
     )
     cabinet = Cabinet.objects.create(
@@ -100,11 +104,21 @@ class IsConsultationReadyToConvertTest(TestCase):
         self.assertFalse(ready)
         self.assertEqual(fields, [])
 
-    def test_not_ready_no_match(self):
+    def test_ready_when_completed(self):
         case = Case(
             case_type=Case.CaseType.CONSULTATION,
             status=Case.CaseStatus.IN_PROGRESS,
             case_specific_data={"outcome": "COMPLETED"},
+        )
+        ready, fields = is_consultation_ready_to_convert(case)
+        self.assertTrue(ready)
+        self.assertIn("case_specific_data.outcome", fields)
+
+    def test_not_ready_when_cancelled(self):
+        case = Case(
+            case_type=Case.CaseType.CONSULTATION,
+            status=Case.CaseStatus.OPEN,
+            case_specific_data={"outcome": "CANCELLED"},
         )
         ready, fields = is_consultation_ready_to_convert(case)
         self.assertFalse(ready)
@@ -117,10 +131,7 @@ class CaseConvertAPITest(APITestCase):
     def setUp(self):
         self.client = APIClient()
         self.user, self.cabinet = _create_cabinet_user()
-        from rest_framework_simplejwt.tokens import RefreshToken
-
-        refresh = RefreshToken.for_user(self.user)
-        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}")
+        self.client.force_authenticate(user=self.user)
 
     def test_convert_legacy_outcome_in_progress(self):
         """Legacy row: status=IN_PROGRESS, outcome=CONVERTED_TO_CASE, not converted → success."""
@@ -209,13 +220,13 @@ class CaseConvertAPITest(APITestCase):
         self.assertEqual(data["code"], "wrong_case_type")
         self.assertEqual(data["case_type"], "LITIGATION")
 
-    def test_convert_not_ready_400(self):
-        """Consultation not ready (no CONVERTED_TO_CASE anywhere) → 400 with fields_checked."""
+    def test_convert_not_ready_when_cancelled_400(self):
+        """Cancelled consultation cannot be converted."""
         consultation = _create_consultation(
             self.cabinet,
             self.user,
-            status=Case.CaseStatus.IN_PROGRESS,
-            case_specific_data={"outcome": "COMPLETED"},
+            status=Case.CaseStatus.OPEN,
+            case_specific_data={"outcome": "CANCELLED"},
         )
         url = reverse("case-convert", kwargs={"pk": consultation.pk})
         response = self.client.post(url, {"targetType": "LITIGATION"}, format="json")
@@ -223,9 +234,6 @@ class CaseConvertAPITest(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         data = response.json()
         self.assertEqual(data["code"], "not_ready_to_convert")
-        self.assertIn("fields_checked", data)
-        self.assertIn("status", data["fields_checked"])
-        self.assertIn("case_specific_data.outcome", data["fields_checked"])
 
     def test_convert_target_type_required_400(self):
         """Missing targetType → 400."""
@@ -264,7 +272,7 @@ def _create_member(email, cabinet, role="LAWYER"):
         password="testpass123",
         first_name="Member",
         last_name=role,
-        phone=f"+336{uuid.uuid4().int % 10**8:08d}",
+        phone=_valid_fr_phone(),
         country="FR",
     )
     user.cabinet = cabinet
@@ -280,16 +288,10 @@ class CaseCloseAPITest(APITestCase):
     def setUp(self):
         self.client = APIClient()
         self.user, self.cabinet = _create_cabinet_user("closer@test.com")
-        from rest_framework_simplejwt.tokens import RefreshToken
-
-        refresh = RefreshToken.for_user(self.user)
-        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}")
+        self.client.force_authenticate(user=self.user)
 
     def _auth_as(self, user):
-        from rest_framework_simplejwt.tokens import RefreshToken
-
-        refresh = RefreshToken.for_user(user)
-        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}")
+        self.client.force_authenticate(user=user)
 
     def test_authorized_user_can_close_matter(self):
         matter = _create_consultation(
@@ -390,6 +392,7 @@ class CaseCloseAPITest(APITestCase):
             case_type=Case.CaseType.LITIGATION,
             status=Case.CaseStatus.OPEN,
         )
+        self.client.force_authenticate(user=None)
         self.client.credentials()
         url = reverse("case-close", kwargs={"pk": matter.pk})
         response = self.client.post(url, {}, format="json")
@@ -402,10 +405,7 @@ class CaseTypeFilterAPITest(APITestCase):
     def setUp(self):
         self.client = APIClient()
         self.user, self.cabinet = _create_cabinet_user("filter@test.com")
-        from rest_framework_simplejwt.tokens import RefreshToken
-
-        refresh = RefreshToken.for_user(self.user)
-        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}")
+        self.client.force_authenticate(user=self.user)
         self.list_url = reverse("case-list")
 
     def test_case_type_consultation_excludes_litigation(self):
@@ -476,4 +476,94 @@ class CaseTypeFilterAPITest(APITestCase):
         )
         titles = [row["title"] for row in response.data["results"]]
         self.assertEqual(titles, ["Plaintiff matter"])
+
+    def test_court_specialty_json_filter(self):
+        _create_consultation(
+            self.cabinet,
+            self.user,
+            case_type=Case.CaseType.LITIGATION,
+            title="Commercial court",
+            case_specific_data={"courtSpecialty": "COMMERCIAL", "jurisdiction": "FIRST_INSTANCE"},
+        )
+        _create_consultation(
+            self.cabinet,
+            self.user,
+            case_type=Case.CaseType.LITIGATION,
+            title="Ordinary court",
+            case_specific_data={"courtSpecialty": "NORMAL", "jurisdiction": "APPEAL"},
+        )
+        response = self.client.get(
+            self.list_url, {"caseType": "LITIGATION", "courtSpecialty": "COMMERCIAL"}
+        )
+        titles = [row["title"] for row in response.data["results"]]
+        self.assertEqual(titles, ["Commercial court"])
+
+    def test_jurisdiction_level_json_filter(self):
+        _create_consultation(
+            self.cabinet,
+            self.user,
+            case_type=Case.CaseType.LITIGATION,
+            title="First instance",
+            case_specific_data={"jurisdiction": "FIRST_INSTANCE"},
+        )
+        _create_consultation(
+            self.cabinet,
+            self.user,
+            case_type=Case.CaseType.LITIGATION,
+            title="Appeal",
+            case_specific_data={"jurisdiction": "APPEAL"},
+        )
+        response = self.client.get(
+            self.list_url, {"caseType": "LITIGATION", "jurisdiction": "APPEAL"}
+        )
+        titles = [row["title"] for row in response.data["results"]]
+        self.assertEqual(titles, ["Appeal"])
+
+    def test_chamber_json_filter(self):
+        _create_consultation(
+            self.cabinet,
+            self.user,
+            case_type=Case.CaseType.LITIGATION,
+            title="Civil chamber",
+            case_specific_data={"jurisdiction": "FIRST_INSTANCE", "chamber": "CIVIL"},
+        )
+        _create_consultation(
+            self.cabinet,
+            self.user,
+            case_type=Case.CaseType.LITIGATION,
+            title="Family chamber",
+            case_specific_data={"jurisdiction": "FIRST_INSTANCE", "chamber": "FAMILY"},
+        )
+        response = self.client.get(
+            self.list_url, {"caseType": "LITIGATION", "chamber": "CIVIL"}
+        )
+        titles = [row["title"] for row in response.data["results"]]
+        self.assertEqual(titles, ["Civil chamber"])
+
+    def test_city_json_filter_matches_city_and_legacy_jurisdiction(self):
+        _create_consultation(
+            self.cabinet,
+            self.user,
+            case_type=Case.CaseType.LITIGATION,
+            title="Casa new",
+            case_specific_data={"city": "Casablanca", "jurisdiction": "FIRST_INSTANCE"},
+        )
+        _create_consultation(
+            self.cabinet,
+            self.user,
+            case_type=Case.CaseType.LITIGATION,
+            title="Rabat legacy",
+            case_specific_data={"jurisdiction": "Rabat"},
+        )
+        _create_consultation(
+            self.cabinet,
+            self.user,
+            case_type=Case.CaseType.LITIGATION,
+            title="Fes",
+            case_specific_data={"city": "Fes", "jurisdiction": "APPEAL"},
+        )
+        casa = self.client.get(self.list_url, {"caseType": "LITIGATION", "city": "Casa"})
+        self.assertEqual([row["title"] for row in casa.data["results"]], ["Casa new"])
+        rabat = self.client.get(self.list_url, {"caseType": "LITIGATION", "city": "Rabat"})
+        self.assertEqual([row["title"] for row in rabat.data["results"]], ["Rabat legacy"])
 

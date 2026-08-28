@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
@@ -18,12 +18,24 @@ import { DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import ServerSelect from '@/components/common/ServerSelect';
+import TeamMemberMultiSelect from '@/components/calendar/TeamMemberMultiSelect';
+import ClientCreateModal, { type ClientCreateModalRef } from '@/components/client/ClientCreateModal';
 import { Loader2, Plus, Trash2, ShieldAlert } from 'lucide-react';
 import { useCaseForm } from '@/hooks/useCaseForm';
 import { useToast } from '@/hooks/use-toast';
 import { useAppTranslation } from '@/i18n';
 import ConflictCheckDialog from '@/components/dashboard/ConflictCheckDialog';
 import { cn } from '@/lib/utils';
+import {
+  COURT_SPECIALTIES,
+  JURISDICTION_LEVELS,
+  chambersForJurisdiction,
+  isChamberValidForJurisdiction,
+  isCourtSpecialty,
+  isJurisdictionLevel,
+  type CourtSpecialty,
+  type JurisdictionLevel,
+} from '@/services/case/litigationCourt';
 import {
   CREATE_CANCEL_CLASS,
   CREATE_FOOTER_CLASS,
@@ -44,9 +56,11 @@ export type LitigationFormValues = {
   client_role?: 'PLAINTIFF' | 'DEFENDANT' | null;
   opposing_party_name?: string;
   opposing_counsel?: string;
-  court_name: string;
-  jurisdiction?: string;
+  court_name?: string;
+  court_specialty: CourtSpecialty;
+  jurisdiction?: JurisdictionLevel | '';
   chamber_division?: string;
+  city?: string;
   judge_name?: string;
   court_case_number?: string;
   lead_attorney?: number | null;
@@ -71,6 +85,15 @@ export interface LitigationFormProps {
   onBack?: () => void;
 }
 
+function CourtGroup({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div className="space-y-3">
+      <p className="text-[12px] font-semibold tracking-wide text-slate-500 dark:text-zinc-400">{title}</p>
+      {children}
+    </div>
+  );
+}
+
 const LitigationForm: React.FC<LitigationFormProps> = ({
   initialValues,
   mode,
@@ -80,6 +103,9 @@ const LitigationForm: React.FC<LitigationFormProps> = ({
 }) => {
   const { t } = useAppTranslation();
   const modal = t.cases.modal;
+  const cw = modal.consultationWorkflow;
+  const clientModalRef = useRef<ClientCreateModalRef>(null);
+  const [createdClient, setCreatedClient] = useState<API.Client | null>(null);
 
   const [thirdParties, setThirdParties] = useState<string[]>(
     initialValues?.third_parties?.length ? [...initialValues.third_parties] : ['']
@@ -141,12 +167,26 @@ const LitigationForm: React.FC<LitigationFormProps> = ({
         client_role: yup.string().oneOf(['PLAINTIFF', 'DEFENDANT']).nullable().optional(),
         opposing_party_name: yup.string().optional(),
         opposing_counsel: yup.string().optional(),
-        court_name: yup.string().required(modal.validation.courtNameRequired),
-        jurisdiction: yup.string().optional(),
-        chamber_division: yup.string().optional(),
+        court_name: yup.string().optional(),
+        court_specialty: yup
+          .string()
+          .oneOf([...COURT_SPECIALTIES])
+          .required(modal.validation.courtSpecialtyRequired),
+        jurisdiction: yup
+          .string()
+          .required(modal.validation.jurisdictionRequired)
+          .oneOf([...JURISDICTION_LEVELS], modal.validation.jurisdictionRequired),
+        chamber_division: yup
+          .string()
+          .optional()
+          .test('chamber-matches-jurisdiction', modal.validation.invalidChamber, function (value) {
+            return isChamberValidForJurisdiction(this.parent.jurisdiction, value);
+          }),
+        city: yup.string().optional(),
         judge_name: yup.string().optional(),
         court_case_number: yup.string().optional(),
         lead_attorney: yup.number().nullable().optional(),
+        co_counsel: yup.array().of(yup.number()).optional(),
         filing_date: yup.string().nullable().optional(),
         first_hearing_date: yup.string().nullable().optional(),
         next_hearing_date: yup.string().nullable().optional(),
@@ -172,12 +212,19 @@ const LitigationForm: React.FC<LitigationFormProps> = ({
       client_role: initialValues?.client_role ?? null,
       opposing_party_name: initialValues?.opposing_party_name ?? '',
       opposing_counsel: initialValues?.opposing_counsel ?? '',
-      court_name: initialValues?.court_name ?? '',
-      jurisdiction: initialValues?.jurisdiction ?? '',
+      court_name: '',
+      court_specialty: isCourtSpecialty(initialValues?.court_specialty)
+        ? initialValues.court_specialty
+        : 'NORMAL',
+      jurisdiction: isJurisdictionLevel(initialValues?.jurisdiction)
+        ? initialValues.jurisdiction
+        : '',
       chamber_division: initialValues?.chamber_division ?? '',
+      city: initialValues?.city ?? '',
       judge_name: initialValues?.judge_name ?? '',
       court_case_number: initialValues?.court_case_number ?? '',
       lead_attorney: initialValues?.lead_attorney ?? null,
+      co_counsel: initialValues?.co_counsel ?? [],
       filing_date: initialValues?.filing_date ?? null,
       first_hearing_date: initialValues?.first_hearing_date ?? null,
       next_hearing_date: initialValues?.next_hearing_date ?? null,
@@ -194,6 +241,32 @@ const LitigationForm: React.FC<LitigationFormProps> = ({
     undefined
   );
   const { toast } = useToast();
+
+  const jurisdiction = form.watch('jurisdiction');
+  const leadAttorney = form.watch('lead_attorney');
+  const coCounsel = form.watch('co_counsel') ?? [];
+  const clientId = form.watch('client');
+  const chamberOptions = chambersForJurisdiction(jurisdiction);
+  const currentChamber = form.watch('chamber_division') || '';
+  const chamberList =
+    currentChamber && !chamberOptions.includes(currentChamber)
+      ? [...chamberOptions, currentChamber]
+      : chamberOptions;
+
+  const chamberLabel = (code: string) => {
+    if (jurisdiction === 'FIRST_INSTANCE' && code in modal.options.chamberFirstInstance) {
+      return modal.options.chamberFirstInstance[
+        code as keyof typeof modal.options.chamberFirstInstance
+      ];
+    }
+    if (jurisdiction === 'APPEAL' && code in modal.options.chamberAppeal) {
+      return modal.options.chamberAppeal[code as keyof typeof modal.options.chamberAppeal];
+    }
+    if (jurisdiction === 'CASSATION' && code in modal.options.chamberCassation) {
+      return modal.options.chamberCassation[code as keyof typeof modal.options.chamberCassation];
+    }
+    return code;
+  };
 
   const addThirdParty = () => setThirdParties((p) => [...p, '']);
   const removeThirdParty = (i: number) =>
@@ -219,27 +292,34 @@ const LitigationForm: React.FC<LitigationFormProps> = ({
 
   const handleSubmit = form.handleSubmit(
     (data) => {
+      const lead = data.lead_attorney ?? null;
+      const extraAttorneys = (data.co_counsel ?? [])
+        .map(Number)
+        .filter((id) => Number.isFinite(id) && id > 0 && id !== lead);
       const payload: API.LitigationFormData = {
         case_type: 'LITIGATION',
-        reference: data.reference,
+        reference: mode === 'create' ? '' : data.reference,
         title: data.title,
         litigation_type: data.litigation_type,
         priority: data.priority,
         client: data.client ?? null,
-        assigned_to: data.lead_attorney ?? null,
+        assigned_to: lead,
         client_role: data.client_role ?? null,
         opposing_party_name: data.opposing_party_name || undefined,
         opposing_counsel: data.opposing_counsel || undefined,
         third_parties: thirdParties.filter((s) => s.trim()).length
           ? thirdParties.filter((s) => s.trim())
           : undefined,
-        court_name: data.court_name,
+        court_name: undefined,
+        court_specialty: data.court_specialty,
         jurisdiction: data.jurisdiction || undefined,
         chamber_division: data.chamber_division || undefined,
+        city: data.city || undefined,
         judge_name: data.judge_name || undefined,
         court_case_number: data.court_case_number || undefined,
-        lead_attorney: data.lead_attorney ?? null,
-        co_counsel: form.watch('co_counsel') ?? [],
+        lead_attorney: lead,
+        co_counsel: extraAttorneys,
+        assigned_attorney_ids: extraAttorneys,
         filing_date: data.filing_date || null,
         first_hearing_date: data.first_hearing_date || null,
         next_hearing_date: data.next_hearing_date || null,
@@ -270,6 +350,21 @@ const LitigationForm: React.FC<LitigationFormProps> = ({
     }
   );
 
+  const year = new Date().getFullYear();
+  const referenceDisplay =
+    mode === 'edit' && initialValues?.reference ? initialValues.reference : `L-${year}-••••`;
+
+  const clientLabel = (c: {
+    first_name?: string;
+    last_name?: string;
+    email?: string;
+    phone?: string;
+  }) =>
+    `${c.first_name || ''} ${c.last_name || ''}`.trim() ||
+    c.email ||
+    c.phone ||
+    t.cases.unnamed;
+
   return (
     <>
     <form
@@ -279,25 +374,21 @@ const LitigationForm: React.FC<LitigationFormProps> = ({
     >
       <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-contain px-6 py-5 md:px-7">
       <div className="space-y-6">
-      {form.formState.errors.case_specific_data && (
+      {(form.formState.errors as { case_specific_data?: { message?: string } }).case_specific_data && (
         <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-[13px] text-red-700 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-300">
-          {form.formState.errors.case_specific_data.message}
+          {(form.formState.errors as { case_specific_data?: { message?: string } }).case_specific_data?.message}
         </div>
       )}
       <CreateFormSection index="01" title={modal.sections.basicInfo}>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-2">
             <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-              {modal.fields.reference} <span className="text-red-500">*</span>
+              {modal.fields.reference}
             </label>
-            <Input
-              {...form.register('reference')}
-              placeholder={modal.placeholders.reference}
-              className={CREATE_INPUT_CLASS}
-            />
-            {form.formState.errors.reference && (
-              <p className="text-red-500 text-xs">{form.formState.errors.reference.message}</p>
-            )}
+            <Input value={referenceDisplay} readOnly disabled className={CREATE_INPUT_CLASS} />
+            <p className="text-[12px] text-slate-500 dark:text-slate-400">
+              {modal.hints.referenceGenerated}
+            </p>
           </div>
           <div className="space-y-2">
             <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
@@ -336,7 +427,7 @@ const LitigationForm: React.FC<LitigationFormProps> = ({
           </div>
           <div className="space-y-2">
             <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-              {modal.fields.priority}
+              {modal.fields.priority} <span className="text-red-500">*</span>
             </label>
             <Select
               value={form.watch('priority')}
@@ -365,15 +456,29 @@ const LitigationForm: React.FC<LitigationFormProps> = ({
             </label>
             <ServerSelect
               link="/clients/clients/"
-              value={form.watch('client')}
+              value={clientId}
               onChange={(v) => form.setValue('client', v ?? null)}
-              labelKey={(c: { first_name?: string; last_name?: string; email?: string }) =>
-                `${c.first_name || ''} ${c.last_name || ''}`.trim() || c.email || t.cases.unnamed
-              }
+              labelKey={clientLabel}
+              extraOptions={createdClient ? [createdClient] : undefined}
               cleanable
               placeholder={modal.placeholders.client}
+              searchPlaceholder={modal.placeholders.client}
               className={CREATE_SERVER_SELECT_CLASS}
             />
+            {clientId && createdClient && Number(createdClient.id) === Number(clientId) ? (
+              <p className="text-[12px] text-emerald-600 dark:text-emerald-400">
+                {clientLabel(createdClient)} · {modal.hints.clientSelected}
+              </p>
+            ) : null}
+            <Button
+              type="button"
+              variant="outline"
+              className={CREATE_CANCEL_CLASS}
+              onClick={() => clientModalRef.current?.show()}
+            >
+              <Plus className="h-4 w-4" />
+              {cw.addClient}
+            </Button>
           </div>
           <div className="space-y-2">
             <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
@@ -468,60 +573,134 @@ const LitigationForm: React.FC<LitigationFormProps> = ({
       </CreateFormSection>
 
       <CreateFormSection index="03" title={modal.sections.courtJurisdiction}>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-              {modal.fields.courtName} <span className="text-red-500">*</span>
-            </label>
-            <Input
-              {...form.register('court_name')}
-              placeholder={modal.placeholders.court}
-              className={CREATE_INPUT_CLASS}
-            />
-            {form.formState.errors.court_name && (
-              <p className="text-red-500 text-xs">{form.formState.errors.court_name.message}</p>
-            )}
-          </div>
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-              {modal.fields.jurisdictionCity}
-            </label>
-            <Input
-              {...form.register('jurisdiction')}
-              placeholder={modal.placeholders.city}
-              className={CREATE_INPUT_CLASS}
-            />
-          </div>
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-              {modal.fields.chamberDivision}
-            </label>
-            <Input
-              {...form.register('chamber_division')}
-              placeholder={modal.placeholders.division}
-              className={CREATE_INPUT_CLASS}
-            />
-          </div>
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-              {modal.fields.judgeName}
-            </label>
-            <Input
-              {...form.register('judge_name')}
-              placeholder={modal.placeholders.judge}
-              className={CREATE_INPUT_CLASS}
-            />
-          </div>
-          <div className="sm:col-span-2 space-y-2">
-            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-              {modal.fields.courtCaseNumber}
-            </label>
-            <Input
-              {...form.register('court_case_number')}
-              placeholder={modal.placeholders.number}
-              className={CREATE_INPUT_CLASS}
-            />
-          </div>
+        <div className="space-y-6">
+          <CourtGroup title={modal.sections.courtTribunal}>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                {modal.fields.courtSpecialty} <span className="text-red-500">*</span>
+              </label>
+              <Select
+                value={form.watch('court_specialty')}
+                onValueChange={(v) =>
+                  form.setValue('court_specialty', v as CourtSpecialty, { shouldValidate: true })
+                }
+              >
+                <SelectTrigger className={CREATE_SELECT_CLASS}>
+                  <SelectValue placeholder={modal.placeholders.selectSpecialty} />
+                </SelectTrigger>
+                <SelectContent>
+                  {COURT_SPECIALTIES.map((value) => (
+                    <SelectItem key={value} value={value}>
+                      {modal.options.courtSpecialty[value]}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {form.formState.errors.court_specialty && (
+                <p className="text-red-500 text-xs">
+                  {form.formState.errors.court_specialty.message}
+                </p>
+              )}
+            </div>
+          </CourtGroup>
+
+          <CourtGroup title={modal.sections.courtLevel}>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                  {modal.fields.jurisdictionLevel} <span className="text-red-500">*</span>
+                </label>
+                <Select
+                  value={jurisdiction || undefined}
+                  onValueChange={(v) => {
+                    form.setValue('jurisdiction', v as JurisdictionLevel, { shouldValidate: true });
+                    form.setValue('chamber_division', '', { shouldValidate: true });
+                  }}
+                >
+                  <SelectTrigger className={CREATE_SELECT_CLASS}>
+                    <SelectValue placeholder={modal.placeholders.selectJurisdiction} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {JURISDICTION_LEVELS.map((value) => (
+                      <SelectItem key={value} value={value}>
+                        {modal.options.jurisdictionLevel[value]}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {form.formState.errors.jurisdiction && (
+                  <p className="text-red-500 text-xs">{form.formState.errors.jurisdiction.message}</p>
+                )}
+              </div>
+              {isJurisdictionLevel(jurisdiction) ? (
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                    {modal.fields.chamberDivision}
+                  </label>
+                  <Select
+                    value={currentChamber || undefined}
+                    onValueChange={(v) =>
+                      form.setValue('chamber_division', v, { shouldValidate: true })
+                    }
+                  >
+                    <SelectTrigger className={CREATE_SELECT_CLASS}>
+                      <SelectValue placeholder={modal.placeholders.selectChamber} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {chamberList.map((value) => (
+                        <SelectItem key={value} value={value}>
+                          {chamberLabel(value)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {form.formState.errors.chamber_division && (
+                    <p className="text-red-500 text-xs">
+                      {form.formState.errors.chamber_division.message}
+                    </p>
+                  )}
+                </div>
+              ) : null}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                  {modal.fields.city}
+                </label>
+                <Input
+                  {...form.register('city')}
+                  placeholder={modal.placeholders.city}
+                  className={CREATE_INPUT_CLASS}
+                />
+              </div>
+            </div>
+          </CourtGroup>
+
+          <CourtGroup title={modal.sections.courtJudicial}>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                  {modal.fields.judgePresident}
+                </label>
+                <Input
+                  {...form.register('judge_name')}
+                  placeholder={modal.placeholders.judge}
+                  className={CREATE_INPUT_CLASS}
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                  {modal.fields.courtCaseNumber}
+                </label>
+                <Input
+                  {...form.register('court_case_number')}
+                  placeholder={modal.placeholders.number}
+                  className={CREATE_INPUT_CLASS}
+                />
+                <p className="text-[12px] text-slate-500 dark:text-slate-400">
+                  {modal.hints.courtCaseNumberDistinct}
+                </p>
+              </div>
+            </div>
+          </CourtGroup>
         </div>
       </CreateFormSection>
 
@@ -533,21 +712,38 @@ const LitigationForm: React.FC<LitigationFormProps> = ({
             </label>
             <ServerSelect
               link="/cabinets/members/select_list"
-              value={form.watch('lead_attorney')}
-              onChange={(v) => form.setValue('lead_attorney', v ? Number(v) : null)}
-              labelKey="email"
+              value={leadAttorney}
+              onChange={(v) => {
+                const nextLead = v ? Number(v) : null;
+                form.setValue('lead_attorney', nextLead);
+                if (nextLead) {
+                  form.setValue(
+                    'co_counsel',
+                    (form.getValues('co_counsel') ?? []).filter((id) => Number(id) !== nextLead)
+                  );
+                }
+              }}
+              labelKey={(m: { first_name?: string; last_name?: string; email?: string }) =>
+                `${m.first_name || ''} ${m.last_name || ''}`.trim() || m.email
+              }
               cleanable
+              searchPlaceholder={cw.searchAttorneys}
               className={CREATE_SERVER_SELECT_CLASS}
             />
           </div>
-          <div className="space-y-2">
+          <div className="sm:col-span-2 space-y-2">
             <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-              {modal.fields.coCounsel}{' '}
-              <span className="text-slate-400 text-xs">{modal.hints.coCounselMulti}</span>
+              {modal.fields.additionalAttorneys}
             </label>
             <p className="text-[12px] text-slate-500 dark:text-slate-400">
-              {modal.hints.coCounselHint}
+              {modal.hints.additionalAttorneysHint}
             </p>
+            <TeamMemberMultiSelect
+              value={coCounsel}
+              excludeIds={leadAttorney ? [Number(leadAttorney)] : []}
+              onChange={(ids) => form.setValue('co_counsel', ids)}
+              placeholder={cw.searchAttorneys}
+            />
           </div>
         </div>
       </CreateFormSection>
@@ -647,7 +843,7 @@ const LitigationForm: React.FC<LitigationFormProps> = ({
           </div>
           <div className="space-y-2">
             <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-              {modal.fields.status}
+              {modal.fields.status} <span className="text-red-500">*</span>
             </label>
             <Select
               value={form.watch('status')}
@@ -692,6 +888,13 @@ const LitigationForm: React.FC<LitigationFormProps> = ({
         </Button>
       </DialogFooter>
     </form>
+    <ClientCreateModal
+      ref={clientModalRef}
+      onSuccess={(client) => {
+        setCreatedClient(client);
+        form.setValue('client', client.id);
+      }}
+    />
     <ConflictCheckDialog
       open={conflictOpen}
       onOpenChange={setConflictOpen}

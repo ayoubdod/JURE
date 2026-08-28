@@ -34,6 +34,8 @@ export type WorkspaceKpiItem = {
   label: string;
   value: number | null;
   accent: string;
+  onClick?: () => void;
+  active?: boolean;
 };
 
 export function WorkspaceKpiStrip({
@@ -51,16 +53,16 @@ export function WorkspaceKpiStrip({
       role="region"
       aria-label={ariaLabel}
     >
-      {items.map((item) => (
-        <div
-          key={item.key}
-          className={cn(
-            'flex min-w-0 items-center gap-2 rounded-md border border-slate-200/90 dark:border-slate-800',
-            'bg-white dark:bg-slate-950 border-l-[3px] px-2.5 py-1.5',
-            'sm:snap-start sm:flex-1 sm:shrink-0 sm:min-w-[5.75rem]',
-            item.accent
-          )}
-        >
+      {items.map((item) => {
+        const className = cn(
+          'flex min-w-0 items-center gap-2 rounded-md border border-slate-200/90 dark:border-slate-800',
+          'bg-white dark:bg-slate-950 border-l-[3px] px-2.5 py-1.5 text-start',
+          'sm:snap-start sm:flex-1 sm:shrink-0 sm:min-w-[5.75rem]',
+          item.accent,
+          item.active && 'ring-1 ring-[#64499D]/35 border-[#64499D]/40',
+          item.onClick && 'cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-900'
+        );
+        const body = (
           <div className="min-w-0">
             <p className="text-[10px] font-medium uppercase tracking-[0.06em] text-slate-500 dark:text-slate-400 leading-none">
               {item.label}
@@ -73,8 +75,17 @@ export function WorkspaceKpiStrip({
               </p>
             )}
           </div>
-        </div>
-      ))}
+        );
+        return item.onClick ? (
+          <button key={item.key} type="button" className={className} onClick={item.onClick}>
+            {body}
+          </button>
+        ) : (
+          <div key={item.key} className={className}>
+            {body}
+          </div>
+        );
+      })}
     </div>
   );
 }

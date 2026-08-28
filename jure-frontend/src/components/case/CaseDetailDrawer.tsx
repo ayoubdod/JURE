@@ -101,7 +101,8 @@ function CaseBody({ c, onOpenCaseById }: { c: API.Case; onOpenCaseById?: (id: nu
 
 function canShowConvertToCase(c: API.Case): boolean {
   if (normalizeCaseType(c) !== 'CONSULTATION') return false;
-  if (getConsultationWorkflowStatus(c) !== 'CONVERTED_TO_CASE') return false;
+  const outcome = getConsultationWorkflowStatus(c);
+  if (outcome === 'CANCELLED') return false;
   return getConvertedToCase(c) == null;
 }
 

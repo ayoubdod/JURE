@@ -32,10 +32,20 @@ export type GetCasesParams = {
     priorityIn?: string;
     institution?: string;
     courtName?: string;
+    courtSpecialty?: string;
     jurisdiction?: string;
+    chamber?: string;
+    city?: string;
     opposingParty?: string;
     dateField?: string;
     category?: string;
+    /** When true, include follow-up rows (C-YEAR-NNNN-F01). Default API excludes them. */
+    includeFollowUps?: boolean | string;
+    upcoming?: boolean | string;
+    thisMonth?: boolean | string;
+    converted?: boolean | string | number;
+    followUpFilter?: 'required' | 'has' | 'none' | string;
+    assignedToIn?: string;
 };
 
 export const apiGetCases = (params?: GetCasesParams) =>
@@ -94,4 +104,27 @@ export type CloseCaseResponse = {
 /** Persist matter closure: POST /api/v1/cases/:id/close/ */
 export const apiCloseCase = (id: number, body?: CloseCasePayload) =>
     axiosInstance.post<CloseCaseResponse>(`${CASES_BASE}${id}/close/`, body ?? {});
+
+export const apiCreateFollowUpConsultation = (parentId: number, body: Record<string, unknown>) =>
+    axiosInstance.post<API.Case>(`${CASES_BASE}${parentId}/follow-ups/`, body);
+
+export const apiRetryConsultationEmail = (id: number) =>
+    axiosInstance.post<{ success: boolean; emailConfirmation?: API.Case['emailConfirmation'] }>(
+      `${CASES_BASE}${id}/send-confirmation/`,
+      {}
+    );
+
+export const apiGetCaseAttachments = (id: number) =>
+    axiosInstance.get<API.CaseAttachment[]>(`${CASES_BASE}${id}/attachments/`);
+
+export const apiUploadCaseAttachment = (id: number, file: File) => {
+    const form = new FormData();
+    form.append('file', file);
+    return axiosInstance.post<API.CaseAttachment>(`${CASES_BASE}${id}/attachments/`, form, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+    });
+};
+
+export const apiDeleteCaseAttachment = (caseId: number, attachmentId: number) =>
+    axiosInstance.delete(`${CASES_BASE}${caseId}/attachments/${attachmentId}/`);
 

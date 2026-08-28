@@ -1,0 +1,33 @@
+{% extends "emails/base/layout.html" %}
+{% load i18n %}
+
+{% block title %}{{ email_title }}{% endblock %}
+
+{% block content %}
+<p style="margin:0 0 16px 0;font-size:16px;line-height:1.6;color:#17141F;">
+  {% if is_follow_up %}
+    A follow-up consultation has been scheduled with {{ firm_name }}{% if parent_reference %} (following {{ parent_reference }}){% endif %}.
+  {% else %}
+    Your consultation has been scheduled with {{ firm_name }}.
+  {% endif %}
+</p>
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="border:1px solid #E8E6ED;border-radius:10px;overflow:hidden;">
+  {% include "emails/base/field_row.html" with label="Reference" primary=reference %}
+  {% include "emails/base/field_row.html" with label="Title" primary=title %}
+  {% include "emails/base/field_row.html" with label="Type" primary=consultation_type %}
+  {% include "emails/base/field_row.html" with label="Date & time" primary=consultation_date %}
+  {% include "emails/base/field_row.html" with label="Duration" primary=duration_label %}
+  {% include "emails/base/field_row.html" with label="Format" primary=format %}
+  {% include "emails/base/field_row.html" with label="Attorney(s)" primary=attorneys %}
+  {% if location_value %}
+    {% if video_link %}
+      {% include "emails/base/field_row.html" with label=location_label primary=location_value secondary=join_label secondary_href=video_link last=True %}
+    {% else %}
+      {% include "emails/base/field_row.html" with label=location_label primary=location_value last=True %}
+    {% endif %}
+  {% endif %}
+</table>
+{% if video_link %}
+  {% include "emails/base/button.html" with cta_url=video_link cta_label=join_label %}
+{% endif %}
+{% endblock %}

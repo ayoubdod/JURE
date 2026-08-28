@@ -1,5 +1,5 @@
-import CaseTypeWorkspace from '@/components/case/workspace/CaseTypeWorkspace';
+import LitigationWorkspace from '@/components/case/workspace/LitigationWorkspace';
 
-export default function LitigationWorkspace() {
-  return <CaseTypeWorkspace kind="LITIGATION" />;
+export default function LitigationWorkspacePage() {
+  return <LitigationWorkspace />;
 }

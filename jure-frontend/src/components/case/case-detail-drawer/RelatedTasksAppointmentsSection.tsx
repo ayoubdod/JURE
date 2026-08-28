@@ -101,7 +101,11 @@ export function RelatedTasksAppointmentsSection({
     >
       <div className="flex flex-wrap items-center gap-2 gap-y-1 mb-4">
         <h3 className="text-[10px] font-semibold uppercase tracking-[0.1em] text-slate-500 dark:text-slate-400">
-          Tasks &amp; Appointments
+          {showTasks && showAppointments
+            ? `${t.cases.pageWorkspace.tabs.tasks} & ${t.cases.pageWorkspace.tabs.appointments}`
+            : showTasks
+              ? t.cases.pageWorkspace.tabs.tasks
+              : t.cases.pageWorkspace.tabs.appointments}
         </h3>
         <span className="text-[10px] text-slate-500 dark:text-slate-400 tabular-nums">
           Tasks ({taskCount}) · Appointments ({apptCount})

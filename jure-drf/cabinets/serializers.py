@@ -46,7 +46,7 @@ class CabinetSerializer(ModelSerializer):
 class CabinetMemberSelectionSerializer(ModelSerializer):
     class Meta:
         model = User
-        fields = ["id", "email"]
+        fields = ["id", "email", "first_name", "last_name"]
 
 class CabinetMemberSerializer(FlexFieldsModelSerializer):
     assigned_in_progress_cases_count = serializers.IntegerField(

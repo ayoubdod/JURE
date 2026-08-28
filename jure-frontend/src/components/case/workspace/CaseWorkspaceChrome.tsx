@@ -13,6 +13,8 @@ export type WorkspaceKpiItem = {
   label: string;
   value: number;
   accent: string;
+  onClick?: () => void;
+  active?: boolean;
 };
 
 function AnimatedStatValue({ value }: { value: number }) {
@@ -74,6 +76,10 @@ export interface CaseWorkspaceChromeProps {
   onPageChange: (page: number) => void;
   onPageSizeChange: (size: number) => void;
   holderRef?: (el: HTMLDivElement | null) => void;
+  banner?: React.ReactNode;
+  filterFooter?: React.ReactNode;
+  filterCount?: number;
+  paginationItemLabel?: string;
 }
 
 export default function CaseWorkspaceChrome({
@@ -104,6 +110,10 @@ export default function CaseWorkspaceChrome({
   onPageChange,
   onPageSizeChange,
   holderRef,
+  banner,
+  filterFooter,
+  filterCount,
+  paginationItemLabel,
 }: CaseWorkspaceChromeProps) {
   const { t, tf } = useAppTranslation();
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -195,16 +205,16 @@ export default function CaseWorkspaceChrome({
           role="region"
           aria-label={t.cases.aria.matterStats}
         >
-          {kpis.map((item) => (
-            <div
-              key={item.key}
-              className={cn(
-                'cases-kpi-chip snap-start shrink-0 flex items-center gap-2 rounded-md border border-slate-200/90 dark:border-slate-800',
-                'bg-white dark:bg-slate-950 border-l-[3px] px-2.5 py-1.5 min-w-[5.75rem]',
-                'sm:flex-1 sm:min-w-0',
-                item.accent
-              )}
-            >
+          {kpis.map((item) => {
+            const chipClass = cn(
+              'cases-kpi-chip snap-start shrink-0 flex items-center gap-2 rounded-md border border-slate-200/90 dark:border-slate-800',
+              'bg-white dark:bg-slate-950 border-l-[3px] px-2.5 py-1.5 min-w-[5.75rem] text-start',
+              'sm:flex-1 sm:min-w-0',
+              item.accent,
+              item.active && 'ring-1 ring-[#64499D]/35 border-[#64499D]/40',
+              item.onClick && 'cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-900'
+            );
+            const body = (
               <div className="min-w-0">
                 <p className="text-[10px] font-medium uppercase tracking-[0.06em] text-slate-500 dark:text-slate-400 leading-none">
                   {item.label}
@@ -213,8 +223,17 @@ export default function CaseWorkspaceChrome({
                   <AnimatedStatValue value={item.value} />
                 </p>
               </div>
-            </div>
-          ))}
+            );
+            return item.onClick ? (
+              <button key={item.key} type="button" className={chipClass} onClick={item.onClick}>
+                {body}
+              </button>
+            ) : (
+              <div key={item.key} className={chipClass}>
+                {body}
+              </div>
+            );
+          })}
         </div>
 
         <div
@@ -237,13 +256,14 @@ export default function CaseWorkspaceChrome({
 
               <MobileFilterSheet
                 title={ws.filters}
-                count={hasActiveFilters ? 1 : 0}
+                count={filterCount ?? (hasActiveFilters ? 1 : 0)}
                 footer={
-                  hasActiveFilters ? (
+                  filterFooter ??
+                  (hasActiveFilters ? (
                     <Button variant="ghost" size="sm" className="h-9 w-full text-[12px]" onClick={onResetFilters}>
                       {t.cases.reset}
                     </Button>
-                  ) : null
+                  ) : null)
                 }
               >
                 {renderFilters()}
@@ -257,6 +277,7 @@ export default function CaseWorkspaceChrome({
             errorState
           ) : (
             <>
+              {banner}
               <div className="md:hidden">{isLoading || totalCount > 0 ? mobileList : emptyState}</div>
               <div className="hidden md:block">
                 {isLoading || totalCount > 0 ? children : emptyState}
@@ -275,7 +296,9 @@ export default function CaseWorkspaceChrome({
           isLoading={isLoading}
           onPageChange={onPageChange}
           onPageSizeChange={onPageSizeChange}
+          itemLabel={paginationItemLabel}
           pageSizeOptions={[
+            { value: '25', label: '25' },
             { value: '20', label: '20 per page' },
             { value: '50', label: '50 per page' },
             { value: '100', label: '100 per page' },

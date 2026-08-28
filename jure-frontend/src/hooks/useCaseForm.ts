@@ -5,6 +5,7 @@ import { isAxiosError } from 'axios';
 import { apiCreateCase, apiUpdateCase } from '@/services/case/api';
 import { toBackendCaseCreatePayload, toBackendCaseUpdatePayload } from '@/services/case/payloadBuilder';
 import { getCaseValidationErrors } from '@/services/case/validationErrors';
+import { useToast } from '@/hooks/use-toast';
 import type { UseFormSetError } from 'react-hook-form';
 
 export type CaseFormSetError = UseFormSetError<Record<string, unknown>>;
@@ -15,6 +16,7 @@ export function useCaseForm(
   onHide?: () => void
 ) {
   const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
 
   const handleCreate = useCallback(
     async (data: API.CaseCreatePayload) => {
@@ -43,12 +45,15 @@ export function useCaseForm(
           if (messages.length > 0 && !mapped.case_specific_data) {
             setError('case_specific_data' as never, { type: 'server', message: messages.join(' ') });
           }
+          if (messages.length > 0) {
+            toast({ title: 'Could not save', description: messages[0], variant: 'destructive' });
+          }
         }
       } finally {
         setIsLoading(false);
       }
     },
-    [setError, onSuccess, onHide]
+    [setError, onSuccess, onHide, toast]
   );
 
   const handleUpdate = useCallback(

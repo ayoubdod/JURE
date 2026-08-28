@@ -21,7 +21,7 @@ export function LitigationSection({
   c: API.Case;
   onOpenCaseById?: (id: number) => void;
 }) {
-  const { enumPretty } = useAppTranslation();
+  const { enumPretty, t } = useAppTranslation();
   const litigationType = getCaseData(c, 'litigation_type') as string | undefined;
   const priority = getCaseData(c, 'priority') as string | undefined;
   const courtCaseNumber = getCaseData(c, 'court_case_number') as string | undefined;
@@ -36,10 +36,35 @@ export function LitigationSection({
     : typeof rawThird === 'string' && rawThird
       ? [rawThird]
       : [];
-  const courtName = (getCaseData(c, 'court_name') as string) ?? c.court ?? '';
+  const courtSpecialty = (getCaseData(c, 'court_specialty') as string) ?? '';
   const jurisdiction = (getCaseData(c, 'jurisdiction') as string) ?? '';
+  const city = (getCaseData(c, 'city') as string) ?? '';
   const chamber = (getCaseData(c, 'chamber_division') as string) ?? (getCaseData(c, 'chamber') as string) ?? '';
   const judgeName = (getCaseData(c, 'judge_name') as string) ?? '';
+  const jurisdictionLevelLabel =
+    jurisdiction && jurisdiction in t.cases.modal.options.jurisdictionLevel
+      ? t.cases.modal.options.jurisdictionLevel[
+          jurisdiction as keyof typeof t.cases.modal.options.jurisdictionLevel
+        ]
+      : em(jurisdiction);
+  const chamberLabel = (() => {
+    if (jurisdiction === 'FIRST_INSTANCE' && chamber in t.cases.modal.options.chamberFirstInstance) {
+      return t.cases.modal.options.chamberFirstInstance[
+        chamber as keyof typeof t.cases.modal.options.chamberFirstInstance
+      ];
+    }
+    if (jurisdiction === 'APPEAL' && chamber in t.cases.modal.options.chamberAppeal) {
+      return t.cases.modal.options.chamberAppeal[
+        chamber as keyof typeof t.cases.modal.options.chamberAppeal
+      ];
+    }
+    if (jurisdiction === 'CASSATION' && chamber in t.cases.modal.options.chamberCassation) {
+      return t.cases.modal.options.chamberCassation[
+        chamber as keyof typeof t.cases.modal.options.chamberCassation
+      ];
+    }
+    return chamber;
+  })();
   const lead = c.assigned_to as API.User | null | undefined;
   const coCounsel = coCounselPills(getCaseData(c, 'co_counsel'));
   const firstHearing = getCaseData(c, 'first_hearing_date') as string | undefined;
@@ -60,7 +85,7 @@ export function LitigationSection({
     <div className="space-y-8">
       {origin && onOpenCaseById && (
         <section>
-          <SectionTitle>Originated from consultation</SectionTitle>
+          <SectionTitle>{t.cases.pageWorkspace.originatedFrom}</SectionTitle>
           <ConvertedCaseLink
             variant="origin"
             link={origin}
@@ -69,24 +94,24 @@ export function LitigationSection({
         </section>
       )}
       <section>
-        <SectionTitle>Case overview</SectionTitle>
+        <SectionTitle>{t.cases.pageWorkspace.overview}</SectionTitle>
         <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Litigation type">
+          <Field label={t.cases.modal.fields.litigationType}>
             {litigationType ? enumPretty(litigationType) : '—'}
           </Field>
-          <Field label="Status">{em(enumPretty(c.status) || c.status)}</Field>
-          <Field label="Priority">{em(priority ? enumPretty(priority) : priority)}</Field>
-          <Field label="Court case number">
+          <Field label={t.cases.modal.fields.status}>{em(enumPretty(c.status) || c.status)}</Field>
+          <Field label={t.cases.modal.fields.priority}>{em(priority ? enumPretty(priority) : priority)}</Field>
+          <Field label={t.cases.modal.fields.courtCaseNumber}>
             {courtCaseNumber ? <span className="font-mono text-[12px]">{courtCaseNumber}</span> : '—'}
           </Field>
-          <Field label="Filing date">{filingDate ? formatDrawerDate(filingDate) : '—'}</Field>
+          <Field label={t.cases.modal.fields.filingDate}>{filingDate ? formatDrawerDate(filingDate) : '—'}</Field>
         </div>
       </section>
 
       <section>
-        <SectionTitle>Parties</SectionTitle>
+        <SectionTitle>{t.cases.modal.sections.parties}</SectionTitle>
         <div className="space-y-4">
-          <Field label="Client">
+          <Field label={t.cases.modal.fields.relatedClient}>
             <span>{clientName}</span>
             {clientRole && (
               <span className="ml-2 inline-flex rounded-full bg-slate-100 dark:bg-slate-800 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-300">
@@ -94,66 +119,71 @@ export function LitigationSection({
               </span>
             )}
           </Field>
-          <Field label="Opposing party">{em(opposingParty)}</Field>
-          <Field label="Opposing counsel">{em(opposingCounsel)}</Field>
-          <Field label="Third parties / witnesses">
+          <Field label={t.cases.modal.fields.opposingPartyName}>{em(opposingParty)}</Field>
+          <Field label={t.cases.modal.fields.opposingCounsel}>{em(opposingCounsel)}</Field>
+          <Field label={t.cases.modal.fields.thirdParties}>
             <TagList items={thirdParties.filter(Boolean)} />
           </Field>
         </div>
       </section>
 
       <section>
-        <SectionTitle>Court & jurisdiction</SectionTitle>
+        <SectionTitle>{t.cases.modal.sections.courtJurisdiction}</SectionTitle>
         <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Court name">{em(courtName)}</Field>
-          <Field label="Jurisdiction / city">{em(jurisdiction)}</Field>
-          <Field label="Chamber / division">{em(chamber)}</Field>
-          <Field label="Judge name">{em(judgeName)}</Field>
+          <Field label={t.cases.modal.fields.courtSpecialty}>
+            {courtSpecialty ? t.cases.modal.options.courtSpecialty[courtSpecialty as keyof typeof t.cases.modal.options.courtSpecialty] ?? enumPretty(courtSpecialty) : '—'}
+          </Field>
+          <Field label={t.cases.modal.fields.jurisdictionLevel}>
+            {jurisdictionLevelLabel}
+          </Field>
+          <Field label={t.cases.modal.fields.chamberDivision}>{em(chamberLabel)}</Field>
+          <Field label={t.cases.modal.fields.city}>{em(city)}</Field>
+          <Field label={t.cases.modal.fields.judgePresident}>{em(judgeName)}</Field>
         </div>
       </section>
 
       <section>
-        <SectionTitle>Legal team</SectionTitle>
+        <SectionTitle>{t.cases.modal.sections.assignedTeam}</SectionTitle>
         <div className="space-y-4">
-          <Field label="Lead attorney">
+          <Field label={t.cases.modal.fields.leadAttorney}>
             {lead ? `${lead.first_name ?? ''} ${lead.last_name ?? ''}`.trim() || em(lead.email) : '—'}
           </Field>
-          <Field label="Co-counsel">
+          <Field label={t.cases.modal.fields.additionalAttorneys}>
             <TagList items={coCounsel} />
           </Field>
         </div>
       </section>
 
       <section>
-        <SectionTitle>Timeline & deadlines</SectionTitle>
+        <SectionTitle>{t.cases.modal.sections.timelineDeadlines}</SectionTitle>
         <div className="rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/50 px-2">
-          <TimelineRow label="Filing date" dateIso={filingDate} />
-          <TimelineRow label="First hearing date" dateIso={firstHearing} />
-          <TimelineRow label="Next hearing date" dateIso={nextHearing} highlight />
-          <TimelineRow label="Statute of limitations" dateIso={statute} />
+          <TimelineRow label={t.cases.modal.fields.filingDate} dateIso={filingDate} />
+          <TimelineRow label={t.cases.modal.fields.firstHearingDate} dateIso={firstHearing} />
+          <TimelineRow label={t.cases.modal.fields.nextHearingDate} dateIso={nextHearing} highlight />
+          <TimelineRow label={t.cases.modal.fields.statuteOfLimitationsDate} dateIso={statute} />
           {keyDeadlines.map((kd, i) => (
             <TimelineRow
               key={`${kd?.label ?? 'd'}-${i}`}
-              label={kd?.label ? String(kd.label) : 'Deadline'}
+              label={kd?.label ? String(kd.label) : t.cases.modal.fields.deadline}
               dateIso={kd?.date as string}
             />
           ))}
         </div>
         <div className="mt-3 space-y-2">
           <p className="text-[11px] font-medium uppercase tracking-[0.08em] text-slate-500">
-            Calculated legal deadlines
+            {t.cases.modal.fields.calculatedLegalDeadlines}
           </p>
           <CaseLegalDeadlinesList caseId={c.id} />
         </div>
       </section>
 
       <section>
-        <SectionTitle>Case details</SectionTitle>
+        <SectionTitle>{t.cases.modal.sections.caseDetails}</SectionTitle>
         <div className="space-y-4">
-          <Field label="Description / facts">
+          <Field label={t.cases.modal.fields.descriptionFacts}>
             {c.description?.trim() ? <LongText>{c.description}</LongText> : '—'}
           </Field>
-          <Field label="Legal arguments">
+          <Field label={t.cases.modal.fields.legalArguments}>
             {legalArguments.trim() ? <LongText>{legalArguments}</LongText> : '—'}
           </Field>
         </div>

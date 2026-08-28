@@ -27,24 +27,14 @@ def is_consultation_ready_to_convert(case: "Case") -> Tuple[bool, list[str]]:
     fields_checked = []
     data = case.case_specific_data or {}
 
-    # 1. Case.status == CONVERTED_TO_CASE
     fields_checked.append("status")
-    if case.status == CONVERTED_TO_CASE:
-        return True, fields_checked
-
-    # 2. case_specific_data.outcome (support snake_case and camelCase)
-    outcome_val = data.get("outcome") or data.get("Outcome")
     fields_checked.append("case_specific_data.outcome")
-    if outcome_val == CONVERTED_TO_CASE:
-        return True, fields_checked
+    outcome_val = (data.get("outcome") or data.get("Outcome") or data.get("status") or data.get("Status") or "")
+    if case.status == Case.CaseStatus.CANCELLED or str(outcome_val).upper() == "CANCELLED":
+        return False, fields_checked
 
-    # 3. case_specific_data.status
-    status_val = data.get("status") or data.get("Status")
-    fields_checked.append("case_specific_data.status")
-    if status_val == CONVERTED_TO_CASE:
-        return True, fields_checked
-
-    return False, fields_checked
+    # Conversion is a separate relationship from consultation status.
+    return True, fields_checked
 
 
 def generate_unique_reference(max_attempts: int = 5) -> str:

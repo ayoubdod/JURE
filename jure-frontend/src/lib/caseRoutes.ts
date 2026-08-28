@@ -88,6 +88,7 @@ async function searchCases(params: {
     search: search || params.slug,
     page: 1,
     page_size: 50,
+    includeFollowUps: true,
   });
   return res.data?.results ?? [];
 }
@@ -126,7 +127,10 @@ export async function fetchCaseBySlug(
   return { caseItem: null, mismatch: null };
 }
 
-export function navigateToCase(navigate: NavigateFunction, c: CaseRouteInput) {
+export function navigateToCase(navigate: NavigateFunction, c: CaseRouteInput & { parentConsultation?: { id?: number } }) {
+  if (c.parentConsultation?.id) {
+    return navigateToCaseById(navigate, c.parentConsultation.id);
+  }
   const type = normalizeCaseType(c.caseType ?? c.case_type);
   if (type !== 'UNKNOWN') {
     navigate(caseWorkspacePath(c));
@@ -137,5 +141,11 @@ export function navigateToCase(navigate: NavigateFunction, c: CaseRouteInput) {
 
 export async function navigateToCaseById(navigate: NavigateFunction, id: number) {
   const res = await apiGetCase(id);
+  const originId = res.data.parentConsultation?.id;
+  if (originId) {
+    const parent = await apiGetCase(originId);
+    navigate(caseWorkspacePath(parent.data));
+    return;
+  }
   navigate(caseWorkspacePath(res.data));
 }

@@ -66,6 +66,19 @@ export function toBackendCaseCreatePayload(
     case_type: caseType, // backend may expect snake_case
   };
   if (assignedId != null) base.assigned_to = assignedId;
+  if (data.case_type === 'CONSULTATION') {
+    const ids = (data as API.ConsultationFormData).assigned_attorney_ids;
+    if (ids?.length) base.assigned_attorney_ids = ids;
+  }
+  if (data.case_type === 'LITIGATION') {
+    const l = data as API.LitigationFormData;
+    const ids = [
+      ...(l.assigned_attorney_ids ?? []),
+      ...(l.lead_attorney != null ? [Number(l.lead_attorney)] : []),
+      ...(Array.isArray(l.co_counsel) ? l.co_counsel.map(Number) : []),
+    ].filter((n) => Number.isFinite(n) && n > 0);
+    base.assigned_attorney_ids = [...new Set(ids)];
+  }
 
   base.case_specific_data = buildCaseSpecificData(data);
   return base;
@@ -92,8 +105,13 @@ function getDescription(
 function getCourt(
   d: API.ConsultationFormData | API.LitigationFormData | API.AdministrativeDutyFormData
 ): string {
-  if ('court_name' in d) return (d as API.LitigationFormData).court_name || 'N/A';
-  return 'N/A';
+  if (d.case_type !== 'LITIGATION') return 'N/A';
+  const l = d as API.LitigationFormData;
+  if (l.court_name?.trim()) return l.court_name.trim();
+  const parts = [l.jurisdiction, l.court_specialty, l.chamber_division, l.city]
+    .map((value) => (typeof value === 'string' ? value.trim() : ''))
+    .filter(Boolean);
+  return parts.join(' / ') || 'N/A';
 }
 
 function getBaseStatus(
@@ -105,7 +123,7 @@ function getBaseStatus(
       SCHEDULED: 'OPEN',
       COMPLETED: 'CLOSED',
       NO_SHOW: 'CANCELLED',
-      /** Must match API.CaseStatus — convert endpoint checks source case status */
+      CANCELLED: 'CANCELLED',
       CONVERTED_TO_CASE: 'CONVERTED_TO_CASE',
     };
     return map[outcome] ?? 'OPEN';
@@ -165,13 +183,32 @@ function buildCaseSpecificData(
 ): Record<string, unknown> {
   if (d.case_type === 'CONSULTATION') {
     const c = d as API.ConsultationFormData;
+    const durationMinutes =
+      c.duration_minutes ??
+      (c.duration === '15min'
+        ? 15
+        : c.duration === '30min'
+          ? 30
+          : c.duration === '1h'
+            ? 60
+            : c.duration === '2h'
+              ? 120
+              : Math.max(1, (c.custom_hours ?? 0) * 60 + (c.custom_minutes ?? 0)));
     return {
       consultationType: c.consultation_type,
       legalDomain: c.legal_domain,
+      customLegalDomain: c.legal_domain === 'OTHER' ? c.custom_legal_domain || '' : undefined,
       consultationDate: c.consultation_date,
       duration: c.duration,
+      durationMinutes,
       format: c.format,
+      address: c.format === 'IN_PERSON' ? c.address || '' : undefined,
+      city: c.format === 'IN_PERSON' ? c.city || '' : undefined,
+      addressInstructions: c.format === 'IN_PERSON' ? c.address_instructions || '' : undefined,
+      phoneNumber: c.format === 'PHONE' ? c.phone_number || '' : undefined,
+      videoLink: c.format === 'VIDEO' ? c.video_link || '' : undefined,
       legalQuestion: c.legal_question,
+      factsContext: c.facts_context || '',
       adviceSummary: c.advice_summary ?? '',
       followUpRequired: c.follow_up_required ?? false,
       followUpDate: c.follow_up_required ? (c.follow_up_date ?? null) : null,
@@ -186,9 +223,11 @@ function buildCaseSpecificData(
       opposingParty: l.opposing_party_name ?? '',
       opposingCounsel: l.opposing_counsel ?? '',
       thirdParties: l.third_parties ?? [],
-      courtName: l.court_name,
+      courtName: l.court_name?.trim() || undefined,
+      courtSpecialty: l.court_specialty,
       jurisdiction: l.jurisdiction ?? '',
       chamber: l.chamber_division ?? '',
+      city: l.city ?? '',
       judgeName: l.judge_name ?? '',
       courtCaseNumber: l.court_case_number ?? '',
       coCounsel: Array.isArray(l.co_counsel) ? l.co_counsel : [],

@@ -6,6 +6,7 @@ import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAppTranslation } from '@/i18n';
 import CaseWorkspaceView from '@/components/case/workspace/CaseWorkspaceView';
+import LitigationWorkspaceSkeleton from '@/components/case/workspace/litigation-detail/LitigationWorkspaceSkeleton';
 import {
   caseTypeListPath,
   caseWorkspacePath,
@@ -74,6 +75,9 @@ export default function CaseWorkspacePage() {
   }
 
   if (loading) {
+    if (expectedType === 'LITIGATION' || expectedType === 'ADMINISTRATIVE') {
+      return <LitigationWorkspaceSkeleton />;
+    }
     return (
       <div className="flex h-full min-h-0 items-center justify-center">
         <Loader2 className="h-6 w-6 animate-spin text-[#64499D]" />
@@ -100,6 +104,15 @@ export default function CaseWorkspacePage() {
 
   if (getCaseType(caseItem) !== expectedType && getCaseType(caseItem) !== 'UNKNOWN') {
     return <Navigate to={caseWorkspacePath(caseItem)} replace />;
+  }
+
+  if (caseItem.parentConsultation?.id) {
+    return (
+      <Navigate
+        to={caseWorkspacePath({ ...caseItem.parentConsultation, caseType: 'CONSULTATION' })}
+        replace
+      />
+    );
   }
 
   return <CaseWorkspaceView caseItem={caseItem} onCaseChange={setCaseItem} />;

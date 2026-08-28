@@ -10,6 +10,7 @@ import {
   Legend,
 } from 'recharts';
 import { formatMAD } from '@/utils/formatMAD';
+import { TrendingUp } from 'lucide-react';
 
 const MONTHS = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
 
@@ -51,7 +52,12 @@ export const MonthlyRevenueChart: React.FC<Props> = ({ data, year }) => {
   return (
     <div className="rounded-xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-950 p-4 shadow-sm">
       <div className="mb-3 flex items-center justify-between gap-2">
-        <h3 className="text-sm font-semibold text-slate-900 dark:text-white">Chiffre d&apos;affaires mensuel</h3>
+        <h3 className="flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-white">
+          <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#64499D] shadow-sm">
+            <TrendingUp size={16} className="text-white" aria-hidden />
+          </span>
+          Chiffre d&apos;affaires mensuel
+        </h3>
         <span className="text-[11px] font-medium text-slate-500">{year}</span>
       </div>
       <div className="h-[280px] w-full min-w-0">

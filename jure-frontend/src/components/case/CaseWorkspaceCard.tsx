@@ -28,6 +28,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useAppTranslation } from '@/i18n';
+import { courtLabels } from '@/components/case/workspace/litigation-detail/helpers';
 
 export interface CaseWorkspaceCardProps {
   caseItem: API.Case;
@@ -83,12 +84,13 @@ const CaseWorkspaceCard: React.FC<CaseWorkspaceCardProps> = ({ caseItem, onClick
   const clientName = personName(caseItem.client as API.User | undefined) || t.cases.unnamed;
   const clientRole = enumPretty(getCaseData(caseItem, 'client_role') as string | undefined);
   const leadName = personName(caseItem.assigned_to as API.User | undefined);
-  const courtName =
-    (getCaseData(caseItem, 'court_name') as string) ||
-    (getCaseData(caseItem, 'institution') as string) ||
-    (getCaseData(caseItem, 'institution_authority') as string) ||
-    caseItem.court ||
-    '';
+  const courtName = isLitigation
+    ? courtLabels(caseItem, t).composed
+    : (getCaseData(caseItem, 'court_name') as string) ||
+      (getCaseData(caseItem, 'institution') as string) ||
+      (getCaseData(caseItem, 'institution_authority') as string) ||
+      caseItem.court ||
+      '';
 
   const subtype = isLitigation
     ? enumPretty(String(getCaseData(caseItem, 'litigation_type') || '')) ||

@@ -48,7 +48,7 @@ export function ConvertedCaseLink(props: Props) {
         <div className="min-w-0 flex-1 space-y-2">
           {props.variant === 'converted' ? (
             <p className="text-[12px] font-medium text-slate-600 dark:text-slate-300">
-              Converted to case
+              {t.cases.pageWorkspace.convertedTo}
               {ref ? (
                 <>
                   {' '}
@@ -58,7 +58,7 @@ export function ConvertedCaseLink(props: Props) {
             </p>
           ) : (
             <p className="text-[12px] font-medium text-slate-600 dark:text-slate-300">
-              Originated from consultation
+              {t.cases.pageWorkspace.originatedFrom}
               {ref ? (
                 <>
                   {' '}
@@ -100,7 +100,7 @@ export function ConvertedCaseLink(props: Props) {
               className="mt-1 h-8 text-[12px]"
               onClick={() => props.onViewCase(link.id)}
             >
-              View Case →
+              {t.cases.pageWorkspace.viewCase}
             </Button>
           ) : (
             <Button
@@ -110,7 +110,7 @@ export function ConvertedCaseLink(props: Props) {
               className="mt-1 h-8 text-[12px]"
               onClick={() => props.onViewConsultation(link.id)}
             >
-              View Consultation →
+              {t.cases.modal.consultationWorkflow.viewConsultation}
             </Button>
           )}
         </div>
@@ -156,6 +156,7 @@ export function getConsultationWorkflowStatus(c: API.Case): string {
 export function canShowConvertToCase(c: API.Case): boolean {
   const type = c.caseType ?? c.case_type;
   if (type !== 'CONSULTATION') return false;
-  if (getConsultationWorkflowStatus(c) !== 'CONVERTED_TO_CASE') return false;
+  const outcome = getConsultationWorkflowStatus(c);
+  if (outcome === 'CANCELLED') return false;
   return getConvertedToCase(c) == null;
 }

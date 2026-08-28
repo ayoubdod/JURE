@@ -1,5 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router';
+import { Coins } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { WorkspaceEmptyState } from '@/components/workspace/WorkspaceChrome';
 import { MonthlyRevenueChart } from '@/components/finance/charts/MonthlyRevenueChart';
 import { RevenueByLawyerChart } from '@/components/finance/charts/RevenueByLawyerChart';
 import { FinanceAlerts } from '@/components/finance/alerts/FinanceAlerts';
@@ -42,21 +45,16 @@ export const FinanceDashboardTab: React.FC<Props> = ({
 
   if (showEmpty || !dashboard) {
     return (
-      <div className="flex flex-1 flex-col items-center justify-center py-16 px-6 text-center">
-        <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-3xl bg-gradient-to-br from-jure-500/20 to-indigo-500/10 text-3xl">
-          📊
-        </div>
-        <h3 className="text-lg font-semibold text-slate-900 dark:text-white">{t.finance.empty.title}</h3>
-        <p className="mt-2 max-w-md text-sm text-slate-600 dark:text-slate-400">
-          {t.finance.empty.description}
-        </p>
-        <Link
-          to="/dashboard/cases"
-          className="mt-6 inline-flex items-center rounded-lg bg-jure-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-jure-700"
-        >
-          {t.finance.empty.goToCases}
-        </Link>
-      </div>
+      <WorkspaceEmptyState
+        icon={Coins}
+        title={t.finance.empty.title}
+        hint={t.finance.empty.description}
+        action={
+          <Button asChild size="sm" className="h-8 text-[12px]">
+            <Link to="/dashboard/cases">{t.finance.empty.goToCases}</Link>
+          </Button>
+        }
+      />
     );
   }
 

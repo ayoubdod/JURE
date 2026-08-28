@@ -59,19 +59,43 @@ declare namespace API {
       title: string;
       court: string;
       cabinet: string;          // keep as you have it
-      assigned_to?: API.User | null;  // <-- was required; make it optional/nullable
-      client?: API.User | null;       // unchanged, but allow null for safety
+      assigned_to?: API.User | null;
+      assigned_attorneys?: API.User[];
+      client?: API.User | null;
       created_by?: API.User | null;
       created: string; // ISO datetime
       /** When the backend sends audit fields (snake_case or camelCase) */
       updated_at?: string | null;
       updated_by?: API.User | null;
-      /** On CONSULTATION: derived case after conversion */
       convertedToCase?: CaseLinkSummary | null;
       converted_to_case?: CaseLinkSummary | null;
-      /** On LITIGATION / ADMINISTRATIVE: source consultation when created via conversion */
       convertedFromCase?: CaseLinkSummary | null;
       converted_from_case?: CaseLinkSummary | null;
+      parentConsultation?: CaseLinkSummary | null;
+      followUpCount?: number;
+      followUps?: Array<
+        CaseLinkSummary & {
+          consultationDate?: string;
+          durationMinutes?: number;
+          format?: string;
+          outcome?: string;
+          assigned_to?: User | null;
+          assigned_attorneys?: User[];
+        }
+      >;
+      attachments?: CaseAttachment[];
+      activity?: CaseActivityItem[];
+      conversion?: { converted?: boolean; convertedCase?: CaseLinkSummary | null };
+      emailConfirmation?: { status?: string | null; error?: string | null };
+      scheduleConflicts?: Array<{
+        attorneyId?: number | null;
+        attorneyName?: string;
+        reference?: string;
+        title?: string;
+        start?: string;
+        end?: string;
+        source?: string;
+      }>;
       [key: string]: unknown;         // Allow variant-specific fields
     };
 
@@ -83,6 +107,26 @@ declare namespace API {
     };
 
     /** Base fields shared across all case types */
+    type CaseAttachment = {
+      id: number;
+      file_name?: string;
+      file_url?: string;
+      file_size?: number | null;
+      other_type?: string;
+      uploaded_by?: User | null;
+      created?: string;
+    };
+
+    type CaseActivityItem = {
+      id: number;
+      kind: string;
+      message: string;
+      created?: string | null;
+      actor?: User | null;
+      previous_value?: unknown;
+      new_value?: unknown;
+    };
+
     type CaseCreateFormBase = {
       reference: string;
       title: string;
@@ -105,16 +149,28 @@ declare namespace API {
     /** Consultation case form fields */
     type ConsultationFormData = CaseCreateFormBase & {
       case_type: 'CONSULTATION';
-      consultation_type: 'INITIAL' | 'FOLLOW_UP' | 'URGENT';
-      consultation_date: string;   // ISO datetime
-      duration: '30min' | '1h' | '2h' | 'CUSTOM';
+      consultation_type: 'PREVENTIVE' | 'REACTIVE' | 'INITIAL' | 'FOLLOW_UP' | 'URGENT';
+      consultation_date: string;
+      duration: '15min' | '30min' | '1h' | '2h' | 'CUSTOM';
+      duration_minutes?: number;
+      custom_hours?: number;
+      custom_minutes?: number;
       format: 'IN_PERSON' | 'PHONE' | 'VIDEO';
+      address?: string;
+      city?: string;
+      address_instructions?: string;
+      phone_number?: string;
+      video_link?: string;
       legal_domain: 'FAMILY' | 'CRIMINAL' | 'CORPORATE' | 'LABOR' | 'REAL_ESTATE' | 'OTHER';
+      custom_legal_domain?: string;
       legal_question: string;
-      status: 'SCHEDULED' | 'COMPLETED' | 'NO_SHOW' | 'CONVERTED_TO_CASE';
+      facts_context?: string;
+      status: 'SCHEDULED' | 'COMPLETED' | 'NO_SHOW' | 'CANCELLED' | 'CONVERTED_TO_CASE';
       advice_summary?: string;
       follow_up_required?: boolean;
       follow_up_date?: string | null;
+      assigned_attorney_ids?: number[];
+      parent_consultation_id?: number | null;
     };
 
     /** Litigation case form fields */
@@ -126,13 +182,16 @@ declare namespace API {
       opposing_party_name?: string;
       opposing_counsel?: string;
       third_parties?: string[];
-      court_name: string;
-      jurisdiction?: string;
+      court_name?: string;
+      court_specialty: 'NORMAL' | 'COMMERCIAL' | 'ADMINISTRATIVE';
+      jurisdiction?: 'FIRST_INSTANCE' | 'APPEAL' | 'CASSATION' | string;
       chamber_division?: string;
+      city?: string;
       judge_name?: string;
       court_case_number?: string;
       lead_attorney?: number | null;
       co_counsel?: number[];
+      assigned_attorney_ids?: number[];
       filing_date?: string | null;
       first_hearing_date?: string | null;
       next_hearing_date?: string | null;

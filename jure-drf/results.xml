@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <testsuites>
-	<testsuite name="chat.tests.DirectConversationReuseTests-20260825204901" tests="1" file="chat/tests.py" time="3.186" timestamp="2026-08-25T20:49:04" failures="0" errors="0" skipped="0">
-		<testcase classname="chat.tests.DirectConversationReuseTests" name="test_second_direct_create_reuses_existing" time="3.186" timestamp="2026-08-25T20:49:04" file="chat\tests.py" line="353"/>
+	<testsuite name="cases.tests_consultation_workflow.ConsultationWorkflowAPITest-20260826233648" tests="1" file="cases/tests_consultation_workflow.py" time="1.269" timestamp="2026-08-26T23:36:49" failures="0" errors="0" skipped="0">
+		<testcase classname="cases.tests_consultation_workflow.ConsultationWorkflowAPITest" name="test_follow_up_identifiers" time="1.269" timestamp="2026-08-26T23:36:49" file="cases\tests_consultation_workflow.py" line="192"/>
 	</testsuite>
 </testsuites>

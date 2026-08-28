@@ -49,13 +49,35 @@ export default function CaseDateDetailPanel({
   const overdue = days != null && days < 0;
   const tone = countdownTone(days, overdue);
   const raw = ev?.raw as Record<string, unknown> | undefined;
+  const meta = (raw?.meta as Record<string, unknown> | undefined) ?? {};
   const caseType =
-    (raw?.case_type as string) || (raw?.caseType as string) || (raw?.category as string) || '—';
+    (meta.caseType as string) ||
+    (raw?.case_type as string) ||
+    (raw?.caseType as string) ||
+    (raw?.category as string) ||
+    '—';
   const caseStatus = (raw?.case_status ?? raw?.status) as string | undefined;
-  const assignedName = (raw?.assigned_attorney_name ?? raw?.assigned_to_name ?? raw?.lead_attorney_name) as
-    | string
+  const assignedTo = (raw?.assignedTo ?? raw?.assigned_to) as
+    | { name?: string; first_name?: string; last_name?: string; email?: string }
     | undefined;
-  const clientName = (raw?.client_name ?? raw?.client) as string | undefined;
+  const assignedName =
+    ((raw?.assigned_attorney_name ?? raw?.assigned_to_name ?? raw?.lead_attorney_name) as string | undefined) ||
+    assignedTo?.name ||
+    (assignedTo
+      ? [assignedTo.first_name, assignedTo.last_name].filter(Boolean).join(' ').trim() || assignedTo.email
+      : undefined);
+  const relatedClient = (raw?.relatedClient ?? raw?.related_client) as
+    | { name?: string; first_name?: string; last_name?: string }
+    | undefined;
+  const clientName = (raw?.client_name ?? raw?.client) as string | { name?: string } | undefined;
+  const clientDisplay =
+    (typeof clientName === 'string' && clientName) ||
+    (clientName && typeof clientName === 'object' && clientName.name) ||
+    relatedClient?.name ||
+    (relatedClient ? [relatedClient.first_name, relatedClient.last_name].filter(Boolean).join(' ') : '');
+  const videoLink = (meta.videoLink ?? meta.video_link ?? raw?.videoLink) as string | undefined;
+  const address = (meta.address ?? raw?.address ?? ev?.location) as string | undefined;
+  const formatValue = (meta.format ?? raw?.format ?? ev?.meeting_type) as string | undefined;
   const deadlineLabel =
     days == null
       ? null
@@ -151,12 +173,34 @@ export default function CaseDateDetailPanel({
                   {cal.caseDateDetail.people}
                 </p>
                 {assignedName && <p className="text-sm text-slate-700 dark:text-slate-300">{assignedName}</p>}
-                {clientName && typeof clientName === 'string' && (
+                {clientDisplay && (
                   <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
-                    {tf(cal.caseDateDetail.client, { name: clientName })}
+                    {tf(cal.caseDateDetail.client, { name: clientDisplay })}
                   </p>
                 )}
               </section>
+
+              {ev?.sourceType === 'CONSULTATION_DATE' && (formatValue || address || videoLink) ? (
+                <section>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400 mb-2">
+                    {t.cases.modal.fields.format}
+                  </p>
+                  {formatValue ? (
+                    <p className="text-sm text-slate-700 dark:text-slate-300">{enumPretty(String(formatValue))}</p>
+                  ) : null}
+                  {address ? <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">{address}</p> : null}
+                  {videoLink ? (
+                    <a
+                      className="mt-2 inline-flex h-8 items-center rounded-lg bg-[#64499D] px-3 text-[12px] font-medium text-white"
+                      href={videoLink}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      {t.cases.modal.consultationWorkflow.joinConsultation}
+                    </a>
+                  ) : null}
+                </section>
+              ) : null}
             </>
           )}
         </div>

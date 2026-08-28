@@ -2,10 +2,12 @@
 """Append case-derived calendar rows (consultation, administrative, litigation)."""
 from __future__ import annotations
 
+from datetime import timedelta
 from typing import Any, Callable
 
 from django.utils import timezone
 
+from cases.consultation_fields import duration_minutes
 from cases.models import Case
 from cases.validators import _parse_datetime
 
@@ -29,7 +31,7 @@ def append_consultation_dates(
     if not cabinet or not want(ST_CONSULTATION_DATE):
         return
     for c in Case.objects.filter(cabinet=cabinet, case_type=Case.CaseType.CONSULTATION).select_related(
-        "assigned_to", "client"
+        "assigned_to", "client", "parent_consultation"
     ):
         data = c.case_specific_data or {}
         raw = data.get("consultationDate")
@@ -41,21 +43,31 @@ def append_consultation_dates(
         if start or end:
             if not _in_range(dt, start, end):
                 continue
+        minutes = duration_minutes(data)
+        end_dt = dt + timedelta(minutes=minutes) if minutes else None
+        origin = c.parent_consultation or c
         events.append(
             {
                 "id": str(c.id),
                 "sourceType": ST_CONSULTATION_DATE,
-                "sourceId": str(c.id),
+                "sourceId": str(origin.id),
                 "title": c.title,
                 "date": _iso(dt),
-                "endDate": None,
-                "label": "Consultation",
+                "endDate": _iso(end_dt) if end_dt else None,
+                "label": "Follow-up" if c.parent_consultation_id else "Consultation",
                 "priority": None,
                 "status": c.status,
                 "assignedTo": _assigned_to_payload(c.assigned_to),
-                "relatedCase": _related_case_payload(c),
+                "relatedCase": _related_case_payload(origin),
                 "relatedClient": _related_client_payload(c.client) if c.client_id else None,
-                "meta": {"caseType": "CONSULTATION", "caseRef": c.reference},
+                "meta": {
+                    "caseType": "CONSULTATION",
+                    "caseRef": c.reference,
+                    "originRef": origin.reference,
+                    "format": data.get("format"),
+                    "address": data.get("address"),
+                    "videoLink": data.get("videoLink"),
+                },
             }
         )
 

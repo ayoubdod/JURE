@@ -62,16 +62,22 @@ export function normalizeCaseDateRaw(raw: Record<string, unknown>, index: number
   const rc = (raw.relatedCase ?? raw.related_case) as Record<string, unknown> | undefined;
   const caseId = (raw.case_id ?? raw.caseId ?? rc?.id) as number | undefined;
   const idBase = raw.id != null ? String(raw.id) : `idx-${index}`;
+  const meta = (raw.meta as Record<string, unknown> | undefined) ?? {};
+  const ref = String(meta.caseRef ?? rc?.reference ?? raw.caseRef ?? '');
+  const baseTitle = String(raw.title ?? raw.label ?? 'Case date');
+  const format = String(meta.format ?? raw.format ?? '');
   return {
     id: `case-date-${idBase}-${start}`,
     type: 'case_date',
     sourceType: st,
-    title: String(raw.title ?? raw.label ?? 'Case date'),
+    title: ref ? `${ref} — ${baseTitle}` : baseTitle,
     start,
-    end: (raw.end ?? raw.end_at) as string | undefined,
+    end: (raw.end ?? raw.end_at ?? raw.endDate ?? raw.end_date) as string | undefined,
     status: undefined,
     priority: undefined,
     case_id: caseId ?? null,
+    meeting_type: format ? format.toLowerCase() : undefined,
+    location: (meta.address as string | undefined) ?? (raw.address as string | undefined) ?? null,
     relatedCase:
       rc && rc.id != null
         ? {
@@ -80,9 +86,9 @@ export function normalizeCaseDateRaw(raw: Record<string, unknown>, index: number
             title: rc.title as string | undefined,
           }
         : caseId
-          ? { id: caseId }
+          ? { id: caseId, reference: ref || undefined }
           : undefined,
-    raw,
+    raw: { ...raw, meta },
   };
 }
 
