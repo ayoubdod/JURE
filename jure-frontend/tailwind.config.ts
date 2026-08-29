@@ -1,4 +1,16 @@
 import type { Config } from "tailwindcss";
+import colors from "tailwindcss/colors";
+
+const withDarkSurfaces = (
+	scale: Record<string, string>,
+	prefix: "slate" | "zinc" | "gray" | "neutral" | "stone",
+) => ({
+	...scale,
+	700: `rgb(var(--${prefix}-700) / <alpha-value>)`,
+	800: `rgb(var(--${prefix}-800) / <alpha-value>)`,
+	900: `rgb(var(--${prefix}-900) / <alpha-value>)`,
+	950: `rgb(var(--${prefix}-950) / <alpha-value>)`,
+});
 
 export default {
 	darkMode: ["class"],
@@ -51,7 +63,13 @@ export default {
 					700: '#4D3680',   // Dark
 					800: '#3E2D71',   // Darker
 					900: '#2A1F4A',   // Darkest
+					950: '#160F24',   // Canvas
 				},
+				slate: withDarkSurfaces(colors.slate, "slate"),
+				zinc: withDarkSurfaces(colors.zinc, "zinc"),
+				gray: withDarkSurfaces(colors.gray, "gray"),
+				neutral: withDarkSurfaces(colors.neutral, "neutral"),
+				stone: withDarkSurfaces(colors.stone, "stone"),
 				border: 'hsl(var(--border))',
 				input: 'hsl(var(--input))',
 				ring: 'hsl(var(--ring))',

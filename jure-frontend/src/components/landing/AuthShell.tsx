@@ -21,7 +21,7 @@ const AuthShell: React.FC<AuthShellProps> = ({
   wide = false,
 }) => {
   return (
-    <div className="landing-root min-h-screen relative overflow-x-hidden text-slate-900 dark:text-slate-100 bg-[#FAF9FD] dark:bg-[#0c0a14]">
+    <div className="landing-root min-h-screen relative overflow-x-hidden text-slate-900 dark:text-slate-100 bg-background">
       <AuroraBackground intensity="medium" />
 
       <div className="relative z-10 min-h-screen flex flex-col min-w-0">

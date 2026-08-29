@@ -310,7 +310,7 @@ const Library = () => {
               ))}
             </div>
 
-            <div className="ws-toolbar-sticky sticky top-0 z-20 -mx-4 mb-5 border-b border-slate-200/80 bg-[#FAF9FD]/90 px-4 py-2 backdrop-blur-sm dark:border-slate-800 dark:bg-[#0c0a14]/90 sm:-mx-0 sm:rounded-xl sm:border sm:px-3">
+            <div className="ws-toolbar-sticky sticky top-0 z-20 -mx-4 mb-5 border-b border-slate-200/80 bg-background/90 px-4 py-2 backdrop-blur-sm dark:border-slate-800 sm:-mx-0 sm:rounded-xl sm:border sm:px-3">
               <div className="flex flex-wrap items-center gap-2">
                 <div className="relative min-w-[12rem] flex-1">
                   <Search className="pointer-events-none absolute start-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />

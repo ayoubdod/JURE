@@ -548,31 +548,31 @@
 
 .dark .fc,
 html.dark .fc {
-  background: #020617;
-  border-color: #1e293b;
+  background: #160F24;
+  border-color: #2A1F4A;
 }
 
 .dark .fc-header-toolbar,
 html.dark .fc-header-toolbar {
-  background: linear-gradient(135deg, #020617 0%, #0f172a 100%);
-  border-bottom-color: #1e293b;
+  background: linear-gradient(135deg, #160F24 0%, #1C1630 100%);
+  border-bottom-color: #2A1F4A;
 }
 
 .dark .fc-daygrid-day,
 html.dark .fc-daygrid-day {
-  background: #020617;
-  border-color: #1e293b;
+  background: #160F24;
+  border-color: #2A1F4A;
 }
 
 .dark .fc-daygrid-day:hover,
 html.dark .fc-daygrid-day:hover {
-  background: #0f172a;
+  background: #1C1630;
 }
 
 .dark .fc-col-header-cell,
 html.dark .fc-col-header-cell {
-  background: #0f172a;
-  border-color: #1e293b;
+  background: #1C1630;
+  border-color: #2A1F4A;
   color: #94a3b8;
 }
 
@@ -583,8 +583,8 @@ html.dark .fc-daygrid-day-number {
 
 .dark .fc-button-group,
 html.dark .fc-button-group {
-  background: #1e293b;
-  border-color: #334155;
+  background: #2A1F4A;
+  border-color: #3E2D71;
 }
 
 .dark .fc-button-group > .fc-button,
@@ -594,7 +594,7 @@ html.dark .fc-button-group > .fc-button {
 
 .dark .fc-button-group > .fc-button:hover:not(.fc-button-active),
 html.dark .fc-button-group > .fc-button:hover:not(.fc-button-active) {
-  background: #334155;
+  background: #3E2D71;
   color: #e2e8f0;
 }
 
@@ -857,32 +857,32 @@ html.dark .fc-button-group > .fc-button:hover:not(.fc-button-active) {
 
 .dark .fc-calendar-card .fc-prev-button,
 .dark .fc-calendar-card .fc-next-button {
-  background: rgb(15 23 42) !important;
-  border-color: rgb(51 65 85) !important;
+  background: rgb(28 22 48) !important;
+  border-color: rgb(62 45 113) !important;
   color: rgb(203 213 225) !important;
 }
 
 .dark .fc-calendar-card .fc-prev-button:hover,
 .dark .fc-calendar-card .fc-next-button:hover {
-  background: rgb(30 41 59) !important;
+  background: rgb(42 31 74) !important;
   border-color: rgb(71 85 105) !important;
   color: rgb(248 250 252) !important;
 }
 
 .dark .fc-calendar-card .fc-today-button {
-  background: rgb(15 23 42) !important;
-  border-color: rgb(51 65 85) !important;
+  background: rgb(28 22 48) !important;
+  border-color: rgb(62 45 113) !important;
   color: rgb(226 232 240) !important;
 }
 
 .dark .fc-calendar-card .fc-today-button:hover {
-  background: rgb(30 41 59) !important;
+  background: rgb(42 31 74) !important;
   border-color: rgb(100 73 157) !important;
 }
 
 .dark .fc-calendar-card .fc-button-group {
-  background: rgb(15 23 42 / 0.8) !important;
-  border-color: rgb(51 65 85) !important;
+  background: rgb(28 22 48 / 0.8) !important;
+  border-color: rgb(62 45 113) !important;
 }
 
 .dark .fc-calendar-card .fc-button-group > .fc-button {
@@ -890,7 +890,7 @@ html.dark .fc-button-group > .fc-button:hover:not(.fc-button-active) {
 }
 
 .dark .fc-calendar-card .fc-button-group > .fc-button:hover:not(.fc-button-active) {
-  background: rgb(51 65 85) !important;
+  background: rgb(62 45 113) !important;
   color: rgb(248 250 252) !important;
 }
 
@@ -964,8 +964,8 @@ html.dark .fc-button-group > .fc-button:hover:not(.fc-button-active) {
    .fc-daygrid sheet showed through and date numbers became white-on-white. */
 .dark .fc-calendar-card,
 html.dark .fc-calendar-card {
-  background: rgb(15 23 42);
-  border-color: rgb(30 41 59);
+  background: rgb(28 22 48);
+  border-color: rgb(42 31 74);
 }
 
 .dark .fc-calendar-card .fc,
@@ -979,14 +979,14 @@ html.dark .fc-calendar-card .fc,
 html.dark .fc-calendar-card .fc-daygrid,
 html.dark .fc-calendar-card .fc-timegrid,
 html.dark .fc-calendar-card .fc-list {
-  background: rgb(2 6 23) !important;
-  border-color: rgb(30 41 59) !important;
+  background: rgb(22 15 36) !important;
+  border-color: rgb(42 31 74) !important;
 }
 
 .dark .fc-calendar-card .fc-header-toolbar,
 html.dark .fc-calendar-card .fc-header-toolbar {
-  background: rgb(15 23 42) !important;
-  border-bottom-color: rgb(30 41 59) !important;
+  background: rgb(28 22 48) !important;
+  border-bottom-color: rgb(42 31 74) !important;
 }
 
 .dark .fc-calendar-card .fc-theme-standard td,
@@ -996,14 +996,14 @@ html.dark .fc-calendar-card .fc-header-toolbar {
 .dark .fc-calendar-card .fc-scrollgrid th,
 html.dark .fc-calendar-card .fc-theme-standard td,
 html.dark .fc-calendar-card .fc-theme-standard th {
-  border-color: rgb(30 41 59) !important;
+  border-color: rgb(42 31 74) !important;
 }
 
 .dark .fc-calendar-card .fc-col-header-cell,
 html.dark .fc-calendar-card .fc-col-header-cell {
-  background: rgb(15 23 42) !important;
+  background: rgb(28 22 48) !important;
   color: rgb(148 163 184) !important;
-  border-color: rgb(30 41 59) !important;
+  border-color: rgb(42 31 74) !important;
 }
 
 .dark .fc-calendar-card .fc-col-header-cell .fc-col-header-cell-cushion,
@@ -1013,8 +1013,8 @@ html.dark .fc-calendar-card .fc-col-header-cell .fc-col-header-cell-cushion {
 
 .dark .fc-calendar-card .fc-daygrid-day,
 html.dark .fc-calendar-card .fc-daygrid-day {
-  background: rgb(2 6 23) !important;
-  border-color: rgb(30 41 59) !important;
+  background: rgb(22 15 36) !important;
+  border-color: rgb(42 31 74) !important;
 }
 
 .dark .fc-calendar-card .fc-day-weekend-jure,
@@ -1023,12 +1023,12 @@ html.dark .fc-calendar-card .fc-daygrid-day {
 html.dark .fc-calendar-card .fc-day-weekend-jure,
 html.dark .fc-calendar-card .fc-day-sat,
 html.dark .fc-calendar-card .fc-day-sun {
-  background: rgb(15 23 42) !important;
+  background: rgb(28 22 48) !important;
 }
 
 .dark .fc-calendar-card .fc-daygrid-day:hover,
 html.dark .fc-calendar-card .fc-daygrid-day:hover {
-  background: rgb(30 41 59) !important;
+  background: rgb(42 31 74) !important;
 }
 
 .dark .fc-calendar-card .fc-daygrid-day-number,
@@ -1056,27 +1056,27 @@ html.dark .fc-calendar-card .fc-day-today-jure .fc-daygrid-day-number {
 .dark .fc-calendar-card .fc-timegrid-axis,
 html.dark .fc-calendar-card .fc-timegrid-slot,
 html.dark .fc-calendar-card .fc-timegrid-axis {
-  background: rgb(2 6 23) !important;
-  border-color: rgb(30 41 59) !important;
+  background: rgb(22 15 36) !important;
+  border-color: rgb(42 31 74) !important;
   color: rgb(148 163 184) !important;
 }
 
 .dark .fc-calendar-card .fc-list-day-cushion,
 html.dark .fc-calendar-card .fc-list-day-cushion {
-  background: rgb(15 23 42) !important;
+  background: rgb(28 22 48) !important;
   color: rgb(226 232 240) !important;
 }
 
 .dark .fc-calendar-card .fc-list-event,
 html.dark .fc-calendar-card .fc-list-event {
-  background: rgb(2 6 23) !important;
+  background: rgb(22 15 36) !important;
 }
 
 .dark .fc-calendar-card .fc-list-event:hover,
 .dark .fc-calendar-card .fc-list-event:hover td,
 html.dark .fc-calendar-card .fc-list-event:hover,
 html.dark .fc-calendar-card .fc-list-event:hover td {
-  background: rgb(30 41 59) !important;
+  background: rgb(42 31 74) !important;
 }
 
 .dark .fc-calendar-card .fc-list-event-title,
@@ -1088,14 +1088,14 @@ html.dark .fc-calendar-card .fc-list-event-time {
 
 .dark .fc-calendar-card .fc-popover,
 html.dark .fc-calendar-card .fc-popover {
-  background: rgb(15 23 42) !important;
-  border-color: rgb(51 65 85) !important;
+  background: rgb(28 22 48) !important;
+  border-color: rgb(62 45 113) !important;
   color: rgb(226 232 240) !important;
 }
 
 .dark .fc-calendar-card .fc-popover-header,
 html.dark .fc-calendar-card .fc-popover-header {
-  background: rgb(30 41 59) !important;
+  background: rgb(42 31 74) !important;
   color: rgb(226 232 240) !important;
 }
 

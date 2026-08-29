@@ -2,6 +2,7 @@ from unittest.mock import MagicMock, patch
 
 import requests
 from django.test import SimpleTestCase, override_settings
+from rest_framework.test import APITestCase
 
 from juria.services.document_text import text_to_docx_base64
 from juria.services.juria_api_service import JuriaAPIError, send_chat_message
@@ -75,3 +76,21 @@ class DocxBuilderTests(SimpleTestCase):
             xml = zf.read("word/document.xml").decode("utf-8")
             self.assertIn("Bonjour", xml)
             self.assertIn("Maroc", xml)
+
+
+class JuriaDisabledApiTests(APITestCase):
+    def test_disabled_returns_503_json(self):
+        with self.settings(JURIA_ENABLED=False):
+            response = self.client.get("/api/v1/juria/usage/")
+        self.assertEqual(response.status_code, 503)
+        self.assertIn("disabled", response.json().get("detail", "").lower())
+
+    def test_missing_provider_key_returns_503_json(self):
+        with self.settings(
+            JURIA_ENABLED=True,
+            JURIA_PROVIDER="deepseek",
+            DEEPSEEK_API_KEY="",
+        ):
+            response = self.client.get("/api/v1/juria/usage/")
+        self.assertEqual(response.status_code, 503)
+        self.assertIn("not configured", response.json().get("detail", "").lower())

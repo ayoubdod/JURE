@@ -8,9 +8,11 @@ RUN bun install
 
 COPY . .
 
-# Vite inlines this at build time — Railway service variables arrive as build args.
+# Vite inlines these at build time — Railway service variables arrive as build args.
 ARG VITE_API_URL=https://jure-production-a298.up.railway.app
 ENV VITE_API_URL=$VITE_API_URL
+ARG VITE_JURIA_ENABLED=true
+ENV VITE_JURIA_ENABLED=$VITE_JURIA_ENABLED
 
 RUN bun run build
 

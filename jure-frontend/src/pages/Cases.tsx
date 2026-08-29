@@ -1013,7 +1013,7 @@ const Cases = () => {
         <div
           className={cn(
             'cases-toolbar-sticky sticky top-0 z-30',
-            'bg-[#FAF9FD]/90 dark:bg-[#0c0a14]/90 border-b border-slate-200/90 dark:border-slate-800',
+            'bg-background/90 border-b border-slate-200/90 dark:border-slate-800',
             'px-0 pt-1 pb-0'
           )}
         >

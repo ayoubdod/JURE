@@ -54,7 +54,7 @@ export function AuroraPage({
   children: React.ReactNode;
 }) {
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[#FAF9FD] dark:bg-[#0c0a14]">
+    <div className="relative min-h-screen overflow-hidden bg-background">
       <AuroraBackground intensity={intensity} />
       <div className={cn('relative z-[1] min-h-screen', className)}>{children}</div>
     </div>

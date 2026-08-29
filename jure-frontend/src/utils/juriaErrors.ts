@@ -9,6 +9,9 @@ export function getJuriaErrorMessage(err: unknown): string {
   if (status === 503) {
     return typeof data?.detail === 'string' ? data.detail : 'Juria est indisponible pour le moment.';
   }
+  if (status === 500) {
+    return "Le serveur Juria a renvoyé une erreur. Vérifiez JURIA_ENABLED et DEEPSEEK_API_KEY sur Railway.";
+  }
   if (status === 401 || status === 402 || status === 429 || status === 502) {
     return data?.error ?? "Juria API indisponible. Réessayez plus tard.";
   }

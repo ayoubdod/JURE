@@ -19,9 +19,9 @@ const AuthSplitShell = ({ eyebrow, heading, subtitle, footer, children }: AuthSp
   const { t } = useAppTranslation();
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[#FAF9FD] p-3 sm:p-5 lg:p-8 dark:bg-[#0c0a14]">
+    <div className="relative min-h-screen overflow-hidden bg-background p-3 sm:p-5 lg:p-8">
       <AuroraBackground intensity="medium" />
-      <div className="relative z-[1] mx-auto flex min-h-[calc(100vh-1.5rem)] w-full max-w-[1100px] overflow-hidden rounded-[28px] bg-white shadow-[0_24px_80px_-24px_rgba(62,45,113,0.45)] dark:bg-zinc-950 sm:min-h-[calc(100vh-2.5rem)] lg:min-h-[min(720px,calc(100vh-4rem))]">
+      <div className="relative z-[1] mx-auto flex min-h-[calc(100vh-1.5rem)] w-full max-w-[1100px] overflow-hidden rounded-[28px] bg-white shadow-[0_24px_80px_-24px_rgba(62,45,113,0.45)] dark:bg-card sm:min-h-[calc(100vh-2.5rem)] lg:min-h-[min(720px,calc(100vh-4rem))]">
         <aside className="relative hidden w-[46%] shrink-0 flex-col overflow-hidden bg-gradient-to-br from-[#9B7FD9] via-[#A58CF4] to-[#3E2D71] p-8 text-white lg:flex xl:p-10">
           <div className="pointer-events-none absolute -end-24 -top-16 h-[22rem] w-[22rem] rounded-full bg-white/10" />
           <div className="pointer-events-none absolute -start-16 top-1/3 h-64 w-64 rounded-full bg-[#A58CF4]/20 blur-sm" />

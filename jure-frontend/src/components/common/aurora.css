@@ -13,7 +13,7 @@
   --aurora-orb-b-opacity: 0.16;
   --aurora-wash-opacity: 1;
   --aurora-grid-alpha: 0.035;
-  --aurora-base: #faf9fd;
+  --aurora-base: hsl(var(--background));
 }
 
 .aurora-layer--medium {
@@ -44,7 +44,6 @@
 }
 
 .dark .aurora-layer {
-  --aurora-base: #0c0a14;
   --aurora-blob-opacity: 0.28;
   --aurora-cyan-opacity: 0.1;
   --aurora-orb-a-opacity: 0.32;
