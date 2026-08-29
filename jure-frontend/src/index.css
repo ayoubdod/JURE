@@ -2,6 +2,47 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Dark mode: leftover slate/zinc/gray near-blacks → JURE dark purple */
+html.dark [class*="bg-slate-950"],
+html.dark [class*="bg-zinc-950"],
+html.dark [class*="bg-gray-950"],
+html.dark [class*="bg-neutral-950"],
+html.dark [class*="bg-stone-950"] {
+  background-color: rgb(22 15 36);
+}
+
+html.dark [class*="bg-slate-900"],
+html.dark [class*="bg-zinc-900"],
+html.dark [class*="bg-gray-900"],
+html.dark [class*="bg-neutral-900"],
+html.dark [class*="bg-stone-900"] {
+  background-color: rgb(28 22 48);
+}
+
+html.dark [class*="bg-slate-800"],
+html.dark [class*="bg-zinc-800"],
+html.dark [class*="bg-gray-800"],
+html.dark [class*="bg-neutral-800"],
+html.dark [class*="bg-stone-800"] {
+  background-color: rgb(42 31 74);
+}
+
+html.dark [class*="border-slate-800"],
+html.dark [class*="border-zinc-800"],
+html.dark [class*="border-gray-800"],
+html.dark [class*="border-neutral-800"],
+html.dark [class*="border-stone-800"] {
+  border-color: rgb(42 31 74);
+}
+
+html.dark [class*="border-slate-700"],
+html.dark [class*="border-zinc-700"],
+html.dark [class*="border-gray-700"],
+html.dark [class*="border-neutral-700"],
+html.dark [class*="border-stone-700"] {
+  border-color: rgb(62 45 113);
+}
+
 /* Definition of the design system. All colors, gradients, fonts, etc should be defined here. */
 
 @layer base {
@@ -55,25 +96,50 @@
 
     /* Latin UI; Arabic overrides via html[lang="ar"] */
     --font-sans: 'Space Grotesk', system-ui, sans-serif;
+
+    /* Tailwind 700–950 RGB channels (light = original neutrals) */
+    --slate-950: 2 6 23;
+    --slate-900: 15 23 42;
+    --slate-800: 30 41 59;
+    --slate-700: 51 65 85;
+    --zinc-950: 9 9 11;
+    --zinc-900: 24 24 27;
+    --zinc-800: 39 39 42;
+    --zinc-700: 63 63 70;
+    --gray-950: 3 7 18;
+    --gray-900: 17 24 39;
+    --gray-800: 31 41 55;
+    --gray-700: 55 65 81;
+    --neutral-950: 10 10 10;
+    --neutral-900: 23 23 23;
+    --neutral-800: 38 38 38;
+    --neutral-700: 64 64 64;
+    --stone-950: 12 10 9;
+    --stone-900: 28 25 23;
+    --stone-800: 41 37 36;
+    --stone-700: 68 64 60;
   }
 
   .dark {
+    color-scheme: dark;
+
     /* Jure Purple Color Palette - Dark Mode */
     --jure-primary: 262 47% 65%; /* #8B6FD1 - lighter for dark mode */
     --jure-primary-dark: 262 47% 55%; /* #7A5BC4 */
     --jure-primary-darker: 262 47% 45%; /* #64499D */
     --jure-primary-light: 262 47% 75%; /* #A08FE8 */
     --jure-primary-lighter: 262 47% 85%; /* #CFC2FF */
-    --jure-accent: 262 47% 15%; /* #2A1F4A */
+    --jure-accent: 261 41% 21%; /* #2A1F4A */
 
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
+    /* Deep purple canvas (not slate/navy) */
+    --background: 261 41% 10%; /* #160F24 */
+    --foreground: 262 47% 96%; /* #F4F1FF */
 
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
+    --card: 261 37% 14%; /* #1C1630 */
+    --card-foreground: 262 47% 96%;
 
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 261 37% 14%;
+    --popover-foreground: 262 47% 96%;
 
     --primary: var(--jure-primary);
     --primary-foreground: 0 0% 100%;
@@ -81,8 +147,8 @@
     --secondary: var(--jure-accent);
     --secondary-foreground: var(--jure-primary);
 
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
+    --muted: 261 41% 21%; /* #2A1F4A */
+    --muted-foreground: 262 25% 72%;
 
     --accent: var(--jure-accent);
     --accent-foreground: var(--jure-primary);
@@ -90,18 +156,40 @@
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
+    --border: 261 32% 22%;
+    --input: 261 32% 22%;
     --ring: var(--jure-primary);
-    
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
+
+    --sidebar-background: 261 42% 9%;
+    --sidebar-foreground: 262 40% 96%;
     --sidebar-primary: var(--jure-primary);
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: var(--jure-accent);
     --sidebar-accent-foreground: var(--jure-primary);
-    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-border: 261 32% 20%;
     --sidebar-ring: var(--jure-primary);
+
+    /* Remap Tailwind slate/zinc/gray/neutral/stone 700–950 → dark purple */
+    --slate-950: 22 15 36;
+    --slate-900: 28 22 48;
+    --slate-800: 42 31 74;
+    --slate-700: 62 45 113;
+    --zinc-950: 22 15 36;
+    --zinc-900: 28 22 48;
+    --zinc-800: 42 31 74;
+    --zinc-700: 62 45 113;
+    --gray-950: 22 15 36;
+    --gray-900: 28 22 48;
+    --gray-800: 42 31 74;
+    --gray-700: 62 45 113;
+    --neutral-950: 22 15 36;
+    --neutral-900: 28 22 48;
+    --neutral-800: 42 31 74;
+    --neutral-700: 62 45 113;
+    --stone-950: 22 15 36;
+    --stone-900: 28 22 48;
+    --stone-800: 42 31 74;
+    --stone-700: 62 45 113;
   }
 
   html[lang="ar"] {
@@ -307,7 +395,7 @@
   }
 
   .dark .knowledge-glass {
-    background: rgba(2, 6, 23, 0.72);
+    background: hsl(var(--card) / 0.78);
   }
 }
 

@@ -15,13 +15,13 @@
 }
 
 .dark .landing-root {
-  --landing-white: #64499d;
-  --landing-black: #ffffff;
-  --landing-muted: #d4c6f7;
-  --landing-line: rgba(165, 140, 244, 0.28);
+  --landing-white: #160f24;
+  --landing-black: #f4f1ff;
+  --landing-muted: #c4b0ef;
+  --landing-line: rgba(165, 140, 244, 0.22);
   --landing-purple-hover: #b9a3f7;
-  background: #64499d;
-  color: #ffffff;
+  background: #160f24;
+  color: #f4f1ff;
 }
 
 /* Brand hairline — the 10% mark */
@@ -52,8 +52,8 @@
 }
 
 .dark .landing-nav--scrolled {
-  background: rgba(100, 73, 157, 0.92);
-  box-shadow: 0 10px 28px -18px rgba(62, 45, 113, 0.55);
+  background: rgba(22, 15, 36, 0.92);
+  box-shadow: 0 10px 28px -18px rgba(22, 15, 36, 0.65);
 }
 
 .landing-nav__bar {
@@ -165,8 +165,8 @@
 }
 
 .dark .landing-glass {
-  background: #4d3680;
-  box-shadow: 0 16px 48px -24px rgba(62, 45, 113, 0.55);
+  background: #2a1f4a;
+  box-shadow: 0 16px 48px -24px rgba(22, 15, 36, 0.65);
 }
 
 .landing-glass-glow {
@@ -206,8 +206,8 @@
 }
 
 .dark .landing-band {
-  background: #4d3680;
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+  background: #2a1f4a;
+  box-shadow: inset 0 0 0 1px rgba(165, 140, 244, 0.16);
 }
 
 /* Icon box: brand purple by default (30%), accent on hover (10%) */
@@ -299,8 +299,8 @@
 
 .dark .landing-float-chip__card {
   color: #ffffff;
-  background: #4d3680;
-  border-color: rgba(255, 255, 255, 0.16);
+  background: #2a1f4a;
+  border-color: rgba(165, 140, 244, 0.22);
 }
 
 .landing-float-chip__card--on-dark {
@@ -325,7 +325,7 @@
 
 .dark .landing-media-slot {
   background:
-    linear-gradient(180deg, #4d3680, #64499d),
+    linear-gradient(180deg, #2a1f4a, #3e2d71),
     repeating-linear-gradient(
       -45deg,
       transparent,
@@ -333,7 +333,7 @@
       rgba(255, 255, 255, 0.04) 8px,
       rgba(255, 255, 255, 0.04) 16px
     );
-  border-color: rgba(255, 255, 255, 0.18);
+  border-color: rgba(165, 140, 244, 0.22);
 }
 
 .landing-media-slot__badge {
@@ -353,8 +353,8 @@
 
 .dark .landing-media-slot__badge {
   color: #a58cf4;
-  background: #4d3680;
-  border-color: rgba(255, 255, 255, 0.16);
+  background: #2a1f4a;
+  border-color: rgba(165, 140, 244, 0.22);
 }
 
 .landing-logo-slot {
@@ -365,8 +365,8 @@
 }
 
 .dark .landing-logo-slot {
-  background: #4d3680;
-  border-color: rgba(255, 255, 255, 0.16);
+  background: #2a1f4a;
+  border-color: rgba(165, 140, 244, 0.22);
 }
 
 /* JURIA / dark feature panel — brand purple (30%) + accent hairline (10%) */
@@ -443,7 +443,7 @@
 }
 
 .dark .landing-chip {
-  background: #4d3680;
+  background: #2a1f4a;
   color: #d4c6f7;
 }
 

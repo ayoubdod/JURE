@@ -27,9 +27,9 @@ const SignupShell = ({ currentStep, steps, children }: SignupShellProps) => {
   const active = inFlow ? steps[currentStep - 1] : null;
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[#FAF9FD] p-3 sm:p-5 lg:p-8 dark:bg-[#0c0a14]">
+    <div className="relative min-h-screen overflow-hidden bg-background p-3 sm:p-5 lg:p-8">
       <AuroraBackground intensity="medium" />
-      <div className="relative z-[1] mx-auto flex min-h-[calc(100vh-1.5rem)] w-full max-w-[1180px] overflow-hidden rounded-[28px] bg-white shadow-[0_24px_80px_-24px_rgba(62,45,113,0.45)] dark:bg-zinc-950 sm:min-h-[calc(100vh-2.5rem)] lg:min-h-[min(820px,calc(100vh-4rem))]">
+      <div className="relative z-[1] mx-auto flex min-h-[calc(100vh-1.5rem)] w-full max-w-[1180px] overflow-hidden rounded-[28px] bg-white shadow-[0_24px_80px_-24px_rgba(62,45,113,0.45)] dark:bg-card sm:min-h-[calc(100vh-2.5rem)] lg:min-h-[min(820px,calc(100vh-4rem))]">
         <aside className="relative hidden w-[42%] shrink-0 flex-col overflow-hidden bg-gradient-to-br from-[#9B7FD9] via-[#64499D] to-[#3E2D71] p-8 text-white lg:flex xl:p-10">
           <div className="pointer-events-none absolute -end-16 -top-20 h-64 w-64 rounded-full bg-white/10" />
           <div className="pointer-events-none absolute -start-10 bottom-24 h-48 w-48 rounded-full bg-[#3E2D71]/40" />

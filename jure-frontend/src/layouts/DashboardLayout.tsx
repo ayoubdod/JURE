@@ -127,8 +127,8 @@ const DashboardLayout = () => {
         <div
           className={
             fillViewport
-              ? 'relative flex h-screen overflow-hidden bg-[#FAF9FD] dark:bg-[#0c0a14]'
-              : 'relative flex min-h-screen flex-col bg-[#FAF9FD] dark:bg-[#0c0a14]'
+              ? 'relative flex h-screen overflow-hidden bg-background'
+              : 'relative flex min-h-screen flex-col bg-background'
           }
           style={{ ['--sidebar-rail-width' as string]: sidebarWidth }}
         >
