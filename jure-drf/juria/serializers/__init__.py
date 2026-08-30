@@ -7,7 +7,13 @@ from juria.serializers.message_serializer import (
     JuriaAssistantMessageResponseSerializer,
     JuriaDraftRequestSerializer,
     JuriaMessageCreateSerializer,
+    JuriaMessageSerializer,
     JuriaUserMessageResponseSerializer,
+)
+from juria.serializers.project_serializer import (
+    JuriaProjectCreateSerializer,
+    JuriaProjectDetailSerializer,
+    JuriaProjectListSerializer,
 )
 
 __all__ = [
@@ -17,5 +23,9 @@ __all__ = [
     "JuriaUserMessageResponseSerializer",
     "JuriaAssistantMessageResponseSerializer",
     "JuriaMessageCreateSerializer",
+    "JuriaMessageSerializer",
     "JuriaDraftRequestSerializer",
+    "JuriaProjectCreateSerializer",
+    "JuriaProjectDetailSerializer",
+    "JuriaProjectListSerializer",
 ]

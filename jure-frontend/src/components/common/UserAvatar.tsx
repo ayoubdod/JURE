@@ -79,6 +79,7 @@ export default function UserAvatar({
   image,
   firstName,
   lastName,
+  email,
   size = 'md',
   className,
 }: UserAvatarProps) {
@@ -87,7 +88,7 @@ export default function UserAvatar({
     .map((n) => (n || '').charAt(0))
     .join('')
     .toUpperCase()
-    .slice(0, 2) || '?';
+    .slice(0, 2) || (email || '?').charAt(0).toUpperCase();
 
   const resolvedImage = resolveImageUrl(image);
 

@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import base64
 import logging
+import re
 from typing import Any
 
 import requests
@@ -47,20 +48,35 @@ def send_chat_message(
     new_message: str,
     case_context: dict[str, Any] | None = None,
     mode: str = "CHAT",
+    *,
+    language: str | None = None,
+    jurisdiction_code: str | None = None,
+    legal_domain: str | None = None,
+    instructions: str | None = None,
+    retrieved_block: str | None = None,
+    json_mode: bool = False,
 ) -> dict[str, Any]:
     """
     Send a message with prior turns for context.
 
     conversation_history: list of {role, content} with roles user/assistant (lowercase).
     """
-    system_prompt = build_system_prompt(mode, case_context)
+    system_prompt = build_system_prompt(
+        mode,
+        case_context,
+        language=language,
+        jurisdiction_code=jurisdiction_code,
+        legal_domain=legal_domain,
+        instructions=instructions,
+        retrieved_block=retrieved_block,
+    )
     messages = [
         {"role": "system", "content": system_prompt},
         *conversation_history,
         {"role": "user", "content": new_message},
     ]
     if provider_name() == "deepseek":
-        result = _deepseek_chat(messages)
+        result = _deepseek_chat(messages, json_mode=json_mode)
         return {
             "content": result["content"],
             "tokens_used": result["tokens_used"],
@@ -83,6 +99,12 @@ def analyze_document(
     file_type: str,
     analysis_prompt: str,
     case_context: dict[str, Any] | None = None,
+    *,
+    language: str | None = None,
+    jurisdiction_code: str | None = None,
+    legal_domain: str | None = None,
+    instructions: str | None = None,
+    retrieved_block: str | None = None,
 ) -> dict[str, Any]:
     """Analyze a PDF/DOCX. DeepSeek receives extracted text; legacy Juria gets the file."""
     if provider_name() == "deepseek":
@@ -95,22 +117,44 @@ def analyze_document(
             "--- Début du document ---\n"
             f"{extracted}\n"
             "--- Fin du document ---\n\n"
-            "Fournis une analyse structurée: synthèse, points clés, clauses sensibles, "
-            "risques, et points à vérifier en droit marocain. N'invente pas de clauses absentes."
+            "Retourne un JSON unique (aucun markdown) avec exactement cette structure:\n"
+            "{"
+            '"analysis":"synthèse en prose",'
+            '"risk_score":0,'
+            '"risks":{"high":[],"medium":[],"low":[]},'
+            '"missing_clauses":[],'
+            '"unusual_clauses":[],'
+            '"extracted":{"parties":[],"obligations":[],"dates":[],"payment":[],'
+            '"termination":[],"penalties":[],"confidentiality":[],"non_compete":[],'
+            '"liability":[],"governing_law":[],"dispute_resolution":[]}'
+            "}\n"
+            "risk_score est un entier 0-100 fondé uniquement sur le texte. "
+            "N'invente pas de clauses absentes. Si une catégorie est vide, utilise []."
         )
         result = _deepseek_chat(
             [
                 {
                     "role": "system",
-                    "content": build_system_prompt("CONTRACT_ANALYSIS", case_context),
+                    "content": build_system_prompt(
+                        "CONTRACT_ANALYSIS",
+                        case_context,
+                        language=language,
+                        jurisdiction_code=jurisdiction_code,
+                        legal_domain=legal_domain,
+                        instructions=instructions,
+                        retrieved_block=retrieved_block,
+                    ),
                 },
                 {"role": "user", "content": user_content},
-            ]
+            ],
+            json_mode=True,
         )
+        parsed = parse_contract_analysis(result["content"])
         return {
-            "analysis": result["content"],
-            "key_points": [],
-            "risks": [],
+            "analysis": parsed.get("analysis") or result["content"],
+            "structured": parsed,
+            "key_points": parsed.get("key_points") or [],
+            "risks": parsed.get("risks") or {},
             "tokens_used": result["tokens_used"],
             "message_id": result["message_id"],
         }
@@ -137,10 +181,12 @@ def draft_document(
     jurisdiction_code: str | None = None,
     legal_system: str | None = None,
     language: str | None = None,
+    legal_domain: str | None = None,
+    instructions: str | None = None,
 ) -> dict[str, Any]:
     """Generate a legal document via the configured provider."""
     code = (jurisdiction_code or "MA").upper()
-    system = legal_system or ("moroccan" if code == "MA" else "")
+    system = legal_system or ""
     lang = language or "fr"
     if provider_name() == "deepseek":
         label = DRAFT_TYPE_LABELS.get(document_type, document_type.replace("_", " ").lower())
@@ -150,20 +196,30 @@ def draft_document(
                 continue
             param_lines.append(f"- {key}: {value}")
         params_block = "\n".join(param_lines) or "- (aucun paramètre fourni)"
+        lang_hint = language or lang or "fr"
         user_content = (
-            f"Rédige un {label} conforme aux usages marocains, en français juridique.\n"
+            f"Rédige un {label}.\n"
             "Utilise uniquement les informations fournies. Pour toute donnée manquante, "
             "insère un placeholder [À COMPLÉTER] — n'invente pas d'identité, de montant "
             "ou de date.\n\n"
             f"Type d'acte: {document_type}\n"
+            f"Langue: {lang_hint}\n"
             f"Paramètres:\n{params_block}\n\n"
-            "Produis le texte complet de l'acte, prêt à être relu par un avocat."
+            "Produis le texte complet de l'acte, prêt à être relu par un avocat. "
+            "Utilise des titres, listes et paragraphes clairs."
         )
         result = _deepseek_chat(
             [
                 {
                     "role": "system",
-                    "content": build_system_prompt("DOCUMENT_DRAFTING", case_context),
+                    "content": build_system_prompt(
+                        "DOCUMENT_DRAFTING",
+                        case_context,
+                        language=language or lang,
+                        jurisdiction_code=jurisdiction_code or code,
+                        legal_domain=legal_domain,
+                        instructions=instructions,
+                    ),
                 },
                 {"role": "user", "content": user_content},
             ]
@@ -189,39 +245,152 @@ def draft_document(
     )
 
 
-def build_system_prompt(mode: str, case_context: dict[str, Any] | None = None) -> str:
-    """System prompt for Juria: Moroccan legal context and optional dossier background."""
-    base = (
-        "Tu es Juria, assistant juridique spécialisé pour le droit marocain. "
-        "Réponds avec rigueur, en t'appuyant sur le système juridique marocain "
-        "(droit marocain). Références utiles: Code Général des Impôts (CGI), "
-        "Code de Commerce, Dahir des Obligations et Contrats (DOC), "
-        "Code du Travail, Code de Procédure Civile. "
-        "Langue principale: français; tu peux reconnaître des formulations en darija "
-        "lorsque c'est pertinent. Juridiction: Royaume du Maroc. "
-        "Tes réponses sont une aide; un avocat doit relire avant tout usage.\n\n"
+def parse_contract_analysis(raw: str) -> dict[str, Any]:
+    import json
+
+    text = (raw or "").strip()
+    if text.startswith("```"):
+        text = re.sub(r"^```(?:json)?\s*", "", text)
+        text = re.sub(r"\s*```$", "", text)
+    try:
+        data = json.loads(text)
+    except (json.JSONDecodeError, TypeError):
+        return {"analysis": raw or "", "parse_error": True}
+    if not isinstance(data, dict):
+        return {"analysis": raw or "", "parse_error": True}
+    return data
+
+
+def _language_rules(lang: str, lang_label: str) -> str:
+    """Hard language enforcement so the model does not default to French."""
+    if lang == "en":
+        return (
+            f"RESPONSE LANGUAGE (mandatory): English ({lang_label}). "
+            "Write the entire answer in English: explanations, headings, and legal phrasing. "
+            "Do not reply in French unless the user explicitly asks to switch language. "
+            "You may quote statutes or case names in their original language when citing."
+        )
+    if lang == "ar":
+        return (
+            f"لغة الرد (إلزامية): العربية الفصحى القانونية ({lang_label}). "
+            "أجب بالعربية الفصحى طوال الرد: الشرح والعناوين والصياغة القانونية. "
+            "لا تجب بالفرنسية أو الإنجليزية إلا إذا طلب المستخدم صراحةً تغيير اللغة. "
+            "يجوز اقتباس النصوص الرسمية بلغتها الأصلية عند الاستشهاد."
+        )
+    if lang == "darija":
+        return (
+            f"RESPONSE LANGUAGE (mandatory): Darija / Moroccan Arabic ({lang_label}). "
+            "Reply in clear Moroccan Darija (دارجة مغربية) for explanations, while keeping "
+            "precise legal terms when needed (Arabic fusḥā or French loanwords as lawyers use them). "
+            "Do not answer in French or English unless the user explicitly switches language."
+        )
+    # French (default)
+    return (
+        f"LANGUE DE RÉPONSE (obligatoire): français ({lang_label}). "
+        "Rédige toute la réponse en français: explications, titres et formulations juridiques. "
+        "Ne réponds pas en anglais ou en arabe sauf si l'utilisateur demande explicitement de changer de langue. "
+        "Tu peux citer des textes officiels dans leur langue d'origine."
     )
-    mode_bits = {
-        "CHAT": (
-            "Mode: discussion juridique générale. Réponds de façon claire et structurée, "
-            "sans inventer de textes de loi: indique quand une vérification officielle est nécessaire."
-        ),
-        "CONTRACT_ANALYSIS": (
-            "Mode: analyse contractuelle. Identifie les risques, clauses sensibles, "
-            "incohérences et points de conformité au regard du droit marocain lorsque applicable."
-        ),
-        "LEGAL_RESEARCH": (
-            "Mode: recherche juridique. Appuie-toi sur les cadres normatifs marocains; "
-            "cite les sources de manière prudente et distingue doctrine / jurisprudence / texte."
-        ),
-        "DOCUMENT_DRAFTING": (
-            "Mode: rédaction d'actes juridiques. Produis des formulations conformes aux usages "
-            "marocains, terminologie juridique correcte, et structure professionnelle."
-        ),
-    }
-    parts = [base, mode_bits.get(mode, mode_bits["CHAT"])]
+
+
+def _mode_instructions(mode: str, lang: str) -> str:
+    if lang == "en":
+        bits = {
+            "CHAT": (
+                "Mode: legal discussion. Answer clearly and structured. "
+                "You may combine analysis, research and drafting in the same thread when asked."
+            ),
+            "CONTRACT_ANALYSIS": (
+                "Mode: contract analysis. Identify risks, sensitive clauses, inconsistencies "
+                "and compliance points under the project jurisdiction."
+            ),
+            "LEGAL_RESEARCH": (
+                "Mode: legal research. Cite only sources provided in the project context. "
+                "Distinguish doctrine / case law / statute."
+            ),
+            "DOCUMENT_DRAFTING": (
+                "Mode: legal drafting. Produce professional wording, correct legal terminology, clear structure."
+            ),
+        }
+    elif lang in ("ar", "darija"):
+        bits = {
+            "CHAT": (
+                "الوضع: نقاش قانوني. أجب بوضوح وبهيكلة جيدة. "
+                "يمكنك الجمع بين التحليل والبحث والصياغة في نفس المحادثة عند الطلب."
+            ),
+            "CONTRACT_ANALYSIS": (
+                "الوضع: تحليل عقد. حدّد المخاطر والبنود الحساسة والتناقضات "
+                "ونقاط الامتثال وفق ولاية المشروع."
+            ),
+            "LEGAL_RESEARCH": (
+                "الوضع: بحث قانوني. استشهد فقط بالمصادر الواردة في سياق المشروع. "
+                "ميّز بين الفقه / الاجتهاد / النص التشريعي."
+            ),
+            "DOCUMENT_DRAFTING": (
+                "الوضع: صياغة قانونية. أنتج صياغة مهنية ومصطلحات قانونية صحيحة وهيكلة واضحة."
+            ),
+        }
+    else:
+        bits = {
+            "CHAT": (
+                "Mode: discussion juridique. Réponds de façon claire et structurée. "
+                "Tu peux combiner analyse, recherche et rédaction dans le même fil si on te le demande."
+            ),
+            "CONTRACT_ANALYSIS": (
+                "Mode: analyse contractuelle. Identifie les risques, clauses sensibles, "
+                "incohérences et points de conformité au regard de la juridiction du projet."
+            ),
+            "LEGAL_RESEARCH": (
+                "Mode: recherche juridique. Cite uniquement les sources fournies dans le contexte "
+                "du projet. Distingue doctrine / jurisprudence / texte."
+            ),
+            "DOCUMENT_DRAFTING": (
+                "Mode: rédaction d'actes juridiques. Produis des formulations professionnelles, "
+                "terminologie juridique correcte, structure claire."
+            ),
+        }
+    return bits.get(mode, bits["CHAT"])
+
+
+def build_system_prompt(
+    mode: str,
+    case_context: dict[str, Any] | None = None,
+    *,
+    language: str | None = None,
+    jurisdiction_code: str | None = None,
+    legal_domain: str | None = None,
+    instructions: str | None = None,
+    retrieved_block: str | None = None,
+) -> str:
+    """System prompt for Juria: jurisdiction, language, project instructions, authorized context."""
+    from juria.constants import JURISDICTION_LABELS, LANGUAGE_LABELS
+
+    code = (jurisdiction_code or "MA").upper()
+    jur_label = JURISDICTION_LABELS.get(code, code)
+    lang = (language or "fr").lower()
+    lang_label = LANGUAGE_LABELS.get(lang, lang)
+    domain = (legal_domain or "").strip()
+
+    # Identity + common rules in English so language choice is not biased by a French-only base.
+    base = (
+        "You are Juria, a professional legal assistant built into JURE. "
+        f"Jurisdiction: {jur_label} ({code}). "
+        "Never hardcode a national legal system other than the project jurisdiction. "
+        "Your answers are assistance only; a lawyer must review before any use. "
+        "Never invent a source, article, case, or document. "
+        "If you lack support in the provided sources, say so explicitly. "
+        "Distinguish established facts from hypotheses.\n\n"
+        f"{_language_rules(lang, lang_label)}\n\n"
+    )
+    if domain:
+        base += f"Legal domain: {domain}.\n\n"
+    parts = [base, _mode_instructions(mode, lang)]
+    if instructions and instructions.strip():
+        parts.append("\n\nProject instructions (priority):\n")
+        parts.append(instructions.strip())
+        parts.append("\n")
     if case_context:
-        parts.append("\n\nContexte du dossier (fourni par le cabinet) :\n")
+        parts.append("\n\nMatter context (authorized fields only):\n")
         for key in (
             "reference",
             "title",
@@ -235,10 +404,18 @@ def build_system_prompt(mode: str, case_context: dict[str, Any] | None = None) -
             val = case_context.get(key)
             if val is not None and str(val).strip():
                 parts.append(f"- {key}: {val}\n")
+    if retrieved_block:
+        parts.append("\n\n")
+        parts.append(retrieved_block)
+        parts.append("\n")
+        parts.append(
+            "When you rely on a source above, mention its number [n] in the text. "
+            "Do not invent a source list — real citations are handled by the system.\n"
+        )
     return "".join(parts)
 
 
-def _deepseek_chat(messages: list[dict[str, str]]) -> dict[str, Any]:
+def _deepseek_chat(messages: list[dict[str, str]], *, json_mode: bool = False, stream: bool = False) -> dict[str, Any]:
     api_key = (getattr(settings, "DEEPSEEK_API_KEY", "") or "").strip()
     if not api_key:
         raise JuriaAPIError("DeepSeek API key is not configured.")
@@ -250,8 +427,11 @@ def _deepseek_chat(messages: list[dict[str, str]]) -> dict[str, Any]:
         "model": model,
         "messages": messages,
         "max_tokens": settings.JURIA_MAX_TOKENS,
-        "stream": False,
+        # Streaming is prepared (stream kwarg) but disabled until the SSE endpoint ships.
+        "stream": bool(stream),
     }
+    if json_mode:
+        payload["response_format"] = {"type": "json_object"}
     if "reasoner" not in model.lower():
         payload["temperature"] = 0.3
 

@@ -21,6 +21,8 @@ export function mapApiListItemToConversation(item: JuriaApiConversationListItem)
     createdAt: item.created_at,
     messages: [],
     lastMessagePreview: item.last_message_preview,
+    projectId: item.project_id ?? undefined,
+    threadId: item.thread_id ?? undefined,
   };
 }
 
@@ -61,6 +63,14 @@ export function mapApiMessageToJuria(m: JuriaApiMessage): JuriaMessage {
       downloadMessageId: m.id,
     };
   }
+
+  msg.author = m.author ?? undefined;
+  msg.sources = m.sources ?? [];
+  msg.analysis = (m.analysis as JuriaMessage['analysis']) ?? undefined;
+  msg.isSuperseded = Boolean(m.is_superseded);
+  msg.editedAt = m.edited_at;
+  msg.parentMessageId = m.parent_message_id ?? null;
+  msg.versions = m.versions;
 
   return msg;
 }

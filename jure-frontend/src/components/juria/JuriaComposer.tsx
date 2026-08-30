@@ -1,20 +1,26 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Paperclip, Send, X } from 'lucide-react';
+import { Paperclip, Plus, Send, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { JURIA_MODE_VISUAL } from '@/components/juria/juriaConstants';
 import { CaseLinkDropdown } from '@/components/juria/CaseLinkDropdown';
 import type { JuriaMode } from '@/types/juria';
 import { useAppTranslation } from '@/i18n';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 const ACCEPT = '.pdf,.doc,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document';
 const ASK_LANG_KEY = 'jure.juria.askLang';
-type AskLang = 'fr' | 'ar' | 'darija';
+type AskLang = 'fr' | 'en' | 'ar' | 'darija';
 
 function readAskLang(): AskLang {
   try {
     const v = localStorage.getItem(ASK_LANG_KEY);
-    if (v === 'ar' || v === 'darija' || v === 'fr') return v;
+    if (v === 'ar' || v === 'darija' || v === 'fr' || v === 'en') return v;
   } catch {
     /* ignore */
   }
@@ -39,6 +45,9 @@ export function JuriaComposer({
   variant = 'docked',
   askLang: askLangProp,
   onAskLangChange,
+  onAddFromCase,
+  onAddFromLibrary,
+  canAddFromCase,
 }: {
   mode: JuriaMode;
   modeReadOnly?: boolean;
@@ -57,6 +66,9 @@ export function JuriaComposer({
   variant?: 'docked' | 'hero';
   askLang?: AskLang;
   onAskLangChange?: (lang: AskLang) => void;
+  onAddFromCase?: () => void;
+  onAddFromLibrary?: () => void;
+  canAddFromCase?: boolean;
 }) {
   const { t } = useAppTranslation();
   const ta = useRef<HTMLTextAreaElement>(null);
@@ -99,7 +111,7 @@ export function JuriaComposer({
   };
 
   const modes: JuriaMode[] = ['LEGAL_RESEARCH', 'CONTRACT_ANALYSIS', 'DOCUMENT_DRAFTING', 'CHAT'];
-  const langs: AskLang[] = ['fr', 'ar', 'darija'];
+  const langs: AskLang[] = ['fr', 'en', 'ar', 'darija'];
   const hero = variant === 'hero';
 
   return (
@@ -125,6 +137,28 @@ export function JuriaComposer({
       )}
 
       <div className="flex items-end gap-1.5 rounded-2xl border border-slate-200 bg-white px-1.5 py-1.5 shadow-[0_1px_2px_rgba(15,23,42,0.04)] dark:border-slate-700 dark:bg-slate-900 sm:gap-2 sm:px-2 sm:py-2">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button
+              type="button"
+              className="mb-0.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"
+              aria-label="Ajouter"
+            >
+              <Plus className="h-5 w-5" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="w-56">
+            <DropdownMenuItem onClick={pickFile}>Importer un document</DropdownMenuItem>
+            {onAddFromCase && (
+              <DropdownMenuItem disabled={!canAddFromCase} onClick={onAddFromCase}>
+                Ajouter un document du dossier
+              </DropdownMenuItem>
+            )}
+            {onAddFromLibrary && (
+              <DropdownMenuItem onClick={onAddFromLibrary}>Ajouter depuis la bibliothèque</DropdownMenuItem>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
         <button
           type="button"
           className="mb-0.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"

@@ -85,11 +85,29 @@ class JuriaConversationListCreateView(JuriaEnabledMixin, generics.ListCreateAPIV
             from rest_framework.exceptions import ValidationError
 
             raise ValidationError({"linked_case_id": "Case not found or not accessible."})
-        title = serializer.validated_data.get("title") or ""
+        title = (serializer.validated_data.get("title") or "").strip()
+        mode = serializer.validated_data.get("mode") or JuriaConversation.Mode.CHAT
+        project = None
+        thread = None
+        cabinet = get_user_cabinet(user)
+        if cabinet:
+            from juria.services.workspace import create_project
+
+            project = create_project(
+                cabinet=cabinet,
+                owner=user,
+                name=title or "Nouveau projet",
+                linked_case=case,
+                mode=mode,
+                default_thread_title=title or "Discussion générale",
+            )
+            thread = project.threads.first()
         serializer.save(
             user=user,
             linked_case=case,
-            title=title.strip(),
+            title=title,
+            project=project,
+            thread=thread,
         )
 
     def create(self, request, *args, **kwargs):

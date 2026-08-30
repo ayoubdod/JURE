@@ -1,135 +1,231 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router';
-import { AlertCircle, ArrowLeft, Menu, MoreHorizontal, PanelLeft } from 'lucide-react';
+import { AlertCircle, Menu, MessageSquare, PanelLeft, PanelLeftOpen, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { JuriaSidebar } from '@/components/juria/JuriaSidebar';
-import { JuriaEmptyState } from '@/components/juria/JuriaEmptyState';
-import { JuriaConversationView } from '@/components/juria/JuriaConversationView';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { JuriaProjectSidebar } from '@/components/juria/JuriaProjectSidebar';
+import { JuriaCreateProjectModal } from '@/components/juria/JuriaCreateProjectModal';
+import { JuriaArchiveView } from '@/components/juria/JuriaArchiveView';
+import { JuriaProjectHeader } from '@/components/juria/JuriaProjectHeader';
+import { JuriaContextBar } from '@/components/juria/JuriaContextBar';
+import { JuriaChat } from '@/components/juria/JuriaChat';
+import { JuriaDocumentPanel } from '@/components/juria/JuriaDocumentPanel';
+import { JuriaTeamPanel } from '@/components/juria/JuriaTeamPanel';
+import { JuriaArtifactEditor } from '@/components/juria/JuriaArtifactEditor';
+import { JuriaActivityPanel } from '@/components/juria/JuriaActivityPanel';
+import { JuriaProjectSettings } from '@/components/juria/JuriaProjectSettings';
+import { JuriaSourceList } from '@/components/juria/JuriaSourceList';
+import { JuriaCaseHub } from '@/components/juria/JuriaCaseHub';
+import { JuriaOverview } from '@/components/juria/JuriaOverview';
 import useJuriaStore from '@/stores/juriaStore';
-import type { JuriaMode } from '@/types/juria';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { cn } from '@/lib/utils';
+import { useAppTranslation } from '@/i18n';
+import type { JuriaLang } from '@/types/juria';
 import { useToast } from '@/hooks/use-toast';
 import { getJuriaErrorMessage } from '@/utils/juriaErrors';
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { cn } from '@/lib/utils';
-import { useIsMobile } from '@/hooks/use-mobile';
-import { useAppTranslation } from '@/i18n';
-import { isJuriaConversationId, normalizeJuriaConversationId } from '@/services/juria/api';
+
+function resolveQuickChatLang(appLang: string): JuriaLang {
+  try {
+    const stored = localStorage.getItem('jure.juria.askLang');
+    if (stored === 'fr' || stored === 'en' || stored === 'ar' || stored === 'darija') return stored;
+  } catch {
+    /* ignore */
+  }
+  if (appLang === 'en' || appLang === 'ar' || appLang === 'fr') return appLang;
+  return 'fr';
+}
 
 export default function JuriaPage() {
-  const { t } = useAppTranslation();
   const [params, setParams] = useSearchParams();
-  const { toast } = useToast();
   const isMobile = useIsMobile();
-  const [mobileListOpen, setMobileListOpen] = useState(false);
-  const [tabletSidebarOpen, setTabletSidebarOpen] = useState(true);
-  const activeId = useJuriaStore((s) => s.activeConversationId);
-  const conversations = useJuriaStore((s) => s.conversations);
-  const setActive = useJuriaStore((s) => s.setActiveConversation);
-  const create = useJuriaStore((s) => s.createConversation);
-  const sendMessage = useJuriaStore((s) => s.sendMessage);
-  const rename = useJuriaStore((s) => s.renameConversation);
-  const archive = useJuriaStore((s) => s.archiveConversation);
-  const del = useJuriaStore((s) => s.deleteConversation);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [createOpen, setCreateOpen] = useState(false);
+  const [tabletOpen, setTabletOpen] = useState(true);
+  const [quickBusy, setQuickBusy] = useState(false);
+  const [projectsNavOpen, setProjectsNavOpen] = useState(() => {
+    try {
+      return localStorage.getItem('jure.juria.projectsNav') !== '0';
+    } catch {
+      return true;
+    }
+  });
+  useEffect(() => {
+    try {
+      localStorage.setItem('jure.juria.projectsNav', projectsNavOpen ? '1' : '0');
+    } catch {
+      /* ignore */
+    }
+  }, [projectsNavOpen]);
+
+  /** Skip one URL→store sync after an intentional UI navigation (create / sidebar click). */
+  const skipUrlReadRef = useRef(false);
+  const { t, lang, dir } = useAppTranslation();
+  const { toast } = useToast();
+  const w = t.juria.workspace;
+
   const loadInitial = useJuriaStore((s) => s.loadInitial);
   const juriaUnavailable = useJuriaStore((s) => s.juriaUnavailable);
   const clearJuriaUnavailable = useJuriaStore((s) => s.clearJuriaUnavailable);
+  const projects = useJuriaStore((s) => s.projects);
+  const archived = useJuriaStore((s) => s.archivedProjects);
+  const activeId = useJuriaStore((s) => s.activeProjectId);
+  const setActive = useJuriaStore((s) => s.setActiveProject);
+  const archiveView = useJuriaStore((s) => s.archiveView);
+  const tab = useJuriaStore((s) => s.activeTab);
+  const setTab = useJuriaStore((s) => s.setActiveTab);
+  const createQuickChat = useJuriaStore((s) => s.createQuickChat);
 
-  const hasActive = !!activeId && conversations.some((c) => c.id === activeId);
+  const project =
+    projects.find((p) => p.id === activeId) || archived.find((p) => p.id === activeId) || null;
+  const projectParam = params.get('p');
 
-  useEffect(() => {
-    void loadInitial();
-  }, [loadInitial]);
-
-  useEffect(() => {
-    const c = normalizeJuriaConversationId(params.get('c'));
-    if (c && c !== activeId) {
-      setActive(c);
-    }
-  }, [params, activeId, setActive]);
-
-  useEffect(() => {
-    if (isJuriaConversationId(activeId)) {
+  const openProject = useCallback(
+    (id: string | null) => {
+      skipUrlReadRef.current = true;
+      setActive(id);
       setParams(
-        (p) => {
-          const n = new URLSearchParams(p);
-          n.set('c', activeId);
-          return n;
-        },
-        { replace: true }
-      );
-      setMobileListOpen(false);
-    } else {
-      setParams(
-        (p) => {
-          const n = new URLSearchParams(p);
+        (prev) => {
+          const n = new URLSearchParams(prev);
+          if (id) n.set('p', id);
+          else n.delete('p');
           n.delete('c');
           return n;
         },
         { replace: true }
       );
+      window.setTimeout(() => {
+        skipUrlReadRef.current = false;
+      }, 300);
+    },
+    [setActive, setParams]
+  );
+
+  const startQuickChat = useCallback(async () => {
+    if (quickBusy) return;
+    setQuickBusy(true);
+    try {
+      const id = await createQuickChat({ language: resolveQuickChatLang(lang) });
+      openProject(id);
+    } catch (err) {
+      toast({
+        variant: 'destructive',
+        title: t.juria.toasts.createFailed,
+        description: getJuriaErrorMessage(err),
+      });
+    } finally {
+      setQuickBusy(false);
     }
+  }, [createQuickChat, lang, openProject, quickBusy, t.juria.toasts.createFailed, toast]);
+
+  // Simple chats are chat-only
+  useEffect(() => {
+    if (project?.is_simple && tab !== 'chat') setTab('chat');
+  }, [project?.is_simple, tab, setTab]);
+
+  useEffect(() => {
+    void loadInitial();
+  }, [loadInitial]);
+
+  // URL → store (browser back/forward only; ignore right after openProject)
+  useEffect(() => {
+    if (skipUrlReadRef.current) return;
+    if (!projectParam) return;
+    const current = useJuriaStore.getState().activeProjectId;
+    if (projectParam !== current) setActive(projectParam);
+  }, [projectParam, setActive]);
+
+  // Store → URL (backup if openProject wasn't used)
+  useEffect(() => {
+    setParams(
+      (prev) => {
+        const cur = prev.get('p');
+        if (activeId === cur || (!activeId && !cur)) return prev;
+        const n = new URLSearchParams(prev);
+        if (activeId) n.set('p', activeId);
+        else n.delete('p');
+        n.delete('c');
+        return n;
+      },
+      { replace: true }
+    );
+    setMobileOpen(false);
   }, [activeId, setParams]);
 
   if (juriaUnavailable) {
     return (
-      <div className="flex min-h-[320px] flex-col items-center justify-center gap-4 rounded-2xl border border-amber-200 bg-amber-50/90 p-6 sm:p-8 text-center dark:border-amber-900 dark:bg-amber-950/40">
-        <AlertCircle className="h-12 w-12 text-amber-600 dark:text-amber-400" />
-        <div>
-          <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Juria indisponible</h2>
-          <p className="mt-2 max-w-md text-sm text-slate-600 dark:text-slate-300">
-            Le service Juria est désactivé ou momentanément indisponible côté serveur. Réessayez plus tard.
-          </p>
-        </div>
+      <div className="flex min-h-[320px] flex-col items-center justify-center gap-4 rounded-2xl border border-amber-200 bg-amber-50/90 p-8 text-center">
+        <AlertCircle className="h-12 w-12 text-amber-600" />
+        <h2 className="text-lg font-semibold">{w.unavailableTitle}</h2>
+        <p className="max-w-md text-sm text-slate-600">{w.unavailableBody}</p>
         <Button
-          type="button"
           variant="outline"
-          className="min-h-11"
           onClick={() => {
             clearJuriaUnavailable();
             void loadInitial();
           }}
         >
-          Réessayer
+          {w.retry}
         </Button>
       </div>
     );
   }
 
   return (
-    <div className="flex h-full min-h-0 w-full overflow-hidden bg-transparent">
-      {/* Desktop / tablet sidebar */}
-      <div className={cn(tabletSidebarOpen ? 'hidden md:contents' : 'hidden lg:contents')}>
-        <JuriaSidebar />
-      </div>
+    <div
+      dir={dir}
+      className="relative flex h-full min-h-0 w-full overflow-hidden bg-gradient-to-br from-[#F7F4FF] via-white to-white dark:from-slate-950 dark:via-slate-950 dark:to-slate-900"
+    >
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,_rgba(100,73,157,0.08),_transparent_50%)]" />
+      {projectsNavOpen ? (
+        <div className={cn('relative z-[1]', tabletOpen ? 'hidden md:contents' : 'hidden lg:contents')}>
+          <JuriaProjectSidebar
+            onNewProject={() => setCreateOpen(true)}
+            onQuickChat={() => void startQuickChat()}
+            quickBusy={quickBusy}
+            onOpenProject={openProject}
+            onCollapse={() => setProjectsNavOpen(false)}
+          />
+        </div>
+      ) : (
+        <div className="relative z-[1] hidden w-11 shrink-0 flex-col items-center border-e border-slate-200/80 bg-white/80 py-3 backdrop-blur-md dark:border-slate-800 dark:bg-slate-950/80 md:flex">
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="h-9 w-9 text-slate-500 hover:text-[#64499D] dark:text-slate-300"
+            aria-label={w.expandSidebar}
+            title={w.expandSidebar}
+            onClick={() => setProjectsNavOpen(true)}
+          >
+            <PanelLeftOpen className="h-4 w-4" />
+          </Button>
+        </div>
+      )}
 
-      {/* Mobile conversation list sheet */}
-      <Sheet open={isMobile && mobileListOpen} onOpenChange={setMobileListOpen}>
+
+      <Sheet open={isMobile && mobileOpen} onOpenChange={setMobileOpen}>
         <SheetContent side="left" className="w-[min(100vw,20rem)] p-0 sm:max-w-sm">
           <SheetHeader className="sr-only">
-            <SheetTitle>Conversations Juria</SheetTitle>
+            <SheetTitle>{w.projectsSheet}</SheetTitle>
           </SheetHeader>
-          <div className="h-full min-h-0">
-            <JuriaSidebar />
-          </div>
+          <JuriaProjectSidebar
+            onNewProject={() => setCreateOpen(true)}
+            onQuickChat={() => void startQuickChat()}
+            quickBusy={quickBusy}
+            onOpenProject={openProject}
+          />
         </SheetContent>
       </Sheet>
 
-      <div className="flex min-h-0 min-w-0 flex-1 flex-col bg-transparent">
-        <div className="flex shrink-0 items-center gap-1 border-b border-slate-100 px-2 py-1 lg:hidden dark:border-slate-800">
+      <div className="relative z-[1] flex min-h-0 min-w-0 flex-1 flex-col">
+        <div className="flex shrink-0 items-center gap-1 border-b border-slate-100 px-2 py-1 dark:border-slate-800 lg:hidden">
           <Button
             type="button"
             variant="ghost"
             size="icon"
             className="h-11 w-11 md:hidden"
-            aria-label="Open conversations"
-            onClick={() => setMobileListOpen(true)}
+            onClick={() => setMobileOpen(true)}
           >
             <Menu className="h-5 w-5" />
           </Button>
@@ -138,112 +234,65 @@ export default function JuriaPage() {
             variant="ghost"
             size="icon"
             className="hidden h-9 w-9 md:inline-flex lg:hidden"
-            aria-label="Toggle conversations"
-            onClick={() => setTabletSidebarOpen((v) => !v)}
+            onClick={() => setTabletOpen((v) => !v)}
           >
             <PanelLeft className="h-4 w-4" />
           </Button>
-          {hasActive && (
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              className="h-11 w-11 md:hidden"
-              aria-label="Close conversation"
-              onClick={() => setActive(null)}
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-          )}
-          <span className="min-w-0 flex-1 truncate text-sm font-medium text-slate-800 dark:text-slate-100">
-            {hasActive
-              ? conversations.find((c) => c.id === activeId)?.title ?? 'Juria'
-              : 'Juria'}
-          </span>
-          {hasActive && activeId && (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-11 w-11 md:hidden" aria-label="Menu conversation">
-                  <MoreHorizontal className="h-5 w-5" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-44">
-                <DropdownMenuItem
-                  onClick={() => {
-                    const conv = conversations.find((c) => c.id === activeId);
-                    const next = window.prompt(t.juria.renamePrompt, conv?.title ?? '');
-                    if (next) rename(activeId, next);
-                  }}
-                >
-                  {t.juria.rename}
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => {
-                    void archive(activeId).catch((e) =>
-                      toast({ title: t.juria.toasts.archiveFailed, description: getJuriaErrorMessage(e), variant: 'destructive' })
-                    );
-                  }}
-                >
-                  {t.juria.archive}
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  className="text-red-600"
-                  onClick={() => {
-                    void del(activeId).catch((e) =>
-                      toast({ title: t.juria.toasts.deleteFailed, description: getJuriaErrorMessage(e), variant: 'destructive' })
-                    );
-                  }}
-                >
-                  {t.juria.delete}
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          )}
+          <span className="truncate text-sm font-medium">{project?.name || t.juria.name}</span>
         </div>
 
-        {!hasActive ?
-          <JuriaEmptyState
-            onPickMode={(mode: JuriaMode) => {
-              void create(mode).catch((e) =>
-                toast({
-                  title: 'Création impossible',
-                  description: getJuriaErrorMessage(e),
-                  variant: 'destructive',
-                })
-              );
-            }}
-            onPickStarter={(text, mode) => {
-              void (async () => {
-                try {
-                  const id = await create(mode ?? 'CHAT');
-                  await sendMessage(id, text);
-                } catch (e) {
-                  toast({
-                    title: 'Erreur',
-                    description: getJuriaErrorMessage(e),
-                    variant: 'destructive',
-                  });
-                }
-              })();
-            }}
-            onAsk={(text, file, caseLink, mode) => {
-              void (async () => {
-                try {
-                  const id = await create(mode ?? 'CHAT', caseLink);
-                  await sendMessage(id, text, file);
-                } catch (e) {
-                  toast({
-                    title: 'Erreur',
-                    description: getJuriaErrorMessage(e),
-                    variant: 'destructive',
-                  });
-                }
-              })();
-            }}
-          />
-        : <JuriaConversationView />}
+        {archiveView && !project ? (
+          <JuriaArchiveView onOpenProject={openProject} />
+        ) : !project ? (
+          <div className="flex min-h-0 flex-1 flex-col items-center justify-center p-8 text-center">
+            <img
+              src="/images/juria-icon.png"
+              alt=""
+              className="mb-4 h-14 w-14 rounded-2xl ring-1 ring-[#64499D]/20"
+            />
+            <h2 className="text-xl font-semibold text-slate-900 dark:text-white">{w.emptyTitle}</h2>
+            <p className="mt-2 max-w-md text-sm text-slate-500">{w.emptyHint}</p>
+            <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
+              <Button
+                className="gap-1.5 bg-[#64499D] hover:bg-[#4D3680]"
+                disabled={quickBusy}
+                onClick={() => void startQuickChat()}
+              >
+                <MessageSquare className="h-4 w-4" />
+                {quickBusy ? w.quickChatCreating : w.quickChat}
+              </Button>
+              <Button variant="outline" className="gap-1.5" onClick={() => setCreateOpen(true)}>
+                <Plus className="h-4 w-4" />
+                {w.newProject}
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <>
+            <JuriaProjectHeader project={project} tab={tab} onTab={setTab} />
+            {!project.is_simple && tab === 'overview' && <JuriaOverview project={project} />}
+            {tab === 'chat' && !project.is_simple && (
+              <JuriaContextBar project={project} context={project.context} />
+            )}
+            {tab === 'chat' && <JuriaChat project={project} />}
+            {!project.is_simple && tab === 'sources' && <JuriaSourceList project={project} />}
+            {!project.is_simple && tab === 'documents' && <JuriaDocumentPanel projectId={project.id} />}
+            {!project.is_simple && tab === 'case' && <JuriaCaseHub project={project} />}
+            {!project.is_simple && tab === 'calendar' && <JuriaCaseHub project={project} surface="calendar" />}
+            {!project.is_simple && tab === 'tasks' && <JuriaCaseHub project={project} surface="tasks" />}
+            {!project.is_simple && tab === 'team' && <JuriaTeamPanel project={project} />}
+            {!project.is_simple && tab === 'artifacts' && <JuriaArtifactEditor projectId={project.id} />}
+            {!project.is_simple && tab === 'activity' && <JuriaActivityPanel />}
+            {!project.is_simple && tab === 'instructions' && <JuriaProjectSettings project={project} />}
+          </>
+        )}
       </div>
+
+      <JuriaCreateProjectModal
+        open={createOpen}
+        onOpenChange={setCreateOpen}
+        onCreated={(id) => openProject(id)}
+      />
     </div>
   );
 }

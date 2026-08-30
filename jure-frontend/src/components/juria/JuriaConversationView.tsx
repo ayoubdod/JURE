@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import dayjs from 'dayjs';
-import { Copy, Download, Eye, FileText, Link2, MoreHorizontal, User } from 'lucide-react';
+import { Copy, Download, Eye, FileText, Link2, MoreHorizontal } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -22,6 +22,8 @@ import { navigateToCaseById } from '@/lib/caseRoutes';
 import { useToast } from '@/hooks/use-toast';
 import { getJuriaErrorMessage } from '@/utils/juriaErrors';
 import { useAppTranslation } from '@/i18n';
+import useUserStore from '@/stores/userStore';
+import UserAvatar from '@/components/common/UserAvatar';
 
 export function JuriaConversationView({
   caseContext: _caseContext,
@@ -36,6 +38,7 @@ export function JuriaConversationView({
   const { t } = useAppTranslation();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const currentUser = useUserStore((s) => s.user);
   const conversations = useJuriaStore((s) => s.conversations);
   const activeId = useJuriaStore((s) => s.activeConversationId);
   const processingId = useJuriaStore((s) => s.processingConversationId);
@@ -229,9 +232,14 @@ export function JuriaConversationView({
                     : null}
                     <p className="mt-1 text-right text-[10px] text-slate-400">{dayjs(m.createdAt).format('HH:mm')}</p>
                   </div>
-                  <div className="hidden h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#64499D]/10 text-[#64499D] sm:flex dark:bg-[#64499D]/25">
-                    <User className="h-4 w-4" />
-                  </div>
+                  <UserAvatar
+                    image={currentUser?.image}
+                    firstName={currentUser?.first_name}
+                    lastName={currentUser?.last_name}
+                    email={currentUser?.email}
+                    size="sm"
+                    className="hidden sm:flex"
+                  />
                 </div>
               )}
 

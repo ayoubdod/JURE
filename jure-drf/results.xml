@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <testsuites>
-	<testsuite name="cases.tests_consultation_workflow.ConsultationWorkflowAPITest-20260826233648" tests="1" file="cases/tests_consultation_workflow.py" time="1.269" timestamp="2026-08-26T23:36:49" failures="0" errors="0" skipped="0">
-		<testcase classname="cases.tests_consultation_workflow.ConsultationWorkflowAPITest" name="test_follow_up_identifiers" time="1.269" timestamp="2026-08-26T23:36:49" file="cases\tests_consultation_workflow.py" line="192"/>
+	<testsuite name="juria.tests.JuriaProjectApiTests-20260830082431" tests="1" file="juria/tests.py" time="3.517" timestamp="2026-08-30T08:24:34" failures="0" errors="0" skipped="0">
+		<testcase classname="juria.tests.JuriaProjectApiTests" name="test_create_simple_chat_skips_firm_context" time="3.517" timestamp="2026-08-30T08:24:34" file="juria\tests.py" line="149"/>
 	</testsuite>
 </testsuites>

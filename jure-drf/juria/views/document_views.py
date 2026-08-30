@@ -18,7 +18,7 @@ from juria.models import JuriaConversation, JuriaMessage, record_juria_usage
 from juria.serializers.conversation_serializer import build_case_context
 from juria.serializers.message_serializer import JuriaDraftRequestSerializer
 from juria.services.juria_api_service import JuriaAPIError, JuriaTimeoutError, draft_document
-from juria.views.conversation_views import get_case_for_user, get_user_conversation
+from juria.views.conversation_views import get_case_for_user
 from juria.views.mixins import JuriaEnabledMixin, juria_error_http_status
 from core.utils import get_user_cabinet
 
@@ -32,7 +32,21 @@ class JuriaConversationDraftView(JuriaEnabledMixin, APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request, conversation_id):
-        conv = get_user_conversation(request.user, conversation_id, restore_archived=True)
+        conv = JuriaConversation.objects.select_related("thread", "project", "linked_case").filter(
+            pk=conversation_id
+        ).first()
+        if conv is None:
+            raise Http404()
+        if conv.thread_id:
+            from juria.services.permissions import get_thread_for_user, require_write
+
+            _thread, access = get_thread_for_user(request.user, conv.thread_id, allow_archived=True)
+            require_write(access.member)
+        elif conv.user_id != request.user.id:
+            raise Http404()
+        if conv.is_archived:
+            conv.is_archived = False
+            conv.save(update_fields=["is_archived", "updated_at"])
         ser = JuriaDraftRequestSerializer(data=request.data)
         ser.is_valid(raise_exception=True)
         document_type = ser.validated_data["document_type"]
@@ -51,8 +65,21 @@ class JuriaConversationDraftView(JuriaEnabledMixin, APIView):
             case = get_case_for_user(request.user, conv.linked_case_id)
 
         case_context = build_case_context(case) if case else None
-        cabinet = get_user_cabinet(request.user)
-        jurisdiction = getattr(cabinet, "jurisdiction", None) if cabinet else None
+        project = conv.project
+        if project:
+            jurisdiction_code = project.jurisdiction_code
+            language = ser.validated_data.get("language") or project.preferred_language
+            legal_system = None
+            legal_domain = project.legal_domain
+            instructions = project.instructions
+        else:
+            cabinet = get_user_cabinet(request.user)
+            jurisdiction = getattr(cabinet, "jurisdiction", None) if cabinet else None
+            jurisdiction_code = getattr(jurisdiction, "code", None)
+            language = ser.validated_data.get("language") or getattr(jurisdiction, "default_language", None)
+            legal_system = getattr(jurisdiction, "legal_system", None)
+            legal_domain = None
+            instructions = None
 
         t0 = time.perf_counter()
         try:
@@ -60,9 +87,11 @@ class JuriaConversationDraftView(JuriaEnabledMixin, APIView):
                 document_type,
                 parameters,
                 case_context=case_context,
-                jurisdiction_code=getattr(jurisdiction, "code", None),
-                legal_system=getattr(jurisdiction, "legal_system", None),
-                language=getattr(jurisdiction, "default_language", None),
+                jurisdiction_code=jurisdiction_code,
+                legal_system=legal_system,
+                language=language,
+                legal_domain=legal_domain,
+                instructions=instructions,
             )
         except JuriaTimeoutError:
             return Response(
@@ -89,6 +118,7 @@ class JuriaConversationDraftView(JuriaEnabledMixin, APIView):
 
         msg = JuriaMessage.objects.create(
             conversation=conv,
+            thread=conv.thread,
             role=JuriaMessage.Role.ASSISTANT,
             content=content,
             mode=JuriaConversation.Mode.DOCUMENT_DRAFTING,
@@ -103,6 +133,38 @@ class JuriaConversationDraftView(JuriaEnabledMixin, APIView):
             tokens_delta=tokens,
             documents_drafted_delta=1,
         )
+
+        artifact_id = None
+        if conv.project_id:
+            import markdown as md
+
+            from juria.constants import ActivityAction, ArtifactType
+            from juria.models import JuriaArtifact, JuriaArtifactVersion
+            from juria.services.activity import log_activity
+
+            type_map = {c: c for c, _ in ArtifactType.choices}
+            art_type = type_map.get(document_type, ArtifactType.AUTRE)
+            title = (ser.validated_data.get("title") or document_type.replace("_", " ")).strip()
+            art = JuriaArtifact.objects.create(
+                project=conv.project,
+                thread=conv.thread,
+                title=title,
+                artifact_type=art_type,
+                content_markdown=content,
+                content_html=md.markdown(content or "", extensions=["extra"]),
+                created_by=request.user,
+                current_version=1,
+            )
+            JuriaArtifactVersion.objects.create(
+                artifact=art,
+                version_number=1,
+                content_html=art.content_html,
+                content_markdown=art.content_markdown,
+                created_by=request.user,
+                note="Génération Juria",
+            )
+            log_activity(conv.project, request.user, ActivityAction.ARTIFACT_CREATED, artifact_id=str(art.id))
+            artifact_id = str(art.id)
 
         download_url = ""
         if rel_path:
@@ -121,6 +183,7 @@ class JuriaConversationDraftView(JuriaEnabledMixin, APIView):
                     "created_at": msg.created_at,
                 },
                 "document_download_url": download_url,
+                "artifact_id": artifact_id,
             },
             status=status.HTTP_201_CREATED,
         )
@@ -131,10 +194,21 @@ class JuriaGeneratedDocumentDownloadView(JuriaEnabledMixin, APIView):
 
     def get(self, request, message_id):
         msg = get_object_or_404(
-            JuriaMessage.objects.select_related("conversation"),
+            JuriaMessage.objects.select_related("conversation", "thread", "thread__project"),
             pk=message_id,
         )
-        if msg.conversation.user_id != request.user.id:
+        allowed = False
+        if msg.conversation_id and msg.conversation.user_id == request.user.id:
+            allowed = True
+        elif msg.thread_id:
+            from juria.services.permissions import get_thread_for_user
+
+            try:
+                get_thread_for_user(request.user, msg.thread_id, allow_archived=True)
+                allowed = True
+            except Exception:
+                allowed = False
+        if not allowed:
             raise Http404()
         path = (msg.generated_document_path or "").strip()
         if not path:
