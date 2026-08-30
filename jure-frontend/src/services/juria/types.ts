@@ -12,13 +12,15 @@ export interface JuriaApiConversationListItem {
   created_at: string;
   updated_at: string;
   last_message_preview: string | null;
+  project_id?: string | null;
+  thread_id?: string | null;
 }
 
 export interface JuriaApiMessage {
   id: string;
   role: JuriaApiMessageRole;
   content: string;
-  mode: JuriaMode;
+  mode?: JuriaMode;
   has_attachment: boolean;
   attachment_name: string | null;
   attachment_type: string | null;
@@ -27,8 +29,29 @@ export interface JuriaApiMessage {
   juria_message_id: string | null;
   generated_document_path: string | null;
   created_at: string;
-  /** Present on assistant messages from chat / draft endpoints. */
   suggestions?: string[];
+  author?: {
+    id: number;
+    first_name: string;
+    last_name: string;
+    email: string;
+    image?: string | null;
+    initials?: string;
+  } | null;
+  sources?: Array<{
+    document: string;
+    document_id: string;
+    source_type: string;
+    page?: number | null;
+    chunk?: string;
+    relevance?: number;
+  }>;
+  analysis?: Record<string, unknown>;
+  is_deleted?: boolean;
+  is_superseded?: boolean;
+  edited_at?: string | null;
+  parent_message_id?: string | null;
+  versions?: Array<{ id: string; version_number: number; content: string; created_at: string }>;
 }
 
 export interface JuriaApiConversationDetail extends JuriaApiConversationListItem {
@@ -43,6 +66,7 @@ export interface JuriaApiSendMessageResponse {
 export interface JuriaApiDraftResponse {
   message: JuriaApiMessage;
   document_download_url: string;
+  artifact_id?: string | null;
 }
 
 export interface JuriaApiUsage {

@@ -6,7 +6,8 @@ from django.db import models
 
 class JuriaConversation(models.Model):
     """
-    A conversation session with Juria — global (user-level) or linked to a case.
+    Legacy conversation session. New work uses JuriaProject + JuriaThread.
+    Existing rows are migrated onto a project/thread pair.
     """
 
     class Mode(models.TextChoices):
@@ -31,6 +32,20 @@ class JuriaConversation(models.Model):
     )
     mode = models.CharField(max_length=30, choices=Mode.choices)
     is_archived = models.BooleanField(default=False)
+    project = models.ForeignKey(
+        "juria.JuriaProject",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="legacy_conversations",
+    )
+    thread = models.ForeignKey(
+        "juria.JuriaThread",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="legacy_conversations",
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

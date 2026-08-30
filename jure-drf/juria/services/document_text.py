@@ -16,10 +16,22 @@ class DocumentTextError(Exception):
     """Raised when a PDF/DOCX has no extractable text."""
 
 
+def extract_document_pages(file_path: str, file_type: str) -> list[dict]:
+    """Return [{page: int, text: str}, ...] without raising on empty scanned PDFs."""
+    kind = (file_type or "").lower().strip()
+    if kind == "pdf":
+        return _extract_pdf_pages(file_path)
+    if kind in ("docx", "doc"):
+        text = _extract_docx(file_path)
+        return [{"page": 1, "text": text or ""}]
+    raise DocumentTextError("Unsupported file type. Use PDF or DOCX.")
+
+
 def extract_document_text(file_path: str, file_type: str) -> str:
     kind = (file_type or "").lower().strip()
     if kind == "pdf":
-        text = _extract_pdf(file_path)
+        pages = _extract_pdf_pages(file_path)
+        text = "\n".join(p.get("text") or "" for p in pages)
     elif kind in ("docx", "doc"):
         text = _extract_docx(file_path)
     else:
@@ -67,7 +79,7 @@ def text_to_docx_base64(text: str) -> str:
     return base64.b64encode(buf.getvalue()).decode("ascii")
 
 
-def _extract_pdf(file_path: str) -> str:
+def _extract_pdf_pages(file_path: str) -> list[dict]:
     from pypdf import PdfReader
 
     try:
@@ -79,10 +91,14 @@ def _extract_pdf(file_path: str) -> str:
             reader.decrypt("")
         except Exception as exc:
             raise DocumentTextError("This PDF is password-protected.") from exc
-    parts: list[str] = []
-    for page in reader.pages:
-        parts.append(page.extract_text() or "")
-    return "\n".join(parts)
+    pages: list[dict] = []
+    for index, page in enumerate(reader.pages, start=1):
+        pages.append({"page": index, "text": page.extract_text() or ""})
+    return pages
+
+
+def _extract_pdf(file_path: str) -> str:
+    return "\n".join(p.get("text") or "" for p in _extract_pdf_pages(file_path))
 
 
 def _extract_docx(file_path: str) -> str:

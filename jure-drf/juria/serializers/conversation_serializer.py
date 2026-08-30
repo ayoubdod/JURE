@@ -9,6 +9,11 @@ def build_case_context(case) -> dict:
     data = case.case_specific_data or {}
     if isinstance(data, dict):
         legal_arguments = data.get("legalArguments") or data.get("legal_arguments") or ""
+    jurisdiction = ""
+    cab = getattr(case, "cabinet", None)
+    jur = getattr(cab, "jurisdiction", None) if cab else None
+    if jur:
+        jurisdiction = getattr(jur, "name", "") or getattr(jur, "code", "") or ""
     return {
         "reference": case.reference,
         "title": case.title,
@@ -17,7 +22,7 @@ def build_case_context(case) -> dict:
         "description": case.description or "",
         "legalArguments": legal_arguments,
         "court": case.court or "",
-        "jurisdiction": "Maroc",
+        "jurisdiction": jurisdiction,
     }
 
 
@@ -36,6 +41,8 @@ class JuriaConversationListSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
             "last_message_preview",
+            "project_id",
+            "thread_id",
         )
 
     def get_last_message_preview(self, obj: JuriaConversation) -> str | None:
@@ -84,6 +91,8 @@ class JuriaConversationDetailSerializer(serializers.ModelSerializer):
             "updated_at",
             "messages",
             "last_message_preview",
+            "project_id",
+            "thread_id",
         )
 
     def get_last_message_preview(self, obj: JuriaConversation) -> str | None:
