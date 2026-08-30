@@ -20,14 +20,23 @@ export async function fetchIceServers(): Promise<RTCIceServer[]> {
     const raw = res.data?.iceServers ?? res.data?.ice_servers;
     if (Array.isArray(raw) && raw.length > 0) {
       cachedIceServers = raw;
+      const hasRelay = raw.some((s) => {
+        const urls = Array.isArray(s.urls) ? s.urls : s.urls ? [s.urls] : [];
+        return urls.some((u) => String(u).startsWith('turn:') || String(u).startsWith('turns:'));
+      });
+      if (!hasRelay) {
+        devWarn(
+          '[webrtc] ICE servers have STUN only (no TURN). Cross-network calls will connect but stay silent.'
+        );
+      }
       return cachedIceServers;
     }
     devWarn('[webrtc] ICE API returned empty iceServers; using fallback STUN');
   } catch (e) {
     devWarn('[webrtc] Failed to fetch ICE servers; using fallback STUN', e);
   }
-  cachedIceServers = FALLBACK_ICE;
-  return cachedIceServers;
+  // Do not cache the STUN-only fallback — a later retry can pick up TURN.
+  return FALLBACK_ICE;
 }
 
 /** Clear ICE cache so the next call can pick up fresh ephemeral TURN credentials. */
@@ -40,6 +49,7 @@ export function initPeerConnection(iceServers: RTCIceServer[]): RTCPeerConnectio
     iceServers,
     // iOS Safari often needs relay candidates on cellular / strict Wi‑Fi.
     iceTransportPolicy: 'all',
+    iceCandidatePoolSize: 4,
   });
 }
 
@@ -90,8 +100,20 @@ export async function addIceCandidate(
   pc: RTCPeerConnection,
   candidate: RTCIceCandidateInit | null
 ): Promise<void> {
-  if (!candidate?.candidate) return;
-  await pc.addIceCandidate(new RTCIceCandidate(candidate));
+  if (!candidate) return;
+  const raw = candidate as RTCIceCandidateInit & {
+    sdp_mid?: string | null;
+    sdp_mline_index?: number | null;
+    username_fragment?: string | null;
+  };
+  const init: RTCIceCandidateInit = {
+    candidate: raw.candidate,
+    sdpMid: raw.sdpMid ?? raw.sdp_mid ?? undefined,
+    sdpMLineIndex: raw.sdpMLineIndex ?? raw.sdp_mline_index ?? undefined,
+    usernameFragment: raw.usernameFragment ?? raw.username_fragment ?? undefined,
+  };
+  if (!init.candidate) return;
+  await pc.addIceCandidate(new RTCIceCandidate(init));
 }
 
 export interface CallMediaRefs {

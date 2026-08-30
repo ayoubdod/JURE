@@ -207,6 +207,7 @@ let callingDeadline: number | null = null;
 let terminalTimer: ReturnType<typeof setTimeout> | null = null;
 let callingAnim: number | null = null;
 let connecting = false;
+let iceRestartAttempted = false;
 let openMeetingRoom = false;
 let lastIncomingDedupe: { key: string; t: number } | null = null;
 let statsTimer: ReturnType<typeof setInterval> | null = null;
@@ -607,6 +608,7 @@ function teardownMedia() {
   pendingConferenceOffers = [];
   calleeReady = false;
   connecting = false;
+  iceRestartAttempted = false;
   clearRemoteMediaElements();
 }
 
@@ -759,7 +761,23 @@ function setupPcCommon(pc: RTCPeerConnection) {
     ) {
       markCallActive();
     }
+    if (pc.iceConnectionState === 'failed') {
+      void attemptIceRestart(pc);
+    }
   };
+}
+
+async function attemptIceRestart(pc: RTCPeerConnection) {
+  if (iceRestartAttempted || !groupName || pc.signalingState !== 'stable') return;
+  iceRestartAttempted = true;
+  try {
+    const offer = await pc.createOffer({ iceRestart: true });
+    await pc.setLocalDescription(offer);
+    sendCallSignal({ type: 'call.offer', sdp: offer, groupName }, conversationId);
+    setUiState((prev) => (prev.status === 'active' ? { ...prev, status: 'reconnecting' } : prev));
+  } catch (e) {
+    devWarn('[call] ICE restart failed', e);
+  }
 }
 
 async function processCalleeOffer(offerSdp: RTCSessionDescriptionInit) {

@@ -404,6 +404,12 @@ TURN_CREDENTIAL = env.str("TURN_CREDENTIAL", default="")
 # Prefer TURN_SECRET for short-lived coturn HMAC credentials (never ship static creds to clients long-term).
 TURN_SECRET = env.str("TURN_SECRET", default="")
 TURN_CREDENTIAL_TTL = env.int("TURN_CREDENTIAL_TTL", default=86400)
+# Full iceServers JSON from a hosted TURN provider (Metered / Twilio / ExpressTURN).
+# Used as-is when set — the easiest production fix on Railway (UDP TURN cannot run there).
+ICE_SERVERS_JSON = env.str("ICE_SERVERS_JSON", default="").strip()
+# Metered.ca: GET https://{METERED_TURN_DOMAIN}/api/v1/turn/credentials?apiKey=...
+METERED_TURN_DOMAIN = env.str("METERED_TURN_DOMAIN", default="").strip()
+METERED_TURN_API_KEY = env.str("METERED_TURN_API_KEY", default="").strip()
 
 # --------------------------------------------------------------------------------------
 # Juria AI
