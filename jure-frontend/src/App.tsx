@@ -90,7 +90,7 @@ const pub = (element: ReactNode) => (
 /** Authenticated app page: auth required, lazy-loaded. */
 const app = (element: ReactNode) => (
   <ProtectedRoute requireAuth={true}>
-    <Suspense fallback={<LogoLoading />}>{element}</Suspense>
+    <Suspense fallback={<div className="min-h-[50vh] bg-background" />}>{element}</Suspense>
   </ProtectedRoute>
 );
 
