@@ -154,7 +154,7 @@ export async function apiJuriaDownloadDocument(messageUuid: string, opts?: { sig
 }
 
 export type JuriaProjectCreateBody = {
-  name: string;
+  name?: string;
   description?: string;
   preferred_language?: string;
   jurisdiction_code?: string;

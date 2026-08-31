@@ -2,7 +2,7 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
-import { LayoutGrid, List, MoreHorizontal, Plus, Scale } from 'lucide-react';
+import { AlertTriangle, Flag, Landmark, LayoutGrid, List, MoreHorizontal, Plus, Scale } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Select,
@@ -63,10 +63,10 @@ const VIEW_KEY = 'jure.litigation.viewMode';
 const PAGE_SIZE_KEY = 'jure.litigation.pageSize';
 
 const KPI_ACCENT = {
-  active: 'border-l-emerald-500',
-  hearings: 'border-l-rose-500',
-  overdue: 'border-l-red-500',
-  high: 'border-l-amber-500',
+  active: 'text-emerald-600',
+  hearings: 'text-rose-500',
+  overdue: 'text-red-500',
+  high: 'text-amber-500',
 };
 
 type LitigationViewMode = 'list' | 'board';
@@ -319,12 +319,14 @@ export default function LitigationWorkspace() {
       label: copy.kpis.active,
       value: kpiValues.active ?? null,
       accent: KPI_ACCENT.active,
+      icon: Scale,
     },
     {
       key: 'hearings',
       label: copy.kpis.upcomingHearings,
       value: kpiValues.hearings ?? null,
       accent: KPI_ACCENT.hearings,
+      icon: Landmark,
       active: upcomingHearing,
       onClick: () => patchParams({ hearing: upcomingHearing ? null : '1' }),
     },
@@ -333,12 +335,14 @@ export default function LitigationWorkspace() {
       label: copy.kpis.criticalDeadlines,
       value: kpiValues.overdue ?? null,
       accent: KPI_ACCENT.overdue,
+      icon: AlertTriangle,
     },
     {
       key: 'high',
       label: copy.kpis.highPriority,
       value: kpiValues.high ?? null,
       accent: KPI_ACCENT.high,
+      icon: Flag,
       active: priority === 'HIGH' || priority === 'URGENT',
       onClick: () => patchParams({ priority: priority === 'HIGH' ? null : 'HIGH' }),
     },
@@ -545,7 +549,7 @@ export default function LitigationWorkspace() {
   return (
     <TooltipProvider delayDuration={200}>
       <div className="relative h-full min-h-0 flex flex-col overflow-hidden bg-slate-50 dark:bg-slate-950">
-        <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-1.5 sm:px-2.5 lg:px-3">
+        <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-4 pb-8 pt-2 sm:px-5 lg:px-6">
           <WorkspacePageHeader
             title={copy.title}
             subtitle={copy.subtitle}

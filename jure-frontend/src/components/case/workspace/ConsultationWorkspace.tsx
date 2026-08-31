@@ -2,7 +2,7 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
-import { LayoutGrid, List, MoreHorizontal, Plus, Scale } from 'lucide-react';
+import { Briefcase, Calendar, CalendarClock, CalendarDays, Clock, LayoutGrid, List, MoreHorizontal, Plus, Scale, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Select,
@@ -58,6 +58,7 @@ import {
 } from './consultationStatus';
 import '@/styles/workspace-list.css';
 
+const JURE_PURPLE = '#64499D';
 const CONSULTATION_TYPES = ['PREVENTIVE', 'REACTIVE'] as const;
 const FORMATS = ['IN_PERSON', 'PHONE', 'VIDEO'] as const;
 const LEGAL_DOMAINS = ['FAMILY', 'CRIMINAL', 'CORPORATE', 'LABOR', 'REAL_ESTATE', 'OTHER'] as const;
@@ -65,11 +66,11 @@ const VIEW_KEY = 'jure.consultations.viewMode';
 const PAGE_SIZE_KEY = 'jure.consultations.pageSize';
 
 const KPI_ACCENT = {
-  today: 'border-l-indigo-500',
-  upcoming: 'border-l-blue-500',
-  followUp: 'border-l-amber-500',
-  converted: 'border-l-[#64499D]',
-  thisMonth: 'border-l-slate-400',
+  today: 'text-indigo-500',
+  upcoming: 'text-blue-500',
+  followUp: 'text-amber-500',
+  converted: 'text-[#64499D]',
+  thisMonth: 'text-slate-400',
 };
 
 type ConsultationViewMode = 'list' | 'board';
@@ -377,6 +378,8 @@ export default function ConsultationWorkspace() {
       key: 'today',
       label: copy.kpis.today,
       value: kpiValues.today ?? null,
+      hint: copy.kpis.todayHint,
+      icon: Calendar,
       accent: KPI_ACCENT.today,
       active: datePreset === 'today',
       onClick: () => patchParams({ date: datePreset === 'today' ? null : 'today' }),
@@ -385,6 +388,8 @@ export default function ConsultationWorkspace() {
       key: 'upcoming',
       label: copy.kpis.scheduled,
       value: kpiValues.upcoming ?? null,
+      hint: copy.kpis.scheduledHint,
+      icon: CalendarClock,
       accent: KPI_ACCENT.upcoming,
       active: datePreset === 'upcoming',
       onClick: () => patchParams({ date: datePreset === 'upcoming' ? null : 'upcoming' }),
@@ -393,6 +398,8 @@ export default function ConsultationWorkspace() {
       key: 'followUp',
       label: copy.kpis.followUp,
       value: kpiValues.followUp ?? null,
+      hint: copy.kpis.followUpHint,
+      icon: Clock,
       accent: KPI_ACCENT.followUp,
       active: followUpFilter === 'required',
       onClick: () => patchParams({ follow: followUpFilter === 'required' ? null : 'required' }),
@@ -401,6 +408,8 @@ export default function ConsultationWorkspace() {
       key: 'converted',
       label: copy.kpis.converted,
       value: kpiValues.converted ?? null,
+      hint: copy.kpis.convertedHint,
+      icon: Briefcase,
       accent: KPI_ACCENT.converted,
       active: converted === '1',
       onClick: () => patchParams({ converted: converted === '1' ? null : '1' }),
@@ -409,6 +418,8 @@ export default function ConsultationWorkspace() {
       key: 'thisMonth',
       label: copy.kpis.thisMonth,
       value: kpiValues.thisMonth ?? null,
+      hint: copy.kpis.thisMonthHint,
+      icon: CalendarDays,
       accent: KPI_ACCENT.thisMonth,
       active: datePreset === 'month',
       onClick: () => patchParams({ date: datePreset === 'month' ? null : 'month' }),
@@ -599,6 +610,85 @@ export default function ConsultationWorkspace() {
 
   const showTodayStrip = datePreset !== 'today' && todayRows.length > 0 && viewMode === 'list';
 
+  const datePresetLabel =
+    datePreset === 'today'
+      ? copy.dateToday
+      : datePreset === 'week'
+        ? copy.dateWeek
+        : datePreset === 'month'
+          ? copy.dateMonth
+          : datePreset === 'upcoming'
+            ? copy.kpis.scheduled
+            : datePreset === 'custom'
+              ? copy.dateCustom
+              : '';
+
+  const followLabel =
+    followUpFilter === 'required'
+      ? copy.followRequired
+      : followUpFilter === 'has'
+        ? copy.followHas
+        : followUpFilter === 'none'
+          ? copy.followNone
+          : '';
+
+  const filterChips: Array<{ key: string; label: string; onClear: () => void }> = [];
+  if (consultationType) {
+    filterChips.push({
+      key: 'type',
+      label: enumPretty(consultationType),
+      onClear: () => patchParams({ type: null }),
+    });
+  }
+  if (format) {
+    filterChips.push({
+      key: 'format',
+      label: enumPretty(format),
+      onClear: () => patchParams({ format: null }),
+    });
+  }
+  if (legalDomain) {
+    filterChips.push({
+      key: 'domain',
+      label: enumPretty(legalDomain),
+      onClear: () => patchParams({ domain: null }),
+    });
+  }
+  if (attorneyIds.length) {
+    filterChips.push({
+      key: 'attorney',
+      label: `${copy.attorneys} (${attorneyIds.length})`,
+      onClear: () => patchParams({ attorney: null }),
+    });
+  }
+  if (datePreset && datePresetLabel) {
+    filterChips.push({
+      key: 'date',
+      label: datePresetLabel,
+      onClear: () => patchParams({ date: null, from: null, to: null }),
+    });
+  }
+  if (followUpFilter && followLabel) {
+    filterChips.push({
+      key: 'follow',
+      label: followLabel,
+      onClear: () => patchParams({ follow: null }),
+    });
+  }
+  if (converted === '1') {
+    filterChips.push({
+      key: 'converted',
+      label: copy.convertedFilter,
+      onClear: () => patchParams({ converted: null }),
+    });
+  } else if (converted === '0') {
+    filterChips.push({
+      key: 'converted',
+      label: copy.notConverted,
+      onClear: () => patchParams({ converted: null }),
+    });
+  }
+
   const emptyState = (
     <WorkspaceEmptyState
       icon={Scale}
@@ -610,7 +700,12 @@ export default function ConsultationWorkspace() {
             {t.cases.empty.resetFilters}
           </Button>
         ) : canCreate ? (
-          <Button size="sm" className="h-8 text-[12px]" onClick={openCreate}>
+          <Button
+            size="sm"
+            className="h-8 text-[12px] text-white hover:opacity-90"
+            style={{ backgroundColor: JURE_PURPLE }}
+            onClick={openCreate}
+          >
             <Plus className="me-1.5 h-3.5 w-3.5" />
             {copy.newCta}
           </Button>
@@ -629,34 +724,49 @@ export default function ConsultationWorkspace() {
   );
 
   const viewToggle = (
-    <div className="ms-auto inline-flex rounded-lg border border-slate-200 p-0.5 dark:border-slate-700">
-      <Button
+    <div
+      className="ms-auto inline-flex items-center rounded-md border border-slate-200 bg-slate-100/80 p-0.5 dark:border-slate-700 dark:bg-slate-900/50"
+      role="group"
+      aria-label={copy.viewList}
+    >
+      <button
         type="button"
-        variant="ghost"
-        size="icon"
-        className={cn('h-8 w-8 rounded-md', viewMode === 'list' && 'bg-white shadow-sm dark:bg-slate-800')}
+        className={cn(
+          'inline-flex items-center gap-1 rounded-md px-2.5 py-1.5 text-[11px] font-semibold transition-colors',
+          viewMode === 'list'
+            ? 'bg-white text-slate-900 shadow-sm ring-1 ring-slate-200/80 dark:bg-slate-800 dark:text-white dark:ring-slate-700'
+            : 'text-slate-600 hover:bg-white/60 dark:text-slate-400 dark:hover:bg-slate-800/60'
+        )}
         onClick={() => handleViewMode('list')}
+        aria-pressed={viewMode === 'list'}
         aria-label={copy.viewList}
       >
-        <List className="h-4 w-4" />
-      </Button>
-      <Button
+        <List className="h-3.5 w-3.5" />
+        <span className="hidden lg:inline">{copy.viewList}</span>
+      </button>
+      <button
         type="button"
-        variant="ghost"
-        size="icon"
-        className={cn('h-8 w-8 rounded-md', viewMode === 'board' && 'bg-white shadow-sm dark:bg-slate-800')}
+        className={cn(
+          'inline-flex items-center gap-1 rounded-md px-2.5 py-1.5 text-[11px] font-semibold transition-colors',
+          viewMode === 'board'
+            ? 'bg-white text-slate-900 shadow-sm ring-1 ring-slate-200/80 dark:bg-slate-800 dark:text-white dark:ring-slate-700'
+            : 'text-slate-600 hover:bg-white/60 dark:text-slate-400 dark:hover:bg-slate-800/60'
+        )}
         onClick={() => handleViewMode('board')}
+        aria-pressed={viewMode === 'board'}
         aria-label={copy.viewBoard}
       >
-        <LayoutGrid className="h-4 w-4" />
-      </Button>
+        <LayoutGrid className="h-3.5 w-3.5" />
+        <span className="hidden lg:inline">{copy.viewBoard}</span>
+      </button>
     </div>
   );
 
   return (
     <TooltipProvider delayDuration={200}>
-      <div className="relative h-full min-h-0 flex flex-col overflow-hidden bg-slate-50 dark:bg-slate-950">
-        <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-1.5 sm:px-2.5 lg:px-3">
+      <div className="relative flex h-full min-h-0 flex-col overflow-hidden bg-slate-50 dark:bg-slate-950">
+        <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto">
+          <div className="px-4 pb-8 pt-2 sm:px-5 lg:px-6">
           <WorkspacePageHeader
             title={copy.title}
             subtitle={copy.subtitle}
@@ -664,19 +774,19 @@ export default function ConsultationWorkspace() {
               canCreate ? (
                 <Button
                   size="sm"
-                  className="h-9 px-3 text-[12px] font-semibold rounded-md shadow-sm shadow-primary/15"
+                  className="hidden h-9 shrink-0 px-3 text-[13px] font-semibold text-white hover:opacity-90 md:inline-flex"
+                  style={{ backgroundColor: JURE_PURPLE }}
                   onClick={openCreate}
                 >
-                  <Plus className="w-4 h-4 mr-1.5" strokeWidth={2.5} />
+                  <Plus className="me-1.5 h-4 w-4" strokeWidth={2.5} />
                   {copy.newCta}
                 </Button>
               ) : undefined
             }
           />
-          <WorkspaceKpiStrip items={kpis} ariaLabel={copy.title} />
-          <div className="py-2">
-            <div className="relative rounded-xl border border-slate-200/90 bg-white/90 px-2.5 py-2 shadow-[0_1px_3px_rgba(0,0,0,0.04)] dark:border-slate-800 dark:bg-slate-950/80 sm:px-4 sm:py-3">
-              <div className="flex items-center gap-1.5 sm:gap-2">
+          <WorkspaceKpiStrip items={kpis} loading={isLoading && kpiValues.today == null} ariaLabel={copy.title} />
+          <div className="sticky top-0 z-30 mt-5 rounded-xl border border-slate-200/90 bg-white/95 px-3 py-2 shadow-[0_1px_2px_rgba(0,0,0,0.04)] backdrop-blur-md dark:border-slate-800 dark:bg-slate-950/95 sm:px-4 sm:py-3">
+              <div className="flex min-w-0 items-center gap-1.5 sm:gap-2">
                 <CompactSearch
                   value={search}
                   onChange={(v) => patchParams({ q: v.trim() || null })}
@@ -700,11 +810,35 @@ export default function ConsultationWorkspace() {
                 </MobileFilterSheet>
                 {viewToggle}
               </div>
-            </div>
+              {filterChips.length > 0 ? (
+                <div className="mt-2.5 flex min-w-0 flex-wrap items-center gap-1.5">
+                  <span className="text-[11px] font-medium uppercase tracking-wider text-slate-400">
+                    {ws.filters}
+                  </span>
+                  {filterChips.map((chip) => (
+                    <button
+                      key={chip.key}
+                      type="button"
+                      onClick={chip.onClear}
+                      className="inline-flex items-center gap-1 rounded-full bg-[#F1ECFF] px-2 py-0.5 text-[12px] font-medium text-[#64499D] hover:bg-[#E6DDF8]"
+                    >
+                      {chip.label}
+                      <X className="h-3 w-3" aria-hidden />
+                    </button>
+                  ))}
+                  <button
+                    type="button"
+                    className="text-[12px] font-medium text-slate-500 hover:text-slate-800"
+                    onClick={resetFilters}
+                  >
+                    {t.cases.reset}
+                  </button>
+                </div>
+              ) : null}
           </div>
 
           {showTodayStrip ? (
-            <div className="mb-3 rounded-lg border border-slate-200/90 bg-white px-3 py-2.5 dark:border-slate-800 dark:bg-slate-950">
+            <div className="mt-4 rounded-xl border border-slate-200/90 bg-white px-3 py-2.5 shadow-[0_1px_2px_rgba(0,0,0,0.04)] dark:border-slate-800 dark:bg-slate-950">
               <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-500">
                 {copy.todayStrip}
               </p>
@@ -733,7 +867,7 @@ export default function ConsultationWorkspace() {
             </div>
           ) : null}
 
-          <div className="pb-3">
+          <div className="mt-4 pb-3">
             {viewMode === 'board' ? (
               loadError ? (
                 errorState
@@ -789,6 +923,7 @@ export default function ConsultationWorkspace() {
               />
             )}
           </div>
+          </div>
         </div>
 
         {viewMode === 'list' && !loadError ? (
@@ -816,6 +951,19 @@ export default function ConsultationWorkspace() {
               { value: '100', label: '100 per page' },
             ]}
           />
+        ) : null}
+
+        {canCreate ? (
+          <Button
+            type="button"
+            size="icon"
+            className="fixed z-40 h-12 w-12 rounded-full text-white shadow-lg md:hidden bottom-[max(1.25rem,env(safe-area-inset-bottom))] end-4"
+            style={{ backgroundColor: JURE_PURPLE }}
+            onClick={openCreate}
+            aria-label={copy.newCta}
+          >
+            <Plus className="h-5 w-5" strokeWidth={2.5} />
+          </Button>
         ) : null}
       </div>
 

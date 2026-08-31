@@ -611,11 +611,15 @@ export interface AppMessages {
     };
   };
   team: {
+    pageSubtitle: string;
     stats: {
       total: string;
       active: string;
       lawyers: string;
       pending: string;
+      totalHint: string;
+      shareOfTeam: string;
+      pendingHint: string;
     };
     searchPlaceholder: string;
     searchAria: string;
@@ -625,6 +629,8 @@ export interface AppMessages {
       allRoles: string;
       status: string;
       allStatuses: string;
+      applied: string;
+      clearAll: string;
     };
     status: {
       active: string;
@@ -1248,6 +1254,10 @@ export interface AppMessages {
       active: string;
       urgent: string;
       closed: string;
+      totalHint: string;
+      shareOfMatters: string;
+      urgentHint: string;
+      closedHint: string;
     };
     searchPlaceholder: string;
     searchAria: string;
@@ -1376,6 +1386,11 @@ export interface AppMessages {
           completed: string;
           converted: string;
           thisMonth: string;
+          todayHint: string;
+          scheduledHint: string;
+          followUpHint: string;
+          convertedHint: string;
+          thisMonthHint: string;
         };
         columns: {
           reference: string;
@@ -3919,6 +3934,7 @@ export interface AppMessages {
       quickChatCreating: string;
       emptyTitle: string;
       emptyHint: string;
+      untitledChat: string;
       searchProjects: string;
       favorites: string;
       recent: string;
@@ -3977,6 +3993,7 @@ export interface AppMessages {
       };
       header: {
         renameProject: string;
+        renameChat: string;
         nameLabel: string;
         archiveConfirm: string;
       };
@@ -4020,6 +4037,7 @@ export interface AppMessages {
         thread: string;
         searchThreads: string;
         newThread: string;
+        untitledThread: string;
         renameThread: string;
         threadName: string;
         deleteThreadConfirm: string;

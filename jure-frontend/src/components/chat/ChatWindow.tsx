@@ -137,6 +137,8 @@ const ChatWindow = forwardRef<
   }, [conversation?.id, fetchActive]);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const messageRefsMap = useRef<Map<number, HTMLDivElement>>(new Map());
+  const isNearBottomRef = useRef(true);
+  const pendingInstantScrollRef = useRef(true);
   const wsRef = useRef<WebSocket | null>(null);
   const connectedConversationIdRef = useRef<number | null>(null);
   const loadingForConvRef = useRef<number | null>(null);
@@ -183,14 +185,46 @@ const ChatWindow = forwardRef<
   };
 
   useEffect(() => {
-    const id = setTimeout(() => {
-      messagesContainerRef.current?.scrollTo({
-        top: messagesContainerRef.current.scrollHeight,
-        behavior: 'smooth',
+    isNearBottomRef.current = true;
+    pendingInstantScrollRef.current = true;
+  }, [conversation?.id]);
+
+  useEffect(() => {
+    const el = messagesContainerRef.current;
+    if (!el) return;
+    const jump = pendingInstantScrollRef.current;
+    if (!jump && !isNearBottomRef.current) return;
+
+    let inner = 0;
+    const outer = requestAnimationFrame(() => {
+      inner = requestAnimationFrame(() => {
+        const node = messagesContainerRef.current;
+        if (!node) return;
+        if (jump) {
+          node.scrollTop = node.scrollHeight;
+          if (messages.length > 0) pendingInstantScrollRef.current = false;
+        } else {
+          const distance = node.scrollHeight - node.scrollTop - node.clientHeight;
+          // Don't animate through a long history (e.g. opening a conversation).
+          if (distance > node.clientHeight) {
+            node.scrollTop = node.scrollHeight;
+          } else {
+            node.scrollTo({ top: node.scrollHeight, behavior: 'smooth' });
+          }
+        }
       });
-    }, 80);
-    return () => clearTimeout(id);
+    });
+    return () => {
+      cancelAnimationFrame(outer);
+      cancelAnimationFrame(inner);
+    };
   }, [messages, isTyping]);
+
+  const handleMessagesScroll = () => {
+    const el = messagesContainerRef.current;
+    if (!el) return;
+    isNearBottomRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < 96;
+  };
 
   useEffect(() => {
     if (!lastLocallySentMessage || !conversation) return;
@@ -525,6 +559,7 @@ const ChatWindow = forwardRef<
       {/* Messages - stable scroll area to prevent layout shift */}
       <div
         ref={messagesContainerRef}
+        onScroll={handleMessagesScroll}
         className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto px-3 py-3 sm:px-4"
       >
         {messagesLoading && messages.length === 0 ? (

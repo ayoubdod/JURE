@@ -16,6 +16,10 @@ class JuriaThread(models.Model):
         related_name="threads",
     )
     title = models.CharField(max_length=200, blank=True, default="")
+    title_is_custom = models.BooleanField(
+        default=False,
+        help_text="True after the user sets the title; AI auto-titles are skipped.",
+    )
     mode = models.CharField(
         max_length=30,
         choices=JuriaConversation.Mode.choices,

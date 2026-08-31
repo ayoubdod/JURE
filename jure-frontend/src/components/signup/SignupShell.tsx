@@ -101,6 +101,12 @@ const SignupShell = ({ currentStep, steps, children }: SignupShellProps) => {
               <LangSwitcher />
               <ThemeToggle />
               <Link
+                to="/signin"
+                className="text-xs font-semibold text-[#64499D] transition-colors hover:underline dark:text-[#CFC2FF]"
+              >
+                {shell.signIn}
+              </Link>
+              <Link
                 to="/"
                 className="hidden items-center gap-1.5 text-xs text-slate-500 transition-colors hover:text-[#64499D] sm:inline-flex dark:text-slate-400"
               >
@@ -145,6 +151,14 @@ const SignupShell = ({ currentStep, steps, children }: SignupShellProps) => {
                 </div>
               )}
               <div className="flex-1">{children}</div>
+              {inFlow && (
+                <p className="mt-6 text-center text-sm text-slate-500">
+                  {shell.alreadyHaveAccount}{' '}
+                  <Link to="/signin" className="font-semibold text-[#64499D] hover:underline dark:text-[#CFC2FF]">
+                    {shell.signIn}
+                  </Link>
+                </p>
+              )}
             </div>
           </div>
         </section>

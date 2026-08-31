@@ -371,22 +371,27 @@ const useJuriaStore = create<JuriaStoreState>()(
           );
           const userMsg = mapApiMessageToJuria(res.user_message);
           const asstMsg = mapApiMessageToJuria(res.assistant_message);
+          const nextTitle = res.thread_title?.trim() || res.project_name?.trim();
 
           set((s) => ({
             conversations: s.conversations.map((c) => {
               if (c.id !== conversationId) return c;
-              const nextTitle =
-                c.title && c.title !== 'Conversation'
-                  ? c.title
-                  : (msgText.replace(/^📎\s*/, '').slice(0, 60) || c.title);
               return {
                 ...c,
-                title: nextTitle,
+                title: nextTitle || c.title,
                 messages: [...c.messages, userMsg, asstMsg],
                 updatedAt: new Date().toISOString(),
                 lastMessagePreview: asstMsg.content?.slice(0, 72) || c.lastMessagePreview,
               };
             }),
+            projects:
+              res.project_name && res.project_id
+                ? s.projects.map((p) => (p.id === res.project_id ? { ...p, name: res.project_name as string } : p))
+                : s.projects,
+            threads:
+              res.thread_title && res.thread_id
+                ? s.threads.map((t) => (t.id === res.thread_id ? { ...t, title: res.thread_title as string } : t))
+                : s.threads,
           }));
           await get().loadUsage();
         } catch (e) {
@@ -561,23 +566,8 @@ const useJuriaStore = create<JuriaStoreState>()(
 
       createQuickChat: async (opts) => {
         const lang = opts?.language || get().projectLanguage || 'fr';
-        const stamp = new Date().toLocaleString(undefined, {
-          day: 'numeric',
-          month: 'short',
-          hour: '2-digit',
-          minute: '2-digit',
-        });
-        const name =
-          opts?.name ||
-          (lang === 'ar'
-            ? `محادثة سريعة — ${stamp}`
-            : lang === 'en'
-              ? `Quick chat — ${stamp}`
-              : lang === 'darija'
-                ? `Chat darija — ${stamp}`
-                : `Chat rapide — ${stamp}`);
         return get().createProject({
-          name,
+          name: opts?.name,
           preferred_language: lang,
           jurisdiction_code: 'MA',
           description: '',
@@ -694,6 +684,8 @@ const useJuriaStore = create<JuriaStoreState>()(
           );
           const userMsg = mapApiMessageToJuria(res.user_message);
           const asstMsg = mapApiMessageToJuria(res.assistant_message);
+          const nextTitle = res.thread_title?.trim();
+          const nextProjectName = res.project_name?.trim();
           set((s) => ({
             threadMessages: {
               ...s.threadMessages,
@@ -701,9 +693,18 @@ const useJuriaStore = create<JuriaStoreState>()(
             },
             threads: s.threads.map((t) =>
               t.id === threadId
-                ? { ...t, updated_at: new Date().toISOString(), last_message_preview: asstMsg.content?.slice(0, 72) }
+                ? {
+                    ...t,
+                    title: nextTitle || t.title,
+                    updated_at: new Date().toISOString(),
+                    last_message_preview: asstMsg.content?.slice(0, 72),
+                  }
                 : t
             ),
+            projects:
+              nextProjectName && res.project_id
+                ? s.projects.map((p) => (p.id === res.project_id ? { ...p, name: nextProjectName } : p))
+                : s.projects,
           }));
           const pid = get().activeProjectId;
           if (pid) void get().loadProjectDetail(pid).catch(() => undefined);

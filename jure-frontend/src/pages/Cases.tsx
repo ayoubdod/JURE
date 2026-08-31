@@ -17,6 +17,10 @@ import {
   Calendar,
   AlertTriangle,
   Scale,
+  Briefcase,
+  FolderOpen,
+  CheckCircle2,
+  X,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -48,6 +52,10 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 import { navigateToCase } from '@/lib/caseRoutes';
 import { eventBus } from '@/utils/eventBus';
+import {
+  WorkspaceKpiStrip,
+  WorkspacePageHeader,
+} from '@/components/workspace/WorkspaceChrome';
 import {
   getCaseData,
   getCaseDateForFilter,
@@ -184,37 +192,6 @@ const StatusPill: React.FC<{ status: API.CaseStatus }> = ({ status }) => {
   );
 };
 
-const AnimatedStatValue: React.FC<{ value: number; className?: string }> = ({ value, className }) => {
-  const [display, setDisplay] = useState(value);
-  const prevRef = useRef(value);
-
-  useEffect(() => {
-    const prefersReduced =
-      typeof window !== 'undefined' &&
-      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (prefersReduced || value === prevRef.current) {
-      setDisplay(value);
-      prevRef.current = value;
-      return;
-    }
-    let frame = 0;
-    const start = prevRef.current;
-    const diff = value - start;
-    const steps = 12;
-    let raf = 0;
-    const tick = () => {
-      frame += 1;
-      setDisplay(Math.round(start + (diff * frame) / steps));
-      if (frame < steps) raf = requestAnimationFrame(tick);
-      else prevRef.current = value;
-    };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, [value]);
-
-  return <span className={cn('cases-stat-value tabular-nums', className)}>{display}</span>;
-};
-
 const isCaseAssignedToUser = (c: API.Case, userId: number): boolean => {
   const assignedToId =
     (c.assigned_to as API.User | null)?.id ?? (c.assigned_to as { id?: number } | null)?.id;
@@ -236,12 +213,10 @@ type CasesTab = 'my' | 'all';
 
 const Q = { type: 'type', status: 'status', clientId: 'clientId', search: 'search', tab: 'tab' } as const;
 
-const KPI_ACCENTS: Record<string, string> = {
-  total: 'border-l-slate-400',
-  active: 'border-l-emerald-500',
-  urgent: 'border-l-amber-500',
-  closed: 'border-l-slate-300 dark:border-l-slate-600',
-};
+const JURE_PURPLE = '#64499D';
+
+const sharePct = (part: number, total: number) =>
+  total > 0 ? Math.round((part / total) * 100) : null;
 
 const TABLE_TH =
   'text-start py-2 px-3 text-[10px] font-semibold text-slate-500 dark:text-slate-400 whitespace-nowrap uppercase tracking-[0.08em] rtl:normal-case rtl:tracking-normal';
@@ -777,9 +752,9 @@ const Cases = () => {
         </Button>
       ) : activeTab !== 'my' ? (
         <Button
-          variant="outline"
           size="sm"
-          className="mt-4 h-8 rounded-md text-[12px]"
+          className="mt-4 h-8 text-[12px] text-white hover:opacity-90"
+          style={{ backgroundColor: JURE_PURPLE }}
           onClick={openCreateCase}
         >
           {t.cases.empty.createCta}
@@ -808,7 +783,7 @@ const Cases = () => {
   );
 
   const renderListView = () => (
-    <div className="rounded-lg border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-950 shadow-[0_1px_2px_rgba(0,0,0,0.04)] overflow-hidden">
+    <div className="overflow-hidden rounded-xl border border-slate-200/90 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04)] dark:border-slate-800 dark:bg-slate-950">
       <div className="overflow-x-auto">
         <table className="w-full min-w-[960px]" role="grid" aria-label={t.cases.aria.mattersList}>
           <thead className="sticky top-0 z-[1]">
@@ -947,78 +922,100 @@ const Cases = () => {
     </div>
   );
 
+  const activePct = sharePct(stats.active, stats.total);
+  const urgentPct = sharePct(stats.urgent, stats.total);
+  const closedPct = sharePct(stats.closed, stats.total);
+
   const kpiItems = [
-    { key: 'total', label: t.cases.stats.total, value: stats.total },
-    { key: 'active', label: t.cases.stats.active, value: stats.active },
-    { key: 'urgent', label: t.cases.stats.urgent, value: stats.urgent },
-    { key: 'closed', label: t.cases.stats.closed, value: stats.closed },
-  ] as const;
+    {
+      key: 'total',
+      label: t.cases.stats.total,
+      value: stats.total,
+      hint: t.cases.stats.totalHint,
+      icon: Briefcase,
+      accent: 'text-slate-500',
+    },
+    {
+      key: 'active',
+      label: t.cases.stats.active,
+      value: stats.active,
+      hint: activePct != null ? tf(t.cases.stats.shareOfMatters, { pct: activePct }) : t.cases.stats.totalHint,
+      icon: FolderOpen,
+      accent: 'text-emerald-600',
+    },
+    {
+      key: 'urgent',
+      label: t.cases.stats.urgent,
+      value: stats.urgent,
+      hint: urgentPct != null ? tf(t.cases.stats.shareOfMatters, { pct: urgentPct }) : t.cases.stats.urgentHint,
+      icon: AlertTriangle,
+      accent: 'text-amber-500',
+    },
+    {
+      key: 'closed',
+      label: t.cases.stats.closed,
+      value: stats.closed,
+      hint: closedPct != null ? tf(t.cases.stats.shareOfMatters, { pct: closedPct }) : t.cases.stats.closedHint,
+      icon: CheckCircle2,
+      accent: 'text-slate-400',
+    },
+  ];
+
+  const filterChips: Array<{ key: string; label: string; onClear: () => void }> = [];
+  if (caseTypeFilter !== 'ALL') {
+    filterChips.push({
+      key: 'type',
+      label:
+        caseTypeFilter === 'CONSULTATION'
+          ? t.cases.filters.consultation
+          : caseTypeFilter === 'LITIGATION'
+            ? t.cases.filters.litigation
+            : t.cases.filters.administrative,
+      onClear: () => updateUrlFilters({ [Q.type]: null }),
+    });
+  }
+  statusFilters.forEach((status) => {
+    filterChips.push({
+      key: `status-${status}`,
+      label: enumPretty(status),
+      onClear: () => handleStatusToggle(status),
+    });
+  });
+  if (clientIdFilter != null) {
+    filterChips.push({
+      key: 'client',
+      label: t.cases.columns.client,
+      onClear: () => updateUrlFilters({ [Q.clientId]: null }),
+    });
+  }
 
   return (
     <div
       ref={setCasesHolderEl}
-      className="relative h-full min-h-0 flex flex-col overflow-hidden bg-transparent"
+      className="relative flex h-full min-h-0 flex-col overflow-hidden bg-slate-50 dark:bg-slate-950"
     >
-      <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden">
-        <div className="px-0 pt-3 pb-1">
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div className="min-w-0">
-              <h1 className="text-xl font-semibold tracking-tight text-slate-900 dark:text-white">
-                {t.cases.allCases}
-              </h1>
-              <p className="mt-0.5 text-[13px] text-slate-500 dark:text-slate-400 max-w-2xl">
-                {t.cases.allCasesSubtitle}
-              </p>
-            </div>
-            <Button
-              size="sm"
-              className="hidden md:inline-flex h-9 px-3 text-[12px] font-semibold shrink-0 rounded-md shadow-sm shadow-primary/15"
-              onClick={openCreateCase}
-            >
-              <Plus className="w-4 h-4 mr-1.5" strokeWidth={2.5} />
-              {t.cases.addNewCase}
-            </Button>
-          </div>
-        </div>
+      <div ref={scrollRef} className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto">
+        <div className="px-4 pb-8 pt-2 sm:px-5 lg:px-6">
+          <WorkspacePageHeader
+            title={t.cases.allCases}
+            subtitle={t.cases.allCasesSubtitle}
+            actions={
+              <Button
+                size="sm"
+                className="hidden h-9 shrink-0 px-3 text-[13px] font-semibold text-white hover:opacity-90 md:inline-flex"
+                style={{ backgroundColor: JURE_PURPLE }}
+                onClick={openCreateCase}
+              >
+                <Plus className="me-1.5 h-4 w-4" strokeWidth={2.5} />
+                {t.cases.addNewCase}
+              </Button>
+            }
+          />
 
-        {/* KPI strip — scrolls away */}
-        <div
-          className="cases-kpi-strip flex gap-2 overflow-x-auto snap-x snap-mandatory px-1 sm:px-0 py-2"
-          role="region"
-          aria-label={t.cases.aria.matterStats}
-        >
-          {kpiItems.map((item) => (
-            <div
-              key={item.key}
-              className={cn(
-                'cases-kpi-chip snap-start shrink-0 flex items-center gap-2 rounded-md border border-slate-200/90 dark:border-slate-800',
-                'bg-white dark:bg-slate-950 border-l-[3px] px-2.5 py-1.5 min-w-[5.75rem]',
-                'sm:flex-1 sm:min-w-0',
-                KPI_ACCENTS[item.key]
-              )}
-            >
-              <div className="min-w-0">
-                <p className="text-[10px] font-medium uppercase tracking-[0.06em] text-slate-500 dark:text-slate-400 leading-none">
-                  {item.label}
-                </p>
-                <p className="mt-0.5 text-base font-bold text-slate-900 dark:text-white leading-none">
-                  <AnimatedStatValue value={item.value} />
-                </p>
-              </div>
-            </div>
-          ))}
-        </div>
+          <WorkspaceKpiStrip items={kpiItems} loading={casesIsLoading && stats.total === 0} ariaLabel={t.cases.aria.matterStats} />
 
-        {/* Sticky work controls */}
-        <div
-          className={cn(
-            'cases-toolbar-sticky sticky top-0 z-30',
-            'bg-background/90 border-b border-slate-200/90 dark:border-slate-800',
-            'px-0 pt-1 pb-0'
-          )}
-        >
-          <div className="relative rounded-lg border border-slate-200/90 dark:border-slate-800 bg-white/95 dark:bg-slate-950/90 px-2 py-2 sm:px-3">
-            <div className="flex items-center gap-1.5 sm:gap-2">
+          <div className="sticky top-0 z-30 mt-5 rounded-xl border border-slate-200/90 bg-white/95 px-3 py-2 shadow-[0_1px_2px_rgba(0,0,0,0.04)] backdrop-blur-md dark:border-slate-800 dark:bg-slate-950/95 sm:px-4 sm:py-3">
+            <div className="flex min-w-0 items-center gap-1.5 sm:gap-2">
               <CompactSearch
                 value={searchTerm}
                 onChange={(v) => updateUrlFilters({ [Q.search]: v || null })}
@@ -1042,7 +1039,7 @@ const Cases = () => {
               </MobileFilterSheet>
 
               <div
-                className="ml-auto hidden items-center rounded-md border border-slate-200 bg-slate-100/80 p-0.5 dark:border-slate-700 dark:bg-slate-900/50 md:inline-flex"
+                className="ms-auto hidden items-center rounded-md border border-slate-200 bg-slate-100/80 p-0.5 dark:border-slate-700 dark:bg-slate-900/50 md:inline-flex"
                 role="group"
                 aria-label={t.cases.aria.viewMode}
               >
@@ -1070,30 +1067,56 @@ const Cases = () => {
               </div>
             </div>
 
+            {filterChips.length > 0 ? (
+              <div className="mt-2.5 flex min-w-0 flex-wrap items-center gap-1.5">
+                <span className="text-[11px] font-medium uppercase tracking-wider text-slate-400">
+                  {t.common.filter}
+                </span>
+                {filterChips.map((chip) => (
+                  <button
+                    key={chip.key}
+                    type="button"
+                    onClick={chip.onClear}
+                    className="inline-flex items-center gap-1 rounded-full bg-[#F1ECFF] px-2 py-0.5 text-[12px] font-medium text-[#64499D] hover:bg-[#E6DDF8]"
+                  >
+                    {chip.label}
+                    <X className="h-3 w-3" aria-hidden />
+                  </button>
+                ))}
+                <button
+                  type="button"
+                  className="text-[12px] font-medium text-slate-500 hover:text-slate-800"
+                  onClick={resetFilters}
+                >
+                  {t.cases.reset}
+                </button>
+              </div>
+            ) : null}
+
             <Tabs
               value={activeTab}
               onValueChange={(v) => setActiveTab(v as CasesTab)}
-              className="mt-2"
+              className="mt-2.5"
             >
-              <TabsList className="h-auto w-full justify-start gap-0 rounded-none border-0 bg-transparent p-0 border-b border-slate-200 dark:border-slate-800">
+              <TabsList className="h-auto w-full justify-start gap-0 rounded-none border-0 border-b border-slate-200 bg-transparent p-0 dark:border-slate-800">
                 <TabsTrigger
                   value="my"
-                  className="relative rounded-none border-0 bg-transparent px-1 pb-2 mr-5 text-[13px] font-medium text-slate-500 dark:text-slate-400 shadow-none data-[state=active]:bg-transparent data-[state=active]:text-slate-900 dark:data-[state=active]:text-white data-[state=active]:shadow-none data-[state=active]:font-semibold after:absolute after:left-0 after:right-0 after:bottom-0 after:h-0.5 after:rounded-full after:bg-primary after:opacity-0 after:content-[''] data-[state=active]:after:opacity-100"
+                  className="relative mr-5 rounded-none border-0 bg-transparent px-1 pb-2 text-[13px] font-medium text-slate-500 shadow-none after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:rounded-full after:bg-[#64499D] after:opacity-0 after:content-[''] data-[state=active]:bg-transparent data-[state=active]:font-semibold data-[state=active]:text-slate-900 data-[state=active]:shadow-none data-[state=active]:after:opacity-100 dark:text-slate-400 dark:data-[state=active]:text-white"
                 >
                   <span className="inline-flex items-center gap-1.5">
                     {t.cases.myCases}
-                    <span className="inline-flex min-w-[1.15rem] justify-center rounded-full bg-slate-200/90 dark:bg-slate-800 px-1.5 py-0 text-[10px] font-semibold tabular-nums text-slate-700 dark:text-slate-300">
+                    <span className="inline-flex min-w-[1.15rem] justify-center rounded-full bg-slate-200/90 px-1.5 py-0 text-[10px] font-semibold tabular-nums text-slate-700 dark:bg-slate-800 dark:text-slate-300">
                       {activeTab === 'my' ? totalCount : myCasesCount}
                     </span>
                   </span>
                 </TabsTrigger>
                 <TabsTrigger
                   value="all"
-                  className="relative rounded-none border-0 bg-transparent px-1 pb-2 text-[13px] font-medium text-slate-500 dark:text-slate-400 shadow-none data-[state=active]:bg-transparent data-[state=active]:text-slate-900 dark:data-[state=active]:text-white data-[state=active]:shadow-none data-[state=active]:font-semibold after:absolute after:left-0 after:right-0 after:bottom-0 after:h-0.5 after:rounded-full after:bg-primary after:opacity-0 after:content-[''] data-[state=active]:after:opacity-100"
+                  className="relative rounded-none border-0 bg-transparent px-1 pb-2 text-[13px] font-medium text-slate-500 shadow-none after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:rounded-full after:bg-[#64499D] after:opacity-0 after:content-[''] data-[state=active]:bg-transparent data-[state=active]:font-semibold data-[state=active]:text-slate-900 data-[state=active]:shadow-none data-[state=active]:after:opacity-100 dark:text-slate-400 dark:data-[state=active]:text-white"
                 >
                   <span className="inline-flex items-center gap-1.5">
                     {t.cases.allCases}
-                    <span className="inline-flex min-w-[1.15rem] justify-center rounded-full bg-slate-200/90 dark:bg-slate-800 px-1.5 py-0 text-[10px] font-semibold tabular-nums text-slate-700 dark:text-slate-300">
+                    <span className="inline-flex min-w-[1.15rem] justify-center rounded-full bg-slate-200/90 px-1.5 py-0 text-[10px] font-semibold tabular-nums text-slate-700 dark:bg-slate-800 dark:text-slate-300">
                       {activeTab === 'all' ? totalCount : allCasesCount}
                     </span>
                   </span>
@@ -1101,21 +1124,17 @@ const Cases = () => {
               </TabsList>
             </Tabs>
           </div>
-        </div>
 
-        {/* Work surface */}
-        <div className="px-0 py-3 md:py-4">
-          {/* Mobile / small tablet: dense cards */}
+          <div className="mt-4 pb-4">
           <div className="md:hidden">{renderMobileCards()}</div>
-          {/* Desktop */}
           <div className="hidden md:block">
             {viewMode === 'list' ? renderListView() : renderGridView()}
+          </div>
           </div>
         </div>
       </div>
 
-      {/* Pagination */}
-      <div className="shrink-0 px-0">
+      <div className="shrink-0 px-4 sm:px-5 lg:px-6">
         <PaginationComponent
           currentPage={currentPage}
           totalPages={totalPages}
@@ -1135,15 +1154,15 @@ const Cases = () => {
         />
       </div>
 
-      {/* Mobile FAB — Add Case */}
       <Button
         type="button"
         size="icon"
-        className="md:hidden fixed z-40 bottom-[max(4.75rem,calc(env(safe-area-inset-bottom)+3.75rem))] right-4 h-12 w-12 rounded-full shadow-lg shadow-primary/30"
+        className="fixed z-40 h-12 w-12 rounded-full text-white shadow-lg md:hidden bottom-[max(4.75rem,calc(env(safe-area-inset-bottom)+3.75rem))] end-4"
+        style={{ backgroundColor: JURE_PURPLE }}
         onClick={openCreateCase}
         aria-label={t.cases.aria.addNewCase}
       >
-        <Plus className="w-5 h-5" strokeWidth={2.5} />
+        <Plus className="h-5 w-5" strokeWidth={2.5} />
       </Button>
 
       <p className="sr-only" aria-live="polite">

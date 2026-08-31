@@ -18,6 +18,7 @@ from juria.services.document_text import (
     extract_document_text,
     text_to_docx_base64,
 )
+from juria.services.titles import sanitize_generated_title
 
 logger = logging.getLogger(__name__)
 
@@ -41,6 +42,50 @@ def provider_configured() -> bool:
     if provider_name() == "deepseek":
         return bool((getattr(settings, "DEEPSEEK_API_KEY", "") or "").strip())
     return bool((getattr(settings, "JURIA_API_KEY", "") or "").strip())
+
+
+_TITLE_LANG = {
+    "fr": "French",
+    "en": "English",
+    "ar": "Arabic",
+    "darija": "Moroccan Darija in Latin script",
+}
+
+
+def generate_conversation_title(user_message: str, *, language: str = "fr") -> str:
+    """Ask the LLM for a short sidebar title. Returns '' on failure."""
+    excerpt = " ".join((user_message or "").split())[:500]
+    if not excerpt:
+        return ""
+    lang_hint = _TITLE_LANG.get((language or "fr").lower(), "French")
+    messages = [
+        {
+            "role": "system",
+            "content": (
+                "You name chat conversations for a legal AI assistant. "
+                "Reply with ONLY a short title (3 to 7 words). "
+                "No quotes, no trailing punctuation, no markdown, no explanation. "
+                f"Write the title in {lang_hint}."
+            ),
+        },
+        {"role": "user", "content": excerpt},
+    ]
+    try:
+        if provider_name() == "deepseek":
+            raw = _deepseek_chat(messages, max_tokens=32).get("content") or ""
+        else:
+            raw = str(
+                _juria_post(
+                    "/chat",
+                    {"messages": messages, "mode": "CHAT", "max_tokens": 32},
+                    "title",
+                ).get("content")
+                or ""
+            )
+    except Exception as exc:
+        logger.warning("Juria title generation failed: %s", exc)
+        return ""
+    return sanitize_generated_title(raw)
 
 
 def send_chat_message(
@@ -415,7 +460,13 @@ def build_system_prompt(
     return "".join(parts)
 
 
-def _deepseek_chat(messages: list[dict[str, str]], *, json_mode: bool = False, stream: bool = False) -> dict[str, Any]:
+def _deepseek_chat(
+    messages: list[dict[str, str]],
+    *,
+    json_mode: bool = False,
+    stream: bool = False,
+    max_tokens: int | None = None,
+) -> dict[str, Any]:
     api_key = (getattr(settings, "DEEPSEEK_API_KEY", "") or "").strip()
     if not api_key:
         raise JuriaAPIError("DeepSeek API key is not configured.")
@@ -426,7 +477,7 @@ def _deepseek_chat(messages: list[dict[str, str]], *, json_mode: bool = False, s
     payload: dict[str, Any] = {
         "model": model,
         "messages": messages,
-        "max_tokens": settings.JURIA_MAX_TOKENS,
+        "max_tokens": int(max_tokens) if max_tokens else settings.JURIA_MAX_TOKENS,
         # Streaming is prepared (stream kwarg) but disabled until the SSE endpoint ships.
         "stream": bool(stream),
     }

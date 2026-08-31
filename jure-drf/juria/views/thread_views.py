@@ -13,6 +13,7 @@ from juria.serializers.thread_serializer import (
 )
 from juria.services.activity import log_activity
 from juria.services.permissions import get_project_for_user, get_thread_for_user, require_write
+from juria.services.titles import is_auto_title
 from juria.services.workspace import ensure_legacy_conversation
 from juria.views.mixins import JuriaEnabledMixin
 
@@ -51,9 +52,11 @@ class JuriaThreadListCreateView(JuriaEnabledMixin, APIView):
         require_write(access.member)
         ser = JuriaThreadCreateSerializer(data=request.data)
         ser.is_valid(raise_exception=True)
+        title = (ser.validated_data.get("title") or "").strip()
         thread = JuriaThread.objects.create(
             project=access.project,
-            title=(ser.validated_data.get("title") or "").strip() or "Nouveau fil",
+            title=title,
+            title_is_custom=bool(title) and not is_auto_title(title),
             mode=ser.validated_data.get("mode") or "CHAT",
             created_by=request.user,
         )
@@ -79,7 +82,18 @@ class JuriaThreadDetailView(JuriaEnabledMixin, APIView):
         ser.is_valid(raise_exception=True)
         data = ser.validated_data
         fields = []
-        for key in ("title", "mode", "is_archived"):
+        if "title" in data:
+            thread.title = data["title"]
+            thread.title_is_custom = True
+            fields.extend(["title", "title_is_custom"])
+            project = access.project
+            if project.is_simple:
+                siblings = project.threads.filter(is_deleted=False, is_archived=False)
+                if siblings.count() == 1:
+                    project.name = thread.title
+                    project.name_is_custom = True
+                    project.save(update_fields=["name", "name_is_custom", "updated_at"])
+        for key in ("mode", "is_archived"):
             if key in data:
                 setattr(thread, key, data[key])
                 fields.append(key)

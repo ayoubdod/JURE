@@ -176,6 +176,8 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 }
 
 function ProjectRow({ p, active, onOpen }: { p: JuriaProject; active: boolean; onOpen: (id: string) => void }) {
+  const { t } = useAppTranslation();
+  const untitled = t.juria.workspace.untitledChat;
   return (
     <button
       type="button"
@@ -190,7 +192,9 @@ function ProjectRow({ p, active, onOpen }: { p: JuriaProject; active: boolean; o
       <Folder className={cn('mt-0.5 h-3.5 w-3.5 shrink-0', active ? 'text-[#64499D]' : 'text-slate-400')} />
       <span className="min-w-0 flex-1">
         <span className="flex items-center gap-1">
-          <span className="line-clamp-1 text-[13px] font-medium text-slate-900 dark:text-slate-100">{p.name}</span>
+          <span className="line-clamp-1 text-[13px] font-medium text-slate-900 dark:text-slate-100">
+            {p.name || untitled}
+          </span>
           {p.is_favorite && <Star className="h-3 w-3 fill-amber-400 text-amber-400" />}
         </span>
         {p.linked_case_reference && (

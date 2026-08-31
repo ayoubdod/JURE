@@ -29,12 +29,23 @@ def _error_response(exc):
 
 
 def _pair_payload(user_msg, assistant_msg, suggestions, request):
+    thread = user_msg.thread
+    project = None
+    if thread is not None:
+        thread.refresh_from_db()
+        project = thread.project
+        if project is not None:
+            project.refresh_from_db()
     return {
         "user_message": JuriaMessageSerializer(user_msg, context={"request": request}).data,
         "assistant_message": {
             **JuriaMessageSerializer(assistant_msg, context={"request": request}).data,
             "suggestions": suggestions or [],
         },
+        "thread_id": str(thread.id) if thread is not None else None,
+        "thread_title": thread.title if thread is not None else None,
+        "project_id": str(project.id) if project is not None else None,
+        "project_name": project.name if project is not None else None,
     }
 
 

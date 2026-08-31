@@ -13,19 +13,15 @@ export function WorkspacePageHeader({
   actions?: React.ReactNode;
 }) {
   return (
-    <div className="flex flex-wrap items-center justify-between gap-2 px-0 pt-2 pb-1 sm:gap-3 sm:pt-3">
+    <header className="flex min-w-0 flex-wrap items-start justify-between gap-3">
       <div className="min-w-0">
-        <h1 className="text-lg font-semibold tracking-tight text-slate-900 dark:text-white sm:text-xl">{title}</h1>
-        <p className="mt-0.5 max-w-2xl text-[13px] text-slate-500 dark:text-slate-400 hidden sm:block">
-          {subtitle}
-        </p>
+        <h1 className="text-[24px] font-semibold tracking-tight text-slate-900 dark:text-white md:text-[26px]">
+          {title}
+        </h1>
+        <p className="mt-1 max-w-xl text-[14px] text-slate-500 dark:text-slate-400">{subtitle}</p>
       </div>
-      {actions ? (
-        <div className="flex min-w-0 items-center justify-end gap-2 max-sm:flex-1 max-sm:basis-full">
-          {actions}
-        </div>
-      ) : null}
-    </div>
+      {actions ? <div className="flex shrink-0 items-center justify-end gap-2">{actions}</div> : null}
+    </header>
   );
 }
 
@@ -33,10 +29,18 @@ export type WorkspaceKpiItem = {
   key: string;
   label: string;
   value: number | null;
-  accent: string;
+  accent?: string;
+  hint?: string;
+  icon?: LucideIcon;
   onClick?: () => void;
   active?: boolean;
 };
+
+function iconAccentClass(accent?: string) {
+  if (!accent) return 'text-slate-500';
+  if (accent.includes('text-') || accent.includes('text[')) return accent;
+  return accent.replace(/border-l-/g, 'text-');
+}
 
 export function WorkspaceKpiStrip({
   items,
@@ -47,46 +51,65 @@ export function WorkspaceKpiStrip({
   loading?: boolean;
   ariaLabel?: string;
 }) {
+  const cols =
+    items.length >= 5
+      ? 'mt-5 grid grid-cols-2 gap-2.5 sm:grid-cols-3 xl:grid-cols-5'
+      : items.length === 3
+        ? 'mt-5 grid grid-cols-2 gap-2.5 lg:grid-cols-3'
+        : 'mt-5 grid grid-cols-2 gap-2.5 lg:grid-cols-4';
+
   return (
-    <div
-      className="ws-kpi-strip grid grid-cols-2 gap-2 px-0 py-2 sm:flex sm:overflow-x-auto sm:snap-x sm:snap-mandatory"
-      role="region"
-      aria-label={ariaLabel}
-    >
-      {items.map((item) => {
-        const className = cn(
-          'flex min-w-0 items-center gap-2 rounded-md border border-slate-200/90 dark:border-slate-800',
-          'bg-white dark:bg-slate-950 border-l-[3px] px-2.5 py-1.5 text-start',
-          'sm:snap-start sm:flex-1 sm:shrink-0 sm:min-w-[5.75rem]',
-          item.accent,
-          item.active && 'ring-1 ring-[#64499D]/35 border-[#64499D]/40',
-          item.onClick && 'cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-900'
-        );
-        const body = (
-          <div className="min-w-0">
-            <p className="text-[10px] font-medium uppercase tracking-[0.06em] text-slate-500 dark:text-slate-400 leading-none">
-              {item.label}
-            </p>
-            {loading || item.value == null ? (
-              <div className="mt-1.5 h-4 w-8 animate-pulse rounded bg-slate-200 dark:bg-slate-800" />
+    <section className={cols} role="region" aria-label={ariaLabel}>
+      {loading
+        ? Array.from({ length: Math.max(items.length, 4) }).map((_, i) => (
+            <div
+              key={i}
+              className="h-[96px] animate-pulse rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950"
+            />
+          ))
+        : items.map((item) => {
+            const Icon = item.icon;
+            const className = cn(
+              'min-w-0 rounded-xl border border-slate-200/90 bg-white px-3.5 py-3 text-start',
+              'shadow-[0_1px_2px_rgba(0,0,0,0.04)] dark:border-slate-800 dark:bg-slate-950',
+              item.active && 'border-[#64499D]/40 ring-2 ring-[#64499D]/20',
+              item.onClick && 'cursor-pointer hover:border-slate-300 dark:hover:border-slate-700'
+            );
+            const body = (
+              <>
+                <div className="flex items-start justify-between gap-2">
+                  <p className="text-[11px] font-medium uppercase tracking-[0.06em] text-slate-500 dark:text-slate-400">
+                    {item.label}
+                  </p>
+                  {Icon ? (
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-50 dark:bg-slate-900">
+                      <Icon className={cn('h-4 w-4', iconAccentClass(item.accent))} aria-hidden />
+                    </span>
+                  ) : null}
+                </div>
+                {item.value == null ? (
+                  <div className="mt-2 h-7 w-12 animate-pulse rounded bg-slate-200 dark:bg-slate-800" />
+                ) : (
+                  <p className="mt-2 text-[26px] font-semibold leading-none tabular-nums text-slate-900 dark:text-white">
+                    {item.value}
+                  </p>
+                )}
+                {item.hint ? (
+                  <p className="mt-1.5 truncate text-[12px] text-slate-400">{item.hint}</p>
+                ) : null}
+              </>
+            );
+            return item.onClick ? (
+              <button key={item.key} type="button" className={className} onClick={item.onClick}>
+                {body}
+              </button>
             ) : (
-              <p className="ws-stat-value mt-0.5 text-base font-bold tabular-nums text-slate-900 dark:text-white leading-none">
-                {item.value}
-              </p>
-            )}
-          </div>
-        );
-        return item.onClick ? (
-          <button key={item.key} type="button" className={className} onClick={item.onClick}>
-            {body}
-          </button>
-        ) : (
-          <div key={item.key} className={className}>
-            {body}
-          </div>
-        );
-      })}
-    </div>
+              <div key={item.key} className={className}>
+                {body}
+              </div>
+            );
+          })}
+    </section>
   );
 }
 

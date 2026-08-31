@@ -67,7 +67,6 @@ export function JuriaChat({ project }: { project: JuriaProject }) {
   const [threadQuery, setThreadQuery] = useState('');
   const [attachKind, setAttachKind] = useState<'case' | 'library' | null>(null);
   const [previewHit, setPreviewHit] = useState<JuriaSourceHit | null>(null);
-  const [createThreadOpen, setCreateThreadOpen] = useState(false);
   const [threadsOpen, setThreadsOpen] = useState(() => {
     try {
       return localStorage.getItem('jure.juria.threadsNav') !== '0';
@@ -134,7 +133,9 @@ export function JuriaChat({ project }: { project: JuriaProject }) {
             <button
               type="button"
               className="rounded-md p-1 text-slate-400 hover:bg-slate-100 hover:text-[#64499D] dark:hover:bg-slate-800"
-              onClick={() => setCreateThreadOpen(true)}
+              onClick={() => void createThread(project.id, undefined, mode)}
+              aria-label={chat.newThread}
+              title={chat.newThread}
             >
               <Plus className="h-3.5 w-3.5" />
             </button>
@@ -170,7 +171,7 @@ export function JuriaChat({ project }: { project: JuriaProject }) {
               )}
             >
               <button type="button" onClick={() => setActiveThread(t.id)} className="min-w-0 flex-1 px-2.5 py-2 text-left text-[12px]">
-                <span className="line-clamp-1 font-medium">{t.title || chat.thread}</span>
+                <span className="line-clamp-1 font-medium">{t.title || chat.untitledThread}</span>
                 {t.last_message_preview && (
                   <span className="mt-0.5 line-clamp-1 text-[10px] text-slate-400">{t.last_message_preview}</span>
                 )}
@@ -216,7 +217,9 @@ export function JuriaChat({ project }: { project: JuriaProject }) {
           <button
             type="button"
             className="mt-1 rounded-md p-1.5 text-slate-400 hover:bg-slate-100 hover:text-[#64499D] dark:hover:bg-slate-800"
-            onClick={() => setCreateThreadOpen(true)}
+            onClick={() => void createThread(project.id, undefined, mode)}
+            aria-label={chat.newThread}
+            title={chat.newThread}
           >
             <Plus className="h-3.5 w-3.5" />
           </button>
@@ -330,15 +333,6 @@ export function JuriaChat({ project }: { project: JuriaProject }) {
         projectId={project.id}
         linkedCaseId={project.linked_case_id}
         onClose={() => setPreviewHit(null)}
-      />
-      <JuriaTextPromptDialog
-        open={createThreadOpen}
-        onOpenChange={setCreateThreadOpen}
-        title={chat.newThread}
-        label={chat.threadName}
-        initialValue={chat.newThread}
-        confirmLabel={actions.create}
-        onConfirm={(title) => void createThread(project.id, title, mode)}
       />
       <JuriaTextPromptDialog
         open={Boolean(renameThread)}

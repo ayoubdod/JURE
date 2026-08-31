@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+import logging
 import os
 import tempfile
 import time
+from concurrent.futures import ThreadPoolExecutor
 
 from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
@@ -17,21 +19,41 @@ from juria.services.juria_api_service import (
     JuriaDocumentError,
     JuriaTimeoutError,
     analyze_document,
+    generate_conversation_title,
     send_chat_message,
 )
 from juria.services.retrieval import ensure_file_extracted
 from juria.services.sources import connect_upload
+from juria.services.titles import fallback_title_from_message, is_auto_title
 from juria.services.workspace import ensure_legacy_conversation
 from juria.models import JuriaFile
 from juria.constants import OcrStatus
 
+logger = logging.getLogger(__name__)
 
-def auto_title_from_first_message(text: str) -> str:
-    cleaned = " ".join((text or "").split())
-    if len(cleaned) > 60:
-        cleaned = cleaned[:57].rstrip() + "..."
-    date_s = timezone.now().strftime("%d %b %Y")
-    return f"{cleaned} — {date_s}"
+
+def auto_title_from_first_message(text: str, language: str = "fr") -> str:
+    return fallback_title_from_message(text, language)
+
+
+def should_auto_title_thread(thread) -> bool:
+    return not getattr(thread, "title_is_custom", False) and is_auto_title(thread.title)
+
+
+def apply_auto_title(thread, project, title: str) -> None:
+    cleaned = (title or "").strip()[:200]
+    if not cleaned:
+        return
+    thread.title = cleaned
+    thread.save(update_fields=["title", "updated_at"])
+    thread.legacy_conversations.update(title=cleaned)
+    if (
+        getattr(project, "is_simple", False)
+        and not getattr(project, "name_is_custom", False)
+        and is_auto_title(project.name)
+    ):
+        project.name = cleaned
+        project.save(update_fields=["name", "updated_at"])
 
 
 def local_path_for_storage(rel_path: str) -> str:
@@ -162,62 +184,84 @@ def send_thread_message(user, thread, project, *, message_text: str, upload=None
         attachment_type=attachment_type,
         attachment_path=attachment_rel,
     )
-    if not thread.title or thread.title in ("Nouveau fil", "Discussion générale"):
-        if message_text:
-            thread.title = auto_title_from_first_message(message_text)
+    need_title = should_auto_title_thread(thread)
     thread.mode = mode
-    thread.save(update_fields=["title", "mode", "updated_at"])
+    thread.save(update_fields=["mode", "updated_at"])
     project.save(update_fields=["updated_at"])
 
     local_path = None
     tmp_cleanup = False
+    title_pool = ThreadPoolExecutor(max_workers=1)
+    title_future = None
+    if need_title and (message_text or "").strip():
+        title_future = title_pool.submit(
+            generate_conversation_title,
+            message_text,
+            language=language,
+        )
     try:
-        if has_attachment:
-            local_path = local_path_for_storage(attachment_rel)
-            tmp_cleanup = not hasattr(default_storage, "path")
-        history = build_history(thread, exclude_message_id=user_msg.id)
-        content, tokens, juria_mid, suggestions, analysis, retrieved, elapsed_ms = _call_model(
-            project=project,
+        try:
+            if has_attachment:
+                local_path = local_path_for_storage(attachment_rel)
+                tmp_cleanup = not hasattr(default_storage, "path")
+            history = build_history(thread, exclude_message_id=user_msg.id)
+            content, tokens, juria_mid, suggestions, analysis, retrieved, elapsed_ms = _call_model(
+                project=project,
+                thread=thread,
+                user=user,
+                message_text=message_text,
+                history=history,
+                mode=mode,
+                language=language,
+                upload_local=local_path,
+                upload_type=attachment_type if has_attachment else None,
+            )
+        except Exception:
+            if attachment_rel:
+                try:
+                    default_storage.delete(attachment_rel)
+                except Exception:
+                    pass
+            user_msg.delete()
+            raise
+        finally:
+            if tmp_cleanup and local_path and os.path.isfile(local_path):
+                try:
+                    os.unlink(local_path)
+                except OSError:
+                    pass
+
+        assistant_msg = JuriaMessage.objects.create(
+            conversation=user_msg.conversation,
             thread=thread,
-            user=user,
-            message_text=message_text,
-            history=history,
+            role=JuriaMessage.Role.ASSISTANT,
+            content=content,
             mode=mode,
             language=language,
-            upload_local=local_path,
-            upload_type=attachment_type if has_attachment else None,
+            tokens_used=tokens or None,
+            response_time_ms=elapsed_ms,
+            juria_message_id=juria_mid,
+            sources=retrieved,
+            analysis=analysis or {},
+            parent_message=user_msg,
         )
-    except Exception:
-        if attachment_rel:
-            try:
-                default_storage.delete(attachment_rel)
-            except Exception:
-                pass
-        user_msg.delete()
-        raise
+        if need_title:
+            generated = ""
+            if title_future is not None:
+                try:
+                    generated = title_future.result(timeout=8) or ""
+                except Exception as exc:
+                    logger.warning("Juria title generation did not finish: %s", exc)
+            apply_auto_title(
+                thread,
+                project,
+                generated or fallback_title_from_message(message_text, language),
+            )
+        else:
+            thread.save(update_fields=["updated_at"])
+        return user_msg, assistant_msg, suggestions
     finally:
-        if tmp_cleanup and local_path and os.path.isfile(local_path):
-            try:
-                os.unlink(local_path)
-            except OSError:
-                pass
-
-    assistant_msg = JuriaMessage.objects.create(
-        conversation=user_msg.conversation,
-        thread=thread,
-        role=JuriaMessage.Role.ASSISTANT,
-        content=content,
-        mode=mode,
-        language=language,
-        tokens_used=tokens or None,
-        response_time_ms=elapsed_ms,
-        juria_message_id=juria_mid,
-        sources=retrieved,
-        analysis=analysis or {},
-        parent_message=user_msg,
-    )
-    thread.save(update_fields=["updated_at"])
-    return user_msg, assistant_msg, suggestions
+        title_pool.shutdown(wait=False)
 
 
 def edit_user_message(user, user_msg: JuriaMessage, *, new_content: str, language: str = "", regenerate: bool = True):

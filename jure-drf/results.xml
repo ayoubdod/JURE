@@ -1,19 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <testsuites>
-	<testsuite name="calls.tests.IceServersApiTests-20260830183749" tests="2" file="calls/tests.py" time="2.278" timestamp="2026-08-30T18:37:51" failures="0" errors="0" skipped="0">
-		<testcase classname="calls.tests.IceServersApiTests" name="test_requires_auth" time="1.226" timestamp="2026-08-30T18:37:50" file="calls\tests.py" line="137"/>
-		<testcase classname="calls.tests.IceServersApiTests" name="test_returns_turn_with_static_creds" time="1.052" timestamp="2026-08-30T18:37:51" file="calls\tests.py" line="149"/>
+	<testsuite name="juria.tests.JuriaProjectApiTests-20260831180346" tests="5" file="juria/tests.py" time="6.137" timestamp="2026-08-31T18:03:52" failures="0" errors="0" skipped="0">
+		<testcase classname="juria.tests.JuriaProjectApiTests" name="test_simple_chat_starts_untitled" time="1.235" timestamp="2026-08-31T18:03:47" file="juria\tests.py" line="227"/>
+		<testcase classname="juria.tests.JuriaProjectApiTests" name="test_rename_marks_project_name_custom" time="1.255" timestamp="2026-08-31T18:03:48" file="juria\tests.py" line="241"/>
+		<testcase classname="juria.tests.JuriaProjectApiTests" name="test_first_message_sets_ai_title" time="1.159" timestamp="2026-08-31T18:03:49" file="juria\tests.py" line="258"/>
+		<testcase classname="juria.tests.JuriaProjectApiTests" name="test_custom_title_is_not_overwritten" time="1.165" timestamp="2026-08-31T18:03:51" file="juria\tests.py" line="287"/>
+		<testcase classname="juria.tests.JuriaProjectApiTests" name="test_create_simple_chat_skips_firm_context" time="1.323" timestamp="2026-08-31T18:03:52" file="juria\tests.py" line="155"/>
 	</testsuite>
-	<testsuite name="calls.tests.IceServersBuildTests-20260830183749" tests="4" file="calls/tests.py" time="0.013" timestamp="2026-08-30T18:37:51" failures="0" errors="0" skipped="0">
-		<testcase classname="calls.tests.IceServersBuildTests" name="test_coturn_entry_uses_tcp_and_credentials" time="0.009" timestamp="2026-08-30T18:37:51" file="calls\tests.py" line="99"/>
-		<testcase classname="calls.tests.IceServersBuildTests" name="test_json_override_is_used" time="0.001" timestamp="2026-08-30T18:37:51" file="calls\tests.py" line="118"/>
-		<testcase classname="calls.tests.IceServersBuildTests" name="test_production_falls_back_to_openrelay" time="0.001" timestamp="2026-08-30T18:37:51" file="calls\tests.py" line="82"/>
-		<testcase classname="calls.tests.IceServersBuildTests" name="test_stun_only_without_turn" time="0.001" timestamp="2026-08-30T18:37:51" file="calls\tests.py" line="65"/>
-	</testsuite>
-	<testsuite name="calls.tests.TurnCredentialTests-20260830183749" tests="4" file="calls/tests.py" time="0.001" timestamp="2026-08-30T18:37:51" failures="0" errors="0" skipped="0">
-		<testcase classname="calls.tests.TurnCredentialTests" name="test_hmac_is_base64_not_hex" time="0.000" timestamp="2026-08-30T18:37:51" file="calls\tests.py" line="17"/>
-		<testcase classname="calls.tests.TurnCredentialTests" name="test_parse_ice_servers_json_array" time="0.000" timestamp="2026-08-30T18:37:51" file="calls\tests.py" line="44"/>
-		<testcase classname="calls.tests.TurnCredentialTests" name="test_parse_ice_servers_json_wrapped" time="0.000" timestamp="2026-08-30T18:37:51" file="calls\tests.py" line="58"/>
-		<testcase classname="calls.tests.TurnCredentialTests" name="test_turn_urls_include_udp_and_tcp" time="0.000" timestamp="2026-08-30T18:37:51" file="calls\tests.py" line="38"/>
+	<testsuite name="juria.tests.JuriaTitleHelperTests-20260831180346" tests="4" file="juria/tests.py" time="0.007" timestamp="2026-08-31T18:03:52" failures="0" errors="0" skipped="0">
+		<testcase classname="juria.tests.JuriaTitleHelperTests" name="test_fallback_title" time="0.001" timestamp="2026-08-31T18:03:52" file="juria\tests.py" line="331"/>
+		<testcase classname="juria.tests.JuriaTitleHelperTests" name="test_generate_conversation_title_strips_model_output" time="0.004" timestamp="2026-08-31T18:03:52" file="juria\tests.py" line="336"/>
+		<testcase classname="juria.tests.JuriaTitleHelperTests" name="test_sanitize_generated_title" time="0.001" timestamp="2026-08-31T18:03:52" file="juria\tests.py" line="326"/>
+		<testcase classname="juria.tests.JuriaTitleHelperTests" name="test_untitled_and_placeholders" time="0.001" timestamp="2026-08-31T18:03:52" file="juria\tests.py" line="318"/>
 	</testsuite>
 </testsuites>

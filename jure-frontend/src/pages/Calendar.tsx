@@ -3,7 +3,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router';
 import FullCalendar from '@fullcalendar/react';
 import { Button } from '@/components/ui/button';
-import { Plus } from 'lucide-react';
+import { Plus, CalendarClock, Calendar, AlertTriangle, CalendarDays } from 'lucide-react';
 import TaskCreateModal, { TaskCreateModalRef } from '@/components/task/TaskCreateModal';
 import TaskUpdateModal, { TaskUpdateModalRef } from '@/components/task/TaskUpdateModal';
 import ScheduleAppointmentDialog, { ScheduleAppointmentDialogRef } from '@/components/ScheduleAppointmentDialog';
@@ -294,14 +294,14 @@ const CalendarPage: React.FC = () => {
     !!debouncedSearch.trim();
 
   const kpiItems = [
-    { key: 'upcoming', label: cal.stats.upcoming, value: loading ? null : stats.upcoming, accent: 'border-l-emerald-500' },
-    { key: 'today', label: cal.stats.today, value: loading ? null : stats.today, accent: 'border-l-indigo-500' },
-    { key: 'overdue', label: cal.stats.overdue, value: loading ? null : stats.overdue, accent: 'border-l-rose-500' },
-    { key: 'week', label: cal.stats.thisWeek, value: loading ? null : stats.thisWeek, accent: 'border-l-slate-400' },
+    { key: 'upcoming', label: cal.stats.upcoming, value: loading ? null : stats.upcoming, accent: 'text-emerald-600', icon: CalendarClock },
+    { key: 'today', label: cal.stats.today, value: loading ? null : stats.today, accent: 'text-indigo-500', icon: Calendar },
+    { key: 'overdue', label: cal.stats.overdue, value: loading ? null : stats.overdue, accent: 'text-rose-500', icon: AlertTriangle },
+    { key: 'week', label: cal.stats.thisWeek, value: loading ? null : stats.thisWeek, accent: 'text-slate-500', icon: CalendarDays },
   ];
 
   return (
-    <div ref={setCalendarHolderEl} className="relative h-full flex flex-col min-h-0 bg-slate-50 dark:bg-slate-950 overflow-hidden px-2 sm:px-4">
+    <div ref={setCalendarHolderEl} className="relative h-full flex flex-col min-h-0 overflow-hidden bg-slate-50 px-4 dark:bg-slate-950 sm:px-5 lg:px-6">
       <WorkspacePageHeader
         title={cal.title}
         subtitle={cal.subtitle}

@@ -62,6 +62,10 @@ class JuriaProject(models.Model):
         default=False,
         help_text="Standalone AI chat without JURE matter / library / team context.",
     )
+    name_is_custom = models.BooleanField(
+        default=False,
+        help_text="True after the user sets the name; AI auto-titles are skipped.",
+    )
     duplicated_from = models.ForeignKey(
         "self",
         null=True,

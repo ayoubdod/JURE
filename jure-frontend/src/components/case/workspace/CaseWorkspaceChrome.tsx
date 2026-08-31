@@ -1,52 +1,19 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Plus, Scale } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import PaginationComponent from '@/components/common/Pagination';
 import CompactSearch from '@/components/common/CompactSearch';
 import MobileFilterSheet from '@/components/common/MobileFilterSheet';
-import { cn } from '@/lib/utils';
 import { useAppTranslation } from '@/i18n';
-import '@/pages/Cases.css';
+import {
+  WorkspaceKpiStrip,
+  WorkspacePageHeader,
+  type WorkspaceKpiItem,
+} from '@/components/workspace/WorkspaceChrome';
 
-export type WorkspaceKpiItem = {
-  key: string;
-  label: string;
-  value: number;
-  accent: string;
-  onClick?: () => void;
-  active?: boolean;
-};
+const JURE_PURPLE = '#64499D';
 
-function AnimatedStatValue({ value }: { value: number }) {
-  const [display, setDisplay] = useState(value);
-  const prevRef = useRef(value);
-
-  useEffect(() => {
-    const prefersReduced =
-      typeof window !== 'undefined' &&
-      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (prefersReduced || value === prevRef.current) {
-      setDisplay(value);
-      prevRef.current = value;
-      return;
-    }
-    let frame = 0;
-    const start = prevRef.current;
-    const diff = value - start;
-    const steps = 12;
-    let raf = 0;
-    const tick = () => {
-      frame += 1;
-      setDisplay(Math.round(start + (diff * frame) / steps));
-      if (frame < steps) raf = requestAnimationFrame(tick);
-      else prevRef.current = value;
-    };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, [value]);
-
-  return <span className="cases-stat-value tabular-nums">{display}</span>;
-}
+export type { WorkspaceKpiItem };
 
 export interface CaseWorkspaceChromeProps {
   title: string;
@@ -167,7 +134,12 @@ export default function CaseWorkspaceChrome({
           {t.cases.empty.resetFilters}
         </Button>
       ) : canCreate ? (
-        <Button size="sm" className="mt-4 h-8 rounded-md text-[12px]" onClick={onCreate}>
+        <Button
+          size="sm"
+          className="mt-4 h-8 text-[12px] text-white hover:opacity-90"
+          style={{ backgroundColor: JURE_PURPLE }}
+          onClick={onCreate}
+        >
           <Plus className="w-4 h-4 mr-1.5" strokeWidth={2.5} />
           {ctaLabel}
         </Button>
@@ -178,73 +150,32 @@ export default function CaseWorkspaceChrome({
   return (
     <div
       ref={holderRef}
-      className="relative h-full min-h-0 flex flex-col overflow-hidden bg-slate-50 dark:bg-slate-950"
+      className="relative flex h-full min-h-0 flex-col overflow-hidden bg-slate-50 dark:bg-slate-950"
     >
-      <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden">
-        <div className="px-0 pt-3 pb-1">
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div className="min-w-0">
-              <h1 className="text-xl font-semibold tracking-tight text-slate-900 dark:text-white">{title}</h1>
-              <p className="mt-0.5 text-[13px] text-slate-500 dark:text-slate-400 max-w-2xl">{subtitle}</p>
-            </div>
-            {canCreate && (
-              <Button
-                size="sm"
-                className="hidden md:inline-flex h-9 px-3 text-[12px] font-semibold shrink-0 rounded-md shadow-sm shadow-primary/15"
-                onClick={onCreate}
-              >
-                <Plus className="w-4 h-4 mr-1.5" strokeWidth={2.5} />
-                {ctaLabel}
-              </Button>
-            )}
-          </div>
-        </div>
+      <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto">
+        <div className="px-4 pb-8 pt-2 sm:px-5 lg:px-6">
+          <WorkspacePageHeader
+            title={title}
+            subtitle={subtitle}
+            actions={
+              canCreate ? (
+                <Button
+                  size="sm"
+                  className="hidden h-9 shrink-0 px-3 text-[13px] font-semibold text-white hover:opacity-90 md:inline-flex"
+                  style={{ backgroundColor: JURE_PURPLE }}
+                  onClick={onCreate}
+                >
+                  <Plus className="me-1.5 h-4 w-4" strokeWidth={2.5} />
+                  {ctaLabel}
+                </Button>
+              ) : undefined
+            }
+          />
 
-        <div
-          className="cases-kpi-strip flex gap-2 overflow-x-auto snap-x snap-mandatory px-1 sm:px-0 py-2"
-          role="region"
-          aria-label={t.cases.aria.matterStats}
-        >
-          {kpis.map((item) => {
-            const chipClass = cn(
-              'cases-kpi-chip snap-start shrink-0 flex items-center gap-2 rounded-md border border-slate-200/90 dark:border-slate-800',
-              'bg-white dark:bg-slate-950 border-l-[3px] px-2.5 py-1.5 min-w-[5.75rem] text-start',
-              'sm:flex-1 sm:min-w-0',
-              item.accent,
-              item.active && 'ring-1 ring-[#64499D]/35 border-[#64499D]/40',
-              item.onClick && 'cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-900'
-            );
-            const body = (
-              <div className="min-w-0">
-                <p className="text-[10px] font-medium uppercase tracking-[0.06em] text-slate-500 dark:text-slate-400 leading-none">
-                  {item.label}
-                </p>
-                <p className="mt-0.5 text-base font-bold text-slate-900 dark:text-white leading-none">
-                  <AnimatedStatValue value={item.value} />
-                </p>
-              </div>
-            );
-            return item.onClick ? (
-              <button key={item.key} type="button" className={chipClass} onClick={item.onClick}>
-                {body}
-              </button>
-            ) : (
-              <div key={item.key} className={chipClass}>
-                {body}
-              </div>
-            );
-          })}
-        </div>
+          <WorkspaceKpiStrip items={kpis} ariaLabel={t.cases.aria.matterStats} />
 
-        <div
-          className={cn(
-            'cases-toolbar-sticky sticky top-0 z-30',
-            'bg-slate-50/95 dark:bg-slate-950/95 border-b border-slate-200/90 dark:border-slate-800',
-            'px-0 pt-1 pb-0'
-          )}
-        >
-          <div className="rounded-lg border border-slate-200/90 bg-white/95 px-2 py-2 dark:border-slate-800 dark:bg-slate-950/90 sm:px-3">
-            <div className="flex items-center gap-1.5 sm:gap-2">
+          <div className="sticky top-0 z-30 mt-5 rounded-xl border border-slate-200/90 bg-white/95 px-3 py-2 shadow-[0_1px_2px_rgba(0,0,0,0.04)] backdrop-blur-md dark:border-slate-800 dark:bg-slate-950/95 sm:px-4 sm:py-3">
+            <div className="flex min-w-0 items-center gap-1.5 sm:gap-2">
               <CompactSearch
                 value={searchValue}
                 onChange={onSearchChange}
@@ -270,9 +201,8 @@ export default function CaseWorkspaceChrome({
               </MobileFilterSheet>
             </div>
           </div>
-        </div>
 
-        <div className="px-0 py-3 md:py-4">
+          <div className="mt-4 pb-4">
           {loadError ? (
             errorState
           ) : (
@@ -284,10 +214,11 @@ export default function CaseWorkspaceChrome({
               </div>
             </>
           )}
+          </div>
         </div>
       </div>
 
-      <div className="shrink-0 px-0">
+      <div className="shrink-0 px-4 sm:px-5 lg:px-6">
         <PaginationComponent
           currentPage={currentPage}
           totalPages={totalPages}
@@ -310,11 +241,12 @@ export default function CaseWorkspaceChrome({
         <Button
           type="button"
           size="icon"
-          className="md:hidden fixed z-40 bottom-[max(4.75rem,calc(env(safe-area-inset-bottom)+3.75rem))] right-4 h-12 w-12 rounded-full shadow-lg shadow-primary/30"
+          className="fixed z-40 h-12 w-12 rounded-full text-white shadow-lg md:hidden bottom-[max(4.75rem,calc(env(safe-area-inset-bottom)+3.75rem))] end-4"
+          style={{ backgroundColor: JURE_PURPLE }}
           onClick={onCreate}
           aria-label={ctaLabel}
         >
-          <Plus className="w-5 h-5" strokeWidth={2.5} />
+          <Plus className="h-5 w-5" strokeWidth={2.5} />
         </Button>
       )}
 
