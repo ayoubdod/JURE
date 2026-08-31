@@ -13,6 +13,9 @@ import {
   Loader2,
   Eye,
   Users,
+  UserRound,
+  Scale,
+  Clock,
   Calendar,
   ChevronRight,
   X,
@@ -72,9 +75,16 @@ import MobileFilterSheet, { FilterField } from '@/components/common/MobileFilter
 import { formatDate, useAppTranslation } from '@/i18n';
 import type { Lang } from '@/i18n';
 import { useShortcutAction } from '@/context/ShortcutsContext';
+import {
+  WorkspaceKpiStrip,
+  WorkspacePageHeader,
+} from '@/components/workspace/WorkspaceChrome';
 import '@/styles/workspace-list.css';
 
-const JURE_PURPLE = '#6D54B5';
+const JURE_PURPLE = '#64499D';
+
+const sharePct = (part: number, total: number) =>
+  total > 0 ? Math.round((part / total) * 100) : null;
 
 const formatJoined = (d: string | Date | undefined, lang: Lang) => {
   if (!d) return '—';
@@ -319,8 +329,6 @@ const TeamMembers: React.FC = () => {
           }
         }}
       >
-        <div className="h-0.5 w-full shrink-0 bg-gradient-to-r from-[#64499D] to-[#8B6FD1]/70" aria-hidden />
-
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
@@ -497,7 +505,6 @@ const TeamMembers: React.FC = () => {
         key={member.id}
         className="overflow-hidden rounded-xl border border-slate-200/90 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)] dark:border-zinc-800 dark:bg-zinc-950"
       >
-        <div className="h-0.5 w-full bg-gradient-to-r from-[#64499D] to-[#8B6FD1]/70" aria-hidden />
         <button
           type="button"
           className="w-full rounded-none px-3 py-2.5 text-left min-h-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#64499D]/40 focus-visible:ring-inset"
@@ -851,47 +858,89 @@ const TeamMembers: React.FC = () => {
     return () => window.removeEventListener('keydown', onKeyDown);
   }, []);
 
+  const activePct = sharePct(activeCount, totalMembers);
+  const lawyersPct = sharePct(lawyersCount, totalMembers);
+
   const kpiItems = [
-    { key: 'total', label: t.team.stats.total, value: totalMembers, accent: 'border-l-slate-400' },
-    { key: 'active', label: t.team.stats.active, value: activeCount, accent: 'border-l-emerald-500' },
-    { key: 'lawyers', label: t.team.stats.lawyers, value: lawyersCount, accent: 'border-l-indigo-500' },
-    { key: 'pending', label: t.team.stats.pending, value: pendingInviteCount, accent: 'border-l-amber-500' },
-  ] as const;
+    {
+      key: 'total',
+      label: t.team.stats.total,
+      value: totalMembers,
+      hint: t.team.stats.totalHint,
+      icon: Users,
+      accent: 'text-slate-500',
+    },
+    {
+      key: 'active',
+      label: t.team.stats.active,
+      value: activeCount,
+      hint: activePct != null ? tf(t.team.stats.shareOfTeam, { pct: activePct }) : t.team.stats.totalHint,
+      icon: UserRound,
+      accent: 'text-emerald-600',
+    },
+    {
+      key: 'lawyers',
+      label: t.team.stats.lawyers,
+      value: lawyersCount,
+      hint: lawyersPct != null ? tf(t.team.stats.shareOfTeam, { pct: lawyersPct }) : t.team.stats.totalHint,
+      icon: Scale,
+      accent: 'text-[#64499D]',
+    },
+    {
+      key: 'pending',
+      label: t.team.stats.pending,
+      value: pendingInviteCount,
+      hint: t.team.stats.pendingHint,
+      icon: Clock,
+      accent: 'text-amber-500',
+    },
+  ];
+
+  const filterChips: Array<{ key: string; label: string; onClear: () => void }> = [];
+  if (roleFilter) {
+    filterChips.push({
+      key: 'role',
+      label: roleLabel(roleFilter),
+      onClear: () => setRoleFilter(''),
+    });
+  }
+  if (statusFilter) {
+    filterChips.push({
+      key: 'status',
+      label:
+        statusFilter === 'active'
+          ? t.team.status.active
+          : statusFilter === 'offline'
+            ? t.team.status.offline
+            : t.team.status.pending,
+      onClear: () => setStatusFilter(''),
+    });
+  }
 
   return (
     <div className="relative flex h-full min-h-0 flex-col overflow-hidden bg-slate-50 dark:bg-slate-950">
-      <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden">
-        {/* KPI strip — scrolls away */}
-        <div
-          className="ws-kpi-strip flex gap-2 overflow-x-auto snap-x snap-mandatory py-2"
-          role="region"
-          aria-label={t.team.aria.stats}
-        >
-          {kpiItems.map((item) => (
-            <div
-              key={item.key}
-              className={cn(
-                'snap-start shrink-0 flex items-center gap-2 rounded-md border border-slate-200/90 dark:border-slate-800',
-                'bg-white dark:bg-slate-950 border-l-[3px] px-2.5 py-1.5 min-w-[5.75rem] sm:flex-1 sm:min-w-0',
-                item.accent
-              )}
-            >
-              <div className="min-w-0">
-                <p className="text-[10px] font-medium uppercase tracking-[0.06em] text-slate-500 dark:text-slate-400 leading-none">
-                  {item.label}
-                </p>
-                <p className="mt-0.5 text-base font-bold tabular-nums text-slate-900 dark:text-white leading-none ws-stat-value">
-                  {item.value}
-                </p>
-              </div>
-            </div>
-          ))}
-        </div>
+      <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto">
+        <div className="px-4 pb-8 pt-2 sm:px-5 lg:px-6">
+          <WorkspacePageHeader
+            title={t.sidebar.team}
+            subtitle={t.team.pageSubtitle}
+            actions={
+              <Button
+                size="sm"
+                className="hidden h-9 shrink-0 px-3 text-[13px] font-semibold text-white hover:opacity-90 md:inline-flex"
+                style={{ backgroundColor: JURE_PURPLE }}
+                onClick={openCreate}
+              >
+                <Plus className="me-1.5 h-4 w-4" strokeWidth={2.5} />
+                {t.team.addMember}
+              </Button>
+            }
+          />
 
-        {/* Sticky work controls */}
-        <div className="ws-toolbar-sticky sticky top-0 z-30 bg-slate-50/95 dark:bg-slate-950/95 border-b border-slate-200/90 dark:border-slate-800 pt-1">
-          <div className="rounded-lg border border-slate-200/90 bg-white/95 px-2 py-2 dark:border-slate-800 dark:bg-slate-950/90 sm:px-3">
-            <div className="flex items-center gap-1.5 sm:gap-2">
+          <WorkspaceKpiStrip items={kpiItems} loading={loading} ariaLabel={t.team.aria.stats} />
+
+          <div className="sticky top-0 z-30 mt-5 rounded-xl border border-slate-200/90 bg-white/95 px-3 py-2 shadow-[0_1px_2px_rgba(0,0,0,0.04)] backdrop-blur-md dark:border-slate-800 dark:bg-slate-950/95 sm:px-4 sm:py-3">
+            <div className="flex min-w-0 items-center gap-1.5 sm:gap-2">
               <CompactSearch
                 value={searchTerm}
                 onChange={setSearchTerm}
@@ -902,12 +951,12 @@ const TeamMembers: React.FC = () => {
               />
 
               <MobileFilterSheet
-                title={t.common.filter}
+                title={t.team.filters.applied}
                 count={(roleFilter ? 1 : 0) + (statusFilter ? 1 : 0)}
                 footer={
                   roleFilter || statusFilter ? (
                     <Button variant="ghost" size="sm" className="h-9 w-full text-[12px]" onClick={resetFilters}>
-                      {t.team.reset}
+                      {t.team.filters.clearAll}
                     </Button>
                   ) : null
                 }
@@ -955,7 +1004,7 @@ const TeamMembers: React.FC = () => {
               </MobileFilterSheet>
 
               <div
-                className="inline-flex md:hidden items-center rounded-md border border-slate-200 dark:border-slate-700 bg-slate-100/80 dark:bg-slate-900 p-0.5 ml-auto"
+                className="ms-auto inline-flex items-center rounded-md border border-slate-200 bg-slate-100/80 p-0.5 dark:border-slate-700 dark:bg-slate-900 md:hidden"
                 role="group"
                 aria-label={t.team.views.aria}
               >
@@ -988,7 +1037,7 @@ const TeamMembers: React.FC = () => {
               </div>
 
               <div
-                className="hidden md:inline-flex items-center rounded-md border border-slate-200 dark:border-slate-700 bg-slate-100/80 dark:bg-slate-900/50 p-0.5 ml-auto"
+                className="ms-auto hidden items-center rounded-md border border-slate-200 bg-slate-100/80 p-0.5 dark:border-slate-700 dark:bg-slate-900/50 md:inline-flex"
                 role="group"
                 aria-label={t.team.views.aria}
               >
@@ -1000,7 +1049,7 @@ const TeamMembers: React.FC = () => {
                     className={cn(
                       'inline-flex items-center gap-1 rounded-md px-2.5 py-1.5 text-[11px] font-semibold transition-colors',
                       viewMode === mode
-                        ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm ring-1 ring-slate-200/80 dark:ring-slate-700'
+                        ? 'bg-white text-slate-900 shadow-sm ring-1 ring-slate-200/80 dark:bg-slate-800 dark:text-white dark:ring-slate-700'
                         : 'text-slate-600 hover:bg-white/60 dark:text-slate-400 dark:hover:bg-slate-800/60'
                     )}
                     aria-pressed={viewMode === mode}
@@ -1012,41 +1061,58 @@ const TeamMembers: React.FC = () => {
                   </button>
                 ))}
               </div>
-
-              <Button
-                size="sm"
-                className="hidden md:inline-flex h-9 shrink-0 rounded-md px-3 text-[12px] font-semibold shadow-sm"
-                style={{ backgroundColor: JURE_PURPLE }}
-                onClick={openCreate}
-              >
-                <Plus className="mr-1.5 h-4 w-4" strokeWidth={2.5} />
-                {t.team.addMember}
-              </Button>
             </div>
-            <p className="mt-1.5 text-[11px] text-slate-500 dark:text-slate-400 tabular-nums">
-              {loading ? t.team.loading : tf(t.team.countSummary, { shown: displayedMembers.length, total: teamMembers.length })}
-            </p>
-          </div>
-        </div>
 
-        {/* Work surface */}
-        <div className="py-3 md:py-4 pb-20 md:pb-4">
+            {filterChips.length > 0 ? (
+              <div className="mt-2.5 flex min-w-0 flex-wrap items-center gap-1.5">
+                <span className="text-[11px] font-medium uppercase tracking-wider text-slate-400">
+                  {t.team.filters.applied}
+                </span>
+                {filterChips.map((chip) => (
+                  <button
+                    key={chip.key}
+                    type="button"
+                    onClick={chip.onClear}
+                    className="inline-flex items-center gap-1 rounded-full bg-[#F1ECFF] px-2 py-0.5 text-[12px] font-medium text-[#64499D] hover:bg-[#E6DDF8]"
+                  >
+                    {chip.label}
+                    <X className="h-3 w-3" aria-hidden />
+                  </button>
+                ))}
+                <button
+                  type="button"
+                  className="text-[12px] font-medium text-slate-500 hover:text-slate-800"
+                  onClick={resetFilters}
+                >
+                  {t.team.filters.clearAll}
+                </button>
+              </div>
+            ) : (
+              <p className="mt-1.5 text-[11px] tabular-nums text-slate-500 dark:text-slate-400">
+                {loading
+                  ? t.team.loading
+                  : tf(t.team.countSummary, { shown: displayedMembers.length, total: teamMembers.length })}
+              </p>
+            )}
+          </div>
+
+          <div className="mt-4 pb-20 md:pb-4">
           {loading ? (
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-4">
               {Array.from({ length: 8 }).map((_, i) => (
                 <div
                   key={i}
-                  className="aspect-square animate-pulse rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-100 dark:bg-zinc-900/50"
+                  className="h-[148px] animate-pulse rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950"
                 />
               ))}
             </div>
           ) : displayedMembers.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-12 text-center">
+            <div className="flex flex-col items-center justify-center px-6 py-16">
               <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800/80">
-                <Users className="h-6 w-6 text-slate-400" aria-hidden />
+                <Users className="h-6 w-6 text-slate-500 dark:text-slate-400" aria-hidden />
               </div>
               <p className="text-sm font-semibold text-slate-900 dark:text-white">{t.team.empty.title}</p>
-              <p className="mt-1 max-w-sm text-[12px] text-slate-500 dark:text-slate-400">
+              <p className="mt-1 max-w-sm text-center text-[13px] text-slate-500 dark:text-slate-400">
                 {hasActiveFilters
                   ? t.team.empty.filteredHint
                   : t.team.empty.emptyHint}
@@ -1058,17 +1124,17 @@ const TeamMembers: React.FC = () => {
               ) : (
                 <Button
                   size="sm"
-                  className="mt-4 h-8 text-[12px] bg-[#6D54B5] hover:bg-[#5a4699]"
+                  className="mt-4 h-8 text-[12px] text-white hover:opacity-90"
+                  style={{ backgroundColor: JURE_PURPLE }}
                   onClick={openCreate}
                 >
-                  <Plus className="mr-1.5 h-3.5 w-3.5" />
+                  <Plus className="me-1.5 h-3.5 w-3.5" />
                   {t.team.addMember}
                 </Button>
               )}
             </div>
           ) : (
             <>
-              {/* Mobile: cards or workload */}
               <div className="md:hidden">
                 {viewMode === 'workload' ? (
                   renderWorkloadView()
@@ -1076,17 +1142,17 @@ const TeamMembers: React.FC = () => {
                   <div className="flex flex-col gap-2">{displayedMembers.map(renderMobileCard)}</div>
                 )}
               </div>
-              {/* Desktop */}
               <div className="hidden md:block">
                 {viewMode === 'grid' ? (
                   <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-4">
                     {displayedMembers.map(renderTile)}
                   </div>
                 ) : viewMode === 'list' ? (
-                  <div className="overflow-x-auto rounded-lg border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-950 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+                  <div className="overflow-hidden rounded-xl border border-slate-200/90 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04)] dark:border-slate-800 dark:bg-slate-950">
+                    <div className="overflow-x-auto">
                     <table className="w-full min-w-[880px] border-collapse text-left" aria-label={t.team.aria.list}>
                       <thead>
-                        <tr className="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/90">
+                        <tr className="border-b border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-900/90">
                           {[
                             t.team.columns.name,
                             t.team.columns.role,
@@ -1100,7 +1166,7 @@ const TeamMembers: React.FC = () => {
                             <th
                               key={h}
                               className={cn(
-                                'px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400',
+                                'px-3 py-2.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400',
                                 i >= 3 && i <= 5 ? 'text-right' : i === 7 ? 'text-right' : 'text-left'
                               )}
                             >
@@ -1111,6 +1177,7 @@ const TeamMembers: React.FC = () => {
                       </thead>
                       <tbody>{displayedMembers.map(renderListRow)}</tbody>
                     </table>
+                    </div>
                   </div>
                 ) : (
                   renderWorkloadView()
@@ -1118,18 +1185,19 @@ const TeamMembers: React.FC = () => {
               </div>
             </>
           )}
+          </div>
         </div>
       </div>
 
       <Button
         type="button"
         size="icon"
-        className="md:hidden fixed z-40 bottom-[max(1.25rem,env(safe-area-inset-bottom))] right-4 h-12 w-12 rounded-full shadow-lg"
+        className="fixed z-40 h-12 w-12 rounded-full text-white shadow-lg md:hidden bottom-[max(1.25rem,env(safe-area-inset-bottom))] end-4"
         style={{ backgroundColor: JURE_PURPLE }}
         onClick={openCreate}
         aria-label={t.team.addMember}
       >
-        <Plus className="w-5 h-5" strokeWidth={2.5} />
+        <Plus className="h-5 w-5" strokeWidth={2.5} />
       </Button>
 
       <p className="sr-only" aria-live="polite">

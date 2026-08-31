@@ -21,6 +21,7 @@ from juria.models import (
     JuriaThread,
 )
 from juria.services.activity import log_activity
+from juria.services.titles import is_auto_title, untitled_chat_name
 
 
 def create_project(
@@ -47,10 +48,22 @@ def create_project(
                 "firm cases, library documents, calendar, tasks, clients, or team data."
             )
         effective_case = None if is_simple else linked_case
+        untitled = untitled_chat_name(preferred_language)
+        provided = (name or "").strip()
+        if is_simple:
+            name_is_custom = bool(provided) and not is_auto_title(provided)
+            project_name = provided if name_is_custom else untitled
+            thread_title = default_thread_title if default_thread_title and default_thread_title != "Discussion générale" else untitled
+            thread_is_custom = bool(thread_title) and not is_auto_title(thread_title)
+        else:
+            name_is_custom = True
+            project_name = provided or "Nouveau projet"
+            thread_title = default_thread_title or "Discussion générale"
+            thread_is_custom = bool(thread_title) and not is_auto_title(thread_title)
         project = JuriaProject.objects.create(
             cabinet=cabinet,
             owner=owner,
-            name=name.strip() or "Nouveau projet",
+            name=project_name,
             description=description or "",
             preferred_language=preferred_language or "fr",
             jurisdiction_code=(jurisdiction_code or "MA").upper(),
@@ -58,6 +71,7 @@ def create_project(
             instructions=instructions or "",
             linked_case=effective_case,
             is_simple=bool(is_simple),
+            name_is_custom=name_is_custom,
         )
         JuriaProjectMember.objects.create(
             project=project,
@@ -88,7 +102,8 @@ def create_project(
         )
         JuriaThread.objects.create(
             project=project,
-            title=default_thread_title,
+            title=thread_title,
+            title_is_custom=thread_is_custom,
             mode=mode,
             created_by=owner,
         )
@@ -143,7 +158,8 @@ def duplicate_project(source: JuriaProject, owner) -> JuriaProject:
         is_simple=source.is_simple,
     )
     clone.duplicated_from = source
-    clone.save(update_fields=["duplicated_from", "updated_at"])
+    clone.name_is_custom = True
+    clone.save(update_fields=["duplicated_from", "name_is_custom", "updated_at"])
     if source.is_simple:
         log_activity(clone, owner, ActivityAction.PROJECT_DUPLICATED, source_id=str(source.id))
         return clone

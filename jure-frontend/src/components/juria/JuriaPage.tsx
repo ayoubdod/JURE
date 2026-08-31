@@ -238,7 +238,9 @@ export default function JuriaPage() {
           >
             <PanelLeft className="h-4 w-4" />
           </Button>
-          <span className="truncate text-sm font-medium">{project?.name || t.juria.name}</span>
+          <span className="truncate text-sm font-medium">
+            {project ? project.name || t.juria.workspace.untitledChat : t.juria.name}
+          </span>
         </div>
 
         {archiveView && !project ? (

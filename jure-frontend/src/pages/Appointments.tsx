@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
-import { Plus, CalendarClock } from 'lucide-react';
+import { Plus, CalendarClock, Calendar, CalendarDays, CheckCircle2, XCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import ScheduleAppointmentDialog, { ScheduleAppointmentDialogRef } from '@/components/ScheduleAppointmentDialog';
 import AppointmentUpdateModal, { AppointmentUpdateModalRef } from '@/components/AppointmentUpdateModal';
@@ -33,7 +33,7 @@ const VIEW_STORAGE_KEY = 'jure.appointments.viewMode';
 const DEFAULT_FILTERS: AppointmentFiltersValue = {
   search: '',
   status: 'all',
-  period: 'upcoming',
+  period: 'all',
   assignedTo: 'all',
   caseId: 'all',
   clientId: 'all',
@@ -199,7 +199,7 @@ const AppointmentsPage: React.FC = () => {
   const hasFilters =
     !!debouncedSearch.trim() ||
     filters.status !== 'all' ||
-    filters.period !== 'upcoming' ||
+    filters.period !== 'all' ||
     filters.assignedTo !== 'all' ||
     filters.caseId !== 'all' ||
     filters.clientId !== 'all';
@@ -210,12 +210,21 @@ const AppointmentsPage: React.FC = () => {
       title={hasFilters ? a.empty.filteredTitle : a.empty.title}
       hint={hasFilters ? a.empty.filteredHint : a.empty.hint}
       action={
-        !hasFilters ? (
+        hasFilters ? (
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 text-[12px]"
+            onClick={() => setFilters(DEFAULT_FILTERS)}
+          >
+            {a.clearFilters}
+          </Button>
+        ) : (
           <Button size="sm" className="h-8 text-[12px]" onClick={openCreate}>
             <Plus className="me-1.5 h-3.5 w-3.5" />
             {a.newAppointment}
           </Button>
-        ) : undefined
+        )
       }
     />
   );
@@ -229,17 +238,72 @@ const AppointmentsPage: React.FC = () => {
     />
   );
 
+  const setPeriod = (period: string) => {
+    setFilters((prev) => ({
+      ...prev,
+      period: prev.period === period ? 'all' : period,
+      status: 'all',
+    }));
+  };
+
+  const setStatus = (status: string) => {
+    setFilters((prev) => ({
+      ...prev,
+      status: prev.status === status ? 'all' : status,
+      period: 'all',
+    }));
+  };
+
   const kpiItems = [
-    { key: 'total', label: a.stats.total, value: stats?.total ?? null, accent: 'border-l-slate-400' },
-    { key: 'today', label: a.stats.today, value: stats?.today ?? null, accent: 'border-l-indigo-500' },
-    { key: 'upcoming', label: a.stats.upcoming, value: stats?.upcoming ?? null, accent: 'border-l-emerald-500' },
-    { key: 'done', label: a.stats.completed, value: stats?.completed ?? null, accent: 'border-l-slate-500' },
-    { key: 'cancelled', label: a.stats.cancelled, value: stats?.cancelled ?? null, accent: 'border-l-rose-500' },
+    {
+      key: 'total',
+      label: a.stats.total,
+      value: stats?.total ?? null,
+      accent: 'text-slate-500',
+      icon: Calendar,
+      onClick: () => setFilters({ ...filters, period: 'all', status: 'all' }),
+    },
+    {
+      key: 'today',
+      label: a.stats.today,
+      value: stats?.today ?? null,
+      accent: 'text-indigo-500',
+      icon: CalendarClock,
+      active: filters.period === 'today',
+      onClick: () => setPeriod('today'),
+    },
+    {
+      key: 'upcoming',
+      label: a.stats.upcoming,
+      value: stats?.upcoming ?? null,
+      accent: 'text-emerald-600',
+      icon: CalendarDays,
+      active: filters.period === 'upcoming',
+      onClick: () => setPeriod('upcoming'),
+    },
+    {
+      key: 'done',
+      label: a.stats.completed,
+      value: stats?.completed ?? null,
+      accent: 'text-slate-500',
+      icon: CheckCircle2,
+      active: filters.status === 'done',
+      onClick: () => setStatus('done'),
+    },
+    {
+      key: 'cancelled',
+      label: a.stats.cancelled,
+      value: stats?.cancelled ?? null,
+      accent: 'text-rose-500',
+      icon: XCircle,
+      active: filters.status === 'cancelled',
+      onClick: () => setStatus('cancelled'),
+    },
   ];
 
   return (
     <div ref={setHolderEl} className="relative h-full min-h-0 flex flex-col overflow-hidden bg-slate-50 dark:bg-slate-950">
-      <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-1.5 sm:px-2.5 lg:px-3">
+      <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-4 pb-8 pt-2 sm:px-5 lg:px-6">
         <WorkspacePageHeader
           title={a.title}
           subtitle={a.subtitle}

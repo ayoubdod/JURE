@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
-import { Plus, CheckSquare } from 'lucide-react';
+import { Plus, CheckSquare, Circle, Timer, CheckCircle2, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import TaskCreateModal, { TaskCreateModalRef } from '@/components/task/TaskCreateModal';
 import TaskUpdateModal, { TaskUpdateModalRef } from '@/components/task/TaskUpdateModal';
@@ -252,16 +252,16 @@ const TasksPage: React.FC = () => {
   );
 
   const kpiItems = [
-    { key: 'total', label: t.tasks.stats.total, value: stats?.total ?? null, accent: 'border-l-slate-400' },
-    { key: 'todo', label: t.tasks.stats.todo, value: stats?.todo ?? null, accent: 'border-l-slate-500' },
-    { key: 'progress', label: t.tasks.stats.inProgress, value: stats?.in_progress ?? null, accent: 'border-l-amber-500' },
-    { key: 'done', label: t.tasks.stats.done, value: stats?.done ?? null, accent: 'border-l-emerald-500' },
-    { key: 'overdue', label: t.tasks.stats.overdue, value: stats?.overdue ?? null, accent: 'border-l-rose-500' },
+    { key: 'total', label: t.tasks.stats.total, value: stats?.total ?? null, accent: 'text-slate-500', icon: CheckSquare },
+    { key: 'todo', label: t.tasks.stats.todo, value: stats?.todo ?? null, accent: 'text-slate-500', icon: Circle },
+    { key: 'progress', label: t.tasks.stats.inProgress, value: stats?.in_progress ?? null, accent: 'text-amber-500', icon: Timer },
+    { key: 'done', label: t.tasks.stats.done, value: stats?.done ?? null, accent: 'text-emerald-600', icon: CheckCircle2 },
+    { key: 'overdue', label: t.tasks.stats.overdue, value: stats?.overdue ?? null, accent: 'text-rose-500', icon: AlertTriangle },
   ];
 
   return (
     <div ref={setHolderEl} className="relative h-full min-h-0 flex flex-col overflow-hidden bg-slate-50 dark:bg-slate-950">
-      <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-1.5 sm:px-2.5 lg:px-3">
+      <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-4 pb-8 pt-2 sm:px-5 lg:px-6">
         <WorkspacePageHeader
           title={t.tasks.title}
           subtitle={t.tasks.subtitle}

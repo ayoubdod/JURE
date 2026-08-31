@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useCallback, useMemo, useRef, useState } from 'react';
-import { MoreHorizontal } from 'lucide-react';
+import { AlertTriangle, CalendarClock, CheckCircle2, Clock, Flag, FolderOpen, MoreHorizontal, Scale } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -60,16 +60,16 @@ import { caseWorkspacePath, navigateToCase } from '@/lib/caseRoutes';
 import { CaseStatus } from '@/utils/constants';
 
 const KPI_ACCENT: Record<string, string> = {
-  total: 'border-l-slate-400',
-  scheduled: 'border-l-blue-500',
-  today: 'border-l-indigo-500',
-  followUp: 'border-l-amber-500',
-  completed: 'border-l-emerald-500',
-  active: 'border-l-emerald-500',
-  hearings: 'border-l-rose-500',
-  due: 'border-l-indigo-500',
-  overdue: 'border-l-red-500',
-  high: 'border-l-amber-500',
+  total: 'text-slate-500',
+  scheduled: 'text-blue-500',
+  today: 'text-indigo-500',
+  followUp: 'text-amber-500',
+  completed: 'text-emerald-600',
+  active: 'text-emerald-600',
+  hearings: 'text-rose-500',
+  due: 'text-indigo-500',
+  overdue: 'text-red-500',
+  high: 'text-amber-500',
 };
 
 const CASE_STATUSES = ['OPEN', 'IN_PROGRESS', 'PENDING', 'CLOSED', 'CANCELLED', 'ARCHIVED'] as const;
@@ -388,34 +388,35 @@ export default function CaseTypeWorkspace({ kind }: CaseTypeWorkspaceProps) {
     if (kind === 'CONSULTATION') {
       const k = ws.consultation.kpis;
       return [
-        { key: 'total', label: k.total, value: kpiValues.total ?? 0, accent: KPI_ACCENT.total },
-        { key: 'scheduled', label: k.scheduled, value: kpiValues.scheduled ?? 0, accent: KPI_ACCENT.scheduled },
-        { key: 'today', label: k.today, value: kpiValues.today ?? 0, accent: KPI_ACCENT.today },
-        { key: 'followUp', label: k.followUp, value: kpiValues.followUp ?? 0, accent: KPI_ACCENT.followUp },
-        { key: 'completed', label: k.completed, value: kpiValues.completed ?? 0, accent: KPI_ACCENT.completed },
+        { key: 'total', label: k.total, value: kpiValues.total ?? 0, accent: KPI_ACCENT.total, icon: Scale },
+        { key: 'scheduled', label: k.scheduled, value: kpiValues.scheduled ?? 0, accent: KPI_ACCENT.scheduled, icon: CalendarClock },
+        { key: 'today', label: k.today, value: kpiValues.today ?? 0, accent: KPI_ACCENT.today, icon: Clock },
+        { key: 'followUp', label: k.followUp, value: kpiValues.followUp ?? 0, accent: KPI_ACCENT.followUp, icon: Flag },
+        { key: 'completed', label: k.completed, value: kpiValues.completed ?? 0, accent: KPI_ACCENT.completed, icon: CheckCircle2 },
       ];
     }
     if (kind === 'LITIGATION') {
       const k = ws.litigation.kpis;
       return [
-        { key: 'active', label: k.active, value: kpiValues.active ?? 0, accent: KPI_ACCENT.active },
+        { key: 'active', label: k.active, value: kpiValues.active ?? 0, accent: KPI_ACCENT.active, icon: Scale },
         {
           key: 'hearings',
           label: k.upcomingHearings,
           value: kpiValues.hearings ?? 0,
           accent: KPI_ACCENT.hearings,
+          icon: CalendarClock,
         },
-        { key: 'overdue', label: k.criticalDeadlines, value: kpiValues.overdue ?? 0, accent: KPI_ACCENT.overdue },
-        { key: 'high', label: k.highPriority, value: kpiValues.high ?? 0, accent: KPI_ACCENT.high },
+        { key: 'overdue', label: k.criticalDeadlines, value: kpiValues.overdue ?? 0, accent: KPI_ACCENT.overdue, icon: AlertTriangle },
+        { key: 'high', label: k.highPriority, value: kpiValues.high ?? 0, accent: KPI_ACCENT.high, icon: Flag },
       ];
     }
     const k = ws.administrative.kpis;
     return [
-      { key: 'active', label: k.active, value: kpiValues.active ?? 0, accent: KPI_ACCENT.active },
-      { key: 'due', label: k.dueThisWeek, value: kpiValues.due ?? 0, accent: KPI_ACCENT.due },
-      { key: 'overdue', label: k.overdue, value: kpiValues.overdue ?? 0, accent: KPI_ACCENT.overdue },
-      { key: 'high', label: k.highPriority, value: kpiValues.high ?? 0, accent: KPI_ACCENT.high },
-      { key: 'completed', label: k.completed, value: kpiValues.completed ?? 0, accent: KPI_ACCENT.completed },
+      { key: 'active', label: k.active, value: kpiValues.active ?? 0, accent: KPI_ACCENT.active, icon: FolderOpen },
+      { key: 'due', label: k.dueThisWeek, value: kpiValues.due ?? 0, accent: KPI_ACCENT.due, icon: CalendarClock },
+      { key: 'overdue', label: k.overdue, value: kpiValues.overdue ?? 0, accent: KPI_ACCENT.overdue, icon: AlertTriangle },
+      { key: 'high', label: k.highPriority, value: kpiValues.high ?? 0, accent: KPI_ACCENT.high, icon: Flag },
+      { key: 'completed', label: k.completed, value: kpiValues.completed ?? 0, accent: KPI_ACCENT.completed, icon: CheckCircle2 },
     ];
   }, [kind, kpiValues, ws]);
 

@@ -2,7 +2,6 @@ import React, { useMemo, useState } from 'react';
 import { UseFormReturn } from 'react-hook-form';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { Link } from 'react-router';
 import { PasswordRequirements } from './PasswordValidation';
 import { Eye, EyeOff } from 'lucide-react';
 import { PhoneInput } from '../ui/phone-input';
@@ -140,13 +139,6 @@ const PersonalInfoForm = ({ onNext, onPrev, form }: PersonalInfoFormProps) => {
       </SignupFieldRow>
 
       <SignupActions onNext={onSubmit} nextLabel={s.continue} onPrev={onPrev} backLabel={t.auth.signup.practice.back} />
-
-      <p className="text-center text-sm text-slate-500">
-        {s.alreadyHaveAccount}{' '}
-        <Link to="/signin" className="font-semibold text-[#64499D] hover:underline dark:text-[#CFC2FF]">
-          {s.signIn}
-        </Link>
-      </p>
     </div>
   );
 };

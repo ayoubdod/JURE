@@ -39,7 +39,7 @@ export default function AppointmentToolbar({
     `${c.first_name || ''} ${c.last_name || ''}`.trim() || c.email || '—';
 
   const extraCount = [
-    value.period !== 'upcoming',
+    value.period !== 'all',
     value.status !== 'all',
     value.assignedTo !== 'all',
     value.clientId !== 'all',
@@ -49,7 +49,7 @@ export default function AppointmentToolbar({
   const clearExtra = () =>
     patch({
       status: 'all',
-      period: 'upcoming',
+      period: 'all',
       assignedTo: 'all',
       caseId: 'all',
       clientId: 'all',
@@ -59,7 +59,7 @@ export default function AppointmentToolbar({
       <>
         <FilterField label={a.filterPeriod}>
         <Select value={value.period} onValueChange={(v) => patch({ period: v })}>
-          <SelectTrigger className={cn(sheetSelectClass, value.period !== 'all' && value.period !== 'upcoming' && activeSelect)}>
+          <SelectTrigger className={cn(sheetSelectClass, value.period !== 'all' && activeSelect)}>
             <SelectValue placeholder={a.filterPeriod} />
           </SelectTrigger>
           <SelectContent>

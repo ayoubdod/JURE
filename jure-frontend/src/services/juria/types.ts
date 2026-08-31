@@ -61,6 +61,10 @@ export interface JuriaApiConversationDetail extends JuriaApiConversationListItem
 export interface JuriaApiSendMessageResponse {
   user_message: JuriaApiMessage;
   assistant_message: JuriaApiMessage & { suggestions?: string[] };
+  thread_id?: string | null;
+  thread_title?: string | null;
+  project_id?: string | null;
+  project_name?: string | null;
 }
 
 export interface JuriaApiDraftResponse {

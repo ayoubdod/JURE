@@ -5,7 +5,13 @@ from django.test import SimpleTestCase, override_settings
 from rest_framework.test import APITestCase
 
 from juria.services.document_text import text_to_docx_base64
-from juria.services.juria_api_service import JuriaAPIError, send_chat_message
+from juria.services.juria_api_service import JuriaAPIError, generate_conversation_title, send_chat_message
+from juria.services.titles import (
+    fallback_title_from_message,
+    is_auto_title,
+    sanitize_generated_title,
+    untitled_chat_name,
+)
 from juria.constants import PermissionLevel, ProjectRole, ProjectStatus, ResourceType
 from juria.models import JuriaProject, JuriaProjectMember, JuriaThread
 
@@ -217,3 +223,134 @@ class JuriaProjectApiTests(APITestCase):
         thread_list = self.client.get(f"/api/v1/juria/projects/{data['id']}/threads/")
         self.assertEqual(thread_list.status_code, 200)
         self.assertGreaterEqual(len(thread_list.json()), 1)
+
+    def test_simple_chat_starts_untitled(self):
+        res = self.client.post(
+            "/api/v1/juria/projects/",
+            {"is_simple": True, "preferred_language": "fr"},
+            format="json",
+        )
+        self.assertEqual(res.status_code, 201, res.content)
+        project = JuriaProject.objects.get(pk=res.json()["id"])
+        self.assertEqual(project.name, "Nouveau chat")
+        self.assertFalse(project.name_is_custom)
+        thread = project.threads.first()
+        self.assertEqual(thread.title, "Nouveau chat")
+        self.assertFalse(thread.title_is_custom)
+
+    def test_rename_marks_project_name_custom(self):
+        created = self.client.post(
+            "/api/v1/juria/projects/",
+            {"is_simple": True, "preferred_language": "fr"},
+            format="json",
+        )
+        pk = created.json()["id"]
+        renamed = self.client.patch(
+            f"/api/v1/juria/projects/{pk}/",
+            {"name": "Bail commercial Hay Riad"},
+            format="json",
+        )
+        self.assertEqual(renamed.status_code, 200, renamed.content)
+        project = JuriaProject.objects.get(pk=pk)
+        self.assertEqual(project.name, "Bail commercial Hay Riad")
+        self.assertTrue(project.name_is_custom)
+
+    @patch("juria.services.chat.generate_conversation_title", return_value="Prescription commerciale")
+    @patch(
+        "juria.services.chat._call_model",
+        return_value=("Réponse", 10, "mid", [], {}, [], 80),
+    )
+    def test_first_message_sets_ai_title(self, _model, _title):
+        created = self.client.post(
+            "/api/v1/juria/projects/",
+            {"is_simple": True, "preferred_language": "fr"},
+            format="json",
+        )
+        project = JuriaProject.objects.get(pk=created.json()["id"])
+        thread = project.threads.first()
+        send = self.client.post(
+            f"/api/v1/juria/threads/{thread.id}/messages/",
+            {"message": "Quelle est la prescription en matière commerciale ?"},
+            format="json",
+        )
+        self.assertEqual(send.status_code, 201, send.content)
+        body = send.json()
+        self.assertEqual(body["thread_title"], "Prescription commerciale")
+        self.assertEqual(body["project_name"], "Prescription commerciale")
+        thread.refresh_from_db()
+        project.refresh_from_db()
+        self.assertEqual(thread.title, "Prescription commerciale")
+        self.assertFalse(thread.title_is_custom)
+        self.assertEqual(project.name, "Prescription commerciale")
+        self.assertFalse(project.name_is_custom)
+
+    @patch("juria.services.chat.generate_conversation_title", return_value="Should not apply")
+    @patch(
+        "juria.services.chat._call_model",
+        return_value=("Réponse", 10, "mid", [], {}, [], 80),
+    )
+    def test_custom_title_is_not_overwritten(self, _model, _title):
+        created = self.client.post(
+            "/api/v1/juria/projects/",
+            {"is_simple": True, "preferred_language": "fr"},
+            format="json",
+        )
+        project = JuriaProject.objects.get(pk=created.json()["id"])
+        thread = project.threads.first()
+        self.client.patch(
+            f"/api/v1/juria/threads/{thread.id}/",
+            {"title": "Dossier client X"},
+            format="json",
+        )
+        send = self.client.post(
+            f"/api/v1/juria/threads/{thread.id}/messages/",
+            {"message": "Analyse ce contrat"},
+            format="json",
+        )
+        self.assertEqual(send.status_code, 201, send.content)
+        thread.refresh_from_db()
+        self.assertEqual(thread.title, "Dossier client X")
+        self.assertTrue(thread.title_is_custom)
+        _title.assert_not_called()
+
+
+class JuriaTitleHelperTests(SimpleTestCase):
+    def test_untitled_and_placeholders(self):
+        self.assertEqual(untitled_chat_name("fr"), "Nouveau chat")
+        self.assertEqual(untitled_chat_name("en"), "New chat")
+        self.assertTrue(is_auto_title("Nouveau chat"))
+        self.assertTrue(is_auto_title("Chat rapide — 31 Aug, 17:52"))
+        self.assertTrue(is_auto_title("Discussion générale"))
+        self.assertFalse(is_auto_title("Bail commercial Hay Riad"))
+
+    def test_sanitize_generated_title(self):
+        self.assertEqual(sanitize_generated_title('  "Prescription commerciale."  '), "Prescription commerciale")
+        self.assertEqual(sanitize_generated_title("Title: Bail commercial"), "Bail commercial")
+        self.assertEqual(sanitize_generated_title(""), "")
+
+    def test_fallback_title(self):
+        self.assertEqual(fallback_title_from_message("Hello world"), "Hello world")
+        long = "a" * 80
+        self.assertTrue(fallback_title_from_message(long).endswith("…"))
+
+    @override_settings(
+        JURIA_PROVIDER="deepseek",
+        DEEPSEEK_API_KEY="sk-test",
+        DEEPSEEK_API_URL="https://api.deepseek.com",
+        DEEPSEEK_MODEL="deepseek-chat",
+        JURIA_MAX_TOKENS=400,
+        JURIA_TIMEOUT_SECONDS=10,
+    )
+    @patch("juria.services.juria_api_service.requests.post")
+    def test_generate_conversation_title_strips_model_output(self, post):
+        post.return_value = MagicMock(
+            status_code=200,
+            json=lambda: {
+                "id": "chatcmpl-title",
+                "choices": [{"message": {"content": '"Mise en demeure locataire"'}}],
+                "usage": {"total_tokens": 8},
+            },
+        )
+        title = generate_conversation_title("Rédige une mise en demeure", language="fr")
+        self.assertEqual(title, "Mise en demeure locataire")
+        self.assertEqual(post.call_args.kwargs["json"]["max_tokens"], 32)

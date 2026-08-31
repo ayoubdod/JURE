@@ -114,7 +114,7 @@ class JuriaProjectListCreateView(JuriaEnabledMixin, APIView):
         project = create_project(
             cabinet=cabinet,
             owner=request.user,
-            name=data["name"],
+            name=data.get("name") or "",
             description=data.get("description") or "",
             preferred_language=data.get("preferred_language") or "fr",
             jurisdiction_code=data.get("jurisdiction_code") or "MA",
@@ -188,8 +188,19 @@ class JuriaProjectDetailView(JuriaEnabledMixin, APIView):
         data = ser.validated_data
         project = access.project
         fields = []
+        if "name" in data:
+            project.name = data["name"]
+            project.name_is_custom = True
+            fields.append("name")
+            fields.append("name_is_custom")
+            if project.is_simple:
+                only = project.threads.filter(is_deleted=False, is_archived=False)
+                if only.count() == 1:
+                    thread = only.first()
+                    thread.title = project.name
+                    thread.title_is_custom = True
+                    thread.save(update_fields=["title", "title_is_custom", "updated_at"])
         for key in (
-            "name",
             "description",
             "preferred_language",
             "jurisdiction_code",

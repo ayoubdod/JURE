@@ -137,7 +137,7 @@ class JuriaProjectDetailSerializer(JuriaProjectListSerializer):
 
 
 class JuriaProjectCreateSerializer(serializers.Serializer):
-    name = serializers.CharField(max_length=200)
+    name = serializers.CharField(max_length=200, required=False, allow_blank=True, default="")
     description = serializers.CharField(required=False, allow_blank=True, default="")
     preferred_language = serializers.ChoiceField(
         choices=LanguageCode.choices, required=False, default=LanguageCode.FR
