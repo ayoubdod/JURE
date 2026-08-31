@@ -10,6 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { apiResetPassword } from '@/services/auth/api';
 import { useAppTranslation } from '@/i18n';
 import LangSwitcher from '@/components/common/LangSwitcher';
+import JureLogo from '@/components/common/JureLogo';
 import { AuroraPage } from '@/components/common/AuroraBackground';
 import clsx from 'clsx';
 
@@ -69,12 +70,8 @@ const ForgotPassword = () => {
       </div>
 
       <div className="w-full max-w-md">
-        <div className="text-center mb-6">
-          <img
-            src="/images/jure-logo.png"
-            alt="Jure logo"
-            className="w-22 h-20 mx-auto object-contain"
-          />
+        <div className="mb-6 flex justify-center">
+          <JureLogo className="h-12 w-auto" />
         </div>
 
         <Card className={clsx('rounded-xl shadow-xl', isDarkMode ? 'bg-[#181b23] text-white' : 'bg-white dark:bg-slate-950 text-black')}>

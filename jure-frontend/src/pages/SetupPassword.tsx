@@ -11,6 +11,7 @@ import clsx from 'clsx';
 import { useTheme } from '@/hooks/useTheme';
 import { isAxiosError } from 'axios';
 import LangSwitcher from '@/components/common/LangSwitcher';
+import JureLogo from '@/components/common/JureLogo';
 import { AuroraPage } from '@/components/common/AuroraBackground';
 import { useAppTranslation } from '@/i18n';
 
@@ -62,12 +63,8 @@ const SetupPassword = () => {
       <AuroraPage className="flex items-center justify-center p-4">
         <div className="w-full max-w-md">
           <div className="flex items-center justify-between mb-6">
-            <div className="flex-1 text-center">
-              <img
-                src="/images/jure-logo.png"
-                alt="Jure logo"
-                className="w-22 h-20 mx-auto object-contain"
-              />
+            <div className="flex-1 flex justify-center">
+              <JureLogo className="h-12 w-auto" />
             </div>
             <div className="ms-4">
               <LangSwitcher />
@@ -103,12 +100,8 @@ const SetupPassword = () => {
     <AuroraPage className="flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="flex items-center justify-between mb-6">
-          <div className="flex-1 text-center">
-            <img
-              src="/images/jure-logo.png"
-              alt="Jure logo"
-              className="w-22 h-20 mx-auto object-contain"
-            />
+          <div className="flex-1 flex justify-center">
+            <JureLogo className="h-12 w-auto" />
           </div>
           <div className="ms-4">
             <LangSwitcher />

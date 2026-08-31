@@ -1,18 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <testsuites>
-	<testsuite name="calls.tests.IceServersApiTests-20260830142007" tests="2" file="calls/tests.py" time="3.317" timestamp="2026-08-30T14:20:10" failures="0" errors="0" skipped="0">
-		<testcase classname="calls.tests.IceServersApiTests" name="test_requires_auth" time="1.451" timestamp="2026-08-30T14:20:08" file="calls\tests.py" line="113"/>
-		<testcase classname="calls.tests.IceServersApiTests" name="test_returns_turn_with_static_creds" time="1.866" timestamp="2026-08-30T14:20:10" file="calls\tests.py" line="119"/>
+	<testsuite name="calls.tests.IceServersApiTests-20260830183749" tests="2" file="calls/tests.py" time="2.278" timestamp="2026-08-30T18:37:51" failures="0" errors="0" skipped="0">
+		<testcase classname="calls.tests.IceServersApiTests" name="test_requires_auth" time="1.226" timestamp="2026-08-30T18:37:50" file="calls\tests.py" line="137"/>
+		<testcase classname="calls.tests.IceServersApiTests" name="test_returns_turn_with_static_creds" time="1.052" timestamp="2026-08-30T18:37:51" file="calls\tests.py" line="149"/>
 	</testsuite>
-	<testsuite name="calls.tests.IceServersBuildTests-20260830142007" tests="3" file="calls/tests.py" time="0.009" timestamp="2026-08-30T14:20:10" failures="0" errors="0" skipped="0">
-		<testcase classname="calls.tests.IceServersBuildTests" name="test_coturn_entry_uses_tcp_and_credentials" time="0.004" timestamp="2026-08-30T14:20:10" file="calls\tests.py" line="75"/>
-		<testcase classname="calls.tests.IceServersBuildTests" name="test_json_override_is_used" time="0.002" timestamp="2026-08-30T14:20:10" file="calls\tests.py" line="94"/>
-		<testcase classname="calls.tests.IceServersBuildTests" name="test_stun_only_without_turn" time="0.002" timestamp="2026-08-30T14:20:10" file="calls\tests.py" line="65"/>
+	<testsuite name="calls.tests.IceServersBuildTests-20260830183749" tests="4" file="calls/tests.py" time="0.013" timestamp="2026-08-30T18:37:51" failures="0" errors="0" skipped="0">
+		<testcase classname="calls.tests.IceServersBuildTests" name="test_coturn_entry_uses_tcp_and_credentials" time="0.009" timestamp="2026-08-30T18:37:51" file="calls\tests.py" line="99"/>
+		<testcase classname="calls.tests.IceServersBuildTests" name="test_json_override_is_used" time="0.001" timestamp="2026-08-30T18:37:51" file="calls\tests.py" line="118"/>
+		<testcase classname="calls.tests.IceServersBuildTests" name="test_production_falls_back_to_openrelay" time="0.001" timestamp="2026-08-30T18:37:51" file="calls\tests.py" line="82"/>
+		<testcase classname="calls.tests.IceServersBuildTests" name="test_stun_only_without_turn" time="0.001" timestamp="2026-08-30T18:37:51" file="calls\tests.py" line="65"/>
 	</testsuite>
-	<testsuite name="calls.tests.TurnCredentialTests-20260830142007" tests="4" file="calls/tests.py" time="0.003" timestamp="2026-08-30T14:20:10" failures="0" errors="0" skipped="0">
-		<testcase classname="calls.tests.TurnCredentialTests" name="test_hmac_is_base64_not_hex" time="0.001" timestamp="2026-08-30T14:20:10" file="calls\tests.py" line="17"/>
-		<testcase classname="calls.tests.TurnCredentialTests" name="test_parse_ice_servers_json_array" time="0.001" timestamp="2026-08-30T14:20:10" file="calls\tests.py" line="44"/>
-		<testcase classname="calls.tests.TurnCredentialTests" name="test_parse_ice_servers_json_wrapped" time="0.001" timestamp="2026-08-30T14:20:10" file="calls\tests.py" line="58"/>
-		<testcase classname="calls.tests.TurnCredentialTests" name="test_turn_urls_include_udp_and_tcp" time="0.001" timestamp="2026-08-30T14:20:10" file="calls\tests.py" line="38"/>
+	<testsuite name="calls.tests.TurnCredentialTests-20260830183749" tests="4" file="calls/tests.py" time="0.001" timestamp="2026-08-30T18:37:51" failures="0" errors="0" skipped="0">
+		<testcase classname="calls.tests.TurnCredentialTests" name="test_hmac_is_base64_not_hex" time="0.000" timestamp="2026-08-30T18:37:51" file="calls\tests.py" line="17"/>
+		<testcase classname="calls.tests.TurnCredentialTests" name="test_parse_ice_servers_json_array" time="0.000" timestamp="2026-08-30T18:37:51" file="calls\tests.py" line="44"/>
+		<testcase classname="calls.tests.TurnCredentialTests" name="test_parse_ice_servers_json_wrapped" time="0.000" timestamp="2026-08-30T18:37:51" file="calls\tests.py" line="58"/>
+		<testcase classname="calls.tests.TurnCredentialTests" name="test_turn_urls_include_udp_and_tcp" time="0.000" timestamp="2026-08-30T18:37:51" file="calls\tests.py" line="38"/>
 	</testsuite>
 </testsuites>
