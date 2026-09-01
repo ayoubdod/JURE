@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import dayjs from 'dayjs';
 import {
   Copy,
+  MessageSquare,
   MoreHorizontal,
   Pencil,
   Plus,
@@ -34,10 +35,11 @@ import { JuriaAttachResourceDialog } from '@/components/juria/JuriaAttachResourc
 import { JuriaSourcePreview } from '@/components/juria/JuriaSourcePreview';
 import { apiJuriaCreateArtifact } from '@/services/juria/api';
 import { JuriaTextPromptDialog } from '@/components/juria/JuriaTextPromptDialog';
+import { RailIconButton } from '@/components/juria/JuriaProjectSidebar';
 import { useAppTranslation } from '@/i18n';
 
 export function JuriaChat({ project }: { project: JuriaProject }) {
-  const { t } = useAppTranslation();
+  const { t, dir } = useAppTranslation();
   const w = t.juria.workspace;
   const chat = w.chat;
   const actions = t.juria.workspace.actions;
@@ -171,7 +173,10 @@ export function JuriaChat({ project }: { project: JuriaProject }) {
               )}
             >
               <button type="button" onClick={() => setActiveThread(t.id)} className="min-w-0 flex-1 px-2.5 py-2 text-left text-[12px]">
-                <span className="line-clamp-1 font-medium">{t.title || chat.untitledThread}</span>
+                <span className="flex items-center gap-1.5">
+                  <MessageSquare className="h-3.5 w-3.5 shrink-0 opacity-70" />
+                  <span className="line-clamp-1 font-medium">{t.title || chat.untitledThread}</span>
+                </span>
                 {t.last_message_preview && (
                   <span className="mt-0.5 line-clamp-1 text-[10px] text-slate-400">{t.last_message_preview}</span>
                 )}
@@ -204,31 +209,35 @@ export function JuriaChat({ project }: { project: JuriaProject }) {
         </div>
       </div>
       ) : (
-        <div className="hidden w-10 shrink-0 flex-col items-center border-e border-slate-100 bg-white/50 py-2 dark:border-slate-800 dark:bg-slate-950/40 md:flex">
-          <button
-            type="button"
-            className="rounded-md p-1.5 text-slate-400 hover:bg-slate-100 hover:text-[#64499D] dark:hover:bg-slate-800"
-            onClick={() => setThreadsOpen(true)}
-            aria-label={w.expandThreads}
-            title={w.expandThreads}
-          >
+        <div className="hidden w-12 shrink-0 flex-col items-center border-e border-slate-100 bg-white/50 py-2 dark:border-slate-800 dark:bg-slate-950/40 md:flex">
+          <RailIconButton label={w.expandThreads} onClick={() => setThreadsOpen(true)}>
             <PanelLeftOpen className="h-4 w-4" />
-          </button>
-          <button
-            type="button"
-            className="mt-1 rounded-md p-1.5 text-slate-400 hover:bg-slate-100 hover:text-[#64499D] dark:hover:bg-slate-800"
-            onClick={() => void createThread(project.id, undefined, mode)}
-            aria-label={chat.newThread}
-            title={chat.newThread}
-          >
-            <Plus className="h-3.5 w-3.5" />
-          </button>
+          </RailIconButton>
+          <RailIconButton label={chat.newThread} onClick={() => void createThread(project.id, undefined, mode)}>
+            <Plus className="h-4 w-4" />
+          </RailIconButton>
+          <div className="my-2 h-px w-6 bg-slate-200 dark:bg-slate-800" />
+          <div className="flex min-h-0 w-full flex-1 flex-col items-center gap-1 overflow-y-auto px-1.5">
+            {threads.map((t) => (
+              <RailIconButton
+                key={t.id}
+                label={t.title || chat.untitledThread}
+                active={t.id === activeThreadId}
+                onClick={() => setActiveThread(t.id)}
+              >
+                <MessageSquare className="h-4 w-4" />
+              </RailIconButton>
+            ))}
+          </div>
         </div>
       )}
 
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
         <div className="min-h-0 flex-1 overflow-y-auto px-3 py-4 sm:px-6">
-          <div className="mx-auto flex max-w-3xl flex-col gap-4">
+          <div
+            dir={dir === 'rtl' || language === 'ar' ? 'rtl' : 'ltr'}
+            className="mx-auto flex max-w-3xl flex-col gap-4"
+          >
             {messages.length === 0 && !processing && (
               <div className="py-16 text-center">
                 <img src="/images/juria-icon.png" alt="" className="mx-auto mb-3 h-12 w-12 rounded-xl ring-1 ring-slate-200 dark:ring-slate-700" />
@@ -418,7 +427,7 @@ function MessageBubble({
           </div>
         ) : isUser ? (
           <div className="group relative">
-            <div className="rounded-2xl rounded-tr-sm bg-[#64499D]/10 px-4 py-3 text-sm text-slate-900 dark:bg-[#64499D]/20 dark:text-slate-100">
+            <div className="rounded-2xl rounded-se-sm bg-[#64499D]/10 px-4 py-3 text-sm text-slate-900 dark:bg-[#64499D]/20 dark:text-slate-100">
               <p className="whitespace-pre-wrap">{m.content}</p>
             </div>
             <DropdownMenu>
@@ -491,7 +500,7 @@ function AssistantBody({
   const sources = (m.sources ?? []).filter((s) => s.document);
 
   return (
-    <div className="rounded-2xl rounded-tl-sm border border-slate-200 bg-white px-4 py-3 dark:border-slate-700 dark:bg-slate-900">
+    <div className="rounded-2xl rounded-ss-sm border border-slate-200 bg-white px-4 py-3 dark:border-slate-700 dark:bg-slate-900">
       {analysis ? (
         <JuriaContractIntelligence analysis={analysis} onClausePrompt={onClausePrompt} />
       ) : (

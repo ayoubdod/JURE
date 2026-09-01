@@ -1,7 +1,8 @@
 import React, { useMemo, useState } from 'react';
-import { Archive, Folder, MessageSquare, PanelLeftClose, Plus, Search, Star } from 'lucide-react';
+import { Archive, Folder, MessageSquare, PanelLeftClose, PanelLeftOpen, Plus, Search, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import useJuriaStore from '@/stores/juriaStore';
 import { useDebounce } from '@/hooks/use-debounce';
@@ -14,6 +15,7 @@ export function JuriaProjectSidebar({
   quickBusy,
   onOpenProject,
   onCollapse,
+  onExpand,
   variant = 'full',
 }: {
   onNewProject: () => void;
@@ -21,7 +23,8 @@ export function JuriaProjectSidebar({
   quickBusy?: boolean;
   onOpenProject?: (id: string) => void;
   onCollapse?: () => void;
-  variant?: 'full' | 'compact';
+  onExpand?: () => void;
+  variant?: 'full' | 'compact' | 'rail';
 }) {
   const { t } = useAppTranslation();
   const w = t.juria.workspace;
@@ -49,6 +52,60 @@ export function JuriaProjectSidebar({
   const nonFavorites = useMemo(() => filtered.filter((p) => !p.is_favorite), [filtered]);
   const recent = nonFavorites.slice(0, 4);
   const rest = nonFavorites.slice(4);
+
+  if (variant === 'rail') {
+    return (
+      <aside className="relative z-[1] hidden w-12 shrink-0 flex-col items-center border-e border-slate-200/80 bg-white/80 py-2 backdrop-blur-md dark:border-slate-800 dark:bg-slate-950/80 md:flex">
+        <RailIconButton label={w.expandSidebar} onClick={onExpand}>
+          <PanelLeftOpen className="h-4 w-4" />
+        </RailIconButton>
+        <img src="/images/juria-icon.png" alt="" className="mt-2 h-7 w-7 rounded-lg object-contain ring-1 ring-[#64499D]/20" />
+        <div className="mt-3 flex flex-col items-center gap-1">
+          {onQuickChat ? (
+            <RailIconButton label={quickBusy ? w.quickChatCreating : w.quickChat} onClick={onQuickChat} disabled={quickBusy}>
+              <MessageSquare className="h-4 w-4" />
+            </RailIconButton>
+          ) : null}
+          <RailIconButton label={w.newProject} onClick={onNewProject}>
+            <Plus className="h-4 w-4" />
+          </RailIconButton>
+        </div>
+        <div className="my-2 h-px w-6 bg-slate-200 dark:bg-slate-800" />
+        <div className="flex min-h-0 w-full flex-1 flex-col items-center gap-1 overflow-y-auto px-1.5">
+          {projects.map((p) => {
+            const Icon = p.is_simple ? MessageSquare : Folder;
+            return (
+              <RailIconButton
+                key={p.id}
+                label={p.name || w.untitledChat}
+                active={p.id === activeId && !archiveView}
+                onClick={() => openProject(p.id)}
+              >
+                <span className="relative">
+                  <Icon className="h-4 w-4" />
+                  {p.is_favorite ? (
+                    <Star className="absolute -end-1 -top-1 h-2 w-2 fill-amber-400 text-amber-400" />
+                  ) : null}
+                </span>
+              </RailIconButton>
+            );
+          })}
+        </div>
+        <div className="mt-auto flex flex-col items-center border-t border-slate-100 pt-2 dark:border-slate-800">
+          <RailIconButton
+            label={w.archived}
+            active={archiveView}
+            onClick={() => {
+              setArchiveView(true);
+              void loadArchived();
+            }}
+          >
+            <Archive className="h-4 w-4" />
+          </RailIconButton>
+        </div>
+      </aside>
+    );
+  }
 
   return (
     <aside
@@ -172,6 +229,46 @@ function Section({ title, children }: { title: string; children: React.ReactNode
       <p className="mb-1 px-2 text-[10px] font-medium uppercase tracking-wider text-slate-400">{title}</p>
       <div className="space-y-0.5">{children}</div>
     </div>
+  );
+}
+
+export function RailIconButton({
+  label,
+  active,
+  disabled,
+  onClick,
+  children,
+}: {
+  label: string;
+  active?: boolean;
+  disabled?: boolean;
+  onClick?: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <button
+          type="button"
+          title={label}
+          aria-label={label}
+          disabled={disabled}
+          onClick={onClick}
+          className={cn(
+            'flex h-9 w-9 shrink-0 items-center justify-center rounded-lg transition',
+            active
+              ? 'bg-[#64499D]/10 text-[#64499D] ring-1 ring-[#64499D]/20'
+              : 'text-slate-500 hover:bg-slate-100 hover:text-[#64499D] dark:text-slate-400 dark:hover:bg-slate-800',
+            disabled && 'pointer-events-none opacity-50'
+          )}
+        >
+          {children}
+        </button>
+      </TooltipTrigger>
+      <TooltipContent side="right" className="max-w-[220px]">
+        {label}
+      </TooltipContent>
+    </Tooltip>
   );
 }
 

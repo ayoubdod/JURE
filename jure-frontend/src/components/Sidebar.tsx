@@ -782,7 +782,8 @@ const Sidebar = ({ activeTab, setActiveTab, expanded, onExpandedChange }: Sideba
       {/* Mobile navigation drawer */}
       <Sheet open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
         <SheetContent
-          side={isRTL ? 'right' : 'left'}
+          side="start"
+          dir={dir}
           className="flex w-[min(100vw,20rem)] flex-col gap-0 p-0 sm:max-w-sm"
         >
           <SheetHeader className="shrink-0 border-b border-border px-3 py-3 text-start">

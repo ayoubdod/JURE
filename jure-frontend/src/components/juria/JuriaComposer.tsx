@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Paperclip, Plus, Send, X } from 'lucide-react';
+import { ArrowUp, Paperclip, Plus, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { JURIA_MODE_VISUAL } from '@/components/juria/juriaConstants';
@@ -91,7 +91,7 @@ export function JuriaComposer({
     const el = ta.current;
     if (!el) return;
     el.style.height = 'auto';
-    el.style.height = `${Math.min(Math.max(el.scrollHeight, 44), 140)}px`;
+    el.style.height = `${Math.min(Math.max(el.scrollHeight, 32), 120)}px`;
   }, [value]);
 
   const pickFile = () => {
@@ -113,6 +113,7 @@ export function JuriaComposer({
   const modes: JuriaMode[] = ['LEGAL_RESEARCH', 'CONTRACT_ANALYSIS', 'DOCUMENT_DRAFTING', 'CHAT'];
   const langs: AskLang[] = ['fr', 'en', 'ar', 'darija'];
   const hero = variant === 'hero';
+  const rtlPrompt = askLang === 'ar';
 
   return (
     <div
@@ -136,15 +137,18 @@ export function JuriaComposer({
         </div>
       )}
 
-      <div className="flex items-end gap-1.5 rounded-2xl border border-slate-200 bg-white px-1.5 py-1.5 shadow-[0_1px_2px_rgba(15,23,42,0.04)] dark:border-slate-700 dark:bg-slate-900 sm:gap-2 sm:px-2 sm:py-2">
+      <div
+        dir={rtlPrompt ? 'rtl' : 'ltr'}
+        className="flex items-end gap-1 rounded-full border border-slate-200 bg-white px-1.5 py-1 shadow-[0_1px_2px_rgba(15,23,42,0.04)] dark:border-slate-700 dark:bg-slate-900 sm:gap-1.5 sm:px-2"
+      >
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button
               type="button"
-              className="mb-0.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"
+              className="mb-px flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"
               aria-label="Ajouter"
             >
-              <Plus className="h-5 w-5" />
+              <Plus className="h-4 w-4" />
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" className="w-56">
@@ -161,15 +165,17 @@ export function JuriaComposer({
         </DropdownMenu>
         <button
           type="button"
-          className="mb-0.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"
+          className="mb-px flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"
           onClick={pickFile}
           aria-label={t.juria.attachFile}
         >
-          <Paperclip className="h-5 w-5" />
+          <Paperclip className="h-4 w-4" />
         </button>
         <textarea
           ref={ta}
           rows={1}
+          dir={rtlPrompt ? 'rtl' : 'ltr'}
+          lang={askLang === 'ar' ? 'ar' : askLang === 'en' ? 'en' : 'fr'}
           value={value}
           onChange={(e) => onChange(e.target.value)}
           onKeyDown={(e) => {
@@ -181,17 +187,17 @@ export function JuriaComposer({
           disabled={disabled}
           enterKeyHint="send"
           placeholder={hero ? t.juria.askPlaceholder : t.juria.modes[mode].placeholder}
-          className="max-h-[140px] min-h-[44px] flex-1 resize-none bg-transparent py-2.5 text-[16px] leading-5 text-slate-900 focus:outline-none sm:text-sm dark:text-slate-100"
+          className="max-h-[120px] min-h-[32px] flex-1 resize-none bg-transparent py-1.5 font-sans text-[15px] leading-5 text-slate-900 focus:outline-none sm:text-[13px] dark:text-slate-100"
         />
         <Button
           type="button"
           size="icon"
-          className="mb-0.5 h-11 w-11 shrink-0 rounded-xl bg-[#64499D] hover:bg-[#4D3680]"
+          className="mb-px h-8 w-8 shrink-0 rounded-full bg-[#64499D] hover:bg-[#4D3680]"
           disabled={disabled || (!value.trim() && !file)}
           onClick={onSend}
           aria-label={t.juria.send}
         >
-          <Send className="h-4 w-4" />
+          <ArrowUp className="h-4 w-4" strokeWidth={2.4} />
         </Button>
       </div>
 

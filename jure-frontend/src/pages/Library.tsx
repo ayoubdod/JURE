@@ -256,8 +256,6 @@ const Library = () => {
   };
 
   const recentTitle = tab === 'my' ? hub.recentlyAdded : hub.lastAdded;
-  const emptyRecent =
-    tab === 'my' ? hub.emptyMyRecent : tab === 'local' ? hub.emptyLocalRecent : hub.emptyInternationalRecent;
   const emptyAll =
     tab === 'favorites'
       ? hub.emptyFavorites
@@ -470,33 +468,27 @@ const Library = () => {
               <SkeletonGrid />
             ) : (
               <div className="space-y-8">
-                {tab !== 'favorites' ? (
+                {tab !== 'favorites' && recent.length > 0 ? (
                 <section aria-labelledby="library-recent">
                   <h2 id="library-recent" className="mb-3 text-sm font-semibold text-slate-900 dark:text-slate-50">
                     {recentTitle}
                   </h2>
-                  {recent.length === 0 ? (
-                    <p className="rounded-xl border border-dashed border-slate-200 px-4 py-8 text-center text-[13px] text-slate-500 dark:border-slate-800">
-                      {emptyRecent}
-                    </p>
-                  ) : (
-                    <div className={view === 'grid' ? 'grid gap-3 sm:grid-cols-2 xl:grid-cols-3' : 'space-y-2'}>
-                      {recent.map((doc) => (
-                        <ResourceCard
-                          key={`recent-${doc.id}`}
-                          document={doc}
-                          {...cardProps}
-                          onEdit={canEdit(doc) ? (d) => updateRef.current?.show(d) : undefined}
-                          onDelete={
-                            canEdit(doc) || doc.is_in_my_library
-                              ? (d) => deleteRef.current?.show(d)
-                              : undefined
-                          }
-                          onAddToMyLibrary={tab !== 'my' ? handleAddToMy : undefined}
-                        />
-                      ))}
-                    </div>
-                  )}
+                  <div className={view === 'grid' ? 'grid gap-3 sm:grid-cols-2 xl:grid-cols-3' : 'space-y-2'}>
+                    {recent.map((doc) => (
+                      <ResourceCard
+                        key={`recent-${doc.id}`}
+                        document={doc}
+                        {...cardProps}
+                        onEdit={canEdit(doc) ? (d) => updateRef.current?.show(d) : undefined}
+                        onDelete={
+                          canEdit(doc) || doc.is_in_my_library
+                            ? (d) => deleteRef.current?.show(d)
+                            : undefined
+                        }
+                        onAddToMyLibrary={tab !== 'my' ? handleAddToMy : undefined}
+                      />
+                    ))}
+                  </div>
                 </section>
                 ) : null}
 
