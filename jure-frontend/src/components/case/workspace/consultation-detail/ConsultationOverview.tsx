@@ -9,6 +9,7 @@ import { getStatusColor } from '@/utils/caseCardHelpers';
 import { TaskStatus } from '@/utils/constants';
 import { apiGetLegalDeadlines, type CalculatedDeadline } from '@/services/legal-deadlines/api';
 import { unwrapDeadlineList } from '@/components/case/CaseLegalDeadlinesList';
+import { deadlineRuleTitle } from '@/lib/legalDeadlineLabels';
 import {
   attorneysOf,
   consultationWhen,
@@ -464,7 +465,9 @@ export default function ConsultationOverview({
                 <span className="w-16 shrink-0 tabular-nums font-medium text-slate-700 dark:text-zinc-200">
                   {formatDate(d.final_deadline, lang, { day: 'numeric', month: 'short' })}
                 </span>
-                <span className="min-w-0 truncate text-slate-800 dark:text-zinc-100">{d.rule?.name || d.notes || '—'}</span>
+                <span className="min-w-0 truncate text-slate-800 dark:text-zinc-100">
+                  {deadlineRuleTitle(lang, d.rule, d.notes || '—')}
+                </span>
               </li>
             ))}
           </ul>

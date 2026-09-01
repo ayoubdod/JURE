@@ -379,12 +379,7 @@ const Settings: React.FC = () => {
         variant="outline"
         size="sm"
         className="mt-4 h-8"
-        onClick={() =>
-          toast({
-            title: t.settings.toasts.exportRequestTitle,
-            description: t.settings.toasts.exportRequestDesc,
-          })
-        }
+        onClick={() => navigate('/dashboard/support')}
       >
         {t.settings.requestHelp}
       </Button>

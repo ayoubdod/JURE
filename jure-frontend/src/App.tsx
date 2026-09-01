@@ -76,7 +76,7 @@ const Settings = lazyRoute(() => import("./pages/Settings"));
 const FinancePage = lazyRoute(() => import("./pages/finance/FinancePage"));
 const NotificationsPage = lazyRoute(() => import("./pages/notifications/NotificationsPage"));
 const EditTask = lazyRoute(() => import("./components/EditTask"));
-const PlaceholderPage = lazyRoute(() => import("./pages/PlaceholderPage"));
+const Support = lazyRoute(() => import("./pages/Support"));
 
 const queryClient = new QueryClient();
 
@@ -275,12 +275,12 @@ const router = createBrowserRouter([
       },
       {
         path: "support",
-        element: app(<PlaceholderPage titleKey="support" />),
+        element: app(<Support />),
       },
       { path: "settings", element: app(<Settings />) },
       { path: "messages", element: app(<Conversations />) },
       { path: "notifications", element: app(<NotificationsPage />) },
-      { path: "help", element: app(<Settings />) },
+      { path: "help", element: <Navigate to="/dashboard/support" replace /> },
     ],
   },
 

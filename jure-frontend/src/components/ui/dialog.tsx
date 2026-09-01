@@ -5,8 +5,22 @@ import { X } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { useAppTranslation } from "@/i18n"
+import { restorePointerEvents } from "@/lib/unlockUi"
 
-const Dialog = DialogPrimitive.Root
+const Dialog = ({
+  onOpenChange,
+  ...props
+}: React.ComponentPropsWithoutRef<typeof DialogPrimitive.Root>) => (
+  <DialogPrimitive.Root
+    {...props}
+    onOpenChange={(open) => {
+      onOpenChange?.(open)
+      if (!open) {
+        window.setTimeout(restorePointerEvents, 0)
+      }
+    }}
+  />
+)
 
 const DialogTrigger = DialogPrimitive.Trigger
 

@@ -1,17 +1,18 @@
 from django.contrib import admin
 
+from core.unfold_admin import JureModelAdmin, JureTabularInline
 from .models import CalculatedDeadline, DeadlineReminder, DeadlineRule, LegalHoliday, LegalSource
 
 
 @admin.register(LegalSource)
-class LegalSourceAdmin(admin.ModelAdmin):
+class LegalSourceAdmin(JureModelAdmin):
     list_display = ("law_number", "title", "status", "effective_from", "effective_until", "jurisdiction")
     list_filter = ("jurisdiction", "status")
     search_fields = ("law_number", "title", "official_reference")
 
 
 @admin.register(DeadlineRule)
-class DeadlineRuleAdmin(admin.ModelAdmin):
+class DeadlineRuleAdmin(JureModelAdmin):
     list_display = (
         "code",
         "name",
@@ -30,19 +31,19 @@ class DeadlineRuleAdmin(admin.ModelAdmin):
 
 
 @admin.register(LegalHoliday)
-class LegalHolidayAdmin(admin.ModelAdmin):
+class LegalHolidayAdmin(JureModelAdmin):
     list_display = ("date", "name", "year", "holiday_type", "is_legally_relevant", "jurisdiction")
     list_filter = ("year", "holiday_type", "jurisdiction", "is_legally_relevant")
     search_fields = ("name",)
 
 
-class DeadlineReminderInline(admin.TabularInline):
+class DeadlineReminderInline(JureTabularInline):
     model = DeadlineReminder
     extra = 0
 
 
 @admin.register(CalculatedDeadline)
-class CalculatedDeadlineAdmin(admin.ModelAdmin):
+class CalculatedDeadlineAdmin(JureModelAdmin):
     list_display = (
         "id",
         "case",

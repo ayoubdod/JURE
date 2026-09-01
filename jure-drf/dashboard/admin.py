@@ -4,9 +4,12 @@ from django.db import models
 from django.template.defaultfilters import linebreaksbr
 from django.utils import timezone
 from django.utils.html import format_html
-from unfold.admin import ModelAdmin
+from django.utils.translation import gettext_lazy as _
+from unfold.decorators import display
 from unfold.widgets import UnfoldAdminFileFieldWidget
 
+from core.admin_display import STATUS_LABELS, status_pair
+from core.unfold_admin import JureModelAdmin
 from jurisdictions.constants import VisibilityScope
 from jurisdictions.models import Jurisdiction
 
@@ -99,7 +102,7 @@ class ScheduleStatusFilter(admin.SimpleListFilter):
 
 
 @admin.register(Announcement)
-class AnnouncementAdmin(ModelAdmin):
+class AnnouncementAdmin(JureModelAdmin):
     form = AnnouncementAdminForm
     # Unfold hides/breaks default FileField widgets unless this override is set.
     formfield_overrides = {
@@ -107,19 +110,14 @@ class AnnouncementAdmin(ModelAdmin):
     }
     list_display = (
         "title",
-        "announcement_type",
-        "status",
+        "scope_badge",
+        "status_badge",
         "priority",
-        "visibility_scope",
-        "jurisdiction",
         "is_active",
         "has_learn_more",
         "has_media",
-        "media_kind",
         "target_cabinets_display",
         "start_date",
-        "end_date",
-        "created_by",
         "created",
     )
     list_filter = (
@@ -153,7 +151,7 @@ class AnnouncementAdmin(ModelAdmin):
     date_hierarchy = "created"
     actions = ("publish_announcements", "archive_announcements", "move_to_draft")
     fieldsets = (
-        (None, {
+        (_("General information"), {
             "description": (
                 "Global announcements are visible to every jurisdiction. "
                 "Jurisdiction announcements are visible only to cabinets in that market. "
@@ -174,21 +172,21 @@ class AnnouncementAdmin(ModelAdmin):
                 "is_active",
             ),
         }),
-        ("Content scope", {
+        (_("Content scope"), {
             "fields": ("visibility_scope", "jurisdiction"),
             "description": (
                 "Choose Global for one record visible everywhere. "
                 "Choose Jurisdiction and pick Morocco or Qatar for market-specific updates."
             ),
         }),
-        ("Schedule", {
+        (_("Schedule"), {
             "fields": ("start_date", "end_date"),
             "description": (
                 "Leave start empty to go live immediately when Published. "
                 "A future start date is saved as Scheduled. Leave end empty to never expire."
             ),
         }),
-        ("Cabinet targeting", {
+        (_("Cabinet targeting"), {
             "fields": ("target_cabinets",),
             "classes": ("collapse",),
             "description": (
@@ -196,13 +194,24 @@ class AnnouncementAdmin(ModelAdmin):
                 "Leave empty for Global and Jurisdiction content."
             ),
         }),
-        ("Preview", {
+        (_("Preview"), {
             "fields": ("dashboard_preview",),
         }),
-        ("Meta", {
+        (_("Meta"), {
             "fields": ("created_by", "updated_by", "created", "modified"),
         }),
     )
+
+    @display(description=_("Scope"), ordering="visibility_scope", label=STATUS_LABELS)
+    def scope_badge(self, obj):
+        label = obj.get_visibility_scope_display()
+        if obj.jurisdiction_id:
+            label = f"{label} · {obj.jurisdiction}"
+        return obj.visibility_scope, label
+
+    @display(description=_("Status"), ordering="status", label=STATUS_LABELS)
+    def status_badge(self, obj):
+        return status_pair(obj.status, obj.get_status_display())
 
     @admin.display(description="Link", boolean=True)
     def has_learn_more(self, obj):
@@ -232,17 +241,17 @@ class AnnouncementAdmin(ModelAdmin):
         cta = ""
         if obj.link_url:
             cta = format_html(
-                '<p style="margin:0.75rem 0 0;"><a href="{}" style="color:#fff;font-weight:600;" rel="noopener">{}</a></p>',
+                '<p style="margin:0.75rem 0 0;"><a href="{}" style="color:#64499D;font-weight:600;" rel="noopener">{}</a></p>',
                 obj.link_url,
                 obj.link_label or "Learn more",
             )
         return format_html(
             '<div style="max-width:28rem;padding:1rem 1.1rem;border-radius:12px;'
-            'background:#4D3680;color:#fff;line-height:1.45;">'
+            'background:#fff;color:#1F2937;line-height:1.45;border:1px solid #E8EAF0;">'
             '<div style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;'
-            'opacity:.8;margin-bottom:0.35rem;">{}</div>'
+            'color:#64499D;margin-bottom:0.35rem;">{}</div>'
             "<strong>{}</strong>"
-            '<div style="margin-top:0.4rem;opacity:.95;">{}</div>{}</div>',
+            '<div style="margin-top:0.4rem;color:#6B7280;">{}</div>{}</div>',
             obj.get_announcement_type_display(),
             obj.title or "Untitled",
             linebreaksbr(obj.message or ""),
@@ -299,6 +308,6 @@ class AnnouncementAdmin(ModelAdmin):
 
 
 @admin.register(ActivityLog)
-class ActivityLogAdmin(ModelAdmin):
+class ActivityLogAdmin(JureModelAdmin):
     list_display = ("kind", "cabinet", "message", "created")
     list_filter = ("kind", "cabinet")

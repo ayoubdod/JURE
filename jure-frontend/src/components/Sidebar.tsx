@@ -250,7 +250,7 @@ const Sidebar = ({ activeTab, setActiveTab, expanded, onExpandedChange }: Sideba
     }));
     setCasesPopoverOpen(false);
     setOfficePopoverOpen(false);
-    navigate(path);
+    navigate(path, { flushSync: true });
     if (options?.closeMobile !== false) {
       closeMobileNav();
     }

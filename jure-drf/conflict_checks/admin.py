@@ -1,10 +1,13 @@
 from django.contrib import admin
-from unfold.admin import ModelAdmin
+from django.utils.translation import gettext_lazy as _
+from unfold.decorators import display
 
+from core.admin_display import STATUS_LABELS, status_pair
+from core.unfold_admin import JureModelAdmin, JureTabularInline
 from .models import ConflictCheck, PotentialMatch
 
 
-class PotentialMatchInline(admin.TabularInline):
+class PotentialMatchInline(JureTabularInline):
     model = PotentialMatch
     extra = 0
     readonly_fields = (
@@ -24,13 +27,13 @@ class PotentialMatchInline(admin.TabularInline):
 
 
 @admin.register(ConflictCheck)
-class ConflictCheckAdmin(ModelAdmin):
+class ConflictCheckAdmin(JureModelAdmin):
     list_display = (
         "id",
         "search_query",
         "cabinet",
         "result_count",
-        "status",
+        "status_badge",
         "initiated_by",
         "created",
     )
@@ -39,9 +42,13 @@ class ConflictCheckAdmin(ModelAdmin):
     readonly_fields = ("result_count", "created", "modified")
     inlines = [PotentialMatchInline]
 
+    @display(description=_("Status"), ordering="status", label=STATUS_LABELS)
+    def status_badge(self, obj):
+        return status_pair(obj.status, obj.get_status_display())
+
 
 @admin.register(PotentialMatch)
-class PotentialMatchAdmin(ModelAdmin):
+class PotentialMatchAdmin(JureModelAdmin):
     list_display = (
         "id",
         "entity_name",

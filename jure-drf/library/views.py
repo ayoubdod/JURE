@@ -37,6 +37,7 @@ class DocumentViewSet(viewsets.ModelViewSet):
     - POST /api/v1/library/my/                         create personal resource
     - GET  /api/v1/library/local/                      current jurisdiction only
     - GET  /api/v1/library/international/              global shared resources
+    - GET  /api/v1/library/favorites/                  current user's reading list
     - GET  /api/v1/library/documents/{id}/
     - POST /api/v1/library/documents/{id}/favorite/
     - DELETE /api/v1/library/documents/{id}/favorite/
@@ -153,6 +154,17 @@ class DocumentViewSet(viewsets.ModelViewSet):
             )
         if library == 'international':
             return base.filter(visibility_scope=VisibilityScope.GLOBAL)
+        if library == 'favorites':
+            user = self.request.user
+            if not user or not user.is_authenticated:
+                return base.none()
+            return (
+                base.filter(
+                    pk__in=LibraryFavorite.objects.filter(user=user).values('document_id')
+                )
+                .filter(documents_visible_to_cabinet_q(cabinet))
+                .distinct()
+            )
         return self.get_queryset()
 
     def _list_payload(self, request, queryset):
@@ -187,7 +199,7 @@ class DocumentViewSet(viewsets.ModelViewSet):
 
     def list(self, request, *args, **kwargs):
         library = (request.query_params.get('library') or kwargs.get('library_scope') or '').strip().lower()
-        if library in ('my', 'personal', 'local', 'international'):
+        if library in ('my', 'personal', 'local', 'international', 'favorites'):
             mapped = 'my' if library == 'personal' else library
             return self._list_payload(request, self._scoped_queryset(mapped))
 
@@ -389,6 +401,10 @@ class DocumentViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'], url_path='international')
     def international_library(self, request):
         return self._list_payload(request, self._scoped_queryset('international'))
+
+    @action(detail=False, methods=['get'], url_path='favorites')
+    def favorites_library(self, request):
+        return self._list_payload(request, self._scoped_queryset('favorites'))
 
     @action(detail=False, methods=['post'], url_path='admin/local')
     def admin_publish_local(self, request):

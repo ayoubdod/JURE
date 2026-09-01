@@ -1,11 +1,11 @@
 from django.contrib import admin
-from unfold.admin import ModelAdmin
 
+from core.unfold_admin import JureModelAdmin
 from .models import ResearchNote
 
 
 @admin.register(ResearchNote)
-class ResearchNoteAdmin(ModelAdmin):
+class ResearchNoteAdmin(JureModelAdmin):
     list_display = (
         "id",
         "title",

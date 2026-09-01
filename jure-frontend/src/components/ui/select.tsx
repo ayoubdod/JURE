@@ -9,10 +9,11 @@ import { useAppTranslation } from "@/i18n"
 
 const Select = ({
   dir,
+  modal = false,
   ...props
 }: React.ComponentPropsWithoutRef<typeof SelectPrimitive.Root>) => {
   const { dir: appDir } = useAppTranslation()
-  return <SelectPrimitive.Root {...props} dir={dir ?? appDir} />
+  return <SelectPrimitive.Root modal={modal} {...props} dir={dir ?? appDir} />
 }
 
 const SelectGroup = SelectPrimitive.Group

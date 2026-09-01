@@ -41,10 +41,18 @@ export function importWithRetry<T>(loader: () => Promise<T>): Promise<T> {
       clearStaleChunkReloadFlag();
       return mod;
     })
-    .catch((error: unknown) => {
-      if (isChunkLoadError(error) && reloadOnceOnStaleChunk()) {
-        return new Promise<T>(() => {});
+    .catch(async (error: unknown) => {
+      if (!isChunkLoadError(error)) throw error;
+      await new Promise((resolve) => window.setTimeout(resolve, 80));
+      try {
+        const mod = await loader();
+        clearStaleChunkReloadFlag();
+        return mod;
+      } catch (retryError) {
+        if (isChunkLoadError(retryError)) {
+          reloadOnceOnStaleChunk();
+        }
+        throw retryError;
       }
-      throw error;
     });
 }

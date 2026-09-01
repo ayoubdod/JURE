@@ -8,6 +8,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { formatDate, useAppTranslation } from '@/i18n';
+import { deadlineRuleTitle } from '@/lib/legalDeadlineLabels';
 
 export function unwrapDeadlineList(
   data: API.Paginated<CalculatedDeadline> | CalculatedDeadline[] | undefined
@@ -143,7 +144,7 @@ export default function CaseLegalDeadlinesList({
                 {formatDate(d.final_deadline, lang)}
               </p>
               <p className="text-xs text-emerald-900/80 dark:text-emerald-200/80 mt-0.5">
-                {d.rule?.name || list.fallbackName}
+                {deadlineRuleTitle(lang, d.rule, list.fallbackName)}
                 {d.rule?.version ? ` · v${d.rule.version}` : ''}
               </p>
               <p className="text-[11px] text-muted-foreground mt-1">

@@ -113,7 +113,7 @@ export default function CommandPalette() {
   const run = (item: CatalogItem) => {
     setPaletteOpen(false);
     if (item.kind === 'navigate' && item.path) {
-      navigate(item.path);
+      navigate(item.path, { flushSync: true });
       return;
     }
     if (item.kind === 'action' && item.action) {

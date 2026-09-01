@@ -3,6 +3,7 @@ import DeadlinesCard from '@/components/dashboard/DeadlinesCard';
 import { getCountdownDays } from '@/utils/caseCardHelpers';
 import { useAppTranslation } from '@/i18n';
 import { cn } from '@/lib/utils';
+import { deadlineEventLabel, deadlineRuleTitle } from '@/lib/legalDeadlineLabels';
 import type { CalculatedDeadline } from '@/services/legal-deadlines/api';
 import { EmptyAction, SectionError, WorkspaceCard } from './ui';
 import { formatShortDate, keyDeadlinesOf, relativeDayLabel } from './helpers';
@@ -81,7 +82,13 @@ export default function LitigationDeadlines({
               return (
                 <li key={d.id} className="flex items-start justify-between gap-3 rounded-lg border border-slate-200 px-3 py-2 dark:border-zinc-800">
                   <div>
-                    <p className="text-[13px] font-medium">{d.rule?.name || d.triggering_event_type}</p>
+                    <p className="text-[13px] font-medium">
+                      {deadlineRuleTitle(
+                        lang,
+                        d.rule,
+                        deadlineEventLabel(lang, d.triggering_event_type, d.triggering_event_type)
+                      )}
+                    </p>
                     <p className={cn('text-[12px]', tone(date))}>
                       {formatShortDate(date, lang)} · {relativeDayLabel(date, lang, copy, tf)}
                     </p>

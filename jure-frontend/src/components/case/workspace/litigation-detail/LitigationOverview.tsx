@@ -8,6 +8,7 @@ import { getConvertedFromCase } from '@/components/case/conversion/ConvertedCase
 import { formatMAD } from '@/utils/formatMAD';
 import { TaskStatus } from '@/utils/constants';
 import type { CalculatedDeadline } from '@/services/legal-deadlines/api';
+import { deadlineEventLabel, deadlineRuleTitle } from '@/lib/legalDeadlineLabels';
 import type { ResearchNote } from '@/services/research-notes/api';
 import { EmptyAction, PersonAvatar, TextLink, WorkspaceCard } from './ui';
 import {
@@ -95,7 +96,11 @@ export default function LitigationOverview({
   const legalUpcoming = (legalDeadlines ?? [])
     .filter((d) => d.status !== 'completed' && d.status !== 'cancelled')
     .map((d) => ({
-      label: d.rule?.name || d.triggering_event_type || copy.calculated,
+      label: deadlineRuleTitle(
+        lang,
+        d.rule,
+        deadlineEventLabel(lang, d.triggering_event_type, d.triggering_event_type) || copy.calculated
+      ),
       date: d.final_deadline || d.calculated_deadline,
       source: 'calculated' as const,
     }));

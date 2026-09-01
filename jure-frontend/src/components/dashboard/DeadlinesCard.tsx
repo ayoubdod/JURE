@@ -31,6 +31,14 @@ import {
 import CaseLegalDeadlinesList, {
   unwrapDeadlineList,
 } from '@/components/case/CaseLegalDeadlinesList';
+import {
+  deadlineComputationLabel,
+  deadlineDomainLabel,
+  deadlineDurationLabel,
+  deadlineEventLabel,
+  deadlineProcedureLabel,
+  deadlineRuleTitle,
+} from '@/lib/legalDeadlineLabels';
 
 type Props = {
   /** When opened from a case, bind to that matter id. */
@@ -148,7 +156,7 @@ export default function DeadlinesCard({ caseId }: Props) {
     setError(null);
     setSaved(null);
     if (!selectedDomain?.available) {
-      setError(selectedDomain?.message || d.errors.noVerifiedRule);
+      setError(d.errors.noVerifiedRule);
       return;
     }
     if (!procedureType) {
@@ -235,7 +243,7 @@ export default function DeadlinesCard({ caseId }: Props) {
       setCreatingTask(true);
       await apiCreateTaskFromDeadline(saved.id, {
         title: tf(d.taskTitle, {
-          label: selectedRule?.procedure_type_label || d.legalDeadline,
+          label: deadlineProcedureLabel(lang, selectedRule?.procedure_type, selectedRule?.procedure_type_label) || d.legalDeadline,
         }),
         priority: 'high',
       });
@@ -302,7 +310,7 @@ export default function DeadlinesCard({ caseId }: Props) {
                   <SelectContent>
                     {domains.map((item) => (
                       <SelectItem key={item.value} value={item.value} disabled={!item.available}>
-                        {item.label}
+                        {deadlineDomainLabel(lang, item.value, item.label)}
                         {!item.available ? d.soon : ''}
                       </SelectItem>
                     ))}
@@ -323,7 +331,7 @@ export default function DeadlinesCard({ caseId }: Props) {
                     ) : (
                       rules.map((r) => (
                         <SelectItem key={r.id} value={r.procedure_type}>
-                          {r.procedure_type_label}
+                          {deadlineProcedureLabel(lang, r.procedure_type, r.procedure_type_label)}
                         </SelectItem>
                       ))
                     )}
@@ -336,7 +344,11 @@ export default function DeadlinesCard({ caseId }: Props) {
               <div className="space-y-1.5">
                 <Label className="text-xs">{d.triggeringEvent}</Label>
                 <Input
-                  value={selectedRule?.event_type_label || d.officialNotification}
+                  value={deadlineEventLabel(
+                    lang,
+                    selectedRule?.event_type,
+                    selectedRule?.event_type_label || d.officialNotification
+                  )}
                   readOnly
                   className="h-9 bg-muted/40"
                 />
@@ -369,8 +381,12 @@ export default function DeadlinesCard({ caseId }: Props) {
 
             {selectedRule && (
               <p className="text-[11px] text-muted-foreground leading-relaxed">
-                {selectedRule.duration_value} {selectedRule.duration_unit} ·{' '}
-                {selectedRule.computation_method_label}
+                {deadlineDurationLabel(lang, selectedRule.duration_value, selectedRule.duration_unit)} ·{' '}
+                {deadlineComputationLabel(
+                  lang,
+                  selectedRule.computation_method,
+                  selectedRule.computation_method_label
+                )}
                 {selectedRule.article_reference
                   ? ` · ${selectedRule.article_reference}`
                   : ''}
@@ -413,8 +429,16 @@ export default function DeadlinesCard({ caseId }: Props) {
                   </p>
                   <p className="text-xs text-emerald-900/80 dark:text-emerald-200/80 mt-1">
                     {tf(d.durationFrom, {
-                      duration: result.explanation.legal_duration,
-                      event: result.explanation.starting_event_type.replace(/_/g, ' '),
+                      duration: deadlineDurationLabel(
+                        lang,
+                        result.rule.duration_value,
+                        result.rule.duration_unit
+                      ) || result.explanation.legal_duration,
+                      event: deadlineEventLabel(
+                        lang,
+                        result.explanation.starting_event_type,
+                        result.explanation.starting_event_type.replace(/_/g, ' ')
+                      ),
                     })}
                   </p>
                   <p className="text-xs text-emerald-900/70 dark:text-emerald-200/70 mt-0.5">
@@ -435,11 +459,19 @@ export default function DeadlinesCard({ caseId }: Props) {
                   </div>
                   <div className="flex justify-between gap-3">
                     <dt className="text-muted-foreground">{d.applicableRule}</dt>
-                    <dd className="text-end">{result.explanation.applicable_rule}</dd>
+                    <dd className="text-end">
+                      {deadlineRuleTitle(lang, result.rule, result.explanation.applicable_rule)}
+                    </dd>
                   </div>
                   <div className="flex justify-between gap-3">
                     <dt className="text-muted-foreground">{d.computation}</dt>
-                    <dd>{result.explanation.computation_method_label}</dd>
+                    <dd>
+                      {deadlineComputationLabel(
+                        lang,
+                        result.explanation.computation_method,
+                        result.explanation.computation_method_label
+                      )}
+                    </dd>
                   </div>
                   {result.explanation.non_working_day_adjustment && (
                     <div className="flex justify-between gap-3">
@@ -461,12 +493,12 @@ export default function DeadlinesCard({ caseId }: Props) {
 
                 {result.explanation.uncertainty && (
                   <p className="text-[11px] text-amber-800 dark:text-amber-300">
-                    {result.explanation.uncertainty_message || d.uncertaintyFallback}
+                    {d.uncertaintyFallback}
                   </p>
                 )}
 
                 <p className="text-[11px] text-muted-foreground leading-relaxed border-t border-emerald-100 dark:border-emerald-800/60 pt-2">
-                  {result.explanation.disclaimer}
+                  {d.disclaimer}
                 </p>
 
                 <div className="space-y-2 border-t border-emerald-100 dark:border-emerald-800/60 pt-3">

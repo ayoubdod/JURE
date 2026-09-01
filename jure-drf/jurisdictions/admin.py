@@ -1,18 +1,21 @@
 from django.contrib import admin, messages
 from django.db.models import Count
 from django.utils.translation import gettext_lazy as _
-from unfold.admin import ModelAdmin
+from unfold.decorators import display
+
+from core.admin_display import STATUS_LABELS, status_pair
+from core.unfold_admin import JureModelAdmin
 
 from .models import Jurisdiction
 
 
 @admin.register(Jurisdiction)
-class JurisdictionAdmin(ModelAdmin):
+class JurisdictionAdmin(JureModelAdmin):
     list_display = (
         "code",
         "name",
         "country_code",
-        "status",
+        "status_badge",
         "cabinet_count",
         "document_count",
         "announcement_count",
@@ -51,6 +54,10 @@ class JurisdictionAdmin(ModelAdmin):
                 _announcement_count=Count("announcements", distinct=True),
             )
         )
+
+    @display(description=_("Status"), ordering="status", label=STATUS_LABELS)
+    def status_badge(self, obj):
+        return status_pair(obj.status, obj.get_status_display())
 
     @admin.display(description=_("Cabinets"), ordering="_cabinet_count")
     def cabinet_count(self, obj):
