@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router';
-import { AlertCircle, Menu, MessageSquare, PanelLeft, PanelLeftOpen, Plus } from 'lucide-react';
+import { AlertCircle, Menu, MessageSquare, PanelLeft, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { JuriaProjectSidebar } from '@/components/juria/JuriaProjectSidebar';
@@ -188,24 +188,19 @@ export default function JuriaPage() {
           />
         </div>
       ) : (
-        <div className="relative z-[1] hidden w-11 shrink-0 flex-col items-center border-e border-slate-200/80 bg-white/80 py-3 backdrop-blur-md dark:border-slate-800 dark:bg-slate-950/80 md:flex">
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="h-9 w-9 text-slate-500 hover:text-[#64499D] dark:text-slate-300"
-            aria-label={w.expandSidebar}
-            title={w.expandSidebar}
-            onClick={() => setProjectsNavOpen(true)}
-          >
-            <PanelLeftOpen className="h-4 w-4" />
-          </Button>
-        </div>
+        <JuriaProjectSidebar
+          variant="rail"
+          onNewProject={() => setCreateOpen(true)}
+          onQuickChat={() => void startQuickChat()}
+          quickBusy={quickBusy}
+          onOpenProject={openProject}
+          onExpand={() => setProjectsNavOpen(true)}
+        />
       )}
 
 
       <Sheet open={isMobile && mobileOpen} onOpenChange={setMobileOpen}>
-        <SheetContent side="left" className="w-[min(100vw,20rem)] p-0 sm:max-w-sm">
+        <SheetContent side="start" dir={dir} className="w-[min(100vw,20rem)] p-0 sm:max-w-sm">
           <SheetHeader className="sr-only">
             <SheetTitle>{w.projectsSheet}</SheetTitle>
           </SheetHeader>

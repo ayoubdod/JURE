@@ -11,37 +11,56 @@
   <a href="{% url 'admin:index' %}">{% trans "Home" %}</a>
   &rsaquo; <a href="{% url 'admin:app_list' app_label=opts.app_label %}">{{ opts.app_config.verbose_name }}</a>
   &rsaquo; <a href="{% url 'admin:library_document_changelist' %}">{{ opts.verbose_name_plural|capfirst }}</a>
-  &rsaquo; {% trans "Upload multiple" %}
+  &rsaquo; {% trans "Bulk upload" %}
 </div>
 {% endblock %}
 
 {% block content %}
-<div id="content-main">
-  <p>
-    {% trans "Each selected file becomes its own document. The title is taken from the filename. Category, tags, description, and public-library setting apply to all of them." %}
-  </p>
-  <form method="post" enctype="multipart/form-data" novalidate>
+<div class="jure-upload">
+  <div>
+    <p class="jure-dash__kicker">{% trans "Library" %}</p>
+    <h1 class="jure-dash__title">{% trans "Upload documents" %}</h1>
+    <p class="jure-upload__intro">
+      {% trans "Each selected file becomes its own document. The title is taken from the filename. Category, tags, description, and scope apply to all of them." %}
+    </p>
+  </div>
+
+  <form method="post" enctype="multipart/form-data" novalidate class="jure-card">
     {% csrf_token %}
     {% if form.non_field_errors %}
       {{ form.non_field_errors }}
     {% endif %}
-    <fieldset class="module aligned">
-      {% for field in form %}
-        <div class="form-row{% if field.errors %} errors{% endif %}">
-          <div>
-            {{ field.label_tag }}
-            {{ field }}
-            {% if field.help_text %}
-              <div class="help">{{ field.help_text }}</div>
-            {% endif %}
-            {{ field.errors }}
-          </div>
+
+    <div class="jure-form-grid">
+      <div class="form-row{% if form.files.errors %} errors{% endif %}">
+        <label for="{{ form.files.id_for_label }}">{{ form.files.label }}</label>
+        <div class="jure-dropzone" data-jure-dropzone>
+          <strong>{% trans "Drag and drop files here" %}</strong>
+          <span>{% trans "or click to browse. Hold Ctrl (Windows) or Cmd (Mac) to select several files." %}</span>
+          {{ form.files }}
+          <ul class="jure-file-list" data-jure-file-list></ul>
         </div>
+        {% if form.files.help_text %}<div class="help">{{ form.files.help_text }}</div>{% endif %}
+        {{ form.files.errors }}
+      </div>
+
+      {% for field in form %}
+        {% if field.name != "files" %}
+        <div class="form-row{% if field.errors %} errors{% endif %}">
+          {{ field.label_tag }}
+          {{ field }}
+          {% if field.help_text %}
+            <div class="help">{{ field.help_text }}</div>
+          {% endif %}
+          {{ field.errors }}
+        </div>
+        {% endif %}
       {% endfor %}
-    </fieldset>
+    </div>
+
     <div class="submit-row">
-      <input type="submit" class="default" value="{% trans 'Upload' %}">
       <a href="{% url 'admin:library_document_changelist' %}" class="button cancel-link">{% trans "Cancel" %}</a>
+      <input type="submit" class="default" value="{% trans 'Upload documents' %}">
     </div>
   </form>
 </div>

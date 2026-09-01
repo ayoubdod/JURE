@@ -9,10 +9,12 @@ from django.template.response import TemplateResponse
 from django.urls import path, reverse
 from django.utils.text import slugify
 from django.utils.translation import gettext_lazy as _
-from unfold.admin import ModelAdmin
+from unfold.decorators import display
 from unfold.widgets import UnfoldAdminFileFieldWidget
 
 from commons.models import Tag
+from core.admin_display import STATUS_LABELS, status_pair
+from core.unfold_admin import JureModelAdmin
 from core.utils import is_valid_slug
 from jurisdictions.constants import VisibilityScope
 from jurisdictions.models import Jurisdiction
@@ -245,25 +247,21 @@ class DocumentBulkUploadForm(forms.Form):
 
 
 @admin.register(Document)
-class DocumentAdmin(ModelAdmin):
+class DocumentAdmin(JureModelAdmin):
     form = DocumentAdminForm
     change_list_template = "admin/library/document/change_list.html"
     formfield_overrides = {
         models.FileField: {"widget": UnfoldAdminFileFieldWidget},
     }
     list_display = [
-        "title",
-        "resource_type",
+        "document_name",
         "category",
-        "status",
-        "visibility_scope",
         "jurisdiction",
-        "language",
-        "is_shared",
-        "cabinet",
+        "scope_badge",
+        "file_type",
+        "status_badge",
         "created_by",
         "created",
-        "modified",
     ]
     list_filter = [
         "status",
@@ -284,7 +282,7 @@ class DocumentAdmin(ModelAdmin):
         js = ("jurisdictions/js/scope_widget.js",)
 
     fieldsets = (
-        (None, {
+        (_("General information"), {
             "fields": (
                 "title",
                 "category",
@@ -303,9 +301,6 @@ class DocumentAdmin(ModelAdmin):
                 "effective_date",
                 "keywords",
                 "tags_input",
-                "visibility_scope",
-                "jurisdiction",
-                "status",
             ),
             "description": (
                 "Global documents are visible in every jurisdiction. "
@@ -314,14 +309,48 @@ class DocumentAdmin(ModelAdmin):
                 "To upload several files at once, use “Upload library files”."
             ),
         }),
-        ("Ownership", {
-            "fields": ("cabinet", "created_by", "updated_by", "created", "modified"),
+        (_("Scope and status"), {
+            "fields": (
+                "visibility_scope",
+                "jurisdiction",
+                "cabinet",
+                "status",
+            ),
+        }),
+        (_("Ownership"), {
+            "fields": ("created_by", "updated_by", "created", "modified"),
             "classes": ("collapse",),
             "description": (
                 "Leave cabinet empty for Global or Jurisdiction library documents."
             ),
         }),
     )
+
+    @display(description=_("Document name"), ordering="title", header=True)
+    def document_name(self, obj):
+        subtitle = obj.get_resource_type_display() if obj.resource_type else ""
+        return [obj.title, subtitle]
+
+    @display(description=_("Scope"), ordering="visibility_scope", label=STATUS_LABELS)
+    def scope_badge(self, obj):
+        label = obj.get_visibility_scope_display()
+        if obj.cabinet_id:
+            label = f"{label} · {obj.cabinet}"
+        return obj.visibility_scope, label
+
+    @display(description=_("File type"))
+    def file_type(self, obj):
+        name = getattr(obj.file, "name", "") or ""
+        ext = os.path.splitext(name)[1].lstrip(".").upper()
+        if ext:
+            return ext
+        if obj.external_url:
+            return _("URL")
+        return "—"
+
+    @display(description=_("Status"), ordering="status", label=STATUS_LABELS)
+    def status_badge(self, obj):
+        return status_pair(obj.status, obj.get_status_display())
 
     def get_urls(self):
         urls = super().get_urls()
@@ -409,14 +438,14 @@ class DocumentAdmin(ModelAdmin):
 
 
 @admin.register(LibraryFavorite)
-class LibraryFavoriteAdmin(ModelAdmin):
+class LibraryFavoriteAdmin(JureModelAdmin):
     list_display = ["user", "document", "created"]
     search_fields = ["user__email", "document__title"]
     raw_id_fields = ["user", "document"]
 
 
 @admin.register(LibrarySave)
-class LibrarySaveAdmin(ModelAdmin):
+class LibrarySaveAdmin(JureModelAdmin):
     list_display = ["cabinet", "document", "added_by", "created"]
     search_fields = ["cabinet__trade_name", "document__title"]
     raw_id_fields = ["cabinet", "document", "added_by"]

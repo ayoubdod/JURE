@@ -26,7 +26,7 @@ declare namespace API {
         | 'public_administrative';
 
     type LibraryScope = 'PERSONAL' | 'LOCAL' | 'INTERNATIONAL';
-    type LibraryTab = 'my' | 'local' | 'international';
+    type LibraryTab = 'my' | 'local' | 'international' | 'favorites';
     type LibraryResourceType =
         | 'law'
         | 'code'

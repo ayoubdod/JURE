@@ -34,6 +34,7 @@ from .views import root, health, deployment_settings_debug
 
 urlpatterns = [
     path('', root, name='root'),
+    path('i18n/', include('django.conf.urls.i18n')),
     path('admin/', admin.site.urls),
     # path('accounts/', include('allauth.urls')),
     # Single-session login must be registered before the stock dj-rest-auth include.

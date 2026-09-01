@@ -24,7 +24,8 @@ import {
 import { Dialog, DialogPortal, DialogOverlay, DialogTitle } from '@/components/ui/dialog';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/utils'
+import { restorePointerEvents } from '@/lib/unlockUi';
 import { API_ORIGIN } from '@/config/api';
 import useUserStore from '@/stores/userStore';
 import { formatDate, useAppTranslation } from '@/i18n';
@@ -91,7 +92,62 @@ async function fetchAuthenticatedBlob(url: string): Promise<Blob> {
   return res.blob();
 }
 
+/** Cache the Blob, not the ArrayBuffer — pdf.js transfers/detaches the buffer on load. */
+const pdfBlobCache = new Map<string, Promise<Blob>>();
+function getPdfData(url: string): Promise<ArrayBuffer> {
+  let cached = pdfBlobCache.get(url);
+  if (!cached) {
+    cached = fetchAuthenticatedBlob(url).catch((err) => {
+      pdfBlobCache.delete(url);
+      throw err;
+    });
+    pdfBlobCache.set(url, cached);
+    if (pdfBlobCache.size > 6) {
+      const first = pdfBlobCache.keys().next().value;
+      if (first) pdfBlobCache.delete(first);
+    }
+  }
+  return cached.then((blob) => blob.arrayBuffer());
+}
+
+type RenderSlot = { priority: number; grant: () => void };
+const renderWaiters: RenderSlot[] = [];
+let renderActive = 0;
+const RENDER_LIMIT = 2;
+
+function acquireRenderSlot(priority: number): Promise<void> {
+  return new Promise((resolve) => {
+    renderWaiters.push({ priority, grant: resolve });
+    renderWaiters.sort((a, b) => b.priority - a.priority);
+    flushRenderSlots();
+  });
+}
+function releaseRenderSlot() {
+  renderActive = Math.max(0, renderActive - 1);
+  flushRenderSlots();
+}
+function flushRenderSlots() {
+  while (renderActive < RENDER_LIMIT && renderWaiters.length) {
+    renderActive += 1;
+    renderWaiters.shift()!.grant();
+  }
+}
+
 type PdfDoc = pdfjsLib.PDFDocumentProxy;
+
+function destroyPdfSafely(proxy: PdfDoc | null) {
+  if (!proxy) return;
+  let attempts = 0;
+  const run = () => {
+    attempts += 1;
+    if ((renderActive > 0 || renderWaiters.length > 0) && attempts < 45) {
+      requestAnimationFrame(run);
+      return;
+    }
+    proxy.destroy().catch(() => undefined);
+  };
+  window.setTimeout(run, 0);
+}
 
 function PageSkeleton({ className }: { className?: string }) {
   return (
@@ -130,17 +186,19 @@ function PdfPageCanvas({
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
+  const lastKeyRef = useRef('');
   const [visible, setVisible] = useState(fit === 'page');
 
   useEffect(() => {
     if (fit !== 'thumb') return;
     const wrap = wrapRef.current;
     if (!wrap) return;
+    const root = wrap.closest('nav, [data-thumb-scroller]') as Element | null;
     const io = new IntersectionObserver(
       ([entry]) => {
         if (entry?.isIntersecting) setVisible(true);
       },
-      { rootMargin: '160px', root: wrap.closest('nav, [data-thumb-scroller]') as Element | null }
+      { rootMargin: '220px', root }
     );
     io.observe(wrap);
     return () => io.disconnect();
@@ -150,31 +208,58 @@ function PdfPageCanvas({
     if (!visible) return;
     const canvas = canvasRef.current;
     if (!canvas) return;
+    const maxW = fit === 'thumb' ? 72 : Math.max(maxWidth || 720, 80);
+    const maxH = fit === 'thumb' ? 96 : Math.max(maxHeight || 900, 80);
+    const docId = pdf.fingerprints?.[0] || '';
+    const key = `${docId}:${pageNumber}:${fit}:${zoom.toFixed(3)}:${Math.round(maxW)}x${Math.round(maxH)}`;
+    if (lastKeyRef.current === key && canvas.width > 0) return;
+
     let cancelled = false;
+    let slotHeld = false;
     let renderTask: { cancel: () => void } | null = null;
+    const priority = fit === 'page' ? 10 : 1;
 
     (async () => {
-      const page = await pdf.getPage(pageNumber);
+      await acquireRenderSlot(priority);
+      slotHeld = true;
       if (cancelled) return;
+      const page = await pdf.getPage(pageNumber);
+      if (cancelled) {
+        page.cleanup();
+        return;
+      }
       const base = page.getViewport({ scale: 1 });
-      const maxW = fit === 'thumb' ? 72 : Math.max(maxWidth || 720, 80);
-      const maxH = fit === 'thumb' ? 96 : Math.max(maxHeight || 900, 80);
       const fitScale = Math.min(maxW / base.width, maxH / base.height);
       const scale = fit === 'thumb' ? fitScale : fitScale * zoom;
       const dpr = fit === 'thumb' ? 1 : Math.min(window.devicePixelRatio || 1, 2);
       const viewport = page.getViewport({ scale: scale * dpr });
-      canvas.width = viewport.width;
-      canvas.height = viewport.height;
-      canvas.style.width = `${viewport.width / dpr}px`;
-      canvas.style.height = `${viewport.height / dpr}px`;
-      const ctx = canvas.getContext('2d');
+      const target = document.createElement('canvas');
+      target.width = viewport.width;
+      target.height = viewport.height;
+      const ctx = target.getContext('2d', { alpha: false });
       if (!ctx) return;
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
       renderTask = page.render({ canvasContext: ctx, viewport });
       await renderTask.promise;
-    })().catch(() => {
-      /* aborted or failed */
-    });
+      if (cancelled) return;
+      canvas.width = target.width;
+      canvas.height = target.height;
+      canvas.style.width = `${viewport.width / dpr}px`;
+      canvas.style.height = `${viewport.height / dpr}px`;
+      const live = canvas.getContext('2d', { alpha: false });
+      if (live) live.drawImage(target, 0, 0);
+      lastKeyRef.current = key;
+      try {
+        page.cleanup();
+      } catch {
+        /* ignore */
+      }
+    })()
+      .catch(() => {
+        /* aborted or failed */
+      })
+      .finally(() => {
+        if (slotHeld) releaseRenderSlot();
+      });
 
     return () => {
       cancelled = true;
@@ -427,7 +512,9 @@ function ThumbnailList({
           orientation === 'vertical' ? 'flex flex-col gap-2 py-1' : 'flex h-full items-stretch gap-2'
         )}
       >
-        {pages.map((n) => (
+        {pages.map((n) => {
+          const paint = Math.abs(n - page) <= 4;
+          return (
           <li key={n} className={orientation === 'horizontal' ? 'h-full w-[64px] shrink-0' : undefined}>
             <button
               type="button"
@@ -444,15 +531,22 @@ function ThumbnailList({
                   : 'ring-1 ring-slate-200 hover:ring-[#64499D]/40 dark:ring-slate-700'
               )}
             >
-              <PdfPageCanvas
-                pdf={pdf}
-                pageNumber={n}
-                fit="thumb"
-                className={orientation === 'vertical' ? 'h-[96px] w-full' : 'h-full w-full'}
-              />
+              {paint ? (
+                <PdfPageCanvas
+                  pdf={pdf}
+                  pageNumber={n}
+                  fit="thumb"
+                  className={orientation === 'vertical' ? 'h-[96px] w-full' : 'h-full w-full'}
+                />
+              ) : (
+                <span className="flex h-[96px] w-full items-center justify-center text-[10px] text-slate-400">
+                  {n}
+                </span>
+              )}
             </button>
           </li>
-        ))}
+          );
+        })}
       </ul>
     </nav>
   );
@@ -472,6 +566,7 @@ const DocumentReaderModal = forwardRef<DocumentReaderModalRef, Props>((_props, r
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [mobileThumbs, setMobileThumbs] = useState(false);
   const paperRef = useRef<HTMLDivElement>(null);
+  const pdfRef = useRef<PdfDoc | null>(null);
   const [viewport, setViewport] = useState({ w: 720, h: 820 });
 
   const hide = useCallback(() => {
@@ -483,6 +578,15 @@ const DocumentReaderModal = forwardRef<DocumentReaderModalRef, Props>((_props, r
     setZoom(100);
     setDetailsOpen(false);
     setMobileThumbs(false);
+    restorePointerEvents();
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      const dying = pdfRef.current;
+      pdfRef.current = null;
+      destroyPdfSafely(dying);
+    };
   }, []);
 
   useImperativeHandle(ref, () => ({
@@ -506,37 +610,42 @@ const DocumentReaderModal = forwardRef<DocumentReaderModalRef, Props>((_props, r
   const handleWordError = useCallback(() => setError('failed'), []);
 
   useEffect(() => {
-    if (!open || !doc) return;
-    if (!fileUrl && !doc.external_url) {
+    if (!open) {
+      const dying = pdfRef.current;
+      pdfRef.current = null;
       setPdf(null);
-      setLoading(false);
-      setPageCount(0);
-      setError('unsupported');
+      destroyPdfSafely(dying);
       return;
     }
-    if (!isPdf) {
-      setPdf(null);
-      setLoading(false);
-      setPageCount(0);
-      setError(isDocx || canFallbackPreview || doc.external_url ? null : 'unsupported');
+    if (!isPdf || !fileUrl) {
       return;
     }
     let cancelled = false;
-    let loaded: PdfDoc | null = null;
     setLoading(true);
     setError(null);
-    fetchAuthenticatedBlob(fileUrl)
-      .then((blob) => blob.arrayBuffer())
-      .then((data) => pdfjsLib.getDocument({ data }).promise)
+    getPdfData(fileUrl)
+      .then((data) => {
+        if (cancelled) return null;
+        return pdfjsLib.getDocument({
+          data,
+          verbosity: 0,
+          disableAutoFetch: true,
+          disableStream: true,
+          disableRange: true,
+        }).promise;
+      })
       .then((proxy) => {
+        if (!proxy) return;
         if (cancelled) {
-          proxy.destroy().catch(() => undefined);
+          destroyPdfSafely(proxy);
           return;
         }
-        loaded = proxy;
+        const previous = pdfRef.current;
+        pdfRef.current = proxy;
         setPdf(proxy);
         setPageCount(proxy.numPages);
         setPage(1);
+        destroyPdfSafely(previous);
       })
       .catch(() => {
         if (!cancelled) setError('failed');
@@ -546,25 +655,47 @@ const DocumentReaderModal = forwardRef<DocumentReaderModalRef, Props>((_props, r
       });
     return () => {
       cancelled = true;
-      loaded?.destroy().catch(() => undefined);
     };
-  }, [open, isPdf, isDocx, fileUrl, doc, canFallbackPreview]);
+  }, [open, isPdf, fileUrl]);
+
+  useEffect(() => {
+    if (!open || isPdf) return;
+    setPdf(null);
+    setLoading(false);
+    setPageCount(0);
+    if (!fileUrl && !doc?.external_url) {
+      setError('unsupported');
+      return;
+    }
+    setError(isDocx || canFallbackPreview || doc?.external_url ? null : 'unsupported');
+  }, [open, isPdf, isDocx, fileUrl, canFallbackPreview, doc?.external_url]);
 
   useEffect(() => {
     if (!open) return;
     const el = paperRef.current;
     if (!el) return;
+    let timer = 0;
     const measure = () => {
-      setViewport({
+      const next = {
         w: Math.max(120, el.clientWidth - 40),
         h: Math.max(160, el.clientHeight - 40),
-      });
+      };
+      setViewport((prev) =>
+        Math.abs(prev.w - next.w) < 8 && Math.abs(prev.h - next.h) < 8 ? prev : next
+      );
     };
-    const ro = new ResizeObserver(measure);
+    const onResize = () => {
+      window.clearTimeout(timer);
+      timer = window.setTimeout(measure, 120);
+    };
+    const ro = new ResizeObserver(onResize);
     ro.observe(el);
     measure();
-    return () => ro.disconnect();
-  }, [open, loading, pdf, error, detailsOpen]);
+    return () => {
+      window.clearTimeout(timer);
+      ro.disconnect();
+    };
+  }, [open, loading, detailsOpen]);
 
   const go = useCallback(
     (next: number) => setPage((current) => Math.min(Math.max(1, next), pageCount || current)),
@@ -641,9 +772,9 @@ const DocumentReaderModal = forwardRef<DocumentReaderModalRef, Props>((_props, r
     ) : null;
 
   return (
-    <Dialog open={open} onOpenChange={(next) => !next && hide()}>
+    <Dialog modal={false} open={open} onOpenChange={(next) => !next && hide()}>
       <DialogPortal>
-        <DialogOverlay className="bg-slate-950/55 backdrop-blur-[3px]" />
+        <DialogOverlay className="bg-slate-950/55 backdrop-blur-2xl" />
         <DialogPrimitive.Content
           className="fixed inset-0 z-50 flex flex-col outline-none"
           onOpenAutoFocus={(e) => e.preventDefault()}
@@ -654,6 +785,10 @@ const DocumentReaderModal = forwardRef<DocumentReaderModalRef, Props>((_props, r
             }
           }}
         >
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-0 bg-slate-950/45 backdrop-blur-2xl"
+          />
           <DialogTitle className="sr-only">{doc?.title || hub.preview}</DialogTitle>
 
           <header className="z-20 flex shrink-0 items-center justify-between gap-3 border-b border-white/10 bg-slate-950/30 px-2 py-2 sm:px-5">
@@ -730,7 +865,7 @@ const DocumentReaderModal = forwardRef<DocumentReaderModalRef, Props>((_props, r
             </div>
           </header>
 
-          <div className="relative flex min-h-0 flex-1">
+          <div className="relative z-10 flex min-h-0 flex-1">
             <div
               dir="ltr"
               className="flex min-h-0 min-w-0 flex-1 items-stretch justify-center gap-1 overflow-hidden px-1 py-2 sm:gap-3 sm:px-5 sm:py-5 md:items-center"
@@ -957,7 +1092,7 @@ const DocumentReaderModal = forwardRef<DocumentReaderModalRef, Props>((_props, r
           </div>
 
           {mobileThumbs && pdf && thumbs.length > 0 ? (
-            <div className="h-36 shrink-0 border-t border-white/10 bg-slate-950/40 p-2 md:hidden">
+            <div className="relative z-10 h-36 shrink-0 border-t border-white/10 bg-slate-950/40 p-2 md:hidden">
               <ThumbnailList
                 pdf={pdf}
                 pages={thumbs}

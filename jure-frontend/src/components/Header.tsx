@@ -198,6 +198,7 @@ const Header = () => {
     appointment: t.sidebar.appointment,
     account: t.sidebar.account,
     support: t.sidebar.support,
+    help: t.sidebar.help,
     settings: t.sidebar.settings,
     conversations: t.sidebar.chat,
     me: t.sidebar.myProfile,

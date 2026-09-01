@@ -1,7 +1,7 @@
 import axiosInstance from "@/utils/axiosInstance";
 import { getFormDataFromObject } from "@/utils/functions";
 
-export type LibraryTab = 'my' | 'local' | 'international';
+export type LibraryTab = 'my' | 'local' | 'international' | 'favorites';
 
 export type LibraryQuery = {
     all?: boolean;

@@ -1,0 +1,74 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block content %}
+<div class="jure-dash">
+  <div class="jure-dash__intro">
+    <div>
+      <p class="jure-dash__kicker">{% trans "Dashboard" %}</p>
+      <h1 class="jure-dash__title">{{ jure_greeting }}, {{ jure_admin_name }}</h1>
+    </div>
+    <p class="jure-dash__meta">
+      {{ jure_today|date:"l, j F Y" }}
+      {% if jure_environment %}
+        <span class="jure-dash__env jure-dash__env--{{ jure_environment }}">{{ jure_environment }}</span>
+      {% endif %}
+    </p>
+  </div>
+
+  <section class="jure-kpis" aria-label="{% trans 'Operations overview' %}">
+    {% for kpi in jure_kpis %}
+      {% if kpi.url %}
+      <a class="jure-kpi" href="{{ kpi.url }}">
+      {% else %}
+      <div class="jure-kpi">
+      {% endif %}
+        <div class="jure-kpi__top">
+          <span class="jure-kpi__label">{{ kpi.label }}</span>
+          <span class="jure-kpi__icon" aria-hidden="true">
+            <span class="material-symbols-outlined">{{ kpi.icon }}</span>
+          </span>
+        </div>
+        <div class="jure-kpi__value">{{ kpi.value }}</div>
+        {% if kpi.change %}
+          <div class="jure-kpi__trend {% if kpi.change_positive %}jure-kpi__trend--up{% else %}jure-kpi__trend--down{% endif %}">
+            {{ kpi.change }}
+            <span>{% trans "vs last month" %}</span>
+          </div>
+        {% elif kpi.hint %}
+          <div class="jure-kpi__trend"><span>{{ kpi.hint }}</span></div>
+        {% endif %}
+      {% if kpi.url %}</a>{% else %}</div>{% endif %}
+    {% empty %}
+      <p class="jure-empty">{% trans "No operational metrics are available yet." %}</p>
+    {% endfor %}
+  </section>
+
+  <section class="jure-activity" aria-label="{% trans 'Recent activity' %}">
+    <div class="jure-activity__header">
+      <h2>{% trans "Recent Activity" %}</h2>
+    </div>
+    {% for item in jure_activity %}
+      {% if item.url %}
+      <a class="jure-activity__item" href="{{ item.url }}">
+      {% else %}
+      <div class="jure-activity__item">
+      {% endif %}
+        <span class="jure-activity__avatar" aria-hidden="true">
+          {% if item.avatar %}
+            <img src="{{ item.avatar }}" alt="">
+          {% else %}
+            {{ item.initials }}
+          {% endif %}
+        </span>
+        <div class="jure-activity__body">
+          <p class="jure-activity__message">{{ item.message }}</p>
+          <p class="jure-activity__when">{{ item.when_label }} {% trans "ago" %}</p>
+        </div>
+      {% if item.url %}</a>{% else %}</div>{% endif %}
+    {% empty %}
+      <p class="jure-empty">{% trans "No recent platform activity yet." %}</p>
+    {% endfor %}
+  </section>
+</div>
+{% endblock %}

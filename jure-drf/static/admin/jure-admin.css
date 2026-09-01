@@ -1,0 +1,891 @@
+/*
+ * JURE staff admin — light-first SaaS design system.
+ * Loaded through Unfold UNFOLD["STYLES"]. Complements Unfold theming;
+ * does not replace Django Admin or Unfold behavior.
+ */
+
+:root {
+  --jure-primary: #64499d;
+  --jure-primary-hover: #4d3680;
+  --jure-primary-soft: rgba(100, 73, 157, 0.08);
+  --jure-primary-softer: rgba(100, 73, 157, 0.05);
+  --jure-background: #f7f8fa;
+  --jure-surface: #ffffff;
+  --jure-border: #e8eaf0;
+  --jure-border-strong: #d5d8e0;
+  --jure-text: #1f2937;
+  --jure-muted: #6b7280;
+  --jure-muted-2: #9ca3af;
+  --jure-radius: 10px;
+  --jure-radius-sm: 8px;
+  --jure-radius-pill: 999px;
+  --jure-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+  --jure-header-height: 64px;
+  --jure-success-bg: #ecfdf3;
+  --jure-success-text: #067647;
+  --jure-warning-bg: #fffaeb;
+  --jure-warning-text: #b54708;
+  --jure-danger-bg: #fef3f2;
+  --jure-danger-text: #b42318;
+  --jure-info-bg: #f4f3f8;
+  --jure-info-text: #64499d;
+  --jure-neutral-bg: #f3f4f6;
+  --jure-neutral-text: #4b5563;
+}
+
+html.dark,
+:root.dark,
+:root[class~="dark"] {
+  --jure-background: #111318;
+  --jure-surface: #181b21;
+  --jure-border: #2a2e38;
+  --jure-border-strong: #3a3f4b;
+  --jure-text: #f3f4f6;
+  --jure-muted: #9ca3af;
+  --jure-muted-2: #6b7280;
+  --jure-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+  --jure-success-bg: rgba(6, 118, 71, 0.16);
+  --jure-success-text: #75e0a7;
+  --jure-warning-bg: rgba(181, 71, 8, 0.16);
+  --jure-warning-text: #f7c57a;
+  --jure-danger-bg: rgba(180, 35, 24, 0.16);
+  --jure-danger-text: #f7a8a2;
+  --jure-info-bg: rgba(100, 73, 157, 0.2);
+  --jure-info-text: #c4b5e0;
+  --jure-neutral-bg: #22262e;
+  --jure-neutral-text: #d1d5db;
+  --jure-primary-soft: rgba(139, 111, 209, 0.16);
+  --jure-primary-softer: rgba(139, 111, 209, 0.1);
+}
+
+html {
+  background: var(--jure-background);
+}
+
+body {
+  background: var(--jure-background) !important;
+  color: var(--jure-text);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-size: 13.5px;
+  line-height: 1.45;
+  letter-spacing: -0.01em;
+}
+
+/* -------------------------------------------------------------------------
+   Shell: sidebar + header
+   ------------------------------------------------------------------------- */
+
+#nav-sidebar-inner {
+  background: var(--jure-surface) !important;
+}
+
+#nav-sidebar-apps h2 {
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--jure-muted) !important;
+}
+
+.jure-header-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: min(520px, 100%);
+  min-height: 38px;
+  padding: 0 12px;
+  background: var(--jure-background);
+  border: 1px solid var(--jure-border);
+  border-radius: var(--jure-radius-pill);
+  color: var(--jure-muted);
+  cursor: pointer;
+  text-align: left;
+}
+
+.jure-header-search:hover {
+  border-color: #d3c6ec;
+}
+
+.jure-header-search .material-symbols-outlined {
+  font-size: 18px;
+  color: var(--jure-muted);
+}
+
+.jure-header-search__placeholder {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+aside nav a,
+#nav-sidebar a {
+  border-radius: var(--jure-radius-sm) !important;
+  font-size: 13px !important;
+  font-weight: 500;
+  color: var(--jure-text) !important;
+  min-height: 34px;
+  padding-block: 6px !important;
+}
+
+aside nav a:hover,
+#nav-sidebar a:hover {
+  background: var(--jure-primary-softer) !important;
+  color: var(--jure-primary) !important;
+}
+
+aside a.active,
+aside nav a.active,
+#nav-sidebar a.active,
+aside nav a.bg-primary-100,
+aside nav a.bg-primary-50,
+aside nav a[aria-current="page"],
+#nav-sidebar a.bg-primary-100,
+#nav-sidebar .selected a {
+  background: var(--jure-primary-soft) !important;
+  color: var(--jure-primary) !important;
+  font-weight: 600 !important;
+}
+
+aside nav .material-symbols-outlined {
+  font-size: 18px !important;
+  color: var(--jure-muted);
+}
+
+aside a.active .material-symbols-outlined,
+aside nav a.active .material-symbols-outlined,
+aside nav a.bg-primary-100 .material-symbols-outlined,
+aside nav a[aria-current="page"] .material-symbols-outlined {
+  color: var(--jure-primary) !important;
+  font-variation-settings: "FILL" 1, "wght" 500, "GRAD" 0, "opsz" 20;
+}
+
+aside p,
+aside span.uppercase,
+aside [class*="tracking"] {
+  letter-spacing: 0.08em;
+  font-size: 11px !important;
+  font-weight: 600;
+  color: var(--jure-muted) !important;
+}
+
+header,
+#header,
+[data-header] {
+  min-height: var(--jure-header-height);
+  background: var(--jure-surface) !important;
+  border-bottom: 1px solid var(--jure-border) !important;
+  box-shadow: none !important;
+}
+
+#header h1,
+header h1,
+.header-title {
+  font-size: 16px !important;
+  font-weight: 650 !important;
+  color: var(--jure-text) !important;
+  letter-spacing: -0.02em;
+}
+
+/* Environment badge — compact, not dominant */
+#header span.rounded-full,
+header [class*="environment"],
+#header .bg-blue-100,
+#header .bg-green-100,
+#header .bg-orange-100,
+#header .bg-red-100,
+#header .bg-yellow-100 {
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 3px 8px !important;
+  border-radius: var(--jure-radius-pill) !important;
+  border: 1px solid var(--jure-border);
+}
+
+/* -------------------------------------------------------------------------
+   Search
+   ------------------------------------------------------------------------- */
+
+#toolbar #searchbar,
+#changelist-search input,
+input[type="search"],
+[data-command] input {
+  border-radius: var(--jure-radius-pill) !important;
+  background: var(--jure-background) !important;
+  border: 1px solid var(--jure-border) !important;
+  box-shadow: none !important;
+  font-size: 13px !important;
+  min-height: 36px;
+}
+
+#toolbar #searchbar:focus,
+#changelist-search input:focus,
+input[type="search"]:focus {
+  border-color: var(--jure-primary) !important;
+  outline: 2px solid var(--jure-primary-soft) !important;
+  outline-offset: 0;
+}
+
+/* -------------------------------------------------------------------------
+   Cards / modules / content surfaces
+   ------------------------------------------------------------------------- */
+
+#content,
+#content-main,
+main {
+  background: transparent;
+}
+
+.module,
+#changelist,
+.inline-group,
+fieldset.module,
+.tabular,
+#result_list,
+form .aligned,
+.jure-card {
+  background: var(--jure-surface) !important;
+  border: 1px solid var(--jure-border) !important;
+  border-radius: var(--jure-radius) !important;
+  box-shadow: var(--jure-shadow) !important;
+}
+
+#changelist {
+  overflow: hidden;
+}
+
+/* -------------------------------------------------------------------------
+   Tables
+   ------------------------------------------------------------------------- */
+
+#result_list,
+.results table,
+#changelist-form table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 13px;
+}
+
+#result_list thead th,
+.results table thead th,
+#changelist-form table thead th {
+  background: var(--jure-surface) !important;
+  color: var(--jure-muted) !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--jure-border) !important;
+  padding: 10px 12px !important;
+  white-space: nowrap;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+#result_list tbody td,
+.results table tbody td,
+#changelist-form table tbody td {
+  border-bottom: 1px solid var(--jure-border) !important;
+  border-top: 0 !important;
+  padding: 9px 12px !important;
+  color: var(--jure-text);
+  vertical-align: middle;
+}
+
+#result_list tbody tr:hover td,
+.results table tbody tr:hover td,
+#changelist-form table tbody tr:hover td {
+  background: var(--jure-primary-softer) !important;
+}
+
+#result_list tbody tr:last-child td {
+  border-bottom: 0 !important;
+}
+
+.paginator,
+.pagination {
+  background: var(--jure-surface);
+  border-top: 1px solid var(--jure-border);
+  padding: 10px 14px;
+  font-size: 13px;
+  color: var(--jure-muted);
+}
+
+/* -------------------------------------------------------------------------
+   Buttons
+   ------------------------------------------------------------------------- */
+
+.button,
+input[type="submit"],
+input[type="button"],
+.submit-row input,
+a.button,
+.addlink,
+.object-tools a,
+.jure-btn {
+  border-radius: var(--jure-radius-sm) !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  padding: 7px 12px !important;
+  min-height: 34px;
+  line-height: 1.2 !important;
+  box-shadow: none !important;
+  border: 1px solid transparent !important;
+}
+
+.button.default,
+input[type="submit"].default,
+input[type="submit"],
+.submit-row input.default,
+.addlink,
+.object-tools a.addlink,
+.jure-btn-primary {
+  background: var(--jure-primary) !important;
+  color: #fff !important;
+  border-color: var(--jure-primary) !important;
+}
+
+.button.default:hover,
+input[type="submit"]:hover,
+.addlink:hover,
+.jure-btn-primary:hover {
+  background: var(--jure-primary-hover) !important;
+  border-color: var(--jure-primary-hover) !important;
+}
+
+.button.cancel-link,
+a.cancel-link,
+.deletelink,
+.jure-btn-secondary {
+  background: var(--jure-surface) !important;
+  color: var(--jure-text) !important;
+  border: 1px solid var(--jure-border) !important;
+}
+
+.deletelink,
+.button.deletelink,
+.jure-btn-danger {
+  background: var(--jure-danger-bg) !important;
+  color: var(--jure-danger-text) !important;
+  border-color: transparent !important;
+}
+
+/* -------------------------------------------------------------------------
+   Forms
+   ------------------------------------------------------------------------- */
+
+label,
+.form-row label,
+.aligned label {
+  color: var(--jure-text) !important;
+  font-size: 12.5px !important;
+  font-weight: 600 !important;
+}
+
+.help,
+.helptext,
+.form-row .help {
+  color: var(--jure-muted) !important;
+  font-size: 12px !important;
+}
+
+input[type="text"],
+input[type="email"],
+input[type="number"],
+input[type="url"],
+input[type="password"],
+input[type="date"],
+input[type="datetime-local"],
+input[type="file"],
+select,
+textarea,
+.vTextField,
+.vLargeTextField,
+.vURLField {
+  border: 1px solid var(--jure-border) !important;
+  border-radius: var(--jure-radius-sm) !important;
+  background: var(--jure-surface) !important;
+  color: var(--jure-text) !important;
+  box-shadow: none !important;
+  min-height: 36px;
+  font-size: 13px !important;
+}
+
+input:focus,
+select:focus,
+textarea:focus,
+.vTextField:focus {
+  border-color: var(--jure-primary) !important;
+  outline: 3px solid var(--jure-primary-soft) !important;
+  outline-offset: 0;
+  box-shadow: none !important;
+}
+
+.errorlist,
+.errors,
+.form-row.errors {
+  color: var(--jure-danger-text);
+}
+
+.errorlist li,
+ul.errorlist {
+  background: var(--jure-danger-bg);
+  border-radius: var(--jure-radius-sm);
+  padding: 6px 10px;
+  font-size: 12px;
+}
+
+fieldset {
+  border: 0;
+}
+
+fieldset.module h2,
+.inline-group h2,
+.collapse h2 {
+  background: transparent !important;
+  color: var(--jure-text) !important;
+  font-size: 13px !important;
+  font-weight: 650 !important;
+  letter-spacing: -0.01em;
+  border-bottom: 1px solid var(--jure-border);
+  padding: 12px 16px !important;
+  text-transform: none !important;
+}
+
+.submit-row {
+  background: var(--jure-surface) !important;
+  border: 1px solid var(--jure-border) !important;
+  border-radius: var(--jure-radius);
+  padding: 12px 16px !important;
+  box-shadow: none !important;
+}
+
+/* -------------------------------------------------------------------------
+   Status badges (Unfold labels + Django boolean icons)
+   ------------------------------------------------------------------------- */
+
+span.rounded-full,
+span[class*="bg-green"],
+span[class*="bg-red"],
+span[class*="bg-orange"],
+span[class*="bg-yellow"],
+span[class*="bg-blue"],
+span[class*="bg-purple"],
+span[class*="bg-gray"],
+.jure-badge {
+  border-radius: var(--jure-radius-pill) !important;
+  font-size: 11px !important;
+  font-weight: 650 !important;
+  letter-spacing: 0.02em;
+  padding: 2px 8px !important;
+  line-height: 1.4 !important;
+}
+
+.jure-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.jure-badge--success,
+span[class*="bg-green"] {
+  background: var(--jure-success-bg) !important;
+  color: var(--jure-success-text) !important;
+}
+
+.jure-badge--warning,
+span[class*="bg-orange"],
+span[class*="bg-yellow"] {
+  background: var(--jure-warning-bg) !important;
+  color: var(--jure-warning-text) !important;
+}
+
+.jure-badge--danger,
+span[class*="bg-red"] {
+  background: var(--jure-danger-bg) !important;
+  color: var(--jure-danger-text) !important;
+}
+
+.jure-badge--info,
+span[class*="bg-blue"],
+span[class*="bg-purple"] {
+  background: var(--jure-info-bg) !important;
+  color: var(--jure-info-text) !important;
+}
+
+.jure-badge--neutral,
+span[class*="bg-gray"] {
+  background: var(--jure-neutral-bg) !important;
+  color: var(--jure-neutral-text) !important;
+}
+
+/* -------------------------------------------------------------------------
+   Login
+   ------------------------------------------------------------------------- */
+
+body.login,
+body.login #container,
+#login-form {
+  background: var(--jure-background);
+}
+
+body.login #content,
+body.login .login {
+  background: var(--jure-surface);
+  border: 1px solid var(--jure-border);
+  border-radius: 12px;
+  box-shadow: var(--jure-shadow);
+}
+
+body.login input[type="submit"] {
+  background: var(--jure-primary) !important;
+  border-radius: var(--jure-radius-sm) !important;
+}
+
+/* -------------------------------------------------------------------------
+   Dashboard
+   ------------------------------------------------------------------------- */
+
+.jure-dash {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding-bottom: 32px;
+}
+
+.jure-dash__intro {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.jure-dash__kicker {
+  margin: 0 0 4px;
+  font-size: 12px;
+  font-weight: 650;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--jure-muted);
+}
+
+.jure-dash__title {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 680;
+  letter-spacing: -0.03em;
+  color: var(--jure-text);
+}
+
+.jure-dash__meta {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--jure-muted);
+}
+
+.jure-dash__env {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 8px;
+  padding: 2px 8px;
+  border-radius: var(--jure-radius-pill);
+  border: 1px solid var(--jure-border);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.jure-dash__env--LOCAL {
+  background: var(--jure-neutral-bg);
+  color: var(--jure-neutral-text);
+}
+
+.jure-dash__env--STAGING {
+  background: var(--jure-warning-bg);
+  color: var(--jure-warning-text);
+}
+
+.jure-dash__env--PRODUCTION {
+  background: var(--jure-success-bg);
+  color: var(--jure-success-text);
+}
+
+.jure-kpis {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.jure-kpi {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+  background: var(--jure-surface);
+  border: 1px solid var(--jure-border);
+  border-radius: var(--jure-radius);
+  box-shadow: var(--jure-shadow);
+  text-decoration: none !important;
+  color: inherit;
+  min-height: 118px;
+}
+
+.jure-kpi:hover {
+  border-color: #d3c6ec;
+  box-shadow: 0 4px 12px rgba(100, 73, 157, 0.06);
+}
+
+.jure-kpi__top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.jure-kpi__label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--jure-muted);
+}
+
+.jure-kpi__icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--jure-primary-soft);
+  color: var(--jure-primary);
+}
+
+.jure-kpi__icon .material-symbols-outlined {
+  font-size: 16px;
+}
+
+.jure-kpi__value {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: var(--jure-text);
+  line-height: 1.15;
+}
+
+.jure-kpi__trend {
+  font-size: 12px;
+  font-weight: 600;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: baseline;
+}
+
+.jure-kpi__trend span {
+  font-weight: 500;
+  color: var(--jure-muted);
+}
+
+.jure-kpi__trend--up {
+  color: var(--jure-success-text);
+}
+
+.jure-kpi__trend--down {
+  color: var(--jure-danger-text);
+}
+
+.jure-activity {
+  background: var(--jure-surface);
+  border: 1px solid var(--jure-border);
+  border-radius: var(--jure-radius);
+  box-shadow: var(--jure-shadow);
+  overflow: hidden;
+}
+
+.jure-activity__header {
+  padding: 14px 16px 10px;
+  border-bottom: 1px solid var(--jure-border);
+}
+
+.jure-activity__header h2 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 650;
+}
+
+.jure-activity__item,
+.jure-activity__item:visited {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--jure-border);
+  text-decoration: none !important;
+  color: inherit;
+}
+
+.jure-activity__item:last-child {
+  border-bottom: 0;
+}
+
+.jure-activity__item:hover {
+  background: var(--jure-primary-softer);
+}
+
+.jure-activity__avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  background: var(--jure-primary-soft);
+  color: var(--jure-primary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.jure-activity__avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.jure-activity__body {
+  min-width: 0;
+}
+
+.jure-activity__message {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 550;
+  color: var(--jure-text);
+}
+
+.jure-activity__when {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: var(--jure-muted);
+}
+
+.jure-empty {
+  padding: 20px 16px;
+  color: var(--jure-muted);
+  font-size: 13px;
+}
+
+/* -------------------------------------------------------------------------
+   Library bulk upload
+   ------------------------------------------------------------------------- */
+
+.jure-upload {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 760px;
+}
+
+.jure-upload__intro {
+  margin: 0;
+  color: var(--jure-muted);
+  font-size: 13px;
+}
+
+.jure-dropzone {
+  position: relative;
+  border: 1.5px dashed var(--jure-border-strong);
+  border-radius: var(--jure-radius);
+  background: var(--jure-surface);
+  padding: 28px 20px;
+  text-align: center;
+  color: var(--jure-muted);
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.jure-dropzone.is-dragover {
+  border-color: var(--jure-primary);
+  background: var(--jure-primary-softer);
+  color: var(--jure-primary);
+}
+
+.jure-dropzone strong {
+  display: block;
+  color: var(--jure-text);
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+
+.jure-dropzone input[type="file"] {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.jure-file-list {
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+  text-align: left;
+  font-size: 12.5px;
+  color: var(--jure-text);
+}
+
+.jure-file-list li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+}
+
+.jure-form-grid {
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+}
+
+.jure-form-grid .form-row {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+/* -------------------------------------------------------------------------
+   Responsive
+   ------------------------------------------------------------------------- */
+
+@media (max-width: 1280px) {
+  .jure-kpis {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 900px) {
+  .jure-kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  #changelist,
+  #result_list,
+  .results {
+    overflow-x: auto;
+  }
+}
+
+@media (max-width: 640px) {
+  .jure-kpis {
+    grid-template-columns: 1fr;
+  }
+
+  .jure-dash__title {
+    font-size: 18px;
+  }
+}

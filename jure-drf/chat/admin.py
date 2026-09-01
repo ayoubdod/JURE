@@ -1,6 +1,6 @@
 from django.contrib import admin
-from unfold.admin import ModelAdmin
 
+from core.unfold_admin import JureModelAdmin
 from .models import (
     Attachment,
     Conversation,
@@ -11,10 +11,10 @@ from .models import (
     ReadReceipt,
 )
 
-admin.site.register(Conversation, ModelAdmin)
-admin.site.register(ConversationMembership, ModelAdmin)
-admin.site.register(Message, ModelAdmin)
-admin.site.register(MessagePin, ModelAdmin)
-admin.site.register(Attachment, ModelAdmin)
-admin.site.register(ReadReceipt, ModelAdmin)
-admin.site.register(DeliveryReceipt, ModelAdmin)
+admin.site.register(Conversation, JureModelAdmin)
+admin.site.register(ConversationMembership, JureModelAdmin)
+admin.site.register(Message, JureModelAdmin)
+admin.site.register(MessagePin, JureModelAdmin)
+admin.site.register(Attachment, JureModelAdmin)
+admin.site.register(ReadReceipt, JureModelAdmin)
+admin.site.register(DeliveryReceipt, JureModelAdmin)

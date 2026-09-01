@@ -657,6 +657,18 @@ class LibraryHubScopeTests(APITestCase):
         self.assertEqual(Document.objects.filter(title="Moroccan Commercial Code").count(), 1)
         self.assertTrue(self.LibrarySave.objects.filter(cabinet=self.cab_ma, document=self.local_ma).exists())
 
+        favorites = self.client_ma.get("/api/v1/library/favorites/", {"all": "true"})
+        self.assertEqual(favorites.status_code, status.HTTP_200_OK)
+        self.assertIn("Moroccan Commercial Code", self._titles(favorites))
+        qa_favorites = self.client_qa.get("/api/v1/library/favorites/", {"all": "true"})
+        self.assertNotIn("Moroccan Commercial Code", self._titles(qa_favorites))
+
+        unfav = self.client_ma.delete(f"/api/v1/library/documents/{self.local_ma.pk}/favorite/")
+        self.assertEqual(unfav.status_code, status.HTTP_200_OK)
+        self.assertFalse(unfav.data["is_favorited"])
+        favorites_after = self.client_ma.get("/api/v1/library/favorites/", {"all": "true"})
+        self.assertNotIn("Moroccan Commercial Code", self._titles(favorites_after))
+
         my_lib = self.client_ma.get("/api/v1/library/my/", {"all": "true"})
         self.assertIn("Moroccan Commercial Code", self._titles(my_lib))
         saved = next(x for x in my_lib.data["results"] if x["title"] == "Moroccan Commercial Code")

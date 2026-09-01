@@ -35,13 +35,14 @@ export function JuriaConversationView({
   showCaseLink?: boolean;
 }) {
   void _caseContext;
-  const { t } = useAppTranslation();
+  const { t, dir } = useAppTranslation();
   const navigate = useNavigate();
   const { toast } = useToast();
   const currentUser = useUserStore((s) => s.user);
   const conversations = useJuriaStore((s) => s.conversations);
   const activeId = useJuriaStore((s) => s.activeConversationId);
   const processingId = useJuriaStore((s) => s.processingConversationId);
+  const language = useJuriaStore((s) => s.projectLanguage);
   const linkCase = useJuriaStore((s) => s.linkConversationToCase);
   const createLinkedConversation = useJuriaStore((s) => s.createLinkedConversation);
   const rename = useJuriaStore((s) => s.renameConversation);
@@ -213,7 +214,10 @@ export function JuriaConversationView({
       </header>
 
       <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 py-3 sm:px-4 sm:py-4">
-        <div className="mx-auto flex max-w-3xl flex-col gap-3 sm:gap-4">
+        <div
+          dir={dir === 'rtl' || language === 'ar' ? 'rtl' : 'ltr'}
+          className="mx-auto flex max-w-3xl flex-col gap-3 sm:gap-4"
+        >
           {conv.messages.map((m) => (
             <div key={m.id}>
               {m.role === 'user' && (
@@ -226,11 +230,11 @@ export function JuriaConversationView({
                       </div>
                     )}
                     {m.content ?
-                      <div className="rounded-2xl rounded-tr-sm bg-[#64499D]/10 px-4 py-3 text-sm text-slate-900 dark:bg-[#64499D]/20 dark:text-slate-100">
+                      <div className="rounded-2xl rounded-se-sm bg-[#64499D]/10 px-4 py-3 text-sm text-slate-900 dark:bg-[#64499D]/20 dark:text-slate-100">
                         <p className="whitespace-pre-wrap">{m.content}</p>
                       </div>
                     : null}
-                    <p className="mt-1 text-right text-[10px] text-slate-400">{dayjs(m.createdAt).format('HH:mm')}</p>
+                    <p className="mt-1 text-end text-[10px] text-slate-400">{dayjs(m.createdAt).format('HH:mm')}</p>
                   </div>
                   <UserAvatar
                     image={currentUser?.image}
@@ -304,7 +308,7 @@ export function JuriaConversationView({
                     : (() => {
                         const { body, sources } = splitJuriaSources(m.content || '');
                         return (
-                          <div className="rounded-2xl rounded-tl-sm border border-slate-200 bg-white px-4 py-3 text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100">
+                          <div className="rounded-2xl rounded-ss-sm border border-slate-200 bg-white px-4 py-3 text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100">
                             {body ? <JuriaMarkdown content={body} /> : null}
                             {sources.length > 0 && (
                               <div className="mt-3 border-t border-slate-100 pt-3 dark:border-slate-800">

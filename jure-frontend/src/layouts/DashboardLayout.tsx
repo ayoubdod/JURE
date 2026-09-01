@@ -22,6 +22,7 @@ import ShortcutsHelpDialog from '@/components/shortcuts/ShortcutsHelpDialog'
 import QuickCreateHost from '@/components/shortcuts/QuickCreateHost'
 import { useIdleLogout } from '@/hooks/useIdleLogout'
 import AuroraBackground, { auroraForAppPath } from '@/components/common/AuroraBackground'
+import { restorePointerEvents } from '@/lib/unlockUi'
 
 const isDashboardIndex = (path: string) =>
   path === '/dashboard' || path === '/dashboard/'
@@ -96,6 +97,10 @@ const DashboardLayout = () => {
       // Keep /ws/calls/ open across dashboard routes; CallShell owns call lifecycle.
     }
   }, [])
+
+  useEffect(() => {
+    restorePointerEvents()
+  }, [location.pathname, location.search])
 
   useEffect(() => {
     try {
@@ -179,7 +184,7 @@ const DashboardLayout = () => {
                               : 'flex-1 overflow-x-hidden p-2.5 sm:p-4 lg:p-5 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-3 sm:pt-4'
               }
             >
-              <Outlet />
+              <Outlet key={location.pathname} />
             </main>
           </div>
         </div>

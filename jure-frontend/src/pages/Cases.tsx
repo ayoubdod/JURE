@@ -368,11 +368,14 @@ const Cases = () => {
   };
 
   const setActiveTab = (tab: CasesTab) => {
-    setSearchParams((prev) => {
-      const next = new URLSearchParams(prev);
-      next.set(Q.tab, tab);
-      return next;
-    });
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        next.set(Q.tab, tab);
+        return next;
+      },
+      { flushSync: true }
+    );
     setCurrentPage(1);
   };
 

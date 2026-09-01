@@ -52,7 +52,7 @@ import DocumentDeleteModal, {
 } from '@/components/document/DocumentDeleteModal';
 import '@/styles/workspace-list.css';
 
-const TABS: LibraryTab[] = ['my', 'local', 'international'];
+const TABS: LibraryTab[] = ['my', 'local', 'international', 'favorites'];
 
 function parseList(data: API.LibraryListResponse | API.Document[] | unknown): {
   results: API.Document[];
@@ -110,20 +110,16 @@ const Library = () => {
   }, [searchInput]);
 
   useEffect(() => {
-    const next = new URLSearchParams(params);
+    const next = new URLSearchParams();
     next.set('tab', tab);
     if (search) next.set('q', search);
-    else next.delete('q');
     if (resourceType) next.set('type', resourceType);
-    else next.delete('type');
     if (language) next.set('lang', language);
-    else next.delete('lang');
     if (sort && sort !== '-created') next.set('sort', sort);
-    else next.delete('sort');
     if (view !== 'grid') next.set('view', view);
-    else next.delete('view');
+    if (next.toString() === params.toString()) return;
     setParams(next, { replace: true });
-  }, [tab, search, resourceType, language, sort, view]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [tab, search, resourceType, language, sort, view, params, setParams]);
 
   const fetchLibrary = useCallback(() => {
     setLoading(true);
@@ -173,15 +169,26 @@ const Library = () => {
   const handleFavorite = useCallback(
     async (doc: API.Document) => {
       try {
-        const res = doc.is_favorited
-          ? await apiUnfavoriteDocument(doc.id)
-          : await apiFavoriteDocument(doc.id);
+        const adding = !doc.is_favorited;
+        const res = adding
+          ? await apiFavoriteDocument(doc.id)
+          : await apiUnfavoriteDocument(doc.id);
         patchDoc(res.data);
+        if (tab === 'favorites' && !res.data.is_favorited) {
+          setResults((prev) => prev.filter((d) => d.id !== doc.id));
+          setRecent((prev) => prev.filter((d) => d.id !== doc.id));
+        }
+        if (adding && res.data.is_favorited) {
+          toast({
+            title: t.library.toasts.favoritedTitle,
+            description: tf(t.library.toasts.favoritedDesc, { title: doc.title }),
+          });
+        }
       } catch {
         toast({ title: t.common.error, variant: 'destructive' });
       }
     },
-    [patchDoc, t.common.error, toast]
+    [patchDoc, t.common.error, t.library.toasts.favoritedTitle, t.library.toasts.favoritedDesc, tab, tf, toast]
   );
 
   const handleAddToMy = useCallback(
@@ -237,18 +244,30 @@ const Library = () => {
   );
 
   const setTab = (next: LibraryTab) => {
-    const copy = new URLSearchParams(params);
-    copy.set('tab', next);
-    setParams(copy, { replace: true });
+    if (next === tab) return;
+    setParams(
+      (prev) => {
+        const copy = new URLSearchParams(prev);
+        copy.set('tab', next);
+        return copy;
+      },
+      { replace: true, flushSync: true }
+    );
   };
 
   const recentTitle = tab === 'my' ? hub.recentlyAdded : hub.lastAdded;
-  const emptyRecent =
-    tab === 'my' ? hub.emptyMyRecent : tab === 'local' ? hub.emptyLocalRecent : hub.emptyInternationalRecent;
-  const emptyAll = tab === 'my' ? hub.emptyMy : tab === 'local' ? hub.emptyLocalAll : hub.emptyInternationalAll;
-  const showAdd = tab === 'my' || isPlatformAdmin;
+  const emptyAll =
+    tab === 'favorites'
+      ? hub.emptyFavorites
+      : tab === 'my'
+        ? hub.emptyMy
+        : tab === 'local'
+          ? hub.emptyLocalAll
+          : hub.emptyInternationalAll;
+  const showAdd = tab === 'my' || (isPlatformAdmin && (tab === 'local' || tab === 'international'));
   const addMode: ResourceFormMode =
     tab === 'local' ? 'local' : tab === 'international' ? 'international' : 'personal';
+  const listTitle = tab === 'favorites' ? hub.readingList : hub.allResources;
 
   const cardProps = {
     view,
@@ -292,7 +311,13 @@ const Library = () => {
                   )}
                 >
                   <span className="block text-[13px] font-semibold">
-                    {id === 'my' ? hub.tabMy : id === 'local' ? hub.tabLocal : hub.tabInternational}
+                    {id === 'my'
+                      ? hub.tabMy
+                      : id === 'local'
+                        ? hub.tabLocal
+                        : id === 'international'
+                          ? hub.tabInternational
+                          : hub.tabFavorites}
                   </span>
                   <span
                     className={cn(
@@ -304,7 +329,9 @@ const Library = () => {
                       ? hub.tabMyHint
                       : id === 'local'
                         ? tf(hub.tabLocalHint, { jurisdiction: jurisdictionName || '—' })
-                        : hub.tabInternationalHint}
+                        : id === 'international'
+                          ? hub.tabInternationalHint
+                          : hub.tabFavoritesHint}
                   </span>
                 </button>
               ))}
@@ -441,38 +468,34 @@ const Library = () => {
               <SkeletonGrid />
             ) : (
               <div className="space-y-8">
+                {tab !== 'favorites' && recent.length > 0 ? (
                 <section aria-labelledby="library-recent">
                   <h2 id="library-recent" className="mb-3 text-sm font-semibold text-slate-900 dark:text-slate-50">
                     {recentTitle}
                   </h2>
-                  {recent.length === 0 ? (
-                    <p className="rounded-xl border border-dashed border-slate-200 px-4 py-8 text-center text-[13px] text-slate-500 dark:border-slate-800">
-                      {emptyRecent}
-                    </p>
-                  ) : (
-                    <div className={view === 'grid' ? 'grid gap-3 sm:grid-cols-2 xl:grid-cols-3' : 'space-y-2'}>
-                      {recent.map((doc) => (
-                        <ResourceCard
-                          key={`recent-${doc.id}`}
-                          document={doc}
-                          {...cardProps}
-                          onEdit={canEdit(doc) ? (d) => updateRef.current?.show(d) : undefined}
-                          onDelete={
-                            canEdit(doc) || doc.is_in_my_library
-                              ? (d) => deleteRef.current?.show(d)
-                              : undefined
-                          }
-                          onAddToMyLibrary={tab !== 'my' ? handleAddToMy : undefined}
-                        />
-                      ))}
-                    </div>
-                  )}
+                  <div className={view === 'grid' ? 'grid gap-3 sm:grid-cols-2 xl:grid-cols-3' : 'space-y-2'}>
+                    {recent.map((doc) => (
+                      <ResourceCard
+                        key={`recent-${doc.id}`}
+                        document={doc}
+                        {...cardProps}
+                        onEdit={canEdit(doc) ? (d) => updateRef.current?.show(d) : undefined}
+                        onDelete={
+                          canEdit(doc) || doc.is_in_my_library
+                            ? (d) => deleteRef.current?.show(d)
+                            : undefined
+                        }
+                        onAddToMyLibrary={tab !== 'my' ? handleAddToMy : undefined}
+                      />
+                    ))}
+                  </div>
                 </section>
+                ) : null}
 
                 <section aria-labelledby="library-all">
                   <div className="mb-3 flex items-center justify-between">
                     <h2 id="library-all" className="text-sm font-semibold text-slate-900 dark:text-slate-50">
-                      {hub.allResources}
+                      {listTitle}
                     </h2>
                     <span className="text-[12px] text-slate-400">
                       {tf(t.library.documentsCount, { count: results.length })}

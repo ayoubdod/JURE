@@ -39,6 +39,11 @@ export function translateKnownEnum(lang: Lang, value: string | null | undefined)
     t.enums.announcementStatus,
     t.enums.documentStatus,
     t.enums.libraryResourceType,
+    t.enums.deadlineLegalDomain,
+    t.enums.deadlineProcedure,
+    t.enums.deadlineEvent,
+    t.enums.deadlineDurationUnit,
+    t.enums.deadlineComputation,
     ...Object.values(t.cases.modal.options),
   ];
   for (const map of maps) {

@@ -11,6 +11,7 @@ urlpatterns = [
     path('my/', DocumentViewSet.as_view({'get': 'my_library', 'post': 'my_library'}), name='my-library'),
     path('local/', DocumentViewSet.as_view({'get': 'local_library'}), name='local-library'),
     path('international/', DocumentViewSet.as_view({'get': 'international_library'}), name='international-library'),
+    path('favorites/', DocumentViewSet.as_view({'get': 'favorites_library'}), name='favorites-library'),
     path('admin/local/', DocumentViewSet.as_view({'post': 'admin_publish_local'}), name='admin-local'),
     path('admin/international/', DocumentViewSet.as_view({'post': 'admin_publish_international'}), name='admin-international'),
     path(

@@ -1,0 +1,39 @@
+{% load i18n unfold %}
+
+<div class="bg-white border-b border-base-200 mb-4 px-4 z-40 dark:bg-base-900 dark:border-base-800 dark:text-font-default-dark {% element_classes 'header' %}">
+    <div class="{% if not cl.model_admin.list_fullwidth and is_fullwidth != "1" %}container{% endif %} flex items-center h-16 mx-auto py-4 {% element_classes 'header_inner' %}">
+        <div id="header-inner" class="flex items-center gap-4 relative w-full">
+            <div class="flex items-center min-w-0">
+                {% block usertools %}
+                    {% if has_permission %}
+                        {% block welcome-msg %}
+                            {% include 'unfold/helpers/welcomemsg.html' %}
+                        {% endblock %}
+                    {% endif %}
+                {% endblock %}
+            </div>
+
+            {% if has_permission %}
+            <div class="hidden md:flex grow justify-center px-4">
+                <button type="button" class="jure-header-search" x-on:click="$dispatch('opencommand')">
+                    <span class="material-symbols-outlined">search</span>
+                    <span class="jure-header-search__placeholder">{% trans "Search users, cabinets, cases, documents..." %}</span>
+                    {% if 'Macintosh' in request.META.HTTP_USER_AGENT %}
+                        {% include "unfold/helpers/shortcut.html" with icon="keyboard_command_key" shortcut="k" %}
+                    {% else %}
+                        {% include "unfold/helpers/shortcut.html" with icon="keyboard_control_key" shortcut="k" %}
+                    {% endif %}
+                </button>
+            </div>
+            {% endif %}
+
+            <div class="flex items-center ml-auto">
+                {% if has_permission %}
+                    {% block userlinks %}
+                        {% include 'unfold/helpers/userlinks.html' %}
+                    {% endblock %}
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>

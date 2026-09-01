@@ -610,6 +610,73 @@ export interface AppMessages {
       invalidUrl: string;
     };
   };
+  support: {
+    pageTitle: string;
+    pageSubtitle: string;
+    responseHint: string;
+    emailLabel: string;
+    emailHint: string;
+    phoneLabel: string;
+    phoneHint: string;
+    locationLabel: string;
+    locationValue: string;
+    locationHint: string;
+    hoursLabel: string;
+    hoursValue: string;
+    copyEmail: string;
+    copied: string;
+    formTitle: string;
+    formHint: string;
+    topicLabel: string;
+    topicPlaceholder: string;
+    topics: {
+      account: string;
+      billing: string;
+      clients: string;
+      cases: string;
+      juria: string;
+      technical: string;
+      other: string;
+    };
+    subjectLabel: string;
+    subjectPlaceholder: string;
+    messageLabel: string;
+    messagePlaceholder: string;
+    messageHint: string;
+    send: string;
+    sending: string;
+    required: string;
+    sentTitle: string;
+    sentDesc: string;
+    sendFailed: string;
+    faqTitle: string;
+    faqHint: string;
+    faq: {
+      clientsQ: string;
+      clientsA: string;
+      mattersQ: string;
+      mattersA: string;
+      teamQ: string;
+      teamA: string;
+      juriaQ: string;
+      juriaA: string;
+      shortcutsQ: string;
+      shortcutsA: string;
+      securityQ: string;
+      securityA: string;
+    };
+    resourcesTitle: string;
+    resources: {
+      shortcuts: string;
+      shortcutsHint: string;
+      docs: string;
+      docsHint: string;
+      status: string;
+      statusHint: string;
+      settings: string;
+      settingsHint: string;
+    };
+  };
   team: {
     pageSubtitle: string;
     stats: {
@@ -923,6 +990,8 @@ export interface AppMessages {
       addedDesc: string;
       copiedTitle: string;
       copiedDesc: string;
+      favoritedTitle: string;
+      favoritedDesc: string;
       copyFailedTitle: string;
       copyFailedDesc: string;
       updatedTitle: string;
@@ -940,6 +1009,9 @@ export interface AppMessages {
       tabMyHint: string;
       tabLocalHint: string;
       tabInternationalHint: string;
+      tabFavorites: string;
+      tabFavoritesHint: string;
+      readingList: string;
       searchPlaceholder: string;
       lastAdded: string;
       recentlyAdded: string;
@@ -964,6 +1036,7 @@ export interface AppMessages {
       emptyLocalAll: string;
       emptyInternationalRecent: string;
       emptyInternationalAll: string;
+      emptyFavorites: string;
       open: string;
       preview: string;
       download: string;
@@ -1154,6 +1227,11 @@ export interface AppMessages {
     announcementPriority: Record<string, string>;
     documentStatus: Record<string, string>;
     libraryResourceType: Record<string, string>;
+    deadlineLegalDomain: Record<string, string>;
+    deadlineProcedure: Record<string, string>;
+    deadlineEvent: Record<string, string>;
+    deadlineDurationUnit: Record<string, string>;
+    deadlineComputation: Record<string, string>;
   };
   errors: {
     generic: string;
@@ -3081,6 +3159,9 @@ export interface AppMessages {
       caseMatter: string;
       selectCase: string;
       ruleMeta: string;
+      ruleName: string;
+      durationLabel: string;
+      disclaimer: string;
       calculate: string;
       calculating: string;
       legalDeadline: string;

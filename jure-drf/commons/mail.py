@@ -22,6 +22,11 @@ SOURCE_LABELS = {
         "fr": "Demande d’alertes de statut",
         "ar": "طلب تنبيهات الحالة",
     },
+    "in-app-support": {
+        "en": "In-app support",
+        "fr": "Support dans l’application",
+        "ar": "الدعم داخل التطبيق",
+    },
 }
 
 TEAM_COPY = {
@@ -192,6 +197,11 @@ def _team_subject(contact) -> str:
     name = (contact.name or "").strip() or contact.email
     if source == "status-subscribe":
         return f"[JURE website] Status alerts request — {contact.email}"
+    if source == "in-app-support":
+        topic = (contact.subject or "").strip()
+        if topic:
+            return f"[JURE support] {name} — {topic}"[:200]
+        return f"[JURE support] Request from {name}"[:200]
     topic = (contact.subject or "").strip()
     if topic:
         return f"[JURE website] Contact request from {name} — {topic}"[:200]
@@ -264,7 +274,7 @@ def _send_team_notification(contact, lang: str) -> None:
 
 def _send_visitor_acknowledgement(contact, lang: str) -> None:
     source = _source_key(contact)
-    copy = ACK_COPY[source][lang]
+    copy = ACK_COPY.get(source, ACK_COPY["contact"])[lang]
     first = _first_name(contact)
     hello_name = first or (contact.name or "").strip()
     hello = copy["hello"].format(name=hello_name) if "{name}" in copy["hello"] else copy["hello"]

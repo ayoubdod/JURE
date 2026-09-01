@@ -4,8 +4,22 @@ import { X } from "lucide-react"
 import * as React from "react"
 
 import { cn } from "@/lib/utils"
+import { restorePointerEvents } from "@/lib/unlockUi"
 
-const Sheet = SheetPrimitive.Root
+const Sheet = ({
+  onOpenChange,
+  ...props
+}: React.ComponentPropsWithoutRef<typeof SheetPrimitive.Root>) => (
+  <SheetPrimitive.Root
+    {...props}
+    onOpenChange={(open) => {
+      onOpenChange?.(open)
+      if (!open) {
+        window.setTimeout(restorePointerEvents, 0)
+      }
+    }}
+  />
+)
 
 const SheetTrigger = SheetPrimitive.Trigger
 
@@ -37,6 +51,12 @@ const sheetVariants = cva(
         left: "inset-y-0 left-0 h-full w-[min(100vw,20rem)] border-r data-[state=closed]:slide-out-to-left data-[state=open]:slide-in-from-left sm:max-w-sm md:w-3/4",
         right:
           "inset-y-0 right-0 h-full w-[min(100vw,100%)] border-l data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right sm:max-w-sm md:w-3/4 md:max-w-md lg:max-w-lg",
+        /** Inline-start edge: left in LTR, right in Arabic/RTL. */
+        start:
+          "inset-y-0 start-0 h-full w-[min(100vw,20rem)] border-e ltr:data-[state=closed]:slide-out-to-left ltr:data-[state=open]:slide-in-from-left rtl:data-[state=closed]:slide-out-to-right rtl:data-[state=open]:slide-in-from-right sm:max-w-sm md:w-3/4",
+        /** Inline-end edge: right in LTR, left in Arabic/RTL. */
+        end:
+          "inset-y-0 end-0 h-full w-[min(100vw,100%)] border-s ltr:data-[state=closed]:slide-out-to-right ltr:data-[state=open]:slide-in-from-right rtl:data-[state=closed]:slide-out-to-left rtl:data-[state=open]:slide-in-from-left sm:max-w-sm md:w-3/4 md:max-w-md lg:max-w-lg",
         bottom:
           "inset-x-0 bottom-0 h-[min(92dvh,100%)] border-t data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom rounded-t-2xl",
       },
@@ -62,7 +82,7 @@ interface SheetContentProps
 const SheetContent = React.forwardRef<
   React.ElementRef<typeof SheetPrimitive.Content>,
   SheetContentProps
->(({ side = "right", className, children, overlayClassName, container, ...props }, ref) => (
+>(({ side = "right", className, children, overlayClassName, container, dir, ...props }, ref) => (
   <SheetPortal container={container ?? undefined}>
     <SheetOverlay
       className={cn(
@@ -72,6 +92,12 @@ const SheetContent = React.forwardRef<
     />
     <SheetPrimitive.Content
       ref={ref}
+      dir={
+        dir ??
+        (typeof document !== "undefined"
+          ? document.documentElement.getAttribute("dir") ?? undefined
+          : undefined)
+      }
       className={cn(
         sheetVariants({ side }),
         container != null && "!absolute !z-50",
@@ -80,7 +106,7 @@ const SheetContent = React.forwardRef<
       {...props}
     >
       {children}
-      <SheetPrimitive.Close className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-secondary">
+      <SheetPrimitive.Close className="absolute end-4 top-4 z-10 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-secondary">
         <X className="h-4 w-4" />
         <span className="sr-only">Close</span>
       </SheetPrimitive.Close>

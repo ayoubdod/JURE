@@ -1,17 +1,20 @@
 from django.contrib import admin
-from unfold.admin import ModelAdmin
+from django.utils.translation import gettext_lazy as _
+from unfold.decorators import display
 
+from core.admin_display import STATUS_LABELS
+from core.unfold_admin import JureModelAdmin
 from .models import Notification
 
 
 @admin.register(Notification)
-class NotificationAdmin(ModelAdmin):
+class NotificationAdmin(JureModelAdmin):
     list_display = (
         "id",
         "notification_type",
         "recipient",
         "priority",
-        "is_read",
+        "read_badge",
         "created_at",
     )
     list_filter = ("notification_type", "priority", "is_read")
@@ -24,3 +27,9 @@ class NotificationAdmin(ModelAdmin):
         "related_user",
     )
     readonly_fields = ("created_at", "email_sent_at", "read_at")
+
+    @display(description=_("Read"), ordering="is_read", label=STATUS_LABELS)
+    def read_badge(self, obj):
+        if obj.is_read:
+            return "read", _("Read")
+        return "unread", _("Unread")
