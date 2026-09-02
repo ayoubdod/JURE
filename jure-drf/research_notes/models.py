@@ -8,10 +8,11 @@ from django_extensions.db.models import TimeStampedModel
 
 class ResearchNote(TimeStampedModel):
     """
-    A persisted research note belonging to a cabinet.
+    A research note belonging to one author inside a cabinet.
 
-    Optionally associated with a matter/case when opened from matter context.
-    Cabinet and author are always derived from the authenticated user on write.
+    Each user only sees and mutates their own notes. Optionally associated
+    with a matter/case when opened from matter context. Cabinet and author
+    are always derived from the authenticated user on write.
     """
 
     cabinet = models.ForeignKey(
@@ -52,6 +53,10 @@ class ResearchNote(TimeStampedModel):
         indexes = [
             models.Index(fields=["cabinet", "-modified"]),
             models.Index(fields=["cabinet", "matter"]),
+            models.Index(
+                fields=["cabinet", "author", "-modified"],
+                name="research_no_cab_author_idx",
+            ),
         ]
 
     def __str__(self) -> str:

@@ -3,7 +3,7 @@ import {
   Check,
   CheckCheck,
   Download,
-  File,
+  FileText,
   MoreHorizontal,
   Pencil,
   Trash2,
@@ -42,7 +42,61 @@ import {
   isCallMessageType,
 } from '@/components/conversations/call/CallHistoryMessage';
 import { useAppTranslation } from '@/i18n';
+import { attachmentFileName, attachmentHref } from './conversationUtils';
 
+function formatAttachmentSize(bytes?: number | null): string {
+  if (bytes == null || !Number.isFinite(bytes) || bytes <= 0) return '';
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(bytes < 10 * 1024 ? 1 : 0)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function fileExtensionLabel(fileName: string): string {
+  const part = fileName.includes('.') ? fileName.split('.').pop() : '';
+  const ext = (part || 'FILE').toUpperCase();
+  return ext.length > 5 ? ext.slice(0, 5) : ext;
+}
+
+function ChatFileAttachment({
+  file,
+  size,
+}: {
+  file: string;
+  size?: number | null;
+}) {
+  const href = attachmentHref(file, BACKEND_BASE_URL);
+  const name = attachmentFileName(file);
+  const ext = fileExtensionLabel(name);
+  const sizeLabel = formatAttachmentSize(size);
+
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      download={name}
+      className={cn(
+        'flex w-full min-w-[220px] max-w-[280px] items-center gap-2.5 rounded-xl border border-slate-200/90 bg-white px-2.5 py-2 no-underline shadow-[0_1px_2px_rgba(15,23,42,0.04)]',
+        'transition-colors hover:border-slate-300 hover:bg-slate-50',
+        'dark:border-slate-700 dark:bg-slate-950 dark:hover:border-slate-600 dark:hover:bg-slate-900'
+      )}
+    >
+      <span className="flex h-10 w-10 shrink-0 flex-col items-center justify-center rounded-lg bg-[#F1ECFF] text-[#64499D] dark:bg-[#64499D]/25 dark:text-[#CFC2FF]">
+        <FileText className="h-4 w-4" aria-hidden />
+        <span className="mt-0.5 text-[8px] font-bold leading-none tracking-wide">{ext}</span>
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block truncate text-[13px] font-semibold leading-tight text-slate-900 dark:text-slate-100">
+          {name}
+        </span>
+        <span className="mt-0.5 block text-[11px] text-slate-500 dark:text-slate-400">
+          {sizeLabel || ext}
+        </span>
+      </span>
+      <Download className="h-4 w-4 shrink-0 text-slate-400" aria-hidden />
+    </a>
+  );
+}
 interface MessageItemProps {
   conversation: API.Conversation;
   msg: API.Message;
@@ -130,7 +184,10 @@ const MessageItem: React.FC<MessageItemProps> = ({
 
   const isDeleted = (msg as any).is_deleted === true;
   const body = msg.body ?? (msg as any).content ?? (msg as any).text ?? (msg as any).message ?? '';
-  const hasAttachments = (msg.attachments ?? []).length > 0;
+  const attachments = msg.attachments ?? [];
+  const fileAttachments = attachments.filter((a) => a.kind === MessageAttachmentKind.FILE);
+  const nonFileAttachments = attachments.filter((a) => a.kind !== MessageAttachmentKind.FILE);
+  const hasAttachments = attachments.length > 0;
   const messageType = getMessageType(msg);
   const isCallHistory = isCallMessageType(messageType);
   const isShared =
@@ -143,6 +200,12 @@ const MessageItem: React.FC<MessageItemProps> = ({
     (msg as { is_pinned?: boolean }).is_pinned === true ||
     (msg as { isPinned?: boolean }).isPinned === true;
   const forwardedDetail = (msg as any).forwarded_from_detail as API.ForwardedFromDetail | undefined;
+  const showTextBubble =
+    showPlaceholder ||
+    isShared ||
+    Boolean(forwardedDetail) ||
+    Boolean(String(body || '').trim()) ||
+    nonFileAttachments.length > 0;
 
   const canEdit = isOwn && !isDeleted && !isShared && !isCallHistory && (body || hasAttachments);
   const canDelete = isOwn && !isCallHistory;
@@ -303,7 +366,7 @@ const MessageItem: React.FC<MessageItemProps> = ({
     ? cn('rounded-2xl', isLastInGroup ? 'rounded-br-md' : 'rounded-br-2xl')
     : cn('rounded-2xl', isLastInGroup ? 'rounded-bl-md' : 'rounded-bl-2xl');
 
-  const bubbleContent = (
+  const bubbleContent = showTextBubble ? (
     <div
       className={cn(
         'text-[13px] leading-relaxed',
@@ -358,127 +421,94 @@ const MessageItem: React.FC<MessageItemProps> = ({
         )
       ) : (
         <>
-          {(msg.attachments ?? []).length > 1 ? (
+          {nonFileAttachments.length > 1 ? (
             <>
               <div className="grid grid-cols-2 gap-2">
-                {(msg.attachments ?? [])
-                  .map((i) => ({ ...i, file: BACKEND_BASE_URL + i.file }))
+                {nonFileAttachments
                   .filter((i) =>
                     [MessageAttachmentKind.IMAGE, MessageAttachmentKind.VIDEO].includes(i.kind)
                   )
                   .slice(0, 4)
-                  .map((attachment, index) => (
-                    <div
-                      key={attachment.id}
-                      className="aspect-square relative cursor-pointer rounded-[4px] overflow-hidden"
-                      onClick={() => handleGalleryOpen(index)}
-                    >
-                      {attachment.kind === MessageAttachmentKind.IMAGE && (
-                        <img
-                          src={attachment.file}
-                          alt=""
-                          className="w-full h-full object-cover"
-                        />
-                      )}
-                      {attachment.kind === MessageAttachmentKind.VIDEO && (
-                        <video
-                          src={attachment.file}
-                          controls
-                          className="w-full h-full object-cover"
-                        />
-                      )}
-                      {index === 3 && (msg.attachments ?? []).length > 4 && (
-                        <div
-                          className="absolute inset-0 bg-black/50 text-white flex items-center justify-center text-lg font-medium cursor-pointer hover:bg-black/60"
-                          onClick={() => handleGalleryOpen(3)}
-                        >
-                          +{(msg.attachments ?? []).length - 4}
-                        </div>
-                      )}
-                    </div>
-                  ))}
-              </div>
-              {(msg.attachments ?? [])
-                .map((i) => ({ ...i, file: BACKEND_BASE_URL + i.file }))
-                .filter((i) =>
-                  [MessageAttachmentKind.AUDIO, MessageAttachmentKind.FILE].includes(i.kind)
-                )
-                .map((attachment) => (
-                  <React.Fragment key={attachment.id}>
-                    {attachment.kind === MessageAttachmentKind.AUDIO && (
-                      <AudioControl
-                        audioSrc={attachment.file}
-                        isOwn={isOwn}
-                        durationMs={attachment.duration_ms}
-                      />
-                    )}
-                    {attachment.kind === MessageAttachmentKind.FILE && (
-                      <div className="flex items-center gap-2 p-2 rounded-[4px] bg-black/10 dark:bg-white/10 mt-1">
-                        <File className="w-4 h-4 shrink-0" />
-                        <span className="flex-1 truncate text-xs">{attachment.file}</span>
-                        <a
-                          href={attachment.file}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="p-1 rounded hover:bg-black/10"
-                        >
-                          <Download className="w-3.5 h-3.5" />
-                        </a>
+                  .map((attachment, index) => {
+                    const src = attachmentHref(attachment.file, BACKEND_BASE_URL);
+                    return (
+                      <div
+                        key={attachment.id}
+                        className="aspect-square relative cursor-pointer rounded-[4px] overflow-hidden"
+                        onClick={() => handleGalleryOpen(index)}
+                      >
+                        {attachment.kind === MessageAttachmentKind.IMAGE && (
+                          <img src={src} alt="" className="w-full h-full object-cover" />
+                        )}
+                        {attachment.kind === MessageAttachmentKind.VIDEO && (
+                          <video src={src} controls className="w-full h-full object-cover" />
+                        )}
+                        {index === 3 && nonFileAttachments.length > 4 && (
+                          <div
+                            className="absolute inset-0 bg-black/50 text-white flex items-center justify-center text-lg font-medium cursor-pointer hover:bg-black/60"
+                            onClick={() => handleGalleryOpen(3)}
+                          >
+                            +{nonFileAttachments.length - 4}
+                          </div>
+                        )}
                       </div>
-                    )}
-                  </React.Fragment>
+                    );
+                  })}
+              </div>
+              {nonFileAttachments
+                .filter((i) => i.kind === MessageAttachmentKind.AUDIO)
+                .map((attachment) => (
+                  <AudioControl
+                    key={attachment.id}
+                    audioSrc={attachmentHref(attachment.file, BACKEND_BASE_URL)}
+                    isOwn={isOwn}
+                    durationMs={attachment.duration_ms}
+                  />
                 ))}
             </>
           ) : (
-            (msg.attachments ?? [])
-              .map((i) => ({ ...i, file: BACKEND_BASE_URL + i.file }))
-              .map((attachment, index) => (
-                <React.Fragment key={attachment.id}>
-                  {attachment.kind === MessageAttachmentKind.IMAGE && (
-                    <img
-                      src={attachment.file}
-                      alt=""
-                      className="cursor-pointer hover:opacity-90 rounded-[4px] max-w-full"
-                      onClick={() => handleGalleryOpen(index)}
-                    />
-                  )}
-                  {attachment.kind === MessageAttachmentKind.VIDEO && (
-                    <video
-                      controls
-                      src={attachment.file}
-                      className="cursor-pointer hover:opacity-90 rounded-[4px] max-w-full"
-                      onClick={() => handleGalleryOpen(index)}
-                    />
-                  )}
-                  {attachment.kind === MessageAttachmentKind.AUDIO && (
-                    <AudioControl
-                      audioSrc={attachment.file}
-                      isOwn={isOwn}
-                      durationMs={attachment.duration_ms}
-                    />
-                  )}
-                  {attachment.kind === MessageAttachmentKind.FILE && (
-                    <div className="flex items-center gap-2 p-2 rounded-[4px] bg-black/10 dark:bg-white/10">
-                      <File className="w-4 h-4 shrink-0" />
-                      <span className="flex-1 truncate text-xs">{attachment.file}</span>
-                      <a
-                        href={attachment.file}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="p-1 rounded hover:bg-black/10"
-                      >
-                        <Download className="w-3.5 h-3.5" />
-                      </a>
-                    </div>
-                  )}
-                </React.Fragment>
-              ))
+            nonFileAttachments.map((attachment, index) => (
+              <React.Fragment key={attachment.id}>
+                {attachment.kind === MessageAttachmentKind.IMAGE && (
+                  <img
+                    src={attachmentHref(attachment.file, BACKEND_BASE_URL)}
+                    alt=""
+                    className="cursor-pointer hover:opacity-90 rounded-[4px] max-w-full"
+                    onClick={() => handleGalleryOpen(index)}
+                  />
+                )}
+                {attachment.kind === MessageAttachmentKind.VIDEO && (
+                  <video
+                    controls
+                    src={attachmentHref(attachment.file, BACKEND_BASE_URL)}
+                    className="cursor-pointer hover:opacity-90 rounded-[4px] max-w-full"
+                    onClick={() => handleGalleryOpen(index)}
+                  />
+                )}
+                {attachment.kind === MessageAttachmentKind.AUDIO && (
+                  <AudioControl
+                    audioSrc={attachmentHref(attachment.file, BACKEND_BASE_URL)}
+                    isOwn={isOwn}
+                    durationMs={attachment.duration_ms}
+                  />
+                )}
+              </React.Fragment>
+            ))
           )}
-          {body && <p className="break-words">{body}</p>}
+          {body ? <p className="break-words">{body}</p> : null}
         </>
       )}
     </div>
-  );
+  ) : null;
+
+  const fileCards =
+    !showPlaceholder && fileAttachments.length > 0 ? (
+      <div className={cn('flex w-full flex-col gap-1.5', showTextBubble && 'mt-1.5')}>
+        {fileAttachments.map((attachment) => (
+          <ChatFileAttachment key={attachment.id} file={attachment.file} size={attachment.size} />
+        ))}
+      </div>
+    ) : null;
 
   // Read receipt (WhatsApp-style): only on sender's own messages when message.is_own or we detect ownership
   const deliveredCount = msg.delivered_count ?? 0;
@@ -562,7 +592,10 @@ const MessageItem: React.FC<MessageItemProps> = ({
                 {isPinned && (
                   <Pin className="mt-1.5 h-3 w-3 shrink-0 text-[#64499D]" />
                 )}
-                {bubbleContent}
+                <div className="min-w-0">
+                  {bubbleContent}
+                  {fileCards}
+                </div>
               </div>
             </div>
             {isLastInGroup ? (

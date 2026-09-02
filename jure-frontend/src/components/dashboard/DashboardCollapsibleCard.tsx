@@ -33,7 +33,7 @@ export default function DashboardCollapsibleCard({
   const expanded = !isMobile || open;
 
   return (
-    <Card className={cn('rounded-xl border border-slate-200/90 dark:border-slate-800', className)}>
+    <Card className={cn('min-w-0 w-full rounded-xl border border-slate-200/90 dark:border-slate-800', className)}>
       <Collapsible open={expanded} onOpenChange={(next) => isMobile && setOpen(next)}>
         {isMobile ? (
           <div className="flex items-start gap-2 px-3 py-1">
@@ -66,7 +66,7 @@ export default function DashboardCollapsibleCard({
           <CardHeader
             className={cn(
               'pb-2',
-              headerRight && 'flex flex-row items-start justify-between space-y-0 gap-2'
+              headerRight && 'flex flex-row flex-wrap items-start justify-between space-y-0 gap-2'
             )}
           >
             <div className="min-w-0">

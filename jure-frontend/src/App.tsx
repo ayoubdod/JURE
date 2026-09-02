@@ -66,6 +66,7 @@ const LitigationWorkspace = lazyRoute(() => import("./pages/cases/LitigationWork
 const AdministrativeWorkspace = lazyRoute(() => import("./pages/cases/AdministrativeWorkspace"));
 const CaseWorkspacePage = lazyRoute(() => import("./pages/cases/CaseWorkspacePage"));
 const Library = lazyRoute(() => import("./pages/Library"));
+const NotesPage = lazyRoute(() => import("./pages/Notes"));
 const Clients = lazyRoute(() => import("./pages/Clients"));
 const LegalAI = lazyRoute(() => import("./pages/LegalAI"));
 const Conversations = lazyRoute(() => import("./pages/Conversations"));
@@ -252,6 +253,7 @@ const router = createBrowserRouter([
         ),
       },
       { path: "library", element: app(<Library />) },
+      { path: "notes", element: app(<NotesPage />) },
       { path: "clients", element: app(<Clients />) },
       ...(JURIA_ENABLED
         ? [

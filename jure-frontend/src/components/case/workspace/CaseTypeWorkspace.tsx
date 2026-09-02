@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useCallback, useMemo, useRef, useState } from 'react';
-import { AlertTriangle, CalendarClock, CheckCircle2, Clock, Flag, FolderOpen, MoreHorizontal, Scale } from 'lucide-react';
+import { AlertTriangle, CalendarClock, CheckCircle2, Clock, Flag, FolderOpen, LayoutGrid, List, MoreHorizontal, Scale } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -18,6 +18,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import ServerSelect from '@/components/common/ServerSelect';
+import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router';
 import CaseModal, { CaseModalRef } from '@/components/case/CaseModal';
 import CaseDeleteModal, { CaseDeleteModalRef } from '@/components/case/CaseDeleteModal';
@@ -31,7 +32,6 @@ import AdministrativeDutyCard from '@/components/case/cards/AdministrativeDutyCa
 import { usePermission } from '@/hooks/usePermissions';
 import { useToast } from '@/hooks/use-toast';
 import { useAppTranslation } from '@/i18n';
-import { cn } from '@/lib/utils';
 import { apiUpdateCase } from '@/services/case/api';
 import {
   assignedDisplayName,
@@ -89,6 +89,17 @@ const DUTY_TYPES = [
   'OTHER',
 ] as const;
 const LITIGATION_TYPES = ['CIVIL', 'CRIMINAL', 'COMMERCIAL', 'ADMINISTRATIVE', 'LABOR', 'FAMILY'] as const;
+
+const ADMIN_VIEW_KEY = 'jure.administrative.viewMode';
+type AdminViewMode = 'list' | 'grid';
+
+function readAdminView(): AdminViewMode {
+  try {
+    return localStorage.getItem(ADMIN_VIEW_KEY) === 'grid' ? 'grid' : 'list';
+  } catch {
+    return 'list';
+  }
+}
 
 function chamberFilterLabel(
   jurisdiction: string,
@@ -192,6 +203,7 @@ export default function CaseTypeWorkspace({ kind }: CaseTypeWorkspaceProps) {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);
   const [search, setSearch] = useState('');
+  const [adminViewMode, setAdminViewMode] = useState<AdminViewMode>(readAdminView);
   const [status, setStatus] = useState('');
   const [assignedTo, setAssignedTo] = useState<number | undefined>();
   const [outcome, setOutcome] = useState('');
@@ -899,6 +911,45 @@ export default function CaseTypeWorkspace({ kind }: CaseTypeWorkspaceProps) {
 
   const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
 
+  const handleAdminViewMode = (mode: AdminViewMode) => {
+    setAdminViewMode(mode);
+    try {
+      localStorage.setItem(ADMIN_VIEW_KEY, mode);
+    } catch {
+      /* ignore */
+    }
+  };
+
+  const adminViewToggle =
+    kind === 'ADMINISTRATIVE' ? (
+      <div
+        className="ms-auto hidden items-center rounded-md border border-slate-200 bg-slate-100/80 p-0.5 dark:border-slate-700 dark:bg-slate-900/50 sm:inline-flex"
+        role="group"
+        aria-label={ws.administrative.viewList}
+      >
+        {(['list', 'grid'] as const).map((mode) => (
+          <button
+            key={mode}
+            type="button"
+            onClick={() => handleAdminViewMode(mode)}
+            className={cn(
+              'inline-flex items-center gap-1 rounded-md px-2.5 py-1.5 text-[11px] font-semibold transition-colors',
+              adminViewMode === mode
+                ? 'bg-white text-slate-900 shadow-sm ring-1 ring-slate-200/80 dark:bg-slate-800 dark:text-white dark:ring-slate-700'
+                : 'text-slate-600 hover:bg-white/60 dark:text-slate-400 dark:hover:bg-slate-800/60'
+            )}
+            aria-pressed={adminViewMode === mode}
+            aria-label={mode === 'list' ? ws.administrative.viewList : ws.administrative.viewGrid}
+          >
+            {mode === 'list' ? <List className="h-3.5 w-3.5" /> : <LayoutGrid className="h-3.5 w-3.5" />}
+            <span className="hidden lg:inline">
+              {mode === 'list' ? ws.administrative.viewList : ws.administrative.viewGrid}
+            </span>
+          </button>
+        ))}
+      </div>
+    ) : null;
+
   const desktopTable = (
     <div className="rounded-lg border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-950 shadow-[0_1px_2px_rgba(0,0,0,0.04)] overflow-hidden">
       <div className="overflow-x-auto">
@@ -943,6 +994,21 @@ export default function CaseTypeWorkspace({ kind }: CaseTypeWorkspaceProps) {
     </div>
   );
 
+  const desktopGrid = (
+    <div className="grid grid-cols-[repeat(auto-fill,minmax(240px,1fr))] gap-3">
+      {isLoading
+        ? Array.from({ length: 8 }).map((_, i) => (
+            <div
+              key={i}
+              className="h-[148px] animate-pulse rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950"
+            />
+          ))
+        : rows.map((c) => (
+            <AdministrativeDutyCard key={c.id} caseItem={c} onClick={() => void navigateToCase(navigate, c)} />
+          ))}
+    </div>
+  );
+
   return (
     <>
       <CaseWorkspaceChrome
@@ -978,8 +1044,9 @@ export default function CaseTypeWorkspace({ kind }: CaseTypeWorkspaceProps) {
         }}
         holderRef={setHolderEl}
         mobileList={mobileList}
+        toolbarEnd={adminViewToggle}
       >
-        {desktopTable}
+        {kind === 'ADMINISTRATIVE' && adminViewMode === 'grid' ? desktopGrid : desktopTable}
       </CaseWorkspaceChrome>
 
       <CaseModal

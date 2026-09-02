@@ -828,7 +828,7 @@ const ConversationsPage: React.FC = () => {
   );
 
   return (
-    <div className="flex h-full min-h-0 overflow-hidden bg-slate-50 text-[13px] font-sans dark:bg-slate-950">
+    <div className="flex h-full min-h-0 overflow-hidden bg-transparent text-[13px] font-sans">
       <ConversationList
         className={cn(
           activeId != null ? 'hidden md:flex' : 'flex'

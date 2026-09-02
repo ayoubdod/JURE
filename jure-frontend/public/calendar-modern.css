@@ -694,9 +694,30 @@ html.dark .fc-button-group > .fc-button:hover:not(.fc-button-active) {
   border-radius: 0.75rem;
   border: none;
   box-shadow: none;
+  height: 100%;
+}
+
+/* Fit the month grid in the remaining viewport instead of forcing 120px day cells */
+.fc-calendar-card .fc-view-harness,
+.fc-calendar-card .fc-daygrid,
+.fc-calendar-card .fc-scrollgrid,
+.fc-calendar-card .fc-scrollgrid-sync-table,
+.fc-calendar-card .fc-daygrid-body,
+.fc-calendar-card .fc-daygrid-body table {
+  height: 100% !important;
+}
+
+.fc-calendar-card .fc-daygrid-day {
+  min-height: 0 !important;
+}
+
+.fc-calendar-card .fc-daygrid-day:hover {
+  transform: none;
 }
 
 .fc-calendar-card .fc-header-toolbar {
+  position: relative;
+  z-index: 6;
   margin: 0;
   padding: 0.5rem 0.75rem !important;
   border-bottom: 1px solid var(--neutral-200);

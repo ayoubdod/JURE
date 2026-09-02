@@ -174,7 +174,7 @@ export default function JuriaPage() {
   return (
     <div
       dir={dir}
-      className="relative flex h-full min-h-0 w-full overflow-hidden bg-gradient-to-br from-[#F7F4FF] via-white to-white dark:from-slate-950 dark:via-slate-950 dark:to-slate-900"
+      className="relative flex h-full min-h-0 w-full overflow-hidden bg-transparent"
     >
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,_rgba(100,73,157,0.08),_transparent_50%)]" />
       {projectsNavOpen ? (

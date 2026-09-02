@@ -3,8 +3,8 @@ import { useSearchParams } from 'react-router';
 import {
   BookmarkPlus,
   Filter,
-  Grid3X3,
-  LayoutList,
+  LayoutGrid,
+  List,
   Loader2,
   Plus,
   Search,
@@ -68,9 +68,11 @@ function parseList(data: API.LibraryListResponse | API.Document[] | unknown): {
   return { results: [], recent: [] };
 }
 
+const RESOURCE_GRID = 'grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4';
+
 function SkeletonGrid() {
   return (
-    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3" aria-hidden>
+    <div className={RESOURCE_GRID} aria-hidden>
       {Array.from({ length: 6 }).map((_, i) => (
         <div key={i} className="h-36 animate-pulse rounded-xl bg-slate-200/80 dark:bg-slate-800" />
       ))}
@@ -279,9 +281,9 @@ const Library = () => {
 
   return (
     <>
-      <div className="flex h-full min-h-0 flex-col overflow-hidden bg-transparent">
-        <div className="min-h-0 flex-1 overflow-y-auto">
-          <div className="mx-auto w-full max-w-6xl px-4 py-5 sm:px-6 lg:px-8">
+      <div className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden bg-transparent">
+        <div className="min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto">
+          <div className="w-full min-w-0 px-4 py-5 sm:px-5 lg:px-6">
             <header className="mb-5">
               <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-white">
                 {t.library.title}
@@ -294,7 +296,7 @@ const Library = () => {
             <div
               role="tablist"
               aria-label={t.library.title}
-              className="mb-4 flex gap-1 overflow-x-auto rounded-xl border border-slate-200 bg-white p-1 dark:border-slate-800 dark:bg-slate-950"
+              className="mb-4 grid grid-cols-2 gap-1 rounded-xl border border-slate-200 bg-white p-1 dark:border-slate-800 dark:bg-slate-950 lg:grid-cols-4"
             >
               {TABS.map((id) => (
                 <button
@@ -304,13 +306,13 @@ const Library = () => {
                   aria-selected={tab === id}
                   onClick={() => setTab(id)}
                   className={cn(
-                    'min-w-0 flex-1 rounded-lg px-3 py-2 text-start transition-colors',
+                    'min-w-0 rounded-lg px-2.5 py-2 text-start transition-colors sm:px-3',
                     tab === id
                       ? 'bg-[#64499D] text-white shadow-sm'
                       : 'text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-900'
                   )}
                 >
-                  <span className="block text-[13px] font-semibold">
+                  <span className="block truncate text-[13px] font-semibold">
                     {id === 'my'
                       ? hub.tabMy
                       : id === 'local'
@@ -321,7 +323,7 @@ const Library = () => {
                   </span>
                   <span
                     className={cn(
-                      'mt-0.5 hidden text-[11px] sm:block',
+                      'mt-0.5 hidden truncate text-[11px] leading-tight md:block',
                       tab === id ? 'text-white/80' : 'text-slate-400'
                     )}
                   >
@@ -337,23 +339,24 @@ const Library = () => {
               ))}
             </div>
 
-            <div className="ws-toolbar-sticky sticky top-0 z-20 -mx-4 mb-5 border-b border-slate-200/80 bg-background/90 px-4 py-2 backdrop-blur-sm dark:border-slate-800 sm:-mx-0 sm:rounded-xl sm:border sm:px-3">
-              <div className="flex flex-wrap items-center gap-2">
-                <div className="relative min-w-[12rem] flex-1">
+            <div className="ws-toolbar-sticky sticky top-0 z-20 mb-5 min-w-0 rounded-xl border border-slate-200/80 bg-background/90 px-3 py-2 backdrop-blur-sm dark:border-slate-800">
+              <div className="flex min-w-0 flex-col gap-2 lg:flex-row lg:flex-wrap lg:items-center">
+                <div className="relative min-w-0 w-full flex-1 lg:min-w-[14rem]">
                   <Search className="pointer-events-none absolute start-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                   <Input
                     value={searchInput}
                     onChange={(e) => setSearchInput(e.target.value)}
                     placeholder={hub.searchPlaceholder}
                     aria-label={hub.searchPlaceholder}
-                    className="h-9 rounded-lg border-slate-200 ps-8 text-[13px] dark:border-slate-700"
+                    className="h-9 min-w-0 rounded-lg border-slate-200 ps-8 text-[13px] dark:border-slate-700"
                   />
                 </div>
+                <div className="flex min-w-0 flex-wrap items-center gap-2">
                 <Button
                   type="button"
                   variant="outline"
                   size="sm"
-                  className="h-9"
+                  className="h-9 shrink-0"
                   onClick={() => setFiltersOpen((v) => !v)}
                   aria-expanded={filtersOpen}
                 >
@@ -361,7 +364,7 @@ const Library = () => {
                   {t.common.filter}
                 </Button>
                 <Select value={sort} onValueChange={setSort}>
-                  <SelectTrigger className="h-9 w-[9.5rem] text-[12.5px]" aria-label={hub.sortLabel}>
+                  <SelectTrigger className="h-9 w-[8.5rem] shrink-0 text-[12.5px]" aria-label={hub.sortLabel}>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -370,35 +373,38 @@ const Library = () => {
                     <SelectItem value="title">{hub.sortTitle}</SelectItem>
                   </SelectContent>
                 </Select>
-                <div className="flex rounded-lg border border-slate-200 p-0.5 dark:border-slate-700">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className={cn('h-8 w-8', view === 'grid' && 'bg-[#64499D]/10 text-[#64499D]')}
-                    aria-label={hub.viewGrid}
-                    aria-pressed={view === 'grid'}
-                    onClick={() => setView('grid')}
-                  >
-                    <Grid3X3 className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className={cn('h-8 w-8', view === 'list' && 'bg-[#64499D]/10 text-[#64499D]')}
-                    aria-label={hub.viewList}
-                    aria-pressed={view === 'list'}
-                    onClick={() => setView('list')}
-                  >
-                    <LayoutList className="h-4 w-4" />
-                  </Button>
+                <div
+                  className="inline-flex shrink-0 items-center rounded-md border border-slate-200 bg-slate-100/80 p-0.5 dark:border-slate-700 dark:bg-slate-900/50"
+                  role="group"
+                  aria-label={hub.viewGrid}
+                >
+                  {(['list', 'grid'] as const).map((mode) => (
+                    <button
+                      key={mode}
+                      type="button"
+                      onClick={() => setView(mode)}
+                      className={cn(
+                        'inline-flex items-center gap-1 rounded-md px-2.5 py-1.5 text-[11px] font-semibold transition-colors',
+                        view === mode
+                          ? 'bg-white text-slate-900 shadow-sm ring-1 ring-slate-200/80 dark:bg-slate-800 dark:text-white dark:ring-slate-700'
+                          : 'text-slate-600 hover:bg-white/60 dark:text-slate-400 dark:hover:bg-slate-800/60'
+                      )}
+                      aria-pressed={view === mode}
+                      aria-label={mode === 'list' ? hub.viewList : hub.viewGrid}
+                    >
+                      {mode === 'list' ? (
+                        <List className="h-3.5 w-3.5" />
+                      ) : (
+                        <LayoutGrid className="h-3.5 w-3.5" />
+                      )}
+                    </button>
+                  ))}
                 </div>
                 {showAdd ? (
                   <Button
                     type="button"
                     size="sm"
-                    className="h-9 bg-[#64499D] text-white hover:bg-[#543d86]"
+                    className="ms-auto h-9 shrink-0 bg-[#64499D] text-white hover:bg-[#543d86]"
                     onClick={() => formRef.current?.show(isPlatformAdmin && tab !== 'my' ? addMode : 'personal')}
                   >
                     {isPlatformAdmin && tab !== 'my' ? (
@@ -406,14 +412,18 @@ const Library = () => {
                     ) : (
                       <Plus className="me-1.5 h-3.5 w-3.5" />
                     )}
-                    {tab === 'my' ? hub.addResource : tab === 'local' ? hub.publishLocal : hub.publishInternational}
+                    <span className="hidden sm:inline">
+                      {tab === 'my' ? hub.addResource : tab === 'local' ? hub.publishLocal : hub.publishInternational}
+                    </span>
+                    <span className="sm:hidden">{hub.addResource}</span>
                   </Button>
                 ) : null}
+                </div>
               </div>
               {filtersOpen ? (
-                <div className="mt-2 flex flex-wrap items-center gap-2">
+                <div className="mt-2 flex min-w-0 flex-wrap items-center gap-2">
                   <Select value={resourceType || 'all'} onValueChange={(v) => setResourceType(v === 'all' ? '' : v)}>
-                    <SelectTrigger className="h-8 w-[12rem] text-[12px]">
+                    <SelectTrigger className="h-8 w-full min-w-0 sm:w-[12rem] text-[12px]">
                       <SelectValue placeholder={hub.fieldType} />
                     </SelectTrigger>
                     <SelectContent>
@@ -426,7 +436,7 @@ const Library = () => {
                     </SelectContent>
                   </Select>
                   <Select value={language || 'all'} onValueChange={(v) => setLanguage(v === 'all' ? '' : v)}>
-                    <SelectTrigger className="h-8 w-[9rem] text-[12px]">
+                    <SelectTrigger className="h-8 w-full min-w-0 sm:w-[9rem] text-[12px]">
                       <SelectValue placeholder={hub.fieldLanguage} />
                     </SelectTrigger>
                     <SelectContent>
@@ -473,7 +483,7 @@ const Library = () => {
                   <h2 id="library-recent" className="mb-3 text-sm font-semibold text-slate-900 dark:text-slate-50">
                     {recentTitle}
                   </h2>
-                  <div className={view === 'grid' ? 'grid gap-3 sm:grid-cols-2 xl:grid-cols-3' : 'space-y-2'}>
+                  <div className={view === 'grid' ? RESOURCE_GRID : 'space-y-2'}>
                     {recent.map((doc) => (
                       <ResourceCard
                         key={`recent-${doc.id}`}
@@ -526,7 +536,7 @@ const Library = () => {
                       ) : null}
                     </div>
                   ) : (
-                    <div className={view === 'grid' ? 'grid gap-3 sm:grid-cols-2 xl:grid-cols-3' : 'space-y-2'}>
+                    <div className={view === 'grid' ? RESOURCE_GRID : 'space-y-2'}>
                       {results.map((doc) => (
                         <ResourceCard
                           key={doc.id}

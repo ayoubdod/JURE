@@ -31,6 +31,7 @@ export interface AppMessages {
     logout: string;
     finance: string;
     tasks: string;
+    notes: string;
     admin: string;
   };
   header: {
@@ -1295,6 +1296,7 @@ export interface AppMessages {
       goLitigation: string;
       goAdministrative: string;
       goLibrary: string;
+      goNotes: string;
       goCalendar: string;
       goTasks: string;
       goAppointment: string;
@@ -1776,6 +1778,8 @@ export interface AppMessages {
         searchPlaceholder: string;
         emptyTitle: string;
         emptyHint: string;
+        viewList: string;
+        viewGrid: string;
         kpis: {
           active: string;
           dueThisWeek: string;
@@ -3287,6 +3291,75 @@ export interface AppMessages {
         connectionDelete: string;
         delete: string;
       };
+      openMyNotes: string;
+      newNote: string;
+      countZero: string;
+    };
+  };
+  notes: {
+    brandTitle: string;
+    pageTitle: string;
+    subtitle: string;
+    subtitleMatter: string;
+    searchPlaceholder: string;
+    newNote: string;
+    sidebarNavAria: string;
+    openFilters: string;
+    nav: {
+      section: string;
+      all: string;
+      recent: string;
+      unscoped: string;
+      matter: string;
+    };
+    tabs: {
+      all: string;
+      recent: string;
+      unscoped: string;
+      matter: string;
+    };
+    recentTitle: string;
+    gridTitle: string;
+    gridTitleMatter: string;
+    matterLabel: string;
+    unscopedBadge: string;
+    updated: string;
+    updatedToday: string;
+    contentPreviewFallback: string;
+    count: string;
+    countOne: string;
+    open: string;
+    attachMatter: string;
+    changeMatter: string;
+    removeMatter: string;
+    back: string;
+    researchHeading: string;
+    createdBy: string;
+    created: string;
+    updatedLabel: string;
+    editor: {
+      createTitle: string;
+      editTitle: string;
+      title: string;
+      citation: string;
+      matter: string;
+      matterSearch: string;
+      matterNone: string;
+      content: string;
+      save: string;
+      saveChanges: string;
+    };
+    empty: {
+      headline: string;
+      body: string;
+      cta: string;
+      searchTitle: string;
+      searchCta: string;
+      filterEmpty: string;
+    };
+    error: {
+      title: string;
+      retry: string;
     };
   };
   notifications: {

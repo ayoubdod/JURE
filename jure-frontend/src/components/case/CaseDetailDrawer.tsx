@@ -486,11 +486,12 @@ const CaseDetailDrawer = forwardRef<CaseDetailDrawerRef, CaseDetailDrawerProps>(
                     </h3>
                     <DeadlinesCard caseId={fetched.id} />
                   </div>
-                  <div className="mt-6 space-y-3">
-                    <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-                      Research notebook
-                    </h3>
-                    <ResearchNotebookCard caseId={fetched.id} />
+                  <div className="mt-6">
+                    <ResearchNotebookCard
+                      caseId={fetched.id}
+                      matterTitle={fetched.title}
+                      matterReference={fetched.reference}
+                    />
                   </div>
                 </TabsContent>
                 {showFinanceTab ?

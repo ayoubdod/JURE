@@ -57,6 +57,9 @@ const isJuriaPage = (path: string) =>
 const isLibraryPage = (path: string) =>
   path.startsWith('/dashboard/library')
 
+const isNotesPage = (path: string) =>
+  path.startsWith('/dashboard/notes')
+
 function readSidebarExpanded(): boolean {
   try {
     const stored = localStorage.getItem(SIDEBAR_EXPANDED_STORAGE_KEY)
@@ -81,6 +84,7 @@ const DashboardLayout = () => {
   const isFinance = isFinancePage(location.pathname)
   const isJuria = isJuriaPage(location.pathname)
   const isLibrary = isLibraryPage(location.pathname)
+  const isNotes = isNotesPage(location.pathname)
   const isTasks = isTasksPage(location.pathname)
   const isAppointments = isAppointmentsPage(location.pathname)
 
@@ -120,6 +124,7 @@ const DashboardLayout = () => {
     isFinance ||
     isJuria ||
     isLibrary ||
+    isNotes ||
     isTasks ||
     isAppointments
 
@@ -167,19 +172,15 @@ const DashboardLayout = () => {
 
             <main
               className={
-                isCockpit
-                  ? 'flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-2.5 sm:p-4 lg:p-5 pb-[max(1.5rem,env(safe-area-inset-bottom))]'
-                  : isConversations
+                isConversations
                     ? 'flex-1 min-h-0 overflow-hidden pt-0'
-                    : isWorkspace
-                      ? 'flex-1 min-h-0 overflow-hidden pt-0'
-                      : isTeam || isClients || isCases || isTasks || isAppointments
+                    : isCockpit || isWorkspace || isTeam || isClients || isCases || isTasks || isAppointments
                         ? 'flex-1 min-h-0 overflow-hidden overflow-x-hidden p-1.5 sm:p-2.5 lg:p-3 pt-1.5 sm:pt-2.5'
                         : isFinance
                           ? 'flex-1 min-h-0 overflow-hidden overflow-x-hidden p-2.5 sm:p-4 lg:p-5 pt-3 sm:pt-4'
                           : isJuria
                             ? 'flex-1 min-h-0 overflow-hidden overflow-x-hidden p-0'
-                            : isLibrary
+                            : isLibrary || isNotes
                               ? 'flex-1 min-h-0 overflow-hidden overflow-x-hidden p-0'
                               : 'flex-1 overflow-x-hidden p-2.5 sm:p-4 lg:p-5 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-3 sm:pt-4'
               }

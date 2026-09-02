@@ -316,7 +316,7 @@ const TeamMembers: React.FC = () => {
       <article
         key={member.id}
         className={cn(
-          'group relative flex aspect-square w-full cursor-pointer flex-col overflow-hidden rounded-xl border border-slate-200/90 bg-white dark:border-zinc-800 dark:bg-zinc-950',
+          'group relative flex w-full cursor-pointer flex-col overflow-hidden rounded-xl border border-slate-200/90 bg-white dark:border-zinc-800 dark:bg-zinc-950',
           'shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition-all duration-150',
           'hover:border-[#64499D]/30 hover:shadow-[0_6px_16px_rgba(100,73,157,0.08)]',
           selected && 'border-[#64499D]/40 ring-2 ring-[#64499D]/20'
@@ -370,101 +370,102 @@ const TeamMembers: React.FC = () => {
           </DropdownMenuContent>
         </DropdownMenu>
 
-        <div className="flex min-h-0 flex-1 flex-col items-center px-3 pb-2 pt-5 text-center">
-          <div className="relative shrink-0">
-            <UserAvatar
-              image={getPersonImage(member as Record<string, unknown>)}
-              firstName={member.first_name}
-              lastName={member.last_name}
-              size="lg"
-              className="h-14 w-14"
-            />
-            {pending ? (
-              <span
-                className="absolute -bottom-0.5 -end-0.5 h-3 w-3 rounded-full border-2 border-white bg-amber-400 dark:border-zinc-950"
-                aria-hidden
+        <div className="flex flex-col px-3 pb-3 pt-4">
+          <div className="flex items-start gap-3 pe-7">
+            <div className="relative shrink-0">
+              <UserAvatar
+                image={getPersonImage(member as Record<string, unknown>)}
+                firstName={member.first_name}
+                lastName={member.last_name}
+                size="lg"
+                className="h-11 w-11"
               />
-            ) : (
-              <PresenceDot
-                online={isCabinetMemberOnline(member, onlineIds)}
-                className="h-3 w-3 dark:border-zinc-950"
-              />
-            )}
-          </div>
-
-          <h3 className="mt-2.5 w-full min-w-0 truncate px-5 text-[14px] font-semibold leading-tight text-slate-900 dark:text-white">
-            {fullName}
-          </h3>
-          {member.email ? (
-            <p className="mt-0.5 w-full truncate text-[11px] text-slate-500 dark:text-zinc-400">{member.email}</p>
-          ) : null}
-
-          <div className="mt-1.5 flex flex-wrap items-center justify-center gap-1">
-            <span
-              className={cn(
-                'inline-flex items-center rounded px-1.5 py-px text-[10px] font-semibold uppercase tracking-[0.05em]',
-                rolePillClass[memberRole]
-              )}
-            >
-              {roleDisplay}
-            </span>
-            <span
-              className={cn(
-                'inline-flex items-center rounded px-1.5 py-px text-[10px] font-medium',
-                statusBadgeClass(member)
-              )}
-            >
-              {statusBadgeText(member)}
-            </span>
-            {showResendForMember(member) && (
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setResendTarget(member);
-                }}
-                className="inline-flex items-center rounded bg-amber-500/15 px-1.5 py-px text-[10px] font-semibold text-amber-800 ring-1 ring-amber-500/25 dark:text-amber-200"
-              >
-                {t.team.resend}
-              </button>
-            )}
-          </div>
-
-          <div className="mt-auto w-full pt-3">
-            <div className="flex items-center gap-2">
-              <span className="shrink-0 text-[11px] tabular-nums text-slate-600 dark:text-zinc-300">
-                {tf(t.team.activeAssigned, { inProgress, assigned: assignedTotal })}
-              </span>
-              <div
-                className="h-1 min-w-0 flex-1 overflow-hidden rounded-full bg-slate-200 dark:bg-zinc-800"
-                title={tf(t.team.workloadTitle, { inProgress, assigned: assignedTotal })}
-              >
-                <div
-                  className={cn('h-full rounded-full', workloadBarClass(assignedTotal))}
-                  style={{ width: `${workloadFillPct(assignedTotal)}%` }}
+              {pending ? (
+                <span
+                  className="absolute -bottom-0.5 -end-0.5 h-2.5 w-2.5 rounded-full border-2 border-white bg-amber-400 dark:border-zinc-950"
+                  aria-hidden
                 />
+              ) : (
+                <PresenceDot
+                  online={isCabinetMemberOnline(member, onlineIds)}
+                  className="h-2.5 w-2.5 dark:border-zinc-950"
+                />
+              )}
+            </div>
+            <div className="min-w-0 flex-1">
+              <h3 className="truncate text-[14px] font-semibold leading-tight text-slate-900 dark:text-white">
+                {fullName}
+              </h3>
+              {member.email ? (
+                <p className="mt-0.5 truncate text-[12px] text-slate-500 dark:text-zinc-400">{member.email}</p>
+              ) : null}
+              <div className="mt-1.5 flex flex-wrap items-center gap-1">
+                <span
+                  className={cn(
+                    'inline-flex items-center rounded px-1.5 py-px text-[10px] font-semibold uppercase tracking-[0.05em]',
+                    rolePillClass[memberRole]
+                  )}
+                >
+                  {roleDisplay}
+                </span>
+                <span
+                  className={cn(
+                    'inline-flex items-center rounded px-1.5 py-px text-[10px] font-medium',
+                    statusBadgeClass(member)
+                  )}
+                >
+                  {statusBadgeText(member)}
+                </span>
+                {showResendForMember(member) && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setResendTarget(member);
+                    }}
+                    className="inline-flex items-center rounded bg-amber-500/15 px-1.5 py-px text-[10px] font-semibold text-amber-800 ring-1 ring-amber-500/25 dark:text-amber-200"
+                  >
+                    {t.team.resend}
+                  </button>
+                )}
               </div>
             </div>
-            {(member.phone || joined !== '—') && (
-              <div className="mt-1.5 flex items-center justify-center gap-2 truncate text-[11px] text-slate-500 dark:text-zinc-400">
-                {member.phone ? (
-                  <span className="inline-flex min-w-0 max-w-[55%] items-center gap-1 truncate">
-                    <Phone className="h-3 w-3 shrink-0 opacity-70" aria-hidden />
-                    <span className="truncate">{member.phone}</span>
-                  </span>
-                ) : null}
-                {joined !== '—' ? (
-                  <span className="inline-flex shrink-0 items-center gap-1">
-                    <Calendar className="h-3 w-3 opacity-70" aria-hidden />
-                    {joined}
-                  </span>
-                ) : null}
-              </div>
-            )}
           </div>
+
+          <div className="mt-3 space-y-1.5">
+            <p className="text-[11px] tabular-nums text-slate-600 dark:text-zinc-300">
+              {tf(t.team.activeAssigned, { inProgress, assigned: assignedTotal })}
+            </p>
+            <div
+              className="h-1.5 w-full overflow-hidden rounded-full bg-slate-200 dark:bg-zinc-800"
+              title={tf(t.team.workloadTitle, { inProgress, assigned: assignedTotal })}
+            >
+              <div
+                className={cn('h-full rounded-full', workloadBarClass(assignedTotal))}
+                style={{ width: `${workloadFillPct(assignedTotal)}%` }}
+              />
+            </div>
+          </div>
+
+          {(member.phone || joined !== '—') && (
+            <div className="mt-2.5 space-y-1 text-[11px] text-slate-500 dark:text-zinc-400">
+              {member.phone ? (
+                <p className="flex min-w-0 items-center gap-1.5 truncate">
+                  <Phone className="h-3 w-3 shrink-0 opacity-70" aria-hidden />
+                  <span className="truncate">{member.phone}</span>
+                </p>
+              ) : null}
+              {joined !== '—' ? (
+                <p className="flex items-center gap-1.5">
+                  <Calendar className="h-3 w-3 shrink-0 opacity-70" aria-hidden />
+                  {joined}
+                </p>
+              ) : null}
+            </div>
+          )}
         </div>
 
-        <div className="flex shrink-0 items-center justify-between gap-2 border-t border-slate-100 px-3 py-1.5 dark:border-zinc-800">
+        <div className="mt-auto flex shrink-0 items-center justify-between gap-2 border-t border-slate-100 px-3 py-1.5 dark:border-zinc-800">
           <button
             type="button"
             className="inline-flex items-center gap-0.5 text-[12px] font-medium text-[#64499D] hover:text-[#4D3680] dark:text-[#CFC2FF]"
@@ -678,17 +679,6 @@ const TeamMembers: React.FC = () => {
         <td className="px-3 py-2 align-middle text-right tabular-nums text-[12px] font-semibold text-slate-900 dark:text-white">
           {assignedTotal}
         </td>
-        <td className="px-3 py-2 align-middle text-right">
-          <div
-            className="ml-auto h-3.5 w-20 max-w-full overflow-hidden rounded-full bg-slate-200 dark:bg-slate-800"
-            title={tf(t.team.workloadTitle, { inProgress, assigned: assignedTotal })}
-          >
-            <div
-              className={cn('h-full rounded-full', workloadBarClass(assignedTotal))}
-              style={{ width: `${workloadFillPct(assignedTotal)}%` }}
-            />
-          </div>
-        </td>
         <td className="px-3 py-2 align-middle whitespace-nowrap text-[11px] text-slate-600 dark:text-slate-400">
           {formatJoined(member.date_joined as string, lang)}
         </td>
@@ -792,16 +782,16 @@ const TeamMembers: React.FC = () => {
                 <div className="min-w-0 flex-1">
                   {total === 0 ? (
                     <div
-                      className="h-6 w-full rounded-md border border-dashed border-slate-300 dark:border-slate-600 bg-slate-50/50 dark:bg-slate-900/30"
+                      className="h-1.5 w-full rounded-full border border-dashed border-slate-300 dark:border-slate-600 bg-slate-50/50 dark:bg-slate-900/30"
                       title={tf(t.team.workloadTitle, { inProgress, assigned: total })}
                     />
                   ) : (
                     <div
-                      className="h-6 w-full overflow-hidden rounded-md bg-slate-100 dark:bg-slate-800"
+                      className="h-1.5 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800"
                       title={tf(t.team.workloadTitle, { inProgress, assigned: total })}
                     >
                       <div
-                        className={cn('h-full rounded-md transition-all', workloadBarClass(total))}
+                        className={cn('h-full rounded-full transition-all', workloadBarClass(total))}
                         style={{ width: `${workloadFillPct(total)}%` }}
                       />
                     </div>
@@ -918,7 +908,7 @@ const TeamMembers: React.FC = () => {
   }
 
   return (
-    <div className="relative flex h-full min-h-0 flex-col overflow-hidden bg-slate-50 dark:bg-slate-950">
+    <div className="relative flex h-full min-h-0 flex-col overflow-hidden bg-transparent">
       <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto">
         <div className="px-4 pb-8 pt-2 sm:px-5 lg:px-6">
           <WorkspacePageHeader
@@ -939,7 +929,7 @@ const TeamMembers: React.FC = () => {
 
           <WorkspaceKpiStrip items={kpiItems} loading={loading} ariaLabel={t.team.aria.stats} />
 
-          <div className="sticky top-0 z-30 mt-5 rounded-xl border border-slate-200/90 bg-white/95 px-3 py-2 shadow-[0_1px_2px_rgba(0,0,0,0.04)] backdrop-blur-md dark:border-slate-800 dark:bg-slate-950/95 sm:px-4 sm:py-3">
+          <div className="ws-toolbar-sticky sticky top-0 z-30 mt-5 rounded-xl border border-slate-200/80 bg-background/90 px-3 py-2 backdrop-blur-sm dark:border-slate-800 sm:px-4 sm:py-3">
             <div className="flex min-w-0 items-center gap-1.5 sm:gap-2">
               <CompactSearch
                 value={searchTerm}
@@ -1087,22 +1077,16 @@ const TeamMembers: React.FC = () => {
                   {t.team.filters.clearAll}
                 </button>
               </div>
-            ) : (
-              <p className="mt-1.5 text-[11px] tabular-nums text-slate-500 dark:text-slate-400">
-                {loading
-                  ? t.team.loading
-                  : tf(t.team.countSummary, { shown: displayedMembers.length, total: teamMembers.length })}
-              </p>
-            )}
+            ) : null}
           </div>
 
           <div className="mt-4 pb-20 md:pb-4">
           {loading ? (
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-4">
+            <div className="grid grid-cols-[repeat(auto-fill,minmax(240px,1fr))] gap-3">
               {Array.from({ length: 8 }).map((_, i) => (
                 <div
                   key={i}
-                  className="h-[148px] animate-pulse rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950"
+                  className="h-[168px] animate-pulse rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950"
                 />
               ))}
             </div>
@@ -1144,7 +1128,7 @@ const TeamMembers: React.FC = () => {
               </div>
               <div className="hidden md:block">
                 {viewMode === 'grid' ? (
-                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-4">
+                  <div className="grid grid-cols-[repeat(auto-fill,minmax(240px,1fr))] gap-3">
                     {displayedMembers.map(renderTile)}
                   </div>
                 ) : viewMode === 'list' ? (
@@ -1159,7 +1143,6 @@ const TeamMembers: React.FC = () => {
                             t.team.columns.status,
                             t.team.columns.inProgress,
                             t.team.columns.assigned,
-                            t.team.columns.workload,
                             t.team.columns.joined,
                             t.team.columns.actions,
                           ].map((h, i) => (
@@ -1167,7 +1150,7 @@ const TeamMembers: React.FC = () => {
                               key={h}
                               className={cn(
                                 'px-3 py-2.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400',
-                                i >= 3 && i <= 5 ? 'text-right' : i === 7 ? 'text-right' : 'text-left'
+                                i >= 3 && i <= 4 ? 'text-right' : i === 6 ? 'text-right' : 'text-left'
                               )}
                             >
                               {h}

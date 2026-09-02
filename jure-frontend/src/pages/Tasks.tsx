@@ -260,7 +260,7 @@ const TasksPage: React.FC = () => {
   ];
 
   return (
-    <div ref={setHolderEl} className="relative h-full min-h-0 flex flex-col overflow-hidden bg-slate-50 dark:bg-slate-950">
+    <div ref={setHolderEl} className="relative h-full min-h-0 flex flex-col overflow-hidden bg-transparent">
       <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-4 pb-8 pt-2 sm:px-5 lg:px-6">
         <WorkspacePageHeader
           title={t.tasks.title}

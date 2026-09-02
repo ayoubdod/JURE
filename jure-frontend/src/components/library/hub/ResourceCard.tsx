@@ -90,6 +90,7 @@ const ResourceCard = memo(function ResourceCard({
         'group relative rounded-xl border border-slate-200/90 bg-white shadow-sm transition-all',
         'hover:border-[#64499D]/30 hover:shadow-md dark:border-slate-800 dark:bg-slate-950',
         'focus-within:ring-2 focus-within:ring-[#64499D]/25',
+        'min-w-0 overflow-hidden',
         isList ? 'flex items-stretch gap-3 p-3 sm:p-3.5' : 'flex flex-col p-4'
       )}
     >
@@ -98,7 +99,7 @@ const ResourceCard = memo(function ResourceCard({
         onClick={() => onOpen(doc)}
         className={cn(
           'flex min-w-0 flex-1 text-start',
-          isList ? 'items-start gap-3' : 'flex-col gap-3'
+          isList ? 'items-start gap-3' : 'flex-col gap-3 pe-14'
         )}
       >
         <div
@@ -118,7 +119,7 @@ const ResourceCard = memo(function ResourceCard({
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-1.5">
-            <h3 className="truncate text-[13.5px] font-semibold text-slate-900 dark:text-slate-50">
+            <h3 className="min-w-0 truncate text-[13.5px] font-semibold text-slate-900 dark:text-slate-50">
               {doc.title}
             </h3>
             {doc.is_recent ? (

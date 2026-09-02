@@ -145,7 +145,7 @@ const IncomingCallNotification: React.FC<{
       className={cn(
         'fixed z-[100] overflow-hidden rounded-2xl border border-slate-200/80 bg-white/95 shadow-[0_12px_40px_-10px_rgba(15,23,42,0.28)] backdrop-blur-xl dark:border-slate-700/80 dark:bg-slate-900/95',
         'transition-all duration-200 ease-out',
-        'bottom-6 left-6 w-[320px]',
+        'bottom-6 end-6 w-[320px]',
         entered ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'
       )}
       role="dialog"
