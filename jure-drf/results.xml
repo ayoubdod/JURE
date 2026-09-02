@@ -1,12 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <testsuites>
-	<testsuite name="library.tests.LibraryHubScopeTests-20260901222940" tests="1" file="library/tests.py" time="16.826" timestamp="2026-09-01T22:29:57" failures="1" errors="0" skipped="0">
-		<testcase classname="library.tests.LibraryHubScopeTests" name="test_favorite_and_add_to_my_library_are_references" time="16.826" timestamp="2026-09-01T22:29:57" file="library\tests.py" line="648">
-			<failure type="AssertionError" message="401 != 200"><![CDATA[Traceback (most recent call last):
-  File "C:\Users\user\Documents\JURE\jure-drf\library\tests.py", line 650, in test_favorite_and_add_to_my_library_are_references
-    self.assertEqual(fav.status_code, status.HTTP_200_OK)
-AssertionError: 401 != 200
-]]></failure>
-		</testcase>
+	<testsuite name="research_notes.tests.test_api.ResearchNoteAPITests-20260902235538" tests="1" file="research_notes/tests/test_api.py" time="8.317" timestamp="2026-09-02T23:55:46" failures="0" errors="0" skipped="0">
+		<testcase classname="research_notes.tests.test_api.ResearchNoteAPITests" name="test_same_cabinet_colleague_cannot_see_or_mutate_notes" time="8.317" timestamp="2026-09-02T23:55:46" file="research_notes\tests\test_api.py" line="273"/>
 	</testsuite>
 </testsuites>

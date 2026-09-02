@@ -114,7 +114,7 @@ const FinancePage: React.FC = () => {
   };
 
   return (
-    <div className="relative flex h-full min-h-0 flex-col overflow-hidden bg-slate-50 dark:bg-slate-950">
+    <div className="relative flex h-full min-h-0 flex-col overflow-hidden bg-transparent">
       <div className="shrink-0 border-b border-slate-200/80 dark:border-slate-800 px-3 sm:px-4 py-4">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>

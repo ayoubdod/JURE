@@ -522,33 +522,47 @@ export default function LitigationWorkspace() {
   );
 
   const viewToggle = (
-    <div className="ms-auto inline-flex rounded-lg border border-slate-200 p-0.5 dark:border-slate-700">
-      <Button
+    <div
+      className="ms-auto inline-flex items-center rounded-md border border-slate-200 bg-slate-100/80 p-0.5 dark:border-slate-700 dark:bg-slate-900/50"
+      role="group"
+      aria-label={copy.viewList}
+    >
+      <button
         type="button"
-        variant="ghost"
-        size="icon"
-        className={cn('h-8 w-8 rounded-md', viewMode === 'list' && 'bg-white shadow-sm dark:bg-slate-800')}
+        className={cn(
+          'inline-flex items-center gap-1 rounded-md px-2.5 py-1.5 text-[11px] font-semibold transition-colors',
+          viewMode === 'list'
+            ? 'bg-white text-slate-900 shadow-sm ring-1 ring-slate-200/80 dark:bg-slate-800 dark:text-white dark:ring-slate-700'
+            : 'text-slate-600 hover:bg-white/60 dark:text-slate-400 dark:hover:bg-slate-800/60'
+        )}
         onClick={() => handleViewMode('list')}
+        aria-pressed={viewMode === 'list'}
         aria-label={copy.viewList}
       >
-        <List className="h-4 w-4" />
-      </Button>
-      <Button
+        <List className="h-3.5 w-3.5" />
+        <span className="hidden lg:inline">{copy.viewList}</span>
+      </button>
+      <button
         type="button"
-        variant="ghost"
-        size="icon"
-        className={cn('h-8 w-8 rounded-md', viewMode === 'board' && 'bg-white shadow-sm dark:bg-slate-800')}
+        className={cn(
+          'inline-flex items-center gap-1 rounded-md px-2.5 py-1.5 text-[11px] font-semibold transition-colors',
+          viewMode === 'board'
+            ? 'bg-white text-slate-900 shadow-sm ring-1 ring-slate-200/80 dark:bg-slate-800 dark:text-white dark:ring-slate-700'
+            : 'text-slate-600 hover:bg-white/60 dark:text-slate-400 dark:hover:bg-slate-800/60'
+        )}
         onClick={() => handleViewMode('board')}
+        aria-pressed={viewMode === 'board'}
         aria-label={copy.viewBoard}
       >
-        <LayoutGrid className="h-4 w-4" />
-      </Button>
+        <LayoutGrid className="h-3.5 w-3.5" />
+        <span className="hidden lg:inline">{copy.viewBoard}</span>
+      </button>
     </div>
   );
 
   return (
     <TooltipProvider delayDuration={200}>
-      <div className="relative h-full min-h-0 flex flex-col overflow-hidden bg-slate-50 dark:bg-slate-950">
+      <div className="relative h-full min-h-0 flex flex-col overflow-hidden bg-transparent">
         <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-4 pb-8 pt-2 sm:px-5 lg:px-6">
           <WorkspacePageHeader
             title={copy.title}
@@ -568,7 +582,7 @@ export default function LitigationWorkspace() {
           />
           <WorkspaceKpiStrip items={kpis} ariaLabel={copy.title} />
           <div className="py-2">
-            <div className="relative rounded-xl border border-slate-200/90 bg-white/90 px-2.5 py-2 shadow-[0_1px_3px_rgba(0,0,0,0.04)] dark:border-slate-800 dark:bg-slate-950/80 sm:px-4 sm:py-3">
+            <div className="relative rounded-xl border border-slate-200/80 bg-background/90 px-2.5 py-2 backdrop-blur-sm dark:border-slate-800 sm:px-4 sm:py-3">
               <div className="flex items-center gap-1.5 sm:gap-2">
                 <CompactSearch
                   value={search}

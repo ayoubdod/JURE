@@ -312,7 +312,7 @@ function CaseMatterWorkspaceView({
   );
 
   return (
-    <div className="flex h-full min-h-0 flex-col overflow-hidden bg-slate-50 dark:bg-slate-950">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden bg-transparent">
       <header className="shrink-0 border-b border-[#64499D]/10 bg-white dark:bg-zinc-950 dark:border-zinc-800">
         <div className="px-4 py-3 sm:px-6 lg:px-8">
           <button
@@ -762,7 +762,11 @@ function CaseMatterWorkspaceView({
 
           <TabsContent value="research" className="mt-0 px-4 py-6 sm:px-6 lg:px-8">
             <div className="mx-auto max-w-5xl">
-              <ResearchNotebookCard caseId={caseItem.id} />
+              <ResearchNotebookCard
+                caseId={caseItem.id}
+                matterTitle={caseItem.title}
+                matterReference={caseItem.reference}
+              />
             </div>
           </TabsContent>
 

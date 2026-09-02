@@ -269,3 +269,64 @@ class ResearchNoteAPITests(APITestCase):
         note = ResearchNote.objects.get(pk=res.data["id"])
         self.assertEqual(note.cabinet_id, self.cab_a.id)
         self.assertEqual(note.author_id, self.user_a.id)
+
+    def test_same_cabinet_colleague_cannot_see_or_mutate_notes(self):
+        colleague = User.objects.create_user(
+            email="notes-colleague@jure.test",
+            password="testpass123",
+            first_name="Cole",
+            last_name="League",
+            phone=_phone(),
+            country="FR",
+        )
+        colleague.cabinet = self.cab_a
+        colleague.is_cabinet_member = True
+        colleague.role = User.Role.ADMIN
+        colleague.save(update_fields=["cabinet", "is_cabinet_member", "role"])
+
+        mine = ResearchNote.objects.create(
+            cabinet=self.cab_a,
+            author=self.user_a,
+            title="Ayoub private research",
+            content="only for me",
+        )
+        theirs = ResearchNote.objects.create(
+            cabinet=self.cab_a,
+            author=colleague,
+            title="Colleague research",
+            content="not shared",
+        )
+
+        res = self.client.get("/api/v1/research-notes/")
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        results = res.data["results"] if isinstance(res.data, dict) else res.data
+        titles = [n["title"] for n in results]
+        self.assertIn("Ayoub private research", titles)
+        self.assertNotIn("Colleague research", titles)
+
+        self.client.force_authenticate(user=colleague)
+        res = self.client.get("/api/v1/research-notes/")
+        results = res.data["results"] if isinstance(res.data, dict) else res.data
+        titles = [n["title"] for n in results]
+        self.assertIn("Colleague research", titles)
+        self.assertNotIn("Ayoub private research", titles)
+
+        self.assertEqual(
+            self.client.get(f"/api/v1/research-notes/{mine.id}/").status_code,
+            status.HTTP_404_NOT_FOUND,
+        )
+        self.assertEqual(
+            self.client.patch(
+                f"/api/v1/research-notes/{mine.id}/",
+                {"title": "Hacked"},
+                format="json",
+            ).status_code,
+            status.HTTP_404_NOT_FOUND,
+        )
+        self.assertEqual(
+            self.client.delete(f"/api/v1/research-notes/{mine.id}/").status_code,
+            status.HTTP_404_NOT_FOUND,
+        )
+        mine.refresh_from_db()
+        self.assertEqual(mine.title, "Ayoub private research")
+        self.assertTrue(ResearchNote.objects.filter(pk=theirs.id).exists())

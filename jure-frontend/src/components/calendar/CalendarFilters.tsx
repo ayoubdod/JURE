@@ -1,4 +1,4 @@
-import { RefreshCw } from 'lucide-react';
+import { Plus, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import ServerSelect from '@/components/common/ServerSelect';
@@ -38,11 +38,15 @@ export default function CalendarFilters({
   onChange,
   loading,
   onRefresh,
+  onAddTask,
+  onAddAppointment,
 }: {
   value: CalendarFiltersValue;
   onChange: (next: CalendarFiltersValue) => void;
   loading?: boolean;
   onRefresh: () => void;
+  onAddTask?: () => void;
+  onAddAppointment?: () => void;
 }) {
   const { t, enumLabel } = useAppTranslation();
   const cal = t.calendar;
@@ -155,8 +159,8 @@ export default function CalendarFilters({
   );
 
   return (
-    <div className="relative rounded-xl border border-slate-200/90 bg-white/90 px-2.5 py-2 shadow-[0_1px_3px_rgba(0,0,0,0.04)] dark:border-slate-800 dark:bg-slate-950/80 sm:px-4 sm:py-3">
-      <div className="flex items-center gap-1.5 sm:gap-2">
+    <div className="relative rounded-xl border border-slate-200/90 bg-background/90 px-2.5 py-2 shadow-[0_1px_3px_rgba(0,0,0,0.04)] backdrop-blur-sm dark:border-slate-800 dark:bg-slate-950/80 sm:px-4 sm:py-2.5">
+      <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
         <CompactSearch
           value={value.search}
           onChange={(search) => patch({ search })}
@@ -192,6 +196,35 @@ export default function CalendarFilters({
           {filterControls()}
         </MobileFilterSheet>
         {refreshButton}
+        {onAddTask || onAddAppointment ? (
+          <div className="ms-auto flex min-w-0 flex-1 items-center justify-end gap-1.5 sm:flex-none sm:gap-2">
+            {onAddTask ? (
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                className="h-8 flex-1 px-2 text-[11px] font-semibold rounded-md sm:h-9 sm:flex-none sm:px-3 sm:text-[12px]"
+                onClick={onAddTask}
+              >
+                <Plus className="w-3.5 h-3.5 mr-1 sm:w-4 sm:h-4 sm:mr-1.5" strokeWidth={2.5} />
+                <span className="sm:hidden">{cal.addTask}</span>
+                <span className="hidden sm:inline">{t.tasks.newTask}</span>
+              </Button>
+            ) : null}
+            {onAddAppointment ? (
+              <Button
+                type="button"
+                size="sm"
+                className="h-8 flex-1 px-2 text-[11px] font-semibold rounded-md shadow-sm shadow-primary/15 sm:h-9 sm:flex-none sm:px-3 sm:text-[12px]"
+                onClick={onAddAppointment}
+              >
+                <Plus className="w-3.5 h-3.5 mr-1 sm:w-4 sm:h-4 sm:mr-1.5" strokeWidth={2.5} />
+                <span className="sm:hidden">{cal.addAppointment}</span>
+                <span className="hidden sm:inline">{t.appointments.newAppointment}</span>
+              </Button>
+            ) : null}
+          </div>
+        ) : null}
       </div>
     </div>
   );

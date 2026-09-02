@@ -188,7 +188,7 @@ const Support = () => {
   ];
 
   return (
-    <div className="relative flex h-full min-h-0 flex-col overflow-hidden bg-slate-50 dark:bg-slate-950">
+    <div className="relative flex h-full min-h-0 flex-col overflow-hidden bg-transparent">
       <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto">
         <div className="px-4 pb-8 pt-2 sm:px-5 lg:px-6">
           <WorkspacePageHeader title={s.pageTitle} subtitle={s.pageSubtitle} />

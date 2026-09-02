@@ -1,12 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import listPlugin from '@fullcalendar/list';
-import { CalendarDays, MapPin, Plus, Video } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { CalendarDays, MapPin, Video } from 'lucide-react';
 import { formatTime, useAppTranslation } from '@/i18n';
 import { useIsMobile } from '@/hooks/use-mobile';
 import {
@@ -36,8 +35,6 @@ export default function CalendarView({
   emptyFiltered,
   onEventClick,
   onDatesSet,
-  onAddTask,
-  onAddAppointment,
 }: {
   calendarRef: React.RefObject<FullCalendar | null>;
   events: CalendarEvent[];
@@ -46,8 +43,6 @@ export default function CalendarView({
   emptyFiltered?: boolean;
   onEventClick: (info: any) => void;
   onDatesSet: (arg: { start: Date; end: Date }) => void;
-  onAddTask: () => void;
-  onAddAppointment: () => void;
 }) {
   const { t, lang } = useAppTranslation();
   const cal = t.calendar;
@@ -90,10 +85,27 @@ export default function CalendarView({
   }, [calendarRef, lang, fcButtonText]);
 
   const isMobile = useIsMobile();
+  const cardRef = useRef<HTMLDivElement>(null);
+  const [toolbarH, setToolbarH] = useState(52);
+
+  useLayoutEffect(() => {
+    const card = cardRef.current;
+    if (!card) return;
+    const measure = () => {
+      const toolbar = card.querySelector('.fc-header-toolbar') as HTMLElement | null;
+      if (toolbar) setToolbarH(toolbar.offsetHeight);
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    const toolbar = card.querySelector('.fc-header-toolbar');
+    if (toolbar) ro.observe(toolbar);
+    ro.observe(card);
+    return () => ro.disconnect();
+  }, [emptyPeriod, emptyFiltered, isMobile, lang, loading]);
 
   return (
     <div className="h-full flex flex-col min-h-0 rounded-xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900/50 shadow-[0_4px_14px_rgba(15,23,42,0.06)] overflow-hidden">
-      <div className="flex-1 min-h-0 relative fc-calendar-card">
+      <div ref={cardRef} className="flex-1 min-h-0 relative fc-calendar-card">
         <FullCalendar
           ref={calendarRef as any}
           plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin, listPlugin]}
@@ -103,6 +115,7 @@ export default function CalendarView({
           locale={lang}
           titleFormat={isMobile ? { year: 'numeric', month: 'short' } : { year: 'numeric', month: 'long' }}
           height="100%"
+          expandRows
           events={fcEvents}
           eventClick={onEventClick}
           datesSet={onDatesSet}
@@ -232,24 +245,16 @@ export default function CalendarView({
           }}
         />
         {(emptyPeriod || emptyFiltered) && !loading && (
-          <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center bg-white/80 dark:bg-slate-950/60 backdrop-blur-[1px] z-[5]">
-            <CalendarDays className="h-12 w-12 text-slate-300 mb-3" />
+          <div
+            className="pointer-events-none absolute inset-x-0 bottom-0 z-[5] flex flex-col items-center justify-center bg-white/90 dark:bg-slate-950/85"
+            style={{ top: toolbarH }}
+          >
+            <CalendarDays className="mb-3 h-10 w-10 text-slate-300" />
             <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
               {emptyFiltered ? cal.emptyFiltered : cal.emptyPeriod}
             </p>
             {!emptyFiltered && (
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{cal.emptyNoData}</p>
-            )}
-            {!emptyFiltered && (
-              <div className="pointer-events-auto mt-4 flex flex-wrap gap-2 justify-center">
-                <Button size="sm" className="rounded-lg" onClick={onAddTask}>
-                  <Plus className="h-4 w-4 mr-1" />
-                  {cal.addTask}
-                </Button>
-                <Button size="sm" variant="outline" className="rounded-lg" onClick={onAddAppointment}>
-                  {cal.scheduleAppointment}
-                </Button>
-              </div>
+              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{cal.emptyNoData}</p>
             )}
           </div>
         )}

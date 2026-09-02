@@ -264,8 +264,8 @@ export default function ConsultationDetailWorkspace({
   );
 
   return (
-    <div className="flex h-full min-h-0 flex-col overflow-hidden bg-slate-50 dark:bg-slate-950">
-      <header className="shrink-0 border-b border-[#64499D]/10 bg-white dark:border-zinc-800 dark:bg-zinc-950">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden bg-transparent">
+      <header className="max-h-[min(50vh,28rem)] min-h-0 shrink-0 overflow-y-auto overscroll-contain border-b border-[#64499D]/10 bg-white dark:border-zinc-800 dark:bg-zinc-950">
         <div className="px-3 py-3 sm:px-5">
           <button
             type="button"
@@ -365,7 +365,7 @@ export default function ConsultationDetailWorkspace({
 
       <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
         <nav
-          className="shrink-0 border-b border-slate-200 bg-white dark:border-zinc-800 dark:bg-zinc-950 lg:w-[232px] lg:border-b-0 lg:border-e"
+          className="min-w-0 shrink-0 border-b border-slate-200 bg-white dark:border-zinc-800 dark:bg-zinc-950 lg:flex lg:min-h-0 lg:w-[232px] lg:flex-col lg:overflow-hidden lg:border-b-0 lg:border-e"
           aria-label={copy.navLabel}
         >
           <div className="p-2 lg:hidden">
@@ -382,7 +382,7 @@ export default function ConsultationDetailWorkspace({
               </SelectContent>
             </Select>
           </div>
-          <div className="hidden lg:sticky lg:top-0 lg:block lg:p-2">
+          <div className="hidden min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain p-2 [scrollbar-width:thin] lg:flex">
             <p className="px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-400">
               {copy.navLabel}
             </p>

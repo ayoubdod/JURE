@@ -193,6 +193,7 @@ const Header = () => {
     'legal-ai': t.sidebar.legalAi,
     juria: t.sidebar.legalAi,
     library: t.sidebar.library,
+    notes: t.sidebar.notes,
     tasks: t.sidebar.tasks,
     calendar: t.sidebar.calendar,
     appointment: t.sidebar.appointment,

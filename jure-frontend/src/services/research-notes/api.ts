@@ -35,6 +35,12 @@ export function unwrapResearchNoteList(data: ResearchNoteListResponse): Research
   return data.results ?? [];
 }
 
+export function unwrapResearchNoteCount(data: ResearchNoteListResponse): number {
+  if (Array.isArray(data)) return data.length;
+  if (typeof data.count === "number") return data.count;
+  return data.results?.length ?? 0;
+}
+
 export const apiGetResearchNotes = (params?: {
   matter?: number;
   unscoped?: boolean;

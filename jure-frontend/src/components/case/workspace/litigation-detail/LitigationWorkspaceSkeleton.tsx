@@ -2,7 +2,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 export default function LitigationWorkspaceSkeleton() {
   return (
-    <div className="flex h-full min-h-0 flex-col overflow-hidden bg-slate-50 dark:bg-slate-950">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden bg-transparent">
       <header className="shrink-0 border-b border-slate-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-950">
         <Skeleton className="h-4 w-40" />
         <div className="mt-3 flex gap-2">
@@ -21,7 +21,7 @@ export default function LitigationWorkspaceSkeleton() {
         </div>
       </header>
       <div className="flex min-h-0 flex-1">
-        <div className="hidden w-[232px] border-e border-slate-200 p-3 dark:border-zinc-800 lg:block">
+        <div className="hidden min-h-0 w-[232px] overflow-y-auto border-e border-slate-200 p-3 dark:border-zinc-800 lg:block">
           {Array.from({ length: 10 }).map((_, i) => (
             <Skeleton key={i} className="mb-2 h-9 w-full rounded-lg" />
           ))}

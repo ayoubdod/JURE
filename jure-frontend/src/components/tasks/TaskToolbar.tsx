@@ -135,27 +135,41 @@ export default function TaskToolbar({
     );
 
   const viewToggle = (
-    <div className="ms-auto inline-flex rounded-lg border border-slate-200 p-0.5 dark:border-slate-700">
-      <Button
+    <div
+      className="ms-auto inline-flex items-center rounded-md border border-slate-200 bg-slate-100/80 p-0.5 dark:border-slate-700 dark:bg-slate-900/50"
+      role="group"
+      aria-label={t.tasks.viewList}
+    >
+      <button
         type="button"
-        variant="ghost"
-        size="icon"
-        className={cn('h-8 w-8 rounded-md', viewMode === 'list' && 'bg-white shadow-sm dark:bg-slate-800')}
+        className={cn(
+          'inline-flex items-center gap-1 rounded-md px-2.5 py-1.5 text-[11px] font-semibold transition-colors',
+          viewMode === 'list'
+            ? 'bg-white text-slate-900 shadow-sm ring-1 ring-slate-200/80 dark:bg-slate-800 dark:text-white dark:ring-slate-700'
+            : 'text-slate-600 hover:bg-white/60 dark:text-slate-400 dark:hover:bg-slate-800/60'
+        )}
         onClick={() => onViewModeChange('list')}
+        aria-pressed={viewMode === 'list'}
         aria-label={t.tasks.viewList}
       >
-        <List className="h-4 w-4" />
-      </Button>
-      <Button
+        <List className="h-3.5 w-3.5" />
+        <span className="hidden lg:inline">{t.tasks.viewList}</span>
+      </button>
+      <button
         type="button"
-        variant="ghost"
-        size="icon"
-        className={cn('h-8 w-8 rounded-md', viewMode === 'board' && 'bg-white shadow-sm dark:bg-slate-800')}
+        className={cn(
+          'inline-flex items-center gap-1 rounded-md px-2.5 py-1.5 text-[11px] font-semibold transition-colors',
+          viewMode === 'board'
+            ? 'bg-white text-slate-900 shadow-sm ring-1 ring-slate-200/80 dark:bg-slate-800 dark:text-white dark:ring-slate-700'
+            : 'text-slate-600 hover:bg-white/60 dark:text-slate-400 dark:hover:bg-slate-800/60'
+        )}
         onClick={() => onViewModeChange('board')}
+        aria-pressed={viewMode === 'board'}
         aria-label={t.tasks.viewBoard}
       >
-        <LayoutGrid className="h-4 w-4" />
-      </Button>
+        <LayoutGrid className="h-3.5 w-3.5" />
+        <span className="hidden lg:inline">{t.tasks.viewBoard}</span>
+      </button>
     </div>
   );
 

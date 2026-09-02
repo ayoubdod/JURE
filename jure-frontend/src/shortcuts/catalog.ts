@@ -76,6 +76,7 @@ export const SHORTCUT_CATALOG: CatalogItem[] = [
   { id: 'goLitigation', group: 'navigation', keys: ['G', '2'], chord: { prefix: 'g', key: '2' }, kind: 'navigate', path: '/dashboard/cases/litigation' },
   { id: 'goAdministrative', group: 'navigation', keys: ['G', '3'], chord: { prefix: 'g', key: '3' }, kind: 'navigate', path: '/dashboard/cases/administrative' },
   { id: 'goLibrary', group: 'navigation', keys: ['G', 'L'], chord: { prefix: 'g', key: 'l' }, kind: 'navigate', path: '/dashboard/library' },
+  { id: 'goNotes', group: 'navigation', keys: ['G', 'R'], chord: { prefix: 'g', key: 'r' }, kind: 'navigate', path: '/dashboard/notes' },
   { id: 'goCalendar', group: 'navigation', keys: ['G', 'A'], chord: { prefix: 'g', key: 'a' }, kind: 'navigate', path: '/dashboard/calendar' },
   { id: 'goTasks', group: 'navigation', keys: ['G', 'K'], chord: { prefix: 'g', key: 'k' }, kind: 'navigate', path: '/dashboard/tasks' },
   { id: 'goAppointment', group: 'navigation', keys: ['G', 'P'], chord: { prefix: 'g', key: 'p' }, kind: 'navigate', path: '/dashboard/appointments' },
@@ -114,6 +115,7 @@ export const NAV_SHORTCUT_BY_PATH: Record<string, string[]> = {
   '/dashboard/clients': ['G', 'C'],
   '/dashboard/cases': ['G', 'M'],
   '/dashboard/library': ['G', 'L'],
+  '/dashboard/notes': ['G', 'R'],
   '/dashboard/calendar': ['G', 'A'],
   '/dashboard/tasks': ['G', 'K'],
   '/dashboard/appointments': ['G', 'P'],
@@ -130,6 +132,7 @@ const PAGE_OWNED_SEARCH = [
   '/dashboard/cases',
   '/dashboard/team',
   '/dashboard/library',
+  '/dashboard/notes',
 ];
 
 export function pageOwnsSlashSearch(pathname: string): boolean {

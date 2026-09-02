@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import {
   Users, Briefcase, CheckSquare, Megaphone, Eye, ArrowRight,
   CalendarPlus, FolderPlus, ClipboardList, UserPlus, Clock,
@@ -26,6 +25,7 @@ import EngagementBudgetCard from '@/components/dashboard/EngagementBudgetCard';
 import EvidenceManagerCard from '@/components/dashboard/EvidenceManagerCard';
 import ResearchNotebookCard from '@/components/dashboard/ResearchNotebookCard';
 import DashboardCollapsibleCard from '@/components/dashboard/DashboardCollapsibleCard';
+import { WorkspacePageHeader } from '@/components/workspace/WorkspaceChrome';
 import { useMatterStore } from '@/stores/matterStore';
 
 // Service to fetch backend overview
@@ -53,7 +53,7 @@ function resolveAnnouncementMediaUrl(url: string | null | undefined): string | n
   return `${base}${u.startsWith('/') ? '' : '/'}${u}`;
 }
 const ANNOUNCEMENT_GLASS =
-  'relative overflow-hidden rounded-2xl border border-white/20 dark:border-white/10 ' +
+  'relative min-w-0 w-full overflow-hidden rounded-2xl border border-white/20 dark:border-white/10 ' +
   'bg-gradient-to-br from-[#5B3F96] via-[#64499D] to-[#2F6F73] ' +
   'dark:from-[#4A3480] dark:via-[#3E2D71] dark:to-[#1F4F52] ' +
   'shadow-[0_12px_40px_-12px_rgba(100,73,157,0.55)] ' +
@@ -152,9 +152,9 @@ const Dashboard = () => {
 
   // --- FALLBACKS (used only when API fails — never invent KPI %) ---
   const fallbackStats = [
-    { title: d.stats.totalClients, value: '—', change: null as string | null, changeState: 'unavailable' as const, icon: Users, iconBg: 'bg-blue-500', changeTone: 'text-muted-foreground' },
-    { title: d.stats.activeCases, value: '—', change: null as string | null, changeState: 'unavailable' as const, icon: Briefcase, iconBg: 'bg-emerald-500', changeTone: 'text-muted-foreground' },
-    { title: d.stats.tasksDue, value: '—', change: null as string | null, changeState: 'unavailable' as const, icon: CheckSquare, iconBg: 'bg-amber-500', changeTone: 'text-muted-foreground' },
+    { title: d.stats.totalClients, value: '—', change: null as string | null, changeState: 'unavailable' as const, icon: Users, iconAccent: 'text-slate-500', changeTone: 'text-muted-foreground' },
+    { title: d.stats.activeCases, value: '—', change: null as string | null, changeState: 'unavailable' as const, icon: Briefcase, iconAccent: 'text-emerald-600', changeTone: 'text-muted-foreground' },
+    { title: d.stats.tasksDue, value: '—', change: null as string | null, changeState: 'unavailable' as const, icon: CheckSquare, iconAccent: 'text-amber-500', changeTone: 'text-muted-foreground' },
   ];
 
   const taskUpdateModalRef = useRef<TaskUpdateModalRef>(null);
@@ -229,7 +229,7 @@ const Dashboard = () => {
         change: s.change,
         changeState: s.changeState,
         Icon: s.icon,
-        iconBg: s.iconBg,
+        iconAccent: s.iconAccent,
         changeTone: s.changeTone,
       }));
     }
@@ -245,7 +245,8 @@ const Dashboard = () => {
         changeState === 'down' ? 'text-rose-600 dark:text-rose-400'
           : changeState === 'up' ? 'text-emerald-600 dark:text-emerald-400'
             : 'text-muted-foreground';
-      const iconBg = s.icon === 'Users' ? 'bg-blue-500' : s.icon === 'Briefcase' ? 'bg-emerald-500' : 'bg-amber-500';
+      const iconAccent =
+        s.icon === 'Users' ? 'text-slate-500' : s.icon === 'Briefcase' ? 'text-emerald-600' : 'text-amber-500';
       const localizedTitle =
         s.icon === 'Users'
           ? d.stats.totalClients
@@ -260,7 +261,7 @@ const Dashboard = () => {
         change: s.change,
         changeState,
         Icon,
-        iconBg,
+        iconAccent,
         changeTone,
       };
     });
@@ -417,18 +418,13 @@ const Dashboard = () => {
 
   return (
     <>
-      <div className="max-w-7xl mx-auto space-y-4">
-        {/* Welcome */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2.5">
-          <div>
-            <h1 className="text-xl font-semibold text-slate-900 dark:text-white tracking-tight">
-              {tf(d.greeting, { name: user?.first_name ?? '' })}
-            </h1>
-            <p className="text-sm text-muted-foreground mt-0.5">
-              {d.subtitle}
-            </p>
-          </div>
-        </div>
+      <div className="relative flex h-full min-h-0 flex-col overflow-hidden bg-transparent">
+        <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto">
+          <div className="space-y-4 px-4 pb-8 pt-2 sm:px-5 lg:px-6">
+        <WorkspacePageHeader
+          title={tf(d.greeting, { name: user?.first_name ?? '' })}
+          subtitle={d.subtitle}
+        />
 
         {/* Announcement — only when backend returns an active, targeted one */}
         {displayAnnouncement && (() => {
@@ -454,13 +450,13 @@ const Dashboard = () => {
               >
                 <X size={14} />
               </Button>
-              <div className="relative z-10 flex flex-col sm:flex-row sm:items-stretch">
+              <div className="relative z-10 flex min-w-0 flex-col sm:flex-row sm:items-stretch">
                 {isImage && mediaUrl ? (
                   <a
                     href={mediaUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="relative block aspect-[16/9] overflow-hidden border-b border-white/15 sm:order-2 sm:aspect-auto sm:w-[220px] sm:shrink-0 sm:border-b-0 sm:border-s"
+                    className="relative block aspect-[16/9] max-w-full overflow-hidden border-b border-white/15 sm:order-2 sm:aspect-auto sm:w-[min(220px,34%)] sm:shrink-0 sm:border-b-0 sm:border-s"
                     title={displayAnnouncement.title}
                   >
                     <img
@@ -473,7 +469,7 @@ const Dashboard = () => {
                   </a>
                 ) : null}
                 {isVideo && mediaUrl ? (
-                  <div className="relative aspect-[16/9] overflow-hidden border-b border-white/15 bg-black/30 sm:order-2 sm:aspect-auto sm:w-[220px] sm:shrink-0 sm:border-b-0 sm:border-s">
+                  <div className="relative aspect-[16/9] max-w-full overflow-hidden border-b border-white/15 bg-black/30 sm:order-2 sm:aspect-auto sm:w-[min(220px,34%)] sm:shrink-0 sm:border-b-0 sm:border-s">
                     <video
                       src={mediaUrl}
                       controls
@@ -511,8 +507,8 @@ const Dashboard = () => {
         })()}
 
         {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          {displayStats.map(({ title, value, change, changeState, Icon, iconBg, changeTone }, i) => {
+        <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3">
+          {displayStats.map(({ title, value, change, changeState, Icon, iconAccent, changeTone }, i) => {
             let changeLabel = '';
             if (!loading) {
               if (changeState === 'unavailable') {
@@ -525,27 +521,25 @@ const Dashboard = () => {
               }
             }
             return (
-              <Card
+              <div
                 key={i}
-                className="rounded-xl border border-slate-200/90 dark:border-slate-800 hover:shadow-md transition-shadow"
+                className="min-w-0 rounded-xl border border-slate-200/90 bg-white px-3.5 py-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)] dark:border-slate-800 dark:bg-slate-950"
               >
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-1">
-                      <p className="text-xs font-medium text-muted-foreground">{title}</p>
-                      <div className="text-xl font-semibold text-slate-900 dark:text-white">
-                        {loading ? '—' : value}
-                      </div>
-                      <p className={`text-xs ${changeTone}`}>
-                        {loading ? '' : changeLabel}
-                      </p>
-                    </div>
-                    <div className={`w-9 h-9 rounded-lg ${iconBg} flex items-center justify-center shadow-sm`}>
-                      <Icon size={16} className="text-white" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+                <div className="flex items-start justify-between gap-2">
+                  <p className="text-[11px] font-medium uppercase tracking-[0.06em] text-slate-500 dark:text-slate-400">
+                    {title}
+                  </p>
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-50 dark:bg-slate-900">
+                    <Icon className={`h-4 w-4 ${iconAccent}`} aria-hidden />
+                  </span>
+                </div>
+                <p className="mt-2 text-[26px] font-semibold leading-none tabular-nums text-slate-900 dark:text-white">
+                  {loading ? '—' : value}
+                </p>
+                <p className={`mt-1.5 truncate text-[12px] ${changeTone}`}>
+                  {loading ? '' : changeLabel}
+                </p>
+              </div>
             );
           })}
         </div>
@@ -555,24 +549,24 @@ const Dashboard = () => {
           title={d.quickActions.title}
           description={d.quickActions.description}
         >
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5">
+          <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-4">
               {quickActions.map((qa, i) => {
                 const Icon = qa.icon;
                 return (
                   <button
                     key={i}
                     onClick={() => handleQuickAction(qa)}
-                    className="group rounded-lg border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-950 p-2.5 text-start hover:border-purple-200 dark:hover:border-purple-700/60 hover:bg-purple-50/60 dark:hover:bg-purple-950/40 transition-colors"
+                    className="group min-w-0 w-full rounded-lg border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-950 p-2.5 text-start hover:border-purple-200 dark:hover:border-purple-700/60 hover:bg-purple-50/60 dark:hover:bg-purple-950/40 transition-colors"
                     aria-label={qa.title}
                   >
-                    <div className="flex items-center gap-2">
-                      <span className="inline-flex w-7 h-7 items-center justify-center rounded-md bg-purple-600 text-white shadow-sm">
-                        <Icon size={14} />
+                    <div className="flex min-w-0 items-center gap-2">
+                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-50 dark:bg-slate-900">
+                        <Icon className="h-4 w-4 text-slate-500" aria-hidden />
                       </span>
-                      <span className="text-xs font-medium text-slate-900 dark:text-white">{qa.title}</span>
-                      <HintKbd keys={qa.keys} className="ms-auto hidden sm:inline-flex opacity-70 group-hover:opacity-100" />
+                      <span className="min-w-0 truncate text-xs font-medium text-slate-900 dark:text-white">{qa.title}</span>
+                      <HintKbd keys={qa.keys} className="ms-auto hidden shrink-0 opacity-70 group-hover:opacity-100 lg:inline-flex" />
                     </div>
-                    <p className="text-xs text-muted-foreground mt-1">{qa.description}</p>
+                    <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{qa.description}</p>
                   </button>
                 );
               })}
@@ -580,29 +574,29 @@ const Dashboard = () => {
         </DashboardCollapsibleCard>
 
         {/* Legal Deadline Calculator — always available; binds to real cases via API */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
-          <div className="lg:col-span-2 space-y-4">
+        <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
+          <div className="min-w-0 space-y-4 lg:col-span-2">
             <DeadlinesCard />
             {demoMatterId ? <MatterTimeline matterId={demoMatterId} /> : null}
           </div>
           {demoMatterId ? (
-            <div className="space-y-4">
+            <div className="min-w-0 space-y-4">
               <EngagementBudgetCard matterId={demoMatterId} />
             </div>
           ) : null}
         </div>
 
         {/* Knowledge & Evidence Row */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
           <ResearchNotebookCard />
           <EvidenceManagerCard />
         </div>
 
         {/* Recent Cases + Today’s Tasks */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
           {/* Recent Cases */}
           <DashboardCollapsibleCard
-            className="lg:col-span-2"
+            className="min-w-0 lg:col-span-2"
             title={d.recentCases.title}
             description={d.recentCases.description}
             headerRight={
@@ -693,6 +687,7 @@ const Dashboard = () => {
 
           {/* Today's Tasks */}
           <DashboardCollapsibleCard
+            className="min-w-0"
             title={d.todayTasks.title}
             description={d.todayTasks.description}
             headerRight={
@@ -802,7 +797,7 @@ const Dashboard = () => {
                 <div className="space-y-3" aria-busy="true" aria-label={d.recentActivity.loading}>
                   {[0, 1, 2].map((i) => (
                     <div key={i} className="flex items-start gap-3">
-                      <div className="h-7 w-7 animate-pulse rounded-full bg-slate-100 dark:bg-slate-800" />
+                      <div className="h-8 w-8 animate-pulse rounded-lg bg-slate-100 dark:bg-slate-800" />
                       <div className="flex-1 space-y-2">
                         <div className="h-3 w-48 max-w-full animate-pulse rounded bg-slate-100 dark:bg-slate-800" />
                         <div className="h-2.5 w-20 animate-pulse rounded bg-slate-100 dark:bg-slate-800" />
@@ -826,24 +821,18 @@ const Dashboard = () => {
               ) : displayActivity.length > 0 ? (
                 displayActivity.map((a, idx) => {
                   const AIcon = ICONS[a.icon] ?? ClipboardList;
-                  const badgeClass =
-                    a.icon === 'CheckSquare'
-                      ? 'bg-emerald-500/15 dark:bg-emerald-500/20'
-                      : a.icon === 'Users'
-                      ? 'bg-blue-500/15 dark:bg-blue-500/20'
-                      : 'bg-purple-500/15 dark:bg-purple-500/20';
                   const iconClass =
                     a.icon === 'CheckSquare'
-                      ? 'text-emerald-600 dark:text-emerald-400'
+                      ? 'text-emerald-600'
                       : a.icon === 'Users'
-                      ? 'text-blue-600 dark:text-blue-400'
-                      : 'text-purple-600 dark:text-purple-400';
+                      ? 'text-slate-500'
+                      : 'text-[#64499D]';
 
                   return (
                     <div key={idx} className="flex items-start gap-3">
-                      <div className={`w-7 h-7 ${badgeClass} rounded-full flex items-center justify-center`}>
-                        <AIcon size={12} className={iconClass} />
-                      </div>
+                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-50 dark:bg-slate-900">
+                        <AIcon className={`h-4 w-4 ${iconClass}`} aria-hidden />
+                      </span>
                       <div className="flex-1">
                         <p className="text-sm text-slate-900 dark:text-white">{a.message}</p>
                         <p className="text-xs text-muted-foreground">{a.ago}</p>
@@ -858,6 +847,8 @@ const Dashboard = () => {
               )}
             </div>
         </DashboardCollapsibleCard>
+          </div>
+        </div>
       </div>
 
       {/* Dialogs */}

@@ -2,8 +2,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 import FullCalendar from '@fullcalendar/react';
-import { Button } from '@/components/ui/button';
-import { Plus, CalendarClock, Calendar, AlertTriangle, CalendarDays } from 'lucide-react';
+import { CalendarClock, Calendar, AlertTriangle, CalendarDays } from 'lucide-react';
 import TaskCreateModal, { TaskCreateModalRef } from '@/components/task/TaskCreateModal';
 import TaskUpdateModal, { TaskUpdateModalRef } from '@/components/task/TaskUpdateModal';
 import ScheduleAppointmentDialog, { ScheduleAppointmentDialogRef } from '@/components/ScheduleAppointmentDialog';
@@ -301,44 +300,26 @@ const CalendarPage: React.FC = () => {
   ];
 
   return (
-    <div ref={setCalendarHolderEl} className="relative h-full flex flex-col min-h-0 overflow-hidden bg-slate-50 px-4 dark:bg-slate-950 sm:px-5 lg:px-6">
+    <div ref={setCalendarHolderEl} className="relative h-full flex flex-col min-h-0 overflow-hidden bg-transparent px-4 pt-2 pb-2 sm:px-5 lg:px-6">
       <WorkspacePageHeader
         title={cal.title}
         subtitle={cal.subtitle}
-        actions={
-          <div className="flex w-full items-center justify-end gap-1.5 sm:w-auto sm:gap-2">
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              className="h-8 flex-1 px-2 text-[11px] font-semibold rounded-md sm:h-9 sm:flex-none sm:px-3 sm:text-[12px]"
-              onClick={openCreateTask}
-            >
-              <Plus className="w-3.5 h-3.5 mr-1 sm:w-4 sm:h-4 sm:mr-1.5" strokeWidth={2.5} />
-              <span className="sm:hidden">{cal.addTask}</span>
-              <span className="hidden sm:inline">{t.tasks.newTask}</span>
-            </Button>
-            <Button
-              type="button"
-              size="sm"
-              className="h-8 flex-1 px-2 text-[11px] font-semibold rounded-md shadow-sm shadow-primary/15 sm:h-9 sm:flex-none sm:px-3 sm:text-[12px]"
-              onClick={openCreateAppointment}
-            >
-              <Plus className="w-3.5 h-3.5 mr-1 sm:w-4 sm:h-4 sm:mr-1.5" strokeWidth={2.5} />
-              <span className="sm:hidden">{cal.addAppointment}</span>
-              <span className="hidden sm:inline">{t.appointments.newAppointment}</span>
-            </Button>
-          </div>
-        }
       />
 
       <WorkspaceKpiStrip items={kpiItems} loading={loading} ariaLabel={cal.title} />
 
       <div className="shrink-0 py-1.5 sm:py-2">
-        <CalendarFilters value={filters} onChange={setFilters} loading={loading} onRefresh={refreshEvents} />
+        <CalendarFilters
+          value={filters}
+          onChange={setFilters}
+          loading={loading}
+          onRefresh={refreshEvents}
+          onAddTask={openCreateTask}
+          onAddAppointment={openCreateAppointment}
+        />
       </div>
 
-      <div className={cn('flex-1 min-h-0 overflow-hidden pb-2 sm:pb-3', loadError && 'flex items-center justify-center')}>
+      <div className={cn('flex-1 min-h-0 overflow-hidden', loadError && 'flex items-center justify-center')}>
         {loadError ? (
           <WorkspaceErrorState
             title={cal.loadError}
@@ -355,8 +336,6 @@ const CalendarPage: React.FC = () => {
             emptyFiltered={!loading && eventsInView.length === 0 && hasActiveFilters}
             onEventClick={onEventClick}
             onDatesSet={handleDatesSet}
-            onAddTask={openCreateTask}
-            onAddAppointment={openCreateAppointment}
           />
         )}
       </div>

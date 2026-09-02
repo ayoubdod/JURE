@@ -764,7 +764,7 @@ export default function ConsultationWorkspace() {
 
   return (
     <TooltipProvider delayDuration={200}>
-      <div className="relative flex h-full min-h-0 flex-col overflow-hidden bg-slate-50 dark:bg-slate-950">
+      <div className="relative flex h-full min-h-0 flex-col overflow-hidden bg-transparent">
         <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto">
           <div className="px-4 pb-8 pt-2 sm:px-5 lg:px-6">
           <WorkspacePageHeader
@@ -785,7 +785,7 @@ export default function ConsultationWorkspace() {
             }
           />
           <WorkspaceKpiStrip items={kpis} loading={isLoading && kpiValues.today == null} ariaLabel={copy.title} />
-          <div className="sticky top-0 z-30 mt-5 rounded-xl border border-slate-200/90 bg-white/95 px-3 py-2 shadow-[0_1px_2px_rgba(0,0,0,0.04)] backdrop-blur-md dark:border-slate-800 dark:bg-slate-950/95 sm:px-4 sm:py-3">
+          <div className="ws-toolbar-sticky sticky top-0 z-30 mt-5 rounded-xl border border-slate-200/80 bg-background/90 px-3 py-2 backdrop-blur-sm dark:border-slate-800 sm:px-4 sm:py-3">
               <div className="flex min-w-0 items-center gap-1.5 sm:gap-2">
                 <CompactSearch
                   value={search}

@@ -22,10 +22,13 @@ def _user_label(user) -> str:
 
 class ResearchNoteViewSet(viewsets.ModelViewSet):
     """
-    CRUD for cabinet-scoped research notes.
+    CRUD for the authenticated user's research notes.
 
     GET/POST   /api/v1/research-notes/
     GET/PATCH/DELETE /api/v1/research-notes/{id}/
+
+    Notes are private to their author. Colleagues in the same cabinet cannot
+    list, read, update, or delete another user's notes.
 
     Query params:
       - matter: filter by case id
@@ -40,9 +43,9 @@ class ResearchNoteViewSet(viewsets.ModelViewSet):
         cabinet = get_user_cabinet(self.request.user)
         if not cabinet:
             return ResearchNote.objects.none()
-        qs = ResearchNote.objects.filter(cabinet=cabinet).select_related(
-            "author", "matter"
-        )
+        qs = ResearchNote.objects.filter(
+            cabinet=cabinet, author=self.request.user
+        ).select_related("author", "matter")
         matter_id = self.request.query_params.get("matter")
         if matter_id not in (None, ""):
             qs = qs.filter(matter_id=matter_id)

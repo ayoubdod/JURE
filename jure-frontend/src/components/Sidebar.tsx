@@ -16,6 +16,7 @@ import {
   User,
   CalendarClock,
   BookOpen,
+  StickyNote,
   ChevronLeft,
 } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router';
@@ -141,6 +142,7 @@ const Sidebar = ({ activeTab, setActiveTab, expanded, onExpandedChange }: Sideba
         ],
       },
       { id: 'library', icon: BookOpen, label: t.sidebar.library, path: '/dashboard/library', badge: null },
+      { id: 'notes', icon: StickyNote, label: t.sidebar.notes, path: '/dashboard/notes', badge: null },
       ...(JURIA_ENABLED
         ? [
             {
