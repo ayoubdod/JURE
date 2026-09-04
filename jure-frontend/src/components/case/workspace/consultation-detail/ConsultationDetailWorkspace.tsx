@@ -33,7 +33,8 @@ import { usePermission } from '@/hooks/usePermissions';
 import { useFinanceAccess } from '@/hooks/useFinanceAccess';
 import { JURIA_ENABLED } from '@/config/features';
 import { getCaseData, getStatusColor } from '@/utils/caseCardHelpers';
-import { clientDisplayName, formatDuration } from '@/services/case/caseType';
+import { formatDuration } from '@/services/case/caseType';
+import { CaseClientLabel } from '@/components/client/CaseClientLabel';
 import { caseTypeListPath, caseWorkspacePath, navigateToCaseById } from '@/lib/caseRoutes';
 import { ConsultationSection } from '@/components/case/case-detail-drawer/consultation-section';
 import { RelatedTasksAppointmentsSection } from '@/components/case/case-detail-drawer/RelatedTasksAppointmentsSection';
@@ -302,21 +303,28 @@ export default function ConsultationDetailWorkspace({
                   </span>
                 ) : null}
               </div>
-              <p className="mt-2 text-[13px] text-slate-600 dark:text-zinc-300">
-                {[
-                  clientDisplayName(caseItem.client) || null,
-                  attorneys[0]
-                    ? `${copy.assignedTo} ${personName(attorneys[0])}${
-                        attorneys.length > 1 ? ` ${tf(copy.plusAttorneys, { count: attorneys.length - 1 })}` : ''
-                      }`
-                    : null,
-                  when.date ? `${when.date}${when.time ? ` · ${when.time}` : ''}` : null,
-                  format ? enumPretty(format) : null,
-                  formatDuration(duration) || null,
-                ]
-                  .filter(Boolean)
-                  .join(' · ')}
-              </p>
+              <div className="mt-2 space-y-1">
+                {caseItem.client ? (
+                  <CaseClientLabel
+                    client={caseItem.client}
+                    nameClassName="text-[13px] font-medium text-slate-800 dark:text-zinc-200"
+                  />
+                ) : null}
+                <p className="text-[13px] text-slate-600 dark:text-zinc-300">
+                  {[
+                    attorneys[0]
+                      ? `${copy.assignedTo} ${personName(attorneys[0])}${
+                          attorneys.length > 1 ? ` ${tf(copy.plusAttorneys, { count: attorneys.length - 1 })}` : ''
+                        }`
+                      : null,
+                    when.date ? `${when.date}${when.time ? ` · ${when.time}` : ''}` : null,
+                    format ? enumPretty(format) : null,
+                    formatDuration(duration) || null,
+                  ]
+                    .filter(Boolean)
+                    .join(' · ')}
+                </p>
+              </div>
             </div>
 
             <div className="flex shrink-0 flex-wrap items-center gap-2">

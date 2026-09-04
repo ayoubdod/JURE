@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { formatDate, useAppTranslation } from '@/i18n';
 import { getCaseData, getCountdownDays, getStatusColor } from '@/utils/caseCardHelpers';
-import { clientDisplayName } from '@/services/case/caseType';
+import { CaseClientLabel } from '@/components/client/CaseClientLabel';
 import { getConvertedFromCase } from '@/components/case/conversion/ConvertedCaseLink';
 import { formatMAD } from '@/utils/formatMAD';
 import { TaskStatus } from '@/utils/constants';
@@ -321,7 +321,7 @@ export default function LitigationOverview({
             <div>
               <dt className="text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-400">{copy.snapshotClient}</dt>
               <dd className="mt-0.5 font-medium">
-                {clientDisplayName(caseItem.client) || '—'}
+                <CaseClientLabel client={caseItem.client} fallback="—" />
                 {clientRole ? (
                   <span className="ms-2 inline-flex rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold uppercase dark:bg-zinc-800">
                     {enumPretty(clientRole)}

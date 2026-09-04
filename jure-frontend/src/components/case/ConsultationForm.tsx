@@ -26,6 +26,7 @@ import { cn } from '@/lib/utils';
 import { apiGetClient } from '@/services/client/api';
 import { apiCreateFollowUpConsultation, apiUploadCaseAttachment } from '@/services/case/api';
 import { toBackendCaseCreatePayload } from '@/services/case/payloadBuilder';
+import { clientDisplayName } from '@/services/case/caseType';
 import {
   CREATE_CANCEL_CLASS,
   CREATE_FOOTER_CLASS,
@@ -390,8 +391,8 @@ const ConsultationForm: React.FC<ConsultationFormProps> = ({
                   link="/clients/clients/"
                   value={clientId}
                   onChange={(v) => form.setValue('client', v ?? null)}
-                  labelKey={(c: { first_name?: string; last_name?: string; email?: string; phone?: string }) =>
-                    `${c.first_name || ''} ${c.last_name || ''}`.trim() || c.email || c.phone || t.cases.unnamed
+                  labelKey={(c: { first_name?: string; last_name?: string; email?: string; phone?: string; client_type?: string }) =>
+                    clientDisplayName(c) || c.email || c.phone || t.cases.unnamed
                   }
                   cleanable
                   placeholder={modal.placeholders.client}

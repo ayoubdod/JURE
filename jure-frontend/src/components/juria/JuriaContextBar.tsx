@@ -9,6 +9,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { useAppTranslation } from '@/i18n';
+import { JuriaLinkCaseControl } from '@/components/juria/JuriaLinkCaseControl';
 
 export function JuriaContextBar({
   project,
@@ -67,7 +68,14 @@ export function JuriaContextBar({
           </DialogHeader>
           <div className="space-y-4 text-sm">
             <Block title={c.case}>
-              {ctx?.case ? `✓ ${ctx.case.reference} — ${ctx.case.title}` : c.notConnected}
+              {ctx?.case ? (
+                `✓ ${ctx.case.reference} — ${ctx.case.title}`
+              ) : (
+                <span className="flex flex-col items-start gap-2">
+                  <span>{c.notConnected}</span>
+                  {!project.is_simple ? <JuriaLinkCaseControl project={project} compact /> : null}
+                </span>
+              )}
             </Block>
             <Block title={c.documents}>
               {(ctx?.documents_count ?? 0) > 0
@@ -105,7 +113,7 @@ function Block({ title, children }: { title: string; children: React.ReactNode }
   return (
     <div>
       <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">{title}</p>
-      <p className="mt-0.5 text-slate-700 dark:text-slate-200">{children}</p>
+      <div className="mt-0.5 text-slate-700 dark:text-slate-200">{children}</div>
     </div>
   );
 }

@@ -5,6 +5,7 @@ import { ConvertedCaseLink, getConvertedToCase } from '@/components/case/convers
 import { em, formatDrawerDateTime } from './format';
 import { Field, LongText, SectionTitle } from './primitives';
 import { formatDuration } from '@/services/case/caseType';
+import { CaseClientLabel } from '@/components/client/CaseClientLabel';
 import { useAppTranslation } from '@/i18n';
 
 const FORMAT_ICONS: Record<string, React.ReactNode> = {
@@ -48,9 +49,6 @@ export function ConsultationSection({
   const converted = getConvertedToCase(c);
   const followUps = c.followUps ?? [];
   const client = c.client as API.User | null | undefined;
-  const clientName = client
-    ? [client.first_name, client.last_name].filter(Boolean).join(' ') || em(client.email)
-    : '—';
 
   const formatLabel = format ? enumPretty(format) : null;
   const formatDisplay = formatLabel ? (
@@ -120,7 +118,9 @@ export function ConsultationSection({
       <section>
         <SectionTitle>{cw.sectionClient}</SectionTitle>
         <div className="grid gap-4 sm:grid-cols-2">
-          <Field label={t.cases.modal.fields.relatedClient}>{clientName}</Field>
+          <Field label={t.cases.modal.fields.relatedClient}>
+            <CaseClientLabel client={client} fallback={em(client?.email) || '—'} />
+          </Field>
           <Field label={cw.assignedAttorneys}>{attorneyNames || '—'}</Field>
         </div>
       </section>

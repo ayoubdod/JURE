@@ -4,33 +4,46 @@ import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Input } from '@/components/ui/input';
 import { useDebounce } from '@/hooks/use-debounce';
-import { apiGetCases } from '@/services/case/api';
+import { apiJuriaLookupCases } from '@/services/juria/api';
 import { cn } from '@/lib/utils';
 import { useAppTranslation } from '@/i18n';
+
+type LookupCase = {
+  id: number;
+  reference: string;
+  title: string;
+};
 
 export function CaseLinkDropdown({
   onSelect,
   compact,
   align = 'start',
+  label,
+  disabled,
 }: {
   onSelect: (c: { id: number; reference?: string; title?: string }) => void;
   compact?: boolean;
   align?: 'start' | 'end';
+  label?: string;
+  disabled?: boolean;
 }) {
   const { t } = useAppTranslation();
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState('');
   const debounced = useDebounce(q, 300);
   const [loading, setLoading] = useState(false);
-  const [results, setResults] = useState<API.Case[]>([]);
+  const [results, setResults] = useState<LookupCase[]>([]);
 
   useEffect(() => {
     if (!open) return;
     let cancelled = false;
     setLoading(true);
-    apiGetCases({ search: debounced || undefined, page_size: 20 })
-      .then((res) => {
-        if (!cancelled) setResults(res.data?.results ?? []);
+    apiJuriaLookupCases(debounced || undefined)
+      .then((rows) => {
+        if (!cancelled) setResults(rows ?? []);
+      })
+      .catch(() => {
+        if (!cancelled) setResults([]);
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -45,17 +58,18 @@ export function CaseLinkDropdown({
       <PopoverTrigger asChild>
         <Button
           type="button"
-          variant="ghost"
+          variant="outline"
           size={compact ? 'sm' : 'default'}
-          className={cn('gap-1.5 text-slate-600', compact && 'h-8 px-2 text-xs')}
+          disabled={disabled}
+          className={cn('gap-1.5', compact && 'h-8 px-2 text-xs')}
         >
           <Link2 className="h-3.5 w-3.5" />
-          {t.juria.linkMatter}
+          {label ?? t.juria.linkMatter}
         </Button>
       </PopoverTrigger>
       <PopoverContent align={align} className="w-72 p-2">
         <Input
-          placeholder="Rechercher un dossier..."
+          placeholder={t.juria.workspace.create.searchCase}
           value={q}
           onChange={(e) => setQ(e.target.value)}
           className="h-9"
@@ -66,13 +80,13 @@ export function CaseLinkDropdown({
               <Loader2 className="h-5 w-5 animate-spin text-indigo-500" />
             </div>
           ) : results.length === 0 ? (
-            <p className="py-4 text-center text-xs text-slate-500">Aucun dossier</p>
+            <p className="py-4 text-center text-xs text-slate-500">{t.conversations.linkCase.noCases}</p>
           ) : (
             results.map((c) => (
               <button
                 key={c.id}
                 type="button"
-                className="w-full rounded-lg px-2 py-2 text-left text-xs hover:bg-slate-100 dark:hover:bg-slate-800"
+                className="w-full rounded-lg px-2 py-2 text-start text-xs hover:bg-slate-100 dark:hover:bg-slate-800"
                 onClick={() => {
                   onSelect({
                     id: c.id,

@@ -4,6 +4,7 @@ import { ConvertedCaseLink, getConvertedFromCase } from '@/components/case/conve
 import { em, formatDrawerDate } from './format';
 import { Field, LongText, SectionTitle, TagList, TimelineRow } from './primitives';
 import CaseLegalDeadlinesList from '@/components/case/CaseLegalDeadlinesList';
+import { CaseClientLabel } from '@/components/client/CaseClientLabel';
 import { useAppTranslation } from '@/i18n';
 
 function coCounselPills(raw: unknown): string[] {
@@ -75,9 +76,6 @@ export function LitigationSection({
   const legalArguments = (getCaseData(c, 'legal_arguments') as string) ?? '';
 
   const client = c.client as API.User | null | undefined;
-  const clientName = client
-    ? [client.first_name, client.last_name].filter(Boolean).join(' ') || em(client.email)
-    : '—';
 
   const origin = getConvertedFromCase(c);
 
@@ -112,7 +110,7 @@ export function LitigationSection({
         <SectionTitle>{t.cases.modal.sections.parties}</SectionTitle>
         <div className="space-y-4">
           <Field label={t.cases.modal.fields.relatedClient}>
-            <span>{clientName}</span>
+            <CaseClientLabel client={client} fallback={em(client?.email) || '—'} />
             {clientRole && (
               <span className="ml-2 inline-flex rounded-full bg-slate-100 dark:bg-slate-800 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-300">
                 {enumPretty(clientRole)}

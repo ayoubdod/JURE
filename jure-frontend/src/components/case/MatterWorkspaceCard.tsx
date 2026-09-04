@@ -15,6 +15,7 @@ import {
 } from '@/utils/caseCardHelpers';
 import { CaseCategory } from '@/utils/constants';
 import { useAppTranslation } from '@/i18n';
+import { clientDisplayName } from '@/services/case/caseType';
 
 export interface MatterWorkspaceCardProps {
   caseItem: API.Case;
@@ -23,7 +24,7 @@ export interface MatterWorkspaceCardProps {
 }
 
 const getClientName = (c?: API.Case['client']) =>
-  c ? [c.first_name, c.last_name].filter(Boolean).join(' ') || '—' : '—';
+  clientDisplayName(c) || '—';
 
 const getAssignedName = (c: API.Case): string => {
   const u = c.assigned_to as API.User | undefined;

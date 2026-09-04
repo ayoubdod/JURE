@@ -6,8 +6,9 @@ from rest_framework.views import APIView
 from cases.models import Case, CaseAttachment
 from juria.views.conversation_views import get_case_for_user
 from juria.views.mixins import JuriaEnabledMixin
+from library.constants import LIBRARY_SCOPE_TO_VISIBILITY, VISIBILITY_TO_LIBRARY_SCOPE
 from library.models import Document
-from jurisdictions.scoping import documents_visible_to_cabinet_q
+from library.querysets import library_scope_queryset
 from juria.services.permissions import require_cabinet
 
 
@@ -43,16 +44,25 @@ class JuriaLookupLibraryView(JuriaEnabledMixin, APIView):
     def get(self, request):
         cabinet = require_cabinet(request.user)
         q = (request.query_params.get("search") or "").strip()
-        qs = Document.objects.filter(documents_visible_to_cabinet_q(cabinet)).order_by("-created")
+        scope = (
+            request.query_params.get("library_scope") or request.query_params.get("scope") or ""
+        ).strip().upper()
+        scopes = [scope] if scope in LIBRARY_SCOPE_TO_VISIBILITY else None
+        qs = (
+            library_scope_queryset(cabinet, scopes)
+            .exclude(status=Document.DocumentStatus.ARCHIVED)
+            .order_by("-created")
+        )
         if q:
             qs = qs.filter(Q(title__icontains=q) | Q(description__icontains=q))
-        qs = qs[:40]
+        qs = qs[:100]
         return Response(
             [
                 {
                     "id": d.id,
                     "title": d.title,
                     "visibility_scope": d.visibility_scope,
+                    "scope": VISIBILITY_TO_LIBRARY_SCOPE.get(d.visibility_scope, "PERSONAL"),
                     "resource_type": d.resource_type,
                 }
                 for d in qs

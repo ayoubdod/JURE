@@ -12,7 +12,7 @@ from jurisdictions.models import Jurisdiction
 from jurisdictions.scoping import serialize_jurisdiction
 from .models import User, UserAttachment, UserAddress
 from django_countries.serializer_fields import CountryField
-from django.core.exceptions import ValidationError as DjangoValidationError
+from django.core.exceptions import ObjectDoesNotExist, ValidationError as DjangoValidationError
 from django_countries.fields import Country
 from django.utils.translation import gettext_lazy as _
 from django.conf import settings
@@ -116,6 +116,7 @@ class CustomUserDetailsSerializer(UserDetailsSerializer):
     cabinet_id = serializers.SerializerMethodField()
     jurisdiction = serializers.SerializerMethodField()
     is_platform_admin = serializers.SerializerMethodField()
+    client_type = serializers.SerializerMethodField()
 
     class Meta:
         extra_fields = []
@@ -141,10 +142,11 @@ class CustomUserDetailsSerializer(UserDetailsSerializer):
             'jurisdiction',
             'role',
             'is_platform_admin',
+            'client_type',
             'accept_terms',
             'accept_data_processing',
         ]
-        read_only_fields = ('email', 'cabinet_id', 'jurisdiction', 'role', 'is_platform_admin')
+        read_only_fields = ('email', 'cabinet_id', 'jurisdiction', 'role', 'is_platform_admin', 'client_type')
 
     def to_representation(self, instance):
         """Build absolute URL for logo in response."""
@@ -168,6 +170,13 @@ class CustomUserDetailsSerializer(UserDetailsSerializer):
 
     def get_is_platform_admin(self, obj):
         return bool(getattr(obj, "is_staff", False) or getattr(obj, "is_superuser", False))
+
+    def get_client_type(self, obj):
+        try:
+            profile = obj.firm_client_profile
+        except ObjectDoesNotExist:
+            return None
+        return getattr(profile, "client_type", None)
 
     def update(self, instance, validated_data):
         """Update user and sync cabinet fields (logo, etc.) to the cabinet."""

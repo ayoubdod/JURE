@@ -3,7 +3,8 @@ import { ChevronDown } from 'lucide-react';
 import UserAvatar, { getPersonImage } from '@/components/common/UserAvatar';
 import { useAppTranslation } from '@/i18n';
 import { cn } from '@/lib/utils';
-import { clientDisplayName, formatShortDate, nextLitigationDeadline } from '@/services/case/caseType';
+import { formatShortDate, nextLitigationDeadline } from '@/services/case/caseType';
+import { CaseClientLabel } from '@/components/client/CaseClientLabel';
 import { getCaseData, getStatusColor } from '@/utils/caseCardHelpers';
 import { courtLabels } from '@/components/case/workspace/litigation-detail/helpers';
 import { attorneysOf, personName } from './consultation-rows';
@@ -61,9 +62,13 @@ function LitigationBoardCard({ c, onOpen }: { c: API.Case; onOpen: () => void })
         ) : null}
       </div>
       <p className="mt-2 text-sm font-semibold text-slate-900 dark:text-white leading-snug">{c.title}</p>
-      <p className="mt-1.5 text-[11px] text-slate-500 dark:text-slate-400 truncate">
-        {clientDisplayName(c.client) || copy.noneDash}
-      </p>
+      <div className="mt-1.5 min-w-0">
+        <CaseClientLabel
+          client={c.client}
+          fallback={copy.noneDash}
+          nameClassName="truncate text-[11px] text-slate-500 dark:text-slate-400"
+        />
+      </div>
       {court.composed ? (
         <p className="mt-1 text-[11px] text-slate-500 truncate">{court.composed}</p>
       ) : null}

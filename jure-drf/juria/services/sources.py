@@ -6,11 +6,13 @@ from django.db.models import Q
 from rest_framework.exceptions import PermissionDenied, ValidationError
 
 from cases.models import Case, CaseAttachment
-from jurisdictions.scoping import documents_visible_to_cabinet_q
 from juria.constants import PermissionLevel, ResourceType, SourceKind
 from juria.models import JuriaFile, JuriaProject, JuriaProjectPermission, JuriaProjectSource
 from library.models import Document
+from library.querysets import library_scope_queryset
 from users.models import User
+
+LIBRARY_LINK_CAP = 500
 
 
 def _bump_permission(project: JuriaProject, resource: str, level: str = PermissionLevel.READ) -> None:
@@ -62,12 +64,35 @@ def connect_case_documents(project: JuriaProject, attachment_ids: list[int], use
     return created
 
 
-def connect_library_documents(project: JuriaProject, document_ids: list[int], user) -> list[JuriaProjectSource]:
+def _library_scope_for_doc(doc: Document) -> str:
+    vis = getattr(doc, "visibility_scope", "") or ""
+    if vis == "GLOBAL":
+        return "INTERNATIONAL"
+    if vis == "JURISDICTION":
+        return "LOCAL"
+    return "PERSONAL"
+
+
+def _library_kind_for_doc(doc: Document) -> str:
+    vis = getattr(doc, "visibility_scope", "") or ""
+    if vis == "GLOBAL":
+        return SourceKind.LIBRARY_INTERNATIONAL
+    if vis == "JURISDICTION":
+        return SourceKind.LIBRARY_LOCAL
+    return SourceKind.LIBRARY
+
+
+def connect_library_documents(
+    project: JuriaProject,
+    document_ids: list[int],
+    user,
+    *,
+    linked_as: str = "selection",
+) -> list[JuriaProjectSource]:
     if not document_ids:
         return []
-    qs = Document.objects.filter(
-        documents_visible_to_cabinet_q(project.cabinet),
-        pk__in=document_ids,
+    qs = library_scope_queryset(project.cabinet, None).filter(pk__in=document_ids).exclude(
+        status=Document.DocumentStatus.ARCHIVED
     )
     found = {d.id for d in qs}
     missing = [i for i in document_ids if i not in found]
@@ -75,21 +100,39 @@ def connect_library_documents(project: JuriaProject, document_ids: list[int], us
         raise PermissionDenied("One or more library documents are not accessible.")
     created = []
     for doc in qs:
-        kind = SourceKind.LIBRARY
-        vis = getattr(doc, "visibility_scope", "") or ""
-        if vis == "GLOBAL":
-            kind = SourceKind.LIBRARY_INTERNATIONAL
-        elif vis == "JURISDICTION":
-            kind = SourceKind.LIBRARY_LOCAL
-        src, _ = JuriaProjectSource.objects.get_or_create(
-            project=project,
-            kind=kind,
-            library_document=doc,
-            defaults={"added_by": user},
-        )
+        kind = _library_kind_for_doc(doc)
+        meta = {
+            "linked_as": linked_as,
+            "library_scope": _library_scope_for_doc(doc),
+        }
+        src = JuriaProjectSource.objects.filter(project=project, library_document=doc).first()
+        if src is None:
+            src = JuriaProjectSource.objects.create(
+                project=project,
+                kind=kind,
+                library_document=doc,
+                added_by=user,
+                metadata=meta,
+            )
+        else:
+            current = dict(src.metadata or {})
+            if not (current.get("linked_as") == "scope" and linked_as == "selection"):
+                current.update(meta)
+                src.metadata = current
+                src.save(update_fields=["metadata"])
         created.append(src)
     _bump_permission(project, ResourceType.LIBRARY, PermissionLevel.READ)
     return created
+
+
+def connect_library_scopes(project: JuriaProject, scopes: list[str] | None, user) -> list[JuriaProjectSource]:
+    """Attach every document from the Library hub tabs in the given scopes.
+
+    ``scopes=None`` (or including ``ALL``) links personal, local and international.
+    """
+    qs = library_scope_queryset(project.cabinet, scopes).exclude(status=Document.DocumentStatus.ARCHIVED)
+    ids = list(qs.order_by("-created").values_list("id", flat=True)[:LIBRARY_LINK_CAP])
+    return connect_library_documents(project, ids, user, linked_as="scope")
 
 
 def connect_flag(project: JuriaProject, kind: str, resource: str, user) -> JuriaProjectSource:

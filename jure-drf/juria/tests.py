@@ -313,6 +313,173 @@ class JuriaProjectApiTests(APITestCase):
         self.assertTrue(thread.title_is_custom)
         _title.assert_not_called()
 
+    def _add_teammate(self, email="juria-member@test.com"):
+        from cases.tests import _valid_fr_phone
+        from users.models import User
+
+        member = User.objects.create_user(
+            email=email,
+            password="testpass123",
+            first_name="Invited",
+            last_name="Colleague",
+            phone=_valid_fr_phone(),
+            country="FR",
+        )
+        member.cabinet = self.cabinet
+        member.is_cabinet_member = True
+        member.save(update_fields=["cabinet", "is_cabinet_member"])
+        return member
+
+    def test_invite_member_creates_notification(self):
+        from notifications.constants import NotificationType
+        from notifications.models import Notification
+
+        created = self.client.post("/api/v1/juria/projects/", {"name": "Dossier partagé"}, format="json")
+        pk = created.json()["id"]
+        other = self._add_teammate()
+        res = self.client.post(
+            f"/api/v1/juria/projects/{pk}/members/",
+            {"user_id": other.id, "role": "EDITOR"},
+            format="json",
+        )
+        self.assertEqual(res.status_code, 201, res.content)
+        note = Notification.objects.filter(
+            recipient=other,
+            notification_type=NotificationType.JURIA_MEMBER_INVITED,
+        ).first()
+        self.assertIsNotNone(note)
+        self.assertIn(str(pk), note.action_url)
+        self.assertEqual(note.related_user_id, self.user.id)
+        again = self.client.post(
+            f"/api/v1/juria/projects/{pk}/members/",
+            {"user_id": other.id, "role": "VIEWER"},
+            format="json",
+        )
+        self.assertEqual(again.status_code, 200, again.content)
+        self.assertEqual(
+            Notification.objects.filter(
+                recipient=other,
+                notification_type=NotificationType.JURIA_MEMBER_INVITED,
+            ).count(),
+            1,
+        )
+
+    def test_lookup_library_filters_by_scope_and_link_all(self):
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        from jurisdictions.constants import VisibilityScope
+        from jurisdictions.models import Jurisdiction
+        from library.models import Document, LibrarySave
+
+        ma, _ = Jurisdiction.objects.get_or_create(
+            code="MA",
+            defaults={
+                "name": "Morocco",
+                "country_code": "MA",
+                "legal_system": "civil_law",
+                "default_language": "fr",
+                "status": "ACTIVE",
+            },
+        )
+        self.cabinet.jurisdiction = ma
+        self.cabinet.save(update_fields=["jurisdiction"])
+
+        created = self.client.post("/api/v1/juria/projects/", {"name": "Sources"}, format="json")
+        pk = created.json()["id"]
+        pdf = lambda name: SimpleUploadedFile(name, b"%PDF-1.4 test", content_type="application/pdf")
+        personal = Document.objects.create(
+            title="Cabinet memo",
+            category=Document.DocumentCategory.LEGAL_RESEARCH_OPINIONS,
+            file=pdf("memo.pdf"),
+            visibility_scope=VisibilityScope.CABINET,
+            cabinet=self.cabinet,
+            created_by=self.user,
+        )
+        local = Document.objects.create(
+            title="Moroccan Commercial Code",
+            category=Document.DocumentCategory.LEGISLATION_REGULATIONS,
+            file=pdf("ma-code.pdf"),
+            visibility_scope=VisibilityScope.JURISDICTION,
+            jurisdiction=ma,
+            is_shared=True,
+        )
+        international = Document.objects.create(
+            title="CISG",
+            category=Document.DocumentCategory.LEGISLATION_REGULATIONS,
+            file=pdf("cisg.pdf"),
+            visibility_scope=VisibilityScope.GLOBAL,
+            is_shared=True,
+        )
+        LibrarySave.objects.get_or_create(
+            cabinet=self.cabinet,
+            document=international,
+            defaults={"added_by": self.user},
+        )
+
+        personal_list = self.client.get("/api/v1/juria/lookup/library/?scope=PERSONAL")
+        self.assertEqual(personal_list.status_code, 200, personal_list.content)
+        personal_ids = [row["id"] for row in personal_list.json()]
+        self.assertIn(personal.id, personal_ids)
+        self.assertIn(international.id, personal_ids)
+        self.assertNotIn(local.id, personal_ids)
+
+        local_list = self.client.get("/api/v1/juria/lookup/library/?library_scope=LOCAL")
+        self.assertEqual(local_list.status_code, 200, local_list.content)
+        local_ids = [row["id"] for row in local_list.json()]
+        self.assertIn(local.id, local_ids)
+        self.assertNotIn(personal.id, local_ids)
+        self.assertNotIn(international.id, local_ids)
+
+        intl_list = self.client.get("/api/v1/juria/lookup/library/?scope=INTERNATIONAL")
+        self.assertEqual(intl_list.status_code, 200, intl_list.content)
+        intl_ids = [row["id"] for row in intl_list.json()]
+        self.assertIn(international.id, intl_ids)
+        self.assertNotIn(personal.id, intl_ids)
+        self.assertNotIn(local.id, intl_ids)
+
+        linked_local = self.client.post(
+            f"/api/v1/juria/projects/{pk}/sources/",
+            {"kind": "LIBRARY", "library_scopes": ["LOCAL"]},
+            format="json",
+        )
+        self.assertEqual(linked_local.status_code, 201, linked_local.content)
+        local_sources = self.client.get(f"/api/v1/juria/projects/{pk}/sources/")
+        local_row = next(
+            row
+            for row in local_sources.json()
+            if row.get("library_document_id") == local.id
+        )
+        self.assertEqual(local_row.get("title"), "Moroccan Commercial Code")
+        self.assertEqual((local_row.get("metadata") or {}).get("linked_as"), "scope")
+        self.assertEqual((local_row.get("metadata") or {}).get("library_scope"), "LOCAL")
+
+        linked = self.client.post(
+            f"/api/v1/juria/projects/{pk}/sources/",
+            {"kind": "LIBRARY", "link_all_libraries": True},
+            format="json",
+        )
+        self.assertEqual(linked.status_code, 201, linked.content)
+        sources = self.client.get(f"/api/v1/juria/projects/{pk}/sources/")
+        self.assertEqual(sources.status_code, 200)
+        lib_ids = {
+            row["library_document_id"]
+            for row in sources.json()
+            if row.get("library_document_id")
+        }
+        self.assertIn(personal.id, lib_ids)
+        self.assertIn(local.id, lib_ids)
+        self.assertIn(international.id, lib_ids)
+
+    def test_link_all_libraries_without_documents_returns_clear_error(self):
+        created = self.client.post("/api/v1/juria/projects/", {"name": "Empty lib"}, format="json")
+        pk = created.json()["id"]
+        linked = self.client.post(
+            f"/api/v1/juria/projects/{pk}/sources/",
+            {"kind": "LIBRARY", "link_all_libraries": True},
+            format="json",
+        )
+        self.assertEqual(linked.status_code, 400, linked.content)
+        self.assertIn("No documents", linked.json().get("detail", ""))
+
 
 class JuriaTitleHelperTests(SimpleTestCase):
     def test_untitled_and_placeholders(self):

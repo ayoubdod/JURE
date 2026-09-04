@@ -18,6 +18,7 @@ import { useToast } from '@/hooks/use-toast';
 import { devError } from '@/utils/devLog';
 import { CaseCategory, CaseStatus } from '@/utils/constants';
 import { useAppTranslation } from '@/i18n';
+import { clientDisplayName } from '@/services/case/caseType';
 import {
   CREATE_CANCEL_CLASS,
   CREATE_FOOTER_CLASS,
@@ -364,9 +365,7 @@ const CaseUpdateModal = forwardRef<CaseUpdateModalRef, CaseUpdateModalProps>(({ 
                     value={mainForm.watch('client')}
                     onChange={(val) => mainForm.setValue('client', val, { shouldDirty: true })}
                     labelKey={(client: API.Client) =>
-                      `${client.first_name || ''} ${client.last_name || ''}`.trim() ||
-                      client.email ||
-                      t.cases.unnamed
+                      clientDisplayName(client) || client.email || t.cases.unnamed
                     }
                     cleanable
                     placeholder={m.placeholders.client}

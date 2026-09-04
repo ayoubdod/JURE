@@ -29,6 +29,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useAppTranslation } from '@/i18n';
 import { courtLabels } from '@/components/case/workspace/litigation-detail/helpers';
+import { clientContactPerson, clientDisplayName } from '@/services/case/caseType';
 
 export interface CaseWorkspaceCardProps {
   caseItem: API.Case;
@@ -81,7 +82,8 @@ const CaseWorkspaceCard: React.FC<CaseWorkspaceCardProps> = ({ caseItem, onClick
     caseItem.title || caseItem.reference || CaseCategory.getLabel(caseItem.category) || t.cases.untitledCase;
   const reference = caseItem.reference ? `#${String(caseItem.reference).replace(/^#/, '')}` : '';
 
-  const clientName = personName(caseItem.client as API.User | undefined) || t.cases.unnamed;
+  const clientName = clientDisplayName(caseItem.client as API.User | undefined) || t.cases.unnamed;
+  const presentedBy = clientContactPerson(caseItem.client as API.User | undefined);
   const clientRole = enumPretty(getCaseData(caseItem, 'client_role') as string | undefined);
   const leadName = personName(caseItem.assigned_to as API.User | undefined);
   const courtName = isLitigation
@@ -221,10 +223,17 @@ const CaseWorkspaceCard: React.FC<CaseWorkspaceCardProps> = ({ caseItem, onClick
 
         <div className="mt-2 flex min-w-0 flex-wrap gap-1.5">
           {caseItem.client ? (
-            <EntityPill
-              icon={User}
-              label={`${clientName}${clientRole ? ` (${clientRole})` : ''}`}
-            />
+            <div className="min-w-0">
+              <EntityPill
+                icon={User}
+                label={`${clientName}${clientRole ? ` (${clientRole})` : ''}`}
+              />
+              {presentedBy ? (
+                <p className="mt-0.5 text-[11px] text-slate-500 dark:text-slate-400">
+                  {tf(t.clients.profile.presentedBy, { name: presentedBy })}
+                </p>
+              ) : null}
+            </div>
           ) : null}
           {leadName ? <EntityPill icon={User} label={`${c.lead}: ${leadName}`} /> : null}
           {courtName ? <EntityPill icon={Building2} label={courtName} /> : null}

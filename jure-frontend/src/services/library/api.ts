@@ -27,6 +27,17 @@ export const apiGetLibrary = (tab: LibraryTab, params?: LibraryQuery) => {
     return axiosInstance.get<API.LibraryListResponse>(`/library/${tab}/`, { params });
 };
 
+export function parseLibraryList(
+    data: API.LibraryListResponse | API.Document[] | unknown
+): API.Document[] {
+    if (Array.isArray(data)) return data;
+    if (data && typeof data === 'object') {
+        const results = (data as API.LibraryListResponse).results;
+        if (Array.isArray(results)) return results;
+    }
+    return [];
+}
+
 export const apiGetDocument = (id: number) => {
     return axiosInstance.get<API.Document>(`/library/documents/${id}/`);
 };

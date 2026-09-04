@@ -1,11 +1,11 @@
 'use client';
 
 import React from 'react';
-import { getCaseData } from '@/utils/caseCardHelpers';
 import { Link2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { getStatusColor } from '@/utils/caseCardHelpers';
+import { getCaseData, getStatusColor } from '@/utils/caseCardHelpers';
+import { clientDisplayName } from '@/services/case/caseType';
 import { useAppTranslation } from '@/i18n';
 
 function typeLabel(link: API.CaseLinkSummary): string {
@@ -17,8 +17,7 @@ function typeLabel(link: API.CaseLinkSummary): string {
 function clientLine(link: API.CaseLinkSummary): string {
   const cl = link.client;
   if (!cl) return '';
-  const name = [cl.first_name, cl.last_name].filter(Boolean).join(' ').trim();
-  return name || cl.email || '';
+  return clientDisplayName(cl) || cl.email || '';
 }
 
 type Props =

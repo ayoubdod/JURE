@@ -60,6 +60,7 @@ export function JuriaChat({ project }: { project: JuriaProject }) {
   const editMessage = useJuriaStore((s) => s.editMessage);
   const deleteMessage = useJuriaStore((s) => s.deleteMessage);
   const conversations = useJuriaStore((s) => s.conversations);
+  const updateProject = useJuriaStore((s) => s.updateProject);
 
   const [draft, setDraft] = useState('');
   const [attach, setAttach] = useState<File | null>(null);
@@ -316,15 +317,36 @@ export function JuriaChat({ project }: { project: JuriaProject }) {
                 ? { reference: project.linked_case_reference ?? undefined, title: project.linked_case_title ?? undefined }
                 : undefined
             }
-            onLinkCase={() => {}}
-            showCaseLink={false}
+            onLinkCase={(c) => {
+              void updateProject(project.id, { linked_case_id: c.id }).catch((e) =>
+                toast({
+                  variant: 'destructive',
+                  title: t.juria.workspace.overview.linkFailed,
+                  description: getJuriaErrorMessage(e),
+                })
+              );
+            }}
+            onUnlinkCase={
+              project.is_simple
+                ? undefined
+                : () => {
+                    void updateProject(project.id, { linked_case_id: null }).catch((e) =>
+                      toast({
+                        variant: 'destructive',
+                        title: t.juria.workspace.overview.linkFailed,
+                        description: getJuriaErrorMessage(e),
+                      })
+                    );
+                  }
+            }
+            showCaseLink={!project.is_simple}
             attachment={attach}
             onAttachmentChange={setAttach}
             askLang={language}
             onAskLangChange={(l) => setLanguage(l)}
             onAddFromCase={project.is_simple ? undefined : () => setAttachKind('case')}
             onAddFromLibrary={project.is_simple ? undefined : () => setAttachKind('library')}
-            canAddFromCase={!project.is_simple && Boolean(project.linked_case_id)}
+            canAddFromCase={!project.is_simple}
           />
         </div>
       </div>

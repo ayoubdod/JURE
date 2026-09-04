@@ -2644,6 +2644,7 @@ export const fr: AppMessages = {
     profile: {
       roleClient: 'Client',
       roleCompany: 'Entreprise',
+      presentedBy: 'Présenté par {name}',
       call: 'Appeler',
       sendEmail: 'E-mail',
       moreActions: 'Plus d’actions',
@@ -3665,6 +3666,10 @@ export const fr: AppMessages = {
       ROLE_CHANGED: { title: 'Votre rôle a été modifié', message: 'Votre rôle au sein du cabinet a été mis à jour.' },
       MEMBER_ADDED: { title: 'Nouveau membre ajouté', message: '{userName} a rejoint le cabinet.' },
       INVITATION_ACCEPTED: { title: 'Invitation acceptée', message: '{userName} a accepté son invitation.' },
+      JURIA_MEMBER_INVITED: {
+        title: 'Ajouté à un projet Juria',
+        message: '{userName} vous a invité à « {projectName} ».',
+      },
       TVA_THRESHOLD_CROSSED: {
         title: 'Seuil TVA franchi — TVA obligatoire',
         message: 'Votre cabinet a franchi le seuil cumulé de 500 000 MAD. La TVA à 20 % s’applique désormais à toutes les nouvelles factures.',
@@ -4474,6 +4479,10 @@ export const fr: AppMessages = {
         linkedCase: 'Dossier lié',
         noCase:
           'Aucun dossier connecté. Juria n’accède qu’aux ressources explicitement liées.',
+        unlinkCase: 'Détacher',
+        linkFailed: 'Impossible de lier ce dossier',
+        connectCalendar: 'Liez un dossier pour afficher les échéances autorisées.',
+        connectTasks: 'Liez un dossier pour afficher les tâches autorisées.',
         viewCase: 'Voir le dossier',
         sources: 'Sources',
         sourcesMeta: '{docs} documents · {lib} bibliothèque',
@@ -4526,6 +4535,14 @@ export const fr: AppMessages = {
         libraryBtn: 'Bibliothèque',
         empty: 'Connectez un dossier ou une bibliothèque pour enrichir le contexte juridique.',
         remove: 'Retirer',
+        addFromCase: 'Ajouter un document du dossier',
+        addFromLibrary: 'Ajouter depuis la bibliothèque',
+        addSelected: 'Ajouter la sélection',
+        selectAllVisible: 'Tout sélectionner',
+        linkThisLibrary: 'Lier cette bibliothèque',
+        linkAllLibraries: 'Lier toutes les bibliothèques',
+        noDocuments: 'Aucun document disponible.',
+        addFailed: 'Ajout impossible',
       },
       documents: {
         searchPlaceholder: 'Rechercher un document…',

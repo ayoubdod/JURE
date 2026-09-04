@@ -70,7 +70,7 @@ export function getNotificationIcon(type: string): ReactNode {
   if (t.startsWith('CASE_')) return <Briefcase className="h-4 w-4 text-blue-600" aria-hidden />;
   if (t === 'PROFILE_UPDATED') return <User className="h-4 w-4 text-slate-600" aria-hidden />;
   if (t === 'ROLE_CHANGED') return <Shield className="h-4 w-4 text-red-600" aria-hidden />;
-  if (t === 'MEMBER_ADDED') return <Users className="h-4 w-4 text-teal-600" aria-hidden />;
+  if (t === 'MEMBER_ADDED' || t === 'JURIA_MEMBER_INVITED') return <Users className="h-4 w-4 text-teal-600" aria-hidden />;
   if (t.startsWith('TVA_') || t === 'TVA_THRESHOLD_CROSSED') {
     return <Scale className="h-4 w-4 text-amber-600" aria-hidden />;
   }
@@ -131,7 +131,7 @@ function matchesFilter(n: AppNotification, filter: NotificationFilterId): boolea
     );
   }
   if (filter === 'team') {
-    return t === 'PROFILE_UPDATED' || t === 'ROLE_CHANGED' || t === 'MEMBER_ADDED';
+    return t === 'PROFILE_UPDATED' || t === 'ROLE_CHANGED' || t === 'MEMBER_ADDED' || t === 'JURIA_MEMBER_INVITED';
   }
   if (filter === 'messages') {
     return t === 'NEW_MESSAGE' || t === 'NEW_MESSAGE_DAILY_REMINDER' || t === 'CALL_MISSED';

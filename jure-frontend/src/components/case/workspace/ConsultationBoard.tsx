@@ -3,7 +3,7 @@ import { Building2, Phone, Video, ChevronDown } from 'lucide-react';
 import UserAvatar, { getPersonImage } from '@/components/common/UserAvatar';
 import { formatDate, formatTime, useAppTranslation } from '@/i18n';
 import { cn } from '@/lib/utils';
-import { clientDisplayName } from '@/services/case/caseType';
+import { CaseClientLabel } from '@/components/client/CaseClientLabel';
 import { getConvertedToCase } from '@/components/case/conversion/ConvertedCaseLink';
 import { getCaseData } from '@/utils/caseCardHelpers';
 import {
@@ -76,9 +76,13 @@ function ConsultationBoardCard({
         ) : null}
       </div>
       <p className="mt-2 text-sm font-semibold text-slate-900 dark:text-white leading-snug">{c.title}</p>
-      <p className="mt-1.5 text-[11px] text-slate-500 dark:text-slate-400 truncate">
-        {clientDisplayName(c.client) || copy.noneDash}
-      </p>
+      <div className="mt-1.5 min-w-0">
+        <CaseClientLabel
+          client={c.client}
+          fallback={copy.noneDash}
+          nameClassName="truncate text-[11px] text-slate-500 dark:text-slate-400"
+        />
+      </div>
       <p className="mt-1 text-[11px] tabular-nums text-slate-500">{dateLabel}</p>
       <div className="mt-2 flex items-center justify-between gap-2">
         {lead ? (

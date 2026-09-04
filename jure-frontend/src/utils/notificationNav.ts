@@ -134,6 +134,10 @@ export async function openNotification(navigate: NavigateFunction, n: AppNotific
     navigate(n.related_user?.id ? `/dashboard/profile/${n.related_user.id}` : '/dashboard/team');
     return;
   }
+  if (t === 'JURIA_MEMBER_INVITED') {
+    navigate(actionUrl || '/dashboard/juria');
+    return;
+  }
   if (t === 'PROFILE_UPDATED' || t === 'ROLE_CHANGED') {
     navigate('/dashboard/profile');
     return;

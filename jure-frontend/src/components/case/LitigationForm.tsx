@@ -24,6 +24,7 @@ import { Loader2, Plus, Trash2, ShieldAlert } from 'lucide-react';
 import { useCaseForm } from '@/hooks/useCaseForm';
 import { useToast } from '@/hooks/use-toast';
 import { useAppTranslation } from '@/i18n';
+import { clientDisplayName } from '@/services/case/caseType';
 import ConflictCheckDialog from '@/components/dashboard/ConflictCheckDialog';
 import { cn } from '@/lib/utils';
 import {
@@ -359,11 +360,8 @@ const LitigationForm: React.FC<LitigationFormProps> = ({
     last_name?: string;
     email?: string;
     phone?: string;
-  }) =>
-    `${c.first_name || ''} ${c.last_name || ''}`.trim() ||
-    c.email ||
-    c.phone ||
-    t.cases.unnamed;
+    client_type?: string;
+  }) => clientDisplayName(c) || c.email || c.phone || t.cases.unnamed;
 
   return (
     <>

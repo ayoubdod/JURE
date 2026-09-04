@@ -21,6 +21,7 @@ import { Loader2, Plus, Trash2 } from 'lucide-react';
 import { useCaseForm } from '@/hooks/useCaseForm';
 import { useToast } from '@/hooks/use-toast';
 import { useAppTranslation } from '@/i18n';
+import { clientDisplayName } from '@/services/case/caseType';
 import { cn } from '@/lib/utils';
 import {
   CREATE_CANCEL_CLASS,
@@ -345,8 +346,8 @@ const AdministrativeDutyForm: React.FC<AdministrativeDutyFormProps> = ({
               link="/clients/clients/"
               value={form.watch('client')}
               onChange={(v) => form.setValue('client', v ?? null)}
-              labelKey={(c: { first_name?: string; last_name?: string; email?: string }) =>
-                `${c.first_name || ''} ${c.last_name || ''}`.trim() || c.email || t.cases.unnamed
+              labelKey={(c: { first_name?: string; last_name?: string; email?: string; client_type?: string }) =>
+                clientDisplayName(c) || c.email || t.cases.unnamed
               }
               cleanable
               placeholder={modal.placeholders.client}

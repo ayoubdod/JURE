@@ -17,6 +17,7 @@ import { getCountdownDays, getCountdownStyle } from '@/utils/caseCardHelpers';
 import { TaskPriority, TaskStatus } from '@/utils/constants';
 import type { Appointment } from '@/services/appointment/api';
 import { useAppTranslation } from '@/i18n';
+import { clientDisplayName } from '@/services/case/caseType';
 
 function formatDayMonthYear(iso: string): string {
   const d = new Date(iso);
@@ -261,7 +262,7 @@ export function RelatedTasksAppointmentsSection({
               <ul className="space-y-2">
                 {appointments.map((a) => {
                   const clientName = a.client_details
-                    ? `${a.client_details.first_name || ''} ${a.client_details.last_name || ''}`.trim() || a.client_details.email
+                    ? `${clientDisplayName(a.client_details) || a.client_details.email}`
                     : null;
                   return (
                     <li

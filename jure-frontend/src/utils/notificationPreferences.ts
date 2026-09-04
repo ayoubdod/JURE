@@ -44,6 +44,6 @@ export function shouldAlertForNotificationType(type: string, prefs: Notification
   ) {
     return prefs.finance;
   }
-  if (t === 'PROFILE_UPDATED' || t === 'ROLE_CHANGED' || t === 'MEMBER_ADDED') return prefs.team;
+  if (t === 'PROFILE_UPDATED' || t === 'ROLE_CHANGED' || t === 'MEMBER_ADDED' || t === 'JURIA_MEMBER_INVITED') return prefs.team;
   return true;
 }

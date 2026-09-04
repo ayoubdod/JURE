@@ -75,7 +75,12 @@ async function fetchCasesForClient(clientId: number): Promise<API.Case[]> {
   const acc: API.Case[] = [];
 
   while (true) {
-    const res = await apiGetCases({ page, page_size: pageSize });
+    const res = await apiGetCases({
+      client: clientId,
+      page,
+      page_size: pageSize,
+      includeFollowUps: true,
+    });
     const data = res.data;
     acc.push(...(data.results || []));
     const lastPage = data.last_page ?? 1;
@@ -183,11 +188,20 @@ const ClientProfilePreview = React.forwardRef<ClientProfilePreviewRef, ClientPro
       if (client?.email) window.location.href = `mailto:${client.email}`;
     };
 
-    const fullName = client
-      ? `${client.first_name || ''} ${client.last_name || ''}`.trim() || t.clients.unnamed
-      : '';
-    const initials = initialsOf(client?.first_name, client?.last_name);
     const isCompany = client?.client_type === 'COMPANY';
+    const personName = isCompany ? (client?.first_name || '').trim() : '';
+    const companyName = isCompany ? (client?.last_name || '').trim() : '';
+    const fullName = client
+      ? isCompany
+        ? companyName || t.clients.unnamed
+        : `${client.first_name || ''} ${client.last_name || ''}`.trim() || t.clients.unnamed
+      : '';
+    const initials = isCompany
+      ? initialsOf(
+          companyName.split(/\s+/).filter(Boolean)[0],
+          companyName.split(/\s+/).filter(Boolean)[1]
+        )
+      : initialsOf(client?.first_name, client?.last_name);
     const ice = client?.ice?.trim();
     const fiscalIf = (client?.fiscal_if || (client as API.Client & { if?: string | null })?.if || '').trim();
 
@@ -301,33 +315,18 @@ const ClientProfilePreview = React.forwardRef<ClientProfilePreviewRef, ClientPro
                             {client.is_active ? t.clients.status.active : t.clients.status.inactive}
                           </span>
                         </div>
-                        <DialogDescription id="client-profile-description" className="mt-0.5 text-[12.5px] text-slate-500 dark:text-zinc-400">
-                          {isCompany ? p.roleCompany : p.roleClient}
-                        </DialogDescription>
-                        {(client.email || client.phone) ? (
-                          <p className="mt-1 truncate text-[12px] text-slate-500 dark:text-zinc-400">
-                            {[client.email, client.phone].filter(Boolean).join(' · ')}
-                          </p>
-                        ) : null}
-                        {typeof client.cases_count === 'number' || (client.cases && client.cases.length > 0) ? (
-                          <p className="mt-1 text-[12px] font-medium text-slate-600 dark:text-zinc-300">
-                            {tf(
-                              (client.cases_count ?? client.cases?.length ?? 0) === 1
-                                ? t.clients.casesCountOne
-                                : t.clients.casesCountOther,
-                              { count: client.cases_count ?? client.cases?.length ?? 0 }
-                            )}
-                          </p>
-                        ) : null}
-                        {client.address ? (
-                          <p
-                            className="mt-1 flex min-w-0 items-center gap-1 text-[12px] text-slate-500 dark:text-zinc-400"
-                            title={client.address}
+                        {isCompany && personName ? (
+                          <DialogDescription
+                            id="client-profile-description"
+                            className="mt-1 truncate text-[12.5px] text-slate-500 dark:text-zinc-400"
                           >
-                            <MapPin className="h-3 w-3 shrink-0" aria-hidden />
-                            <span className="truncate">{client.address}</span>
-                          </p>
-                        ) : null}
+                            {tf(p.presentedBy, { name: personName })}
+                          </DialogDescription>
+                        ) : (
+                          <DialogDescription id="client-profile-description" className="sr-only">
+                            {isCompany ? p.roleCompany : p.roleClient}
+                          </DialogDescription>
+                        )}
                       </div>
                     </div>
 
@@ -445,21 +444,6 @@ const ClientProfilePreview = React.forwardRef<ClientProfilePreviewRef, ClientPro
               >
                 {client && tab === 'overview' ? (
                   <div className="min-w-0 space-y-6">
-                    <div className="grid min-w-0 grid-cols-2 gap-2 sm:grid-cols-4">
-                      <SummaryCell icon={Mail} label={t.clients.email} value={client.email || '—'} />
-                      <SummaryCell icon={Phone} label={t.clients.phone} value={client.phone || '—'} />
-                      <SummaryCell
-                        icon={Briefcase}
-                        label={p.cases}
-                        value={casesLoading ? '…' : String(caseStats.total)}
-                      />
-                      <SummaryCell
-                        icon={User}
-                        label={t.common.status}
-                        value={client.is_active ? t.clients.status.active : t.clients.status.inactive}
-                      />
-                    </div>
-
                     <section className="min-w-0 space-y-3">
                       <h3 className="text-[13px] font-semibold text-slate-800 dark:text-zinc-200">{p.contact}</h3>
                       <dl className="divide-y divide-slate-100 overflow-hidden rounded-xl border border-slate-200 dark:divide-zinc-800 dark:border-zinc-800">
@@ -687,28 +671,6 @@ const ClientProfilePreview = React.forwardRef<ClientProfilePreviewRef, ClientPro
     );
   }
 );
-
-function SummaryCell({
-  icon: Icon,
-  label,
-  value,
-}: {
-  icon: typeof Mail;
-  label: string;
-  value: string;
-}) {
-  return (
-    <div className="min-w-0 rounded-xl border border-slate-200 bg-white px-3 py-2.5 dark:border-zinc-800 dark:bg-zinc-950">
-      <div className="flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-[0.08em] text-slate-400">
-        <Icon className="h-3 w-3 text-[#64499D]" aria-hidden />
-        {label}
-      </div>
-      <p className="mt-1 truncate text-[13px] font-medium text-slate-800 dark:text-zinc-200" title={value}>
-        {value}
-      </p>
-    </div>
-  );
-}
 
 function InfoRow({
   icon: Icon,

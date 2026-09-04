@@ -2,7 +2,7 @@ import { Field, LongText } from '@/components/case/case-detail-drawer/primitives
 import { ConvertedCaseLink, getConvertedFromCase } from '@/components/case/conversion/ConvertedCaseLink';
 import { formatDrawerDate } from '@/components/case/case-detail-drawer/format';
 import { getCaseData, getCountdownDays, getCountdownStyle } from '@/utils/caseCardHelpers';
-import { clientDisplayName } from '@/services/case/caseType';
+import { CaseClientLabel } from '@/components/client/CaseClientLabel';
 import { cn } from '@/lib/utils';
 import { Check, Circle } from 'lucide-react';
 import { useAppTranslation } from '@/i18n';
@@ -66,7 +66,9 @@ export default function AdministrativeDetails({
 
       <WorkspaceCard title={copy.people}>
         <div className="grid gap-4 sm:grid-cols-2">
-          <Field label={copy.snapshotClient}>{clientDisplayName(caseItem.client) || copy.noneAssigned}</Field>
+          <Field label={copy.snapshotClient}>
+            <CaseClientLabel client={caseItem.client} fallback={copy.noneAssigned} />
+          </Field>
           <Field label={copy.leadAttorney}>{lead ? personName(lead) : copy.noneAssigned}</Field>
         </div>
       </WorkspaceCard>

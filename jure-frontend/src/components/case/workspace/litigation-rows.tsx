@@ -1,6 +1,7 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
-import { clientDisplayName, formatShortDate, nextLitigationDeadline } from '@/services/case/caseType';
+import { formatShortDate, nextLitigationDeadline } from '@/services/case/caseType';
+import { CaseClientLabel } from '@/components/client/CaseClientLabel';
 import { getCaseData, getStatusColor } from '@/utils/caseCardHelpers';
 import { courtLabels } from '@/components/case/workspace/litigation-detail/helpers';
 import { attorneysOf, personName, tdClass } from './consultation-rows';
@@ -69,8 +70,16 @@ export function LitigationRow({
       </td>
       <td className={cn(tdClass(), 'hidden md:table-cell')}>
         {c.client ? (
-          <button type="button" className="text-start hover:text-[#64499D] hover:underline" onClick={onClient}>
-            {clientDisplayName(c.client)}
+          <button
+            type="button"
+            className="block max-w-[13rem] min-w-0 text-start hover:text-[#64499D]"
+            onClick={onClient}
+          >
+            <CaseClientLabel
+              client={c.client}
+              nameClassName="truncate font-medium hover:underline"
+              presentedClassName="truncate"
+            />
           </button>
         ) : (
           miss
@@ -149,9 +158,9 @@ export function LitigationMobileCard({
         <div onClick={(e) => e.stopPropagation()}>{actions}</div>
       </div>
       <h3 className="mt-1 text-sm font-semibold text-slate-900 dark:text-white">{c.title}</h3>
-      <p className="mt-1.5 text-[12px] text-slate-600">
-        {clientDisplayName(c.client) || copy.noneDash}
-      </p>
+      <div className="mt-1.5 text-[12px] text-slate-600">
+        <CaseClientLabel client={c.client} fallback={copy.noneDash} />
+      </div>
       {court.composed ? (
         <p className="mt-1 text-[12px] text-slate-500">{court.composed}</p>
       ) : null}

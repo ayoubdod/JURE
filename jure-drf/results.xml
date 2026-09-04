@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <testsuites>
-	<testsuite name="research_notes.tests.test_api.ResearchNoteAPITests-20260902235538" tests="1" file="research_notes/tests/test_api.py" time="8.317" timestamp="2026-09-02T23:55:46" failures="0" errors="0" skipped="0">
-		<testcase classname="research_notes.tests.test_api.ResearchNoteAPITests" name="test_same_cabinet_colleague_cannot_see_or_mutate_notes" time="8.317" timestamp="2026-09-02T23:55:46" file="research_notes\tests\test_api.py" line="273"/>
+	<testsuite name="juria.tests.JuriaProjectApiTests-20260904124631" tests="2" file="juria/tests.py" time="9.103" timestamp="2026-09-04T12:46:40" failures="0" errors="0" skipped="0">
+		<testcase classname="juria.tests.JuriaProjectApiTests" name="test_lookup_library_filters_by_scope_and_link_all" time="4.793" timestamp="2026-09-04T12:46:36" file="juria\tests.py" line="367"/>
+		<testcase classname="juria.tests.JuriaProjectApiTests" name="test_link_all_libraries_without_documents_returns_clear_error" time="4.310" timestamp="2026-09-04T12:46:40" file="juria\tests.py" line="463"/>
 	</testsuite>
 </testsuites>

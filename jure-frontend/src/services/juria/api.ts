@@ -462,11 +462,16 @@ export async function apiJuriaLookupCaseDocuments(caseId: number) {
   return data;
 }
 
-export async function apiJuriaLookupLibrary(search?: string) {
+export async function apiJuriaLookupLibrary(search?: string, scope?: string) {
   const { data } = await axiosInstance.get<
-    { id: number; title: string; visibility_scope: string; resource_type: string }[]
-  >(`${BASE}lookup/library/`, { params: { search } });
-  return data;
+    { id: number; title: string; visibility_scope: string; scope?: string; resource_type: string }[]
+  >(`${BASE}lookup/library/`, {
+    params: {
+      ...(search?.trim() ? { search: search.trim() } : {}),
+      ...(scope ? { library_scope: scope, scope } : {}),
+    },
+  });
+  return Array.isArray(data) ? data : [];
 }
 
 export async function apiJuriaSendMessageWithLang(

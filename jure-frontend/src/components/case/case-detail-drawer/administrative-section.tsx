@@ -4,6 +4,7 @@ import { getCaseData, getCountdownDays, getCountdownStyle } from '@/utils/caseCa
 import { ConvertedCaseLink, getConvertedFromCase } from '@/components/case/conversion/ConvertedCaseLink';
 import { em, formatDrawerDate } from './format';
 import { Field, LongText, SectionTitle } from './primitives';
+import { CaseClientLabel } from '@/components/client/CaseClientLabel';
 import { cn } from '@/lib/utils';
 import { useAppTranslation } from '@/i18n';
 
@@ -54,9 +55,6 @@ export function AdministrativeSection({
 
   const assigned = c.assigned_to as API.User | null | undefined;
   const client = c.client as API.User | null | undefined;
-  const clientName = client
-    ? [client.first_name, client.last_name].filter(Boolean).join(' ') || em(client.email)
-    : '—';
 
   const done = docs.filter((d) => d?.completed).length;
   const total = docs.length;
@@ -97,7 +95,9 @@ export function AdministrativeSection({
       <section>
         <SectionTitle>People</SectionTitle>
         <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Related client">{clientName}</Field>
+          <Field label="Related client">
+            <CaseClientLabel client={client} fallback={em(client?.email) || '—'} />
+          </Field>
           <Field label="Assigned to">
             {assigned ? `${assigned.first_name ?? ''} ${assigned.last_name ?? ''}`.trim() || em(assigned.email) : '—'}
           </Field>
