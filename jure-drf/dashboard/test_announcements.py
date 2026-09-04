@@ -8,7 +8,8 @@ from django.urls import reverse
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APIClient, APITestCase
-from rest_framework_simplejwt.tokens import RefreshToken
+
+from core.testing import api_client_for
 
 from cabinets.models import Cabinet
 from lawyers.models import LawyerProfile
@@ -42,10 +43,7 @@ def _create_cabinet_lawyer(email: str, phone: str, trade_name: str = "Cabinet"):
 
 
 def _auth_client(user) -> APIClient:
-    api = APIClient()
-    refresh = RefreshToken.for_user(user)
-    api.credentials(HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}")
-    return api
+    return api_client_for(user)
 
 
 def _make_announcement(*, title, cabinets, **kwargs):

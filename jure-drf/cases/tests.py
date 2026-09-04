@@ -567,3 +567,56 @@ class CaseTypeFilterAPITest(APITestCase):
         rabat = self.client.get(self.list_url, {"caseType": "LITIGATION", "city": "Rabat"})
         self.assertEqual([row["title"] for row in rabat.data["results"]], ["Rabat legacy"])
 
+
+class CloseCaseServiceTest(TestCase):
+    """Domain close_case() — same rules as the HTTP action, without the view."""
+
+    def test_persists_closed_status_summary_and_audit(self):
+        from dashboard.models import ActivityLog
+
+        from .services import close_case
+
+        user, cabinet = _create_cabinet_user("svc-closer@test.com")
+        matter = _create_consultation(
+            cabinet,
+            user,
+            case_type=Case.CaseType.LITIGATION,
+            status=Case.CaseStatus.OPEN,
+            title="Service close",
+        )
+        closed, already, previous = close_case(matter, user, outcome="Settled", lessons="Call early")
+        self.assertFalse(already)
+        self.assertEqual(previous, Case.CaseStatus.OPEN)
+        matter.refresh_from_db()
+        self.assertEqual(closed.status, Case.CaseStatus.CLOSED)
+        self.assertEqual(matter.status, Case.CaseStatus.CLOSED)
+        self.assertEqual(matter.updated_by_id, user.id)
+        summary = (matter.case_specific_data or {}).get("close_summary") or {}
+        self.assertEqual(summary.get("outcome"), "Settled")
+        self.assertEqual(summary.get("lessons"), "Call early")
+        self.assertEqual(
+            ActivityLog.objects.filter(cabinet=cabinet, kind="matter_closed").count(),
+            1,
+        )
+
+    def test_already_closed_is_idempotent(self):
+        from dashboard.models import ActivityLog
+
+        from .services import close_case
+
+        user, cabinet = _create_cabinet_user("svc-closed@test.com")
+        matter = _create_consultation(
+            cabinet,
+            user,
+            case_type=Case.CaseType.LITIGATION,
+            status=Case.CaseStatus.CLOSED,
+        )
+        _, already, previous = close_case(matter, user, outcome="ignored")
+        self.assertTrue(already)
+        self.assertEqual(previous, Case.CaseStatus.CLOSED)
+        self.assertEqual(
+            ActivityLog.objects.filter(cabinet=cabinet, kind="matter_closed").count(),
+            0,
+        )
+
+

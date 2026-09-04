@@ -8,8 +8,8 @@ from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 from rest_framework import status
-from rest_framework.test import APIClient
-from rest_framework_simplejwt.tokens import RefreshToken
+
+from core.testing import api_client_for
 
 from cabinets.models import Cabinet
 from chat.models import Conversation, ConversationMembership
@@ -42,10 +42,7 @@ def _create_cabinet_user(email: str, phone: str, trade_name: str = "Cabinet"):
 
 
 def _auth_client(user):
-    client = APIClient()
-    token = RefreshToken.for_user(user)
-    client.credentials(HTTP_AUTHORIZATION=f"Bearer {token.access_token}")
-    return client
+    return api_client_for(user)
 
 
 def _add_member(cabinet, *, email: str, phone: str, first_name: str = "Member"):

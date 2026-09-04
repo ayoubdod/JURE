@@ -6,7 +6,8 @@ from django.test import TestCase
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient, APITestCase
-from rest_framework_simplejwt.tokens import RefreshToken
+
+from core.testing import api_client_for
 
 from cabinets.models import Cabinet
 from lawyers.models import LawyerProfile
@@ -40,10 +41,7 @@ def _create_cabinet_lawyer(email: str, phone: str, trade_name: str = "Cabinet"):
 
 
 def _auth_client(user) -> APIClient:
-    api = APIClient()
-    refresh = RefreshToken.for_user(user)
-    api.credentials(HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}")
-    return api
+    return api_client_for(user)
 
 
 def _pdf(name="brief.pdf"):
@@ -203,7 +201,7 @@ class DocumentAdminFormTests(TestCase):
         return DocumentAdminForm(data=payload, files={"file": _pdf("admin.pdf")})
 
     def test_tags_input_creates_missing_tags(self):
-        form = self._form(tags_input="Contrat, Modèle, formation")
+        form = self._form(tags_input="Contrat, Modele, formation")
         self.assertTrue(form.is_valid(), form.errors)
         self.assertEqual(form.cleaned_data["tags_input"], ["contrat", "modele", "formation"])
 

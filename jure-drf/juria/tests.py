@@ -521,3 +521,82 @@ class JuriaTitleHelperTests(SimpleTestCase):
         title = generate_conversation_title("Rédige une mise en demeure", language="fr")
         self.assertEqual(title, "Mise en demeure locataire")
         self.assertEqual(post.call_args.kwargs["json"]["max_tokens"], 32)
+
+
+class JuriaPermissionServiceTests(APITestCase):
+    """Cabinet and project access rules used by every JURIA view."""
+
+    def setUp(self):
+        from cases.tests import _create_cabinet_user
+
+        self.user_a, self.cab_a = _create_cabinet_user(email="juria-perm-a@test.com")
+        self.user_b, self.cab_b = _create_cabinet_user(email="juria-perm-b@test.com")
+
+    def _project(self, owner, cabinet, *, name="Dossier"):
+        project = JuriaProject.objects.create(
+            cabinet=cabinet,
+            owner=owner,
+            name=name,
+        )
+        JuriaProjectMember.objects.create(
+            project=project,
+            user=owner,
+            role=ProjectRole.OWNER,
+        )
+        return project
+
+    def test_require_cabinet_rejects_user_without_cabinet(self):
+        from rest_framework.exceptions import PermissionDenied
+
+        from cases.tests import _valid_fr_phone
+        from juria.services.permissions import require_cabinet
+        from users.models import User
+
+        stray = User.objects.create_user(
+            email="no-cab@test.com",
+            password="testpass123",
+            first_name="No",
+            last_name="Cabinet",
+            phone=_valid_fr_phone(),
+            country="FR",
+        )
+        with self.assertRaises(PermissionDenied):
+            require_cabinet(stray)
+
+    def test_get_project_for_other_cabinet_is_not_found(self):
+        from rest_framework.exceptions import NotFound
+
+        from juria.services.permissions import get_project_for_user
+
+        project = self._project(self.user_b, self.cab_b)
+        with self.assertRaises(NotFound):
+            get_project_for_user(self.user_a, project.id)
+
+    def test_viewer_cannot_write(self):
+        from rest_framework.exceptions import PermissionDenied
+
+        from cases.tests import _valid_fr_phone
+        from juria.services.permissions import require_write
+        from users.models import User
+
+        project = self._project(self.user_a, self.cab_a)
+        teammate = User.objects.create_user(
+            email="juria-viewer@test.com",
+            password="testpass123",
+            first_name="View",
+            last_name="Only",
+            phone=_valid_fr_phone(),
+            country="FR",
+        )
+        teammate.cabinet = self.cab_a
+        teammate.is_cabinet_member = True
+        teammate.role = User.Role.LAWYER
+        teammate.save(update_fields=["cabinet", "is_cabinet_member", "role"])
+        viewer = JuriaProjectMember.objects.create(
+            project=project,
+            user=teammate,
+            role=ProjectRole.VIEWER,
+        )
+        with self.assertRaises(PermissionDenied):
+            require_write(viewer)
+

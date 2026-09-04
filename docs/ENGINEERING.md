@@ -31,6 +31,7 @@ app/
 - User-facing strings: gettext. Code, comments, and commit messages: English.
 - Canonical URL prefix: `/api/v1/`. Keep `/api/` aliases; do not add a third mount.
 - Tests: `poetry run pytest`. New business logic extracted into a service should get a test in the same change.
+- Authenticated API tests mint JWTs with `core.testing.access_token_for` (embeds `session_version`). Do not use `RefreshToken.for_user` — that omits `sv` and the API returns 401 `session_replaced`.
 
 Ruff is configured in `pyproject.toml`. It is **not** a merge gate yet (existing code would fail a full `ruff check`). Use it on files you already touch if you want; do not reformat the world.
 
