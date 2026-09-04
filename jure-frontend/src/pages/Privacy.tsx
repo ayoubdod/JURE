@@ -9,10 +9,9 @@ import { RouteSeo } from "@/marketing/Seo";
 
 type Lang = "fr" | "en" | "ar";
 
-const STRINGS: Record<Lang, any> = {
-  fr: {
+const privacyFr = {
     htmlLang: "fr",
-    dir: "ltr",
+    dir: "ltr" as "ltr" | "rtl",
     nav: { features: "Fonctionnalités", pricing: "Tarifs", about: "À propos", contact: "Contact" },
     auth: { signin: "Se connecter" },
     themeToggle: { label: "Basculer le thème", title: "Basculer le thème" },
@@ -84,7 +83,12 @@ const STRINGS: Record<Lang, any> = {
       },
     },
     footer: { privacy: "Confidentialité", terms: "Conditions", status: "Statut", rights: "Tous droits réservés." },
-  },
+};
+
+type PrivacyCopy = typeof privacyFr;
+
+const STRINGS: Record<Lang, PrivacyCopy> = {
+  fr: privacyFr,
   en: {
     htmlLang: "en",
     dir: "ltr",

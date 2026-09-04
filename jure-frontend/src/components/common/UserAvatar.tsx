@@ -18,15 +18,23 @@ const IMAGE_FIELDS = [
   'headshot',
 ] as const;
 
+function stringField(obj: object, key: string): string | undefined {
+  const val = (obj as Record<string, unknown>)[key];
+  if (typeof val === 'string' && val.trim()) return val.trim();
+  return undefined;
+}
+
 /** Extract image URL from a person/object (checks image, avatar, profile_image, etc.). */
-export const getPersonImage = (obj: Record<string, unknown> | null | undefined): string | undefined => {
+export const getPersonImage = (obj: object | null | undefined): string | undefined => {
   if (!obj || typeof obj !== 'object') return undefined;
   for (const key of IMAGE_FIELDS) {
-    const val = obj[key];
-    if (typeof val === 'string' && val.trim()) return val.trim();
+    const val = stringField(obj, key);
+    if (val) return val;
   }
-  const user = obj.user as Record<string, unknown> | undefined;
-  if (user && typeof user === 'object') return getPersonImage(user);
+  if ('user' in obj) {
+    const user = (obj as { user?: unknown }).user;
+    if (user && typeof user === 'object') return getPersonImage(user);
+  }
   return undefined;
 };
 

@@ -1,6 +1,6 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
+import type { EventClickArg } from '@fullcalendar/core';
 import FullCalendar from '@fullcalendar/react';
 import { CalendarClock, Calendar, AlertTriangle, CalendarDays } from 'lucide-react';
 import TaskCreateModal, { TaskCreateModalRef } from '@/components/task/TaskCreateModal';
@@ -16,7 +16,11 @@ import {
   WorkspacePageHeader,
   WorkspaceErrorState,
 } from '@/components/workspace/WorkspaceChrome';
-import { apiGetCalendarEvents, apiGetCalendarCaseDateEvents } from '@/services/calendar/api';
+import {
+  apiGetCalendarEvents,
+  apiGetCalendarCaseDateEvents,
+  type CalendarEventsQuery,
+} from '@/services/calendar/api';
 import { useWorkspaceSync } from '@/hooks/useWorkspaceSync';
 import { useShortcutAction } from '@/context/ShortcutsContext';
 import { useAppTranslation } from '@/i18n';
@@ -117,7 +121,7 @@ const CalendarPage: React.FC = () => {
       setLoadError(false);
       try {
         const typesParam = calendarTypesParam(filters.eventType);
-        const params: Record<string, any> = {
+        const params: CalendarEventsQuery = {
           start: start.toISOString(),
           end: end.toISOString(),
         };
@@ -143,9 +147,9 @@ const CalendarPage: React.FC = () => {
             ? apiGetCalendarCaseDateEvents(start.toISOString(), end.toISOString())
             : Promise.resolve({ data: [] as Record<string, unknown>[] }),
         ]);
-        setEvents(res.data as CalendarEvent[]);
+        setEvents(res.data);
         const normalized: CalendarEvent[] = [];
-        (caseRes.data as Record<string, unknown>[]).forEach((raw, i) => {
+        caseRes.data.forEach((raw, i) => {
           const n = normalizeCaseDateRaw(raw, i);
           if (n) normalized.push(n);
         });
@@ -214,7 +218,7 @@ const CalendarPage: React.FC = () => {
     void navigateToCaseById(navigate, id);
   };
 
-  const onEventClick = (info: any) => {
+  const onEventClick = (info: EventClickArg) => {
     const evt = info.event;
     const ext = evt.extendedProps as CalendarEvent;
     if (ext?.type === 'case_date') {

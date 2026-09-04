@@ -9,10 +9,9 @@ import { RouteSeo } from "@/marketing/Seo";
 
 type Lang = "fr" | "en" | "ar";
 
-const STRINGS: Record<Lang, any> = {
-  fr: {
+const statusFr = {
     htmlLang: "fr",
-    dir: "ltr",
+    dir: "ltr" as "ltr" | "rtl",
     nav: { features: "Fonctionnalités", pricing: "Tarifs", about: "À propos", contact: "Contact" },
     auth: { signin: "Se connecter" },
     themeToggle: { label: "Basculer le thème", title: "Basculer le thème" },
@@ -33,7 +32,12 @@ const STRINGS: Record<Lang, any> = {
     incidents: { title: "Incidents récents", none: "Aucun incident au cours des 7 derniers jours." },
     uptime: { title: "Uptime (30 jours)", foot: "Chiffres à titre indicatif. Intégrez vos métriques réelles plus tard." },
     footer: { privacy: "Confidentialité", terms: "Conditions", status: "Statut", rights: "Tous droits réservés." },
-  },
+};
+
+type StatusCopy = typeof statusFr;
+
+const STRINGS: Record<Lang, StatusCopy> = {
+  fr: statusFr,
   en: {
     htmlLang: "en",
     dir: "ltr",

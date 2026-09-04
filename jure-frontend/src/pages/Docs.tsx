@@ -9,9 +9,8 @@ import { RouteSeo } from "@/marketing/Seo";
 
 type Lang = "fr" | "en" | "ar";
 
-const STRINGS: Record<Lang, any> = {
-  en: {
-    htmlLang: "en", dir: "ltr",
+const docsEn = {
+    htmlLang: "en", dir: "ltr" as "ltr" | "rtl",
     nav: { features: "Features", pricing: "Pricing", about: "About", contact: "Contact" },
     auth: { signin: "Sign in" },
     themeToggle: { label: "Toggle theme", title: "Toggle theme" },
@@ -26,7 +25,12 @@ const STRINGS: Record<Lang, any> = {
     },
     cta: { status: "Service Status", contact: "Contact", open: "Open" },
     footer: { privacy: "Privacy", terms: "Terms", status: "Status", rights: "All rights reserved." },
-  },
+};
+
+type DocsCopy = typeof docsEn;
+
+const STRINGS: Record<Lang, DocsCopy> = {
+  en: docsEn,
   fr: {
     htmlLang: "fr", dir: "ltr",
     nav: { features: "Fonctionnalités", pricing: "Tarifs", about: "À propos", contact: "Contact" },

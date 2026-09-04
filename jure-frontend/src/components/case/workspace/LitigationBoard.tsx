@@ -81,7 +81,7 @@ function LitigationBoardCard({ c, onOpen }: { c: API.Case; onOpen: () => void })
             size="xs"
             firstName={lead.first_name}
             lastName={lead.last_name}
-            image={getPersonImage(lead as unknown as Record<string, unknown>)}
+            image={getPersonImage(lead)}
           />
           <span className="truncate text-[11px] text-slate-600 dark:text-slate-400">{personName(lead)}</span>
         </div>

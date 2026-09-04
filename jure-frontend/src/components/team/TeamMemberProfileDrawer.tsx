@@ -265,7 +265,7 @@ const TeamMemberProfileDrawer = forwardRef<
               <div className="flex min-w-0 items-start gap-3">
                 <div className="relative mt-0.5 shrink-0">
                   <UserAvatar
-                    image={getPersonImage(data as Record<string, unknown>)}
+                    image={getPersonImage(data)}
                     firstName={data.first_name}
                     lastName={data.last_name}
                     size="md"

@@ -175,7 +175,7 @@ const RoleManagement: React.FC = () => {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-3">
                         <UserAvatar
-                          image={getPersonImage(member as Record<string, unknown>)}
+                          image={getPersonImage(member)}
                           firstName={member.first_name}
                           lastName={member.last_name}
                           size="md"

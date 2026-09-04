@@ -9,7 +9,7 @@ import { isFinanceAuthorized } from '@/utils/financePermissions';
  */
 export function useFinanceAccess() {
   const user = useUserStore((s) => s.user);
-  const userRole = (user as { role?: string } | null)?.role;
+  const userRole = user?.role;
   const [memberRole, setMemberRole] = useState<API.Role | null | undefined>(undefined);
 
   useEffect(() => {
@@ -33,7 +33,7 @@ export function useFinanceAccess() {
   /** True while we still need cabinet member role to decide (no user.role yet). */
   const loading = userRole == null && memberRole === undefined;
 
-  const effectiveRole = (userRole ?? (memberRole === undefined ? undefined : memberRole)) as string | undefined;
+  const effectiveRole = userRole ?? (memberRole === undefined ? undefined : memberRole);
   const authorized = effectiveRole != null && isFinanceAuthorized(effectiveRole);
 
   return { authorized, loading, effectiveRole, userRole, memberRole };

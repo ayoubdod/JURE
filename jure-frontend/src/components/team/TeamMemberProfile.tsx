@@ -321,7 +321,7 @@ const TeamMemberProfile: React.FC<Props> = ({ profile, onUpdateSuccess }) => {
     .find(Boolean);
 
   const imageUrl = useMemo(() => {
-    const fromProfile = getPersonImage(profile as unknown as Record<string, unknown>);
+    const fromProfile = getPersonImage(profile);
     const fromSession = isOwnProfile ? user?.image : undefined;
     return resolveMediaUrl(fromSession || fromProfile);
   }, [isOwnProfile, user?.image, profile]);

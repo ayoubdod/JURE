@@ -13,39 +13,43 @@ import { track, MarketingEvents } from "@/lib/analytics";
 
 type Lang = "fr" | "en" | "ar";
 
-const STRINGS: Record<Lang, any> = {
-  en: {
-    htmlLang: "en",
-    dir: "ltr",
-    nav: { features: "Features", pricing: "Pricing", about: "About", contact: "Contact" },
-    auth: { signin: "Sign in" },
-    themeToggle: { label: "Toggle theme", title: "Toggle theme" },
-    hero: {
-      title: "Contact us",
-      subtitle: "Tell us about your needs. We’ll get back within 1 business day.",
-      cta: "Send message",
-      alt: "Email us",
-    },
-    form: {
-      name: "Full name",
-      email: "Work email",
-      company: "Company",
-      subject: "Subject",
-      message: "Message",
-      consent: "I agree to be contacted about JURE.",
-      required: "Please fill all required fields.",
-      sent: "Thank you! Your message has been sent.",
-      sendFailed: "We could not send your message. Please email contact@jure.ma.",
-      sending: "Sending…",
-    },
-    info: {
-      title: "Other ways to reach us",
-      email: "contact@jure.ma",
-      phone: "+212 665236382",
-      address: "Casablanca, Morocco",
-    },
-    footer: { privacy: "Privacy", terms: "Terms", status: "Status", rights: "All rights reserved." },
+const contactEn = {
+  htmlLang: "en",
+  dir: "ltr" as const,
+  nav: { features: "Features", pricing: "Pricing", about: "About", contact: "Contact" },
+  auth: { signin: "Sign in" },
+  themeToggle: { label: "Toggle theme", title: "Toggle theme" },
+  hero: {
+    title: "Contact us",
+    subtitle: "Tell us about your needs. We’ll get back within 1 business day.",
+    cta: "Send message",
+    alt: "Email us",
   },
+  form: {
+    name: "Full name",
+    email: "Work email",
+    company: "Company",
+    subject: "Subject",
+    message: "Message",
+    consent: "I agree to be contacted about JURE.",
+    required: "Please fill all required fields.",
+    sent: "Thank you! Your message has been sent.",
+    sendFailed: "We could not send your message. Please email contact@jure.ma.",
+    sending: "Sending…",
+  },
+  info: {
+    title: "Other ways to reach us",
+    email: "contact@jure.ma",
+    phone: "+212 665236382",
+    address: "Casablanca, Morocco",
+  },
+  footer: { privacy: "Privacy", terms: "Terms", status: "Status", rights: "All rights reserved." },
+};
+
+type ContactCopy = typeof contactEn;
+
+const STRINGS: Record<Lang, ContactCopy> = {
+  en: contactEn,
   fr: {
     htmlLang: "fr",
     dir: "ltr",
@@ -145,8 +149,10 @@ const Contact: React.FC = () => {
   const isRtl = t.dir === "rtl";
 
   const onChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value, type, checked } = e.target as any;
-    setForm((f) => ({ ...f, [name]: type === "checkbox" ? checked : value }));
+    const { name, value } = e.target;
+    const checked = e.target instanceof HTMLInputElement ? e.target.checked : false;
+    const isCheckbox = e.target instanceof HTMLInputElement && e.target.type === "checkbox";
+    setForm((f) => ({ ...f, [name]: isCheckbox ? checked : value }));
   };
 
   const submit = async (e: React.FormEvent) => {

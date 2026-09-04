@@ -98,7 +98,7 @@ export function LitigationRow({
               size="xs"
               firstName={lead.first_name}
               lastName={lead.last_name}
-              image={getPersonImage(lead as unknown as Record<string, unknown>)}
+              image={getPersonImage(lead)}
             />
             <span className="max-w-[9rem] truncate">{personName(lead)}</span>
           </div>

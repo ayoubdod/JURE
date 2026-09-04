@@ -193,9 +193,9 @@ const TeamMembers: React.FC = () => {
         m.email,
         m.phone,
         m.address,
-        (m as any).role,
-        (m as any).position,
-        (m as any).department,
+        m.role,
+        m.position,
+        m.department,
       ]
         .filter(Boolean)
         .join(' ')
@@ -205,7 +205,7 @@ const TeamMembers: React.FC = () => {
     if (roleFilter && (m.role || '') !== roleFilter) return false;
     if (statusFilter === 'active' && !m.is_active) return false;
     if (statusFilter === 'offline' && m.is_active) return false;
-    if (statusFilter === 'pending' && !(m as any).invitation_sent) return false;
+    if (statusFilter === 'pending' && !m.invitation_sent) return false;
     return true;
   });
 
@@ -221,7 +221,7 @@ const TeamMembers: React.FC = () => {
   const totalMembers = teamMembers.length;
   const activeCount = teamMembers.filter((m) => m.is_active).length;
   const lawyersCount = teamMembers.filter((m) => m.role === 'LAWYER').length;
-  const pendingInviteCount = teamMembers.filter((m) => !!(m as any).invitation_sent).length;
+  const pendingInviteCount = teamMembers.filter((m) => !!m.invitation_sent).length;
 
   const handleCall = (member: API.CabinetMember) => {
     const name = `${member.first_name || ''} ${member.last_name || ''}`.trim() || t.team.unnamed;
@@ -267,7 +267,7 @@ const TeamMembers: React.FC = () => {
     }
   };
 
-  const isPending = (m: API.CabinetMember) => !!(m as any).invitation_sent;
+  const isPending = (m: API.CabinetMember) => !!m.invitation_sent;
 
   const openProfile = (member: API.CabinetMember) => {
     setSelectedMemberId(member.id);
@@ -374,7 +374,7 @@ const TeamMembers: React.FC = () => {
           <div className="flex items-start gap-3 pe-7">
             <div className="relative shrink-0">
               <UserAvatar
-                image={getPersonImage(member as Record<string, unknown>)}
+                image={getPersonImage(member)}
                 firstName={member.first_name}
                 lastName={member.last_name}
                 size="lg"
@@ -515,7 +515,7 @@ const TeamMembers: React.FC = () => {
           <div className="flex items-start gap-3">
             <div className="relative shrink-0">
               <UserAvatar
-                image={getPersonImage(member as Record<string, unknown>)}
+                image={getPersonImage(member)}
                 firstName={member.first_name}
                 lastName={member.last_name}
                 size="md"
@@ -629,7 +629,7 @@ const TeamMembers: React.FC = () => {
           <div className="flex items-center gap-2.5 min-w-0">
             <div className="relative shrink-0">
               <UserAvatar
-                image={getPersonImage(member as Record<string, unknown>)}
+                image={getPersonImage(member)}
                 firstName={member.first_name}
                 lastName={member.last_name}
                 size="sm"
@@ -761,7 +761,7 @@ const TeamMembers: React.FC = () => {
               >
                 <div className="flex shrink-0 items-center gap-3 sm:w-56">
                   <UserAvatar
-                    image={getPersonImage(member as Record<string, unknown>)}
+                    image={getPersonImage(member)}
                     firstName={member.first_name}
                     lastName={member.last_name}
                     size="sm"

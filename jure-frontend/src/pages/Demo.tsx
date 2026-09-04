@@ -33,10 +33,9 @@ import "@/components/landing/landing.css";
 
 type Lang = "fr" | "en" | "ar";
 
-const STRINGS: Record<Lang, any> = {
-  fr: {
+const demoFr = {
     htmlLang: "fr",
-    dir: "ltr",
+    dir: "ltr" as "ltr" | "rtl",
     back: "Retour",
     title: "Démonstration JURE",
     subtitle: "Parcourez les modules réels de la plateforme — tels qu’ils existent dans votre espace de travail.",
@@ -157,7 +156,12 @@ const STRINGS: Record<Lang, any> = {
         desc: "Dossiers, clients, calendrier, finance et équipe dans une seule plateforme.",
       },
     ],
-  },
+};
+
+type DemoCopy = typeof demoFr;
+
+const STRINGS: Record<Lang, DemoCopy> = {
+  fr: demoFr,
   en: {
     htmlLang: "en",
     dir: "ltr",
@@ -501,7 +505,7 @@ const ScaleIcon: React.FC<{ className?: string }> = ({ className }) => (
   </svg>
 );
 
-function StepMock({ stepId, m, isRtl }: { stepId: string; m: any; isRtl: boolean }) {
+function StepMock({ stepId, m, isRtl }: { stepId: string; m: DemoCopy["mock"]; isRtl: boolean }) {
   switch (stepId) {
     case "dashboard":
       return (

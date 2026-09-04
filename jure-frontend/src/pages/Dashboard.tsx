@@ -371,11 +371,15 @@ const Dashboard = () => {
       const assignedId =
         typeof task.assigned_to === 'object' && task.assigned_to
           ? task.assigned_to.id
-          : (task.assigned_to as unknown as number | null) ?? task.assigned_to_details?.id ?? null;
+          : typeof task.assigned_to === 'number'
+            ? task.assigned_to
+            : task.assigned_to_details?.id ?? null;
       const clientId =
         typeof task.client === 'object' && task.client
           ? task.client.id
-          : (task.client as unknown as number | null) ?? null;
+          : typeof task.client === 'number'
+            ? task.client
+            : null;
 
       await apiUpdateTask({
         id: task.id,

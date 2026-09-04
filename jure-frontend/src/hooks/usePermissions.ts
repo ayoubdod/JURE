@@ -9,9 +9,7 @@ export const usePermission = (permission: API.Permission): boolean => {
   const { user } = useUserStore();
   
   return useMemo(() => {
-    const userRole = (user as any)?.role as API.Role | undefined;
-    const customPermissions = (user as any)?.permissions as API.Permission[] | undefined;
-    return hasPermission(permission, userRole, customPermissions);
+    return hasPermission(permission, user?.role, user?.permissions);
   }, [user, permission]);
 };
 
@@ -22,11 +20,8 @@ export const usePermissions = (permissions: API.Permission[]): Record<API.Permis
   const { user } = useUserStore();
   
   return useMemo(() => {
-    const userRole = (user as any)?.role as API.Role | undefined;
-    const customPermissions = (user as any)?.permissions as API.Permission[] | undefined;
-    
     return permissions.reduce((acc, perm) => {
-      acc[perm] = hasPermission(perm, userRole, customPermissions);
+      acc[perm] = hasPermission(perm, user?.role, user?.permissions);
       return acc;
     }, {} as Record<API.Permission, boolean>);
   }, [user, permissions]);
@@ -39,8 +34,8 @@ export const useUserRole = () => {
   const { user } = useUserStore();
   
   return useMemo(() => {
-    const userRole = (user as any)?.role as API.Role | undefined;
-    const customPermissions = (user as any)?.permissions as API.Permission[] | undefined;
+    const userRole = user?.role;
+    const customPermissions = user?.permissions;
     const rolePermissions = userRole ? getRolePermissions(userRole) : [];
     
     return {

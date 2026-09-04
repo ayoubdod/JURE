@@ -4,10 +4,10 @@ import { detectInitialLanguage } from '@/i18n/locale';
 import { normalizeDocumentCategory } from '@/lib/libraryTaxonomy';
 
 export type Option = {
-    label:string;
-    value:string;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    [key: string]: any;
+    label: string;
+    value: string;
+    country?: string;
+    nativeLabel?: string;
 }
 
 export class Languages {

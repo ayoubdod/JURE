@@ -24,12 +24,17 @@ declare namespace API {
             default_language: string
             status: string
         } | null
-        role?: string
+        role?: Role
+        permissions?: Permission[]
         is_platform_admin?: boolean
         business_address?: string
         team_size?: string
         website?: string
         client_type?: 'INDIVIDUAL' | 'COMPANY' | null
+        cabinet_name?: string
+        company_name?: string
+        organization?: { name?: string }
+        cabinet?: { name?: string }
     }
 
     type UserUpdateForm = {

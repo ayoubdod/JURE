@@ -134,7 +134,7 @@ export function AttorneyCell({
       <UserAvatar
         firstName={first.first_name}
         lastName={first.last_name}
-        image={getPersonImage(first as unknown as Record<string, unknown>)}
+        image={getPersonImage(first)}
         size="xs"
       />
       <span className="max-w-[9rem] truncate">{personName(first)}</span>

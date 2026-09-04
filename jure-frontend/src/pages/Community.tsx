@@ -9,10 +9,9 @@ import { RouteSeo } from "@/marketing/Seo";
 
 type Lang = "fr" | "en" | "ar";
 
-const STRINGS: Record<Lang, any> = {
-  fr: {
+const communityFr = {
     htmlLang: "fr",
-    dir: "ltr",
+    dir: "ltr" as "ltr" | "rtl",
     nav: { features: "Fonctionnalités", about: "À propos", contact: "Contact" },
     auth: { signin: "Se connecter" },
     themeToggle: { label: "Basculer le thème", title: "Basculer le thème" },
@@ -44,7 +43,12 @@ const STRINGS: Record<Lang, any> = {
       primary: "Parler à l’équipe",
     },
     footer: { privacy: "Confidentialité", terms: "Conditions", status: "Statut", rights: "Tous droits réservés." },
-  },
+};
+
+type CommunityCopy = typeof communityFr;
+
+const STRINGS: Record<Lang, CommunityCopy> = {
+  fr: communityFr,
   en: {
     htmlLang: "en",
     dir: "ltr",

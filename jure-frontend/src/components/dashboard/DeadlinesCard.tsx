@@ -16,6 +16,7 @@ import DashboardCollapsibleCard from '@/components/dashboard/DashboardCollapsibl
 import { useToast } from '@/hooks/use-toast';
 import { CalendarPlus, Loader2, Scale } from 'lucide-react';
 import { formatDate, useAppTranslation } from '@/i18n';
+import { isAxiosError } from 'axios';
 import {
   apiCalculateDeadline,
   apiCreateTaskFromDeadline,
@@ -44,6 +45,20 @@ type Props = {
   /** When opened from a case, bind to that matter id. */
   caseId?: number;
 };
+
+function drfErrorMessage(err: unknown, fallback: string, extraField?: string): string {
+  if (!isAxiosError(err) || !err.response?.data || typeof err.response.data !== 'object') {
+    return fallback;
+  }
+  const data = err.response.data as Record<string, unknown>;
+  if (typeof data.detail === 'string') return data.detail;
+  if (extraField) {
+    const field = data[extraField];
+    const first = Array.isArray(field) ? field[0] : field;
+    if (typeof first === 'string') return first;
+  }
+  return fallback;
+}
 
 export default function DeadlinesCard({ caseId }: Props) {
   const { t, tf, lang } = useAppTranslation();
@@ -178,12 +193,8 @@ export default function DeadlinesCard({ caseId }: Props) {
       });
       setResult(res.data);
       setManualDate(res.data.calculated_deadline);
-    } catch (err: any) {
-      const detail =
-        err?.response?.data?.detail ||
-        err?.response?.data?.legal_domain?.[0] ||
-        d.errors.calculate;
-      setError(typeof detail === 'string' ? detail : d.errors.calculate);
+    } catch (err) {
+      setError(drfErrorMessage(err, d.errors.calculate, 'legal_domain'));
       setResult(null);
     } finally {
       setCalculating(false);
@@ -228,10 +239,8 @@ export default function DeadlinesCard({ caseId }: Props) {
           date: formatDisplayDate(res.data.final_deadline),
         }),
       });
-    } catch (err: any) {
-      const detail =
-        err?.response?.data?.detail || err?.response?.data?.case?.[0] || d.errors.save;
-      setError(typeof detail === 'string' ? detail : d.errors.save);
+    } catch (err) {
+      setError(drfErrorMessage(err, d.errors.save, 'case'));
     } finally {
       setSaving(false);
     }

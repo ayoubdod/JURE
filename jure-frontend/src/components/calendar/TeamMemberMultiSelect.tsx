@@ -31,7 +31,7 @@ function toOption(member: API.CabinetMember): TeamMemberOption {
     first_name: member.first_name,
     last_name: member.last_name,
     email: member.email,
-    image: getPersonImage(member as unknown as Record<string, unknown>),
+    image: getPersonImage(member),
   };
 }
 

@@ -68,7 +68,7 @@ function AppointmentParticipants({
             key={p.id}
             size="xs"
             className="ring-2 ring-white dark:ring-slate-950"
-            image={getPersonImage(p as unknown as Record<string, unknown>)}
+            image={getPersonImage(p)}
             firstName={p.first_name}
             lastName={p.last_name}
             email={p.email}

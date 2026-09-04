@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client'
 
 import * as React from 'react'
@@ -24,17 +23,17 @@ import { CheckIcon, ChevronDownIcon, Loader2, RefreshCw, X } from 'lucide-react'
 import { useInFilterPanel } from '@/components/common/filterPanelContext'
 import { useAppTranslation } from '@/i18n'
 
-interface ServerSelectOption {
-  [key: string]: any
-}
+type ServerSelectOption = Record<string, unknown>
+
+export type ServerSelectValue = string | number | null | undefined
 
 interface ServerSelectProps {
   link: string
-  value?: any
-  onChange?: (value: any) => void
+  value?: ServerSelectValue
+  onChange?: (value: ServerSelectValue) => void
   placeholder?: string
   labelKey?: string | ((option: ServerSelectOption) => React.ReactNode)
-  valueKey?: string | ((option: ServerSelectOption) => string)
+  valueKey?: string | ((option: ServerSelectOption) => string | number)
   id?: string
   nullOption?: ServerSelectOption
   extraOptions?: ServerSelectOption[]
@@ -42,6 +41,24 @@ interface ServerSelectProps {
   disabled?: boolean
   searchPlaceholder?: string
   cleanable?: boolean
+}
+
+function rowsFromPayload(data: unknown): ServerSelectOption[] {
+  const raw = Array.isArray(data)
+    ? data
+    : data && typeof data === 'object' && Array.isArray((data as { results?: unknown }).results)
+      ? (data as { results: unknown[] }).results
+      : []
+  return raw.filter((row): row is ServerSelectOption => !!row && typeof row === 'object')
+}
+
+function optionValueOf(
+  option: ServerSelectOption,
+  valueKey: string | ((option: ServerSelectOption) => string | number)
+): string | number {
+  const value = typeof valueKey === 'function' ? valueKey(option) : option[valueKey]
+  if (typeof value === 'number') return value
+  return String(value ?? '')
 }
 
 export default function ServerSelect({
@@ -84,7 +101,7 @@ export default function ServerSelect({
       setLoading(true)
       setError(null)
       const response = await axiosInstance.get(link)
-      const data = Array.isArray(response.data) ? response.data : response.data.results
+      const data = rowsFromPayload(response.data)
       setOptions(data)
     } catch (err) {
       setError(t.common.selectError)
@@ -100,13 +117,9 @@ export default function ServerSelect({
 
   const allOptions = useMemo(() => {
     const extras = extraOptions ?? []
-    const seen = new Set(
-      options.map((option) =>
-        String(typeof valueKey === 'function' ? valueKey(option) : option[valueKey])
-      )
-    )
+    const seen = new Set(options.map((option) => String(optionValueOf(option, valueKey))))
     const mergedExtras = extras.filter((option) => {
-      const key = String(typeof valueKey === 'function' ? valueKey(option) : option[valueKey])
+      const key = String(optionValueOf(option, valueKey))
       if (!key || seen.has(key)) return false
       seen.add(key)
       return true
@@ -114,23 +127,18 @@ export default function ServerSelect({
     return [...mergedExtras, ...options, ...(nullOption ? [nullOption] : [])]
   }, [extraOptions, nullOption, options, valueKey])
 
-  const getSelectedLabel = useMemo((): string => {
+  const getSelectedLabel = useMemo((): React.ReactNode => {
     if (!value) return resolvedPlaceholder
 
-    const selectedOption = allOptions.find(option => {
-      const optionValue = typeof valueKey === 'function'
-        ? valueKey(option)
-        : option[valueKey]
-      return String(optionValue) === String(value)
+    const selectedOption = allOptions.find((option) => {
+      return String(optionValueOf(option, valueKey)) === String(value)
     })
 
     if (!selectedOption) return resolvedPlaceholder
 
-    const selectedLabel = typeof labelKey === 'function'
-      ? labelKey(selectedOption)
-      : selectedOption[labelKey] || ''
-
-    return selectedLabel
+    if (typeof labelKey === 'function') return labelKey(selectedOption)
+    const raw = selectedOption[labelKey]
+    return raw ? String(raw) : ''
   }, [value, resolvedPlaceholder, allOptions, valueKey, labelKey])
 
   if (loading) {
@@ -170,23 +178,21 @@ export default function ServerSelect({
         <CommandEmpty>{t.common.noResults}</CommandEmpty>
         <CommandGroup>
           {allOptions.map((option) => {
-            const optionValue = typeof valueKey === 'function'
-              ? valueKey(option)
-              : option[valueKey]
+            const optionValue = optionValueOf(option, valueKey)
             const optionLabel = typeof labelKey === 'function'
               ? labelKey(option)
-              : option[labelKey] || ''
+              : option[labelKey] == null ? '' : String(option[labelKey])
             const isSelected = String(value) === String(optionValue)
 
             return (
               <CommandItem
-                key={optionValue}
-                value={optionLabel}
+                key={String(optionValue)}
+                value={typeof optionLabel === 'string' ? optionLabel : String(optionValue)}
                 onSelect={() => {
                   onChange?.(optionValue)
                   setOpen(false)
                 }}
-                disabled={option.disabled}
+                disabled={Boolean(option.disabled)}
               >
                 <CheckIcon
                   className={cn(

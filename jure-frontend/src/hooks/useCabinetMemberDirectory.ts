@@ -16,10 +16,9 @@ let loadPromise: Promise<Map<number, CabinetMemberPublic>> | null = null;
 function buildMap(members: API.CabinetMember[]): Map<number, CabinetMemberPublic> {
   const m = new Map<number, CabinetMemberPublic>();
   for (const mem of members) {
-    const fromMember = getPersonImage(mem as unknown as Record<string, unknown>);
+    const fromMember = getPersonImage(mem);
     const u = mem.user;
-    const fromUser =
-      typeof u === 'object' && u != null ? getPersonImage(u as unknown as Record<string, unknown>) : undefined;
+    const fromUser = typeof u === 'object' && u != null ? getPersonImage(u) : undefined;
     const image = fromMember || fromUser;
     const row: CabinetMemberPublic = {
       image,
@@ -84,7 +83,7 @@ export function useCabinetMemberDirectory() {
       /** Current user / owner: `GET /cabinets/members/` may include them; merge session photo when missing. */
       if (currentUser?.id === id) {
         const sessionRow: CabinetMemberPublic = {
-          image: getPersonImage(currentUser as unknown as Record<string, unknown>),
+          image: getPersonImage(currentUser),
           first_name: currentUser.first_name,
           last_name: currentUser.last_name,
           email: currentUser.email,

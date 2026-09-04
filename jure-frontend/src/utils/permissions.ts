@@ -95,7 +95,7 @@ export const useHasPermission = (permission: API.Permission): boolean => {
   // Get the current user's cabinet member data if available
   // For now, we'll assume the user has a role stored somewhere
   // This will need to be updated when the backend provides user role info
-  const userRole = (user as any)?.role as API.Role | undefined;
+  const userRole = user?.role;
   return hasPermission(permission, userRole);
 };
 

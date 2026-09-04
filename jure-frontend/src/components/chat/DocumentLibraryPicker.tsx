@@ -5,7 +5,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import { apiGetDocuments } from '@/services/library/api';
+import { apiGetDocuments, parseLibraryList } from '@/services/library/api';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router';
 import { Button } from '@/components/ui/button';
@@ -39,9 +39,7 @@ const DocumentLibraryPicker: React.FC<DocumentLibraryPickerProps> = ({
       setLoading(true);
       apiGetDocuments({ all: true })
         .then((res) => {
-          const data = res.data;
-          const list = Array.isArray(data) ? data : (data as any)?.results ?? [];
-          setDocs(list);
+          setDocs(parseLibraryList(res.data));
         })
         .catch(() => {
           toast({ title: t.common.error, description: t.conversations.loadDocumentsFailed, variant: 'destructive' });

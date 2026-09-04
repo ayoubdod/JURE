@@ -240,10 +240,10 @@ const Header = () => {
   const organizationName = pickFirstNonEmpty(
     user?.trade_name,
     user?.firm_name,
-    (user as any)?.cabinet_name,
-    (user as any)?.company_name,
-    (user as any)?.organization?.name,
-    (user as any)?.cabinet?.name,
+    user?.cabinet_name,
+    user?.company_name,
+    user?.organization?.name,
+    user?.cabinet?.name,
   );
   const getPageTitle = () => {
     if (organizationName) return organizationName;

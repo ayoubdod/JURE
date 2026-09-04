@@ -17,9 +17,9 @@ export function taskAssigneeUser(task: API.Task | null): API.User | null {
     return task.assignees[0];
   }
   const details = task.assigned_to_details;
-  if (details && typeof details === 'object' && (details as API.User).email) return details as API.User;
-  const raw = task.assigned_to as unknown;
-  if (raw && typeof raw === 'object' && raw !== null && 'email' in raw) return raw as API.User;
+  if (details && typeof details === 'object' && details.email) return details;
+  const raw = task.assigned_to;
+  if (raw && typeof raw === 'object' && 'email' in raw) return raw;
   return null;
 }
 
@@ -54,16 +54,12 @@ export function taskAssigneeIds(task: API.Task | null): number[] {
   return one != null ? [one] : [];
 }
 
-export function taskClientUser(task: API.Task | null): { id?: number; first_name?: string; last_name?: string; email?: string } | null {
+export function taskClientUser(task: API.Task | null): PersonLike {
   if (!task) return null;
-  const details = task.client_details as unknown;
-  if (details && typeof details === 'object' && details !== null) {
-    return details as { id?: number; first_name?: string; last_name?: string; email?: string };
-  }
-  const raw = task.client as unknown;
-  if (raw && typeof raw === 'object' && raw !== null) {
-    return raw as { id?: number; first_name?: string; last_name?: string; email?: string };
-  }
+  const details = task.client_details;
+  if (details && typeof details === 'object') return details;
+  const raw = task.client;
+  if (raw && typeof raw === 'object') return raw;
   return null;
 }
 

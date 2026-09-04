@@ -208,7 +208,7 @@ export function TaskDetailPanel({
                         <div key={person.id || label} className="flex items-center gap-2 text-sm">
                           <UserAvatar
                             size="sm"
-                            image={getPersonImage(person as unknown as Record<string, unknown>) ?? cab?.image}
+                            image={getPersonImage(person) ?? cab?.image}
                             firstName={person.first_name ?? cab?.first_name}
                             lastName={person.last_name ?? cab?.last_name}
                             email={person.email ?? cab?.email}
@@ -528,7 +528,7 @@ export function AppointmentDetailPanel({
                     <UserAvatar
                       size="sm"
                       image={
-                        getPersonImage(appointment.created_by_details as unknown as Record<string, unknown>) ??
+                        getPersonImage(appointment.created_by_details) ??
                         cabinetCreator?.image
                       }
                       firstName={appointment.created_by_details.first_name}
@@ -553,7 +553,7 @@ export function AppointmentDetailPanel({
                       <div key={person.id} className="flex items-center gap-2">
                         <UserAvatar
                           size="sm"
-                          image={getPersonImage(person as unknown as Record<string, unknown>)}
+                          image={getPersonImage(person)}
                           firstName={person.first_name}
                           lastName={person.last_name}
                           email={person.email}
@@ -571,7 +571,7 @@ export function AppointmentDetailPanel({
                       <UserAvatar
                         size="sm"
                         image={
-                          getPersonImage(appointment.client_details as unknown as Record<string, unknown>) ??
+                          getPersonImage(appointment.client_details) ??
                           cabinetClient?.image
                         }
                         firstName={appointment.client_details.first_name}
