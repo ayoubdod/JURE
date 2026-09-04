@@ -15,6 +15,13 @@ function isolateEmbedded(value: string): string {
   return `\u2068${value}\u2069`;
 }
 
+function projectNameFromNotification(n: AppNotification): string {
+  const title = n.title?.trim() || '';
+  const sep = title.indexOf('·');
+  if (sep >= 0) return title.slice(sep + 1).trim();
+  return title;
+}
+
 export function translateNotification(
   n: AppNotification,
   items: AppMessages['notifications']['items']
@@ -30,6 +37,7 @@ export function translateNotification(
     caseRef: isolateEmbedded(n.related_case?.reference?.trim() || n.case_reference?.trim() || ''),
     appointmentTitle: isolateEmbedded(n.related_appointment?.title?.trim() || ''),
     userName: isolateEmbedded(relatedUserName(n)),
+    projectName: isolateEmbedded(projectNameFromNotification(n)),
   };
 
   const title = interpolate(tpl.title, vars).trim();

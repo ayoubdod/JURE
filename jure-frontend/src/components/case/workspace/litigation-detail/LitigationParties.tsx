@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { getCaseData } from '@/utils/caseCardHelpers';
-import { clientDisplayName } from '@/services/case/caseType';
+import { CaseClientLabel } from '@/components/client/CaseClientLabel';
 import { useAppTranslation } from '@/i18n';
 import { EmptyAction, WorkspaceCard } from './ui';
 import { thirdPartyLabels } from './helpers';
@@ -20,14 +20,17 @@ export default function LitigationParties({
   const opposing = String(getCaseData(caseItem, 'opposing_party_name') ?? getCaseData(caseItem, 'opposing_party') ?? '');
   const opposingCounsel = String(getCaseData(caseItem, 'opposing_counsel') ?? '');
   const thirds = thirdPartyLabels(caseItem);
-  const clientName = clientDisplayName(caseItem.client);
+  const hasClient = Boolean(caseItem.client);
 
   return (
     <div className="space-y-4">
       <WorkspaceCard title={copy.snapshotClient}>
-        {clientName ? (
+        {hasClient ? (
           <div>
-            <p className="text-[15px] font-semibold text-slate-900 dark:text-white">{clientName}</p>
+            <CaseClientLabel
+              client={caseItem.client}
+              nameClassName="text-[15px] font-semibold text-slate-900 dark:text-white"
+            />
             {clientRole ? (
               <p className="mt-1 text-[13px] text-slate-500">{enumPretty(clientRole)}</p>
             ) : null}

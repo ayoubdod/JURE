@@ -4,6 +4,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { JURIA_JURISDICTIONS, type JuriaLang, type JuriaProject } from '@/types/juria';
 import useJuriaStore from '@/stores/juriaStore';
 import { useAppTranslation } from '@/i18n';
+import { JuriaLinkCaseControl } from '@/components/juria/JuriaLinkCaseControl';
 
 const LANGS: { id: JuriaLang; label: string }[] = [
   { id: 'fr', label: 'Français' },
@@ -69,6 +70,17 @@ export function JuriaProjectSettings({ project }: { project: JuriaProject }) {
               </option>
             ))}
           </select>
+        </div>
+        <div>
+          <label className="mb-1 block text-[11px] font-medium uppercase text-slate-400">{t.juria.workspace.overview.linkedCase}</label>
+          {project.linked_case_id ? (
+            <p className="mb-2 text-sm text-slate-700 dark:text-slate-200">
+              #{project.linked_case_reference} {project.linked_case_title ? `— ${project.linked_case_title}` : ''}
+            </p>
+          ) : (
+            <p className="mb-2 text-sm text-slate-500">{t.juria.workspace.overview.noCase}</p>
+          )}
+          {!project.is_simple ? <JuriaLinkCaseControl project={project} compact /> : null}
         </div>
         <div>
           <label className="mb-1 block text-[11px] font-medium uppercase text-slate-400">{s.aiInstructions}</label>

@@ -2,7 +2,7 @@ import { Field, LongText, TagList, TimelineRow } from '@/components/case/case-de
 import CaseLegalDeadlinesList from '@/components/case/CaseLegalDeadlinesList';
 import { ConvertedCaseLink, getConvertedFromCase } from '@/components/case/conversion/ConvertedCaseLink';
 import { getCaseData } from '@/utils/caseCardHelpers';
-import { clientDisplayName } from '@/services/case/caseType';
+import { CaseClientLabel } from '@/components/client/CaseClientLabel';
 import { useAppTranslation } from '@/i18n';
 import { WorkspaceCard } from './ui';
 import {
@@ -66,7 +66,7 @@ export default function LitigationDetails({
       <WorkspaceCard title={copy.parties}>
         <div className="space-y-4">
           <Field label={modal.fields.relatedClient}>
-            {clientDisplayName(caseItem.client) || '—'}
+            <CaseClientLabel client={caseItem.client} fallback="—" />
             {clientRole ? (
               <span className="ms-2 inline-flex rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold uppercase dark:bg-zinc-800">
                 {enumPretty(clientRole)}

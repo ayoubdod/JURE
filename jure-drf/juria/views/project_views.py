@@ -43,12 +43,14 @@ from juria.services.permissions import (
     require_write,
     same_cabinet_user,
 )
+from juria.services.notifications import notify_juria_member_invited
 from juria.services.sources import (
     connect_case,
     connect_case_documents,
     connect_client,
     connect_flag,
     connect_library_documents,
+    connect_library_scopes,
 )
 from juria.services.workspace import create_project, duplicate_project, ensure_legacy_conversation
 from juria.views.conversation_views import get_case_for_user
@@ -149,12 +151,16 @@ class JuriaProjectListCreateView(JuriaEnabledMixin, APIView):
                 other = same_cabinet_user(cabinet, uid)
                 if other is None:
                     continue
-                JuriaProjectMember.objects.get_or_create(
+                member, created = JuriaProjectMember.objects.get_or_create(
                     project=project,
                     user=other,
                     defaults={"role": ProjectRole.EDITOR, "invited_by": request.user},
                 )
                 log_activity(project, request.user, ActivityAction.MEMBER_INVITED, user_id=uid)
+                if created:
+                    notify_juria_member_invited(
+                        project=project, invitee=other, inviter=request.user
+                    )
         thread = project.threads.order_by("created_at").first()
         if thread:
             ensure_legacy_conversation(thread, request.user)
@@ -354,6 +360,10 @@ class JuriaProjectMemberListView(JuriaEnabledMixin, APIView):
         if not created:
             member.role = ser.validated_data["role"]
             member.save(update_fields=["role"])
+        else:
+            notify_juria_member_invited(
+                project=access.project, invitee=other, inviter=request.user
+            )
         log_activity(
             access.project,
             request.user,
@@ -442,11 +452,21 @@ class JuriaProjectSourceListView(JuriaEnabledMixin, APIView):
             created = connect_case_documents(project, ids, request.user)
             src = created[0] if created else None
         elif kind in (SourceKind.LIBRARY, SourceKind.LIBRARY_LOCAL, SourceKind.LIBRARY_INTERNATIONAL):
-            ids = list(data.get("library_document_ids") or [])
-            if data.get("library_document_id"):
-                ids.append(data["library_document_id"])
-            created = connect_library_documents(project, ids, request.user)
+            if data.get("link_all_libraries"):
+                created = connect_library_scopes(project, None, request.user)
+            elif data.get("library_scopes"):
+                created = connect_library_scopes(project, list(data["library_scopes"]), request.user)
+            else:
+                ids = list(data.get("library_document_ids") or [])
+                if data.get("library_document_id"):
+                    ids.append(data["library_document_id"])
+                created = connect_library_documents(project, ids, request.user)
             src = created[0] if created else None
+            if src is None:
+                return Response(
+                    {"detail": "No documents found in this library."},
+                    status=400,
+                )
         elif kind == SourceKind.CALENDAR:
             src = connect_flag(project, SourceKind.CALENDAR, ResourceType.CALENDAR, request.user)
         elif kind == SourceKind.TASKS:

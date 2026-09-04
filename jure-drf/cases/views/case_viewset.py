@@ -71,6 +71,7 @@ class CaseViewSet(CloseCaseMixin, ConsultationConvertMixin, ConsultationWorkflow
                 "updated_by",
                 "assigned_to",
                 "client",
+                "client__firm_client_profile",
                 "parent_consultation",
             )
             .prefetch_related(

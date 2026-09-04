@@ -28,6 +28,7 @@ import ServerSelect from '../common/ServerSelect';
 import { Textarea } from '../ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import UserAvatar, { getPersonImage } from '@/components/common/UserAvatar';
+import { clientDisplayName } from '@/services/case/caseType';
 import { formatDate, useAppTranslation } from '@/i18n';
 import { cn } from '@/lib/utils';
 import {
@@ -399,9 +400,7 @@ const CaseViewModal = forwardRef<CaseViewModalRef, CaseViewModalProps>(
                         value={mainForm.watch('client')}
                         onChange={(val) => mainForm.setValue('client', val)}
                         labelKey={(client: API.Client) =>
-                          `${client.first_name || ''} ${client.last_name || ''}`.trim() ||
-                          client.email ||
-                          t.cases.unnamed
+                          clientDisplayName(client) || client.email || t.cases.unnamed
                         }
                         cleanable
                         placeholder={modal.placeholders.client}
@@ -594,14 +593,18 @@ const CaseViewModal = forwardRef<CaseViewModalRef, CaseViewModalProps>(
                     <div className="flex items-start gap-4 rounded-xl border border-slate-200 bg-white px-3 py-3 dark:border-zinc-800 dark:bg-zinc-950">
                       <UserAvatar
                         image={getPersonImage(instance.client as Record<string, unknown>)}
-                        firstName={instance.client.first_name}
-                        lastName={instance.client.last_name}
+                        firstName={
+                          instance.client.client_type === 'COMPANY'
+                            ? instance.client.last_name
+                            : instance.client.first_name
+                        }
+                        lastName={instance.client.client_type === 'COMPANY' ? '' : instance.client.last_name}
                         email={instance.client.email}
                         size="lg"
                       />
                       <div className="min-w-0 flex-1">
                         <h4 className="text-[13.5px] font-semibold text-slate-900 dark:text-zinc-50">
-                          {instance.client.first_name} {instance.client.last_name}
+                          {clientDisplayName(instance.client) || instance.client.email}
                         </h4>
                         <div className="mt-1.5 flex flex-wrap gap-x-4 gap-y-1 text-[13px] font-normal text-slate-600 dark:text-zinc-400">
                           <span className="inline-flex min-w-0 items-center gap-1.5">

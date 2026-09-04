@@ -35,7 +35,6 @@ import { useAppTranslation } from '@/i18n';
 import { apiUpdateCase } from '@/services/case/api';
 import {
   assignedDisplayName,
-  clientDisplayName,
   consultationOutcome,
   formatDuration,
   formatShortDate,
@@ -48,6 +47,7 @@ import {
   chambersForJurisdiction,
 } from '@/services/case/litigationCourt';
 import { courtLabels } from '@/components/case/workspace/litigation-detail/helpers';
+import { CaseClientLabel } from '@/components/client/CaseClientLabel';
 import type { AppMessages } from '@/i18n/messages/types';
 import { getCaseData, getStatusColor } from '@/utils/caseCardHelpers';
 import {
@@ -825,7 +825,9 @@ export default function CaseTypeWorkspace({ kind }: CaseTypeWorkspaceProps) {
         {kind === 'CONSULTATION' && (
           <>
             <td className={cn(tdClass(), 'font-mono text-[11px]')}>{c.reference || miss}</td>
-            <td className={tdClass()}>{clientDisplayName(c.client) || miss}</td>
+            <td className={tdClass()}>
+              <CaseClientLabel client={c.client} fallback={miss} nameClassName="truncate" presentedClassName="truncate" />
+            </td>
             <td className={cn(tdClass(), 'font-semibold text-slate-900 dark:text-white')}>{titleOf(c)}</td>
             <td className={tdClass()}>
               {displayOrMissing(getCaseData(c, 'consultation_type'), miss, enumPretty)}
@@ -853,7 +855,9 @@ export default function CaseTypeWorkspace({ kind }: CaseTypeWorkspaceProps) {
           <>
             <td className={cn(tdClass(), 'font-mono text-[11px]')}>{c.reference || miss}</td>
             <td className={cn(tdClass(), 'font-semibold text-slate-900 dark:text-white')}>{titleOf(c)}</td>
-            <td className={tdClass()}>{clientDisplayName(c.client) || miss}</td>
+            <td className={tdClass()}>
+              <CaseClientLabel client={c.client} fallback={miss} nameClassName="truncate" presentedClassName="truncate" />
+            </td>
             <td className={tdClass()}>{displayOrMissing(getCaseData(c, 'client_role'), miss, enumPretty)}</td>
             <td className={tdClass()}>{displayOrMissing(getCaseData(c, 'opposing_party'), miss)}</td>
             <td className={tdClass()}>{court?.composed || miss}</td>
@@ -880,7 +884,9 @@ export default function CaseTypeWorkspace({ kind }: CaseTypeWorkspaceProps) {
           <>
             <td className={cn(tdClass(), 'font-mono text-[11px]')}>{c.reference || miss}</td>
             <td className={cn(tdClass(), 'font-semibold text-slate-900 dark:text-white')}>{titleOf(c)}</td>
-            <td className={tdClass()}>{clientDisplayName(c.client) || miss}</td>
+            <td className={tdClass()}>
+              <CaseClientLabel client={c.client} fallback={miss} nameClassName="truncate" presentedClassName="truncate" />
+            </td>
             <td className={tdClass()}>{displayOrMissing(getCaseData(c, 'duty_type'), miss, enumPretty)}</td>
             <td className={tdClass()}>{displayOrMissing(getCaseData(c, 'institution'), miss)}</td>
             <td className={tdClass()}>{assignedDisplayName(c) || miss}</td>

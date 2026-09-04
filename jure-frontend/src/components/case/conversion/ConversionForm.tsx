@@ -5,6 +5,7 @@ import { DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { FileText, Loader2 } from 'lucide-react';
 import { getCaseData } from '@/utils/caseCardHelpers';
+import { clientDisplayName } from '@/services/case/caseType';
 import { em } from '@/components/case/case-detail-drawer/format';
 import { useConvertCase } from '@/hooks/useConvertCase';
 import { LitigationConversionFields, defaultLitigationConversionState, type LitigationConversionState } from './LitigationConversionFields';
@@ -170,9 +171,7 @@ export function ConversionForm({
     const legalQuestion = getCaseData(consultation, 'legal_question') as string | undefined;
     const adviceSummary = getCaseData(consultation, 'advice_summary') as string | undefined;
     const client = consultation.client;
-    const clientName = client
-      ? [client.first_name, client.last_name].filter(Boolean).join(' ') || em(client.email)
-      : '—';
+    const clientName = clientDisplayName(client) || em(client?.email) || '—';
     const assigned = consultation.assigned_to;
     const assignedName = assigned
       ? `${assigned.first_name ?? ''} ${assigned.last_name ?? ''}`.trim() || em(assigned.email)

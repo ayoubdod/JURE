@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 import {
   Activity,
@@ -39,7 +39,8 @@ import { useFinanceAccess } from '@/hooks/useFinanceAccess';
 import { JURIA_ENABLED } from '@/config/features';
 import { CaseStatus } from '@/utils/constants';
 import { getCaseData, getCountdownDays, getStatusColor } from '@/utils/caseCardHelpers';
-import { assignedDisplayName, clientDisplayName } from '@/services/case/caseType';
+import { assignedDisplayName } from '@/services/case/caseType';
+import { CaseClientLabel } from '@/components/client/CaseClientLabel';
 import { caseTypeListPath, caseWorkspacePath, navigateToCaseById } from '@/lib/caseRoutes';
 import { getConvertedFromCase } from '@/components/case/conversion/ConvertedCaseLink';
 import ResearchNotebookCard from '@/components/dashboard/ResearchNotebookCard';
@@ -250,8 +251,16 @@ export default function LitigationDetailWorkspace({
     research: researchCount,
   };
 
-  const snapshot = [
-    { label: copy.snapshotClient, value: clientDisplayName(caseItem.client) },
+  const snapshot: { label: string; value: ReactNode }[] = [
+    {
+      label: copy.snapshotClient,
+      value: caseItem.client ? (
+        <CaseClientLabel
+          client={caseItem.client}
+          nameClassName="truncate text-[13px] font-medium text-slate-800 dark:text-zinc-200"
+        />
+      ) : '',
+    },
     { label: copy.snapshotRole, value: clientRole ? enumPretty(clientRole) : '' },
     { label: copy.snapshotCourt, value: court.composed },
     { label: copy.snapshotChamber, value: court.chamber },
@@ -401,7 +410,9 @@ export default function LitigationDetailWorkspace({
               {snapshot.map((row) => (
                 <div key={row.label}>
                   <dt className="text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-400">{row.label}</dt>
-                  <dd className="mt-0.5 truncate text-[13px] font-medium text-slate-800 dark:text-zinc-200">{row.value}</dd>
+                  <dd className="mt-0.5 min-w-0 text-[13px] font-medium text-slate-800 dark:text-zinc-200">
+                    {typeof row.value === 'string' ? <span className="truncate block">{row.value}</span> : row.value}
+                  </dd>
                 </div>
               ))}
             </dl>

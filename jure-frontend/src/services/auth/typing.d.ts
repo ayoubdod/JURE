@@ -29,6 +29,7 @@ declare namespace API {
         business_address?: string
         team_size?: string
         website?: string
+        client_type?: 'INDIVIDUAL' | 'COMPANY' | null
     }
 
     type UserUpdateForm = {

@@ -51,6 +51,7 @@ import {
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 import { navigateToCase } from '@/lib/caseRoutes';
+import { CaseClientLabel } from '@/components/client/CaseClientLabel';
 import { eventBus } from '@/utils/eventBus';
 import {
   WorkspaceKpiStrip,
@@ -70,9 +71,6 @@ import { useShortcutAction } from '@/context/ShortcutsContext';
 /* =========================
    Helpers & Mini Components
    ========================= */
-const getClientName = (c?: API.Case['client']) =>
-  c ? [c.first_name, c.last_name].filter(Boolean).join(' ') || '—' : '—';
-
 const getCaseTitle = (caseItem: API.Case, untitled: string) =>
   (caseItem as API.Case & { title?: string }).title ||
   caseItem.reference ||
@@ -272,8 +270,13 @@ const CaseTableRow = memo(function CaseTableRow({
           {title}
         </span>
       </td>
-      <td className="px-3 py-2 align-middle text-start text-[12px] text-slate-700 dark:text-slate-300 truncate max-w-[160px]">
-        {getClientName(caseItem.client)}
+      <td className="px-3 py-2 align-middle text-start text-[12px] text-slate-700 dark:text-slate-300 max-w-[180px]">
+        <CaseClientLabel
+          client={caseItem.client}
+          fallback="—"
+          nameClassName="truncate"
+          presentedClassName="truncate"
+        />
       </td>
       <td className="px-3 py-2 align-middle text-start text-[12px] text-slate-700 dark:text-slate-300 truncate max-w-[140px]">
         {getAssignedName(caseItem)}

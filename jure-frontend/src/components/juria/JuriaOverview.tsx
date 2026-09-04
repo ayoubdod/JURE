@@ -8,6 +8,7 @@ import { navigateToCaseById } from '@/lib/caseRoutes';
 import { JURIA_JURISDICTIONS } from '@/types/juria';
 import dayjs from 'dayjs';
 import { useAppTranslation } from '@/i18n';
+import { JuriaLinkCaseControl } from '@/components/juria/JuriaLinkCaseControl';
 
 export function JuriaOverview({ project }: { project: JuriaProject }) {
   const { t, tf } = useAppTranslation();
@@ -48,9 +49,17 @@ export function JuriaOverview({ project }: { project: JuriaProject }) {
               >
                 {o.viewCase}
               </Button>
+              <div className="mt-3">
+                <JuriaLinkCaseControl project={project} compact />
+              </div>
             </>
           ) : (
-            <p className="mt-2 text-sm text-slate-500">{o.noCase}</p>
+            <>
+              <p className="mt-2 text-sm text-slate-500">{o.noCase}</p>
+              <div className="mt-3">
+                <JuriaLinkCaseControl project={project} compact />
+              </div>
+            </>
           )}
         </div>
         <button

@@ -2,7 +2,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { formatDate, useAppTranslation } from '@/i18n';
-import { clientDisplayName, formatDuration } from '@/services/case/caseType';
+import { clientContactPerson, formatDuration } from '@/services/case/caseType';
+import { CaseClientLabel } from '@/components/client/CaseClientLabel';
 import { getCaseData } from '@/utils/caseCardHelpers';
 import { getConvertedToCase } from '@/components/case/conversion/ConvertedCaseLink';
 import { getStatusColor } from '@/utils/caseCardHelpers';
@@ -267,12 +268,16 @@ export default function ConsultationOverview({
             ) : null
           }
         >
-          <p className="text-[14px] font-semibold text-slate-900 dark:text-white">
-            {clientDisplayName(caseItem.client) || '—'}
-          </p>
-          <p className="text-[12px] text-slate-500">
-            {clientType ? enumPretty(clientType) : copy.clientTypeUnknown}
-          </p>
+          <CaseClientLabel
+            client={caseItem.client}
+            fallback="—"
+            nameClassName="text-[14px] font-semibold text-slate-900 dark:text-white"
+          />
+          {clientContactPerson(caseItem.client) ? null : (
+            <p className="text-[12px] text-slate-500">
+              {clientType ? enumPretty(clientType) : copy.clientTypeUnknown}
+            </p>
+          )}
         </Card>
         <Card title={copy.assignedTo}>
           <p className="text-[14px] font-semibold text-slate-900 dark:text-white">

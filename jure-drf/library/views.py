@@ -1,5 +1,4 @@
 import logging
-from django.db.models import Q
 from rest_framework import viewsets, filters, status, permissions
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied, NotFound
@@ -129,43 +128,18 @@ class DocumentViewSet(viewsets.ModelViewSet):
             logger.exception("Failed to delete stored file %s for document id=%s", name, instance.pk)
 
     def _scoped_queryset(self, library: str):
+        from library.querysets import library_tab_queryset
+
         cabinet = get_user_cabinet(self.request.user)
         if not cabinet:
             return Document.objects.none()
-
-        base = (
-            Document.objects.select_related('created_by', 'updated_by', 'cabinet', 'jurisdiction')
+        if library not in ('my', 'local', 'international', 'favorites'):
+            return self.get_queryset()
+        return (
+            library_tab_queryset(cabinet, library, user=self.request.user)
+            .select_related('created_by', 'updated_by', 'cabinet', 'jurisdiction')
             .prefetch_related('tags')
         )
-        if library == 'my':
-            saved_ids = LibrarySave.objects.filter(cabinet=cabinet).values_list('document_id', flat=True)
-            visible_shared = documents_visible_to_cabinet_q(cabinet)
-            return base.filter(
-                Q(visibility_scope=VisibilityScope.CABINET, cabinet=cabinet)
-                | (Q(pk__in=saved_ids) & visible_shared)
-            ).distinct()
-        if library == 'local':
-            jurisdiction_id = getattr(cabinet, 'jurisdiction_id', None)
-            if not jurisdiction_id:
-                return base.none()
-            return base.filter(
-                visibility_scope=VisibilityScope.JURISDICTION,
-                jurisdiction_id=jurisdiction_id,
-            )
-        if library == 'international':
-            return base.filter(visibility_scope=VisibilityScope.GLOBAL)
-        if library == 'favorites':
-            user = self.request.user
-            if not user or not user.is_authenticated:
-                return base.none()
-            return (
-                base.filter(
-                    pk__in=LibraryFavorite.objects.filter(user=user).values('document_id')
-                )
-                .filter(documents_visible_to_cabinet_q(cabinet))
-                .distinct()
-            )
-        return self.get_queryset()
 
     def _list_payload(self, request, queryset):
         queryset = self._apply_status_filter(self.filter_queryset(queryset))

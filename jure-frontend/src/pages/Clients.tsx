@@ -196,8 +196,10 @@ const ClientTableRow = memo(function ClientTableRow({ client, onOpen, onOpenCase
       </td>
       <td className="max-w-[160px] truncate px-3 py-3 align-middle text-[13px] text-slate-600 dark:text-slate-400">
         {company || '—'}
-        {contactPerson && company ? (
-          <span className="mt-0.5 block truncate text-[12px] text-slate-400">{contactPerson}</span>
+        {contactPerson ? (
+          <span className="mt-0.5 block truncate text-[12px] text-slate-400">
+            {t.clients.modal.contactPerson} · {contactPerson}
+          </span>
         ) : null}
       </td>
       <td className="px-3 py-3 align-middle">
@@ -240,6 +242,7 @@ const ClientCard = memo(function ClientCard({ client, onOpen, onOpenCases }: Cli
   const fullName = clientDisplayName(client, t.clients.unnamed);
   const casesCount = casesOf(client);
   const typeLabel = isCompanyClient(client) ? t.clients.typeCompany : t.clients.typeIndividual;
+  const contactPerson = clientContactPerson(client);
   const casesLabel = tf(
     casesCount === 1 ? t.clients.casesCountOne : t.clients.casesCountOther,
     { count: casesCount }
@@ -270,6 +273,11 @@ const ClientCard = memo(function ClientCard({ client, onOpen, onOpenCases }: Cli
             {fullName}
           </h3>
           <p className="mt-0.5 truncate text-[12px] text-slate-500 dark:text-slate-400">{typeLabel}</p>
+          {contactPerson ? (
+            <p className="mt-0.5 truncate text-[12px] text-slate-500 dark:text-slate-400">
+              {t.clients.modal.contactPerson} · {contactPerson}
+            </p>
+          ) : null}
         </div>
         <StatusPill active={!!client.is_active} />
       </div>

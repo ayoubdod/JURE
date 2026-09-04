@@ -1,6 +1,7 @@
 # backend/tasks/serializers.py
 from pathlib import Path
 
+from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Q
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
@@ -31,9 +32,18 @@ def _user_cabinet(user):
 
 
 class UserLiteSerializer(serializers.ModelSerializer):
+    client_type = serializers.SerializerMethodField()
+
     class Meta:
         model = User
-        fields = ['id', 'email', 'first_name', 'last_name', 'image']
+        fields = ['id', 'email', 'first_name', 'last_name', 'image', 'client_type']
+
+    def get_client_type(self, obj):
+        try:
+            profile = obj.firm_client_profile
+        except ObjectDoesNotExist:
+            return None
+        return getattr(profile, 'client_type', None)
 
 
 class ConversationLiteSerializer(serializers.ModelSerializer):

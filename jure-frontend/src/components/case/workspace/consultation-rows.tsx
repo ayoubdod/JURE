@@ -4,7 +4,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import UserAvatar, { getPersonImage } from '@/components/common/UserAvatar';
 import { formatDate, formatTime, type AppMessages, type Lang } from '@/i18n';
 import { cn } from '@/lib/utils';
-import { clientDisplayName } from '@/services/case/caseType';
+import { CaseClientLabel } from '@/components/client/CaseClientLabel';
 import { getConvertedToCase } from '@/components/case/conversion/ConvertedCaseLink';
 import { getCaseData } from '@/utils/caseCardHelpers';
 
@@ -213,8 +213,16 @@ export function ConsultationRow({
       </td>
       <td className={cn(tdClass(), 'hidden md:table-cell')}>
         {c.client ? (
-          <button type="button" className="text-start hover:text-[#64499D] hover:underline" onClick={onClient}>
-            {clientDisplayName(c.client)}
+          <button
+            type="button"
+            className="block max-w-[13rem] min-w-0 text-start hover:text-[#64499D]"
+            onClick={onClient}
+          >
+            <CaseClientLabel
+              client={c.client}
+              nameClassName="truncate font-medium hover:underline"
+              presentedClassName="truncate"
+            />
           </button>
         ) : (
           copy.noneDash
@@ -315,7 +323,9 @@ export function ConsultationMobileCard({
       {ctype ? (
         <p className="mt-0.5 text-[11px] uppercase tracking-wide text-slate-500">{enumPretty(ctype)}</p>
       ) : null}
-      <p className="mt-1.5 text-[12px] text-slate-600">{clientDisplayName(c.client) || copy.noneDash}</p>
+      <div className="mt-1.5 text-[12px] text-slate-600">
+        <CaseClientLabel client={c.client} fallback={copy.noneDash} />
+      </div>
       <div className="mt-1.5 flex flex-wrap items-center gap-2 text-[12px] text-slate-600">
         <DateCell iso={dt} lang={lang} copy={copy} tf={tf} />
         {format ? <span>{enumPretty(format)}</span> : null}

@@ -2436,6 +2436,7 @@ export interface AppMessages {
     profile: {
       roleClient: string;
       roleCompany: string;
+      presentedBy: string;
       call: string;
       sendEmail: string;
       moreActions: string;
@@ -3445,6 +3446,7 @@ export interface AppMessages {
       ROLE_CHANGED: { title: string; message: string };
       MEMBER_ADDED: { title: string; message: string };
       INVITATION_ACCEPTED: { title: string; message: string };
+      JURIA_MEMBER_INVITED: { title: string; message: string };
       TVA_THRESHOLD_CROSSED: { title: string; message: string };
       INVOICE_OVERDUE: { title: string; message: string };
       PAYMENT_RECEIVED: { title: string; message: string };
@@ -4222,6 +4224,10 @@ export interface AppMessages {
         project: string;
         linkedCase: string;
         noCase: string;
+        unlinkCase: string;
+        linkFailed: string;
+        connectCalendar: string;
+        connectTasks: string;
         viewCase: string;
         sources: string;
         sourcesMeta: string;
@@ -4273,6 +4279,14 @@ export interface AppMessages {
         libraryBtn: string;
         empty: string;
         remove: string;
+        addFromCase: string;
+        addFromLibrary: string;
+        addSelected: string;
+        selectAllVisible: string;
+        linkThisLibrary: string;
+        linkAllLibraries: string;
+        noDocuments: string;
+        addFailed: string;
       };
       documents: {
         searchPlaceholder: string;

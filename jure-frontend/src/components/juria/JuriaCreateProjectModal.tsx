@@ -14,8 +14,8 @@ import { JURIA_JURISDICTIONS, type JuriaLang } from '@/types/juria';
 import {
   apiJuriaLookupCaseDocuments,
   apiJuriaLookupCases,
-  apiJuriaLookupLibrary,
 } from '@/services/juria/api';
+import { apiGetLibrary, parseLibraryList, type LibraryTab } from '@/services/library/api';
 import { apiGetCabinetMembers } from '@/services/cabinet-member/api';
 import { apiGetClients } from '@/services/client/api';
 import useJuriaStore from '@/stores/juriaStore';
@@ -101,7 +101,22 @@ export function JuriaCreateProjectModal({
   useEffect(() => {
     if (!open || !connectLib) return;
     const t = window.setTimeout(() => {
-      void apiJuriaLookupLibrary(libQuery).then(setLibDocs).catch(() => setLibDocs([]));
+      const tabs: LibraryTab[] = ['my', 'local', 'international'];
+      void Promise.all(
+        tabs.map((tab) =>
+          apiGetLibrary(tab, { search: libQuery.trim() || undefined, all: true })
+        )
+      )
+        .then((responses) => {
+          const byId = new Map<number, LibOpt>();
+          for (const res of responses) {
+            for (const doc of parseLibraryList(res.data)) {
+              byId.set(doc.id, { id: doc.id, title: doc.title || `#${doc.id}` });
+            }
+          }
+          setLibDocs([...byId.values()]);
+        })
+        .catch(() => setLibDocs([]));
     }, 250);
     return () => window.clearTimeout(t);
   }, [open, connectLib, libQuery]);

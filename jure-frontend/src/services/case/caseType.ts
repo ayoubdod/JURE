@@ -14,9 +14,29 @@ export function getCaseType(c: API.Case): BackendCaseType | 'UNKNOWN' {
   return normalizeCaseType(c.caseType ?? c.case_type ?? undefined);
 }
 
-export function clientDisplayName(c?: API.User | null): string {
+export function clientDisplayName(
+  c?: {
+    first_name?: string | null;
+    last_name?: string | null;
+    email?: string | null;
+    client_type?: string | null;
+  } | null
+): string {
   if (!c) return '';
+  if (c.client_type === 'COMPANY') {
+    return (c.last_name || '').trim() || c.email || '';
+  }
   return [c.first_name, c.last_name].filter(Boolean).join(' ').trim() || c.email || '';
+}
+
+export function clientContactPerson(
+  c?: {
+    first_name?: string | null;
+    client_type?: string | null;
+  } | null
+): string {
+  if (!c || c.client_type !== 'COMPANY') return '';
+  return (c.first_name || '').trim();
 }
 
 export function assignedDisplayName(c: API.Case): string {

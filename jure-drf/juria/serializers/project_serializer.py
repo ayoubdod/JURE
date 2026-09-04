@@ -192,6 +192,11 @@ class JuriaSourceCreateSerializer(serializers.Serializer):
     case_document_ids = serializers.ListField(child=serializers.IntegerField(), required=False)
     library_document_id = serializers.IntegerField(required=False, allow_null=True)
     library_document_ids = serializers.ListField(child=serializers.IntegerField(), required=False)
+    library_scopes = serializers.ListField(
+        child=serializers.ChoiceField(choices=["PERSONAL", "LOCAL", "INTERNATIONAL", "ALL"]),
+        required=False,
+    )
+    link_all_libraries = serializers.BooleanField(required=False, default=False)
     client_id = serializers.IntegerField(required=False, allow_null=True)
     juria_file_id = serializers.UUIDField(required=False, allow_null=True)
     metadata = serializers.DictField(required=False)

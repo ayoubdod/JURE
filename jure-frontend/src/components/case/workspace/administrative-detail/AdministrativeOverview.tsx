@@ -2,7 +2,7 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { formatDate, useAppTranslation } from '@/i18n';
 import { getCaseData, getCountdownDays, getStatusColor } from '@/utils/caseCardHelpers';
-import { clientDisplayName } from '@/services/case/caseType';
+import { CaseClientLabel } from '@/components/client/CaseClientLabel';
 import { getConvertedFromCase } from '@/components/case/conversion/ConvertedCaseLink';
 import { formatMAD } from '@/utils/formatMAD';
 import { TaskStatus } from '@/utils/constants';
@@ -259,7 +259,9 @@ export default function AdministrativeOverview({
           <div className="space-y-3">
             <div>
               <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-400">{copy.snapshotClient}</p>
-              <p className="text-[13px] font-medium">{clientDisplayName(caseItem.client) || copy.noneAssigned}</p>
+              <p className="text-[13px] font-medium">
+                <CaseClientLabel client={caseItem.client} fallback={copy.noneAssigned} />
+              </p>
             </div>
             {lead ? (
               <div className="flex items-center gap-2">
