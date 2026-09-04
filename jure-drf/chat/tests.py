@@ -168,6 +168,33 @@ class ChatAPITest(APITestCase):
         response = self.client.get(url)
         self.assertIn(response.status_code, (status.HTTP_403_FORBIDDEN, status.HTTP_404_NOT_FOUND))
 
+    def test_list_excludes_conversations_without_membership(self):
+        mine = _direct_conversation(self.user1, self.user2)
+        outsider = _make_user("outsider@test.com", "Out", "Sider", with_cabinet=True)
+        foreign = _direct_conversation(self.user2, outsider)
+        response = self.client.get(reverse("chat-conversations-list"))
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        rows = response.data["results"] if isinstance(response.data, dict) else response.data
+        ids = {row["id"] for row in rows}
+        self.assertIn(mine.id, ids)
+        self.assertNotIn(foreign.id, ids)
+
+    def test_cannot_send_message_to_foreign_conversation(self):
+        outsider = _make_user("msg-out@test.com", "Out", "Sider", with_cabinet=True)
+        conv = _direct_conversation(self.user2, outsider)
+        response = self.client.post(
+            reverse("chat-messages-list"),
+            {"conversation": conv.id, "body": "Should not land"},
+            format="json",
+        )
+        self.assertIn(
+            response.status_code,
+            (status.HTTP_400_BAD_REQUEST, status.HTTP_403_FORBIDDEN, status.HTTP_404_NOT_FOUND),
+        )
+        self.assertFalse(
+            Message.objects.filter(conversation=conv, body="Should not land").exists()
+        )
+
 
 class ChatSerializersTest(TestCase):
     def setUp(self):

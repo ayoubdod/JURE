@@ -1,5 +1,6 @@
 from allauth.account.models import EmailAddress
-from django.test import TestCase
+from django.core import mail
+from django.test import TestCase, override_settings
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient, APITestCase
@@ -190,7 +191,16 @@ class SessionVersionJWTTests(APITestCase):
         self.user.cabinet = cabinet
         self.user.is_cabinet_member = True
         self.user.role = User.Role.OWNER
-        self.user.save(update_fields=["cabinet", "is_cabinet_member", "role"])
+        self.user.phone_verified = True
+        self.user.save(
+            update_fields=["cabinet", "is_cabinet_member", "role", "phone_verified"]
+        )
+        EmailAddress.objects.create(
+            user=self.user,
+            email=self.user.email,
+            verified=True,
+            primary=True,
+        )
 
     def test_token_without_sv_is_rejected(self):
         client = APIClient()
@@ -204,3 +214,63 @@ class SessionVersionJWTTests(APITestCase):
         client = api_client_for(self.user)
         response = client.get(reverse("my-cabinet"))
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+
+    def test_login_invalidates_previous_access_token(self):
+        old_client = api_client_for(self.user)
+        probe = reverse("my-cabinet")
+        self.assertEqual(old_client.get(probe).status_code, status.HTTP_200_OK)
+        sv_before = User.objects.get(pk=self.user.pk).session_version
+
+        login = self.client.post(
+            reverse("rest_login"),
+            {"email": self.user.email, "password": "testpass123"},
+            format="json",
+        )
+        self.assertEqual(login.status_code, status.HTTP_200_OK, login.data)
+        self.assertEqual(
+            login.wsgi_request.resolver_match.func.view_class.__name__,
+            "SingleSessionLoginView",
+        )
+        self.user.refresh_from_db(fields=["session_version"])
+        self.assertGreater(self.user.session_version, sv_before)
+        access = login.data.get("access") or login.data.get("access_token")
+        self.assertTrue(access)
+
+        previous = old_client.get(probe)
+        self.assertEqual(previous.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(str(previous.data.get("detail")), "session_replaced")
+
+        fresh = APIClient()
+        fresh.credentials(HTTP_AUTHORIZATION=f"Bearer {access}")
+        self.assertEqual(fresh.get(probe).status_code, status.HTTP_200_OK)
+
+
+@override_settings(EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend")
+class PasswordResetAPITests(APITestCase):
+    def setUp(self):
+        self.url = reverse("rest_password_reset")
+        self.user = User.objects.create_user(
+            email="reset@example.com",
+            phone="+212661000088",
+            first_name="Re",
+            last_name="Set",
+            country="MA",
+            password="testpass123",
+        )
+
+    def test_unknown_email_does_not_leak_or_send(self):
+        response = self.client.post(
+            self.url, {"email": "nobody@example.com"}, format="json"
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertEqual(len(mail.outbox), 0)
+
+    def test_known_email_sends_frontend_reset_link(self):
+        response = self.client.post(
+            self.url, {"email": self.user.email}, format="json"
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertEqual(len(mail.outbox), 1)
+        body = mail.outbox[0].body
+        self.assertIn("/password-reset-confirm/?uuid=", body)
+        self.assertIn("&token=", body)

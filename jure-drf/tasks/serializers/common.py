@@ -33,9 +33,12 @@ class UserLiteSerializer(serializers.ModelSerializer):
         fields = ['id', 'email', 'first_name', 'last_name', 'image', 'client_type']
 
     def get_client_type(self, obj):
+        # Calendar events pass _user_lite dicts, not User instances.
+        if not obj or isinstance(obj, dict):
+            return obj.get('client_type') if isinstance(obj, dict) else None
         try:
             profile = obj.firm_client_profile
-        except ObjectDoesNotExist:
+        except (ObjectDoesNotExist, AttributeError):
             return None
         return getattr(profile, 'client_type', None)
 

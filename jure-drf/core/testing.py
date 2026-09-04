@@ -57,3 +57,22 @@ def create_cabinet_owner(*, email: str, trade_name: str = "Cabinet", phone: str 
     user.role = User.Role.OWNER
     user.save(update_fields=["cabinet", "is_cabinet_member", "role"])
     return user, cabinet
+
+
+def create_cabinet_member(cabinet, *, email: str, role: str = "LAWYER"):
+    from django.contrib.auth import get_user_model
+
+    User = get_user_model()
+    user = User.objects.create_user(
+        email=email,
+        password="testpass123",
+        first_name="Team",
+        last_name="Member",
+        phone=unique_test_phone(),
+        country="FR",
+    )
+    user.cabinet = cabinet
+    user.is_cabinet_member = True
+    user.role = role
+    user.save(update_fields=["cabinet", "is_cabinet_member", "role"])
+    return user

@@ -9,7 +9,7 @@ from django.urls import reverse
 from django.utils import timezone
 from rest_framework import status
 
-from core.testing import api_client_for
+from core.testing import api_client_for, unique_test_phone
 
 from cabinets.models import Cabinet
 from chat.models import Conversation, ConversationMembership
@@ -359,3 +359,105 @@ class AppointmentMeetingTypeApiTest(TestCase):
         )
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("client", res.data)
+
+
+def _list_rows(response):
+    return response.data["results"] if isinstance(response.data, dict) else response.data
+
+
+class TaskAppointmentCabinetIsolationTests(TestCase):
+    """Cabinet A must not list or retrieve Cabinet B's work, including calendar."""
+
+    def setUp(self):
+        self.owner_a, self.cab_a = _create_cabinet_user(
+            f"tasks-a-{uuid.uuid4().hex[:8]}@test.com",
+            unique_test_phone(),
+            "Cabinet A",
+        )
+        self.owner_b, self.cab_b = _create_cabinet_user(
+            f"tasks-b-{uuid.uuid4().hex[:8]}@test.com",
+            unique_test_phone(),
+            "Cabinet B",
+        )
+        self.api_a = _auth_client(self.owner_a)
+        self.api_b = _auth_client(self.owner_b)
+        self.due = timezone.now().date()
+        self.start = timezone.now() + timedelta(days=2)
+        self.end = self.start + timedelta(hours=1)
+
+        self.task_a = Task.objects.create(
+            title="Ours task",
+            cabinet=self.cab_a,
+            created_by=self.owner_a,
+            due_date=self.due,
+        )
+        self.task_b = Task.objects.create(
+            title="Theirs task",
+            cabinet=self.cab_b,
+            created_by=self.owner_b,
+            due_date=self.due,
+        )
+        self.appt_a = Appointment.objects.create(
+            title="Ours meeting",
+            start_at=self.start,
+            end_at=self.end,
+            cabinet=self.cab_a,
+            created_by=self.owner_a,
+        )
+        self.appt_b = Appointment.objects.create(
+            title="Theirs meeting",
+            start_at=self.start,
+            end_at=self.end,
+            cabinet=self.cab_b,
+            created_by=self.owner_b,
+        )
+
+    def test_task_list_excludes_other_cabinet(self):
+        response = self.api_a.get(reverse("task-list"))
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        titles = {row["title"] for row in _list_rows(response)}
+        self.assertIn("Ours task", titles)
+        self.assertNotIn("Theirs task", titles)
+
+    def test_cannot_retrieve_foreign_task(self):
+        response = self.api_a.get(
+            reverse("task-detail", kwargs={"pk": self.task_b.pk})
+        )
+        self.assertIn(
+            response.status_code,
+            (status.HTTP_403_FORBIDDEN, status.HTTP_404_NOT_FOUND),
+        )
+
+    def test_appointment_list_excludes_other_cabinet(self):
+        response = self.api_a.get(reverse("appointment-list"))
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        titles = {row["title"] for row in _list_rows(response)}
+        self.assertIn("Ours meeting", titles)
+        self.assertNotIn("Theirs meeting", titles)
+
+    def test_cannot_retrieve_foreign_appointment(self):
+        response = self.api_a.get(
+            reverse("appointment-detail", kwargs={"pk": self.appt_b.pk})
+        )
+        self.assertIn(
+            response.status_code,
+            (status.HTTP_403_FORBIDDEN, status.HTTP_404_NOT_FOUND),
+        )
+
+    def test_calendar_events_exclude_other_cabinet(self):
+        window_start = timezone.now() - timedelta(days=1)
+        window_end = timezone.now() + timedelta(days=14)
+        response = self.api_a.get(
+            reverse("calendar-events"),
+            {
+                "start": window_start.isoformat(),
+                "end": window_end.isoformat(),
+                "types": "tasks,appointments",
+            },
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        titles = {row["title"] for row in response.data}
+        self.assertIn("Ours task", titles)
+        self.assertIn("Ours meeting", titles)
+        self.assertNotIn("Theirs task", titles)
+        self.assertNotIn("Theirs meeting", titles)

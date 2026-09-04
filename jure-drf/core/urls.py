@@ -37,8 +37,13 @@ urlpatterns = [
     path('i18n/', include('django.conf.urls.i18n')),
     path('admin/', admin.site.urls),
     # path('accounts/', include('allauth.urls')),
-    # Single-session login must be registered before the stock dj-rest-auth include.
-    path('api/v1/dj-rest-auth/login/', SingleSessionLoginView.as_view(), name='rest_login'),
+    # Optional trailing slash: reverse() and some clients omit it, and the
+    # stock dj-rest-auth include uses login/?$ which would otherwise win.
+    re_path(
+        r"^api/v1/dj-rest-auth/login/?$",
+        SingleSessionLoginView.as_view(),
+        name="rest_login",
+    ),
     path('api/v1/dj-rest-auth/', include('dj_rest_auth.urls')),
     path('api/v1/dj-rest-auth/registration/', include('dj_rest_auth.registration.urls')),
 

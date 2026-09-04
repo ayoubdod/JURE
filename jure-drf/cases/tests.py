@@ -568,6 +568,21 @@ class CaseTypeFilterAPITest(APITestCase):
         self.assertEqual([row["title"] for row in rabat.data["results"]], ["Rabat legacy"])
 
 
+class CaseCabinetIsolationTests(APITestCase):
+    def test_list_excludes_other_cabinet_matters(self):
+        user_a, cab_a = _create_cabinet_user("cases-a@test.com")
+        user_b, cab_b = _create_cabinet_user("cases-b@test.com")
+        _create_consultation(cab_a, user_a, title="Ours")
+        _create_consultation(cab_b, user_b, title="Theirs")
+        api = APIClient()
+        api.force_authenticate(user=user_a)
+        response = api.get(reverse("case-list"))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        titles = [row["title"] for row in response.data["results"]]
+        self.assertIn("Ours", titles)
+        self.assertNotIn("Theirs", titles)
+
+
 class CloseCaseServiceTest(TestCase):
     """Domain close_case() — same rules as the HTTP action, without the view."""
 
@@ -618,5 +633,4 @@ class CloseCaseServiceTest(TestCase):
             ActivityLog.objects.filter(cabinet=cabinet, kind="matter_closed").count(),
             0,
         )
-
 
