@@ -14,7 +14,7 @@ import {
   defaultAdministrativeConversionState,
   type AdministrativeConversionState,
 } from './AdministrativeConversionFields';
-import type { ConversionTargetType } from './CaseTypeSelector';
+import type { ConversionTargetType } from './ConversionTypeSelector';
 import {
   CREATE_CANCEL_CLASS,
   CREATE_FOOTER_CLASS,

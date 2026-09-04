@@ -27,7 +27,7 @@ import CaseModal, { CaseModalRef } from '@/components/case/CaseModal';
 import CaseDeleteModal, { CaseDeleteModalRef } from '@/components/case/CaseDeleteModal';
 import ScheduleAppointmentDialog, {
   ScheduleAppointmentDialogRef,
-} from '@/components/ScheduleAppointmentDialog';
+} from '@/components/appointments/ScheduleAppointmentDialog';
 import TaskCreateModal, { TaskCreateModalRef } from '@/components/task/TaskCreateModal';
 import ClientProfilePreview, { ClientProfilePreviewRef } from '@/components/client/ClientProfilePreview';
 import { usePermission } from '@/hooks/usePermissions';

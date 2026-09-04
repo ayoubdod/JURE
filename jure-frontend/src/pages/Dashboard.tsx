@@ -6,7 +6,7 @@ import {
   ShieldAlert, BookOpenCheck, Flag, X
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import AddClientDialog from '../components/AddClientDialog';
+import AddClientDialog from '../components/client/AddClientDialog';
 import useUserStore from '@/stores/userStore';
 import TaskUpdateModal, { TaskUpdateModalRef } from '@/components/task/TaskUpdateModal';
 import { TaskDetailPanel } from '@/components/calendar/EmbeddedDetailPanels';

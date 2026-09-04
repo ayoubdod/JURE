@@ -19,7 +19,7 @@ import { isAxiosError } from 'axios';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { DialogDescription } from '@radix-ui/react-dialog';
 import { Textarea } from '../ui/textarea';
-import TagsInput from '../TagsInput';
+import TagsInput from '@/components/common/TagsInput';
 import { useToast } from '@/hooks/use-toast';
 import { devError, devWarn } from '@/utils/devLog';
 import { useAppTranslation } from '@/i18n';

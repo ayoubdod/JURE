@@ -10,8 +10,8 @@ import { getCaseData, getStatusColor } from '@/utils/caseCardHelpers';
 import { useToast } from '@/hooks/use-toast';
 import TaskCreateModal, { TaskCreateModalRef } from '@/components/task/TaskCreateModal';
 import TaskUpdateModal, { TaskUpdateModalRef } from '@/components/task/TaskUpdateModal';
-import ScheduleAppointmentDialog, { ScheduleAppointmentDialogRef } from '@/components/ScheduleAppointmentDialog';
-import AppointmentUpdateModal, { AppointmentUpdateModalRef } from '@/components/AppointmentUpdateModal';
+import ScheduleAppointmentDialog, { ScheduleAppointmentDialogRef } from '@/components/appointments/ScheduleAppointmentDialog';
+import AppointmentUpdateModal, { AppointmentUpdateModalRef } from '@/components/appointments/AppointmentUpdateModal';
 import { TaskDetailPanel, AppointmentDetailPanel } from '@/components/calendar/EmbeddedDetailPanels';
 import { RelatedTasksAppointmentsSection } from './case-detail-drawer/RelatedTasksAppointmentsSection';
 import { eventBus } from '@/utils/eventBus';
@@ -26,7 +26,7 @@ import {
 } from './case-detail-drawer/format';
 import { LitigationSection } from './case-detail-drawer/litigation-section';
 import { CaseDetailDrawerSkeleton } from './case-detail-drawer/skeleton';
-import { CaseTypeSelector, type ConversionTargetType } from './conversion/CaseTypeSelector';
+import { ConversionTypeSelector, type ConversionTargetType } from './conversion/ConversionTypeSelector';
 import { ConversionForm } from './conversion/ConversionForm';
 import { getConvertedToCase, getConsultationWorkflowStatus } from './conversion/ConvertedCaseLink';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -552,7 +552,7 @@ const CaseDetailDrawer = forwardRef<CaseDetailDrawerRef, CaseDetailDrawerProps>(
 
         {open && (
           <>
-            <CaseTypeSelector
+            <ConversionTypeSelector
               open={typeSelectorOpen}
               onOpenChange={setTypeSelectorOpen}
               onSelectType={(t) => {

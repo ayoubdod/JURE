@@ -14,7 +14,7 @@ import {
   AppointmentDetailPanel,
 } from '@/components/calendar/EmbeddedDetailPanels';
 import TaskUpdateModal, { TaskUpdateModalRef } from '@/components/task/TaskUpdateModal';
-import AppointmentUpdateModal, { AppointmentUpdateModalRef } from '@/components/AppointmentUpdateModal';
+import AppointmentUpdateModal, { AppointmentUpdateModalRef } from '@/components/appointments/AppointmentUpdateModal';
 import type { Appointment } from '@/services/appointment/api';
 import { invalidateUserWorkspaceCache } from '@/utils/userWorkspaceCache';
 import {

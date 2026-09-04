@@ -14,9 +14,9 @@ This file is the **one way**. If two patterns exist in the tree, copy the one na
 
 ## Backend (`jure-drf`)
 
-**Copy:** `finance/` (packages), `juria/` (services), `cases/views/case_viewset.py` (thin ViewSet + mixins).
+**Copy:** `finance/` (packages), `juria/` (services), `cases/views/case_viewset.py` (thin ViewSet + mixins), `users/serializers/`, `chat/serializers/` / `chat/views/`, `tasks/serializers/` / `tasks/views/`, `cabinets/views/`, `library/serializers/` and `library/views/` (one module per HTTP concern, public names re-exported from `__init__.py`).
 
-**Avoid growing:** single-file `views.py` / `serializers.py` in `chat/`, `users/`, `library/`.
+**Avoid growing:** single-file dumps in `library/`. Do not expand `chat/consumers/signaling.py` in a cleanup PR.
 
 ```
 app/
@@ -36,7 +36,7 @@ Ruff is configured in `pyproject.toml`. It is **not** a merge gate yet (existing
 
 ## Frontend (`jure-frontend`)
 
-**Copy:** `src/App.tsx` (routing), `src/services/<domain>/api.ts`, `src/utils/axiosInstance.ts`, `src/components/case/CaseCreateModal.tsx`.
+**Copy:** `src/App.tsx` (routing), `src/services/<domain>/api.ts`, `src/utils/axiosInstance.ts`, `src/components/case/CaseCreateModal.tsx`. Import appointment dialogs from `src/components/appointments/`. Profile UI lives in `src/components/team/TeamMemberProfile.tsx`. Consultation conversion type picker is `ConversionTypeSelector`, not the create-case `CaseTypeSelector`.
 
 **Do not copy:** unused scaffolds, mock `setTimeout` submits, a second `CaseTypeSelector`, or 1,000-line pages as a template.
 

@@ -31,7 +31,7 @@ import { getRemoteFieldsValidation } from '@/utils/functions';
 import { isAxiosError } from 'axios';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { Textarea } from '../ui/textarea';
-import TagsInput from '../TagsInput';
+import TagsInput from '@/components/common/TagsInput';
 import { cn } from '@/lib/utils';
 import { Label } from '@/components/ui/label';
 import { useAppTranslation } from '@/i18n';

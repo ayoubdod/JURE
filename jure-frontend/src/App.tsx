@@ -76,7 +76,7 @@ const AppointmentsPage = lazyRoute(() => import("./pages/Appointments"));
 const Settings = lazyRoute(() => import("./pages/Settings"));
 const FinancePage = lazyRoute(() => import("./pages/finance/FinancePage"));
 const NotificationsPage = lazyRoute(() => import("./pages/notifications/NotificationsPage"));
-const EditTask = lazyRoute(() => import("./components/EditTask"));
+const EditTask = lazyRoute(() => import("./components/task/EditTask"));
 const Support = lazyRoute(() => import("./pages/Support"));
 
 const queryClient = new QueryClient();

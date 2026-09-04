@@ -48,8 +48,8 @@ import TaskCreateModal, { TaskCreateModalRef } from '@/components/task/TaskCreat
 import TaskUpdateModal, { TaskUpdateModalRef } from '@/components/task/TaskUpdateModal';
 import ScheduleAppointmentDialog, {
   ScheduleAppointmentDialogRef,
-} from '@/components/ScheduleAppointmentDialog';
-import AppointmentUpdateModal, { AppointmentUpdateModalRef } from '@/components/AppointmentUpdateModal';
+} from '@/components/appointments/ScheduleAppointmentDialog';
+import AppointmentUpdateModal, { AppointmentUpdateModalRef } from '@/components/appointments/AppointmentUpdateModal';
 import { TaskDetailPanel, AppointmentDetailPanel } from '@/components/calendar/EmbeddedDetailPanels';
 import MatterCloseModal from '@/components/dashboard/MatterCloseModal';
 import ConflictCheckDialog from '@/components/dashboard/ConflictCheckDialog';

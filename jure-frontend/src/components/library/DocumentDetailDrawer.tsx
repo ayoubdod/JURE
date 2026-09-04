@@ -15,7 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import TagsInput from '@/components/TagsInput';
+import TagsInput from '@/components/common/TagsInput';
 import {
   Copy,
   Edit,

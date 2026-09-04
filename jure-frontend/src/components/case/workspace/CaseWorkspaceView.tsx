@@ -67,12 +67,12 @@ import TaskCreateModal, { TaskCreateModalRef } from '@/components/task/TaskCreat
 import TaskUpdateModal, { TaskUpdateModalRef } from '@/components/task/TaskUpdateModal';
 import ScheduleAppointmentDialog, {
   ScheduleAppointmentDialogRef,
-} from '@/components/ScheduleAppointmentDialog';
-import AppointmentUpdateModal, { AppointmentUpdateModalRef } from '@/components/AppointmentUpdateModal';
+} from '@/components/appointments/ScheduleAppointmentDialog';
+import AppointmentUpdateModal, { AppointmentUpdateModalRef } from '@/components/appointments/AppointmentUpdateModal';
 import { TaskDetailPanel, AppointmentDetailPanel } from '@/components/calendar/EmbeddedDetailPanels';
 import MatterCloseModal from '@/components/dashboard/MatterCloseModal';
 import ConflictCheckDialog from '@/components/dashboard/ConflictCheckDialog';
-import { CaseTypeSelector, type ConversionTargetType } from '@/components/case/conversion/CaseTypeSelector';
+import { ConversionTypeSelector, type ConversionTargetType } from '@/components/case/conversion/ConversionTypeSelector';
 import { ConversionForm } from '@/components/case/conversion/ConversionForm';
 import { canShowConvertToCase } from '@/components/case/conversion/ConvertedCaseLink';
 import { useToast } from '@/hooks/use-toast';
@@ -892,7 +892,7 @@ function CaseMatterWorkspaceView({
         matterId={caseItem.id}
         excludeMatterId={caseItem.id}
       />
-      <CaseTypeSelector
+      <ConversionTypeSelector
         open={typeSelectorOpen}
         onOpenChange={setTypeSelectorOpen}
         onSelectType={(next) => {
