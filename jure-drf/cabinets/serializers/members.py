@@ -1,47 +1,13 @@
-# cabinets/serializers.py
-from rest_framework.serializers import ModelSerializer, ValidationError
-from rest_framework import serializers
 from django.contrib.auth import get_user_model
-from django.utils.crypto import get_random_string
-from rest_flex_fields.serializers import FlexFieldsModelSerializer
 from django_countries.serializer_fields import CountryField
-from .permissions import get_role_permissions
-from .models import Cabinet
+from rest_flex_fields.serializers import FlexFieldsModelSerializer
+from rest_framework import serializers
+from rest_framework.serializers import ModelSerializer
+
+from ..permissions import get_role_permissions
 
 User = get_user_model()
 
-
-class CabinetSerializer(ModelSerializer):
-    """Serializer for cabinet profile (logo, trade_name, etc.). Used for PATCH updates."""
-
-    jurisdiction_code = serializers.SerializerMethodField()
-    practice_type = serializers.ChoiceField(
-        choices=Cabinet.PracticeType.choices,
-        required=False,
-        allow_null=True,
-    )
-
-    class Meta:
-        model = Cabinet
-        fields = [
-            'id',
-            'trade_name',
-            'description',
-            'business_address',
-            'founded_date',
-            'structure_type',
-            'practice_type',
-            'jurisdiction',
-            'jurisdiction_code',
-            'team_size',
-            'website',
-            'logo',
-        ]
-        read_only_fields = ['id', 'jurisdiction', 'jurisdiction_code']
-
-    def get_jurisdiction_code(self, obj):
-        jur = getattr(obj, "jurisdiction", None)
-        return getattr(jur, "code", None)
 
 class CabinetMemberSelectionSerializer(ModelSerializer):
     class Meta:

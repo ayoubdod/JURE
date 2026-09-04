@@ -5,6 +5,7 @@ from rest_framework.permissions import IsAuthenticated
 from users.models import User
 
 from ..permissions import DEFAULT_ROLE_PERMISSIONS, can_manage_roles
+from ..serializers import CabinetMemberSerializer
 
 
 @api_view(['PATCH'])

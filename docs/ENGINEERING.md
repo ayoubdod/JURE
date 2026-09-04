@@ -14,7 +14,7 @@ This file is the **one way**. If two patterns exist in the tree, copy the one na
 
 ## Backend (`jure-drf`)
 
-**Copy:** `finance/` (packages), `juria/` (services), `cases/views/case_viewset.py` (thin ViewSet + mixins), `users/serializers/`, `chat/serializers/` / `chat/views/`, `tasks/serializers/` / `tasks/views/`, `cabinets/views/`, `library/serializers/` and `library/views/` (one module per HTTP concern, public names re-exported from `__init__.py`).
+**Copy:** `finance/` (packages), `juria/` (services), `cases/views/case_viewset.py` (thin ViewSet + mixins), `users/serializers/` / `users/views/`, `chat/serializers/` / `chat/views/`, `tasks/serializers/` / `tasks/views/`, `cabinets/serializers/` / `cabinets/views/`, `clients/serializers/` / `clients/views/`, `library/serializers/` and `library/views/` (one module per HTTP concern, public names re-exported from `__init__.py`).
 
 **Avoid growing:** single-file dumps in `library/`. Do not expand `chat/consumers/signaling.py` in a cleanup PR.
 
