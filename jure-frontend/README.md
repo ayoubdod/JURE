@@ -1,73 +1,51 @@
-# Welcome to your Lovable project
+# JURE web (`jure-frontend`)
 
-## Project info
+Vite + React 18 + TypeScript UI for JURE.
 
-**URL**: https://lovable.dev/projects/210f27ff-b8bd-445f-ae74-757fb6fa3c07
+## Requirements
 
-## How can I edit this code?
+- Node.js **20+**
+- npm
+- API running (see [`../jure-drf/README.md`](../jure-drf/README.md)), default `http://localhost:8000`
 
-There are several ways of editing your application.
+## Setup
 
-**Use Lovable**
-
-Simply visit the [Lovable Project](https://lovable.dev/projects/210f27ff-b8bd-445f-ae74-757fb6fa3c07) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+```bash
+cd jure-frontend
+copy .env.example .env   # Windows; macOS/Linux: cp .env.example .env
+npm install
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+App: `http://localhost:3000` (Vite `server.port` is 3000).
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+`VITE_API_URL` is the **API origin only** (`http://localhost:8000`). The client appends `/api/v1/`. Do not put secrets in Vite env vars. JURIA keys stay on Django.
 
-**Use GitHub Codespaces**
+## Scripts
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+| Command | Purpose |
+|---|---|
+| `npm run dev` | Local Vite server |
+| `npm run build` | Production bundle |
+| `npm run lint` | ESLint |
+| `npm run i18n:audit` | Unused / missing message keys |
 
-## What technologies are used for this project?
+## Layout — which pattern to copy
 
-This project is built with:
+| Path | Role |
+|---|---|
+| `src/pages/` | Route-level screens |
+| `src/components/<domain>/` | Feature UI (`case`, `chat`, `finance`, …) |
+| `src/components/ui/` | shadcn/Radix primitives |
+| `src/services/<domain>/api.ts` | HTTP wrappers (axios) |
+| `src/stores/` | Zustand |
+| `src/i18n/` | Typed catalogs (`en` / `fr` / `ar`) |
+| `src/App.tsx` | Router and providers |
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+New UI strings go through `src/i18n`, not hardcoded French or English in JSX.
 
-## How can I deploy this project?
+Golden examples: `src/App.tsx`, `src/utils/axiosInstance.ts`, `src/components/case/CaseCreateModal.tsx`.
 
-Simply open [Lovable](https://lovable.dev/projects/210f27ff-b8bd-445f-ae74-757fb6fa3c07) and click on Share -> Publish.
+## TypeScript and lint
 
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+`strict` is **off** today so the existing app keeps compiling. Do not flip `tsconfig` to `"strict": true` in a drive-by PR. New code in `src/services/` should still avoid `any`. Details: [`../docs/ENGINEERING.md`](../docs/ENGINEERING.md).

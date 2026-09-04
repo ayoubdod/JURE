@@ -29,6 +29,9 @@ db.sqlite3-journal
 media/
 staticfiles/
 
+# Accidental nested copy (often contains its own .venv). Not part of the app.
+/jure-drf/
+
 # Virtual Environment
 venv/
 env/

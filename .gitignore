@@ -1,5 +1,9 @@
 # Repo-root ignore (backend/frontend each have their own .gitignore)
-lkqslk
 *.sqlite3
 .DS_Store
 Thumbs.db
+__pycache__/
+*.py[cod]
+.env
+.venv/
+node_modules/
