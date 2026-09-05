@@ -70,6 +70,48 @@ class CabinetMemberTenancyTests(APITestCase):
             (status.HTTP_403_FORBIDDEN, status.HTTP_404_NOT_FOUND),
         )
 
+    def test_cannot_patch_or_delete_foreign_member(self):
+        url = reverse("cabinet-members-detail", kwargs={"pk": self.member_b.id})
+        patched = self.api_a.patch(url, {"first_name": "Hijacked"}, format="json")
+        self.assertIn(
+            patched.status_code,
+            (status.HTTP_403_FORBIDDEN, status.HTTP_404_NOT_FOUND),
+        )
+        deleted = self.api_a.delete(url)
+        self.assertIn(
+            deleted.status_code,
+            (status.HTTP_403_FORBIDDEN, status.HTTP_404_NOT_FOUND),
+        )
+        self.member_b.refresh_from_db()
+        self.assertEqual(self.member_b.first_name, "Team")
+        self.assertTrue(self.member_b.is_cabinet_member)
+
+    def test_cannot_change_foreign_member_role(self):
+        url = reverse("update-member-role", kwargs={"member_id": self.member_b.id})
+        response = self.api_a.patch(url, {"role": User.Role.ADMIN}, format="json")
+        self.assertIn(
+            response.status_code,
+            (status.HTTP_403_FORBIDDEN, status.HTTP_404_NOT_FOUND),
+        )
+        self.member_b.refresh_from_db()
+        self.assertEqual(self.member_b.role, User.Role.LAWYER)
+
+    def test_cannot_resend_invitation_for_foreign_member(self):
+        from users.models import PasswordSetupToken
+
+        url = reverse(
+            "cabinet-members-resend-invitation", kwargs={"pk": self.member_b.id}
+        )
+        before = PasswordSetupToken.objects.filter(user=self.member_b).count()
+        response = self.api_a.post(url)
+        self.assertIn(
+            response.status_code,
+            (status.HTTP_403_FORBIDDEN, status.HTTP_404_NOT_FOUND),
+        )
+        self.assertEqual(
+            PasswordSetupToken.objects.filter(user=self.member_b).count(), before
+        )
+
 
 class CabinetRoleUpdateTests(APITestCase):
     def setUp(self):

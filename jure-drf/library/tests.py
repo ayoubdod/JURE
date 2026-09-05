@@ -185,6 +185,45 @@ class SharedLibraryApiTests(APITestCase):
         shared_ids = {item["id"] for item in shared_list.data}
         self.assertIn(self.shared.pk, shared_ids)
 
+    def test_cannot_retrieve_or_mutate_foreign_private_document(self):
+        url = f"{self.list_url}{self.private_a.pk}/"
+        retrieved = self.client_b.get(url)
+        self.assertIn(
+            retrieved.status_code,
+            (status.HTTP_403_FORBIDDEN, status.HTTP_404_NOT_FOUND),
+        )
+        patched = self.client_b.patch(url, {"title": "Hijacked"}, format="json")
+        self.assertIn(
+            patched.status_code,
+            (status.HTTP_403_FORBIDDEN, status.HTTP_404_NOT_FOUND),
+        )
+        deleted = self.client_b.delete(url)
+        self.assertIn(
+            deleted.status_code,
+            (status.HTTP_403_FORBIDDEN, status.HTTP_404_NOT_FOUND),
+        )
+        self.private_a.refresh_from_db()
+        self.assertEqual(self.private_a.title, "Cabinet A private")
+        self.assertTrue(Document.objects.filter(pk=self.private_a.pk).exists())
+        favorite = self.client_b.post(f"{url}favorite/")
+        self.assertIn(
+            favorite.status_code,
+            (status.HTTP_403_FORBIDDEN, status.HTTP_404_NOT_FOUND),
+        )
+        added = self.client_b.post(f"{url}add-to-my-library/")
+        self.assertIn(
+            added.status_code,
+            (status.HTTP_403_FORBIDDEN, status.HTTP_404_NOT_FOUND),
+        )
+        from library.models import LibraryFavorite, LibrarySave
+
+        self.assertFalse(
+            LibraryFavorite.objects.filter(user=self.user_b, document=self.private_a).exists()
+        )
+        self.assertFalse(
+            LibrarySave.objects.filter(cabinet=self.cab_b, document=self.private_a).exists()
+        )
+
 
 class DocumentAdminFormTests(TestCase):
     def _form(self, **data):

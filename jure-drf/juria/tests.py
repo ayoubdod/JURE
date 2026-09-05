@@ -600,3 +600,287 @@ class JuriaPermissionServiceTests(APITestCase):
         with self.assertRaises(PermissionDenied):
             require_write(viewer)
 
+
+@override_settings(JURIA_ENABLED=True, JURIA_PROVIDER="deepseek", DEEPSEEK_API_KEY="sk-test")
+class JuriaLookupIsolationTests(APITestCase):
+    """Wizard lookups must not leak another cabinet's matters or files."""
+
+    def setUp(self):
+        from cases.tests import _create_cabinet_user, _create_consultation
+
+        self.user_a, self.cab_a = _create_cabinet_user(email="juria-lookup-a@test.com")
+        self.user_b, self.cab_b = _create_cabinet_user(email="juria-lookup-b@test.com")
+        self.ours = _create_consultation(self.cab_a, self.user_a, title="Ours matter")
+        self.theirs = _create_consultation(self.cab_b, self.user_b, title="Theirs matter")
+        self.client.force_authenticate(self.user_a)
+
+    def test_lookup_cases_excludes_other_cabinet(self):
+        response = self.client.get("/api/v1/juria/lookup/cases/")
+        self.assertEqual(response.status_code, 200, response.content)
+        titles = {row["title"] for row in response.json()}
+        self.assertIn("Ours matter", titles)
+        self.assertNotIn("Theirs matter", titles)
+
+    def test_lookup_case_documents_rejects_foreign_case(self):
+        response = self.client.get(
+            "/api/v1/juria/lookup/case-documents/",
+            {"case_id": self.theirs.pk},
+        )
+        self.assertEqual(response.status_code, 404)
+
+    def test_lookup_library_excludes_other_cabinet_personal_docs(self):
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        from jurisdictions.constants import VisibilityScope
+        from library.models import Document
+
+        pdf = SimpleUploadedFile("secret.pdf", b"%PDF-1.4 x", content_type="application/pdf")
+        foreign = Document.objects.create(
+            title="Cabinet B memo",
+            category=Document.DocumentCategory.LEGAL_RESEARCH_OPINIONS,
+            file=pdf,
+            visibility_scope=VisibilityScope.CABINET,
+            cabinet=self.cab_b,
+            created_by=self.user_b,
+        )
+        ours = Document.objects.create(
+            title="Cabinet A memo",
+            category=Document.DocumentCategory.LEGAL_RESEARCH_OPINIONS,
+            file=SimpleUploadedFile("ours.pdf", b"%PDF-1.4 y", content_type="application/pdf"),
+            visibility_scope=VisibilityScope.CABINET,
+            cabinet=self.cab_a,
+            created_by=self.user_a,
+        )
+        response = self.client.get("/api/v1/juria/lookup/library/?scope=PERSONAL")
+        self.assertEqual(response.status_code, 200, response.content)
+        ids = {row["id"] for row in response.json()}
+        self.assertIn(ours.id, ids)
+        self.assertNotIn(foreign.id, ids)
+
+    def test_project_list_excludes_other_cabinet(self):
+        ours = self.client.post("/api/v1/juria/projects/", {"name": "Ours project"}, format="json")
+        self.assertEqual(ours.status_code, 201, ours.content)
+        theirs = JuriaProject.objects.create(
+            cabinet=self.cab_b,
+            owner=self.user_b,
+            name="Theirs project",
+        )
+        JuriaProjectMember.objects.create(
+            project=theirs,
+            user=self.user_b,
+            role=ProjectRole.OWNER,
+        )
+        listed = self.client.get("/api/v1/juria/projects/")
+        self.assertEqual(listed.status_code, 200, listed.content)
+        payload = listed.json()
+        rows = payload["results"] if isinstance(payload, dict) else payload
+        names = {row["name"] for row in rows}
+        self.assertIn("Ours project", names)
+        self.assertNotIn("Theirs project", names)
+
+    def test_cannot_read_or_link_foreign_juria_resources(self):
+        from juria.models import JuriaConversation
+
+        conv = JuriaConversation.objects.create(
+            user=self.user_b,
+            mode=JuriaConversation.Mode.CHAT,
+            title="Secret chat",
+            linked_case=self.theirs,
+        )
+        hidden = self.client.get(f"/api/v1/juria/conversations/{conv.id}/")
+        self.assertEqual(hidden.status_code, 404)
+        destroyed = self.client.delete(f"/api/v1/juria/conversations/{conv.id}/")
+        self.assertEqual(destroyed.status_code, 404)
+        self.assertTrue(JuriaConversation.objects.filter(pk=conv.id).exists())
+        drafted = self.client.post(
+            f"/api/v1/juria/conversations/{conv.id}/draft/",
+            {"document_type": "MEMO", "parameters": {}},
+            format="json",
+        )
+        self.assertEqual(drafted.status_code, 404)
+        messaged = self.client.post(
+            f"/api/v1/juria/conversations/{conv.id}/messages/",
+            {"message": "Hacked"},
+            format="json",
+        )
+        self.assertEqual(messaged.status_code, 404)
+
+        linked = self.client.post(
+            "/api/v1/juria/conversations/",
+            {"mode": "CHAT", "linked_case_id": self.theirs.pk},
+            format="json",
+        )
+        self.assertEqual(linked.status_code, 400)
+
+        theirs = JuriaProject.objects.create(
+            cabinet=self.cab_b,
+            owner=self.user_b,
+            name="Hidden project",
+        )
+        JuriaProjectMember.objects.create(
+            project=theirs,
+            user=self.user_b,
+            role=ProjectRole.OWNER,
+        )
+        detail = self.client.get(f"/api/v1/juria/projects/{theirs.id}/")
+        self.assertEqual(detail.status_code, 404)
+        files = self.client.get(f"/api/v1/juria/projects/{theirs.id}/files/")
+        self.assertEqual(files.status_code, 404)
+
+        from juria.models import JuriaThread
+
+        thread = JuriaThread.objects.create(
+            project=theirs,
+            title="Hidden thread",
+            created_by=self.user_b,
+        )
+        for path in (
+            f"/api/v1/juria/projects/{theirs.id}/threads/",
+            f"/api/v1/juria/threads/{thread.id}/",
+            f"/api/v1/juria/threads/{thread.id}/messages/",
+            f"/api/v1/juria/projects/{theirs.id}/context/",
+            f"/api/v1/juria/projects/{theirs.id}/artifacts/",
+            f"/api/v1/juria/projects/{theirs.id}/activity/",
+            f"/api/v1/juria/projects/{theirs.id}/permissions/",
+            f"/api/v1/juria/projects/{theirs.id}/members/",
+            f"/api/v1/juria/projects/{theirs.id}/sources/",
+            f"/api/v1/juria/projects/{theirs.id}/cases/",
+        ):
+            got = self.client.get(path)
+            self.assertEqual(got.status_code, 404, path)
+        archived = self.client.post(f"/api/v1/juria/projects/{theirs.id}/archive/")
+        self.assertEqual(archived.status_code, 404)
+        restored = self.client.post(f"/api/v1/juria/projects/{theirs.id}/restore/")
+        self.assertEqual(restored.status_code, 404)
+        duplicated = self.client.post(f"/api/v1/juria/projects/{theirs.id}/duplicate/")
+        self.assertEqual(duplicated.status_code, 404)
+        theirs.refresh_from_db()
+        self.assertEqual(theirs.status, ProjectStatus.ACTIVE)
+        self.assertEqual(
+            JuriaProject.objects.filter(cabinet=self.cab_a, name__icontains="Hidden").count(),
+            0,
+        )
+
+        from django.core.files.uploadedfile import SimpleUploadedFile
+
+        from juria.constants import ArtifactType
+        from juria.models import JuriaArtifact, JuriaFile, JuriaMessage
+
+        msg = JuriaMessage.objects.create(
+            thread=thread,
+            author=self.user_b,
+            role=JuriaMessage.Role.USER,
+            content="Secret prompt",
+            mode="CHAT",
+        )
+        edited = self.client.post(
+            f"/api/v1/juria/messages/{msg.id}/edit/",
+            {"content": "Hacked", "regenerate": False},
+            format="json",
+        )
+        self.assertEqual(edited.status_code, 404)
+        removed = self.client.delete(f"/api/v1/juria/messages/{msg.id}/")
+        self.assertEqual(removed.status_code, 404)
+        msg.refresh_from_db()
+        self.assertEqual(msg.content, "Secret prompt")
+        self.assertFalse(msg.is_deleted)
+
+        mine = self.client.post("/api/v1/juria/projects/", {"name": "Mine"}, format="json")
+        self.assertEqual(mine.status_code, 201, mine.content)
+        mine_id = mine.json()["id"]
+        artifact = JuriaArtifact.objects.create(
+            project=theirs,
+            title="Secret brief",
+            artifact_type=ArtifactType.AUTRE,
+            content_markdown="secret",
+            created_by=self.user_b,
+        )
+        mixed = self.client.get(f"/api/v1/juria/projects/{mine_id}/artifacts/{artifact.id}/")
+        self.assertEqual(mixed.status_code, 404)
+        exported = self.client.get(
+            f"/api/v1/juria/projects/{mine_id}/artifacts/{artifact.id}/export/"
+        )
+        self.assertEqual(exported.status_code, 404)
+        copied = self.client.post(
+            f"/api/v1/juria/projects/{mine_id}/artifacts/{artifact.id}/duplicate/"
+        )
+        self.assertEqual(copied.status_code, 404)
+        compared = self.client.get(
+            f"/api/v1/juria/projects/{mine_id}/artifacts/{artifact.id}/compare/"
+        )
+        self.assertEqual(compared.status_code, 404)
+
+        jfile = JuriaFile.objects.create(
+            project=theirs,
+            file=SimpleUploadedFile("secret.pdf", b"%PDF-1.4 x", content_type="application/pdf"),
+            original_name="secret.pdf",
+            file_kind="pdf",
+            uploaded_by=self.user_b,
+        )
+        stolen = self.client.get(
+            f"/api/v1/juria/projects/{mine_id}/files/{jfile.id}/download/"
+        )
+        self.assertEqual(stolen.status_code, 404)
+        purged = self.client.delete(f"/api/v1/juria/projects/{mine_id}/files/{jfile.id}/")
+        self.assertEqual(purged.status_code, 404)
+        jfile.refresh_from_db()
+        self.assertFalse(jfile.is_removed)
+
+        from django.core.files.base import ContentFile
+        from django.core.files.storage import default_storage
+
+        doc_path = default_storage.save(
+            "juria_docs/secret.docx", ContentFile(b"PK secret brief")
+        )
+        msg.generated_document_path = doc_path
+        msg.save(update_fields=["generated_document_path"])
+        leaked_doc = self.client.get(f"/api/v1/juria/documents/{msg.id}/download/")
+        self.assertEqual(leaked_doc.status_code, 404)
+
+    def test_cannot_invite_or_source_foreign_cabinet_resources(self):
+        from django.core.files.uploadedfile import SimpleUploadedFile
+
+        from cases.tests import _create_firm_client
+        from jurisdictions.constants import VisibilityScope
+        from library.models import Document
+        from juria.models import JuriaProjectSource
+
+        created = self.client.post("/api/v1/juria/projects/", {"name": "Sourced"}, format="json")
+        self.assertEqual(created.status_code, 201, created.content)
+        pk = created.json()["id"]
+
+        invited = self.client.post(
+            f"/api/v1/juria/projects/{pk}/members/",
+            {"user_id": self.user_b.id, "role": ProjectRole.EDITOR},
+            format="json",
+        )
+        self.assertIn(invited.status_code, (400, 403, 404))
+        self.assertFalse(
+            JuriaProjectMember.objects.filter(project_id=pk, user=self.user_b).exists()
+        )
+
+        foreign_client = _create_firm_client(self.cab_b, email="juria-client-b@test.com")
+        sourced = self.client.post(
+            f"/api/v1/juria/projects/{pk}/sources/",
+            {"kind": "CLIENT", "client_id": foreign_client.id},
+            format="json",
+        )
+        self.assertIn(sourced.status_code, (400, 403, 404))
+
+        foreign_doc = Document.objects.create(
+            title="Cabinet B memo",
+            category=Document.DocumentCategory.LEGAL_RESEARCH_OPINIONS,
+            file=SimpleUploadedFile("b.pdf", b"%PDF-1.4 x", content_type="application/pdf"),
+            visibility_scope=VisibilityScope.CABINET,
+            cabinet=self.cab_b,
+            created_by=self.user_b,
+        )
+        library = self.client.post(
+            f"/api/v1/juria/projects/{pk}/sources/",
+            {"kind": "LIBRARY", "library_document_ids": [foreign_doc.id]},
+            format="json",
+        )
+        self.assertIn(library.status_code, (400, 403, 404))
+        self.assertFalse(
+            JuriaProjectSource.objects.filter(project_id=pk).exists()
+        )
+

@@ -401,6 +401,44 @@ class ConflictCheckAPITests(APITestCase):
         self.api.force_authenticate(self.user_a)
         res = self.api.get(f"/api/v1/conflict-checks/{foreign_id}/")
         self.assertEqual(res.status_code, status.HTTP_404_NOT_FOUND)
+        reviewed = self.api.patch(
+            f"/api/v1/conflict-checks/{foreign_id}/review/",
+            {"status": "DISMISSED", "notes": "Hacked"},
+            format="json",
+        )
+        self.assertEqual(reviewed.status_code, status.HTTP_404_NOT_FOUND)
+        from conflict_checks.models import ConflictCheck
+
+        check = ConflictCheck.objects.get(pk=foreign_id)
+        self.assertEqual(check.status, ConflictCheck.ReviewStatus.PENDING_REVIEW)
+        self.assertNotEqual((check.notes or "").strip(), "Hacked")
+        matches = created.data.get("matches") or []
+        if matches:
+            match_id = matches[0]["id"]
+            reviewed_match = self.api.patch(
+                f"/api/v1/conflict-checks/{foreign_id}/matches/{match_id}/review/",
+                {"review_status": "DISMISSED", "notes": "Hacked"},
+                format="json",
+            )
+            self.assertEqual(reviewed_match.status_code, status.HTTP_404_NOT_FOUND)
+            match = PotentialMatch.objects.get(pk=match_id)
+            self.assertEqual(match.review_status, PotentialMatch.ReviewStatus.PENDING)
+
+        own = self.api.post(
+            "/api/v1/conflict-checks/search/",
+            {"query": "Globex"},
+            format="json",
+        )
+        self.assertEqual(own.status_code, status.HTTP_201_CREATED, own.data)
+        if matches:
+            mixed = self.api.patch(
+                f"/api/v1/conflict-checks/{own.data['id']}/matches/{matches[0]['id']}/review/",
+                {"review_status": "DISMISSED"},
+                format="json",
+            )
+            self.assertEqual(mixed.status_code, status.HTTP_404_NOT_FOUND)
+            match = PotentialMatch.objects.get(pk=matches[0]["id"])
+            self.assertEqual(match.review_status, PotentialMatch.ReviewStatus.PENDING)
 
     def test_short_query_rejected(self):
         self.api.force_authenticate(self.user_a)

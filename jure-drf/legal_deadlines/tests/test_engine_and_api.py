@@ -239,6 +239,34 @@ class LegalDeadlineAPITests(APITestCase):
         detail = self.client.get(f"/api/v1/legal-deadlines/deadlines/{deadline_id}/")
         self.assertEqual(detail.status_code, status.HTTP_404_NOT_FOUND)
 
+        task_res = self.client.post(
+            f"/api/v1/legal-deadlines/deadlines/{deadline_id}/create-task/",
+            {"title": "Should not exist"},
+            format="json",
+        )
+        self.assertIn(
+            task_res.status_code,
+            (status.HTTP_403_FORBIDDEN, status.HTTP_404_NOT_FOUND),
+        )
+        patched = self.client.patch(
+            f"/api/v1/legal-deadlines/deadlines/{deadline_id}/",
+            {"notes": "Hacked"},
+            format="json",
+        )
+        self.assertIn(
+            patched.status_code,
+            (status.HTTP_403_FORBIDDEN, status.HTTP_404_NOT_FOUND),
+        )
+        deleted = self.client.delete(f"/api/v1/legal-deadlines/deadlines/{deadline_id}/")
+        self.assertIn(
+            deleted.status_code,
+            (status.HTTP_403_FORBIDDEN, status.HTTP_404_NOT_FOUND),
+        )
+        self.client.force_authenticate(self.user_a)
+        still = self.client.get(f"/api/v1/legal-deadlines/deadlines/{deadline_id}/")
+        self.assertEqual(still.status_code, status.HTTP_200_OK)
+        self.assertNotEqual((still.data.get("notes") or "").strip(), "Hacked")
+
     def test_cannot_save_to_other_cabinet_case(self):
         self.client.force_authenticate(self.user_a)
         res = self.client.post(

@@ -56,3 +56,26 @@ class ClientCabinetIsolationTests(APITestCase):
             response.status_code,
             (status.HTTP_403_FORBIDDEN, status.HTTP_404_NOT_FOUND),
         )
+
+    def test_cannot_patch_foreign_client(self):
+        foreign = self._create_via_api(self.api_b, email="patch-me@cab-b.test.com")
+        response = self.api_a.patch(
+            reverse("client-detail", kwargs={"pk": foreign["id"]}),
+            {"first_name": "Hijacked"},
+            format="json",
+        )
+        self.assertIn(
+            response.status_code,
+            (status.HTTP_403_FORBIDDEN, status.HTTP_404_NOT_FOUND),
+        )
+        client = User.objects.get(pk=foreign["id"])
+        self.assertEqual(client.first_name, "Ada")
+
+    def test_cannot_delete_foreign_client(self):
+        foreign = self._create_via_api(self.api_b, email="delete-me@cab-b.test.com")
+        response = self.api_a.delete(reverse("client-detail", kwargs={"pk": foreign["id"]}))
+        self.assertIn(
+            response.status_code,
+            (status.HTTP_403_FORBIDDEN, status.HTTP_404_NOT_FOUND),
+        )
+        self.assertTrue(User.objects.filter(pk=foreign["id"]).exists())

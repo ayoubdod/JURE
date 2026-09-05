@@ -444,6 +444,46 @@ class TaskAppointmentCabinetIsolationTests(TestCase):
             (status.HTTP_403_FORBIDDEN, status.HTTP_404_NOT_FOUND),
         )
 
+    def test_cannot_patch_or_delete_foreign_task(self):
+        patched = self.api_a.patch(
+            reverse("task-detail", kwargs={"pk": self.task_b.pk}),
+            {"title": "Hijacked task"},
+            format="json",
+        )
+        self.assertIn(
+            patched.status_code,
+            (status.HTTP_403_FORBIDDEN, status.HTTP_404_NOT_FOUND),
+        )
+        deleted = self.api_a.delete(reverse("task-detail", kwargs={"pk": self.task_b.pk}))
+        self.assertIn(
+            deleted.status_code,
+            (status.HTTP_403_FORBIDDEN, status.HTTP_404_NOT_FOUND),
+        )
+        self.task_b.refresh_from_db()
+        self.assertEqual(self.task_b.title, "Theirs task")
+        self.assertTrue(Task.objects.filter(pk=self.task_b.pk).exists())
+
+    def test_cannot_patch_or_delete_foreign_appointment(self):
+        patched = self.api_a.patch(
+            reverse("appointment-detail", kwargs={"pk": self.appt_b.pk}),
+            {"title": "Hijacked meeting"},
+            format="json",
+        )
+        self.assertIn(
+            patched.status_code,
+            (status.HTTP_403_FORBIDDEN, status.HTTP_404_NOT_FOUND),
+        )
+        deleted = self.api_a.delete(
+            reverse("appointment-detail", kwargs={"pk": self.appt_b.pk})
+        )
+        self.assertIn(
+            deleted.status_code,
+            (status.HTTP_403_FORBIDDEN, status.HTTP_404_NOT_FOUND),
+        )
+        self.appt_b.refresh_from_db()
+        self.assertEqual(self.appt_b.title, "Theirs meeting")
+        self.assertTrue(Appointment.objects.filter(pk=self.appt_b.pk).exists())
+
     def test_calendar_events_exclude_other_cabinet(self):
         window_start = timezone.now() - timedelta(days=1)
         window_end = timezone.now() + timedelta(days=14)
@@ -461,3 +501,121 @@ class TaskAppointmentCabinetIsolationTests(TestCase):
         self.assertIn("Ours meeting", titles)
         self.assertNotIn("Theirs task", titles)
         self.assertNotIn("Theirs meeting", titles)
+
+    def test_cannot_touch_foreign_task_attachments(self):
+        upload = SimpleUploadedFile(
+            "secret.pdf", b"%PDF-1.4 secret", content_type="application/pdf"
+        )
+        attachment = TaskAttachment.objects.create(
+            task=self.task_b,
+            file=upload,
+            original_name="secret.pdf",
+            mime="application/pdf",
+            size=15,
+            uploaded_by=self.owner_b,
+        )
+        listed = self.api_a.get(reverse("task-attachments", kwargs={"pk": self.task_b.pk}))
+        self.assertIn(
+            listed.status_code,
+            (status.HTTP_403_FORBIDDEN, status.HTTP_404_NOT_FOUND),
+        )
+        downloaded = self.api_a.get(
+            reverse(
+                "task-download-attachment",
+                kwargs={"pk": self.task_b.pk, "attachment_id": attachment.pk},
+            )
+        )
+        self.assertIn(
+            downloaded.status_code,
+            (status.HTTP_403_FORBIDDEN, status.HTTP_404_NOT_FOUND),
+        )
+        deleted = self.api_a.delete(
+            reverse(
+                "task-destroy-attachment",
+                kwargs={"pk": self.task_b.pk, "attachment_id": attachment.pk},
+            )
+        )
+        self.assertIn(
+            deleted.status_code,
+            (status.HTTP_403_FORBIDDEN, status.HTTP_404_NOT_FOUND),
+        )
+        self.assertTrue(TaskAttachment.objects.filter(pk=attachment.pk).exists())
+
+    def test_cannot_touch_foreign_appointment_attachments(self):
+        from tasks.models import AppointmentAttachment
+
+        upload = SimpleUploadedFile(
+            "secret.pdf", b"%PDF-1.4 secret", content_type="application/pdf"
+        )
+        attachment = AppointmentAttachment.objects.create(
+            appointment=self.appt_b,
+            file=upload,
+            original_name="secret.pdf",
+            mime="application/pdf",
+            size=15,
+            uploaded_by=self.owner_b,
+        )
+        listed = self.api_a.get(
+            reverse("appointment-attachments", kwargs={"pk": self.appt_b.pk})
+        )
+        self.assertIn(
+            listed.status_code,
+            (status.HTTP_403_FORBIDDEN, status.HTTP_404_NOT_FOUND),
+        )
+        downloaded = self.api_a.get(
+            reverse(
+                "appointment-download-attachment",
+                kwargs={"pk": self.appt_b.pk, "attachment_id": attachment.pk},
+            )
+        )
+        self.assertIn(
+            downloaded.status_code,
+            (status.HTTP_403_FORBIDDEN, status.HTTP_404_NOT_FOUND),
+        )
+        deleted = self.api_a.delete(
+            reverse(
+                "appointment-destroy-attachment",
+                kwargs={"pk": self.appt_b.pk, "attachment_id": attachment.pk},
+            )
+        )
+        self.assertIn(
+            deleted.status_code,
+            (status.HTTP_403_FORBIDDEN, status.HTTP_404_NOT_FOUND),
+        )
+        self.assertTrue(AppointmentAttachment.objects.filter(pk=attachment.pk).exists())
+
+    def test_cannot_assign_task_to_foreign_user(self):
+        response = self.api_a.post(
+            reverse("task-list"),
+            {"title": "Spy task", "assigned_to": self.owner_b.id},
+            format="json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertFalse(Task.objects.filter(title="Spy task").exists())
+
+    def test_cannot_link_foreign_case_or_attendee(self):
+        from cases.tests import _create_consultation
+
+        foreign_case = _create_consultation(self.cab_b, self.owner_b, title="Theirs matter")
+        task = self.api_a.post(
+            reverse("task-list"),
+            {"title": "Linked spy", "case": foreign_case.pk, "assigned_to": self.owner_a.id},
+            format="json",
+        )
+        self.assertEqual(task.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertFalse(Task.objects.filter(title="Linked spy").exists())
+
+        meeting = self.api_a.post(
+            reverse("appointment-list"),
+            {
+                "title": "Spy meeting",
+                "start_at": self.start.isoformat(),
+                "end_at": self.end.isoformat(),
+                "meeting_type": "in_person",
+                "location": "Casablanca",
+                "attendee_ids": [self.owner_b.id],
+            },
+            format="json",
+        )
+        self.assertEqual(meeting.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertFalse(Appointment.objects.filter(title="Spy meeting").exists())

@@ -54,6 +54,19 @@ def _create_consultation(cabinet, user, **kwargs):
     return Case.objects.create(**defaults)
 
 
+def _create_firm_client(cabinet, *, email: str):
+    return User.objects.create_user(
+        email=email,
+        password="clientpass123",
+        first_name="Client",
+        last_name="User",
+        phone=_valid_fr_phone(),
+        country="FR",
+        cabinet=cabinet,
+        is_cabinet_member=False,
+    )
+
+
 class IsConsultationReadyToConvertTest(TestCase):
     """Test the is_consultation_ready_to_convert helper."""
 
@@ -569,18 +582,246 @@ class CaseTypeFilterAPITest(APITestCase):
 
 
 class CaseCabinetIsolationTests(APITestCase):
+    def setUp(self):
+        self.user_a, self.cab_a = _create_cabinet_user("cases-a@test.com")
+        self.user_b, self.cab_b = _create_cabinet_user("cases-b@test.com")
+        self.ours = _create_consultation(self.cab_a, self.user_a, title="Ours")
+        self.theirs = _create_consultation(self.cab_b, self.user_b, title="Theirs")
+        self.client_a = _create_firm_client(self.cab_a, email="client-a@test.com")
+        self.client_b = _create_firm_client(self.cab_b, email="client-b@test.com")
+        self.api = APIClient()
+        self.api.force_authenticate(user=self.user_a)
+
     def test_list_excludes_other_cabinet_matters(self):
-        user_a, cab_a = _create_cabinet_user("cases-a@test.com")
-        user_b, cab_b = _create_cabinet_user("cases-b@test.com")
-        _create_consultation(cab_a, user_a, title="Ours")
-        _create_consultation(cab_b, user_b, title="Theirs")
-        api = APIClient()
-        api.force_authenticate(user=user_a)
-        response = api.get(reverse("case-list"))
+        response = self.api.get(reverse("case-list"))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         titles = [row["title"] for row in response.data["results"]]
         self.assertIn("Ours", titles)
         self.assertNotIn("Theirs", titles)
+
+    def test_cannot_retrieve_foreign_matter(self):
+        response = self.api.get(reverse("case-detail", kwargs={"pk": self.theirs.pk}))
+        self.assertIn(
+            response.status_code,
+            (status.HTTP_403_FORBIDDEN, status.HTTP_404_NOT_FOUND),
+        )
+
+    def test_cannot_patch_foreign_matter(self):
+        response = self.api.patch(
+            reverse("case-detail", kwargs={"pk": self.theirs.pk}),
+            {"title": "Hijacked"},
+            format="json",
+        )
+        self.assertIn(
+            response.status_code,
+            (status.HTTP_403_FORBIDDEN, status.HTTP_404_NOT_FOUND),
+        )
+        self.theirs.refresh_from_db()
+        self.assertEqual(self.theirs.title, "Theirs")
+
+    def test_cannot_delete_foreign_matter(self):
+        response = self.api.delete(reverse("case-detail", kwargs={"pk": self.theirs.pk}))
+        self.assertIn(
+            response.status_code,
+            (status.HTTP_403_FORBIDDEN, status.HTTP_404_NOT_FOUND),
+        )
+        self.assertTrue(Case.objects.filter(pk=self.theirs.pk).exists())
+
+    def test_cannot_assign_foreign_user_on_create(self):
+        response = self.api.post(
+            reverse("case-list"),
+            {
+                "title": "Hijack assignee",
+                "description": "Must stay in cabinet A",
+                "court": "N/A",
+                "caseType": "CONSULTATION",
+                "assigned_to": self.user_b.id,
+            },
+            format="json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertFalse(Case.objects.filter(title="Hijack assignee").exists())
+
+    def test_cannot_patch_assigned_to_foreign_user(self):
+        response = self.api.patch(
+            reverse("case-detail", kwargs={"pk": self.ours.pk}),
+            {"assigned_to": self.user_b.id},
+            format="json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.ours.refresh_from_db()
+        self.assertEqual(self.ours.assigned_to_id, self.user_a.id)
+
+    def test_cannot_add_foreign_user_as_co_counsel(self):
+        response = self.api.patch(
+            reverse("case-detail", kwargs={"pk": self.ours.pk}),
+            {"assigned_attorney_ids": [self.user_b.id]},
+            format="json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertFalse(self.ours.assigned_attorneys.filter(pk=self.user_b.id).exists())
+
+    def test_cannot_attach_foreign_client_on_create(self):
+        response = self.api.post(
+            reverse("case-list"),
+            {
+                "title": "Hijack client",
+                "description": "Must stay in cabinet A",
+                "court": "N/A",
+                "caseType": "CONSULTATION",
+                "client": self.client_b.id,
+            },
+            format="json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertFalse(Case.objects.filter(title="Hijack client").exists())
+
+    def test_cannot_patch_foreign_client_onto_matter(self):
+        response = self.api.patch(
+            reverse("case-detail", kwargs={"pk": self.ours.pk}),
+            {"client": self.client_b.id},
+            format="json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.ours.refresh_from_db()
+        self.assertNotEqual(self.ours.client_id, self.client_b.id)
+
+    def test_cannot_touch_foreign_attachments_or_follow_ups(self):
+        from django.core.files.uploadedfile import SimpleUploadedFile
+
+        from .models import CaseAttachment
+
+        attachment = CaseAttachment.objects.create(
+            case=self.theirs,
+            file=SimpleUploadedFile("secret.pdf", b"%PDF-1.4 secret", content_type="application/pdf"),
+            original_name="secret.pdf",
+            uploaded_by=self.user_b,
+        )
+        listed = self.api.get(
+            reverse("case-attachments", kwargs={"pk": self.theirs.pk})
+        )
+        self.assertIn(
+            listed.status_code,
+            (status.HTTP_403_FORBIDDEN, status.HTTP_404_NOT_FOUND),
+        )
+        deleted = self.api.delete(
+            reverse(
+                "case-delete-attachment",
+                kwargs={"pk": self.theirs.pk, "attachment_id": attachment.pk},
+            )
+        )
+        self.assertIn(
+            deleted.status_code,
+            (status.HTTP_403_FORBIDDEN, status.HTTP_404_NOT_FOUND),
+        )
+        self.assertTrue(CaseAttachment.objects.filter(pk=attachment.pk).exists())
+
+        follow_up = self.api.post(
+            reverse("case-follow-ups", kwargs={"pk": self.theirs.pk}),
+            {"title": "Should not exist"},
+            format="json",
+        )
+        self.assertIn(
+            follow_up.status_code,
+            (status.HTTP_403_FORBIDDEN, status.HTTP_404_NOT_FOUND),
+        )
+        converted = self.api.post(
+            reverse("case-convert", kwargs={"pk": self.theirs.pk}),
+            {"targetType": "LITIGATION"},
+            format="json",
+        )
+        self.assertIn(
+            converted.status_code,
+            (status.HTTP_403_FORBIDDEN, status.HTTP_404_NOT_FOUND),
+        )
+
+    def test_cannot_read_foreign_case_finance(self):
+        for suffix in ("finance/", "invoices/", "fees/", "expenses/", "payments/", "tax-advance/"):
+            response = self.api.get(f"/api/v1/cases/{self.theirs.pk}/{suffix}")
+            self.assertIn(
+                response.status_code,
+                (status.HTTP_403_FORBIDDEN, status.HTTP_404_NOT_FOUND),
+                suffix,
+            )
+        patched_tax = self.api.patch(
+            f"/api/v1/cases/{self.theirs.pk}/tax-advance/",
+            {"status": "PAID"},
+            format="json",
+        )
+        self.assertIn(
+            patched_tax.status_code,
+            (status.HTTP_403_FORBIDDEN, status.HTTP_404_NOT_FOUND),
+        )
+
+        from finance.models import Expense, Fee, Invoice, Payment
+
+        posts = (
+            ("fees/", {"fee_type": "FIXED", "planned_amount": "10.00"}),
+            (
+                "expenses/",
+                {
+                    "description": "Hacked",
+                    "amount": "10.00",
+                    "expense_date": "2026-01-15",
+                },
+            ),
+            ("invoices/", {"amount_ht": "10.00"}),
+            (
+                "payments/",
+                {
+                    "amount": "10.00",
+                    "payment_method": "CASH",
+                    "payment_date": "2026-01-15",
+                },
+            ),
+        )
+        for suffix, payload in posts:
+            created = self.api.post(
+                f"/api/v1/cases/{self.theirs.pk}/{suffix}",
+                payload,
+                format="json",
+            )
+            self.assertIn(
+                created.status_code,
+                (status.HTTP_403_FORBIDDEN, status.HTTP_404_NOT_FOUND),
+                suffix,
+            )
+        self.assertFalse(Fee.objects.filter(case=self.theirs).exists())
+        self.assertFalse(Expense.objects.filter(case=self.theirs).exists())
+        self.assertFalse(Invoice.objects.filter(case=self.theirs).exists())
+        self.assertFalse(Payment.objects.filter(case=self.theirs).exists())
+
+    def test_cannot_send_confirmation_or_download_foreign_invoice(self):
+        from decimal import Decimal
+
+        from finance.models import Invoice
+        from finance.services.case_finance_service import get_or_create_firm_client
+
+        confirmed = self.api.post(
+            reverse("case-send-confirmation", kwargs={"pk": self.theirs.pk})
+        )
+        self.assertIn(
+            confirmed.status_code,
+            (status.HTTP_403_FORBIDDEN, status.HTTP_404_NOT_FOUND),
+        )
+
+        self.theirs.client = self.client_b
+        self.theirs.save(update_fields=["client"])
+        invoice = Invoice.objects.create(
+            cabinet=self.cab_b,
+            invoice_number="INV-CASE-SECRET",
+            case=self.theirs,
+            client=get_or_create_firm_client(self.client_b),
+            amount_ht=Decimal("10.00"),
+            created_by=self.user_b,
+        )
+        mixed_pdf = self.api.get(
+            f"/api/v1/cases/{self.ours.pk}/invoices/{invoice.pk}/pdf/"
+        )
+        self.assertIn(
+            mixed_pdf.status_code,
+            (status.HTTP_403_FORBIDDEN, status.HTTP_404_NOT_FOUND),
+        )
 
 
 class CloseCaseServiceTest(TestCase):

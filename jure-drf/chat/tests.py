@@ -195,6 +195,179 @@ class ChatAPITest(APITestCase):
             Message.objects.filter(conversation=conv, body="Should not land").exists()
         )
 
+    def test_cannot_read_or_archive_foreign_conversation(self):
+        outsider = _make_user("archive-out@test.com", "Out", "Sider", with_cabinet=True)
+        conv = _direct_conversation(self.user2, outsider)
+        Message.objects.create(conversation=conv, sender=self.user2, body="Secret")
+        messages = self.client.get(
+            reverse("chat-conversations-messages", kwargs={"pk": conv.id})
+        )
+        self.assertIn(
+            messages.status_code,
+            (status.HTTP_403_FORBIDDEN, status.HTTP_404_NOT_FOUND),
+        )
+        listed = self.client.get(
+            reverse("chat-messages-list"),
+            {"conversation_id": conv.id},
+        )
+        self.assertIn(
+            listed.status_code,
+            (status.HTTP_403_FORBIDDEN, status.HTTP_404_NOT_FOUND),
+        )
+        archived = self.client.post(
+            reverse("conversations-archive-bulk"),
+            {"conversation_id": conv.id, "archived": True},
+            format="json",
+        )
+        self.assertIn(
+            archived.status_code,
+            (status.HTTP_403_FORBIDDEN, status.HTTP_404_NOT_FOUND),
+        )
+        membership = ConversationMembership.objects.get(conversation=conv, user=self.user2)
+        self.assertFalse(membership.archived)
+
+    def test_cannot_link_foreign_case_to_group(self):
+        from cases.tests import _create_consultation
+
+        group = Conversation.objects.create(
+            type=Conversation.Type.GROUP,
+            title="Team",
+            created_by=self.user1,
+        )
+        ConversationMembership.objects.create(
+            conversation=group, user=self.user1, is_admin=True
+        )
+        foreign_case = _create_consultation(
+            self.user2.cabinet, self.user2, title="Theirs matter"
+        )
+        response = self.client.post(
+            reverse("chat-conversations-link-case", kwargs={"pk": group.id}),
+            {"caseId": foreign_case.pk},
+            format="json",
+        )
+        self.assertIn(
+            response.status_code,
+            (status.HTTP_403_FORBIDDEN, status.HTTP_404_NOT_FOUND),
+        )
+        group.refresh_from_db()
+        self.assertIsNone(group.linked_case_id)
+
+    def test_cannot_forward_foreign_message(self):
+        outsider = _make_user("fwd-out@test.com", "Out", "Sider", with_cabinet=True)
+        foreign = _direct_conversation(self.user2, outsider)
+        secret = Message.objects.create(
+            conversation=foreign, sender=self.user2, body="Secret"
+        )
+        mine = _direct_conversation(self.user1, self.user2)
+        response = self.client.post(
+            reverse("chat-messages-forward", kwargs={"pk": secret.id}),
+            {"target_conversation_id": mine.id},
+            format="json",
+        )
+        self.assertIn(
+            response.status_code,
+            (status.HTTP_403_FORBIDDEN, status.HTTP_404_NOT_FOUND),
+        )
+        self.assertFalse(
+            Message.objects.filter(conversation=mine, forwarded_from=secret).exists()
+        )
+
+    def test_cannot_list_pinned_messages_of_foreign_conversation(self):
+        outsider = _make_user("pin-out@test.com", "Out", "Sider", with_cabinet=True)
+        conv = _direct_conversation(self.user2, outsider)
+        response = self.client.get(
+            reverse("chat-conversations-pinned-messages", kwargs={"pk": conv.id})
+        )
+        self.assertIn(
+            response.status_code,
+            (status.HTTP_403_FORBIDDEN, status.HTTP_404_NOT_FOUND),
+        )
+
+    def test_cannot_edit_delete_or_mark_read_foreign_message(self):
+        outsider = _make_user("msg-mut@test.com", "Out", "Sider", with_cabinet=True)
+        conv = _direct_conversation(self.user2, outsider)
+        secret = Message.objects.create(
+            conversation=conv, sender=self.user2, body="Secret"
+        )
+        patched = self.client.patch(
+            reverse("chat-messages-detail", kwargs={"pk": secret.id}),
+            {"body": "Hacked"},
+            format="json",
+        )
+        self.assertIn(
+            patched.status_code,
+            (status.HTTP_403_FORBIDDEN, status.HTTP_404_NOT_FOUND),
+        )
+        deleted = self.client.delete(
+            reverse("chat-messages-detail", kwargs={"pk": secret.id})
+        )
+        self.assertIn(
+            deleted.status_code,
+            (status.HTTP_403_FORBIDDEN, status.HTTP_404_NOT_FOUND),
+        )
+        marked = self.client.post(
+            reverse("chat-messages-mark-read", kwargs={"pk": secret.id})
+        )
+        self.assertIn(
+            marked.status_code,
+            (status.HTTP_403_FORBIDDEN, status.HTTP_404_NOT_FOUND),
+        )
+        secret.refresh_from_db()
+        self.assertEqual(secret.body, "Secret")
+        self.assertFalse(secret.is_deleted)
+        self.assertFalse(secret.read_by.filter(pk=self.user1.pk).exists())
+
+    def test_cannot_rename_pin_or_delete_foreign_conversation(self):
+        outsider = _make_user("conv-mut@test.com", "Out", "Sider", with_cabinet=True)
+        conv = _direct_conversation(self.user2, outsider)
+        renamed = self.client.post(
+            reverse("chat-conversations-rename", kwargs={"pk": conv.id}),
+            {"title": "Hacked"},
+            format="json",
+        )
+        self.assertIn(
+            renamed.status_code,
+            (status.HTTP_403_FORBIDDEN, status.HTTP_404_NOT_FOUND),
+        )
+        pinned = self.client.post(
+            reverse("conversations-pin-bulk"),
+            {"conversation_id": conv.id, "pinned": True},
+            format="json",
+        )
+        self.assertIn(
+            pinned.status_code,
+            (status.HTTP_403_FORBIDDEN, status.HTTP_404_NOT_FOUND),
+        )
+        detail_pin = self.client.post(
+            reverse("chat-conversations-pin", kwargs={"pk": conv.id}),
+            {"pinned": True},
+            format="json",
+        )
+        self.assertIn(
+            detail_pin.status_code,
+            (status.HTTP_403_FORBIDDEN, status.HTTP_404_NOT_FOUND),
+        )
+        detail_archive = self.client.post(
+            reverse("chat-conversations-archive", kwargs={"pk": conv.id}),
+            {"archived": True},
+            format="json",
+        )
+        self.assertIn(
+            detail_archive.status_code,
+            (status.HTTP_403_FORBIDDEN, status.HTTP_404_NOT_FOUND),
+        )
+        deleted = self.client.delete(
+            reverse("chat-conversations-detail", kwargs={"pk": conv.id})
+        )
+        self.assertIn(
+            deleted.status_code,
+            (status.HTTP_403_FORBIDDEN, status.HTTP_404_NOT_FOUND),
+        )
+        self.assertTrue(Conversation.objects.filter(pk=conv.id).exists())
+        membership = ConversationMembership.objects.get(conversation=conv, user=self.user2)
+        self.assertFalse(membership.is_deleted)
+        self.assertFalse(membership.is_pinned)
+
 
 class ChatSerializersTest(TestCase):
     def setUp(self):
