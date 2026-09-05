@@ -18,7 +18,7 @@ export const TaxAdvanceCard: React.FC<Props> = ({ tax, onMarkPaid }) => {
   return (
     <div className="rounded-xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-950 p-4 shadow-sm">
       <p className="text-[15px] font-semibold text-slate-900 dark:text-white">
-        ⚖️ {tf(ct.taxAdvanceAmount, { amount: formatMAD(tax.amount) })}
+        ⚖️ {tf(ct.taxAdvanceAmount, { amount: formatMAD(tax.amount, lang) })}
       </p>
       <div className="mt-3">
         <span

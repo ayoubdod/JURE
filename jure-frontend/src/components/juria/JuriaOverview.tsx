@@ -6,12 +6,11 @@ import useJuriaStore from '@/stores/juriaStore';
 import { useNavigate } from 'react-router';
 import { navigateToCaseById } from '@/lib/caseRoutes';
 import { JURIA_JURISDICTIONS } from '@/types/juria';
-import dayjs from 'dayjs';
-import { useAppTranslation } from '@/i18n';
+import { useAppTranslation, formatDateTime } from '@/i18n';
 import { JuriaLinkCaseControl } from '@/components/juria/JuriaLinkCaseControl';
 
 export function JuriaOverview({ project }: { project: JuriaProject }) {
-  const { t, tf } = useAppTranslation();
+  const { t, tf, lang } = useAppTranslation();
   const o = t.juria.workspace.overview;
   const setTab = useJuriaStore((s) => s.setActiveTab);
   const activities = useJuriaStore((s) => s.activities);
@@ -33,7 +32,7 @@ export function JuriaOverview({ project }: { project: JuriaProject }) {
             {project.legal_domain ? ` · ${project.legal_domain}` : ''}
           </p>
           <p className="mt-1 text-[11px] text-slate-400">
-            {tf(o.updatedAt, { date: dayjs(project.updated_at).format('DD MMM YYYY HH:mm') })}
+            {tf(o.updatedAt, { date: formatDateTime(project.updated_at, lang) })}
           </p>
         </div>
         <div className="rounded-2xl border border-slate-200 bg-white/80 p-5 dark:border-slate-800 dark:bg-slate-950/60">
@@ -65,7 +64,7 @@ export function JuriaOverview({ project }: { project: JuriaProject }) {
         <button
           type="button"
           onClick={() => setTab('sources')}
-          className="rounded-2xl border border-slate-200 bg-white/80 p-5 text-left hover:border-[#64499D]/30 dark:border-slate-800 dark:bg-slate-950/60"
+          className="rounded-2xl border border-slate-200 bg-white/80 p-5 text-start hover:border-[#64499D]/30 dark:border-slate-800 dark:bg-slate-950/60"
         >
           <Library className="mb-2 h-4 w-4 text-[#64499D]" />
           <p className="text-sm font-medium">{o.sources}</p>
@@ -79,7 +78,7 @@ export function JuriaOverview({ project }: { project: JuriaProject }) {
         <button
           type="button"
           onClick={() => setTab('team')}
-          className="rounded-2xl border border-slate-200 bg-white/80 p-5 text-left hover:border-[#64499D]/30 dark:border-slate-800 dark:bg-slate-950/60"
+          className="rounded-2xl border border-slate-200 bg-white/80 p-5 text-start hover:border-[#64499D]/30 dark:border-slate-800 dark:bg-slate-950/60"
         >
           <Users className="mb-2 h-4 w-4 text-[#64499D]" />
           <p className="text-sm font-medium">{o.team}</p>

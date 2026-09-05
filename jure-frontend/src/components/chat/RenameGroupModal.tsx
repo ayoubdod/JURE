@@ -140,7 +140,7 @@ const RenameGroupModal = forwardRef<RenameGroupModalRef, RenameGroupModalProps>(
               {t.common.cancel}
             </Button>
             <Button onClick={handleSubmit} disabled={isLoading}>
-              {isLoading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+              {isLoading ? <Loader2 className="w-4 h-4 me-2 animate-spin" /> : null}
               {m.rename}
             </Button>
           </DialogFooter>

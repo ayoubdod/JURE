@@ -59,7 +59,7 @@ export function GroupCallParticipantPicker({
       }}
     >
       <DialogContent className="max-w-[400px] gap-0 overflow-hidden p-0 sm:rounded-2xl">
-        <DialogHeader className="space-y-1 border-b border-slate-100 px-4 py-3.5 text-left dark:border-slate-800">
+        <DialogHeader className="space-y-1 border-b border-slate-100 px-4 py-3.5 text-start dark:border-slate-800">
           <DialogTitle className="flex items-center gap-2 text-[15px] font-semibold tracking-tight">
             {kind === 'video' ? (
               <Video className="h-4 w-4 text-indigo-600" aria-hidden />
@@ -74,13 +74,13 @@ export function GroupCallParticipantPicker({
         {participants.length > 4 ? (
           <div className="border-b border-slate-100 px-3 py-2 dark:border-slate-800">
             <div className="relative">
-              <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
+              <Search className="pointer-events-none absolute start-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
               <input
                 type="search"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder={searchPlaceholder}
-                className="h-9 w-full rounded-lg border border-slate-200 bg-slate-50 pl-8 pr-3 text-sm outline-none focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100 dark:border-slate-700 dark:bg-slate-900 dark:focus:ring-indigo-950"
+                className="h-9 w-full rounded-lg border border-slate-200 bg-slate-50 ps-8 pe-3 text-sm outline-none focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100 dark:border-slate-700 dark:bg-slate-900 dark:focus:ring-indigo-950"
               />
             </div>
           </div>
@@ -100,7 +100,7 @@ export function GroupCallParticipantPicker({
                   onOpenChange(false);
                 }}
                 className={cn(
-                  'flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors',
+                  'flex w-full items-center gap-3 px-4 py-2.5 text-start transition-colors',
                   'hover:bg-slate-50 dark:hover:bg-slate-900/50 focus-visible:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-indigo-400',
                   'dark:hover:bg-slate-900/70 dark:focus-visible:bg-slate-900/70'
                 )}

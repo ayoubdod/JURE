@@ -686,7 +686,7 @@ const TeamMemberProfile: React.FC<Props> = ({ profile, onUpdateSuccess }) => {
                 {overviewRows.map((row) => (
                   <div key={row.label} className="flex items-baseline justify-between gap-4">
                     <dt className="text-[12px] text-slate-500 dark:text-slate-400">{row.label}</dt>
-                    <dd className="text-right text-sm font-semibold text-slate-900 dark:text-slate-100">{row.value}</dd>
+                    <dd className="text-end text-sm font-semibold text-slate-900 dark:text-slate-100">{row.value}</dd>
                   </div>
                 ))}
               </dl>

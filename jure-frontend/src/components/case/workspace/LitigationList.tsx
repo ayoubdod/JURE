@@ -161,7 +161,7 @@ export default function LitigationList({
           <div
             key={section.key}
             className={cn(
-              'overflow-hidden rounded-xl border border-slate-200/90 border-l-[3px] shadow-[0_1px_2px_rgba(0,0,0,0.04)] dark:border-slate-800',
+              'overflow-hidden rounded-xl border border-slate-200/90 border-s-[3px] shadow-[0_1px_2px_rgba(0,0,0,0.04)] dark:border-slate-800',
               section.accent
             )}
           >

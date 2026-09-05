@@ -88,7 +88,7 @@ const ResetPassword = () => {
   };
 
   const shell = (body: React.ReactNode) => (
-    <AuroraPage className="flex items-center justify-center p-4">
+    <AuroraPage className="flex items-center justify-center p-4" documentTitle={t.auth.resetTitle}>
       <div className="absolute top-4 end-4 flex items-center gap-2">
         <LangSwitcher />
         <Button
@@ -186,6 +186,7 @@ const ResetPassword = () => {
                   size="icon"
                   className="absolute end-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                   onClick={() => setShowPassword1(!showPassword1)}
+                  aria-label={showPassword1 ? t.settings.hidePassword : t.settings.showPassword}
                 >
                   {showPassword1 ? (
                     <EyeOff className="h-4 w-4 text-slate-400 dark:text-slate-500" />
@@ -219,6 +220,7 @@ const ResetPassword = () => {
                   size="icon"
                   className="absolute end-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                   onClick={() => setShowPassword2(!showPassword2)}
+                  aria-label={showPassword2 ? t.settings.hidePassword : t.settings.showPassword}
                 >
                   {showPassword2 ? (
                     <EyeOff className="h-4 w-4 text-slate-400 dark:text-slate-500" />

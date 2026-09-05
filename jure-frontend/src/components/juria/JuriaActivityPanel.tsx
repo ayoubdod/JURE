@@ -1,11 +1,10 @@
 import React from 'react';
-import dayjs from 'dayjs';
 import useJuriaStore from '@/stores/juriaStore';
 import UserAvatar from '@/components/common/UserAvatar';
-import { useAppTranslation } from '@/i18n';
+import { useAppTranslation, formatDateTime } from '@/i18n';
 
 export function JuriaActivityPanel() {
-  const { t } = useAppTranslation();
+  const { t, lang } = useAppTranslation();
   const labels = t.juria.workspace.activity.labels;
   const empty = t.juria.workspace.activity.empty;
   const activities = useJuriaStore((s) => s.activities);
@@ -35,7 +34,7 @@ export function JuriaActivityPanel() {
               <p className="text-[13px] text-slate-800 dark:text-slate-100">
                 {labels[a.action as keyof typeof labels] || a.action}
               </p>
-              <p className="text-[11px] text-slate-400">{dayjs(a.created_at).format('DD MMM YYYY HH:mm')}</p>
+              <p className="text-[11px] text-slate-400">{formatDateTime(a.created_at, lang)}</p>
             </div>
           </div>
         ))}

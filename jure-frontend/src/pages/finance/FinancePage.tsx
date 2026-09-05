@@ -127,11 +127,11 @@ const FinancePage: React.FC = () => {
               className="h-10 bg-jure-600 hover:bg-jure-700"
               onClick={() => navigate('/dashboard/cases')}
             >
-              <Plus className="mr-2 h-4 w-4" />
+              <Plus className="me-2 h-4 w-4" />
               {t.finance.addPayment}
             </Button>
             <Button type="button" variant="outline" className="h-10" disabled>
-              <Download className="mr-2 h-4 w-4" />
+              <Download className="me-2 h-4 w-4" />
               {t.finance.export}
             </Button>
           </div>

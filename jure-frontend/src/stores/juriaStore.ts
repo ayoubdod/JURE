@@ -46,9 +46,14 @@ import {
   type JuriaProjectCreateBody,
 } from '@/services/juria/api';
 import { mapApiDetailToConversation, mapApiListItemToConversation, mapApiMessageToJuria } from '@/utils/juriaMappers';
-import { getJuriaErrorMessage, isJuriaDisabledError } from '@/utils/juriaErrors';
+import { getJuriaErrorMessage, isJuriaDisabledError, juriaMissingIdError } from '@/utils/juriaErrors';
+import { detectInitialLanguage, tFor } from '@/i18n';
 
 type FabCase = { id: number; reference?: string; title?: string };
+
+function juriaFallbackError(e: unknown): Error {
+  return new Error(getJuriaErrorMessage(e) || tFor(detectInitialLanguage()).errors.generic);
+}
 
 interface JuriaStoreState {
   juriaUnavailable: boolean;
@@ -293,7 +298,7 @@ const useJuriaStore = create<JuriaStoreState>()(
         const conv = mapApiDetailToConversation(detail);
         const id = normalizeJuriaConversationId(conv.id);
         if (!id) {
-          throw new Error('Conversation créée sans identifiant.');
+          throw juriaMissingIdError();
         }
         conv.id = id;
         conv.archived = false;
@@ -396,7 +401,7 @@ const useJuriaStore = create<JuriaStoreState>()(
           await get().loadUsage();
         } catch (e) {
           if (isJuriaDisabledError(e)) set({ juriaUnavailable: true });
-          throw new Error(getJuriaErrorMessage(e) || 'Erreur');
+          throw juriaFallbackError(e);
         } finally {
           set((s) => ({
             processingConversationId:
@@ -441,7 +446,7 @@ const useJuriaStore = create<JuriaStoreState>()(
           await get().loadUsage();
         } catch (e) {
           if (isJuriaDisabledError(e)) set({ juriaUnavailable: true });
-          throw new Error(getJuriaErrorMessage(e) || 'Erreur');
+          throw juriaFallbackError(e);
         } finally {
           set({ processingConversationId: null });
         }
@@ -711,7 +716,7 @@ const useJuriaStore = create<JuriaStoreState>()(
           await get().loadUsage();
         } catch (e) {
           if (isJuriaDisabledError(e)) set({ juriaUnavailable: true });
-          throw new Error(getJuriaErrorMessage(e) || 'Erreur');
+          throw juriaFallbackError(e);
         } finally {
           set((s) => ({
             processingThreadId: s.processingThreadId === threadId ? null : s.processingThreadId,

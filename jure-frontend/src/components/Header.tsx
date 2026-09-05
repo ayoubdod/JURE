@@ -417,7 +417,7 @@ const Header = () => {
             size="icon"
             className="lg:hidden shrink-0 h-10 w-10 text-muted-foreground hover:text-foreground"
             onClick={toggleMobileNav}
-            aria-label="Open navigation menu"
+            aria-label={t.header.openNav}
           >
             <Menu size={20} />
           </Button>
@@ -427,7 +427,7 @@ const Header = () => {
                 <img 
                   key={user.logo_version || user.logo}
                   src={user.logo_version ? `${user.logo}${user.logo.includes('?') ? '&' : '?'}t=${user.logo_version}` : user.logo}
-                  alt={`${organizationName} logo`}
+                  alt={tf(t.header.orgLogo, { name: organizationName })}
                   className="h-6 w-6 sm:h-7 sm:w-7 object-contain rounded shrink-0"
                 />
               )}
@@ -506,7 +506,7 @@ const Header = () => {
                     size="icon"
                     className="text-muted-foreground hover:text-foreground h-10 w-10 sm:h-8 sm:w-8"
                     onClick={handleSearchToggle}
-                    aria-label="Search"
+                    aria-label={t.header.searchAria}
                   >
                     <Search size={16} />
                   </Button>
@@ -718,7 +718,7 @@ const Header = () => {
                           <span className="text-xs text-muted-foreground flex-shrink-0">
                             {formatMessageTime((lastMessage as any).created)}
                             {unreadCount > 1 && (
-                              <span className="ml-1">· {tf(t.header.messagesCount, { count: unreadCount })}</span>
+                              <span className="ms-1">· {tf(t.header.messagesCount, { count: unreadCount })}</span>
                             )}
                           </span>
                         </div>
@@ -758,7 +758,7 @@ const Header = () => {
                 variant="ghost"
                 size="icon"
                 className="md:hidden h-10 w-10 text-muted-foreground hover:text-foreground"
-                aria-label="More actions"
+                aria-label={t.header.moreActions}
               >
                 <MoreHorizontal size={18} />
               </Button>
@@ -769,7 +769,7 @@ const Header = () => {
                 className="min-h-10"
               >
                 {themeChoice === 'dark' ? <Sun size={15} className="me-2" /> : <Moon size={15} className="me-2" />}
-                {themeChoice === 'dark' ? 'Light mode' : 'Dark mode'}
+                {themeChoice === 'dark' ? t.header.lightMode : t.header.darkMode}
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={() => navigate('/dashboard/conversations')}

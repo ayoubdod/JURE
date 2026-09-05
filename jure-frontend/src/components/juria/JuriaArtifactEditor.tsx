@@ -68,7 +68,7 @@ export function JuriaArtifactEditor({ projectId }: { projectId: string }) {
             key={a.id}
             type="button"
             onClick={() => setActiveId(a.id)}
-            className={`mb-1 w-full rounded-lg px-2 py-2 text-left text-[12px] ${a.id === active?.id ? 'bg-[#64499D]/10' : 'hover:bg-slate-50'}`}
+            className={`mb-1 w-full rounded-lg px-2 py-2 text-start text-[12px] ${a.id === active?.id ? 'bg-[#64499D]/10' : 'hover:bg-slate-50'}`}
           >
             <span className="line-clamp-1 font-medium">{a.title}</span>
             <span className="text-[10px] text-slate-400">v{a.current_version}</span>

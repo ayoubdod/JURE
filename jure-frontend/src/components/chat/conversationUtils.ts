@@ -14,14 +14,6 @@ export function formatCaseRef(lc: API.LinkedCaseSummary): string {
   return `#${lc.id}`;
 }
 
-export function humanizeToken(value?: string | null): string {
-  if (!value) return '';
-  return value
-    .replace(/_/g, ' ')
-    .toLowerCase()
-    .replace(/\b\w/g, (ch) => ch.toUpperCase());
-}
-
 export function parseLinkedCaseId(lc: API.LinkedCaseSummary): number | null {
   const n = typeof lc.id === 'number' ? lc.id : parseInt(String(lc.id), 10);
   return Number.isFinite(n) ? n : null;
@@ -137,7 +129,11 @@ export function isSameCalendarDay(a?: string, b?: string): boolean {
   );
 }
 
-export function formatDateSeparator(iso: string, labels: { today: string; yesterday: string }): string {
+export function formatDateSeparator(
+  iso: string,
+  labels: { today: string; yesterday: string },
+  locale?: string
+): string {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return '';
   const now = new Date();
@@ -146,7 +142,7 @@ export function formatDateSeparator(iso: string, labels: { today: string; yester
   const diffDays = Math.round((today.getTime() - that.getTime()) / 86_400_000);
   if (diffDays === 0) return labels.today;
   if (diffDays === 1) return labels.yesterday;
-  return d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+  return d.toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric' });
 }
 
 const GROUP_WINDOW_MS = 5 * 60 * 1000;

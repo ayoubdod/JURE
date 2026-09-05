@@ -4,6 +4,7 @@ import { Download, ZoomIn, ZoomOut, RotateCcw, Archive, FileText, Image, Video, 
 import { renderAsync } from 'docx-preview';
 import { API_ORIGIN } from '@/config/api';
 import { getFileType } from '@/utils/functions';
+import { useAppTranslation } from '@/i18n';
 import { cn } from '@/lib/utils';
 import useUserStore from '@/stores/userStore';
 
@@ -60,7 +61,10 @@ const UnsupportedFallback: React.FC<{
   fileIcon: React.ReactNode;
   extension: string;
   className?: string;
-}> = ({ fileUrl, fileName, title, onDownload, fileIcon, extension, className }) => (
+}> = ({ fileUrl, fileName, title, onDownload, fileIcon, extension, className }) => {
+  const { t } = useAppTranslation();
+  const hub = t.library.hub;
+  return (
   <div
     className={cn(
       'flex flex-col items-center justify-center min-h-[200px] gap-4 rounded-md border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 p-6',
@@ -72,7 +76,7 @@ const UnsupportedFallback: React.FC<{
         {fileIcon}
       </div>
       <p className="text-[11px] font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
-        {extension || 'File'}
+        {extension || hub.readerFile}
       </p>
       <p className="text-[13px] text-slate-600 dark:text-slate-300 text-center max-w-[200px] truncate">
         {title || fileName}
@@ -83,11 +87,12 @@ const UnsupportedFallback: React.FC<{
       className="h-9 text-[13px] border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-slate-400 focus:ring-offset-0"
       variant="outline"
     >
-      <Download size={14} className="mr-2" />
-      Download to View
+      <Download size={14} className="me-2" />
+      {hub.readerDownloadToView}
     </Button>
   </div>
-);
+  );
+};
 
 const getFileIconByType = (fileName: string) => {
   const type = getFileType(fileName);
@@ -123,6 +128,8 @@ export const FilePreviewer: React.FC<FilePreviewerProps> = ({
     return `${API_ORIGIN}/media/${url}`;
   },
 }) => {
+  const { t } = useAppTranslation();
+  const hub = t.library.hub;
   const resolvedUrl = resolveUrl(fileUrl);
   const ext = getFileExtension(fileName || fileUrl);
   const [imageError, setImageError] = useState(false);
@@ -245,7 +252,7 @@ export const FilePreviewer: React.FC<FilePreviewerProps> = ({
             className="h-11 w-11 sm:h-7 sm:w-7 p-0"
             onClick={() => setImageZoom((z) => Math.max(0.5, z - 0.25))}
             disabled={imageZoom <= 0.5}
-            aria-label="Zoom out"
+            aria-label={hub.readerZoomOut}
           >
             <ZoomOut size={14} />
           </Button>
@@ -258,7 +265,7 @@ export const FilePreviewer: React.FC<FilePreviewerProps> = ({
             className="h-11 w-11 sm:h-7 sm:w-7 p-0"
             onClick={() => setImageZoom((z) => Math.min(3, z + 0.25))}
             disabled={imageZoom >= 3}
-            aria-label="Zoom in"
+            aria-label={hub.readerZoomIn}
           >
             <ZoomIn size={14} />
           </Button>
@@ -267,10 +274,10 @@ export const FilePreviewer: React.FC<FilePreviewerProps> = ({
             size="sm"
             className="h-11 sm:h-7 text-[11px] px-3"
             onClick={() => setImageZoom(1)}
-            aria-label="Reset zoom"
+            aria-label={hub.readerReset}
           >
-            <RotateCcw size={12} className="mr-1" />
-            Reset
+            <RotateCcw size={12} className="me-1" />
+            {hub.readerReset}
           </Button>
         </div>
       </div>
@@ -301,7 +308,7 @@ export const FilePreviewer: React.FC<FilePreviewerProps> = ({
       >
         {pdfLoading && !pdfSrc ? (
           <div className="flex h-[min(70dvh,560px)] sm:h-[400px] items-center justify-center text-[13px] text-slate-500">
-            Loading preview…
+            {hub.readerOpening}
           </div>
         ) : (
           <iframe
@@ -319,11 +326,11 @@ export const FilePreviewer: React.FC<FilePreviewerProps> = ({
             className="h-11 sm:h-8 min-w-[44px] text-[13px]"
             onClick={() => window.open(resolvedUrl, '_blank')}
           >
-            Open in new tab
+            {hub.readerOpenTab}
           </Button>
           <Button variant="outline" size="sm" className="h-11 sm:h-8 min-w-[44px] text-[13px]" onClick={handleDownload}>
-            <Download size={12} className="mr-1" />
-            Download
+            <Download size={12} className="me-1" />
+            {hub.download}
           </Button>
         </div>
       </div>
@@ -354,7 +361,7 @@ export const FilePreviewer: React.FC<FilePreviewerProps> = ({
       >
         {docxLoading && (
           <div className="flex items-center justify-center min-h-[200px] text-[13px] text-slate-500">
-            Loading document...
+            {hub.readerLoading}
           </div>
         )}
         <div
@@ -421,7 +428,7 @@ export const FilePreviewer: React.FC<FilePreviewerProps> = ({
       title={title}
       onDownload={handleDownload}
       fileIcon={fileIcon}
-      extension={ext || 'File'}
+      extension={ext || t.library.hub.readerFile}
       className={className}
     />
   );

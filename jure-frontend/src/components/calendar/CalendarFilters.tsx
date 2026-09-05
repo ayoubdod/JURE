@@ -206,7 +206,7 @@ export default function CalendarFilters({
                 className="h-8 flex-1 px-2 text-[11px] font-semibold rounded-md sm:h-9 sm:flex-none sm:px-3 sm:text-[12px]"
                 onClick={onAddTask}
               >
-                <Plus className="w-3.5 h-3.5 mr-1 sm:w-4 sm:h-4 sm:mr-1.5" strokeWidth={2.5} />
+                <Plus className="w-3.5 h-3.5 me-1 sm:w-4 sm:h-4 sm:me-1.5" strokeWidth={2.5} />
                 <span className="sm:hidden">{cal.addTask}</span>
                 <span className="hidden sm:inline">{t.tasks.newTask}</span>
               </Button>
@@ -218,7 +218,7 @@ export default function CalendarFilters({
                 className="h-8 flex-1 px-2 text-[11px] font-semibold rounded-md shadow-sm shadow-primary/15 sm:h-9 sm:flex-none sm:px-3 sm:text-[12px]"
                 onClick={onAddAppointment}
               >
-                <Plus className="w-3.5 h-3.5 mr-1 sm:w-4 sm:h-4 sm:mr-1.5" strokeWidth={2.5} />
+                <Plus className="w-3.5 h-3.5 me-1 sm:w-4 sm:h-4 sm:me-1.5" strokeWidth={2.5} />
                 <span className="sm:hidden">{cal.addAppointment}</span>
                 <span className="hidden sm:inline">{t.appointments.newAppointment}</span>
               </Button>

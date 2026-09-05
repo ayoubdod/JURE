@@ -158,7 +158,7 @@ const SignIn = () => {
               type="button"
               onClick={() => setShowPassword((v) => !v)}
               className="absolute end-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
-              aria-label={t.auth.passwordLabel}
+              aria-label={showPassword ? t.settings.hidePassword : t.settings.showPassword}
             >
               {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>

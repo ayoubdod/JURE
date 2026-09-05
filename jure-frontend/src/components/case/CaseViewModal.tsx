@@ -541,7 +541,7 @@ const CaseViewModal = forwardRef<CaseViewModalRef, CaseViewModalProps>(
                           onClick={addAssignee}
                           className="h-8 px-3 text-xs shadow-none"
                         >
-                          <UserPlus className="mr-1 h-3 w-3" />
+                          <UserPlus className="me-1 h-3 w-3" />
                           {t.common.add}
                         </Button>
                       </div>

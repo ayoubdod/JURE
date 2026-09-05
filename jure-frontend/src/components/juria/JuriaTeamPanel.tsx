@@ -5,10 +5,13 @@ import useJuriaStore from '@/stores/juriaStore';
 import { apiJuriaInviteMember, apiJuriaRemoveMember, apiJuriaUpdateMemberRole } from '@/services/juria/api';
 import { apiGetCabinetMembers } from '@/services/cabinet-member/api';
 import type { JuriaProject, JuriaProjectRole } from '@/types/juria';
+import { useAppTranslation } from '@/i18n';
 
 const ROLES: JuriaProjectRole[] = ['OWNER', 'EDITOR', 'REVIEWER', 'VIEWER'];
 
 export function JuriaTeamPanel({ project }: { project: JuriaProject }) {
+  const { t } = useAppTranslation();
+  const tp = t.juria.workspace.teamPanel;
   const load = useJuriaStore((s) => s.loadProjectDetail);
   const members = project.members ?? [];
   const [directory, setDirectory] = useState<API.CabinetMember[]>([]);
@@ -29,7 +32,7 @@ export function JuriaTeamPanel({ project }: { project: JuriaProject }) {
             onChange={(e) => setUserId(e.target.value)}
             className="h-9 flex-1 rounded-md border border-slate-200 bg-white px-2 text-sm dark:border-slate-700 dark:bg-slate-900"
           >
-            <option value="">Inviter un membre du cabinet…</option>
+            <option value="">{tp.invitePlaceholder}</option>
             {directory.map((m) => {
               const uid = typeof m.user === 'object' && m.user ? String((m.user as API.User).id) : String(m.id);
               return (
@@ -48,7 +51,7 @@ export function JuriaTeamPanel({ project }: { project: JuriaProject }) {
               setUserId('');
             }}
           >
-            Inviter
+            {tp.invite}
           </Button>
         </div>
         <div className="space-y-2">
@@ -71,13 +74,13 @@ export function JuriaTeamPanel({ project }: { project: JuriaProject }) {
               >
                 {ROLES.map((r) => (
                   <option key={r} value={r}>
-                    {r}
+                    {tp.roles[r]}
                   </option>
                 ))}
               </select>
               {m.role !== 'OWNER' && (
                 <Button size="sm" variant="ghost" className="h-8 text-xs text-red-600" onClick={() => void apiJuriaRemoveMember(project.id, m.id).then(() => load(project.id))}>
-                  Retirer
+                  {t.juria.workspace.actions.remove}
                 </Button>
               )}
             </div>

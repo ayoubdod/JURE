@@ -10,7 +10,7 @@ import { TaskPriority, TaskStatus } from '@/utils/constants';
 import { cn } from '@/lib/utils';
 import UserAvatar, { getPersonImage } from '@/components/common/UserAvatar';
 import { useCabinetMemberDirectory } from '@/hooks/useCabinetMemberDirectory';
-import { useAppTranslation } from '@/i18n';
+import { formatDate, formatDateTime, formatTime, useAppTranslation } from '@/i18n';
 import { useNavigate } from 'react-router';
 import { taskAssigneeUsers } from '@/lib/workspacePeople';
 import { CalendarAttachmentList } from '@/components/calendar/CalendarAttachmentField';
@@ -21,12 +21,6 @@ export const SHEET_PANEL =
   'flex flex-col gap-0 !p-0 border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 shadow-xl [&>button]:hidden !absolute !right-0 !top-0 !h-full !w-[min(100%,420px)] !max-w-[420px] !sm:max-w-[420px]';
 
 export const EMBEDDED_OVERLAY = '!bg-transparent pointer-events-auto';
-
-function formatDayMonthYear(iso: string): string {
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return '—';
-  return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
-}
 
 function getCountdownDays(iso: string): number | null {
   const d = new Date(iso);
@@ -93,7 +87,8 @@ export function TaskDetailPanel({
   /** Optional quick-complete handler (e.g. dashboard). Hidden when task is already done. */
   onComplete?: (task: API.Task) => void | Promise<void>;
 }) {
-  const { enumPretty, t } = useAppTranslation();
+  const { enumPretty, t, tf, lang } = useAppTranslation();
+  const panel = t.calendar.panel;
   const lookupCabinet = useCabinetMemberDirectory();
   const [task, setTask] = useState<API.Task | null>(null);
   const [loading, setLoading] = useState(false);
@@ -138,7 +133,7 @@ export function TaskDetailPanel({
           <div className="flex items-start justify-between gap-2">
             <div className="flex flex-wrap items-center gap-2">
               <span className="inline-flex rounded-md bg-indigo-500/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-indigo-700 dark:text-indigo-400 ring-1 ring-indigo-500/25">
-                Task
+                {t.calendar.legend.task}
               </span>
               {(task?.priority === TaskPriority.HIGH || String(task?.priority || '').toLowerCase() === 'urgent') && (
                 <span className="inline-flex rounded-md bg-rose-500/15 px-2 py-0.5 text-[10px] font-semibold uppercase text-rose-700 dark:text-rose-400 ring-1 ring-rose-500/25">
@@ -156,11 +151,11 @@ export function TaskDetailPanel({
                 </span>
               )}
             </div>
-            <Button type="button" variant="ghost" size="icon" className="h-8 w-8 shrink-0" aria-label="Close" onClick={() => onOpenChange(false)}>
+            <Button type="button" variant="ghost" size="icon" className="h-8 w-8 shrink-0" aria-label={t.common.close} onClick={() => onOpenChange(false)}>
               <X className="h-4 w-4" />
             </Button>
           </div>
-          <h2 className="mt-3 text-lg font-semibold leading-snug text-slate-900 dark:text-white pr-2">{task?.title || '—'}</h2>
+          <h2 className="mt-3 text-lg font-semibold leading-snug text-slate-900 dark:text-white pe-2">{task?.title || '—'}</h2>
           <div className="mt-3 h-px bg-slate-200 dark:border-slate-800 dark:bg-slate-800" />
         </header>
 
@@ -172,7 +167,7 @@ export function TaskDetailPanel({
           ) : task ? (
             <>
               <section>
-                <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400 mb-2">Details</p>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400 mb-2">{t.tasks.modal.taskDetails}</p>
                 <div className="rounded-lg border border-slate-200/80 dark:border-slate-800 bg-white/60 dark:bg-slate-900/40 px-3 py-2.5 text-sm text-slate-700 dark:text-slate-300 whitespace-pre-wrap min-h-[3rem]">
                   {task.description || '—'}
                 </div>
@@ -187,7 +182,7 @@ export function TaskDetailPanel({
                 {task.estimated_hours && (
                   <p className="mt-3 flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
                     <Clock className="h-4 w-4 shrink-0" />
-                    <span>{task.estimated_hours} h estimated</span>
+                    <span>{tf(panel.hoursEstimated, { hours: task.estimated_hours })}</span>
                   </p>
                 )}
               </section>
@@ -230,11 +225,11 @@ export function TaskDetailPanel({
                         tone === 'normal' && 'text-slate-600 dark:text-slate-400'
                       )}
                     >
-                      Due {formatDayMonthYear(dueIso)}
-                      {days != null && !overdue && ` · ${days === 0 ? 'Today' : `in ${days}d`}`}
+                      {tf(panel.dueOn, { date: formatDate(dueIso, lang, { day: 'numeric', month: 'short', year: 'numeric' }) || '—' })}
+                      {days != null && !overdue && ` · ${days === 0 ? t.calendar.fc.today : tf(t.cases.deadline.inDays, { days })}`}
                     </span>
                     {overdue && (
-                      <span className="rounded-md bg-red-500/15 px-1.5 py-0.5 text-[10px] font-bold uppercase text-red-700 dark:text-red-400">Overdue</span>
+                      <span className="rounded-md bg-red-500/15 px-1.5 py-0.5 text-[10px] font-bold uppercase text-red-700 dark:text-red-400">{t.tasks.overdue}</span>
                     )}
                   </div>
                 )}
@@ -251,40 +246,42 @@ export function TaskDetailPanel({
 
               {(showRelatedCaseLink || (task.client && typeof task.client === 'object')) && (
                 <section>
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400 mb-2">Related</p>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400 mb-2">{panel.related}</p>
                   {showRelatedCaseLink && (
                     <button
                       type="button"
-                      className="text-left w-full rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-2 hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors"
+                      className="text-start w-full rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-2 hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors"
                       onClick={() => onOpenCase(relatedCaseId!)}
                     >
                       <span className="font-mono text-xs text-slate-500">{ext.reference || `#${relatedCaseId}`}</span>
-                      <p className="text-sm font-medium text-slate-900 dark:text-white mt-0.5">{ext.case_title || 'View case'}</p>
+                      <p className="text-sm font-medium text-slate-900 dark:text-white mt-0.5">{ext.case_title || t.calendar.caseDateDetail.viewCase}</p>
                     </button>
                   )}
                   {task.client && typeof task.client === 'object' && (
                     <p className={cn('text-sm text-slate-600 dark:text-slate-400', showRelatedCaseLink && 'mt-2')}>
-                      Client:{' '}
-                      {`${(task.client as { first_name?: string; last_name?: string; email?: string }).first_name || ''} ${(task.client as { first_name?: string; last_name?: string }).last_name || ''}`.trim() ||
-                        (task.client as { email?: string }).email ||
-                        '—'}
+                      {tf(t.calendar.caseDateDetail.client, {
+                        name:
+                          `${(task.client as { first_name?: string; last_name?: string; email?: string }).first_name || ''} ${(task.client as { first_name?: string; last_name?: string }).last_name || ''}`.trim() ||
+                          (task.client as { email?: string }).email ||
+                          '—',
+                      })}
                     </p>
                   )}
                 </section>
               )}
             </>
           ) : (
-            <p className="text-sm text-slate-500 py-8 text-center">Task not found</p>
+            <p className="text-sm text-slate-500 py-8 text-center">{t.tasks.modal.notFound}</p>
           )}
         </div>
 
         <footer className="sticky bottom-0 z-20 flex shrink-0 flex-wrap items-center justify-between gap-2 border-t border-slate-200 dark:border-slate-800 bg-slate-50/95 dark:bg-slate-950/95 backdrop-blur-sm px-4 py-3">
           <span className="text-xs text-slate-500 dark:text-slate-400">
-            {task?.due_date ? `Due: ${formatDayMonthYear(task.due_date)}` : ''}
+            {task?.due_date ? tf(t.cases.related.due, { date: formatDate(task.due_date, lang, { day: 'numeric', month: 'short', year: 'numeric' }) || '—' }) : ''}
           </span>
           <div className="flex flex-wrap items-center justify-end gap-2">
             <Button type="button" variant="ghost" size="sm" onClick={() => onOpenChange(false)}>
-              Close
+              {t.common.close}
             </Button>
             {task && onComplete && task.status !== TaskStatus.DONE && (
               <Button
@@ -304,11 +301,11 @@ export function TaskDetailPanel({
                 }}
               >
                 {completing ? (
-                  <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
+                  <Loader2 className="h-4 w-4 me-1.5 animate-spin" />
                 ) : (
-                  <CheckSquare className="h-4 w-4 mr-1.5" />
+                  <CheckSquare className="h-4 w-4 me-1.5" />
                 )}
-                Mark done
+                {t.tasks.markDone}
               </Button>
             )}
             {task && (
@@ -320,8 +317,8 @@ export function TaskDetailPanel({
                   onEdit(task);
                 }}
               >
-                <Edit className="h-4 w-4 mr-1.5" />
-                Edit Task
+                <Edit className="h-4 w-4 me-1.5" />
+                {t.tasks.modal.editTitle}
               </Button>
             )}
           </div>
@@ -348,7 +345,7 @@ export function AppointmentDetailPanel({
   onOpenCase: (id: number) => void;
   contextCaseId?: number | null;
 }) {
-  const { enumPretty, t, tf } = useAppTranslation();
+  const { enumPretty, t, tf, lang } = useAppTranslation();
   const { toast } = useToast();
   const navigate = useNavigate();
   const lookupCabinet = useCabinetMemberDirectory();
@@ -356,6 +353,7 @@ export function AppointmentDetailPanel({
   const [loading, setLoading] = useState(false);
   const [statusUpdating, setStatusUpdating] = useState<'done' | 'cancelled' | null>(null);
   const m = t.calendar.appointmentModal;
+  const panel = t.calendar.panel;
 
   useEffect(() => {
     if (open && appointmentId) {
@@ -406,7 +404,7 @@ export function AppointmentDetailPanel({
           <div className="flex items-start justify-between gap-2">
             <div className="flex flex-wrap items-center gap-2">
               <span className="inline-flex rounded-md bg-emerald-500/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400 ring-1 ring-emerald-500/25">
-                Appointment
+                {t.calendar.legend.appointment}
               </span>
               {appointment?.status && (
                 <span
@@ -419,11 +417,11 @@ export function AppointmentDetailPanel({
                 </span>
               )}
             </div>
-            <Button type="button" variant="ghost" size="icon" className="h-8 w-8 shrink-0" aria-label="Close" onClick={() => onOpenChange(false)}>
+            <Button type="button" variant="ghost" size="icon" className="h-8 w-8 shrink-0" aria-label={t.common.close} onClick={() => onOpenChange(false)}>
               <X className="h-4 w-4" />
             </Button>
           </div>
-          <h2 className="mt-3 text-lg font-semibold leading-snug text-slate-900 dark:text-white pr-2">{appointment?.title || '—'}</h2>
+          <h2 className="mt-3 text-lg font-semibold leading-snug text-slate-900 dark:text-white pe-2">{appointment?.title || '—'}</h2>
           <div className="mt-3 h-px bg-slate-200 dark:bg-slate-800" />
         </header>
 
@@ -435,16 +433,16 @@ export function AppointmentDetailPanel({
           ) : appointment ? (
             <>
               <section>
-                <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400 mb-2">Schedule</p>
-                <p className="text-sm font-medium text-slate-900 dark:text-white">{formatDayMonthYear(appointment.start_at)}</p>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400 mb-2">{m.scheduleDetails}</p>
+                <p className="text-sm font-medium text-slate-900 dark:text-white">{formatDate(appointment.start_at, lang, { day: 'numeric', month: 'short', year: 'numeric' }) || '—'}</p>
                 <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-                  {new Date(appointment.start_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  {formatTime(appointment.start_at, lang)}
                   {' → '}
-                  {new Date(appointment.end_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  {formatTime(appointment.end_at, lang)}
                 </p>
                 {durationMin != null && (
                   <span className="mt-2 inline-flex rounded-md bg-slate-500/10 px-2 py-0.5 text-xs font-medium text-slate-700 dark:text-slate-300">
-                    {durationMin} min
+                    {tf(panel.durationMin, { min: durationMin })}
                   </span>
                 )}
                 {(() => {
@@ -456,7 +454,7 @@ export function AppointmentDetailPanel({
                     const convTitle =
                       appointment.jure_conversation?.display_name ||
                       appointment.jure_conversation?.title ||
-                      (appointment.conversation ? `Conversation #${appointment.conversation}` : '');
+                      (appointment.conversation ? tf(panel.conversationNumber, { id: appointment.conversation }) : '');
                     const joinUrl =
                       appointment.conference_url ||
                       (appointment.conversation
@@ -522,7 +520,7 @@ export function AppointmentDetailPanel({
               )}
 
               <section>
-                <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400 mb-2">People</p>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400 mb-2">{t.calendar.caseDateDetail.people}</p>
                 {appointment.created_by_details && (
                   <div className="flex items-center gap-2 mb-3">
                     <UserAvatar
@@ -536,7 +534,7 @@ export function AppointmentDetailPanel({
                       email={appointment.created_by_details.email}
                     />
                     <div className="min-w-0">
-                      <p className="text-[10px] font-medium uppercase tracking-wider text-slate-500">Scheduled by</p>
+                      <p className="text-[10px] font-medium uppercase tracking-wider text-slate-500">{panel.scheduledBy}</p>
                       <p className="text-sm text-slate-800 dark:text-slate-200">
                         {`${appointment.created_by_details.first_name || ''} ${appointment.created_by_details.last_name || ''}`.trim() ||
                           appointment.created_by_details.email}
@@ -580,7 +578,7 @@ export function AppointmentDetailPanel({
                       />
                     )}
                     <div className="min-w-0">
-                      <p className="text-[10px] font-medium uppercase tracking-wider text-slate-500">Client</p>
+                      <p className="text-[10px] font-medium uppercase tracking-wider text-slate-500">{t.cases.card.client}</p>
                       <p className="text-sm text-slate-800 dark:text-slate-200">{clientName}</p>
                     </div>
                   </div>
@@ -588,18 +586,18 @@ export function AppointmentDetailPanel({
                 {showAppointmentCaseLink && (
                   <button
                     type="button"
-                    className="mt-2 w-full text-left rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-2 hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors"
+                    className="mt-2 w-full text-start rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-2 hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors"
                     onClick={() => onOpenCase(appointment.case!)}
                   >
-                    <span className="font-mono text-xs text-slate-500">Case</span>
-                    <p className="text-sm font-medium text-slate-900 dark:text-white mt-0.5">{appointment.case_title || `Case #${appointment.case}`}</p>
+                    <span className="font-mono text-xs text-slate-500">{t.calendar.caseDateDetail.case}</span>
+                    <p className="text-sm font-medium text-slate-900 dark:text-white mt-0.5">{appointment.case_title || `${t.calendar.caseDateDetail.case} #${appointment.case}`}</p>
                   </button>
                 )}
               </section>
 
               {appointment.description ? (
                 <section>
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400 mb-2">Notes</p>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400 mb-2">{t.calendar.scheduleDialog.notes}</p>
                   <div className="rounded-lg border border-slate-200/80 dark:border-slate-800 bg-slate-100/50 dark:bg-slate-900/50 px-3 py-2.5 text-sm text-slate-700 dark:text-slate-300 whitespace-pre-wrap">
                     {appointment.description}
                   </div>
@@ -607,13 +605,13 @@ export function AppointmentDetailPanel({
               ) : null}
             </>
           ) : (
-            <p className="text-sm text-slate-500 py-8 text-center">Appointment not found</p>
+            <p className="text-sm text-slate-500 py-8 text-center">{m.notFound}</p>
           )}
         </div>
 
         <footer className="sticky bottom-0 z-20 flex shrink-0 flex-col gap-2 border-t border-slate-200 dark:border-slate-800 bg-slate-50/95 dark:bg-slate-950/95 backdrop-blur-sm px-4 py-3">
           <span className="text-xs text-slate-500 dark:text-slate-400 truncate">
-            {appointment ? new Date(appointment.start_at).toLocaleString() : ''}
+            {appointment ? formatDateTime(appointment.start_at, lang) : ''}
           </span>
           <div className="flex flex-wrap items-center justify-end gap-2">
             <Button type="button" variant="ghost" size="sm" onClick={() => onOpenChange(false)}>
@@ -698,7 +696,7 @@ export function AppointmentDetailPanel({
                   }}
                 >
                   <Edit className="h-4 w-4 me-1.5" />
-                  Edit Appointment
+                  {m.updateTitle}
                 </Button>
               </>
             ) : appointment ? (
@@ -711,7 +709,7 @@ export function AppointmentDetailPanel({
                 }}
               >
                 <Edit className="h-4 w-4 me-1.5" />
-                Edit Appointment
+                {m.updateTitle}
               </Button>
             ) : null}
           </div>

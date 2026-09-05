@@ -17,7 +17,7 @@ export const CREATE_INPUT_CLASS =
   'h-10 rounded-lg border-slate-200 bg-white text-[13.5px] shadow-none transition-all duration-200 dark:border-zinc-700 dark:bg-zinc-950 focus-visible:ring-2 focus-visible:ring-[#64499D]/25 focus-visible:ring-offset-0 focus-visible:border-[#64499D]';
 
 export const CREATE_SELECT_CLASS =
-  'h-10 rounded-lg border-slate-200 bg-white text-start text-[13.5px] shadow-none transition-all duration-200 dark:border-zinc-700 dark:bg-zinc-950 focus:ring-2 focus:ring-[#64499D]/25 focus:ring-offset-0 focus:border-[#64499D] rtl:text-right';
+  'h-10 rounded-lg border-slate-200 bg-white text-start text-[13.5px] shadow-none transition-all duration-200 dark:border-zinc-700 dark:bg-zinc-950 focus:ring-2 focus:ring-[#64499D]/25 focus:ring-offset-0 focus:border-[#64499D]';
 
 export const CREATE_TEXTAREA_CLASS =
   'min-h-[92px] rounded-lg border-slate-200 bg-white text-[13.5px] shadow-none transition-all duration-200 dark:border-zinc-700 dark:bg-zinc-950 focus-visible:ring-2 focus-visible:ring-[#64499D]/25 focus-visible:ring-offset-0 focus-visible:border-[#64499D] resize-none';

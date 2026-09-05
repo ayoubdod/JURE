@@ -713,12 +713,12 @@ const CabinetMemberCreateModal = forwardRef<
             >
               {submitPhase === 'loading' ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <Loader2 className="me-2 h-4 w-4 animate-spin" />
                   {t.team.modal.creating}
                 </>
               ) : submitPhase === 'success' ? (
                 <>
-                  <Check className="mr-2 h-4 w-4" />
+                  <Check className="me-2 h-4 w-4" />
                   {t.team.modal.createdTitle}
                 </>
               ) : (

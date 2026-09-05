@@ -1,6 +1,7 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
-import { formatCaseRef, humanizeToken, linkedCaseDotClass } from './conversationUtils';
+import { formatCaseRef, linkedCaseDotClass } from './conversationUtils';
+import { useAppTranslation } from '@/i18n';
 
 export const LinkedMatterChip: React.FC<{
   linkedCase: API.LinkedCaseSummary;
@@ -8,8 +9,10 @@ export const LinkedMatterChip: React.FC<{
   compact?: boolean;
   className?: string;
 }> = ({ linkedCase, onClick, compact, className }) => {
+  const { enumLabel, enumPretty } = useAppTranslation();
   const ref = formatCaseRef(linkedCase);
-  const typeLabel = humanizeToken(linkedCase.caseType ?? linkedCase.case_type);
+  const typeRaw = linkedCase.caseType ?? linkedCase.case_type;
+  const typeLabel = enumLabel('caseType', typeRaw) || enumPretty(typeRaw);
   const Comp = onClick ? 'button' : 'span';
 
   return (

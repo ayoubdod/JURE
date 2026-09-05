@@ -41,7 +41,7 @@ import {
   callMetaFromMessage,
   isCallMessageType,
 } from '@/components/conversations/call/CallHistoryMessage';
-import { useAppTranslation } from '@/i18n';
+import { formatTime, useAppTranslation } from '@/i18n';
 import { attachmentFileName, attachmentHref } from './conversationUtils';
 
 function formatAttachmentSize(bytes?: number | null): string {
@@ -127,7 +127,7 @@ const MessageItem: React.FC<MessageItemProps> = ({
   isLastInGroup = true,
 }) => {
   const currentUser = useUserStore((s) => s.user);
-  const { t, tf } = useAppTranslation();
+  const { t, tf, lang } = useAppTranslation();
   const callCopy = t.conversations.call;
 
   // Helper: get person object from membership (backend may use user or cabinet_member)
@@ -174,10 +174,7 @@ const MessageItem: React.FC<MessageItemProps> = ({
     (myId != null && senderId != null && (myId == senderId || String(myId) === String(senderId))) ||
     (senderUser?.email && currentUser?.email && senderUser.email.toLowerCase() === currentUser.email.toLowerCase()) ||
     (conversation.type === 'direct' && otherId != null && senderId != null && String(senderId) !== String(otherId));
-  const time = new Date((msg as any).sent_at ?? (msg as any).created ?? 0).toLocaleTimeString([], {
-    hour: '2-digit',
-    minute: '2-digit',
-  });
+  const time = formatTime((msg as any).sent_at ?? (msg as any).created ?? 0, lang);
 
   const [isGalleryOpen, setIsGalleryOpen] = useState(false);
   const [galleryInitialIndex, setGalleryInitialIndex] = useState(0);
@@ -283,7 +280,7 @@ const MessageItem: React.FC<MessageItemProps> = ({
     <>
       {canEdit && onEdit && (
         <ContextMenuItem onClick={() => onEdit(msg)}>
-          <Pencil className="mr-2 h-3.5 w-3.5" />
+          <Pencil className="me-2 h-3.5 w-3.5" />
           Edit
         </ContextMenuItem>
       )}
@@ -292,13 +289,13 @@ const MessageItem: React.FC<MessageItemProps> = ({
           onClick={() => onDelete(msg)}
           className="text-destructive focus:text-destructive"
         >
-          <Trash2 className="mr-2 h-3.5 w-3.5" />
+          <Trash2 className="me-2 h-3.5 w-3.5" />
           Delete
         </ContextMenuItem>
       )}
       {canForward && onForward && (
         <ContextMenuItem onClick={() => onForward(msg)}>
-          <Forward className="mr-2 h-3.5 w-3.5" />
+          <Forward className="me-2 h-3.5 w-3.5" />
           Forward
         </ContextMenuItem>
       )}
@@ -306,12 +303,12 @@ const MessageItem: React.FC<MessageItemProps> = ({
         <ContextMenuItem onClick={() => onPin(msg, !isPinned)}>
           {isPinned ? (
             <>
-              <PinOff className="mr-2 h-3.5 w-3.5" />
+              <PinOff className="me-2 h-3.5 w-3.5" />
               Unpin
             </>
           ) : (
             <>
-              <Pin className="mr-2 h-3.5 w-3.5" />
+              <Pin className="me-2 h-3.5 w-3.5" />
               Pin
             </>
           )}
@@ -324,7 +321,7 @@ const MessageItem: React.FC<MessageItemProps> = ({
     <>
       {canEdit && onEdit && (
         <DropdownMenuItem onClick={() => onEdit(msg)}>
-          <Pencil className="mr-2 h-3.5 w-3.5" />
+          <Pencil className="me-2 h-3.5 w-3.5" />
           Edit
         </DropdownMenuItem>
       )}
@@ -333,13 +330,13 @@ const MessageItem: React.FC<MessageItemProps> = ({
           onClick={() => onDelete(msg)}
           className="text-destructive focus:text-destructive"
         >
-          <Trash2 className="mr-2 h-3.5 w-3.5" />
+          <Trash2 className="me-2 h-3.5 w-3.5" />
           Delete
         </DropdownMenuItem>
       )}
       {canForward && onForward && (
         <DropdownMenuItem onClick={() => onForward(msg)}>
-          <Forward className="mr-2 h-3.5 w-3.5" />
+          <Forward className="me-2 h-3.5 w-3.5" />
           Forward
         </DropdownMenuItem>
       )}
@@ -347,12 +344,12 @@ const MessageItem: React.FC<MessageItemProps> = ({
         <DropdownMenuItem onClick={() => onPin(msg, !isPinned)}>
           {isPinned ? (
             <>
-              <PinOff className="mr-2 h-3.5 w-3.5" />
+              <PinOff className="me-2 h-3.5 w-3.5" />
               Unpin
             </>
           ) : (
             <>
-              <Pin className="mr-2 h-3.5 w-3.5" />
+              <Pin className="me-2 h-3.5 w-3.5" />
               Pin
             </>
           )}

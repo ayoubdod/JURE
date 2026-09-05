@@ -206,7 +206,7 @@ export function JuriaProjectSidebar({
             void loadArchived();
           }}
           className={cn(
-            'flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-[12px] transition',
+            'flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-start text-[12px] transition',
             archiveView ? 'bg-[#64499D]/10 text-[#64499D]' : 'text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800/70'
           )}
         >
@@ -280,7 +280,7 @@ function ProjectRow({ p, active, onOpen }: { p: JuriaProject; active: boolean; o
       type="button"
       onClick={() => onOpen(p.id)}
       className={cn(
-        'group flex w-full items-start gap-2 rounded-lg px-2.5 py-2 text-left transition',
+        'group flex w-full items-start gap-2 rounded-lg px-2.5 py-2 text-start transition',
         active
           ? 'bg-[#64499D]/[0.08] ring-1 ring-[#64499D]/15'
           : 'hover:bg-slate-50 dark:hover:bg-slate-800/70'

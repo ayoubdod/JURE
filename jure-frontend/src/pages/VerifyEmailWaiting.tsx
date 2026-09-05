@@ -106,7 +106,7 @@ const VerifyEmailWaiting: React.FC = () => {
   };
 
   return (
-    <AuroraPage className="flex items-center justify-center p-4">
+    <AuroraPage className="flex items-center justify-center p-4" documentTitle={t.auth.verifyWaitingTitle}>
       <div className="w-full max-w-2xl">
         <Card className="shadow-xl">
           <CardHeader className="text-center space-y-4">

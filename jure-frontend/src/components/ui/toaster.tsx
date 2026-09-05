@@ -7,12 +7,14 @@ import {
   ToastTitle,
   ToastViewport,
 } from "@/components/ui/toast"
+import { useAppTranslation } from "@/i18n"
 
 export function Toaster() {
   const { toasts } = useToast()
+  const { dir } = useAppTranslation()
 
   return (
-    <ToastProvider>
+    <ToastProvider swipeDirection={dir === "rtl" ? "left" : "right"}>
       {toasts.map(function ({ id, title, description, action, ...props }) {
         return (
           <Toast key={id} {...props}>

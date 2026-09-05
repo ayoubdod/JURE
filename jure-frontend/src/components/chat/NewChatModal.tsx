@@ -406,12 +406,12 @@ const NewChatModal = forwardRef<NewChatModalRef, NewChatModalProps>(
               >
                 {submitPhase === 'loading' ? (
                   <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    <Loader2 className="me-2 h-4 w-4 animate-spin" />
                     {copy.creating}
                   </>
                 ) : submitPhase === 'success' ? (
                   <>
-                    <Check className="mr-2 h-4 w-4" />
+                    <Check className="me-2 h-4 w-4" />
                     {copy.createGroup}
                   </>
                 ) : (

@@ -30,7 +30,7 @@ export const FinanceDashboardTab: React.FC<Props> = ({
   onOpenCase,
   tvaStatus,
 }) => {
-  const { t, tf } = useAppTranslation();
+  const { t, tf, lang } = useAppTranslation();
   const [receivables, setReceivables] = useState<API.FinanceReceivables | null>(null);
 
   useEffect(() => {
@@ -69,28 +69,28 @@ export const FinanceDashboardTab: React.FC<Props> = ({
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 text-[13px]">
             <div>
               <p className="text-slate-500">{t.finance.receivables.invoiced}</p>
-              <p className="font-semibold tabular-nums">{formatMAD(receivables.total_invoiced)}</p>
+              <p className="font-semibold tabular-nums">{formatMAD(receivables.total_invoiced, lang)}</p>
             </div>
             <div>
               <p className="text-slate-500">{t.finance.receivables.collected}</p>
-              <p className="font-semibold tabular-nums">{formatMAD(receivables.total_collected)}</p>
+              <p className="font-semibold tabular-nums">{formatMAD(receivables.total_collected, lang)}</p>
             </div>
             <div>
               <p className="text-slate-500">{t.finance.receivables.outstanding}</p>
-              <p className="font-semibold tabular-nums">{formatMAD(receivables.total_outstanding)}</p>
+              <p className="font-semibold tabular-nums">{formatMAD(receivables.total_outstanding, lang)}</p>
             </div>
             <div>
               <p className="text-slate-500">{t.finance.receivables.overdue}</p>
-              <p className="font-semibold tabular-nums text-red-600">{formatMAD(receivables.total_overdue)}</p>
+              <p className="font-semibold tabular-nums text-red-600">{formatMAD(receivables.total_overdue, lang)}</p>
             </div>
           </div>
           {aging ? (
             <div className="mt-4 flex flex-wrap gap-2 text-[11px] text-slate-600 dark:text-slate-400">
-              <span>{tf(t.finance.receivables.agingCurrent, { amount: formatMAD(aging.CURRENT) })}</span>
-              <span>1–30: {formatMAD(aging['1_30'])}</span>
-              <span>31–60: {formatMAD(aging['31_60'])}</span>
-              <span>61–90: {formatMAD(aging['61_90'])}</span>
-              <span>90+: {formatMAD(aging['90_PLUS'])}</span>
+              <span>{tf(t.finance.receivables.agingCurrent, { amount: formatMAD(aging.CURRENT, lang) })}</span>
+              <span>1–30: {formatMAD(aging['1_30'], lang)}</span>
+              <span>31–60: {formatMAD(aging['31_60'], lang)}</span>
+              <span>61–90: {formatMAD(aging['61_90'], lang)}</span>
+              <span>90+: {formatMAD(aging['90_PLUS'], lang)}</span>
             </div>
           ) : null}
           {receivables.total_outstanding === 0 ? (
@@ -115,13 +115,13 @@ export const FinanceDashboardTab: React.FC<Props> = ({
         <div className="rounded-xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-950 p-4 shadow-sm">
           <h3 className="mb-3 text-sm font-semibold text-slate-900 dark:text-white">{t.finance.recentMovements}</h3>
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-[12px]">
+            <table className="w-full text-start text-[12px]">
               <thead>
                 <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-500">
-                  <th className="py-2 pr-2">{t.finance.columns.case}</th>
-                  <th className="py-2 pr-2">{t.finance.columns.client}</th>
-                  <th className="py-2 pr-2 text-right">{t.finance.columns.amount}</th>
-                  <th className="py-2 pr-2">{t.finance.columns.type}</th>
+                  <th className="py-2 pe-2">{t.finance.columns.case}</th>
+                  <th className="py-2 pe-2">{t.finance.columns.client}</th>
+                  <th className="py-2 pe-2 text-end">{t.finance.columns.amount}</th>
+                  <th className="py-2 pe-2">{t.finance.columns.type}</th>
                   <th className="py-2">{t.finance.columns.date}</th>
                 </tr>
               </thead>
@@ -135,10 +135,10 @@ export const FinanceDashboardTab: React.FC<Props> = ({
                 ) : (
                   tx.map((row) => (
                     <tr key={row.id} className="border-b border-slate-100 dark:border-slate-800/80">
-                      <td className="py-2 pr-2 font-mono text-[11px]">{row.case_reference}</td>
-                      <td className="py-2 pr-2">{row.client_name}</td>
-                      <td className="py-2 pr-2 text-right tabular-nums">{formatMAD(row.amount)}</td>
-                      <td className="py-2 pr-2">
+                      <td className="py-2 pe-2 font-mono text-[11px]">{row.case_reference}</td>
+                      <td className="py-2 pe-2">{row.client_name}</td>
+                      <td className="py-2 pe-2 text-end tabular-nums">{formatMAD(row.amount, lang)}</td>
+                      <td className="py-2 pe-2">
                         <span
                           className={cn(
                             'inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold uppercase',
@@ -161,7 +161,7 @@ export const FinanceDashboardTab: React.FC<Props> = ({
               </tbody>
             </table>
           </div>
-          <div className="mt-3 text-right">
+          <div className="mt-3 text-end">
             <button
               type="button"
               className="text-[13px] font-medium text-jure-600 hover:underline dark:text-jure-400"

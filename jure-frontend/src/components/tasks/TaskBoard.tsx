@@ -17,28 +17,28 @@ const COLUMNS: Array<{
   {
     status: TaskStatus.TODO,
     key: 'todo',
-    accent: 'border-l-slate-500 bg-slate-50/90 dark:bg-slate-950/70',
+    accent: 'border-s-slate-500 bg-slate-50/90 dark:bg-slate-950/70',
     header: 'text-slate-700 dark:text-slate-200',
     count: 'bg-slate-200/90 text-slate-700 dark:bg-slate-800 dark:text-slate-200',
   },
   {
     status: TaskStatus.IN_PROGRESS,
     key: 'inProgress',
-    accent: 'border-l-amber-500 bg-amber-50/70 dark:bg-amber-950/25',
+    accent: 'border-s-amber-500 bg-amber-50/70 dark:bg-amber-950/25',
     header: 'text-amber-800 dark:text-amber-200',
     count: 'bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-200',
   },
   {
     status: TaskStatus.DONE,
     key: 'done',
-    accent: 'border-l-emerald-500 bg-emerald-50/70 dark:bg-emerald-950/25',
+    accent: 'border-s-emerald-500 bg-emerald-50/70 dark:bg-emerald-950/25',
     header: 'text-emerald-800 dark:text-emerald-200',
     count: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-200',
   },
   {
     status: TaskStatus.CANCELLED,
     key: 'cancelled',
-    accent: 'border-l-rose-500 bg-rose-50/70 dark:bg-rose-950/25',
+    accent: 'border-s-rose-500 bg-rose-50/70 dark:bg-rose-950/25',
     header: 'text-rose-800 dark:text-rose-200',
     count: 'bg-rose-100 text-rose-800 dark:bg-rose-900/50 dark:text-rose-200',
   },
@@ -99,7 +99,7 @@ export default function TaskBoard({
           <div
             key={col.status}
             className={cn(
-              'flex min-h-0 flex-col overflow-hidden rounded-xl border border-slate-200/90 border-l-[3px] dark:border-slate-800',
+              'flex min-h-0 flex-col overflow-hidden rounded-xl border border-slate-200/90 border-s-[3px] dark:border-slate-800',
               col.accent,
               isOpen ? 'md:h-full' : 'self-start'
             )}

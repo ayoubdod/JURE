@@ -101,7 +101,7 @@ export const MonthlyRevenueChart: React.FC<Props> = ({ data, year }) => {
                 fontSize: 12,
               }}
               formatter={(value: number, name: string) => [
-                formatMAD(value),
+                formatMAD(value, lang),
                 name === 'billed' ? t.finance.charts.billed : t.finance.charts.collected,
               ]}
             />

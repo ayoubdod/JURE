@@ -1,5 +1,6 @@
 import React from 'react';
 import type { JuriaContractAnalysis } from '@/types/juria';
+import { useAppTranslation } from '@/i18n';
 
 export function JuriaContractIntelligence({
   analysis,
@@ -8,31 +9,38 @@ export function JuriaContractIntelligence({
   analysis: JuriaContractAnalysis;
   onClausePrompt?: (prompt: string) => void;
 }) {
+  const { t, tf } = useAppTranslation();
+  const intel = t.juria.intelligence;
   const score = analysis.risk_score ?? 0;
   const high = analysis.risks?.high?.length ?? 0;
   const med = analysis.risks?.medium?.length ?? 0;
   const low = analysis.risks?.low?.length ?? 0;
   const extracted = analysis.extracted || {};
+  const clauseActions = [
+    { id: 'explain', label: intel.explain },
+    { id: 'rewrite', label: intel.rewrite },
+    { id: 'alternative', label: intel.alternative },
+  ] as const;
 
   return (
     <div className="space-y-3">
-      <p className="text-[11px] font-semibold uppercase tracking-wider text-[#64499D]">Contract Intelligence</p>
+      <p className="text-[11px] font-semibold uppercase tracking-wider text-[#64499D]">{intel.title}</p>
       <div className="flex items-end gap-3">
         <div>
-          <p className="text-[10px] text-slate-400">Risk Score</p>
+          <p className="text-[10px] text-slate-400">{intel.riskScore}</p>
           <p className="text-2xl font-semibold text-slate-900 dark:text-white">{score} <span className="text-sm text-slate-400">/ 100</span></p>
         </div>
         <div className="flex gap-2 text-[11px]">
-          <span className="rounded-full bg-red-50 px-2 py-0.5 text-red-700">🔴 {high} élevés</span>
-          <span className="rounded-full bg-amber-50 px-2 py-0.5 text-amber-700">🟠 {med} moyens</span>
-          <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-emerald-700">🟢 {low} faibles</span>
+          <span className="rounded-full bg-red-50 px-2 py-0.5 text-red-700">🔴 {tf(intel.high, { n: high })}</span>
+          <span className="rounded-full bg-amber-50 px-2 py-0.5 text-amber-700">🟠 {tf(intel.medium, { n: med })}</span>
+          <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-emerald-700">🟢 {tf(intel.low, { n: low })}</span>
         </div>
       </div>
       {(analysis.missing_clauses?.length || 0) > 0 && (
-        <p className="text-[12px] text-slate-600">Clauses manquantes: {analysis.missing_clauses!.length}</p>
+        <p className="text-[12px] text-slate-600">{tf(intel.missingClauses, { n: analysis.missing_clauses!.length })}</p>
       )}
       {(analysis.unusual_clauses?.length || 0) > 0 && (
-        <p className="text-[12px] text-slate-600">Clauses inhabituelles: {analysis.unusual_clauses!.length}</p>
+        <p className="text-[12px] text-slate-600">{tf(intel.unusualClauses, { n: analysis.unusual_clauses!.length })}</p>
       )}
       {analysis.analysis && <p className="whitespace-pre-wrap text-[13px] leading-relaxed text-slate-800 dark:text-slate-200">{analysis.analysis}</p>}
       <div className="grid gap-2 sm:grid-cols-2">
@@ -48,14 +56,16 @@ export function JuriaContractIntelligence({
                     <span>{String(v)}</span>
                     {onClausePrompt && (
                       <span className="flex shrink-0 gap-1 text-[10px] text-[#64499D]">
-                        {['Expliquer', 'Réécrire', 'Alternative'].map((act) => (
+                        {clauseActions.map((act) => (
                           <button
-                            key={act}
+                            key={act.id}
                             type="button"
                             className="hover:underline"
-                            onClick={() => onClausePrompt(`${act} cette clause : « ${String(v)} »`)}
+                            onClick={() =>
+                              onClausePrompt(tf(intel.clausePrompt, { action: act.label, clause: String(v) }))
+                            }
                           >
-                            {act}
+                            {act.label}
                           </button>
                         ))}
                       </span>

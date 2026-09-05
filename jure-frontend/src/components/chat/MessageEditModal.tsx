@@ -76,7 +76,7 @@ const MessageEditModal: React.FC<MessageEditModalProps> = ({
             {t.common.cancel}
           </Button>
           <Button onClick={handleSubmit} disabled={saving || !body.trim()}>
-            {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+            {saving ? <Loader2 className="h-4 w-4 animate-spin me-2" /> : null}
             {t.common.save}
           </Button>
         </DialogFooter>

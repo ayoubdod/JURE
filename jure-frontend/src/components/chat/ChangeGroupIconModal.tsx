@@ -179,7 +179,7 @@ const ChangeGroupIconModal = forwardRef<ChangeGroupIconModalRef, ChangeGroupIcon
                 disabled={isLoading}
                 className="w-full"
               >
-                <Upload className="h-4 w-4 mr-2" />
+                <Upload className="h-4 w-4 me-2" />
                 {m.uploadImage}
               </Button>
             </div>

@@ -1,5 +1,4 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import dayjs from 'dayjs';
 import {
   Copy,
   MessageSquare,
@@ -36,7 +35,7 @@ import { JuriaSourcePreview } from '@/components/juria/JuriaSourcePreview';
 import { apiJuriaCreateArtifact } from '@/services/juria/api';
 import { JuriaTextPromptDialog } from '@/components/juria/JuriaTextPromptDialog';
 import { RailIconButton } from '@/components/juria/JuriaProjectSidebar';
-import { useAppTranslation } from '@/i18n';
+import { useAppTranslation, formatTime } from '@/i18n';
 
 export function JuriaChat({ project }: { project: JuriaProject }) {
   const { t, dir } = useAppTranslation();
@@ -173,7 +172,7 @@ export function JuriaChat({ project }: { project: JuriaProject }) {
                 t.id === activeThreadId ? 'bg-[#64499D]/10 text-[#4D3680] dark:bg-[#64499D]/20 dark:text-[#C4B5FD]' : 'text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800/70'
               )}
             >
-              <button type="button" onClick={() => setActiveThread(t.id)} className="min-w-0 flex-1 px-2.5 py-2 text-left text-[12px]">
+              <button type="button" onClick={() => setActiveThread(t.id)} className="min-w-0 flex-1 px-2.5 py-2 text-start text-[12px]">
                 <span className="flex items-center gap-1.5">
                   <MessageSquare className="h-3.5 w-3.5 shrink-0 opacity-70" />
                   <span className="line-clamp-1 font-medium">{t.title || chat.untitledThread}</span>
@@ -410,7 +409,7 @@ function MessageBubble({
   onOpenSource: (s: JuriaSourceHit) => void;
   onClausePrompt: (prompt: string) => void;
 }) {
-  const { t } = useAppTranslation();
+  const { t, lang } = useAppTranslation();
   const actions = t.juria.workspace.actions;
   const [copied, setCopied] = useState(false);
   const isUser = m.role === 'user';
@@ -492,7 +491,7 @@ function MessageBubble({
             onClausePrompt={onClausePrompt}
           />
         )}
-        <p className={cn('mt-1 text-[10px] text-slate-400', isUser && 'text-end')}>{dayjs(m.createdAt).format('HH:mm')}</p>
+        <p className={cn('mt-1 text-[10px] text-slate-400', isUser && 'text-end')}>{formatTime(m.createdAt, lang)}</p>
       </div>
       {isUser && (
         <UserAvatar image={image} firstName={first} lastName={last} email={author?.email || currentUser?.email} size="sm" />

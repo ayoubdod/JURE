@@ -39,7 +39,7 @@ function CaseRow({
       type="button"
       onClick={onSelect}
       className={cn(
-        'w-full text-left px-2 py-2 rounded-md border transition-colors',
+        'w-full text-start px-2 py-2 rounded-md border transition-colors',
         selected
           ? 'bg-primary/10 border-primary/30 ring-1 ring-primary/20'
           : 'border-transparent hover:bg-slate-100 dark:hover:bg-slate-800/80'
@@ -115,12 +115,12 @@ export function LinkCaseModal({
           <DialogTitle className="text-[15px]">{m.title}</DialogTitle>
         </DialogHeader>
         <div className="relative">
-          <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+          <Search className="absolute start-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
           <Input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder={m.searchPlaceholder}
-            className="h-9 pl-8 text-[13px]"
+            className="h-9 ps-8 text-[13px]"
           />
         </div>
         <div className="max-h-[220px] overflow-y-auto space-y-1 border border-slate-200 dark:border-slate-800 rounded-md p-1">

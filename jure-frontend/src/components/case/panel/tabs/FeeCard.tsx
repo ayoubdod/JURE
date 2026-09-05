@@ -20,7 +20,7 @@ type Props = {
 };
 
 export const FeeCard: React.FC<Props> = ({ fee, onEdit, onDelete }) => {
-  const { t, tf } = useAppTranslation();
+  const { t, tf, lang } = useAppTranslation();
   const ct = t.finance.caseTab;
   const planned = fee.planned_amount || 1;
   const pct = Math.min(100, Math.round(((fee.paid_amount || 0) / planned) * 100));
@@ -54,9 +54,9 @@ export const FeeCard: React.FC<Props> = ({ fee, onEdit, onDelete }) => {
       <p className="mt-2 text-[13px] text-slate-600 dark:text-slate-400">
         {ct.lawyer}: <span className="font-medium text-slate-900 dark:text-white">{fee.lawyer_name}</span>
       </p>
-      <p className="mt-1 text-[13px]">{ct.planned}: {formatMAD(fee.planned_amount)}</p>
+      <p className="mt-1 text-[13px]">{ct.planned}: {formatMAD(fee.planned_amount, lang)}</p>
       <p className="text-[13px] text-slate-700 dark:text-slate-300">
-        {ct.invoiced}: {formatMAD(fee.invoiced_amount)} · {ct.paid}: {formatMAD(fee.paid_amount)}
+        {ct.invoiced}: {formatMAD(fee.invoiced_amount, lang)} · {ct.paid}: {formatMAD(fee.paid_amount, lang)}
       </p>
       <div className="mt-3">
         <div className="mb-1 flex justify-between text-[11px] text-slate-500">

@@ -21,7 +21,7 @@ import { useToast } from '@/hooks/use-toast';
 import { isAxiosError } from 'axios';
 import { cn } from '@/lib/utils';
 import { devLog } from '@/utils/devLog';
-import { useAppTranslation } from '@/i18n';
+import { intlLocale, useAppTranslation } from '@/i18n';
 
 import { getConversationWsUrl } from '@/config/api';
 import type { WebSocketMessage } from '@/stores/chatStore';
@@ -120,7 +120,7 @@ const ChatWindow = forwardRef<
   onOpenContext,
   onConversationFilesChange,
 }, ref) => {
-  const { t } = useAppTranslation();
+  const { t, lang } = useAppTranslation();
   const toastMsgs = t.conversations.toasts;
   const callCopy = t.conversations.call;
   const onlineIds = useChatStore((s) => s.onlineIds ?? []);
@@ -598,10 +598,14 @@ const ChatWindow = forwardRef<
                     <div className="my-3 flex items-center gap-3">
                       <div className="h-px flex-1 bg-slate-200 dark:bg-slate-800" />
                       <span className="text-[11px] font-medium text-slate-400">
-                        {formatDateSeparator(sent, {
-                          today: t.conversations.today,
-                          yesterday: t.conversations.yesterday,
-                        })}
+                        {formatDateSeparator(
+                          sent,
+                          {
+                            today: t.conversations.today,
+                            yesterday: t.conversations.yesterday,
+                          },
+                          intlLocale(lang)
+                        )}
                       </span>
                       <div className="h-px flex-1 bg-slate-200 dark:bg-slate-800" />
                     </div>

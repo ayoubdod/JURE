@@ -40,12 +40,12 @@ export const TVAStatusWidget: React.FC<Props> = ({ status }) => {
     </span>
   );
 
-  const cumulDisplay = status.lifetime_ca_display?.trim() || formatMAD(cumul);
-  const thresholdDisplay = status.threshold_display?.trim() || formatMAD(threshold);
+  const cumulDisplay = status.lifetime_ca_display?.trim() || formatMAD(cumul, lang);
+  const thresholdDisplay = status.threshold_display?.trim() || formatMAD(threshold, lang);
   const remainingDisplay =
     assujetti
       ? '—'
-      : status.ca_remaining_display?.trim() || (remaining != null ? formatMAD(remaining) : '—');
+      : status.ca_remaining_display?.trim() || (remaining != null ? formatMAD(remaining, lang) : '—');
 
   const disclaimer = status.note?.trim();
   const firmDate = status.firm_created_at
@@ -90,7 +90,7 @@ export const TVAStatusWidget: React.FC<Props> = ({ status }) => {
           percent={pct}
           aria-label={tf(t.finance.stats.tvaProgressAria, { percent: Math.round(pct) })}
         />
-        <p className="text-right text-[12px] tabular-nums text-slate-600 dark:text-slate-400">
+        <p className="text-end text-[12px] tabular-nums text-slate-600 dark:text-slate-400">
           {Math.round(pct)}%
         </p>
       </div>

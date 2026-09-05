@@ -103,14 +103,14 @@ export const InvoiceCard: React.FC<Props> = ({ invoice, onPdf, onPreviewPdf, onE
         </div>
       </div>
       <div className="mt-2 space-y-1 text-[13px] text-slate-700 dark:text-slate-300">
-        <p>{t.finance.columns.amountHt}: {formatMAD(invoice.amount_ht)}</p>
+        <p>{t.finance.columns.amountHt}: {formatMAD(invoice.amount_ht, lang)}</p>
         <p>
-          {tvaExempt ? t.finance.columns.tva : ct.tva20}: {formatMAD(invoice.tva)}
+          {tvaExempt ? t.finance.columns.tva : ct.tva20}: {formatMAD(invoice.tva, lang)}
         </p>
         {exonerationLine ? (
           <p className="text-[11px] italic leading-snug text-[#94a3b8]">{exonerationLine}</p>
         ) : null}
-        <p className="font-semibold text-slate-900 dark:text-white">{ct.ttcLabel}: {formatMAD(invoice.amount_ttc)}</p>
+        <p className="font-semibold text-slate-900 dark:text-white">{ct.ttcLabel}: {formatMAD(invoice.amount_ttc, lang)}</p>
         <p
           className={cn(
             'text-[12px]',

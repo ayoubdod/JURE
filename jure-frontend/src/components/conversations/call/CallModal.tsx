@@ -8,7 +8,7 @@ import CallControls from './CallControls';
 import VideoStage from './VideoStage';
 import VoiceStage from './VoiceStage';
 import FullscreenCallStage from './FullscreenCallStage';
-import type { ConnectionQuality } from '@/utils/webrtc';
+import { displayMediaErrorMessage, type ConnectionQuality } from '@/utils/webrtc';
 import { useAppTranslation, tFor, detectInitialLanguage } from '@/i18n';
 import { useCallSessionStore } from '@/stores/callSessionStore';
 
@@ -199,7 +199,7 @@ const CallModal: React.FC<{
         : call.micDenied
       : call.failed;
     const detail =
-      mediaErrorMessage ||
+      displayMediaErrorMessage(mediaErrorMessage) ||
       (micDenied
         ? isVideo
           ? call.cameraDeniedHint

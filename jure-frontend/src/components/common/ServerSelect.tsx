@@ -221,7 +221,7 @@ export default function ServerSelect({
       {...(id && { id })}
       onClick={inlineMenu ? () => setOpen((v) => !v) : undefined}
     >
-      <span className={cn("min-w-0 flex-1 truncate", dir === "rtl" ? "text-right" : "text-start")}>{getSelectedLabel}</span>
+      <span className="min-w-0 flex-1 truncate text-start">{getSelectedLabel}</span>
       <div className="flex items-center gap-1">
         {cleanable && value && (
           <Button

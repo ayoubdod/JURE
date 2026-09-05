@@ -28,7 +28,7 @@ function formatAxisMad(v: number): string {
 }
 
 export const RevenueByLawyerChart: React.FC<Props> = ({ data }) => {
-  const { t } = useAppTranslation();
+  const { t, lang } = useAppTranslation();
   const rows = useMemo(
     () => data.map((d) => ({ ...d, name: d.lawyer_name })),
     [data]
@@ -74,7 +74,7 @@ export const RevenueByLawyerChart: React.FC<Props> = ({ data }) => {
                 className="text-slate-600 dark:text-slate-400"
               />
               <Tooltip
-                formatter={(value: number) => formatMAD(value)}
+                formatter={(value: number) => formatMAD(value, lang)}
                 contentStyle={{ borderRadius: 12, fontSize: 12 }}
               />
               <Bar dataKey="amount" fill={BAR} radius={[0, 6, 6, 0]} maxBarSize={28} />

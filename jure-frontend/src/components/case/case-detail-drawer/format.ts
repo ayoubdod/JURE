@@ -1,9 +1,13 @@
-/** Display date as "27 Mar 2026" */
+import { formatDate, formatDateTime } from '@/i18n/format';
+import { detectInitialLanguage } from '@/i18n/locale';
+import { getMessages } from '@/i18n/messages';
+
+/** Display date as "27 Mar 2026" (locale-aware month). */
 export function formatDrawerDate(iso: string | Date | null | undefined): string {
   if (iso == null || iso === '') return '—';
   const d = typeof iso === 'string' ? new Date(iso) : iso;
   if (Number.isNaN(d.getTime())) return '—';
-  return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+  return formatDate(d, detectInitialLanguage(), { month: 'short' }) || '—';
 }
 
 /** Date + time for scheduling fields */
@@ -11,13 +15,7 @@ export function formatDrawerDateTime(iso: string | Date | null | undefined): str
   if (iso == null || iso === '') return '—';
   const d = typeof iso === 'string' ? new Date(iso) : iso;
   if (Number.isNaN(d.getTime())) return '—';
-  return d.toLocaleString('en-GB', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
+  return formatDateTime(d, detectInitialLanguage()) || '—';
 }
 
 /** Last updated line in footer */
@@ -49,6 +47,9 @@ export function getCaseUpdatedByUser(c: API.Case): API.User | null | undefined {
 export const em = (v: unknown): string => {
   if (v == null || v === '') return '—';
   if (typeof v === 'string' && v.trim() === '') return '—';
-  if (typeof v === 'boolean') return v ? 'Yes' : 'No';
+  if (typeof v === 'boolean') {
+    const c = getMessages(detectInitialLanguage()).common;
+    return v ? c.yes : c.no;
+  }
   return String(v);
 };

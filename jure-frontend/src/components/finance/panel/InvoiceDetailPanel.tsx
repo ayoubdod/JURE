@@ -216,18 +216,18 @@ export const InvoiceDetailPanel: React.FC<Props> = ({
                   <div className="grid grid-cols-1 gap-1 border-t border-slate-100 pt-2 dark:border-slate-800">
                     <div className="flex justify-between">
                       <span className="text-slate-500">{t.finance.columns.amountHt}</span>
-                      <span className="tabular-nums">{formatMAD(data.amount_ht)}</span>
+                      <span className="tabular-nums">{formatMAD(data.amount_ht, lang)}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-slate-500">{tvaExempt ? t.finance.columns.tva : ct.tva20}</span>
-                      <span className="tabular-nums">{formatMAD(data.tva)}</span>
+                      <span className="tabular-nums">{formatMAD(data.tva, lang)}</span>
                     </div>
                     {exonerationNote ? (
                       <p className="text-[11px] italic text-[#94a3b8]">{exonerationNote}</p>
                     ) : null}
                     <div className="flex justify-between font-semibold">
                       <span className="text-slate-700 dark:text-slate-200">{t.finance.columns.ttc}</span>
-                      <span className="tabular-nums">{formatMAD(data.amount_ttc)}</span>
+                      <span className="tabular-nums">{formatMAD(data.amount_ttc, lang)}</span>
                     </div>
                   </div>
                   <div className="flex justify-between text-[12px] text-slate-600">
@@ -251,7 +251,7 @@ export const InvoiceDetailPanel: React.FC<Props> = ({
                         key={p.id}
                         className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-950 px-3 py-2 text-[13px]"
                       >
-                        <span className="font-medium tabular-nums">{formatMAD(p.amount)}</span>
+                        <span className="font-medium tabular-nums">{formatMAD(p.amount, lang)}</span>
                         <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] dark:bg-slate-800">
                           {enumLabel('paymentMethod', p.method) || p.method}
                         </span>
@@ -262,7 +262,7 @@ export const InvoiceDetailPanel: React.FC<Props> = ({
                   )}
                   <div className="flex justify-between border-t border-slate-200 pt-2 text-[13px] dark:border-slate-800">
                     <span className="text-slate-600">{ct.totalPaid}</span>
-                    <span className="font-semibold tabular-nums">{formatMAD(totalPaid)}</span>
+                    <span className="font-semibold tabular-nums">{formatMAD(totalPaid, lang)}</span>
                   </div>
                   <div className="flex justify-between text-[13px]">
                     <span className="text-slate-600">{ct.remainingDue}</span>
@@ -272,7 +272,7 @@ export const InvoiceDetailPanel: React.FC<Props> = ({
                         remaining <= 0 ? 'text-emerald-600' : 'text-amber-600'
                       )}
                     >
-                      {formatMAD(Math.max(0, remaining))}
+                      {formatMAD(Math.max(0, remaining), lang)}
                     </span>
                   </div>
                 </div>
@@ -285,7 +285,7 @@ export const InvoiceDetailPanel: React.FC<Props> = ({
           <div className="text-[13px] font-medium">
             {ct.remainingColon}{' '}
             <span className={cn('tabular-nums', remaining <= 0 ? 'text-emerald-600' : 'text-amber-600')}>
-              {data ? formatMAD(Math.max(0, remaining)) : '—'}
+              {data ? formatMAD(Math.max(0, remaining), lang) : '—'}
             </span>
           </div>
           <div className="flex flex-wrap gap-2">

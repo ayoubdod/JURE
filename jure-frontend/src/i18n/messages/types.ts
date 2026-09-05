@@ -33,6 +33,10 @@ export interface AppMessages {
     tasks: string;
     notes: string;
     admin: string;
+    navAria: string;
+    collapse: string;
+    expand: string;
+    toggleItem: string;
   };
   header: {
     searchPlaceholder: string;
@@ -53,6 +57,12 @@ export interface AppMessages {
     notificationsEmptyTitle: string;
     notificationsEmptySubtitle: string;
     notificationsViewAll: string;
+    openNav: string;
+    searchAria: string;
+    moreActions: string;
+    lightMode: string;
+    darkMode: string;
+    orgLogo: string;
   };
   auth: {
     signInTitle: string;
@@ -719,6 +729,7 @@ export interface AppMessages {
       ASSISTANT: string;
       VIEWER: string;
     };
+    noRole: string;
     roleDescriptions: {
       VIEWER: string;
       ASSISTANT: string;
@@ -1106,6 +1117,9 @@ export interface AppMessages {
       readerZoomOut: string;
       readerFit: string;
       readerReset: string;
+      readerOpenTab: string;
+      readerDownloadToView: string;
+      readerFile: string;
       readerDownloadDocument: string;
       readerCloseDetails: string;
       readerAddedDate: string;
@@ -1280,6 +1294,7 @@ export interface AppMessages {
     toggleTheme: string;
     selectOption: string;
     selectError: string;
+    breadcrumb: string;
     pagination: {
       showing: string;
       pageSize: string;
@@ -1340,6 +1355,8 @@ export interface AppMessages {
     title: string;
     description: string;
     returnHome: string;
+    documentTitle: string;
+    metaDescription: string;
   };
   routeError: {
     title: string;
@@ -1480,6 +1497,8 @@ export interface AppMessages {
       overdue: string;
       today: string;
       inDays: string;
+      inCountDays: string;
+      passed: string;
     };
     aria: {
       mattersList: string;
@@ -1518,6 +1537,13 @@ export interface AppMessages {
       viewCase: string;
       moreActions: string;
       overdueBy: string;
+    };
+    related: {
+      counts: string;
+      empty: string;
+      openTask: string;
+      openAppointment: string;
+      due: string;
     };
     workspaces: {
       navAria: string;
@@ -2107,6 +2133,8 @@ export interface AppMessages {
         originatingConsultation: string;
         viewConsultation: string;
         convertSuccess: string;
+        alreadyConverted: string;
+        convertNotFound: string;
         openCase: string;
         converted: string;
         emailSent: string;
@@ -2283,6 +2311,9 @@ export interface AppMessages {
         createdDescription: string;
         fixFormTitle: string;
         fixFormDescription: string;
+        saveFailed: string;
+        noCabinet: string;
+        signInAgain: string;
       };
       options: {
         consultationType: {
@@ -2932,6 +2963,14 @@ export interface AppMessages {
       overdue: string;
       client: string;
       viewCase: string;
+    };
+    panel: {
+      related: string;
+      scheduledBy: string;
+      hoursEstimated: string;
+      durationMin: string;
+      conversationNumber: string;
+      dueOn: string;
     };
     fc: {
       today: string;
@@ -3876,6 +3915,19 @@ export interface AppMessages {
       defaultCamera: string;
       defaultSpeaker: string;
       speakerUnsupported: string;
+      media: {
+        permissionVideo: string;
+        permissionVoice: string;
+        notFoundVideo: string;
+        notFoundVoice: string;
+        inUseVideo: string;
+        inUseVoice: string;
+        insecure: string;
+        accessVideo: string;
+        accessVoice: string;
+        establishConnection: string;
+        establishVideoConnection: string;
+      };
       callingBody: string;
       liveAudioAria: string;
       audioIdleAria: string;
@@ -4325,6 +4377,15 @@ export interface AppMessages {
       downloadFailed: string;
       draftFailed: string;
     };
+    errors: {
+      unavailable: string;
+      server: string;
+      apiUnavailable: string;
+      timeout: string;
+      invalidRequest: string;
+      missingId: string;
+      invalidId: string;
+    };
     slowHint: string;
     conversationMenuAria: string;
     generatedDocument: string;
@@ -4384,6 +4445,19 @@ export interface AppMessages {
       underline: string;
       compareVersions: string;
       editNote: string;
+    };
+    intelligence: {
+      title: string;
+      riskScore: string;
+      high: string;
+      medium: string;
+      low: string;
+      missingClauses: string;
+      unusualClauses: string;
+      explain: string;
+      rewrite: string;
+      alternative: string;
+      clausePrompt: string;
     };
     fileTooLarge: string;
     workspace: {
@@ -4490,6 +4564,11 @@ export interface AppMessages {
         searchClient: string;
         searchGeneric: string;
         caseDocs: string;
+        linkCaseFirst: string;
+        noCaseDocuments: string;
+      };
+      composer: {
+        importDocument: string;
       };
       chat: {
         threads: string;
@@ -4541,6 +4620,9 @@ export interface AppMessages {
         noActivity: string;
         openChat: string;
         updatedAt: string;
+        noEvents: string;
+        noTasks: string;
+        court: string;
       };
       activity: {
         empty: string;
@@ -4590,6 +4672,8 @@ export interface AppMessages {
         linkAllLibraries: string;
         noDocuments: string;
         addFailed: string;
+        used: string;
+        page: string;
       };
       documents: {
         searchPlaceholder: string;
@@ -4610,6 +4694,16 @@ export interface AppMessages {
         export: string;
         duplicate: string;
         compare: string;
+      };
+      teamPanel: {
+        invitePlaceholder: string;
+        invite: string;
+        roles: {
+          OWNER: string;
+          EDITOR: string;
+          REVIEWER: string;
+          VIEWER: string;
+        };
       };
     };
   };

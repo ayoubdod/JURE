@@ -33,7 +33,7 @@ type Props = {
 
 export const FinanceTab: React.FC<Props> = ({ caseId }) => {
   const { toast } = useToast();
-  const { t, tf } = useAppTranslation();
+  const { t, tf, lang } = useAppTranslation();
   const ct = t.finance.caseTab;
   const toasts = t.finance.toasts;
   const [data, setData] = useState<API.FinanceCasePayload | null>(null);
@@ -75,9 +75,9 @@ export const FinanceTab: React.FC<Props> = ({ caseId }) => {
       return <span className="text-emerald-600 dark:text-emerald-400 font-semibold">{ct.settled}</span>;
     }
     if (summary.remaining_status === 'overdue') {
-      return <span className="text-red-600 dark:text-red-400 font-semibold">{formatMAD(summary.remaining)}</span>;
+      return <span className="text-red-600 dark:text-red-400 font-semibold">{formatMAD(summary.remaining, lang)}</span>;
     }
-    return <span className="text-amber-600 dark:text-amber-400 font-semibold">{formatMAD(summary.remaining)}</span>;
+    return <span className="text-amber-600 dark:text-amber-400 font-semibold">{formatMAD(summary.remaining, lang)}</span>;
   };
 
   const totalReceived = data?.payments?.reduce((s, p) => s + p.amount, 0) ?? 0;
@@ -202,19 +202,19 @@ export const FinanceTab: React.FC<Props> = ({ caseId }) => {
     <div className="space-y-8 pb-4">
       <div className="flex flex-wrap gap-x-6 gap-y-2 rounded-xl border border-slate-200/90 bg-white px-4 py-3 text-[13px] dark:border-slate-800 dark:bg-slate-950">
         <span>
-          {ct.honoraires}: <strong className="tabular-nums">{formatMAD(summary.planned)}</strong>
+          {ct.honoraires}: <strong className="tabular-nums">{formatMAD(summary.planned, lang)}</strong>
         </span>
         <span>
-          {ct.expenses}: <strong className="tabular-nums">{formatMAD(summary.total_expenses ?? 0)}</strong>
+          {ct.expenses}: <strong className="tabular-nums">{formatMAD(summary.total_expenses ?? 0, lang)}</strong>
         </span>
         <span>
-          {ct.invoiced}: <strong className="tabular-nums">{formatMAD(summary.invoiced)}</strong>
+          {ct.invoiced}: <strong className="tabular-nums">{formatMAD(summary.invoiced, lang)}</strong>
         </span>
         <span>
-          {ct.paid}: <strong className="tabular-nums">{formatMAD(summary.paid)}</strong>
+          {ct.paid}: <strong className="tabular-nums">{formatMAD(summary.paid, lang)}</strong>
         </span>
         <span>
-          {ct.net}: <strong className="tabular-nums">{formatMAD(summary.net_position ?? 0)}</strong>
+          {ct.net}: <strong className="tabular-nums">{formatMAD(summary.net_position ?? 0, lang)}</strong>
         </span>
         <span className="flex items-center gap-1">{ct.remaining}: {remainingLabel()}</span>
       </div>
@@ -279,7 +279,7 @@ export const FinanceTab: React.FC<Props> = ({ caseId }) => {
                   </p>
                 </div>
                 <div className="flex items-center gap-3">
-                  <strong className="tabular-nums">{formatMAD(e.amount)}</strong>
+                  <strong className="tabular-nums">{formatMAD(e.amount, lang)}</strong>
                   <Button type="button" size="sm" variant="ghost" className="text-red-600" onClick={() => handleDeleteExpense(e)}>
                     {t.common.delete}
                   </Button>
@@ -328,7 +328,7 @@ export const FinanceTab: React.FC<Props> = ({ caseId }) => {
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
           <h3 className="text-sm font-semibold text-slate-900 dark:text-white">
             {t.finance.tabs.payments}{' '}
-            <span className="font-normal text-slate-500">{tf(ct.paymentsTotal, { amount: formatMAD(totalReceived) })}</span>
+            <span className="font-normal text-slate-500">{tf(ct.paymentsTotal, { amount: formatMAD(totalReceived, lang) })}</span>
           </h3>
           <Button type="button" size="sm" className="h-9 bg-jure-600 hover:bg-jure-700" onClick={() => setAddPayOpen(true)}>
             <Plus className="me-1.5 h-4 w-4" />

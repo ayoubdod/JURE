@@ -1,38 +1,11 @@
 import React from 'react';
 import { Check, Circle } from 'lucide-react';
-import { getCaseData, getCountdownDays, getCountdownStyle } from '@/utils/caseCardHelpers';
+import { getCaseData } from '@/utils/caseCardHelpers';
 import { ConvertedCaseLink, getConvertedFromCase } from '@/components/case/conversion/ConvertedCaseLink';
 import { em, formatDrawerDate } from './format';
-import { Field, LongText, SectionTitle } from './primitives';
+import { CountdownBadge, Field, LongText, SectionTitle } from './primitives';
 import { CaseClientLabel } from '@/components/client/CaseClientLabel';
-import { cn } from '@/lib/utils';
 import { useAppTranslation } from '@/i18n';
-
-function DueCountdown({ dateIso }: { dateIso: string | undefined }) {
-  if (!dateIso) return <span className="text-[13px]">—</span>;
-  const days = getCountdownDays(dateIso);
-  if (days === null) return <span className="text-[13px]">—</span>;
-  if (days < 0) {
-    return (
-      <span className="inline-flex items-center rounded-full bg-slate-200/80 dark:bg-slate-700 px-2 py-0.5 text-[10px] font-medium text-slate-600 line-through decoration-slate-500">
-        Passed
-      </span>
-    );
-  }
-  const st = getCountdownStyle(days);
-  return (
-    <span
-      className={cn(
-        'inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold tabular-nums',
-        st === 'critical' && 'bg-red-600 text-white',
-        st === 'warning' && 'bg-amber-500/90 text-amber-950',
-        st === 'normal' && 'bg-slate-200/90 dark:bg-slate-700 text-slate-700 dark:text-slate-200'
-      )}
-    >
-      {st === 'normal' ? `in ${days} days` : days === 0 ? 'Today' : `${days} days`}
-    </span>
-  );
-}
 
 export function AdministrativeSection({
   c,
@@ -41,7 +14,10 @@ export function AdministrativeSection({
   c: API.Case;
   onOpenCaseById?: (id: number) => void;
 }) {
-  const { enumPretty, t } = useAppTranslation();
+  const { enumPretty, t, tf } = useAppTranslation();
+  const fields = t.cases.modal.fields;
+  const sections = t.cases.modal.sections;
+  const d = t.cases.workspace.administrative.detail;
   const dutyType = getCaseData(c, 'duty_type') as string | undefined;
   const priority = getCaseData(c, 'priority') as string | undefined;
   const institution =
@@ -75,73 +51,73 @@ export function AdministrativeSection({
         </section>
       )}
       <section>
-        <SectionTitle>Task overview</SectionTitle>
+        <SectionTitle>{sections.taskDetails}</SectionTitle>
         <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Duty type">{dutyType ? enumPretty(dutyType) : '—'}</Field>
-          <Field label="Status">
+          <Field label={fields.dutyType}>{dutyType ? enumPretty(dutyType) : '—'}</Field>
+          <Field label={fields.status}>
             {em(
               enumPretty(String((getCaseData(c, 'status') as string) ?? c.status ?? '')) ||
                 ((getCaseData(c, 'status') as string) ?? c.status)
             )}
           </Field>
-          <Field label="Priority">{em(priority ? enumPretty(priority) : priority)}</Field>
-          <Field label="Institution / authority">{em(institution)}</Field>
-          <Field label="Institution reference number">
+          <Field label={fields.priority}>{em(priority ? enumPretty(priority) : priority)}</Field>
+          <Field label={fields.institutionAuthority}>{em(institution)}</Field>
+          <Field label={fields.institutionReferenceNumber}>
             {instRef ? <span className="font-mono text-[12px]">{instRef}</span> : '—'}
           </Field>
         </div>
       </section>
 
       <section>
-        <SectionTitle>People</SectionTitle>
+        <SectionTitle>{d.people}</SectionTitle>
         <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Related client">
+          <Field label={fields.relatedClient}>
             <CaseClientLabel client={client} fallback={em(client?.email) || '—'} />
           </Field>
-          <Field label="Assigned to">
+          <Field label={fields.assignedTo}>
             {assigned ? `${assigned.first_name ?? ''} ${assigned.last_name ?? ''}`.trim() || em(assigned.email) : '—'}
           </Field>
         </div>
       </section>
 
       <section>
-        <SectionTitle>Description</SectionTitle>
-        <Field label="Purpose / description">
+        <SectionTitle>{fields.description}</SectionTitle>
+        <Field label={d.purpose}>
           {c.description?.trim() ? <LongText>{c.description}</LongText> : '—'}
         </Field>
       </section>
 
       <section>
-        <SectionTitle>Dates</SectionTitle>
+        <SectionTitle>{sections.dates}</SectionTitle>
         <div className="space-y-3 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/50 p-3">
           <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
-            <span className="text-[10px] font-medium uppercase tracking-[0.08em] text-slate-500">Start date</span>
+            <span className="text-[10px] font-medium uppercase tracking-[0.08em] text-slate-500">{d.startDate}</span>
             <span className="text-[13px] text-slate-900 dark:text-slate-100">{startDate ? formatDrawerDate(startDate) : '—'}</span>
           </div>
           <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
-            <span className="text-[10px] font-medium uppercase tracking-[0.08em] text-slate-500">Due date / legal deadline</span>
+            <span className="text-[10px] font-medium uppercase tracking-[0.08em] text-slate-500">{fields.dueDateLegalDeadline}</span>
             <div className="flex flex-wrap items-center gap-2 justify-end">
               <span className="text-[13px] text-slate-900 dark:text-slate-100">{dueDate ? formatDrawerDate(dueDate) : '—'}</span>
-              <DueCountdown dateIso={dueDate} />
+              <CountdownBadge dateIso={dueDate} />
             </div>
           </div>
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <span className="text-[10px] font-medium uppercase tracking-[0.08em] text-slate-500">Completion</span>
+            <span className="text-[10px] font-medium uppercase tracking-[0.08em] text-slate-500">{d.completion}</span>
             <span className="text-[13px] text-emerald-700 dark:text-emerald-400 font-medium">
-              {completionDate ? `Completed on ${formatDrawerDate(completionDate)}` : '—'}
+              {completionDate ? tf(d.completedOn, { date: formatDrawerDate(completionDate) }) : '—'}
             </span>
           </div>
         </div>
       </section>
 
       <section>
-        <SectionTitle>Documents checklist</SectionTitle>
+        <SectionTitle>{sections.documentsChecklist}</SectionTitle>
         {total === 0 ? (
           <p className="text-[13px] text-slate-600 dark:text-slate-400">—</p>
         ) : (
           <div className="space-y-3">
             <p className="text-[13px] text-slate-700 dark:text-slate-300">
-              {done} of {total} documents completed
+              {tf(d.docsProgress, { done, total })}
             </p>
             <div className="h-1 w-full overflow-hidden rounded-full bg-slate-200 dark:bg-slate-800">
               <div className="h-full rounded-full bg-emerald-600/85 transition-[width]" style={{ width: `${pct}%` }} />

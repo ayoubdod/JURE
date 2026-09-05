@@ -114,7 +114,7 @@ const Sidebar = ({ activeTab, setActiveTab, expanded, onExpandedChange }: Sideba
   const [casesPopoverOpen, setCasesPopoverOpen] = useState(false);
   const [officePopoverOpen, setOfficePopoverOpen] = useState(false);
   const chatStore = useChatStore();
-  const { t, dir } = useAppTranslation();
+  const { t, tf, dir } = useAppTranslation();
   const isRTL = dir === 'rtl';
   const { authorized: financeAuthorized } = useFinanceAccess();
   const { open: mobileNavOpen, setOpen: setMobileNavOpen, close: closeMobileNav } = useMobileNav();
@@ -369,7 +369,7 @@ const Sidebar = ({ activeTab, setActiveTab, expanded, onExpandedChange }: Sideba
                 active && 'text-white hover:bg-white/10',
               )}
               aria-expanded={isExpanded}
-              aria-label={`Toggle ${item.label}`}
+              aria-label={tf(t.sidebar.toggleItem, { label: item.label })}
             >
               <ChevronDown
                 size={14}
@@ -590,7 +590,7 @@ const Sidebar = ({ activeTab, setActiveTab, expanded, onExpandedChange }: Sideba
                 active && 'text-white hover:bg-white/10',
               )}
               aria-expanded={isSectionOpen}
-              aria-label={`Toggle ${item.label}`}
+              aria-label={tf(t.sidebar.toggleItem, { label: item.label })}
             >
               <ChevronDown
                 size={14}
@@ -796,7 +796,7 @@ const Sidebar = ({ activeTab, setActiveTab, expanded, onExpandedChange }: Sideba
             <SheetDescription className="sr-only">{t.sidebar.office}</SheetDescription>
           </SheetHeader>
 
-          <nav className="min-h-0 flex-1 overflow-y-auto px-2 py-2" aria-label="Primary">
+          <nav className="min-h-0 flex-1 overflow-y-auto px-2 py-2" aria-label={t.sidebar.navAria}>
             <div className="flex flex-col gap-0.5">
               {menuItems.map((item) => renderMobileNavButton(item))}
             </div>
@@ -825,7 +825,7 @@ const Sidebar = ({ activeTab, setActiveTab, expanded, onExpandedChange }: Sideba
                 'flex h-full w-full flex-col border-e border-border bg-background py-3 shadow-lg',
                 'overflow-x-hidden overflow-y-hidden',
               )}
-              aria-label="Main navigation"
+              aria-label={t.sidebar.navAria}
               data-state={railExpanded ? 'expanded' : 'collapsed'}
             >
               {/* Logo — full wordmark when expanded, J mark when collapsed */}
@@ -844,7 +844,7 @@ const Sidebar = ({ activeTab, setActiveTab, expanded, onExpandedChange }: Sideba
 
               <nav
                 className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto overflow-x-hidden px-1.5"
-                aria-label="Primary"
+                aria-label={t.sidebar.navAria}
               >
                 {menuItems.map((item) => renderDesktopNavItem(item))}
               </nav>
@@ -895,7 +895,7 @@ const Sidebar = ({ activeTab, setActiveTab, expanded, onExpandedChange }: Sideba
                     // Logical radii: always flush on the sidebar (`start`) side, rounded toward content.
                     'rounded-e-xl rounded-s-none',
                   )}
-                  aria-label={railExpanded ? 'Collapse sidebar' : 'Expand sidebar'}
+                  aria-label={railExpanded ? t.sidebar.collapse : t.sidebar.expand}
                   aria-expanded={railExpanded}
                 >
                   <ChevronLeft
@@ -912,7 +912,7 @@ const Sidebar = ({ activeTab, setActiveTab, expanded, onExpandedChange }: Sideba
                 </button>
               </TooltipTrigger>
               <TooltipContent side={flyoutSide} sideOffset={12} className="flex items-center gap-2">
-                {railExpanded ? 'Collapse sidebar' : 'Expand sidebar'}
+                {railExpanded ? t.sidebar.collapse : t.sidebar.expand}
                 <HintKbd keys={['mod', 'B']} />
               </TooltipContent>
             </Tooltip>

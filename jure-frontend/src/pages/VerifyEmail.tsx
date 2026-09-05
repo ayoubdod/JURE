@@ -61,7 +61,7 @@ const VerifyEmail: React.FC = () => {
 
   if (isLoading) {
     return (
-      <AuroraPage className="flex items-center justify-center p-4">
+      <AuroraPage className="flex items-center justify-center p-4" documentTitle={t.auth.verifyLoadingTitle}>
         <Card className="w-full max-w-md">
           <CardContent className="pt-6">
             <div className="text-center space-y-4">
@@ -83,7 +83,7 @@ const VerifyEmail: React.FC = () => {
     const pendingEmail = localStorage.getItem('pendingVerificationEmail');
 
     return (
-      <AuroraPage className="flex items-center justify-center p-4">
+      <AuroraPage className="flex items-center justify-center p-4" documentTitle={t.auth.verifyFailureTitle}>
         <Card className="w-full max-w-md">
           <CardHeader>
             <div className="flex justify-center mb-4">

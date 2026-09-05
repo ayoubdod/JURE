@@ -2,6 +2,9 @@
  * Shared utilities for CaseCard components.
  */
 
+import { formatDate as formatDateI18n, formatDateTime as formatDateTimeI18n } from '@/i18n/format';
+import { detectInitialLanguage } from '@/i18n/locale';
+
 /**
  * Returns the number of days from today to the given date.
  * Positive = future, negative = past, 0 = today.
@@ -71,10 +74,7 @@ export function formatDateTime(date: string | Date | null | undefined): string {
   if (date == null || date === '') return '';
   const d = typeof date === 'string' ? new Date(date) : date;
   if (Number.isNaN(d.getTime())) return '';
-  return d.toLocaleString(undefined, {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-  });
+  return formatDateTimeI18n(d, detectInitialLanguage());
 }
 
 /**
@@ -84,7 +84,7 @@ export function formatDate(date: string | Date | null | undefined): string {
   if (date == null || date === '') return '';
   const d = typeof date === 'string' ? new Date(date) : date;
   if (Number.isNaN(d.getTime())) return '';
-  return d.toLocaleDateString(undefined, { dateStyle: 'medium' });
+  return formatDateI18n(d, detectInitialLanguage(), { month: 'short' });
 }
 
 /**

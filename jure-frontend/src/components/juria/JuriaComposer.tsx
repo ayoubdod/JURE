@@ -146,20 +146,20 @@ export function JuriaComposer({
             <button
               type="button"
               className="mb-px flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"
-              aria-label="Ajouter"
+              aria-label={t.common.add}
             >
               <Plus className="h-4 w-4" />
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" className="w-56">
-            <DropdownMenuItem onClick={pickFile}>Importer un document</DropdownMenuItem>
+            <DropdownMenuItem onClick={pickFile}>{t.juria.workspace.composer.importDocument}</DropdownMenuItem>
             {onAddFromCase && (
               <DropdownMenuItem disabled={!canAddFromCase} onClick={onAddFromCase}>
-                Ajouter un document du dossier
+                {t.juria.workspace.sources.addFromCase}
               </DropdownMenuItem>
             )}
             {onAddFromLibrary && (
-              <DropdownMenuItem onClick={onAddFromLibrary}>Ajouter depuis la bibliothèque</DropdownMenuItem>
+              <DropdownMenuItem onClick={onAddFromLibrary}>{t.juria.workspace.sources.addFromLibrary}</DropdownMenuItem>
             )}
           </DropdownMenuContent>
         </DropdownMenu>

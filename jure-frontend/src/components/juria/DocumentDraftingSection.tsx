@@ -102,7 +102,7 @@ export function DocumentDraftingSection({
               setSelected(def.id);
               setValues({});
             }}
-            className={`rounded-xl border p-3 text-left text-xs transition ${
+            className={`rounded-xl border p-3 text-start text-xs transition ${
               selected === def.id
                 ? 'border-indigo-500 bg-indigo-50 dark:border-indigo-500 dark:bg-indigo-950/40'
                 : 'border-slate-200 bg-white hover:border-slate-300 dark:border-slate-800 dark:bg-slate-900'

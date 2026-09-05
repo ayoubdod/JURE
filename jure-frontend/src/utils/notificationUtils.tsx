@@ -23,44 +23,13 @@ import type {
   RelatedUser,
 } from '@/types/notification';
 import { isChatMessageNotification } from '@/utils/notificationNav';
+import { detectInitialLanguage } from '@/i18n/locale';
+import { getMessages } from '@/i18n/messages';
+import { formatRelativeTime } from '@/i18n/format';
+import type { Lang } from '@/i18n/types';
 
-const MONTHS_FR = [
-  'janv.',
-  'févr.',
-  'mars',
-  'avr.',
-  'mai',
-  'juin',
-  'juil.',
-  'août',
-  'sept.',
-  'oct.',
-  'nov.',
-  'déc.',
-];
-
-export function formatTimeAgo(iso: string): string {
-  if (!iso) return '';
-  const date = new Date(iso);
-  const now = new Date();
-  const diffSec = Math.floor((now.getTime() - date.getTime()) / 1000);
-  if (diffSec < 60) return "À l'instant";
-  if (diffSec < 3600) {
-    const m = Math.floor(diffSec / 60);
-    return `Il y a ${m} minute${m > 1 ? 's' : ''}`;
-  }
-  if (diffSec < 86400) {
-    const h = Math.floor(diffSec / 3600);
-    return `Il y a ${h} heure${h > 1 ? 's' : ''}`;
-  }
-  if (diffSec < 604800) {
-    const d = Math.floor(diffSec / 86400);
-    return `Il y a ${d} jour${d > 1 ? 's' : ''}`;
-  }
-  const dd = date.getDate();
-  const mon = MONTHS_FR[date.getMonth()];
-  const yyyy = date.getFullYear();
-  return `${dd} ${mon} ${yyyy}`;
+export function formatTimeAgo(iso: string, lang?: Lang): string {
+  return formatRelativeTime(iso, lang ?? detectInitialLanguage());
 }
 
 export function getNotificationIcon(type: string): ReactNode {
@@ -157,16 +126,13 @@ export function getDateGroupKey(iso: string): DateGroupKey {
   return 'older';
 }
 
-const DEFAULT_GROUP_LABELS: Record<DateGroupKey, string> = {
-  today: 'Today',
-  yesterday: 'Yesterday',
-  week: 'This Week',
-  older: 'Older',
-};
+function defaultGroupLabels(): Record<DateGroupKey, string> {
+  return getMessages(detectInitialLanguage()).notifications.groups;
+}
 
 export function groupNotificationsByDate(
   notifications: AppNotification[],
-  labels: Partial<Record<DateGroupKey, string>> = DEFAULT_GROUP_LABELS
+  labels: Partial<Record<DateGroupKey, string>> = defaultGroupLabels()
 ): { key: DateGroupKey; label: string; items: AppNotification[] }[] {
   const order: DateGroupKey[] = ['today', 'yesterday', 'week', 'older'];
   const buckets: Record<DateGroupKey, AppNotification[]> = {
@@ -182,7 +148,7 @@ export function groupNotificationsByDate(
     .filter((k) => buckets[k].length > 0)
     .map((k) => ({
       key: k,
-      label: labels[k] ?? DEFAULT_GROUP_LABELS[k],
+      label: labels[k] ?? defaultGroupLabels()[k],
       items: buckets[k],
     }));
 }

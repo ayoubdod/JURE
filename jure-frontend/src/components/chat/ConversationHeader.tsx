@@ -23,7 +23,6 @@ import {
   getDirectPeer,
   getDirectPeerInfo,
   getLinkedCase,
-  humanizeToken,
 } from './conversationUtils';
 
 const ConversationHeader: React.FC<{
@@ -55,7 +54,7 @@ const ConversationHeader: React.FC<{
   onUnlinkConversationCase,
   onOpenLinkedCase,
 }) => {
-  const { t, tf } = useAppTranslation();
+  const { t, tf, enumLabel } = useAppTranslation();
   const currentEmail = useUserStore((s) => s.user?.email);
   const isDirect = conversation.type === 'direct';
   const linkedCase = getLinkedCase(conversation);
@@ -67,13 +66,16 @@ const ConversationHeader: React.FC<{
   const displayName =
     conversation.display_name ||
     (isDirect ? peerInfo?.fullName : conversation.title) ||
-    'Chat';
+    t.sidebar.chat;
   const memberCount = (conversation.memberships ?? []).filter((m) => !m.archived).length;
+  const matterType = linkedCase
+    ? enumLabel('caseType', linkedCase.caseType ?? linkedCase.case_type)
+    : '';
   const typeLabel = isDirect
     ? t.conversations.typeDirect
     : linkedCase
       ? tf(t.conversations.typeMatter, {
-          type: humanizeToken(linkedCase.caseType ?? linkedCase.case_type) || t.conversations.typeGroup,
+          type: matterType || t.conversations.typeGroup,
         })
       : t.conversations.typeGroup;
   const statusLabel = isTyping
@@ -223,7 +225,7 @@ const ConversationHeader: React.FC<{
           <DropdownMenuContent align="end">
             {!isDirect && onChangeIcon ? (
               <DropdownMenuItem onClick={() => onChangeIcon(conversation)}>
-                <ImageIcon className="mr-2 h-4 w-4" /> {t.conversations.changeIconMenu}
+                <ImageIcon className="me-2 h-4 w-4" /> {t.conversations.changeIconMenu}
               </DropdownMenuItem>
             ) : null}
             {!isDirect && onOpenLinkCaseModal && onUnlinkConversationCase ? (
@@ -236,7 +238,7 @@ const ConversationHeader: React.FC<{
                     </span>
                   </div>
                   <DropdownMenuItem onClick={() => onOpenLinkCaseModal()}>
-                    <Link2 className="mr-2 h-4 w-4" /> {t.conversations.changeCase}
+                    <Link2 className="me-2 h-4 w-4" /> {t.conversations.changeCase}
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={() => {
@@ -248,7 +250,7 @@ const ConversationHeader: React.FC<{
                 </>
               ) : (
                 <DropdownMenuItem onClick={() => onOpenLinkCaseModal()}>
-                  <Link2 className="mr-2 h-4 w-4" /> {t.conversations.linkCaseAction}
+                  <Link2 className="me-2 h-4 w-4" /> {t.conversations.linkCaseAction}
                 </DropdownMenuItem>
               )
             ) : null}
@@ -256,7 +258,7 @@ const ConversationHeader: React.FC<{
               onClick={() => onDeleteConversation?.(conversation)}
               className="text-red-600 focus:bg-red-50 focus:text-red-600 dark:focus:bg-red-950/30"
             >
-              <Trash2 className="mr-2 h-4 w-4" /> {t.conversations.deleteConversation}
+              <Trash2 className="me-2 h-4 w-4" /> {t.conversations.deleteConversation}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

@@ -1,10 +1,12 @@
 import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import type { EventClickArg, EventInput } from '@fullcalendar/core';
+import type { EventClickArg, EventInput, LocaleInput } from '@fullcalendar/core';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import listPlugin from '@fullcalendar/list';
+import frLocale from '@fullcalendar/core/locales/fr';
+import arMaLocale from '@fullcalendar/core/locales/ar-ma';
 import { CalendarDays, MapPin, Video } from 'lucide-react';
 import { formatTime, useAppTranslation } from '@/i18n';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -26,6 +28,12 @@ const DESKTOP_TOOLBAR = {
   center: 'title',
   end: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek',
 };
+
+function fcLocaleFor(lang: string): LocaleInput | string {
+  if (lang === 'fr') return frLocale;
+  if (lang === 'ar') return arMaLocale;
+  return 'en';
+}
 
 export default function CalendarView({
   calendarRef,
@@ -80,7 +88,7 @@ export default function CalendarView({
   useEffect(() => {
     const api = calendarRef.current?.getApi();
     if (!api) return;
-    api.setOption('locale', lang);
+    api.setOption('locale', fcLocaleFor(lang));
     api.setOption('buttonText', fcButtonText);
   }, [calendarRef, lang, fcButtonText]);
 
@@ -112,7 +120,7 @@ export default function CalendarView({
           initialView={isMobile ? 'listWeek' : 'dayGridMonth'}
           headerToolbar={isMobile ? MOBILE_TOOLBAR : DESKTOP_TOOLBAR}
           buttonText={fcButtonText}
-          locale={lang}
+          locale={fcLocaleFor(lang)}
           titleFormat={isMobile ? { year: 'numeric', month: 'short' } : { year: 'numeric', month: 'long' }}
           height="100%"
           expandRows

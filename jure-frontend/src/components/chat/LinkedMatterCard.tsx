@@ -5,7 +5,6 @@ import { cn } from '@/lib/utils';
 import { useAppTranslation } from '@/i18n';
 import {
   formatCaseRef,
-  humanizeToken,
   linkedCaseDotClass,
   parseLinkedCaseId,
 } from './conversationUtils';
@@ -31,10 +30,10 @@ const LinkedMatterCard: React.FC<{
   const [unlinkConfirm, setUnlinkConfirm] = React.useState(false);
   const caseId = linkedCase ? parseLinkedCaseId(linkedCase) : null;
   const typeLabel = linkedCase
-    ? humanizeToken(linkedCase.caseType ?? linkedCase.case_type)
+    ? enumLabel('caseType', linkedCase.caseType ?? linkedCase.case_type)
     : '';
   const statusLabel = linkedCase?.status
-    ? enumLabel('caseStatus', linkedCase.status) || humanizeToken(linkedCase.status)
+    ? enumLabel('caseStatus', linkedCase.status)
     : '';
 
   const shortcuts: { tab: LinkedMatterTab; label: string; icon: React.ReactNode }[] = [

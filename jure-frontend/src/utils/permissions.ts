@@ -1,4 +1,5 @@
 import useUserStore from '@/stores/userStore';
+import { detectInitialLanguage, tFor } from '@/i18n';
 
 /**
  * Default role permissions mapping
@@ -103,15 +104,9 @@ export const useHasPermission = (permission: API.Permission): boolean => {
  * Get role display name
  */
 export const getRoleDisplayName = (role?: API.Role): string => {
-  const roleNames: Record<API.Role, string> = {
-    OWNER: 'Owner',
-    ADMIN: 'Administrator',
-    MANAGER: 'Manager',
-    LAWYER: 'Lawyer',
-    ASSISTANT: 'Assistant',
-    VIEWER: 'Viewer',
-  };
-  return role ? roleNames[role] : 'No Role';
+  const team = tFor(detectInitialLanguage()).team;
+  if (!role) return team.noRole;
+  return team.roles[role] ?? team.noRole;
 };
 
 /**

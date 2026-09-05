@@ -2,6 +2,7 @@ import React from 'react';
 import CallDialog from '@/components/chat/CallDialog';
 import IncomingCallNotification from '@/components/conversations/call/IncomingCallNotification';
 import { useCallSessionStore, useWebRtcCall } from '@/stores/callSessionStore';
+import { useAppTranslation } from '@/i18n';
 import {
   attachRemoteMedia,
   onRemoteAudioPlayBlocked,
@@ -13,6 +14,7 @@ import {
  * App-level call UI. Mount once under DashboardLayout so calls survive navigation.
  */
 const CallShell: React.FC = () => {
+  const { t } = useAppTranslation();
   const bootstrap = useCallSessionStore((s) => s.bootstrap);
   React.useEffect(() => {
     bootstrap();
@@ -121,7 +123,7 @@ const CallShell: React.FC = () => {
           remoteName={
             callState.mode === 'conference' && callState.displayTitle
               ? callState.displayTitle
-              : callState.remoteUser?.name ?? callState.displayTitle ?? 'Call'
+              : callState.remoteUser?.name ?? callState.displayTitle ?? t.conversations.call.call
           }
           remoteAvatar={callState.remoteUser?.avatar}
           remoteFirstName={callState.remoteUser?.firstName}

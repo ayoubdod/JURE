@@ -477,7 +477,7 @@ const AdministrativeDutyForm: React.FC<AdministrativeDutyFormProps> = ({
                 </div>
               ))}
               <Button type="button" variant="outline" size="sm" onClick={addDocument}>
-                <Plus className="w-4 h-4 mr-1" />
+                <Plus className="w-4 h-4 me-1" />
                 {modal.actions.addDocument}
               </Button>
             </div>

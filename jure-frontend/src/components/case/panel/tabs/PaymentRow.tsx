@@ -25,7 +25,7 @@ type Props = {
 };
 
 export const PaymentRow: React.FC<Props> = ({ payment, onDelete }) => {
-  const { t } = useAppTranslation();
+  const { t, lang } = useAppTranslation();
   return (
     <div className="rounded-xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-950 p-4 shadow-sm">
       <div className="flex items-start justify-between gap-2">
@@ -40,7 +40,7 @@ export const PaymentRow: React.FC<Props> = ({ payment, onDelete }) => {
               {t.finance.paymentMethods[payment.method] ?? methodLabel[payment.method]}
             </span>
             <span className="font-semibold tabular-nums text-slate-900 dark:text-white">
-              {formatMAD(payment.amount)}
+              {formatMAD(payment.amount, lang)}
             </span>
           </div>
           <p className="font-mono text-[12px] text-slate-600">

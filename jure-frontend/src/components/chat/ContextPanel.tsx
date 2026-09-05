@@ -285,7 +285,7 @@ const ContextPanel: React.FC<ContextPanelProps> = ({
             <li key={msg.id}>
               <button
                 type="button"
-                className="w-full rounded-md border border-slate-200 px-2 py-1.5 text-left text-[12px] text-slate-700 transition-colors line-clamp-3 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#64499D]/30 dark:border-slate-800 dark:text-slate-300 dark:hover:bg-slate-800/60"
+                className="w-full rounded-md border border-slate-200 px-2 py-1.5 text-start text-[12px] text-slate-700 transition-colors line-clamp-3 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#64499D]/30 dark:border-slate-800 dark:text-slate-300 dark:hover:bg-slate-800/60"
                 onClick={() => onPanelPinnedMessageClick?.(msg.id)}
               >
                 {pinnedSnippet(msg)}
@@ -584,7 +584,7 @@ const ContextPanel: React.FC<ContextPanelProps> = ({
                 <button
                   type="button"
                   onClick={() => onOpenTask?.(task.id)}
-                  className="w-full text-left rounded-lg border border-slate-200 dark:border-slate-800 bg-white/60 dark:bg-slate-900/40 px-2.5 py-2 hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors group"
+                  className="w-full text-start rounded-lg border border-slate-200 dark:border-slate-800 bg-white/60 dark:bg-slate-900/40 px-2.5 py-2 hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors group"
                 >
                   <div className="flex items-start justify-between gap-1">
                     <div className="flex flex-wrap items-center gap-1 min-w-0">
@@ -599,7 +599,7 @@ const ContextPanel: React.FC<ContextPanelProps> = ({
                         </span>
                       )}
                     </div>
-                    <ChevronRight className="h-4 w-4 text-slate-300 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <ChevronRight className="h-4 w-4 text-slate-300 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity rtl:rotate-180" />
                   </div>
                   <p className="text-[13px] font-semibold text-slate-800 dark:text-slate-200 line-clamp-2 mt-1">{task.title ?? '—'}</p>
                   {due.label && <p className={cn('text-[11px] mt-1', due.cls)}>{due.label}</p>}
@@ -707,11 +707,11 @@ const ContextPanel: React.FC<ContextPanelProps> = ({
         <Button
           variant="ghost"
           size="icon"
-          className="h-8 w-8 self-center rounded-l-md border border-r-0 border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900"
+          className="h-8 w-8 self-center rounded-s-md border border-e-0 border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900"
           onClick={onToggle}
           aria-label={t.conversations.openContextAria}
         >
-          <ChevronRight className="h-4 w-4 text-slate-500" />
+          <ChevronRight className="h-4 w-4 text-slate-500 rtl:rotate-180" />
         </Button>
       ) : null}
 
@@ -759,7 +759,7 @@ const ContextPanel: React.FC<ContextPanelProps> = ({
                   onClick={onToggle}
                   aria-label={t.conversations.closeContextAria}
                 >
-                  <ChevronRight className="h-3.5 w-3.5 rotate-180 text-slate-500" />
+                  <ChevronRight className="h-3.5 w-3.5 rotate-180 text-slate-500 rtl:rotate-0" />
                 </Button>
               ) : null}
             </div>

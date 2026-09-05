@@ -3,6 +3,7 @@
 import React from 'react';
 import { Calendar, CheckSquare } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useAppTranslation } from '@/i18n';
 
 function getCounts(caseItem: API.Case): { tasks: number; appointments: number } | null {
   const raw = caseItem._counts;
@@ -22,6 +23,7 @@ export interface CaseCardCountBadgesProps {
  * Compact task / appointment counters for case cards. Hidden when `_counts` is absent.
  */
 const CaseCardCountBadges: React.FC<CaseCardCountBadgesProps> = ({ caseItem, className }) => {
+  const { t } = useAppTranslation();
   const c = getCounts(caseItem);
   if (!c) return null;
 
@@ -40,7 +42,7 @@ const CaseCardCountBadges: React.FC<CaseCardCountBadgesProps> = ({ caseItem, cla
       >
         <CheckSquare className="h-3 w-3 shrink-0 opacity-90" aria-hidden />
         <span>{c.tasks}</span>
-        <span className="font-medium">Tasks</span>
+        <span className="font-medium">{t.cases.card.tasks}</span>
       </span>
       <span
         className={cn(
@@ -52,7 +54,7 @@ const CaseCardCountBadges: React.FC<CaseCardCountBadgesProps> = ({ caseItem, cla
       >
         <Calendar className="h-3 w-3 shrink-0 opacity-90" aria-hidden />
         <span>{c.appointments}</span>
-        <span className="font-medium">Appt</span>
+        <span className="font-medium">{t.cases.card.appointments}</span>
       </span>
     </div>
   );

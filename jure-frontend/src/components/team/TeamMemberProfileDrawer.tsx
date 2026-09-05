@@ -588,7 +588,7 @@ const TeamMemberProfileDrawer = forwardRef<
                                 ) : null}
                               </p>
                             </div>
-                            <ChevronRight className="h-4 w-4 shrink-0 text-slate-300" aria-hidden />
+                            <ChevronRight className="h-4 w-4 shrink-0 text-slate-300 rtl:rotate-180" aria-hidden />
                           </button>
                         </li>
                       );

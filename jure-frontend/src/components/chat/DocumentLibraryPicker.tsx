@@ -87,12 +87,12 @@ const DocumentLibraryPicker: React.FC<DocumentLibraryPickerProps> = ({
                 <button
                   key={doc.id}
                   onClick={() => handleSelect(doc)}
-                  className="w-full flex items-center gap-2 px-2 py-0.5 rounded text-left hover:bg-slate-100 dark:hover:bg-slate-800 text-[13px]"
+                  className="w-full flex items-center gap-2 px-2 py-0.5 rounded text-start hover:bg-slate-100 dark:hover:bg-slate-800 text-[13px]"
                 >
                   <FileText className="w-4 h-4 text-slate-400 shrink-0" />
                   <span className="truncate">{doc.title || t.conversations.untitled}</span>
                   {doc.is_shared ? (
-                    <span className="ml-auto shrink-0 rounded border border-[#64499D]/25 bg-[#64499D]/10 px-1 py-px text-[9px] font-semibold text-[#64499D] dark:text-[#CFC2FF]">
+                    <span className="ms-auto shrink-0 rounded border border-[#64499D]/25 bg-[#64499D]/10 px-1 py-px text-[9px] font-semibold text-[#64499D] dark:text-[#CFC2FF]">
                       {t.library.publicLibraryBadge}
                     </span>
                   ) : null}

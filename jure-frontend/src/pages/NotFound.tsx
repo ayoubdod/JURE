@@ -17,8 +17,8 @@ const NotFound = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-100 dark:bg-slate-800">
       <Helmet>
-        <title>Page not found | JURE</title>
-        <meta name="description" content="The page you requested could not be found." />
+        <title>{t.notFound.documentTitle}</title>
+        <meta name="description" content={t.notFound.metaDescription} />
         <meta name="robots" content="noindex, nofollow" />
       </Helmet>
       <div className="text-center">

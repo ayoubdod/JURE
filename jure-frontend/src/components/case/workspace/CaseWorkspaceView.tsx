@@ -320,23 +320,23 @@ function CaseMatterWorkspaceView({
             onClick={() => navigate(listPath)}
             className="inline-flex items-center gap-1.5 text-[13px] font-medium text-slate-500 hover:text-[#64499D]"
           >
-            <ArrowLeft className="h-4 w-4" />
+            <ArrowLeft className="h-4 w-4 rtl:rotate-180" />
             {tf(pw.backTo, { section: sectionTitle })}
           </button>
 
-          <nav className="mt-2 flex flex-wrap items-center gap-1 text-[12px] text-slate-500" aria-label="Breadcrumb">
+          <nav className="mt-2 flex flex-wrap items-center gap-1 text-[12px] text-slate-500" aria-label={t.common.breadcrumb}>
             <Link to="/dashboard" className="hover:text-[#64499D]">
               {pw.dashboard}
             </Link>
-            <ChevronRight className="h-3.5 w-3.5" />
+            <ChevronRight className="h-3.5 w-3.5 rtl:rotate-180" />
             <Link to="/dashboard/cases" className="hover:text-[#64499D]">
               {pw.cases}
             </Link>
-            <ChevronRight className="h-3.5 w-3.5" />
+            <ChevronRight className="h-3.5 w-3.5 rtl:rotate-180" />
             <Link to={listPath} className="hover:text-[#64499D]">
               {sectionTitle}
             </Link>
-            <ChevronRight className="h-3.5 w-3.5" />
+            <ChevronRight className="h-3.5 w-3.5 rtl:rotate-180" />
             <span className="font-medium text-slate-800 dark:text-zinc-200">{caseItem.title || caseItem.reference}</span>
           </nav>
 
@@ -614,7 +614,7 @@ function CaseMatterWorkspaceView({
                 <Field label={pw.client}>
                   {personName(caseItem.client)}
                   {clientRole ? (
-                    <span className="ml-2 inline-flex rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold uppercase dark:bg-slate-800">
+                    <span className="ms-2 inline-flex rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold uppercase dark:bg-slate-800">
                       {enumPretty(clientRole)}
                     </span>
                   ) : null}

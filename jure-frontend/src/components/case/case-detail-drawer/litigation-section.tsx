@@ -112,7 +112,7 @@ export function LitigationSection({
           <Field label={t.cases.modal.fields.relatedClient}>
             <CaseClientLabel client={client} fallback={em(client?.email) || '—'} />
             {clientRole && (
-              <span className="ml-2 inline-flex rounded-full bg-slate-100 dark:bg-slate-800 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-300">
+              <span className="ms-2 inline-flex rounded-full bg-slate-100 dark:bg-slate-800 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-300">
                 {enumPretty(clientRole)}
               </span>
             )}

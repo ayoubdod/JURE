@@ -79,7 +79,7 @@ export function CollapsibleSection({
         aria-controls={contentId}
       >
         {icon ? <span className="shrink-0 text-muted-foreground/70">{icon}</span> : null}
-        <span className="flex-1 truncate text-left text-[13px] font-medium tracking-wide">
+        <span className="flex-1 truncate text-start text-[13px] font-medium tracking-wide">
           {title}
         </span>
         <ChevronDown

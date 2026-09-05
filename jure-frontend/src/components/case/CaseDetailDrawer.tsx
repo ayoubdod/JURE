@@ -72,9 +72,9 @@ function typeLabel(c: API.Case): string {
 
 function typeAccentClass(c: API.Case): string {
   const t = normalizeCaseType(c);
-  if (t === 'LITIGATION') return 'border-l-rose-500';
-  if (t === 'CONSULTATION') return 'border-l-indigo-500';
-  return 'border-l-amber-400';
+  if (t === 'LITIGATION') return 'border-s-rose-500';
+  if (t === 'CONSULTATION') return 'border-s-indigo-500';
+  return 'border-s-amber-400';
 }
 
 function rawStatusKey(c: API.Case): string {
@@ -155,7 +155,7 @@ const CaseDetailDrawer = forwardRef<CaseDetailDrawerRef, CaseDetailDrawerProps>(
     const [drawerMobile, setDrawerMobile] = useState(false);
     const openRef = useRef(false);
     const { toast } = useToast();
-    const { t, enumPretty } = useAppTranslation();
+    const { t, tf, enumPretty } = useAppTranslation();
     const navigate = useNavigate();
     const [typeSelectorOpen, setTypeSelectorOpen] = useState(false);
     const [conversionFormOpen, setConversionFormOpen] = useState(false);
@@ -240,12 +240,12 @@ const CaseDetailDrawer = forwardRef<CaseDetailDrawerRef, CaseDetailDrawerProps>(
             patchListFromCase(res.data);
           })
           .catch(() => {
-            setError('Could not load case details.');
+            setError(t.cases.errors.fetchFailed);
             setFetched(null);
           })
           .finally(() => setLoading(false));
       },
-      [patchListFromCase]
+      [patchListFromCase, t]
     );
 
     const openCaseById = useCallback(
@@ -354,7 +354,7 @@ const CaseDetailDrawer = forwardRef<CaseDetailDrawerRef, CaseDetailDrawerProps>(
           <>
             <header
               className={cn(
-                'sticky top-0 z-20 shrink-0 border-b border-slate-200 dark:border-slate-800 bg-slate-50/95 dark:bg-slate-950/95 backdrop-blur-sm px-4 py-4 pl-5 border-l-[3px]',
+                'sticky top-0 z-20 shrink-0 border-b border-slate-200 dark:border-slate-800 bg-slate-50/95 dark:bg-slate-950/95 backdrop-blur-sm px-4 py-4 ps-5 border-s-[3px]',
                 typeAccentClass(fetched)
               )}
             >
@@ -382,7 +382,7 @@ const CaseDetailDrawer = forwardRef<CaseDetailDrawerRef, CaseDetailDrawerProps>(
                     <p className="font-mono text-[11px] text-slate-500 dark:text-slate-400">{fetched.reference}</p>
                   )}
                   <h2 className="text-lg font-semibold leading-snug text-slate-900 dark:text-white line-clamp-2">
-                    {fetched.title || fetched.reference || 'Untitled case'}
+                    {fetched.title || fetched.reference || t.cases.untitledCase}
                   </h2>
                 </div>
                 <div className="flex shrink-0 items-center gap-1">
@@ -393,7 +393,7 @@ const CaseDetailDrawer = forwardRef<CaseDetailDrawerRef, CaseDetailDrawerProps>(
                       size="icon"
                       className="h-9 w-9 text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30"
                       onClick={() => onDelete(fetched)}
-                      aria-label="Delete case"
+                      aria-label={t.cases.pageWorkspace.deleteCase}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -404,7 +404,7 @@ const CaseDetailDrawer = forwardRef<CaseDetailDrawerRef, CaseDetailDrawerProps>(
                     size="icon"
                     className="h-9 w-9"
                     onClick={() => closeInternal()}
-                    aria-label="Close"
+                    aria-label={t.common.close}
                   >
                     <X className="h-4 w-4" />
                   </Button>
@@ -427,14 +427,14 @@ const CaseDetailDrawer = forwardRef<CaseDetailDrawerRef, CaseDetailDrawerProps>(
                     </TabsTrigger>
                     {showFinanceTab ?
                       <TabsTrigger value="finance" className="rounded-lg px-4 text-[13px]">
-                        <Coins className="mr-1.5 h-4 w-4 opacity-90" aria-hidden />
+                        <Coins className="me-1.5 h-4 w-4 opacity-90" aria-hidden />
                         Finance
                         {tvaCabinetStatus && isCabinetTvaExonerated(tvaCabinetStatus) ?
-                          <span className="ml-2 inline-flex rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-semibold text-emerald-800 dark:text-emerald-300">
+                          <span className="ms-2 inline-flex rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-semibold text-emerald-800 dark:text-emerald-300">
                             TVA exonérée
                           </span>
                         : tvaCabinetStatus ?
-                          <span className="ml-2 inline-flex rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-semibold text-amber-900 dark:text-amber-200">
+                          <span className="ms-2 inline-flex rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-semibold text-amber-900 dark:text-amber-200">
                             TVA 20% applicable
                           </span>
                         : null}
@@ -442,7 +442,7 @@ const CaseDetailDrawer = forwardRef<CaseDetailDrawerRef, CaseDetailDrawerProps>(
                     : null}
                     {JURIA_ENABLED ?
                       <TabsTrigger value="juria" className="rounded-lg px-4 text-[13px] text-indigo-700 dark:text-indigo-300">
-                        <Sparkles className="mr-1.5 h-4 w-4 opacity-90" aria-hidden />
+                        <Sparkles className="me-1.5 h-4 w-4 opacity-90" aria-hidden />
                         Juria
                       </TabsTrigger>
                     : null}
@@ -533,7 +533,7 @@ const CaseDetailDrawer = forwardRef<CaseDetailDrawerRef, CaseDetailDrawerProps>(
                   className="h-9"
                   onClick={() => setMatterCloseOpen(true)}
                 >
-                  <Flag className="mr-1.5 h-3.5 w-3.5" />
+                  <Flag className="me-1.5 h-3.5 w-3.5" />
                   {t.dashboard.matterClose.confirmClose}
                 </Button>
               )}
@@ -582,8 +582,8 @@ const CaseDetailDrawer = forwardRef<CaseDetailDrawerRef, CaseDetailDrawerProps>(
                   const refLine = newCase.reference?.trim();
                   toast({
                     title: refLine
-                      ? `Case ${refLine} created successfully`
-                      : 'Case created successfully',
+                      ? tf(t.cases.modal.toasts.createdDescription, { title: refLine })
+                      : t.cases.modal.toasts.createdTitle,
                   });
                   closeInternal();
                   const nextType = newCase.caseType ?? newCase.case_type;

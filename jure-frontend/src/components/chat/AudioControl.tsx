@@ -205,7 +205,7 @@ const AudioControl: React.FC<AudioControlProps> = ({
 
       <span
         className={cn(
-          'min-w-[2.25rem] text-right font-mono text-[11px] tabular-nums',
+          'min-w-[2.25rem] text-end font-mono text-[11px] tabular-nums',
           isOwn ? 'text-white/85' : 'text-slate-500 dark:text-slate-400'
         )}
       >

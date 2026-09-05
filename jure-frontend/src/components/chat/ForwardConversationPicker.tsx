@@ -97,12 +97,12 @@ const ForwardConversationPicker: React.FC<ForwardConversationPickerProps> = ({
           <DialogTitle>{t.conversations.forwardTo}</DialogTitle>
         </DialogHeader>
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder={t.conversations.searchPlaceholder}
-            className="pl-9"
+            className="ps-9"
           />
         </div>
         <ScrollArea className="max-h-[280px]">
@@ -126,7 +126,7 @@ const ForwardConversationPicker: React.FC<ForwardConversationPickerProps> = ({
                       onOpenChange(false);
                     }}
                     className={cn(
-                      'w-full flex items-center gap-3 px-3 py-2.5 text-left hover:bg-muted/50 transition-colors'
+                      'w-full flex items-center gap-3 px-3 py-2.5 text-start hover:bg-muted/50 transition-colors'
                     )}
                   >
                     {c.type === 'direct' && person ? (

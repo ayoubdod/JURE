@@ -1,5 +1,4 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import dayjs from 'dayjs';
 import { Copy, Download, Eye, FileText, Link2, MoreHorizontal } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -21,7 +20,7 @@ import { useNavigate } from 'react-router';
 import { navigateToCaseById } from '@/lib/caseRoutes';
 import { useToast } from '@/hooks/use-toast';
 import { getJuriaErrorMessage } from '@/utils/juriaErrors';
-import { useAppTranslation, formatDate } from '@/i18n';
+import { useAppTranslation, formatDate, formatTime } from '@/i18n';
 import useUserStore from '@/stores/userStore';
 import UserAvatar from '@/components/common/UserAvatar';
 
@@ -234,7 +233,7 @@ export function JuriaConversationView({
                         <p className="whitespace-pre-wrap">{m.content}</p>
                       </div>
                     : null}
-                    <p className="mt-1 text-end text-[10px] text-slate-400">{dayjs(m.createdAt).format('HH:mm')}</p>
+                    <p className="mt-1 text-end text-[10px] text-slate-400">{formatTime(m.createdAt, lang)}</p>
                   </div>
                   <UserAvatar
                     image={currentUser?.image}
@@ -354,7 +353,7 @@ export function JuriaConversationView({
                       >
                         {t.juria.askFollowUp}
                       </button>
-                      <span className="ms-auto text-[10px] text-slate-400">{dayjs(m.createdAt).format('HH:mm')}</span>
+                      <span className="ms-auto text-[10px] text-slate-400">{formatTime(m.createdAt, lang)}</span>
                     </div>
                     {m.suggestions && m.suggestions.length > 0 && (
                       <div className="mt-2 flex gap-2 overflow-x-auto pb-1">

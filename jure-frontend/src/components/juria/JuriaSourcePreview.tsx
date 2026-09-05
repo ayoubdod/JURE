@@ -5,6 +5,7 @@ import FilePreviewer from '@/components/library/FilePreviewer';
 import { apiGetDocument } from '@/services/library/api';
 import { apiGetCaseAttachments } from '@/services/case/api';
 import { apiJuriaDownloadFileBlob } from '@/services/juria/api';
+import { useAppTranslation } from '@/i18n';
 import type { JuriaSourceHit } from '@/types/juria';
 
 export function JuriaSourcePreview({
@@ -18,6 +19,7 @@ export function JuriaSourcePreview({
   linkedCaseId?: number | null;
   onClose: () => void;
 }) {
+  const { t, tf } = useAppTranslation();
   const readerRef = useRef<DocumentReaderModalRef>(null);
   const [fileUrl, setFileUrl] = useState<string | null>(null);
   const [fileName, setFileName] = useState('');
@@ -75,7 +77,7 @@ export function JuriaSourcePreview({
       <Dialog open={Boolean(fileUrl)} onOpenChange={(v) => { if (!v) { setFileUrl(null); onClose(); } }}>
         <DialogContent className="max-w-3xl">
           <DialogHeader>
-            <DialogTitle className="truncate text-sm">{fileName}{hit?.page ? ` · p. ${hit.page}` : ''}</DialogTitle>
+            <DialogTitle className="truncate text-sm">{fileName}{hit?.page ? ` · ${tf(t.juria.workspace.sources.page, { n: hit.page })}` : ''}</DialogTitle>
           </DialogHeader>
           {fileUrl && <FilePreviewer fileUrl={fileUrl} fileName={fileName} className="max-h-[70vh]" />}
         </DialogContent>
