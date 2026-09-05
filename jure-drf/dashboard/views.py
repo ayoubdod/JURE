@@ -25,9 +25,6 @@ from .models import Announcement, ActivityLog
 from .kpi import build_stat, calculate_growth, month_bounds, month_date_bounds
 
 # ---- helpers ----
-def user_cabinet(user):
-    return getattr(user, "cabinet", None)
-
 def format_ago(dt):
     if not dt: return ""
     delta = now() - dt
