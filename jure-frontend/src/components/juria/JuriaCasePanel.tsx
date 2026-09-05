@@ -10,10 +10,12 @@ import { buildJuriaCaseContextPayload } from '@/utils/juriaCaseContext';
 import type { JuriaMode } from '@/types/juria';
 import { useToast } from '@/hooks/use-toast';
 import { getJuriaErrorMessage } from '@/utils/juriaErrors';
+import { useAppTranslation } from '@/i18n';
 
 export function JuriaCasePanel({ caseItem }: { caseItem: API.Case }) {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { t, tf } = useAppTranslation();
   const activeId = useJuriaStore((s) => s.activeConversationId);
   const conversations = useJuriaStore((s) => s.conversations);
   const create = useJuriaStore((s) => s.createConversation);
@@ -45,11 +47,11 @@ export function JuriaCasePanel({ caseItem }: { caseItem: API.Case }) {
             <div className="flex items-center gap-2">
               <Sparkles className="h-4 w-4 shrink-0 text-indigo-600" />
               <h3 className="text-sm font-semibold text-slate-900 dark:text-white">
-                Assistant Juria — Dossier #{refLine ?? caseItem.id}
+                {tf(t.juria.casePanel.title, { reference: refLine ?? caseItem.id })}
               </h3>
             </div>
             <p className="mt-1 text-[11px] leading-relaxed text-slate-600 dark:text-slate-400">
-              Toutes les questions posées ici sont liées à ce dossier.
+              {t.juria.casePanel.hint}
             </p>
           </div>
           <Button
@@ -63,7 +65,7 @@ export function JuriaCasePanel({ caseItem }: { caseItem: API.Case }) {
             }}
           >
             <ExternalLink className="h-3.5 w-3.5" />
-            Ouvrir dans Juria
+            {t.juria.casePanel.openInJuria}
           </Button>
         </div>
       </div>
@@ -76,7 +78,7 @@ export function JuriaCasePanel({ caseItem }: { caseItem: API.Case }) {
               onPickMode={(mode: JuriaMode) => {
                 void create(mode, linked).catch((e) =>
                   toast({
-                    title: 'Création impossible',
+                    title: t.juria.toasts.createFailed,
                     description: getJuriaErrorMessage(e),
                     variant: 'destructive',
                   })
@@ -89,7 +91,7 @@ export function JuriaCasePanel({ caseItem }: { caseItem: API.Case }) {
                     await sendMessage(id, text);
                   } catch (e) {
                     toast({
-                      title: 'Erreur',
+                      title: t.common.error,
                       description: getJuriaErrorMessage(e),
                       variant: 'destructive',
                     });
@@ -103,7 +105,7 @@ export function JuriaCasePanel({ caseItem }: { caseItem: API.Case }) {
                     await sendMessage(id, text, file);
                   } catch (e) {
                     toast({
-                      title: 'Erreur',
+                      title: t.common.error,
                       description: getJuriaErrorMessage(e),
                       variant: 'destructive',
                     });
@@ -112,7 +114,7 @@ export function JuriaCasePanel({ caseItem }: { caseItem: API.Case }) {
               }}
             />
           : detailLoading && !(conversations.find((c) => c.id === activeId)?.messages.length) ?
-            <div className="flex flex-1 items-center justify-center text-xs text-slate-500">Chargement…</div>
+            <div className="flex flex-1 items-center justify-center text-xs text-slate-500">{t.juria.loading}</div>
           : <JuriaConversationView caseContext={caseCtx} compact showCaseLink={false} />}
         </div>
       </div>

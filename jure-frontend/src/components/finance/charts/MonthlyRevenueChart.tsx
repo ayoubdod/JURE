@@ -11,8 +11,7 @@ import {
 } from 'recharts';
 import { formatMAD } from '@/utils/formatMAD';
 import { TrendingUp } from 'lucide-react';
-
-const MONTHS = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
+import { intlLocale, useAppTranslation, type Lang } from '@/i18n';
 
 type Point = { month: number; billed: number; collected: number };
 
@@ -21,7 +20,16 @@ type Props = {
   year: number;
 };
 
+function monthShortLabels(lang: Lang): string[] {
+  const loc = intlLocale(lang);
+  return Array.from({ length: 12 }, (_, i) =>
+    new Intl.DateTimeFormat(loc, { month: 'short' }).format(new Date(2020, i, 15))
+  );
+}
+
 export const MonthlyRevenueChart: React.FC<Props> = ({ data, year }) => {
+  const { t, lang } = useAppTranslation();
+  const months = useMemo(() => monthShortLabels(lang), [lang]);
   const gradId = useId().replace(/:/g, '');
   const colorBilled = `colorBilled-${gradId}`;
   const colorCollected = `colorCollected-${gradId}`;
@@ -31,7 +39,7 @@ export const MonthlyRevenueChart: React.FC<Props> = ({ data, year }) => {
     for (const p of data) {
       byMonth.set(p.month, p);
     }
-    return MONTHS.map((label, i) => {
+    return months.map((label, i) => {
       const m = i + 1;
       const row = byMonth.get(m);
       return {
@@ -41,7 +49,7 @@ export const MonthlyRevenueChart: React.FC<Props> = ({ data, year }) => {
         collected: row?.collected ?? 0,
       };
     });
-  }, [data]);
+  }, [data, months]);
 
   /** Scale so small MAD amounts are visible (avoid a flat line at 0 with misleading "0k" ticks). */
   const yAxisMax = useMemo(() => {
@@ -56,7 +64,7 @@ export const MonthlyRevenueChart: React.FC<Props> = ({ data, year }) => {
           <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#64499D] shadow-sm">
             <TrendingUp size={16} className="text-white" aria-hidden />
           </span>
-          Chiffre d&apos;affaires mensuel
+          {t.finance.charts.monthlyTitle}
         </h3>
         <span className="text-[11px] font-medium text-slate-500">{year}</span>
       </div>
@@ -94,11 +102,11 @@ export const MonthlyRevenueChart: React.FC<Props> = ({ data, year }) => {
               }}
               formatter={(value: number, name: string) => [
                 formatMAD(value),
-                name === 'billed' ? 'CA facturé' : 'Encaissé',
+                name === 'billed' ? t.finance.charts.billed : t.finance.charts.collected,
               ]}
             />
             <Legend
-              formatter={(value) => (value === 'billed' ? 'CA facturé' : 'Encaissé')}
+              formatter={(value) => (value === 'billed' ? t.finance.charts.billed : t.finance.charts.collected)}
               wrapperStyle={{ fontSize: 12 }}
             />
             <Area

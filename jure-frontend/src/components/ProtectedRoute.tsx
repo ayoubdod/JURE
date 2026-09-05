@@ -5,6 +5,7 @@ import useUserStore from '@/stores/userStore';
 import { useToast } from '@/hooks/use-toast';
 import LogoLoading from '@/components/common/LogoLoading';
 import { devError } from '@/utils/devLog';
+import { useAppTranslation } from '@/i18n';
 import {
   clearSessionValidationCache,
   getValidatedToken,
@@ -55,6 +56,7 @@ const ProtectedRoute = ({ children, requireAuth = true }: ProtectedRouteProps) =
   const { isLoggedIn, accessToken, logout, setUser } = useUserStore();
   const location = useLocation();
   const { toast } = useToast();
+  const { t } = useAppTranslation();
 
   // Persisted session → render immediately; never block in-app navigation.
   const hasCachedSession = Boolean(accessToken && isLoggedIn);
@@ -79,8 +81,8 @@ const ProtectedRoute = ({ children, requireAuth = true }: ProtectedRouteProps) =
       if (cancelled) return;
       if (!ok) {
         toast({
-          title: 'Session expirée',
-          description: 'Votre session a expiré. Veuillez vous reconnecter.',
+          title: t.sessionExpired.title,
+          description: t.sessionExpired.description,
           variant: 'destructive',
         });
       }

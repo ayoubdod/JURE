@@ -371,7 +371,7 @@ export function JuriaChat({ project }: { project: JuriaProject }) {
           if (!v) setRenameThread(null);
         }}
         title={chat.renameThread}
-        label="Nom"
+        label={chat.threadName}
         initialValue={renameThread?.title || ''}
         onConfirm={(title) => {
           if (renameThread) void updateThread(renameThread.id, { title });

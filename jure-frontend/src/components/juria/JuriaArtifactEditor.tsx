@@ -12,9 +12,8 @@ import {
 import { useAppTranslation } from '@/i18n';
 
 export function JuriaArtifactEditor({ projectId }: { projectId: string }) {
-  const { t } = useAppTranslation();
+  const { t, tf } = useAppTranslation();
   const a = t.juria.workspace.artifacts;
-  const actions = t.juria.workspace.actions;
   const artifacts = useJuriaStore((s) => s.artifacts);
   const load = useJuriaStore((s) => s.loadArtifacts);
   const [activeId, setActiveId] = useState<string | null>(artifacts[0]?.id ?? null);
@@ -84,15 +83,15 @@ export function JuriaArtifactEditor({ projectId }: { projectId: string }) {
               size="sm"
               className="h-8 bg-[#64499D] hover:bg-[#4D3680]"
               onClick={() =>
-                void apiJuriaUpdateArtifact(projectId, active.id, { title, content_html: html, note: 'Édition' }).then(() =>
+                void apiJuriaUpdateArtifact(projectId, active.id, { title, content_html: html, note: t.juria.editor.editNote }).then(() =>
                   load(projectId)
                 )
               }
             >
-              Enregistrer
+              {t.common.save}
             </Button>
             <Button size="sm" variant="outline" className="h-8" onClick={() => void apiJuriaDuplicateArtifact(projectId, active.id).then(() => load(projectId))}>
-              Dupliquer
+              {a.duplicate}
             </Button>
             {['docx', 'pdf', 'txt', 'md', 'rtf', 'odt'].map((fmt) => (
               <Button key={fmt} size="sm" variant="ghost" className="h-8 text-[11px] uppercase" onClick={() => void download(fmt)}>
@@ -110,7 +109,10 @@ export function JuriaArtifactEditor({ projectId }: { projectId: string }) {
                   )
                 }
               >
-                Comparer v{active.current_version - 1} / v{active.current_version}
+                {tf(t.juria.editor.compareVersions, {
+                  from: active.current_version - 1,
+                  to: active.current_version,
+                })}
               </Button>
             )}
           </div>
@@ -137,6 +139,8 @@ export function JuriaArtifactEditor({ projectId }: { projectId: string }) {
 }
 
 function ArtifactCanvas({ html, onChange }: { html: string; onChange: (v: string) => void }) {
+  const { t } = useAppTranslation();
+  const ed = t.juria.editor;
   const ref = React.useRef<HTMLDivElement>(null);
   React.useEffect(() => {
     if (ref.current && ref.current.innerHTML !== html) ref.current.innerHTML = html || '<p></p>';
@@ -149,16 +153,16 @@ function ArtifactCanvas({ html, onChange }: { html: string; onChange: (v: string
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="flex gap-1 border-b border-slate-100 px-3 py-1.5 text-[11px]">
         {[
-          { label: 'H1', fn: () => document.execCommand('formatBlock', false, 'h1') },
-          { label: 'H2', fn: () => document.execCommand('formatBlock', false, 'h2') },
-          { label: 'P', fn: () => document.execCommand('formatBlock', false, 'p') },
-          { label: 'Liste', fn: () => cmd('insertUnorderedList') },
-          { label: 'Gras', fn: () => cmd('bold') },
-          { label: 'Italique', fn: () => cmd('italic') },
-          { label: 'Souligné', fn: () => cmd('underline') },
+          { id: 'h1', label: 'H1', fn: () => document.execCommand('formatBlock', false, 'h1') },
+          { id: 'h2', label: 'H2', fn: () => document.execCommand('formatBlock', false, 'h2') },
+          { id: 'p', label: 'P', fn: () => document.execCommand('formatBlock', false, 'p') },
+          { id: 'list', label: ed.list, fn: () => cmd('insertUnorderedList') },
+          { id: 'bold', label: ed.bold, fn: () => cmd('bold') },
+          { id: 'italic', label: ed.italic, fn: () => cmd('italic') },
+          { id: 'underline', label: ed.underline, fn: () => cmd('underline') },
         ].map((b) => (
           <button
-            key={b.label}
+            key={b.id}
             type="button"
             className="rounded px-2 py-1 text-slate-500 hover:bg-slate-100"
             onMouseDown={(e) => {

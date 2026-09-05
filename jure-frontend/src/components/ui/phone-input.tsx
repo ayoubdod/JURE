@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
+import { intlLocale, useAppTranslation } from "@/i18n";
 
 const RPNInputComponent = RPNInput.default;
 
@@ -92,9 +93,19 @@ const CountrySelect = ({
   options: countryList,
   onChange,
 }: CountrySelectProps) => {
+  const { t, lang } = useAppTranslation();
+  const locale = intlLocale(lang);
   const scrollAreaRef = React.useRef<HTMLDivElement>(null);
   const [searchValue, setSearchValue] = React.useState("");
   const [isOpen, setIsOpen] = React.useState(false);
+  const localizedList = React.useMemo(() => {
+    const names = new Intl.DisplayNames([locale], { type: "region" });
+    return countryList.map((entry) =>
+      entry.value
+        ? { ...entry, label: names.of(entry.value) || entry.label }
+        : entry,
+    );
+  }, [countryList, locale]);
 
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen} modal>
@@ -139,13 +150,13 @@ const CountrySelect = ({
                 }
               }, 0);
             }}
-            placeholder="Search country..."
+            placeholder={t.common.countrySearch}
           />
           <CommandList>
             <ScrollArea ref={scrollAreaRef} className="h-72">
-              <CommandEmpty>No country found.</CommandEmpty>
+              <CommandEmpty>{t.common.countryEmpty}</CommandEmpty>
               <CommandGroup>
-                {countryList.map(({ value, label }) =>
+                {localizedList.map(({ value, label }) =>
                   value ? (
                     <CountrySelectOption
                       key={value}
@@ -190,7 +201,7 @@ const CountrySelectOption = ({
       <span className="flex-1 text-sm">{countryName}</span>
       <span className="text-sm text-foreground/50">{`+${RPNInput.getCountryCallingCode(country)}`}</span>
       <CheckIcon
-        className={`ml-auto size-4 ${country === selectedCountry ? "opacity-100" : "opacity-0"}`}
+        className={`ms-auto size-4 ${country === selectedCountry ? "opacity-100" : "opacity-0"}`}
       />
     </CommandItem>
   );

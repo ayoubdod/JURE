@@ -1048,6 +1048,13 @@ export default function CaseTypeWorkspace({ kind }: CaseTypeWorkspaceProps) {
           setPageSize(n);
           setPage(1);
         }}
+        paginationItemLabel={
+          kind === 'CONSULTATION'
+            ? copy.paginationLabel
+            : kind === 'LITIGATION'
+              ? copy.paginationLabel
+              : t.sidebar.administrative
+        }
         holderRef={setHolderEl}
         mobileList={mobileList}
         toolbarEnd={adminViewToggle}

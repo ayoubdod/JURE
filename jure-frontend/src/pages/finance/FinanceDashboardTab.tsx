@@ -30,7 +30,7 @@ export const FinanceDashboardTab: React.FC<Props> = ({
   onOpenCase,
   tvaStatus,
 }) => {
-  const { t } = useAppTranslation();
+  const { t, tf } = useAppTranslation();
   const [receivables, setReceivables] = useState<API.FinanceReceivables | null>(null);
 
   useEffect(() => {
@@ -65,28 +65,28 @@ export const FinanceDashboardTab: React.FC<Props> = ({
     <div className="space-y-6">
       {receivables ? (
         <div className="rounded-xl border border-slate-200/90 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950">
-          <h3 className="mb-3 text-sm font-semibold text-slate-900 dark:text-white">Créances (receivables)</h3>
+          <h3 className="mb-3 text-sm font-semibold text-slate-900 dark:text-white">{t.finance.receivables.title}</h3>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 text-[13px]">
             <div>
-              <p className="text-slate-500">Facturé</p>
+              <p className="text-slate-500">{t.finance.receivables.invoiced}</p>
               <p className="font-semibold tabular-nums">{formatMAD(receivables.total_invoiced)}</p>
             </div>
             <div>
-              <p className="text-slate-500">Encaissé</p>
+              <p className="text-slate-500">{t.finance.receivables.collected}</p>
               <p className="font-semibold tabular-nums">{formatMAD(receivables.total_collected)}</p>
             </div>
             <div>
-              <p className="text-slate-500">Outstanding</p>
+              <p className="text-slate-500">{t.finance.receivables.outstanding}</p>
               <p className="font-semibold tabular-nums">{formatMAD(receivables.total_outstanding)}</p>
             </div>
             <div>
-              <p className="text-slate-500">En retard</p>
+              <p className="text-slate-500">{t.finance.receivables.overdue}</p>
               <p className="font-semibold tabular-nums text-red-600">{formatMAD(receivables.total_overdue)}</p>
             </div>
           </div>
           {aging ? (
             <div className="mt-4 flex flex-wrap gap-2 text-[11px] text-slate-600 dark:text-slate-400">
-              <span>Current: {formatMAD(aging.CURRENT)}</span>
+              <span>{tf(t.finance.receivables.agingCurrent, { amount: formatMAD(aging.CURRENT) })}</span>
               <span>1–30: {formatMAD(aging['1_30'])}</span>
               <span>31–60: {formatMAD(aging['31_60'])}</span>
               <span>61–90: {formatMAD(aging['61_90'])}</span>
@@ -94,7 +94,7 @@ export const FinanceDashboardTab: React.FC<Props> = ({
             </div>
           ) : null}
           {receivables.total_outstanding === 0 ? (
-            <p className="mt-3 text-[13px] text-slate-500">No outstanding receivables.</p>
+            <p className="mt-3 text-[13px] text-slate-500">{t.finance.receivables.noneOutstanding}</p>
           ) : null}
         </div>
       ) : null}

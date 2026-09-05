@@ -380,6 +380,26 @@ class DashboardOverviewAPITest(APITestCase):
         for key in ("announcement", "recent_cases", "today_tasks", "recent_activity", "kpis"):
             self.assertIn(key, data)
 
+    def test_overview_activity_includes_kind_title_and_timestamp(self):
+        _create_task(
+            self.cabinet,
+            title="File brief",
+            due_date=timezone.localdate(),
+            status_value=Task.TaskStatus.DONE,
+        )
+        response = self.api.get(self.url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        completed = next(
+            item
+            for item in response.json()["recent_activity"]
+            if item.get("kind") == "task_completed"
+        )
+        self.assertEqual(completed["title"], "File brief")
+        self.assertIn("Task completed:", completed["message"])
+        self.assertEqual(completed["icon"], "CheckSquare")
+        self.assertTrue(completed["at"])
+        self.assertTrue(completed["ago"])
+
     def test_overview_tenant_isolation_via_api(self):
         other_user, other_cab = _create_cabinet_lawyer(
             "other-api@test.com", "+33630000002", "Other"

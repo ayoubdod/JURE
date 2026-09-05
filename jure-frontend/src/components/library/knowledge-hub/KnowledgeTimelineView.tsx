@@ -1,5 +1,6 @@
 import React, { memo, useMemo } from 'react';
 import { cn } from '@/lib/utils';
+import { intlLocale, useAppTranslation } from '@/i18n';
 import { riskStyles } from './knowledgeUtils';
 import type { EnrichedDocument } from './types';
 
@@ -14,6 +15,8 @@ const KnowledgeTimelineView = memo(function KnowledgeTimelineView({
   selectedId,
   onSelect,
 }: Props) {
+  const { t, lang } = useAppTranslation();
+  const kh = t.library.knowledgeHub;
   const groups = useMemo(() => {
     const map = new Map<string, EnrichedDocument[]>();
     const sorted = [...items].sort(
@@ -21,15 +24,15 @@ const KnowledgeTimelineView = memo(function KnowledgeTimelineView({
     );
     for (const doc of sorted) {
       const d = new Date(doc.modified);
-      const key = d.toLocaleDateString(undefined, {
+      const key = new Intl.DateTimeFormat(intlLocale(lang), {
         month: 'long',
         year: 'numeric',
-      });
+      }).format(d);
       if (!map.has(key)) map.set(key, []);
       map.get(key)!.push(doc);
     }
     return Array.from(map.entries());
-  }, [items]);
+  }, [items, lang]);
 
   return (
     <div className="space-y-8 px-1 py-2 sm:px-2">
@@ -59,10 +62,10 @@ const KnowledgeTimelineView = memo(function KnowledgeTimelineView({
                 >
                   <div className="flex flex-wrap items-center gap-2">
                     <time className="text-[11px] tabular-nums text-slate-400">
-                      {new Date(doc.modified).toLocaleDateString(undefined, {
+                      {new Intl.DateTimeFormat(intlLocale(lang), {
                         month: 'short',
                         day: 'numeric',
-                      })}
+                      }).format(new Date(doc.modified))}
                     </time>
                     <span
                       className={cn(
@@ -70,11 +73,11 @@ const KnowledgeTimelineView = memo(function KnowledgeTimelineView({
                         riskStyles(doc.insight.riskLevel)
                       )}
                     >
-                      {doc.insight.riskLevel}
+                      {kh.risk[doc.insight.riskLevel]}
                     </span>
                     {doc.insight.aiIndexed && (
                       <span className="text-[10px] font-medium text-[#64499D] dark:text-[#CFC2FF]">
-                        Indexed
+                        {kh.indexed}
                       </span>
                     )}
                   </div>

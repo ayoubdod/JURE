@@ -10,11 +10,14 @@ import type { JuriaMode } from '@/types/juria';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { getJuriaErrorMessage } from '@/utils/juriaErrors';
+import { useAppTranslation } from '@/i18n';
 
 export function JuriaFloatingAssistant() {
   const location = useLocation();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { t, tf, dir } = useAppTranslation();
+  const fab = t.juria.fab;
   const [open, setOpen] = useState(false);
 
   const activeId = useJuriaStore((s) => s.activeConversationId);
@@ -51,7 +54,7 @@ export function JuriaFloatingAssistant() {
       await sendMessage(id, text || (file ? `📎 ${file.name}` : ''), file ?? undefined);
     } catch (e) {
       toast({
-        title: 'Erreur',
+        title: t.common.error,
         description: getJuriaErrorMessage(e),
         variant: 'destructive',
       });
@@ -65,7 +68,7 @@ export function JuriaFloatingAssistant() {
       setOpen(true);
     } catch (e) {
       toast({
-        title: 'Erreur',
+        title: t.common.error,
         description: getJuriaErrorMessage(e),
         variant: 'destructive',
       });
@@ -75,26 +78,26 @@ export function JuriaFloatingAssistant() {
   const lastAssistant = conv?.messages.filter((m) => m.role === 'assistant').pop();
 
   return (
-    <div className="pointer-events-none fixed bottom-0 right-0 z-[45] p-0">
-      <div className="pointer-events-auto flex flex-col items-end gap-3 pr-3 sm:pr-6 pb-[max(1rem,env(safe-area-inset-bottom))] sm:pb-6">
+    <div className="pointer-events-none fixed bottom-0 end-0 z-[45] p-0">
+      <div className="pointer-events-auto flex flex-col items-end gap-3 pe-3 sm:pe-6 pb-[max(1rem,env(safe-area-inset-bottom))] sm:pb-6">
         {open && (
           <div className="flex h-[min(480px,70dvh)] w-[min(360px,calc(100vw-1.5rem))] flex-col overflow-hidden rounded-[20px] border border-slate-200/90 bg-white shadow-[0_12px_40px_-12px_rgba(15,23,42,0.35)] dark:border-slate-800 dark:bg-slate-950">
             <div className="flex shrink-0 items-start justify-between gap-2 border-b border-slate-100 px-4 py-3 dark:border-slate-800">
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-semibold text-slate-900 dark:text-white">Juria</span>
+                  <span className="text-sm font-semibold text-slate-900 dark:text-white">{t.juria.name}</span>
                   <span className="rounded-full bg-indigo-100 px-2 py-0.5 text-[10px] font-semibold text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">
-                    Beta
+                    {t.juria.beta}
                   </span>
                 </div>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400">Votre assistant juridique marocain</p>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400">{t.juria.tagline}</p>
                 {fabCase && (
                   <p className="mt-1 text-[10px] text-indigo-600 dark:text-indigo-400">
-                    Contexte: Dossier #{fabCase.reference ?? fabCase.id} actif
+                    {tf(fab.matterContext, { reference: fabCase.reference ?? fabCase.id })}
                   </p>
                 )}
               </div>
-              <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => setOpen(false)} aria-label="Fermer">
+              <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => setOpen(false)} aria-label={t.common.close}>
                 <X className="h-4 w-4" />
               </Button>
             </div>
@@ -106,19 +109,19 @@ export function JuriaFloatingAssistant() {
                 </div>
               )}
               <div className="space-y-2">
-                <p className="text-[10px] font-medium uppercase tracking-wide text-slate-400">Actions rapides</p>
+                <p className="text-[10px] font-medium uppercase tracking-wide text-slate-400">{fab.quickActions}</p>
                 <div className="flex flex-col gap-1.5">
-                  <Button variant="outline" size="sm" className="h-8 justify-start text-xs" onClick={() => void quick('Analyser un contrat', 'CONTRACT_ANALYSIS')}>
-                    📄 Analyser un document
+                  <Button variant="outline" size="sm" className="h-8 justify-start text-xs" onClick={() => void quick(fab.analyzePrompt, 'CONTRACT_ANALYSIS')}>
+                    📄 {fab.analyzeDoc}
                   </Button>
-                  <Button variant="outline" size="sm" className="h-8 justify-start text-xs" onClick={() => void quick('Recherche rapide sur ', 'LEGAL_RESEARCH')}>
-                    🔍 Recherche rapide
+                  <Button variant="outline" size="sm" className="h-8 justify-start text-xs" onClick={() => void quick(fab.searchPrompt, 'LEGAL_RESEARCH')}>
+                    🔍 {fab.quickSearch}
                   </Button>
-                  <Button variant="outline" size="sm" className="h-8 justify-start text-xs" onClick={() => void quick('Rédiger un acte juridique : ', 'DOCUMENT_DRAFTING')}>
-                    📝 Rédiger un acte
+                  <Button variant="outline" size="sm" className="h-8 justify-start text-xs" onClick={() => void quick(fab.draftPrompt, 'DOCUMENT_DRAFTING')}>
+                    📝 {fab.draftAct}
                   </Button>
                   <Button variant="outline" size="sm" className="h-8 justify-start text-xs" onClick={() => void quick('', 'CHAT')}>
-                    💬 Poser une question
+                    💬 {fab.askQuestion}
                   </Button>
                 </div>
               </div>
@@ -135,7 +138,7 @@ export function JuriaFloatingAssistant() {
                     await create(m, link);
                   } catch (e) {
                     toast({
-                      title: 'Erreur',
+                      title: t.common.error,
                       description: getJuriaErrorMessage(e),
                       variant: 'destructive',
                     });
@@ -152,7 +155,7 @@ export function JuriaFloatingAssistant() {
               onLinkCase={(c) => {
                 void createLinkedConversation(c).catch((e) =>
                   toast({
-                    title: 'Impossible de lier',
+                    title: t.juria.workspace.overview.linkFailed,
                     description: getJuriaErrorMessage(e),
                     variant: 'destructive',
                   })
@@ -176,7 +179,7 @@ export function JuriaFloatingAssistant() {
                 }}
               >
                 <ExternalLink className="h-3.5 w-3.5" />
-                Ouvrir Juria complet
+                {fab.openFull}
               </Button>
             </div>
           </div>
@@ -191,15 +194,15 @@ export function JuriaFloatingAssistant() {
                 'relative flex h-[52px] w-[52px] items-center justify-center overflow-hidden rounded-[14px] bg-white shadow-[0_4px_16px_rgba(100,73,157,0.35)] transition hover:brightness-105',
                 'animate-juria-fab-breathe'
               )}
-              aria-label="Demander à Juria"
+              aria-label={fab.askAria}
             >
               <img src="/images/juria-icon.png" alt="" className="h-full w-full object-cover" />
               {processingId && (
-                <span className="absolute right-1.5 top-1.5 h-2.5 w-2.5 animate-pulse rounded-full bg-amber-400 ring-2 ring-white" />
+                <span className="absolute end-1.5 top-1.5 h-2.5 w-2.5 animate-pulse rounded-full bg-amber-400 ring-2 ring-white" />
               )}
             </button>
           </TooltipTrigger>
-          <TooltipContent side="left">Demander à Juria</TooltipContent>
+          <TooltipContent side={dir === 'rtl' ? 'right' : 'left'}>{fab.askAria}</TooltipContent>
         </Tooltip>
       </div>
     </div>

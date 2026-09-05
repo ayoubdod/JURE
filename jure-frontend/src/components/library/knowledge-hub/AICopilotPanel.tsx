@@ -15,8 +15,9 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { useAppTranslation } from '@/i18n';
 import { riskStyles } from './knowledgeUtils';
-import type { EnrichedDocument } from './types';
+import type { EnrichedDocument, RiskLevel } from './types';
 
 type Props = {
   document: EnrichedDocument | null;
@@ -52,10 +53,14 @@ const AICopilotPanel = memo(function AICopilotPanel({
   onOpen,
   className,
 }: Props) {
+  const { t, tf } = useAppTranslation();
+  const kh = t.library.knowledgeHub;
+  const riskLabel = (level: RiskLevel) => kh.risk[level] ?? level;
+
   if (!doc) {
     return (
       <aside
-        aria-label="AI Copilot"
+        aria-label={kh.copilotAria}
         className={cn(
           'flex h-full flex-col border-l border-slate-200/80 bg-white/70 dark:border-slate-800 dark:bg-slate-950/70',
           className
@@ -66,8 +71,8 @@ const AICopilotPanel = memo(function AICopilotPanel({
             <Brain className="h-3.5 w-3.5" />
           </div>
           <div>
-            <p className="text-[13px] font-semibold text-slate-900 dark:text-slate-50">AI Copilot</p>
-            <p className="text-[10px] text-slate-400">Select knowledge to inspect</p>
+            <p className="text-[13px] font-semibold text-slate-900 dark:text-slate-50">{t.library.copilot}</p>
+            <p className="text-[10px] text-slate-400">{kh.copilotEmptyHint}</p>
           </div>
         </div>
         <div className="flex flex-1 flex-col items-center justify-center gap-3 px-6 text-center">
@@ -75,11 +80,10 @@ const AICopilotPanel = memo(function AICopilotPanel({
             <Sparkles className="h-5 w-5 text-[#64499D]/70" />
           </div>
           <p className="text-[13px] font-medium text-slate-700 dark:text-slate-200">
-            Intelligence awaits selection
+            {kh.copilotEmptyTitle}
           </p>
           <p className="text-[11px] leading-relaxed text-slate-500">
-            Summaries, entities, risks, clauses, and related documents appear when you select an
-            asset.
+            {kh.copilotEmptyBody}
           </p>
         </div>
       </aside>
@@ -90,7 +94,7 @@ const AICopilotPanel = memo(function AICopilotPanel({
 
   return (
     <aside
-      aria-label="AI Copilot"
+        aria-label={kh.copilotAria}
       className={cn(
         'flex h-full min-h-0 flex-col border-l border-slate-200/80 bg-white/80 backdrop-blur-xl dark:border-slate-800 dark:bg-slate-950/80',
         className
@@ -102,7 +106,7 @@ const AICopilotPanel = memo(function AICopilotPanel({
             <Brain className="h-3.5 w-3.5" />
           </div>
           <div className="min-w-0">
-            <p className="text-[13px] font-semibold text-slate-900 dark:text-slate-50">AI Copilot</p>
+            <p className="text-[13px] font-semibold text-slate-900 dark:text-slate-50">{kh.copilotAria}</p>
             <p className="truncate text-[10px] text-slate-400">{doc.title}</p>
           </div>
         </div>
@@ -111,7 +115,7 @@ const AICopilotPanel = memo(function AICopilotPanel({
             type="button"
             onClick={onClose}
             className="rounded-md p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 lg:hidden"
-            aria-label="Close AI panel"
+            aria-label={kh.copilotClose}
           >
             <X className="h-4 w-4" />
           </button>
@@ -122,7 +126,7 @@ const AICopilotPanel = memo(function AICopilotPanel({
         <div className="rounded-xl border border-[#64499D]/15 bg-gradient-to-br from-[#64499D]/08 to-transparent p-3">
           <div className="mb-2 flex items-center justify-between gap-2">
             <span className="text-[10px] font-semibold uppercase tracking-wider text-[#64499D] dark:text-[#CFC2FF]">
-              Confidence {insight.confidence}%
+              {tf(kh.confidence, { n: insight.confidence })}
             </span>
             <span
               className={cn(
@@ -130,7 +134,7 @@ const AICopilotPanel = memo(function AICopilotPanel({
                 riskStyles(insight.riskLevel)
               )}
             >
-              {insight.riskLevel} risk
+              {tf(kh.riskBadge, { level: riskLabel(insight.riskLevel) })}
             </span>
           </div>
           <p className="text-[12px] leading-relaxed text-slate-600 dark:text-slate-300">
@@ -144,17 +148,17 @@ const AICopilotPanel = memo(function AICopilotPanel({
               onClick={() => onOpen(doc)}
             >
               <FileText className="h-3 w-3" />
-              Open preview
+              {kh.openPreview}
             </Button>
           )}
         </div>
 
-        <Section title="Entities detected" icon={Building2}>
+        <Section title={kh.entitiesDetected} icon={Building2}>
           <div className="space-y-2">
             {insight.entities.people.length > 0 && (
               <div>
                 <p className="mb-1 flex items-center gap-1 text-[10px] text-slate-400">
-                  <User className="h-3 w-3" /> People
+                  <User className="h-3 w-3" /> {kh.people}
                 </p>
                 <div className="flex flex-wrap gap-1">
                   {insight.entities.people.map((p) => (
@@ -171,7 +175,7 @@ const AICopilotPanel = memo(function AICopilotPanel({
             {insight.entities.companies.length > 0 && (
               <div>
                 <p className="mb-1 flex items-center gap-1 text-[10px] text-slate-400">
-                  <Building2 className="h-3 w-3" /> Companies
+                  <Building2 className="h-3 w-3" /> {kh.companies}
                 </p>
                 <div className="flex flex-wrap gap-1">
                   {insight.entities.companies.map((c) => (
@@ -188,7 +192,7 @@ const AICopilotPanel = memo(function AICopilotPanel({
             {insight.entities.dates.length > 0 && (
               <div>
                 <p className="mb-1 flex items-center gap-1 text-[10px] text-slate-400">
-                  <Calendar className="h-3 w-3" /> Dates
+                  <Calendar className="h-3 w-3" /> {kh.dates}
                 </p>
                 <div className="flex flex-wrap gap-1">
                   {insight.entities.dates.map((d) => (
@@ -206,26 +210,26 @@ const AICopilotPanel = memo(function AICopilotPanel({
               !insight.entities.companies.length &&
               !insight.entities.dates.length && (
                 <p className="text-[11px] text-slate-500">
-                  Deeper entity extraction pending full AI index.
+                  {kh.entitiesPending}
                 </p>
               )}
           </div>
         </Section>
 
-        <Section title="Risks & deadlines" icon={AlertTriangle}>
+        <Section title={kh.risksDeadlines} icon={AlertTriangle}>
           <ul className="space-y-1.5 text-[12px] text-slate-600 dark:text-slate-300">
             <li className="flex gap-2">
               <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-amber-500" />
-              Risk posture: {insight.riskLevel}
+              {tf(kh.riskPosture, { level: riskLabel(insight.riskLevel) })}
             </li>
             <li className="flex gap-2">
               <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-[#64499D]" />
-              Review recommended before next matter milestone
+              {kh.reviewRecommended}
             </li>
           </ul>
         </Section>
 
-        <Section title="Key clauses" icon={ListChecks}>
+        <Section title={kh.keyClauses} icon={ListChecks}>
           <ul className="space-y-1">
             {insight.keyClauses.map((clause) => (
               <li
@@ -238,7 +242,7 @@ const AICopilotPanel = memo(function AICopilotPanel({
           </ul>
         </Section>
 
-        <Section title="Smart tags" icon={Tags}>
+        <Section title={kh.smartTags} icon={Tags}>
           <div className="flex flex-wrap gap-1">
             {insight.smartTags.map((tag) => (
               <span
@@ -251,7 +255,7 @@ const AICopilotPanel = memo(function AICopilotPanel({
           </div>
         </Section>
 
-        <Section title="Suggested actions" icon={Sparkles}>
+        <Section title={kh.suggestedActions} icon={Sparkles}>
           <ul className="space-y-1">
             {insight.suggestedActions.map((action) => (
               <li key={action}>
@@ -266,13 +270,13 @@ const AICopilotPanel = memo(function AICopilotPanel({
           </ul>
         </Section>
 
-        <Section title="Related & timeline" icon={GitBranch}>
+        <Section title={kh.relatedTimeline} icon={GitBranch}>
           <p className="text-[12px] leading-relaxed text-slate-500">
-            <Link2 className="mr-1 inline h-3 w-3" />
-            {insight.relatedHint}. Generated timeline available after preview open.
+            <Link2 className="me-1 inline h-3 w-3" />
+            {tf(kh.relatedAfterPreview, { hint: insight.relatedHint })}
           </p>
           <p className="mt-1 text-[11px] text-slate-400">
-            {insight.references} citation references · Knowledge score {insight.knowledgeScore}
+            {tf(kh.citationsScore, { n: insight.references, score: insight.knowledgeScore })}
           </p>
         </Section>
       </div>

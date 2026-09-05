@@ -349,7 +349,7 @@ const AppointmentsPage: React.FC = () => {
           isLoading={loading}
           onPageChange={setPage}
           onPageSizeChange={handlePageSize}
-          itemLabel={t.sidebar.appointment.toLowerCase()}
+          itemLabel={t.sidebar.appointment}
         />
       )}
 

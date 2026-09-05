@@ -10,19 +10,21 @@ import {
   Network,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { DocumentCategory } from '@/utils/constants';
+import { useAppTranslation } from '@/i18n';
 import type { EnrichedDocument } from './types';
 
-const CAPABILITIES = [
-  { icon: ScanSearch, title: 'Semantic Search', desc: 'Meaning-first retrieval across the firm corpus' },
-  { icon: FileSearch, title: 'Clause Extraction', desc: 'Surface governing law, liability, and IP clauses' },
-  { icon: ShieldAlert, title: 'Risk Detection', desc: 'Flag high-exposure language and deadlines' },
-  { icon: GitCompare, title: 'Document Comparison', desc: 'Diff versions and detect near-duplicates' },
-  { icon: Copy, title: 'OCR & Translation', desc: 'Index scans and normalize multilingual assets' },
-  { icon: Tags, title: 'Smart Tags', desc: 'Auto-classify folders, tags, and related matters' },
-  { icon: Network, title: 'Citation Graph', desc: 'Trace references between contracts and cases' },
-  { icon: Languages, title: 'Version Intelligence', desc: 'Track lineage and superseded instruments' },
-];
+const CAPABILITY_ICONS = {
+  semanticSearch: ScanSearch,
+  clauseExtraction: FileSearch,
+  riskDetection: ShieldAlert,
+  documentComparison: GitCompare,
+  ocrTranslation: Copy,
+  smartTags: Tags,
+  citationGraph: Network,
+  versionIntelligence: Languages,
+} as const;
+
+type CapabilityKey = keyof typeof CAPABILITY_ICONS;
 
 type Props = {
   items: EnrichedDocument[];
@@ -30,6 +32,9 @@ type Props = {
 };
 
 const KnowledgeAIView = memo(function KnowledgeAIView({ items, onSelect }: Props) {
+  const { t, tf, enumLabel } = useAppTranslation();
+  const kh = t.library.knowledgeHub;
+  const capabilityKeys = Object.keys(CAPABILITY_ICONS) as CapabilityKey[];
   const clusters = useMemo(() => {
     const byCat = new Map<string, EnrichedDocument[]>();
     for (const doc of items) {
@@ -40,7 +45,7 @@ const KnowledgeAIView = memo(function KnowledgeAIView({ items, onSelect }: Props
     return Array.from(byCat.entries())
       .map(([category, docs]) => ({
         category,
-        label: DocumentCategory.getLabel(category) || category,
+        label: enumLabel('documentCategory', category) || category,
         docs: docs.sort((a, b) => b.insight.knowledgeScore - a.insight.knowledgeScore).slice(0, 4),
         avgScore: Math.round(
           docs.reduce((s, d) => s + d.insight.knowledgeScore, 0) / Math.max(docs.length, 1)
@@ -48,7 +53,7 @@ const KnowledgeAIView = memo(function KnowledgeAIView({ items, onSelect }: Props
         riskHigh: docs.filter((d) => d.insight.riskLevel === 'high').length,
       }))
       .sort((a, b) => b.docs.length - a.docs.length);
-  }, [items]);
+  }, [items, enumLabel]);
 
   const suggestions = useMemo(() => {
     const pending = items.filter((d) => d.insight.pendingClassification).slice(0, 3);
@@ -60,27 +65,31 @@ const KnowledgeAIView = memo(function KnowledgeAIView({ items, onSelect }: Props
     <div className="space-y-6">
       <section>
         <h3 className="mb-3 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">
-          AI capabilities
+          {kh.aiCapabilities}
         </h3>
         <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
-          {CAPABILITIES.map(({ icon: Icon, title, desc }) => (
+          {capabilityKeys.map((key) => {
+            const Icon = CAPABILITY_ICONS[key];
+            const copy = kh.capabilities[key];
+            return (
             <div
-              key={title}
+              key={key}
               className="rounded-xl border border-slate-200/80 bg-white/70 p-3 dark:border-slate-800 dark:bg-slate-950/60"
             >
               <div className="mb-2 flex h-7 w-7 items-center justify-center rounded-lg bg-[#64499D]/10 text-[#64499D] dark:text-[#CFC2FF]">
                 <Icon className="h-3.5 w-3.5" />
               </div>
-              <p className="text-[12px] font-semibold text-slate-900 dark:text-slate-50">{title}</p>
-              <p className="mt-0.5 text-[11px] leading-relaxed text-slate-500">{desc}</p>
+              <p className="text-[12px] font-semibold text-slate-900 dark:text-slate-50">{copy.title}</p>
+              <p className="mt-0.5 text-[11px] leading-relaxed text-slate-500">{copy.desc}</p>
             </div>
-          ))}
+            );
+          })}
         </div>
       </section>
 
       <section>
         <h3 className="mb-3 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">
-          Semantic clusters
+          {kh.semanticClusters}
         </h3>
         <div className="grid gap-3 lg:grid-cols-2">
           {clusters.map((cluster) => (
@@ -94,8 +103,8 @@ const KnowledgeAIView = memo(function KnowledgeAIView({ items, onSelect }: Props
                     {cluster.label}
                   </p>
                   <p className="text-[11px] text-slate-400">
-                    {cluster.docs.length} shown · avg score {cluster.avgScore}
-                    {cluster.riskHigh > 0 ? ` · ${cluster.riskHigh} high risk` : ''}
+                    {tf(kh.clusterMeta, { shown: cluster.docs.length, score: cluster.avgScore })}
+                    {cluster.riskHigh > 0 ? tf(kh.clusterHighRisk, { n: cluster.riskHigh }) : ''}
                   </p>
                 </div>
               </div>
@@ -128,11 +137,11 @@ const KnowledgeAIView = memo(function KnowledgeAIView({ items, onSelect }: Props
       <section className="grid gap-3 sm:grid-cols-2">
         <div className="rounded-xl border border-amber-500/20 bg-amber-500/[0.04] p-4">
           <p className="text-[12px] font-semibold text-amber-800 dark:text-amber-300">
-            Suggested classifications
+            {kh.suggestedClassifications}
           </p>
           <ul className="mt-2 space-y-1.5">
             {suggestions.pending.length === 0 ? (
-              <li className="text-[11px] text-slate-500">All assets classified</li>
+              <li className="text-[11px] text-slate-500">{kh.allClassified}</li>
             ) : (
               suggestions.pending.map((doc) => (
                 <li key={doc.id}>
@@ -150,11 +159,11 @@ const KnowledgeAIView = memo(function KnowledgeAIView({ items, onSelect }: Props
         </div>
         <div className="rounded-xl border border-rose-500/20 bg-rose-500/[0.04] p-4">
           <p className="text-[12px] font-semibold text-rose-800 dark:text-rose-300">
-            Risk watchlist
+            {kh.riskWatchlist}
           </p>
           <ul className="mt-2 space-y-1.5">
             {suggestions.risky.length === 0 ? (
-              <li className="text-[11px] text-slate-500">No elevated risks detected</li>
+              <li className="text-[11px] text-slate-500">{kh.noElevatedRisks}</li>
             ) : (
               suggestions.risky.map((doc) => (
                 <li key={doc.id}>

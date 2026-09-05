@@ -382,6 +382,9 @@ export interface AppMessages {
       submit: string;
       createdTitle: string;
       createdDescription: string;
+      tagPlaceholder: string;
+      tagDuplicate: string;
+      tagInvalid: string;
     };
     update: {
       title: string;
@@ -585,6 +588,8 @@ export interface AppMessages {
       notificationUpdatedDesc: string;
       notificationEnabled: string;
       notificationDisabled: string;
+      notificationsUnsupported: string;
+      notificationPermissionBlocked: string;
       digestEnabledTitle: string;
       digestEnabledDesc: string;
       preferencesSavedTitle: string;
@@ -800,6 +805,21 @@ export interface AppMessages {
       setupSentTitle: string;
       setupSentDesc: string;
       inviteFailed: string;
+      loadFailed: string;
+      updateFailed: string;
+    };
+    rolePage: {
+      overviewTitle: string;
+      overviewDesc: string;
+      membersCount: string;
+      permissionsLabel: string;
+      permissionsEnabled: string;
+      membersTitle: string;
+      membersDesc: string;
+      empty: string;
+      detailsTitle: string;
+      detailsDesc: string;
+      permissionsCount: string;
     };
     resendDialog: {
       title: string;
@@ -1091,6 +1111,67 @@ export interface AppMessages {
       readerAddedDate: string;
       readerAddedBy: string;
     };
+    knowledgeHub: {
+      graphHint: string;
+      graphAria: string;
+      hubNode: string;
+      showingAffinity: string;
+      copilotAria: string;
+      copilotEmptyHint: string;
+      copilotEmptyTitle: string;
+      copilotEmptyBody: string;
+      copilotClose: string;
+      confidence: string;
+      riskBadge: string;
+      openPreview: string;
+      entitiesDetected: string;
+      people: string;
+      companies: string;
+      dates: string;
+      entitiesPending: string;
+      risksDeadlines: string;
+      riskPosture: string;
+      reviewRecommended: string;
+      keyClauses: string;
+      smartTags: string;
+      suggestedActions: string;
+      relatedTimeline: string;
+      relatedAfterPreview: string;
+      citationsScore: string;
+      indexed: string;
+      metricsAria: string;
+      metricTotal: string;
+      metricAiIndexed: string;
+      metricFolders: string;
+      metricPending: string;
+      metricUpdated: string;
+      metricScore: string;
+      aiCapabilities: string;
+      semanticClusters: string;
+      clusterMeta: string;
+      clusterHighRisk: string;
+      suggestedClassifications: string;
+      allClassified: string;
+      riskWatchlist: string;
+      noElevatedRisks: string;
+      collectionAiGenerated: string;
+      collectionRecent: string;
+      risk: {
+        high: string;
+        medium: string;
+        low: string;
+      };
+      capabilities: {
+        semanticSearch: { title: string; desc: string };
+        clauseExtraction: { title: string; desc: string };
+        riskDetection: { title: string; desc: string };
+        documentComparison: { title: string; desc: string };
+        ocrTranslation: { title: string; desc: string };
+        smartTags: { title: string; desc: string };
+        citationGraph: { title: string; desc: string };
+        versionIntelligence: { title: string; desc: string };
+      };
+    };
   };
   profile: {
     loading: string;
@@ -1199,6 +1280,19 @@ export interface AppMessages {
     toggleTheme: string;
     selectOption: string;
     selectError: string;
+    pagination: {
+      showing: string;
+      pageSize: string;
+      perPage: string;
+      navAria: string;
+      previousAria: string;
+      nextAria: string;
+      morePages: string;
+      defaultItems: string;
+    };
+    countrySearch: string;
+    countryEmpty: string;
+    selectCountry: string;
   };
   validation: {
     required: string;
@@ -1265,6 +1359,10 @@ export interface AppMessages {
     description: string;
   };
   sessionReplaced: {
+    title: string;
+    description: string;
+  };
+  sessionExpired: {
     title: string;
     description: string;
   };
@@ -2018,6 +2116,21 @@ export interface AppMessages {
         litigationOptionHint: string;
         administrativeOptionHint: string;
         followUpCreated: string;
+        convertExtras: {
+          notSet: string;
+          coCounselHint: string;
+          addCoCounsel: string;
+          addDeadline: string;
+          addDocument: string;
+          done: string;
+          memberFallback: string;
+          jurisdiction: string;
+          chamber: string;
+          copiedSection: string;
+          completeSection: string;
+          newCaseType: string;
+          deadlinePair: string;
+        };
       };
       sections: {
         basicInfo: string;
@@ -2689,6 +2802,11 @@ export interface AppMessages {
       unassigned: string;
       notFound: string;
       attachments: string;
+      editTitle: string;
+      editSubtitle: string;
+      backToTasks: string;
+      assignment: string;
+      clientNamePlaceholder: string;
     };
     validation: {
       titleRequired: string;
@@ -3074,6 +3192,7 @@ export interface AppMessages {
       openAria: string;
       loading: string;
       loadError: string;
+      noClient: string;
     };
     todayTasks: {
       title: string;
@@ -3091,6 +3210,11 @@ export interface AppMessages {
       loading: string;
       loadError: string;
       hoursAgo: string;
+      today: string;
+      taskCompleted: string;
+      clientAdded: string;
+      documentUploaded: string;
+      clientFallback: string;
     };
     priorityCritical: string;
     matterClose: {
@@ -3832,6 +3956,37 @@ export interface AppMessages {
       thresholdCrossed: string;
       exemptTooltip: string;
     };
+    tvaWidget: {
+      title: string;
+      currentRegime: string;
+      regimeLiable: string;
+      cumulativeCa: string;
+      legalThreshold: string;
+      firmCreated: string;
+      legalRef: string;
+      disclaimer: string;
+    };
+    charts: {
+      monthlyTitle: string;
+      billed: string;
+      collected: string;
+      byLawyerTitle: string;
+      byLawyerEmpty: string;
+    };
+    thresholdBanner: {
+      title: string;
+      body: string;
+      viewFinance: string;
+    };
+    receivables: {
+      title: string;
+      invoiced: string;
+      collected: string;
+      outstanding: string;
+      overdue: string;
+      agingCurrent: string;
+      noneOutstanding: string;
+    };
     empty: {
       title: string;
       description: string;
@@ -3908,11 +4063,84 @@ export interface AppMessages {
       pdfPreviewFailed: string;
       accessDenied: string;
       invoiceNotFound: string;
+      deleteFeeConfirm: string;
+      deleteExpenseConfirm: string;
+      deletePaymentConfirm: string;
+      expenseSaved: string;
+      expenseSaveFailed: string;
+      loadCaseFailed: string;
     };
     feeTypes: {
       FIXED: string;
       HOURLY: string;
       SUCCESS_FEE: string;
+    };
+    feeStatuses: {
+      PENDING: string;
+      INVOICED: string;
+      PAID: string;
+      PARTIAL: string;
+      PARTIALLY_PAID: string;
+      CANCELLED: string;
+    };
+    expenseCategories: {
+      TRAVEL: string;
+      COURT: string;
+      EXPERT: string;
+      ADMIN: string;
+      OTHER: string;
+    };
+    caseTab: {
+      settled: string;
+      honoraires: string;
+      expenses: string;
+      invoiced: string;
+      paid: string;
+      net: string;
+      remaining: string;
+      remainingColon: string;
+      add: string;
+      addHonoraire: string;
+      addExpense: string;
+      addExpenseEmpty: string;
+      noHonoraires: string;
+      noExpenses: string;
+      noInvoices: string;
+      generateInvoice: string;
+      generateInvoiceEmpty: string;
+      paymentsTotal: string;
+      addPayment: string;
+      recordPayment: string;
+      noPayments: string;
+      taxAdvanceTitle: string;
+      taxAdvanceAmount: string;
+      noTaxAdvance: string;
+      billable: string;
+      nonBillable: string;
+      planned: string;
+      paidPct: string;
+      lawyer: string;
+      overdueDue: string;
+      dueDays: string;
+      dueInDays: string;
+      dueLabel: string;
+      tva20: string;
+      ttcLabel: string;
+      invoiceDetails: string;
+      linkedCase: string;
+      issued: string;
+      dueOn: string;
+      createdBy: string;
+      linkedPayments: string;
+      noLinkedPayments: string;
+      totalPaid: string;
+      remainingDue: string;
+      closeOut: string;
+      markPaid: string;
+      taxPaid: string;
+      taxUnpaid: string;
+      paymentDate: string;
+      tvaExemptNote: string;
     };
     modals: {
       addPayment: {
@@ -3987,6 +4215,18 @@ export interface AppMessages {
         loadFailed: string;
         saveFailed: string;
         genericError: string;
+      };
+      addExpense: {
+        title: string;
+        description: string;
+        notes: string;
+        category: string;
+        amountMad: string;
+        date: string;
+        billable: string;
+        reimbursable: string;
+        receiptRef: string;
+        saving: string;
       };
     };
   };
@@ -4081,6 +4321,69 @@ export interface AppMessages {
       archiveFailed: string;
       deleteFailed: string;
       createFailed: string;
+      createLinkedFailed: string;
+      downloadFailed: string;
+      draftFailed: string;
+    };
+    slowHint: string;
+    conversationMenuAria: string;
+    generatedDocument: string;
+    generatedOn: string;
+    downloadDocx: string;
+    openLink: string;
+    pickDraftType: string;
+    generateDocument: string;
+    fab: {
+      matterContext: string;
+      quickActions: string;
+      analyzeDoc: string;
+      analyzePrompt: string;
+      quickSearch: string;
+      searchPrompt: string;
+      draftAct: string;
+      draftPrompt: string;
+      askQuestion: string;
+      openFull: string;
+      askAria: string;
+    };
+    casePanel: {
+      title: string;
+      hint: string;
+      openInJuria: string;
+    };
+    draftFields: {
+      bailleur: string;
+      bailleurPlaceholder: string;
+      preneur: string;
+      loyer: string;
+      duree: string;
+      destinataire: string;
+      objetLitige: string;
+      delai: string;
+      denomination: string;
+      capital: string;
+      siege: string;
+      mandant: string;
+      mandataire: string;
+      pouvoirs: string;
+      juridiction: string;
+      demandeur: string;
+      defendeur: string;
+      employeur: string;
+      salarie: string;
+      poste: string;
+      affaire: string;
+      demandes: string;
+      objetDoc: string;
+      details: string;
+    };
+    editor: {
+      list: string;
+      bold: string;
+      italic: string;
+      underline: string;
+      compareVersions: string;
+      editNote: string;
     };
     fileTooLarge: string;
     workspace: {

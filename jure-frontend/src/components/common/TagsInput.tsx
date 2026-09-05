@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { TagsInputClear, TagsInputInput, TagsInputItem, TagsInputLabel, TagsInputPrimitiveItemDelete, TagsInputPrimitiveItemText, TagsInputPrimitiveRoot } from '@/components/ui/tags-input';
+import { useAppTranslation } from '@/i18n';
 
 // Slug validation function
 const isValidSlug = (slug: string): boolean => {
@@ -22,6 +23,8 @@ type TagsInputProps = {
 
 const TagsInput = ({ value, onChange, setError, error }: TagsInputProps) => {
     const [inputValue, setInputValue] = useState('');
+    const { t } = useAppTranslation();
+    const tags = t.document.create;
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const newValue = e.target.value;
@@ -41,10 +44,10 @@ const TagsInput = ({ value, onChange, setError, error }: TagsInputProps) => {
                         setInputValue('');
                         setError?.('');
                     } else {
-                        setError?.('This slug already exists');
+                        setError?.(tags.tagDuplicate);
                     }
                 } else {
-                    setError('Invalid slug format. Use only lowercase letters, numbers, hyphens, and underscores. Cannot start or end with hyphen or underscore.');
+                    setError(tags.tagInvalid);
                 }
             }
         }
@@ -69,7 +72,7 @@ const TagsInput = ({ value, onChange, setError, error }: TagsInputProps) => {
                     ))
                 }
                 <TagsInputInput 
-                    placeholder='Enter tag (e.g., my-tag, my_tag, mytag123)' 
+                    placeholder={tags.tagPlaceholder} 
                     className='mt-2' 
                     value={inputValue}
                     onChange={handleInputChange}

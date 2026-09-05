@@ -3,8 +3,9 @@ import { Button } from '@/components/ui/button';
 import {
   Users, Briefcase, CheckSquare, Megaphone, Eye, ArrowRight,
   CalendarPlus, FolderPlus, ClipboardList, UserPlus, Clock,
-  ShieldAlert, BookOpenCheck, Flag, X
+  ShieldAlert, BookOpenCheck, Flag, X,
 } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import AddClientDialog from '../components/client/AddClientDialog';
 import useUserStore from '@/stores/userStore';
@@ -42,7 +43,7 @@ import {
   isAnnouncementDismissed,
 } from '@/utils/announcementDismiss';
 import { BACKEND_BASE_URL } from '@/utils/constants';
-import { useAppTranslation } from '@/i18n';
+import { formatRelativeTime, useAppTranslation, type Lang } from '@/i18n';
 import { AnnouncementLearnMoreLink } from '@/components/dashboard/AnnouncementLearnMoreLink';
 
 function resolveAnnouncementMediaUrl(url: string | null | undefined): string | null {
@@ -117,21 +118,51 @@ const ANNOUNCEMENT_STYLES: Record<
   },
 };
 
-// Map API icon strings → lucide components
-const ICONS: Record<string, React.ComponentType<any>> = {
+const ICONS: Record<string, LucideIcon> = {
   Users,
   Briefcase,
   CheckSquare,
   ClipboardList,
-  // add more if backend returns other names
 };
 
 type ApiCase = DashboardOverview['recent_cases'][number];
 type ApiTask = DashboardOverview['today_tasks'][number];
 type ApiActivity = DashboardOverview['recent_activity'][number];
 
+function caseClientLabel(client: string | null | undefined, noClient: string): string {
+  const name = (client ?? '').trim();
+  if (!name || name === 'No Client') return noClient;
+  return name;
+}
+
+function activityLabel(
+  a: ApiActivity,
+  copy: {
+    taskCompleted: string;
+    clientAdded: string;
+    documentUploaded: string;
+    clientFallback: string;
+  },
+  tf: (template: string, vars: Record<string, string | number>) => string,
+): string {
+  const title = (a.title ?? '').trim() || copy.clientFallback;
+  if (a.kind === 'task_completed') return tf(copy.taskCompleted, { title });
+  if (a.kind === 'client_added') return tf(copy.clientAdded, { title });
+  if (a.kind === 'document_uploaded') return tf(copy.documentUploaded, { title });
+  return a.message;
+}
+
+function activityWhen(a: ApiActivity, lang: Lang, todayLabel: string): string {
+  if (a.at) {
+    const formatted = formatRelativeTime(a.at, lang);
+    if (formatted) return formatted;
+  }
+  if (a.ago === 'today') return todayLabel;
+  return a.ago;
+}
+
 const Dashboard = () => {
-  const { t, tf, enumLabel } = useAppTranslation();
+  const { t, tf, enumLabel, lang } = useAppTranslation();
   const d = t.dashboard;
   const { runAction } = useShortcuts();
   const [openDialogs, setOpenDialogs] = useState({
@@ -644,7 +675,9 @@ const Dashboard = () => {
                     >
                       <div className="min-w-0 flex-1">
                         <h4 className="truncate text-sm font-medium text-slate-900 dark:text-white">{c.title}</h4>
-                        <p className="truncate text-xs text-muted-foreground">{c.client}</p>
+                        <p className="truncate text-xs text-muted-foreground">
+                          {caseClientLabel(c.client, d.recentCases.noClient)}
+                        </p>
                       </div>
                       <div className="flex shrink-0 items-center gap-2">
                         <span
@@ -838,8 +871,12 @@ const Dashboard = () => {
                         <AIcon className={`h-4 w-4 ${iconClass}`} aria-hidden />
                       </span>
                       <div className="flex-1">
-                        <p className="text-sm text-slate-900 dark:text-white">{a.message}</p>
-                        <p className="text-xs text-muted-foreground">{a.ago}</p>
+                        <p className="text-sm text-slate-900 dark:text-white">
+                          {activityLabel(a, d.recentActivity, tf)}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {activityWhen(a, lang, d.recentActivity.today)}
+                        </p>
                       </div>
                     </div>
                   );

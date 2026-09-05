@@ -10,6 +10,7 @@ import {
 } from 'recharts';
 import { formatMAD } from '@/utils/formatMAD';
 import { Users } from 'lucide-react';
+import { useAppTranslation } from '@/i18n';
 
 type Row = { lawyer_name: string; amount: number };
 
@@ -27,6 +28,7 @@ function formatAxisMad(v: number): string {
 }
 
 export const RevenueByLawyerChart: React.FC<Props> = ({ data }) => {
+  const { t } = useAppTranslation();
   const rows = useMemo(
     () => data.map((d) => ({ ...d, name: d.lawyer_name })),
     [data]
@@ -43,11 +45,11 @@ export const RevenueByLawyerChart: React.FC<Props> = ({ data }) => {
         <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#64499D] shadow-sm">
           <Users size={16} className="text-white" aria-hidden />
         </span>
-        CA par avocat
+        {t.finance.charts.byLawyerTitle}
       </h3>
       {rows.length === 0 ? (
         <div className="flex h-[280px] items-center justify-center text-sm text-slate-500 dark:text-slate-400">
-          Aucune répartition par avocat pour cette période
+          {t.finance.charts.byLawyerEmpty}
         </div>
       ) : (
         <div className="h-[280px] w-full min-w-0">

@@ -79,7 +79,10 @@ type Props = {
 };
 
 export function LitigationConversionFields({ values, onChange, fieldErrors }: Props) {
-  const { enumPretty } = useAppTranslation();
+  const { t, enumPretty } = useAppTranslation();
+  const f = t.cases.modal.fields;
+  const p = t.cases.modal.placeholders;
+  const x = t.cases.modal.consultationWorkflow.convertExtras;
   const setDeadline = (i: number, field: 'label' | 'date', v: string) => {
     const next = [...values.key_deadlines];
     next[i] = { ...next[i], [field]: v };
@@ -102,7 +105,7 @@ export function LitigationConversionFields({ values, onChange, fieldErrors }: Pr
     <div className="space-y-4">
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
-          <Label className="text-[13px]">Litigation Type</Label>
+          <Label className="text-[13px]">{f.litigationType}</Label>
           <Select
             value={values.litigation_type}
             onValueChange={(v) => onChange({ litigation_type: v })}
@@ -120,7 +123,7 @@ export function LitigationConversionFields({ values, onChange, fieldErrors }: Pr
           </Select>
         </div>
         <div className="space-y-2">
-          <Label className="text-[13px]">Priority</Label>
+          <Label className="text-[13px]">{f.priority}</Label>
           <Select value={values.priority} onValueChange={(v) => onChange({ priority: v })}>
             <SelectTrigger className="h-9">
               <SelectValue />
@@ -137,7 +140,7 @@ export function LitigationConversionFields({ values, onChange, fieldErrors }: Pr
       </div>
 
       <div className="space-y-2">
-        <Label className="text-[13px]">Client Role</Label>
+          <Label className="text-[13px]">{f.clientRole}</Label>
         <RadioGroup
           value={values.client_role === '' ? 'none' : values.client_role}
           onValueChange={(v) =>
@@ -160,7 +163,7 @@ export function LitigationConversionFields({ values, onChange, fieldErrors }: Pr
           <div className="flex items-center gap-2">
             <RadioGroupItem value="none" id="conv_role_none" />
             <Label htmlFor="conv_role_none" className="font-normal text-slate-500">
-              Not set
+              {x.notSet}
             </Label>
           </div>
         </RadioGroup>
@@ -168,7 +171,7 @@ export function LitigationConversionFields({ values, onChange, fieldErrors }: Pr
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
-          <Label className="text-[13px]">Opposing Party</Label>
+          <Label className="text-[13px]">{f.opposingPartyName}</Label>
           <Input
             className="h-9"
             value={values.opposing_party}
@@ -176,7 +179,7 @@ export function LitigationConversionFields({ values, onChange, fieldErrors }: Pr
           />
         </div>
         <div className="space-y-2">
-          <Label className="text-[13px]">Opposing Counsel</Label>
+          <Label className="text-[13px]">{f.opposingCounsel}</Label>
           <Input
             className="h-9"
             value={values.opposing_counsel}
@@ -184,7 +187,7 @@ export function LitigationConversionFields({ values, onChange, fieldErrors }: Pr
           />
         </div>
         <div className="space-y-2 sm:col-span-2">
-          <Label className="text-[13px]">Court Name</Label>
+          <Label className="text-[13px]">{f.courtName}</Label>
           <Input
             className="h-9"
             value={values.court_name}
@@ -192,7 +195,7 @@ export function LitigationConversionFields({ values, onChange, fieldErrors }: Pr
           />
         </div>
         <div className="space-y-2">
-          <Label className="text-[13px]">Jurisdiction</Label>
+          <Label className="text-[13px]">{x.jurisdiction}</Label>
           <Input
             className="h-9"
             value={values.jurisdiction}
@@ -200,7 +203,7 @@ export function LitigationConversionFields({ values, onChange, fieldErrors }: Pr
           />
         </div>
         <div className="space-y-2">
-          <Label className="text-[13px]">Chamber</Label>
+          <Label className="text-[13px]">{x.chamber}</Label>
           <Input
             className="h-9"
             value={values.chamber}
@@ -208,7 +211,7 @@ export function LitigationConversionFields({ values, onChange, fieldErrors }: Pr
           />
         </div>
         <div className="space-y-2">
-          <Label className="text-[13px]">Judge Name</Label>
+          <Label className="text-[13px]">{f.judgeName}</Label>
           <Input
             className="h-9"
             value={values.judge_name}
@@ -216,7 +219,7 @@ export function LitigationConversionFields({ values, onChange, fieldErrors }: Pr
           />
         </div>
         <div className="space-y-2">
-          <Label className="text-[13px]">Court Case Number</Label>
+          <Label className="text-[13px]">{f.courtCaseNumber}</Label>
           <Input
             className="h-9"
             value={values.court_case_number}
@@ -226,8 +229,8 @@ export function LitigationConversionFields({ values, onChange, fieldErrors }: Pr
       </div>
 
       <div className="space-y-2">
-        <Label className="text-[13px]">Co-counsel</Label>
-        <p className="text-[11px] text-slate-500">Select team members from your cabinet.</p>
+        <Label className="text-[13px]">{f.coCounsel}</Label>
+        <p className="text-[11px] text-slate-500">{x.coCounselHint}</p>
         <div className="space-y-2">
           {values.co_counsel_slots.map((slot, i) => (
             <div key={i} className="flex gap-2">
@@ -236,10 +239,10 @@ export function LitigationConversionFields({ values, onChange, fieldErrors }: Pr
                 value={slot ?? undefined}
                 onChange={(v) => setCoSlot(i, v != null && v !== '' ? Number(v) : null)}
                 labelKey={(u: { first_name?: string; last_name?: string; email?: string }) =>
-                  `${u.first_name ?? ''} ${u.last_name ?? ''}`.trim() || u.email || 'Member'
+                  `${u.first_name ?? ''} ${u.last_name ?? ''}`.trim() || u.email || x.memberFallback
                 }
                 cleanable
-                placeholder="Select member"
+                placeholder={t.profile.selectMember}
                 className="flex-1"
               />
               <Button type="button" variant="outline" size="icon" onClick={() => removeCoRow(i)}>
@@ -248,8 +251,8 @@ export function LitigationConversionFields({ values, onChange, fieldErrors }: Pr
             </div>
           ))}
           <Button type="button" variant="outline" size="sm" onClick={addCoRow}>
-            <Plus className="h-3.5 w-3.5 mr-1" />
-            Add co-counsel
+            <Plus className="h-3.5 w-3.5 me-1" />
+            {x.addCoCounsel}
           </Button>
         </div>
       </div>
@@ -257,10 +260,10 @@ export function LitigationConversionFields({ values, onChange, fieldErrors }: Pr
       <div className="grid gap-4 sm:grid-cols-2">
         {(
           [
-            ['filing_date', 'Filing Date', values.filing_date],
-            ['first_hearing_date', 'First Hearing Date', values.first_hearing_date],
-            ['next_hearing_date', 'Next Hearing Date', values.next_hearing_date],
-            ['statute_of_limitations_date', 'Statute of Limitations Date', values.statute_of_limitations_date],
+            ['filing_date', f.filingDate, values.filing_date],
+            ['first_hearing_date', f.firstHearingDate, values.first_hearing_date],
+            ['next_hearing_date', f.nextHearingDate, values.next_hearing_date],
+            ['statute_of_limitations_date', f.statuteOfLimitationsDate, values.statute_of_limitations_date],
           ] as const
         ).map(([key, label, val]) => (
           <div key={key} className="space-y-2">
@@ -277,13 +280,13 @@ export function LitigationConversionFields({ values, onChange, fieldErrors }: Pr
       </div>
 
       <div className="space-y-2">
-        <Label className="text-[13px]">Key Deadlines</Label>
+        <Label className="text-[13px]">{f.keyDeadlines}</Label>
         <div className="space-y-2">
           {values.key_deadlines.map((item, i) => (
             <div key={i} className="flex gap-2 items-center">
               <Input
                 className="h-9 flex-1"
-                placeholder="Label"
+                placeholder={p.label}
                 value={item.label}
                 onChange={(e) => setDeadline(i, 'label', e.target.value)}
               />
@@ -299,8 +302,8 @@ export function LitigationConversionFields({ values, onChange, fieldErrors }: Pr
             </div>
           ))}
           <Button type="button" variant="outline" size="sm" onClick={addDeadline}>
-            <Plus className="h-3.5 w-3.5 mr-1" />
-            Add deadline
+            <Plus className="h-3.5 w-3.5 me-1" />
+            {x.addDeadline}
           </Button>
         </div>
         {fieldErrors.key_deadlines && (
@@ -309,17 +312,17 @@ export function LitigationConversionFields({ values, onChange, fieldErrors }: Pr
       </div>
 
       <div className="space-y-2">
-        <Label className="text-[13px]">Legal Arguments</Label>
+        <Label className="text-[13px]">{f.legalArguments}</Label>
         <Textarea
           className="min-h-[80px] resize-none text-[13px]"
           value={values.legal_arguments}
           onChange={(e) => onChange({ legal_arguments: e.target.value })}
-          placeholder="Optional"
+          placeholder={t.common.optional}
         />
       </div>
 
       <div className="space-y-2">
-        <Label className="text-[13px]">Status</Label>
+        <Label className="text-[13px]">{f.status}</Label>
         <Select value={values.status} onValueChange={(v) => onChange({ status: v })}>
           <SelectTrigger className="h-9">
             <SelectValue />

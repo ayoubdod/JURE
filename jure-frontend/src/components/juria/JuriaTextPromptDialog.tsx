@@ -8,6 +8,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { useAppTranslation } from '@/i18n';
 
 export function JuriaTextPromptDialog({
   open,
@@ -15,7 +16,7 @@ export function JuriaTextPromptDialog({
   title,
   label,
   initialValue = '',
-  confirmLabel = 'Save',
+  confirmLabel,
   onConfirm,
 }: {
   open: boolean;
@@ -26,6 +27,7 @@ export function JuriaTextPromptDialog({
   confirmLabel?: string;
   onConfirm: (value: string) => void;
 }) {
+  const { t } = useAppTranslation();
   const [value, setValue] = useState(initialValue);
 
   useEffect(() => {
@@ -62,7 +64,7 @@ export function JuriaTextPromptDialog({
         />
         <DialogFooter className="gap-2 sm:gap-0">
           <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
-            Annuler
+            {t.common.cancel}
           </Button>
           <Button
             type="button"
@@ -70,7 +72,7 @@ export function JuriaTextPromptDialog({
             disabled={!value.trim()}
             onClick={submit}
           >
-            {confirmLabel}
+            {confirmLabel ?? t.common.save}
           </Button>
         </DialogFooter>
       </DialogContent>

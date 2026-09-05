@@ -311,7 +311,7 @@ const TasksPage: React.FC = () => {
           isLoading={loading}
           onPageChange={setPage}
           onPageSizeChange={handlePageSize}
-          itemLabel={t.sidebar.tasks.toLowerCase()}
+          itemLabel={t.sidebar.tasks}
         />
       )}
 

@@ -105,7 +105,18 @@ const CollectionsSidebar: React.FC<Props> = ({
     const publicLabel = jurisdictionName
       ? `${t.library.publicLibrary} · ${jurisdictionName}`
       : t.library.publicLibrary;
-    const label = item.id === 'public' ? publicLabel : item.id === 'all' ? t.library.title : item.label;
+    const label =
+      item.id === 'public'
+        ? publicLabel
+        : item.id === 'all'
+          ? t.library.title
+          : item.id === 'ai_generated'
+            ? t.library.knowledgeHub.collectionAiGenerated
+            : item.id === 'favorites'
+              ? t.library.hub.tabFavorites
+              : item.id === 'recent'
+                ? t.library.knowledgeHub.collectionRecent
+                : item.label;
     const button = (
       <button
         type="button"

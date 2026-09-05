@@ -1152,6 +1152,7 @@ const Cases = () => {
             setPageSize(n);
             setCurrentPage(1);
           }}
+          itemLabel={t.sidebar.cases}
           pageSizeOptions={[
             { value: '20', label: '20 per page' },
             { value: '50', label: '50 per page' },

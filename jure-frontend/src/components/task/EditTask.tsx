@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router';
 import Sidebar from '@/components/Sidebar';
 import Header from '@/components/Header';
@@ -17,6 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { TaskPriority, TaskStatus } from '@/utils/constants';
 import { isAxiosError } from 'axios';
 import { getRemoteFieldsValidation } from '@/utils/functions';
+import { useAppTranslation } from '@/i18n';
 
 
 
@@ -28,6 +29,9 @@ import { getRemoteFieldsValidation } from '@/utils/functions';
 const EditTask = () => {
   const [activeTab, setActiveTab] = useState('tasks');
   const { toast } = useToast();
+  const { t, tf, dir } = useAppTranslation();
+  const m = t.tasks.modal;
+  const v = t.tasks.validation;
 
 
   const params = useParams();
@@ -36,16 +40,20 @@ const EditTask = () => {
   const [loading, setIsLoading] = useState(false);
 
 
-  const schema = yup.object({
-    title: yup.string().required('Title is required'),
-    description: yup.string().required('Description is required'),
-    priority: yup.string().required('Priority is required'),
-    status: yup.string().required('Status is required'),
-    due_date: yup.string().required('Due date is required'),
-    estimated_hours: yup.string().optional(),
-    assigned_to: yup.string().optional(),
-    client: yup.string().optional(),
-  });
+  const schema = useMemo(
+    () =>
+      yup.object({
+        title: yup.string().required(v.titleRequired),
+        description: yup.string().required(v.descriptionRequired),
+        priority: yup.string().required(v.priorityRequired),
+        status: yup.string().required(v.statusRequired),
+        due_date: yup.string().required(v.dueDateRequired),
+        estimated_hours: yup.string().optional(),
+        assigned_to: yup.string().optional(),
+        client: yup.string().optional(),
+      }),
+    [v]
+  );
 
 
   const mainForm = useForm<API.TaskUpdateForm>({
@@ -72,8 +80,8 @@ const EditTask = () => {
       })
         .catch((error) => {
           toast({
-            title: "Task not found",
-            description: "The requested task could not be found.",
+            title: m.notFound,
+            description: t.errors.notFound,
             variant: "destructive",
           });
           navigate(-1);
@@ -97,8 +105,8 @@ const EditTask = () => {
     })
       .then((res) => {
         toast({
-          title: "Task updated successfully",
-          description: "The task has been updated successfully.",
+          title: m.updatedTitle,
+          description: tf(m.updatedDescription, { title: (res.data.title || data.title).trim() }),
           variant: "default",
         });
         navigate('/dashboard/calendar');
@@ -126,12 +134,12 @@ const EditTask = () => {
                 onClick={handleCancel}
                 className="flex items-center gap-2"
               >
-                <ArrowLeft size={16} />
-                Back to Tasks
+                <ArrowLeft size={16} className={dir === 'rtl' ? 'rotate-180' : undefined} />
+                {m.backToTasks}
               </Button>
               <div>
-                <h1 className="text-xl font-semibold text-slate-900 dark:text-white">Edit Task</h1>
-                <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">Modify task details and settings</p>
+                <h1 className="text-xl font-semibold text-slate-900 dark:text-white">{m.editTitle}</h1>
+                <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">{m.editSubtitle}</p>
               </div>
             </div>
 
@@ -142,16 +150,16 @@ const EditTask = () => {
                 <div className="space-y-4">
                   <h3 className="text-lg font-medium text-slate-900 dark:text-white flex items-center gap-2">
                     <Flag size={20} />
-                    Basic Information
+                    {m.taskInformation}
                   </h3>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="md:col-span-2">
-                      <Label htmlFor="title">Task Title *</Label>
+                      <Label htmlFor="title">{m.taskTitle} *</Label>
                       <Input
                         id="title"
                         {...mainForm.register('title')}
-                        placeholder="Enter task title"
+                        placeholder={m.titlePlaceholder}
                         className="mt-1"
                         required
                       /> {
@@ -162,11 +170,11 @@ const EditTask = () => {
                     </div>
 
                     <div className="md:col-span-2">
-                      <Label htmlFor="description">Description</Label>
+                      <Label htmlFor="description">{m.description}</Label>
                       <Textarea
                         id="description"
                         {...mainForm.register('description')}
-                        placeholder="Enter task description"
+                        placeholder={m.descriptionPlaceholder}
                         className="mt-1 min-h-[100px]"
                         rows={4}
                       /> {
@@ -182,24 +190,24 @@ const EditTask = () => {
                 <div className="space-y-4 border-t pt-6">
                   <h3 className="text-lg font-medium text-slate-900 dark:text-white flex items-center gap-2">
                     <Calendar size={20} />
-                    Task Details
+                    {m.taskDetails}
                   </h3>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="">
                       <label className="text-sm font-medium flex items-center gap-1">
                         <CircleDot className="w-2 h-2 text-slate-700 dark:text-slate-300" />
-                        <span>Status </span>
+                        <span>{m.status}</span>
                       </label>
                       <Select value={mainForm.watch('status')} onValueChange={(val: API.TaskStatus) => mainForm.setValue('status', val)} >
                         <SelectTrigger>
-                          <SelectValue placeholder="Select a status" />
+                          <SelectValue placeholder={m.selectStatus} />
                         </SelectTrigger>
                         <SelectContent>
                           {
                             TaskStatus.options.map((status, index) => (
                               <SelectItem key={index} value={status.value}>
-                                {status.label}
+                                {t.enums.taskStatus[status.value] ?? status.label}
                               </SelectItem>
                             ))
                           }
@@ -213,16 +221,16 @@ const EditTask = () => {
                     </div>
 
                     <div>
-                      <Label htmlFor="priority">Priority</Label>
+                      <Label htmlFor="priority">{m.priority}</Label>
                       <Select value={mainForm.watch('priority')} onValueChange={(val: API.TaskPriority) => mainForm.setValue('priority', val)}  >
                         <SelectTrigger >
-                          <SelectValue placeholder="Select priority " />
+                          <SelectValue placeholder={m.selectPriority} />
                         </SelectTrigger>
                         <SelectContent>
                           {
                             TaskPriority.options.map((priority, index) => (
                               <SelectItem key={index} value={priority.value}>
-                                {priority.label}
+                                {t.enums.taskPriority[priority.value] ?? priority.label}
                               </SelectItem>
                             ))
                           }
@@ -231,7 +239,7 @@ const EditTask = () => {
                     </div>
 
                     <div>
-                      <Label htmlFor="dueDate">Due Date</Label>
+                      <Label htmlFor="dueDate">{m.dueDate}</Label>
                       <Input
                         id="dueDate"
                         type="date"
@@ -241,14 +249,14 @@ const EditTask = () => {
                     </div>
 
                     <div>
-                      <Label htmlFor="estimatedHours">Estimated Hours</Label>
+                      <Label htmlFor="estimatedHours">{m.estimatedHours}</Label>
                       <Input
                         id="estimatedHours"
                         type="number"
                         min="0.5"
                         step="0.5"
                         {...mainForm.register('estimated_hours')}
-                        placeholder="e.g., 2.5"
+                        placeholder={m.estimatedHoursPlaceholder}
                         className="mt-1"
                       />
                     </div>
@@ -259,7 +267,7 @@ const EditTask = () => {
                 <div className="space-y-4 border-t pt-6">
                   <h3 className="text-lg font-medium text-slate-900 dark:text-white flex items-center gap-2">
                     <User size={20} />
-                    Assignment
+                    {m.assignment}
                   </h3>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -267,7 +275,7 @@ const EditTask = () => {
                     <div className="">
                       <label className="text-sm font-medium flex items-center gap-1">
                         <UserCheck className="w-4 h-4  text-slate-700 dark:text-slate-300" />
-                        <span>Assigned To</span>
+                        <span>{m.assignedTo}</span>
                       </label>
                       <ServerSelect
                         link='/cabinets/members/select_list'
@@ -286,11 +294,11 @@ const EditTask = () => {
                     </div>
 
                     <div>
-                      <Label htmlFor="client">Client</Label>
+                      <Label htmlFor="client">{m.client}</Label>
                       <Input
                         id="client"
                         {...mainForm.register('client')}
-                        placeholder="Enter client name"
+                        placeholder={m.clientNamePlaceholder}
                         className=""
 
                       />
@@ -306,14 +314,14 @@ const EditTask = () => {
                     onClick={handleCancel}
                     disabled={loading}
                   >
-                    Cancel
+                    {t.common.cancel}
                   </Button>
                   <Button
                     type="button"
                     onClick={handleSubmit(handleSubmitForm)}
                     className="bg-purple-600 hover:bg-purple-700"
                   >
-                    {loading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : 'Save'}
+                    {loading ? <Loader2 className="w-4 h-4 me-2 animate-spin" /> : t.common.save}
                   </Button>
                 </div>
               </form>

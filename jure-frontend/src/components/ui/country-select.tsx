@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
+import { intlLocale, useAppTranslation } from "@/i18n";
 
 type CountryEntry = { label: string; value: RPNInput.Country | undefined };
 
@@ -34,24 +35,27 @@ const CountrySelect = ({
   disabled,
   value: selectedCountry,
   onChange,
-  placeholder = "Select country...",
+  placeholder,
   className,
 }: CountrySelectProps) => {
+  const { t, lang } = useAppTranslation();
+  const locale = intlLocale(lang);
   const scrollAreaRef = React.useRef<HTMLDivElement>(null);
   const [searchValue, setSearchValue] = React.useState("");
   const [isOpen, setIsOpen] = React.useState(false);
+  const displayPlaceholder = placeholder ?? t.common.selectCountry;
 
-  // Get all countries from react-phone-number-input
   const countryList: CountryEntry[] = React.useMemo(() => {
+    const names = new Intl.DisplayNames([locale], { type: "region" });
     const countries = RPNInput.getCountries();
     return countries.map((country) => ({
-      label: new Intl.DisplayNames(['en'], { type: 'region' }).of(country) || country,
+      label: names.of(country) || country,
       value: country,
     }));
-  }, []);
+  }, [locale]);
 
-  const selectedCountryName = selectedCountry 
-    ? new Intl.DisplayNames(['en'], { type: 'region' }).of(selectedCountry) || selectedCountry
+  const selectedCountryName = selectedCountry
+    ? new Intl.DisplayNames([locale], { type: "region" }).of(selectedCountry) || selectedCountry
     : undefined;
 
   return (
@@ -75,7 +79,7 @@ const CountrySelect = ({
               />
             )}
             <span className="truncate">
-              {selectedCountryName || placeholder}
+              {selectedCountryName || displayPlaceholder}
             </span>
           </div>
           <ChevronsUpDown
@@ -103,11 +107,11 @@ const CountrySelect = ({
                 }
               }, 0);
             }}
-            placeholder="Search country..."
+            placeholder={t.common.countrySearch}
           />
           <CommandList>
             <ScrollArea ref={scrollAreaRef} className="h-72">
-              <CommandEmpty>No country found.</CommandEmpty>
+              <CommandEmpty>{t.common.countryEmpty}</CommandEmpty>
               <CommandGroup>
                 {countryList.filter(c=>c.value != 'AC').map(({ value, label }) =>
                   value ? (
@@ -153,7 +157,7 @@ const CountrySelectOption = ({
       <FlagComponent country={country} countryName={countryName} />
       <span className="flex-1 text-sm">{countryName}</span>
       <CheckIcon
-        className={`ml-auto size-4 ${country === selectedCountry ? "opacity-100" : "opacity-0"}`}
+        className={`ms-auto size-4 ${country === selectedCountry ? "opacity-100" : "opacity-0"}`}
       />
     </CommandItem>
   );

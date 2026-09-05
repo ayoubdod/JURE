@@ -23,6 +23,7 @@ import {
   CreateFormSection,
 } from '@/components/forms/CreateFormShell';
 import { cn } from '@/lib/utils';
+import { useAppTranslation } from '@/i18n';
 
 function validDateInput(s: string): boolean {
   if (!s.trim()) return true;
@@ -30,7 +31,10 @@ function validDateInput(s: string): boolean {
   return !Number.isNaN(d.getTime());
 }
 
-function validateLitigation(lit: LitigationConversionState): Record<string, string> {
+function validateLitigation(
+  lit: LitigationConversionState,
+  msgs: { invalidDate: string; deadlinePair: string },
+): Record<string, string> {
   const err: Record<string, string> = {};
   const dk = [
     'filing_date',
@@ -41,24 +45,27 @@ function validateLitigation(lit: LitigationConversionState): Record<string, stri
   for (const k of dk) {
     const v = lit[k];
     if (typeof v === 'string' && v.trim() && !validDateInput(v)) {
-      err[k] = 'Invalid date';
+      err[k] = msgs.invalidDate;
     }
   }
   for (const row of lit.key_deadlines) {
     const l = row.label.trim();
     const d = row.date.trim();
     if ((l && !d) || (!l && d)) {
-      err.key_deadlines = 'Each deadline needs both a label and a date, or remove the row.';
+      err.key_deadlines = msgs.deadlinePair;
       break;
     }
   }
   return err;
 }
 
-function validateAdministrative(a: AdministrativeConversionState): Record<string, string> {
+function validateAdministrative(
+  a: AdministrativeConversionState,
+  invalidDate: string,
+): Record<string, string> {
   const err: Record<string, string> = {};
-  if (a.start_date.trim() && !validDateInput(a.start_date)) err.start_date = 'Invalid date';
-  if (a.due_date.trim() && !validDateInput(a.due_date)) err.due_date = 'Invalid date';
+  if (a.start_date.trim() && !validDateInput(a.start_date)) err.start_date = invalidDate;
+  if (a.due_date.trim() && !validDateInput(a.due_date)) err.due_date = invalidDate;
   return err;
 }
 
@@ -145,6 +152,10 @@ export function ConversionForm({
   onBack,
   onSuccess,
 }: Props) {
+  const { t, tf } = useAppTranslation();
+  const cw = t.cases.modal.consultationWorkflow;
+  const x = cw.convertExtras;
+  const f = t.cases.modal.fields;
   const [lit, setLit] = useState<LitigationConversionState>(defaultLitigationConversionState);
   const [adm, setAdm] = useState<AdministrativeConversionState>(defaultAdministrativeConversionState);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
@@ -188,14 +199,17 @@ export function ConversionForm({
   const handleCreate = async () => {
     clearError();
     if (targetType === 'LITIGATION') {
-      const ve = validateLitigation(lit);
+      const ve = validateLitigation(lit, {
+        invalidDate: t.validation.invalidDate,
+        deadlinePair: x.deadlinePair,
+      });
       setFieldErrors(ve);
       if (Object.keys(ve).length) return;
       const body = buildLitigationPayload(lit);
       const created = await convert(consultation.id, body);
       if (created) onSuccess(created);
     } else {
-      const ve = validateAdministrative(adm);
+      const ve = validateAdministrative(adm, t.validation.invalidDate);
       setFieldErrors(ve);
       if (Object.keys(ve).length) return;
       const body = buildAdministrativePayload(adm);
@@ -205,7 +219,9 @@ export function ConversionForm({
   };
 
   const titleSuffix =
-    targetType === 'LITIGATION' ? 'Litigation' : 'Administrative duty';
+    targetType === 'LITIGATION'
+      ? t.cases.workspaces.litigation.title
+      : t.cases.workspaces.administrative.title;
   const formId = useId();
   const isBusy = loading;
 
@@ -215,27 +231,27 @@ export function ConversionForm({
       onOpenChange={onOpenChange}
       isBusy={isBusy}
       formId={formId}
-      title="Convert Consultation to Case"
-      description={`New case type: ${titleSuffix}`}
+      title={cw.convertDialogTitle}
+      description={tf(x.newCaseType, { type: titleSuffix })}
       icon={FileText}
-      closeLabel="Close"
+      closeLabel={t.common.close}
       onClose={() => onOpenChange(false)}
       overlayClassName="z-[100]"
       contentClassName="z-[110] md:h-[min(86vh,780px)] md:w-[min(90vw,820px)] md:max-w-[820px]"
     >
       <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-contain px-6 py-5 md:px-7">
         <div className="space-y-6">
-          <CreateFormSection index="01" title="Copied from consultation — read only">
+          <CreateFormSection index="01" title={x.copiedSection}>
             <div className="space-y-3 rounded-xl border border-slate-200 bg-slate-50/90 p-4 dark:border-zinc-800 dark:bg-zinc-900/40">
-              <ReadRow label="Title" value={inherited.title} />
-              <ReadRow label="Client" value={inherited.clientName} />
-              <ReadRow label="Assigned To" value={inherited.assignedName} />
-              <ReadRow label="Description" value={inherited.description} multiline />
-              <ReadRow label="Summary / Notes" value={inherited.summary} multiline />
+              <ReadRow label={f.title} value={inherited.title} />
+              <ReadRow label={t.cases.columns.client} value={inherited.clientName} />
+              <ReadRow label={f.assignedTo} value={inherited.assignedName} />
+              <ReadRow label={f.description} value={inherited.description} multiline />
+              <ReadRow label={f.adviceSummary} value={inherited.summary} multiline />
             </div>
           </CreateFormSection>
 
-          <CreateFormSection index="02" title="Complete the new case information">
+          <CreateFormSection index="02" title={x.completeSection}>
             {targetType === 'LITIGATION' ? (
               <LitigationConversionFields
                 values={lit}
@@ -255,7 +271,7 @@ export function ConversionForm({
 
       <DialogFooter className={cn(CREATE_FOOTER_CLASS, 'justify-between')}>
         <Button type="button" variant="outline" onClick={onBack} disabled={isBusy} className={CREATE_CANCEL_CLASS}>
-          ← Back
+          {t.common.back}
         </Button>
         <div className="flex items-center gap-2.5">
           <Button
@@ -265,16 +281,16 @@ export function ConversionForm({
             disabled={isBusy}
             className={CREATE_CANCEL_CLASS}
           >
-            Cancel
+            {t.common.cancel}
           </Button>
           <Button type="button" className={CREATE_SUBMIT_CLASS} onClick={handleCreate} disabled={isBusy}>
             {isBusy ? (
               <>
                 <Loader2 className="animate-spin" />
-                Creating...
+                {t.cases.modal.creating}
               </>
             ) : (
-              'Create Case'
+              t.cases.modal.createCase
             )}
           </Button>
         </div>

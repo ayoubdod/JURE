@@ -1,35 +1,25 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { cn } from '@/lib/utils';
+import { useAppTranslation } from '@/i18n';
 import type { SmartMetrics } from './types';
 import '@/styles/workspace-list.css';
 
+type MetricKey = keyof SmartMetrics;
+
 type MetricDef = {
-  key: keyof SmartMetrics;
-  label: string;
+  key: MetricKey;
+  labelKey: 'metricTotal' | 'metricAiIndexed' | 'metricFolders' | 'metricPending' | 'metricUpdated' | 'metricScore';
   suffix?: string;
   accent: string;
 };
 
 const METRICS: MetricDef[] = [
-  { key: 'totalDocuments', label: 'Total', accent: 'border-l-slate-400' },
-  {
-    key: 'aiIndexed',
-    label: 'AI Indexed',
-    accent: 'border-l-[#64499D]',
-  },
-  { key: 'folders', label: 'Folders', accent: 'border-l-indigo-500' },
-  {
-    key: 'pendingClassification',
-    label: 'Pending',
-    accent: 'border-l-amber-500',
-  },
-  { key: 'recentlyUpdated', label: 'Updated', accent: 'border-l-emerald-500' },
-  {
-    key: 'knowledgeScore',
-    label: 'Score',
-    suffix: '%',
-    accent: 'border-l-[#64499D]',
-  },
+  { key: 'totalDocuments', labelKey: 'metricTotal', accent: 'border-l-slate-400' },
+  { key: 'aiIndexed', labelKey: 'metricAiIndexed', accent: 'border-l-[#64499D]' },
+  { key: 'folders', labelKey: 'metricFolders', accent: 'border-l-indigo-500' },
+  { key: 'pendingClassification', labelKey: 'metricPending', accent: 'border-l-amber-500' },
+  { key: 'recentlyUpdated', labelKey: 'metricUpdated', accent: 'border-l-emerald-500' },
+  { key: 'knowledgeScore', labelKey: 'metricScore', suffix: '%', accent: 'border-l-[#64499D]' },
 ];
 
 function AnimatedCounter({ value, suffix = '' }: { value: number; suffix?: string }) {
@@ -75,15 +65,17 @@ type Props = {
 
 /** Compact single-row KPI strip — scrolls away; never sticky. */
 const SmartMetricsBar: React.FC<Props> = ({ metrics, className }) => {
+  const { t } = useAppTranslation();
+  const kh = t.library.knowledgeHub;
   return (
     <section
-      aria-label="Smart metrics"
+      aria-label={kh.metricsAria}
       className={cn(
         'ws-kpi-strip flex gap-2 overflow-x-auto snap-x snap-mandatory py-2',
         className
       )}
     >
-      {METRICS.map(({ key, label, suffix, accent }) => (
+      {METRICS.map(({ key, labelKey, suffix, accent }) => (
         <div
           key={key}
           className={cn(
@@ -95,7 +87,7 @@ const SmartMetricsBar: React.FC<Props> = ({ metrics, className }) => {
         >
           <div className="min-w-0">
             <p className="text-[10px] font-medium uppercase tracking-[0.06em] text-slate-500 dark:text-slate-400 leading-none truncate">
-              {label}
+              {kh[labelKey]}
             </p>
             <p className="mt-0.5 text-base font-bold text-slate-900 dark:text-white leading-none">
               <AnimatedCounter value={metrics[key]} suffix={suffix} />
