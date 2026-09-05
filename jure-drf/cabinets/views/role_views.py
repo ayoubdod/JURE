@@ -2,6 +2,7 @@ from rest_framework import response, status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 
+from core.utils import get_user_cabinet
 from users.models import User
 
 from ..permissions import DEFAULT_ROLE_PERMISSIONS, can_manage_roles
@@ -29,6 +30,14 @@ def update_cabinet_member_role(request, member_id):
         if not member_user.is_cabinet_member:
             return response.Response(
                 {'error': 'User is not a cabinet member'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        actor_cabinet = get_user_cabinet(request.user)
+        member_cabinet = get_user_cabinet(member_user)
+        if not actor_cabinet or member_cabinet != actor_cabinet:
+            return response.Response(
+                {'error': 'Member not found'},
                 status=status.HTTP_404_NOT_FOUND
             )
         

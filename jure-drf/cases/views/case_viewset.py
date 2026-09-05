@@ -2,10 +2,9 @@
 import logging
 
 from django.db.models import Count
-from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import permissions, status, viewsets
-from rest_framework.exceptions import PermissionDenied
+from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.response import Response
 
 from cabinets.permissions import HasCasesPermission
@@ -96,13 +95,18 @@ class CaseViewSet(CloseCaseMixin, ConsultationConvertMixin, ConsultationWorkflow
         assignee_id = self.request.data.get("assigned_to_id") or self.request.data.get("assigned_to")
         if assignee_id:
             try:
-                assignee = get_object_or_404(User, pk=assignee_id)
-            except (ValueError, TypeError):
+                assignee = User.objects.get(pk=assignee_id)
+            except (User.DoesNotExist, ValueError, TypeError):
                 assignee = user
                 logger.warning(
                     "Invalid assigned_to/assigned_to_id=%s, defaulting to requester",
                     assignee_id,
                 )
+            else:
+                if get_user_cabinet(assignee) != cab:
+                    raise ValidationError(
+                        {"assigned_to": "Cannot assign case to user from different cabinet."}
+                    )
         else:
             assignee = user
 
