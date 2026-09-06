@@ -197,6 +197,7 @@ const Header = () => {
     tasks: t.sidebar.tasks,
     calendar: t.sidebar.calendar,
     appointment: t.sidebar.appointment,
+    appointments: t.sidebar.appointment,
     account: t.sidebar.account,
     support: t.sidebar.support,
     help: t.sidebar.help,
@@ -215,10 +216,10 @@ const Header = () => {
     if (/^\d+$/.test(segment)) {
       const prev = segments[index - 1];
       if (prev && ['case', 'cases'].includes(prev.toLowerCase())) {
-        return `Case #${segment}`;
+        return tf(t.header.caseNumber, { id: segment });
       }
       if (prev && ['client', 'clients'].includes(prev.toLowerCase())) {
-        return `Client #${segment}`;
+        return tf(t.header.clientNumber, { id: segment });
       }
       return `#${segment}`;
     }

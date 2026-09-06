@@ -63,6 +63,8 @@ export interface AppMessages {
     lightMode: string;
     darkMode: string;
     orgLogo: string;
+    caseNumber: string;
+    clientNumber: string;
   };
   auth: {
     signInTitle: string;
@@ -1342,6 +1344,8 @@ export interface AppMessages {
     deadlineEvent: Record<string, string>;
     deadlineDurationUnit: Record<string, string>;
     deadlineComputation: Record<string, string>;
+    conflictMatchType: Record<string, string>;
+    conflictRole: Record<string, string>;
   };
   errors: {
     generic: string;

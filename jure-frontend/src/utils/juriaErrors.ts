@@ -28,10 +28,14 @@ export function getJuriaErrorMessage(err: unknown): string {
     return copy.server;
   }
   if (status === 401 || status === 402 || status === 429 || status === 502) {
-    return data?.error ?? copy.apiUnavailable;
+    return typeof data?.error === 'string'
+      ? localizeApiMessage(data.error, copy.apiUnavailable)
+      : copy.apiUnavailable;
   }
   if (status === 504) {
-    return data?.error ?? copy.timeout;
+    return typeof data?.error === 'string'
+      ? localizeApiMessage(data.error, copy.timeout)
+      : copy.timeout;
   }
   if (status === 400) {
     if (typeof data?.detail === 'string') return localizeApiMessage(data.detail, data.detail);

@@ -155,12 +155,67 @@ const PHRASE_TO_CODE: Record<string, string> = {
   'case not found or not accessible.': 'CASE_NOT_FOUND_OR_INACCESSIBLE',
   'link a case before attaching case documents.': 'LINK_CASE_BEFORE_DOCS',
   'client not found.': 'CLIENT_NOT_FOUND',
+  'please select at least one team member.': 'APPT_SELECT_MEMBER',
+  'please select a client for this appointment.': 'APPT_SELECT_CLIENT',
+  'please select a jure group conversation or create one.': 'APPT_SELECT_OR_CREATE_CONV',
+  'please select a jure group conversation for the video conference.': 'APPT_SELECT_VIDEO_CONV',
+  'please select a permanent jure group conversation.': 'APPT_SELECT_PERM_CONV',
+  'please enter an address for an in-person appointment.': 'APPT_IN_PERSON_ADDRESS',
+  'please select at least one participant.': 'TASK_SELECT_PARTICIPANT',
+  'cannot pay a cancelled invoice.': 'PAY_CANCELLED_INVOICE',
+  'send the invoice before recording a payment.': 'PAY_SEND_INVOICE_FIRST',
+  'cancelled invoices cannot change status.': 'INVOICE_CANCELLED_STATUS',
+  'paid invoices cannot be changed via status endpoint.': 'INVOICE_PAID_NO_STATUS',
+  'paid invoices cannot be cancelled via status endpoint.': 'INVOICE_PAID_NO_CANCEL',
+  'seuls les brouillons permettent de modifier le montant ht / la tva / les lignes. vous pouvez mettre à jour les notes et la date d’échéance.':
+    'INVOICE_DRAFT_ONLY_AMOUNTS',
+  'seuls les brouillons permettent de modifier le montant ht / la tva / les lignes. vous pouvez mettre à jour les notes et la date d\'échéance.':
+    'INVOICE_DRAFT_ONLY_AMOUNTS',
+  'modification interdite pour ce statut.': 'INVOICE_FIELD_LOCKED',
+  'birthday cannot be in the future.': 'BIRTHDAY_FUTURE',
+  'la date de naissance ne peut pas être dans le futur.': 'BIRTHDAY_FUTURE',
+  'لا يمكن أن يكون تاريخ الميلاد في المستقبل.': 'BIRTHDAY_FUTURE',
+  'birthday cannot be before 1950.': 'BIRTHDAY_BEFORE_1950',
+  'user must be at least 18 years old.': 'AGE_MIN_18',
+  "l'utilisateur doit avoir au moins 18 ans.": 'AGE_MIN_18',
+  'يجب أن يكون المستخدم عمره 18 عاماً على الأقل.': 'AGE_MIN_18',
+  'iban must be exactly 24 characters long.': 'IBAN_LENGTH',
+  "l'iban doit faire exactement 24 caractères.": 'IBAN_LENGTH',
+  'يجب أن يكون iban بالضبط 24 حرفاً.': 'IBAN_LENGTH',
+  'professional card number must contain only digits and be at least 4 characters long.':
+    'PROF_CARD_FORMAT',
+  'bar inscription year must be between 1950 and current year.': 'BAR_YEAR_RANGE',
+  'bar inscription year must be a valid year.': 'BAR_YEAR_INVALID',
+  'ice must contain exactly 15 digits.': 'ICE_DIGITS',
+  'upload a document or provide an external url.': 'LIB_FILE_OR_URL',
+  'select a jurisdiction for the local library.': 'LIB_LOCAL_JURISDICTION',
+  'no verified rule is currently available for this procedure.': 'DEADLINE_NO_RULE',
+  'provide procedure_type or rule_id.': 'DEADLINE_NEED_PROCEDURE',
+  'unsupported file type. use pdf or docx.': 'FILE_PDF_DOCX',
+  'user is not attached to any cabinet.': 'NO_CABINET',
+  'the phone number entered is not valid.': 'PHONE_INVALID',
+  'call history messages are created by the system only.': 'CALL_HISTORY_SYSTEM_ONLY',
+  'only one shared item reference is allowed per message.': 'SHARE_ONE_ONLY',
+  'text messages cannot reference a shared item.': 'SHARE_TEXT_NO_IDS',
+  'shared_case is required when message_type is shared_case.': 'SHARE_CASE_ID_REQUIRED',
+  'shared_task is required when message_type is shared_task.': 'SHARE_TASK_ID_REQUIRED',
+  'shared_appointment is required when message_type is shared_appointment.': 'SHARE_APPT_ID_REQUIRED',
 };
 
 const NAME_SIMILARITY_RE = /^name similarity:\s*(\d+)%$/i;
 const ORG_SIMILARITY_RE = /^organization-name similarity:\s*(\d+)%$/i;
 const CASE_REQUIRES_RE = /^(consultation|litigation|administrative) case requires:\s*(.+)$/i;
 const MUST_BE_ONE_RE = /^(\S+) must be one of:\s*(.+)$/i;
+const PAYMENT_EXCEEDS_RE = /^payment exceeds outstanding balance \((.+) mad\)\.$/i;
+const TRANSITION_SENT_RE = /^cannot transition from (.+) to sent\.$/i;
+const UNSUPPORTED_FILE_RE = /^unsupported file type \((.+)\)\. allowed:\s*(.+)$/i;
+const INVALID_MUST_ONE_RE = /^invalid (category|status|resource type)\. must be one of:\s*(.+)$/i;
+const INVALID_TAG_RE = /^invalid tag:\s*(.+)$/i;
+const FEE_NOT_ON_CASE_RE = /^fee (\d+) not on this case\.$/i;
+const EXPENSE_NOT_ON_CASE_RE = /^expense (\d+) not on this case\.$/i;
+const ERROR_CREATING_RE = /^error creating (client|team member|cabinet):\s*(.+)$/i;
+const ERROR_SAVING_USER_RE = /^error saving user:\s*(.+)$/i;
+const ATTACHMENT_VALIDATION_RE = /^attachment validation error:\s*(.+)$/i;
 
 function matchPattern(lang: Lang, normalized: string): string | null {
   const t = getMessages(lang);
@@ -180,6 +235,66 @@ function matchPattern(lang: Lang, normalized: string): string | null {
   const mustOne = MUST_BE_ONE_RE.exec(normalized);
   if (mustOne && codes.FIELD_MUST_BE_ONE_OF) {
     return interpolate(codes.FIELD_MUST_BE_ONE_OF, { field: mustOne[1], choices: mustOne[2] });
+  }
+  const payExceeds = PAYMENT_EXCEEDS_RE.exec(normalized);
+  if (payExceeds && codes.PAYMENT_EXCEEDS) {
+    return interpolate(codes.PAYMENT_EXCEEDS, { amount: payExceeds[1] });
+  }
+  const transition = TRANSITION_SENT_RE.exec(normalized);
+  if (transition && codes.INVOICE_TRANSITION_SENT) {
+    return interpolate(codes.INVOICE_TRANSITION_SENT, { current: transition[1] });
+  }
+  const unsupported = UNSUPPORTED_FILE_RE.exec(normalized);
+  if (unsupported && codes.UNSUPPORTED_FILE_TYPE) {
+    return interpolate(codes.UNSUPPORTED_FILE_TYPE, { ext: unsupported[1], allowed: unsupported[2] });
+  }
+  const invalidOne = INVALID_MUST_ONE_RE.exec(normalized);
+  if (invalidOne && codes.INVALID_CHOICE_LIST) {
+    return interpolate(codes.INVALID_CHOICE_LIST, { kind: invalidOne[1], choices: invalidOne[2] });
+  }
+  const invalidTag = INVALID_TAG_RE.exec(normalized);
+  if (invalidTag && codes.INVALID_TAG) {
+    return interpolate(codes.INVALID_TAG, { tag: invalidTag[1] });
+  }
+  const feeNot = FEE_NOT_ON_CASE_RE.exec(normalized);
+  if (feeNot && codes.FEE_NOT_ON_CASE) {
+    return interpolate(codes.FEE_NOT_ON_CASE, { id: feeNot[1] });
+  }
+  const expenseNot = EXPENSE_NOT_ON_CASE_RE.exec(normalized);
+  if (expenseNot && codes.EXPENSE_NOT_ON_CASE) {
+    return interpolate(codes.EXPENSE_NOT_ON_CASE, { id: expenseNot[1] });
+  }
+  const creating = ERROR_CREATING_RE.exec(normalized);
+  if (creating) {
+    const kind = creating[1].toLowerCase();
+    const detail = creating[2];
+    const nestedCode = PHRASE_TO_CODE[detail.toLowerCase()] ?? PHRASE_TO_CODE[detail];
+    const nested = (nestedCode && codes[nestedCode]) || detail;
+    if (kind === 'client' && codes.ERROR_CREATING_CLIENT) {
+      return interpolate(codes.ERROR_CREATING_CLIENT, { detail: nested });
+    }
+    if (kind === 'team member' && codes.ERROR_CREATING_TEAM) {
+      return interpolate(codes.ERROR_CREATING_TEAM, { detail: nested });
+    }
+    if (kind === 'cabinet' && codes.ERROR_CREATING_CABINET) {
+      return interpolate(codes.ERROR_CREATING_CABINET, { detail: nested });
+    }
+  }
+  const savingUser = ERROR_SAVING_USER_RE.exec(normalized);
+  if (savingUser && codes.ERROR_SAVING_USER) {
+    const detail = savingUser[1];
+    const nestedCode = PHRASE_TO_CODE[detail.toLowerCase()] ?? PHRASE_TO_CODE[detail];
+    return interpolate(codes.ERROR_SAVING_USER, {
+      detail: (nestedCode && codes[nestedCode]) || detail,
+    });
+  }
+  const attachment = ATTACHMENT_VALIDATION_RE.exec(normalized);
+  if (attachment && codes.ATTACHMENT_VALIDATION) {
+    const detail = attachment[1];
+    const nestedCode = PHRASE_TO_CODE[detail.toLowerCase()] ?? PHRASE_TO_CODE[detail];
+    return interpolate(codes.ATTACHMENT_VALIDATION, {
+      detail: (nestedCode && codes[nestedCode]) || detail,
+    });
   }
   return null;
 }

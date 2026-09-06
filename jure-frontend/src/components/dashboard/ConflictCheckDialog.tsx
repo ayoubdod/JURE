@@ -37,6 +37,9 @@ function MatchCard({
     match: string;
     viewMatter: string;
     matterFallback: string;
+    matchType: string;
+    roleValue: string;
+    statusValue: string;
   };
 }) {
   const reason = localizeApiMessage(match.match_reason, match.match_reason);
@@ -48,13 +51,13 @@ function MatchCard({
       <div className="flex items-start justify-between gap-2">
         <div className="text-sm font-medium leading-snug">{match.entity_name}</div>
         <span className="shrink-0 text-[10px] uppercase tracking-wide text-muted-foreground border px-1.5 py-0.5 rounded">
-          {match.match_type_label || match.match_type}
+          {labels.matchType}
         </span>
       </div>
       <div className="text-xs text-muted-foreground">{reason}</div>
       <div className="text-xs">
         <span className="text-muted-foreground">{labels.role}: </span>
-        {match.role_label || match.role}
+        {labels.roleValue}
       </div>
       <div className="text-xs">
         <span className="font-medium">
@@ -64,7 +67,7 @@ function MatchCard({
       </div>
       <div className="text-xs">
         <span className="text-muted-foreground">{labels.status}: </span>
-        {match.matter_status}
+        {labels.statusValue}
       </div>
       <Button
         type="button"
@@ -87,7 +90,7 @@ export default function ConflictCheckDialog({
   matterId = null,
   excludeMatterId = null,
 }: Props) {
-  const { t, tf } = useAppTranslation();
+  const { t, tf, enumLabel, enumPretty } = useAppTranslation();
   const m = t.dashboard.conflictCheck;
   const navigate = useNavigate();
   const [q, setQ] = useState(initialQuery);
@@ -150,6 +153,17 @@ export default function ConflictCheckDialog({
   const exact = result?.exact_matches ?? [];
   const potential = result?.potential_matches ?? [];
   const total = result?.result_count ?? 0;
+
+  const matchCardLabels = (match: ConflictPotentialMatch) => ({
+    role: m.roleLabel,
+    status: m.statusLabel,
+    match: m.matchLabel,
+    viewMatter: m.viewMatter,
+    matterFallback: m.matterFallback,
+    matchType: enumLabel('conflictMatchType', match.match_type) || match.match_type_label || match.match_type,
+    roleValue: enumLabel('conflictRole', match.role) || match.role_label || match.role,
+    statusValue: enumPretty(match.matter_status) || match.matter_status,
+  });
 
   return (
     <Dialog open={open} onOpenChange={resetOnClose}>
@@ -215,13 +229,7 @@ export default function ConflictCheckDialog({
                       key={match.id}
                       match={match}
                       onViewMatter={viewMatter}
-                      labels={{
-                        role: m.roleLabel,
-                        status: m.statusLabel,
-                        match: m.matchLabel,
-                        viewMatter: m.viewMatter,
-                        matterFallback: m.matterFallback,
-                      }}
+                      labels={matchCardLabels(match)}
                     />
                   ))}
                 </div>
@@ -237,13 +245,7 @@ export default function ConflictCheckDialog({
                       key={match.id}
                       match={match}
                       onViewMatter={viewMatter}
-                      labels={{
-                        role: m.roleLabel,
-                        status: m.statusLabel,
-                        match: m.matchLabel,
-                        viewMatter: m.viewMatter,
-                        matterFallback: m.matterFallback,
-                      }}
+                      labels={matchCardLabels(match)}
                     />
                   ))}
                 </div>
