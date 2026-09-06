@@ -22,6 +22,7 @@ from juria.services.juria_api_service import (
     generate_conversation_title,
     send_chat_message,
 )
+from juria.services.draft_cleanup import extract_advisory_note, ungrounded_advisory
 from juria.services.retrieval import ensure_file_extracted
 from juria.services.sources import connect_upload
 from juria.services.titles import fallback_title_from_message, is_auto_title
@@ -101,6 +102,28 @@ def format_analysis_response(data: dict) -> str:
     return "".join(lines)
 
 
+def finalize_assistant_payload(
+    content: str,
+    analysis: dict | None,
+    retrieved,
+    language: str,
+    *,
+    mode: str = "CHAT",
+) -> tuple[str, dict]:
+    """Strip embedded advisory into analysis; inject coral-banner note when ungrounded."""
+    body, note = extract_advisory_note(content or "")
+    out = dict(analysis or {})
+    if note:
+        out["advisory_note"] = note
+    elif (
+        not retrieved
+        and not out.get("advisory_note")
+        and (mode or "").upper() in ("CONTRACT_ANALYSIS", "LEGAL_RESEARCH", "DOCUMENT_DRAFTING")
+    ):
+        out["advisory_note"] = ungrounded_advisory(language)
+    return body, out
+
+
 def _call_model(*, project, thread, user, message_text, history, mode, language, upload_local=None, upload_type=None):
     ctx = resolve_prompt_context(project, message_text, language=language)
     kwargs = dict(
@@ -123,6 +146,9 @@ def _call_model(*, project, thread, user, message_text, history, mode, language,
         tokens = int(api_out.get("tokens_used") or 0)
         juria_mid = str(api_out.get("message_id") or "")
         analysis = api_out.get("structured") or {}
+        content, analysis = finalize_assistant_payload(
+            content, analysis, ctx["retrieved"], language, mode="CONTRACT_ANALYSIS"
+        )
         elapsed_ms = int((time.perf_counter() - t0) * 1000)
         record_juria_usage(user, messages_delta=2, tokens_delta=tokens, contract_analyses_delta=1)
         return content, tokens, juria_mid, [], analysis, ctx["retrieved"], elapsed_ms
@@ -132,10 +158,13 @@ def _call_model(*, project, thread, user, message_text, history, mode, language,
     tokens = int(api_out.get("tokens_used") or 0)
     juria_mid = str(api_out.get("message_id") or "")
     suggestions = list(api_out.get("suggestions") or [])
+    content, analysis = finalize_assistant_payload(
+        content, {}, ctx["retrieved"], language, mode=mode
+    )
     elapsed_ms = int((time.perf_counter() - t0) * 1000)
     research_delta = 1 if mode == JuriaConversation.Mode.LEGAL_RESEARCH else 0
     record_juria_usage(user, messages_delta=2, tokens_delta=tokens, research_queries_delta=research_delta)
-    return content, tokens, juria_mid, suggestions, {}, ctx["retrieved"], elapsed_ms
+    return content, tokens, juria_mid, suggestions, analysis, ctx["retrieved"], elapsed_ms
 
 
 def send_thread_message(user, thread, project, *, message_text: str, upload=None, file_name="", language="", mode=""):

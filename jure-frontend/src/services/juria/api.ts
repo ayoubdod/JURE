@@ -46,6 +46,8 @@ export type DraftBody = {
   document_type: string;
   parameters: Record<string, string>;
   linked_case_id?: number | null;
+  title?: string;
+  language?: string;
 };
 
 export async function apiJuriaListConversations(params?: {

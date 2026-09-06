@@ -117,3 +117,41 @@ export function splitJuriaSources(content: string): { body: string; sources: str
     .filter((line) => line.length > 0 && !/^#{1,3}\s/.test(line));
   return { body, sources };
 }
+
+/** Pull AI/system advisory banners (تنبيه / Note / Avertissement) out of the body. */
+export function splitJuriaAdvisory(content: string): { body: string; advisory: string } {
+  const lines = (content || '').split('\n');
+  const note: string[] = [];
+  const body: string[] = [];
+  for (const line of lines) {
+    const trimmed = line.trim().replace(/^\*{1,2}|\*{1,2}$/g, '');
+    if (
+      /^(تنبيه|ملاحظة|avertissement|note|disclaimer|warning)\s*[:：]/i.test(trimmed) &&
+      /(استرشادي|لا يغني|indicatif|ne remplace|advisory|does not replace|sources|مصادر)/i.test(trimmed)
+    ) {
+      note.push(trimmed);
+    } else {
+      body.push(line);
+    }
+  }
+  return { body: body.join('\n').trim(), advisory: note.join(' ').trim() };
+}
+
+export function draftTypeLabel(
+  apiType: string,
+  labels: Record<string, string>
+): string {
+  const id = DOCUMENT_DRAFT_TYPES.find((d) => d.apiType === apiType)?.id;
+  if (id && labels[id]) return labels[id];
+  return apiType.replace(/_/g, ' ');
+}
+
+export function safeDownloadFilename(title: string): string {
+  const cleaned = (title || 'document')
+    .replace(/[<>:"/\\|?*\u0000-\u001f]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 120);
+  const base = cleaned || 'document';
+  return base.toLowerCase().endsWith('.docx') ? base : `${base}.docx`;
+}

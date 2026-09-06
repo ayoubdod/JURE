@@ -56,6 +56,7 @@ export interface JuriaDocumentCard {
   docxUrl?: string;
   downloadMessageId?: string;
   artifactId?: string;
+  fileName?: string;
 }
 
 export interface JuriaSourceHit {
@@ -77,6 +78,8 @@ export interface JuriaContractAnalysis {
   unusual_clauses?: string[];
   extracted?: Record<string, unknown[] | string[]>;
   parse_error?: boolean;
+  advisory_note?: string;
+  document_title?: string;
 }
 
 export interface JuriaMessage {
@@ -92,6 +95,7 @@ export interface JuriaMessage {
   author?: JuriaPublicUser | null;
   sources?: JuriaSourceHit[];
   analysis?: JuriaContractAnalysis;
+  advisoryNote?: string;
   isSuperseded?: boolean;
   editedAt?: string | null;
   parentMessageId?: string | null;

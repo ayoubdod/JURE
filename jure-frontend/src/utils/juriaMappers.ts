@@ -40,6 +40,12 @@ export function mapApiMessageToJuria(m: JuriaApiMessage): JuriaMessage {
   const role =
     m.role === 'USER' ? 'user' : m.role === 'SYSTEM' ? 'system' : ('assistant' as const);
 
+  const analysis = (m.analysis as JuriaMessage['analysis']) ?? undefined;
+  const titleFromAnalysis =
+    typeof analysis?.document_title === 'string' ? analysis.document_title.trim() : '';
+  const advisoryFromAnalysis =
+    typeof analysis?.advisory_note === 'string' ? analysis.advisory_note.trim() : '';
+
   const msg: JuriaMessage = {
     id: m.id,
     role,
@@ -57,17 +63,22 @@ export function mapApiMessageToJuria(m: JuriaApiMessage): JuriaMessage {
   }
 
   if (m.generated_document_path) {
+    const typeName =
+      titleFromAnalysis ||
+      tFor(detectInitialLanguage()).juria.generatedDocument;
     msg.documentCard = {
-      typeName: tFor(detectInitialLanguage()).juria.generatedDocument,
+      typeName,
       previewLines: (m.content || '').split('\n').slice(0, 4).join('\n').trim() || '—',
       generatedAt: m.created_at,
       downloadMessageId: m.id,
+      fileName: titleFromAnalysis ? `${titleFromAnalysis}.docx` : undefined,
     };
   }
 
   msg.author = m.author ?? undefined;
   msg.sources = m.sources ?? [];
-  msg.analysis = (m.analysis as JuriaMessage['analysis']) ?? undefined;
+  msg.analysis = analysis;
+  msg.advisoryNote = advisoryFromAnalysis || undefined;
   msg.isSuperseded = Boolean(m.is_superseded);
   msg.editedAt = m.edited_at;
   msg.parentMessageId = m.parent_message_id ?? null;

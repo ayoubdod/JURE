@@ -3,6 +3,7 @@ import os
 import re
 import time
 import uuid
+from urllib.parse import quote
 
 from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
@@ -17,6 +18,13 @@ from rest_framework.views import APIView
 from juria.models import JuriaConversation, JuriaMessage, record_juria_usage
 from juria.serializers.conversation_serializer import build_case_context
 from juria.serializers.message_serializer import JuriaDraftRequestSerializer
+from juria.services.draft_cleanup import (
+    clean_draft_content,
+    draft_type_title,
+    extract_advisory_note,
+    infer_document_title,
+    ungrounded_advisory,
+)
 from juria.services.juria_api_service import JuriaAPIError, JuriaTimeoutError, draft_document
 from juria.views.conversation_views import get_case_for_user
 from juria.views.mixins import JuriaEnabledMixin, juria_error_http_status
@@ -25,7 +33,16 @@ from core.utils import get_user_cabinet
 
 def _safe_filename(name: str) -> str:
     base = re.sub(r"[^\w.\-]+", "_", name, flags=re.UNICODE).strip("._") or "document"
-    return base[:200]
+    return base[:180]
+
+
+def _content_disposition(filename: str) -> str:
+    """ASCII fallback + RFC 5987 UTF-8 filename for Arabic/French titles."""
+    ascii_name = _safe_filename(filename)
+    if not ascii_name.lower().endswith(".docx"):
+        ascii_name = f"{ascii_name}.docx"
+    utf8_name = filename if filename.lower().endswith(".docx") else f"{filename}.docx"
+    return f"attachment; filename=\"{ascii_name}\"; filename*=UTF-8''{quote(utf8_name)}"
 
 
 class JuriaConversationDraftView(JuriaEnabledMixin, APIView):
@@ -66,12 +83,14 @@ class JuriaConversationDraftView(JuriaEnabledMixin, APIView):
 
         case_context = build_case_context(case) if case else None
         project = conv.project
+        has_project_sources = False
         if project:
             jurisdiction_code = project.jurisdiction_code
             language = ser.validated_data.get("language") or project.preferred_language
             legal_system = None
             legal_domain = project.legal_domain
             instructions = project.instructions
+            has_project_sources = project.sources.exists()
         else:
             cabinet = get_user_cabinet(request.user)
             jurisdiction = getattr(cabinet, "jurisdiction", None) if cabinet else None
@@ -104,15 +123,35 @@ class JuriaConversationDraftView(JuriaEnabledMixin, APIView):
                 status=juria_error_http_status(exc),
             )
 
-        content = api_out.get("content") or ""
-        docx_b64 = api_out.get("docx_base64") or ""
+        content = clean_draft_content(api_out.get("content") or "")
+        content, embedded_note = extract_advisory_note(content)
         tokens = int(api_out.get("tokens_used") or 0)
         elapsed_ms = int((time.perf_counter() - t0) * 1000)
+        title = (
+            (api_out.get("title") or "").strip()
+            or (ser.validated_data.get("title") or "").strip()
+            or infer_document_title(content, document_type, language)
+            or draft_type_title(document_type, language)
+        )
+        advisory = ""
+        if not has_project_sources and not case_context:
+            advisory = embedded_note or ungrounded_advisory(language)
+        elif embedded_note:
+            advisory = embedded_note
 
         rel_path = ""
+        from juria.services.document_text import text_to_docx_base64
+
+        rtl = (language or "").lower() in ("ar", "darija")
+        docx_b64 = text_to_docx_base64(content, rtl=rtl) if content else ""
         if docx_b64:
             raw = base64.b64decode(docx_b64)
-            fname = _safe_filename(f"{document_type}_{uuid.uuid4().hex}.docx")
+            fname = _safe_filename(f"{title}.docx")
+            if not fname.lower().endswith(".docx"):
+                fname = f"{fname}.docx"
+            # Avoid collisions without making the name look like a UUID dump
+            stem, ext = os.path.splitext(fname)
+            fname = f"{stem}_{uuid.uuid4().hex[:8]}{ext}"
             rel_path = f"juria/generated/{conv.id}/{fname}"
             default_storage.save(rel_path, ContentFile(raw))
 
@@ -125,6 +164,10 @@ class JuriaConversationDraftView(JuriaEnabledMixin, APIView):
             tokens_used=tokens or None,
             response_time_ms=elapsed_ms,
             generated_document_path=rel_path,
+            analysis={
+                **({"advisory_note": advisory} if advisory else {}),
+                "document_title": title,
+            },
         )
         conv.save(update_fields=["updated_at"])
         record_juria_usage(
@@ -144,11 +187,10 @@ class JuriaConversationDraftView(JuriaEnabledMixin, APIView):
 
             type_map = {c: c for c, _ in ArtifactType.choices}
             art_type = type_map.get(document_type, ArtifactType.AUTRE)
-            title = (ser.validated_data.get("title") or document_type.replace("_", " ")).strip()
             art = JuriaArtifact.objects.create(
                 project=conv.project,
                 thread=conv.thread,
-                title=title,
+                title=title[:255],
                 artifact_type=art_type,
                 content_markdown=content,
                 content_html=md.markdown(content or "", extensions=["extra"]),
@@ -181,8 +223,11 @@ class JuriaConversationDraftView(JuriaEnabledMixin, APIView):
                     "generated_document_path": msg.generated_document_path,
                     "tokens_used": tokens,
                     "created_at": msg.created_at,
+                    "analysis": msg.analysis,
                 },
+                "document_title": title,
                 "document_download_url": download_url,
+                "advisory_note": advisory,
                 "artifact_id": artifact_id,
             },
             status=status.HTTP_201_CREATED,
@@ -217,6 +262,14 @@ class JuriaGeneratedDocumentDownloadView(JuriaEnabledMixin, APIView):
             raise Http404()
         fh = default_storage.open(path, "rb")
         filename = os.path.basename(path.replace("\\", "/")) or "document.docx"
-        resp = FileResponse(fh, as_attachment=True, filename=filename)
-        resp["Content-Disposition"] = f'attachment; filename="{filename}"'
+        # Prefer a human title when the stored file still uses a technical stem
+        display = filename
+        analysis = msg.analysis if isinstance(msg.analysis, dict) else {}
+        title_hint = (analysis.get("document_title") or "").strip()
+        if not title_hint:
+            title_hint = infer_document_title(msg.content or "", "AUTRE", msg.language or "fr")
+        if title_hint:
+            display = f"{title_hint}.docx"
+        resp = FileResponse(fh, as_attachment=True, filename=_safe_filename(display))
+        resp["Content-Disposition"] = _content_disposition(display)
         return resp

@@ -4,12 +4,14 @@ from __future__ import annotations
 
 import base64
 import io
+import re
 import zipfile
 from xml.etree import ElementTree as ET
 from xml.sax.saxutils import escape
 
 MAX_EXTRACT_CHARS = 80_000
 _W_NS = "http://schemas.openxmlformats.org/wordprocessingml/2006/main"
+_BOLD_CHUNK = re.compile(r"(\*\*[^*]+\*\*|__[^_]+__)")
 
 
 class DocumentTextError(Exception):
@@ -47,13 +49,10 @@ def extract_document_text(file_path: str, file_type: str) -> str:
     return text
 
 
-def text_to_docx_base64(text: str) -> str:
-    """Build a minimal Word document from plain text (no extra dependency)."""
+def text_to_docx_base64(text: str, *, rtl: bool = False) -> str:
+    """Build a minimal Word document. Converts **bold** markers to real bold runs."""
     lines = (text or "").splitlines() or [""]
-    paragraphs = "".join(
-        f'<w:p><w:r><w:t xml:space="preserve">{escape(line)}</w:t></w:r></w:p>'
-        for line in lines
-    )
+    paragraphs = "".join(_paragraph_xml(line, rtl=rtl) for line in lines)
     document_xml = (
         '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
         f'<w:document xmlns:w="{_W_NS}">'
@@ -67,7 +66,7 @@ def text_to_docx_base64(text: str) -> str:
 </Types>
 """
     rels = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+<Relationships xmlns="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
   <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/>
 </Relationships>
 """
@@ -77,6 +76,36 @@ def text_to_docx_base64(text: str) -> str:
         zf.writestr("_rels/.rels", rels)
         zf.writestr("word/document.xml", document_xml)
     return base64.b64encode(buf.getvalue()).decode("ascii")
+
+
+def _paragraph_xml(line: str, *, rtl: bool = False) -> str:
+    ppr = "<w:pPr><w:bidi/></w:pPr>" if rtl else ""
+    return f"<w:p>{ppr}{_runs_xml(line)}</w:p>"
+
+
+def _runs_xml(line: str) -> str:
+    """Turn markdown-ish bold into Word bold; leave other text plain."""
+    text = line or ""
+    # Drop heading hashes so the Word file does not show "# Title"
+    text = re.sub(r"^#{1,6}\s+", "", text)
+    chunks = _BOLD_CHUNK.split(text)
+    if not chunks:
+        return '<w:r><w:t xml:space="preserve"></w:t></w:r>'
+    runs: list[str] = []
+    for chunk in chunks:
+        if not chunk:
+            continue
+        bold = False
+        value = chunk
+        if chunk.startswith("**") and chunk.endswith("**") and len(chunk) >= 4:
+            bold = True
+            value = chunk[2:-2]
+        elif chunk.startswith("__") and chunk.endswith("__") and len(chunk) >= 4:
+            bold = True
+            value = chunk[2:-2]
+        rpr = "<w:rPr><w:b/></w:rPr>" if bold else ""
+        runs.append(f'<w:r>{rpr}<w:t xml:space="preserve">{escape(value)}</w:t></w:r>')
+    return "".join(runs) or '<w:r><w:t xml:space="preserve"></w:t></w:r>'
 
 
 def _extract_pdf_pages(file_path: str) -> list[dict]:

@@ -110,6 +110,43 @@ class DocxBuilderTests(SimpleTestCase):
             self.assertIn("Bonjour", xml)
             self.assertIn("Maroc", xml)
 
+    def test_text_to_docx_renders_bold(self):
+        import base64
+        import zipfile
+        from io import BytesIO
+
+        raw = base64.b64decode(text_to_docx_base64("**إنذار رسمي**"))
+        with zipfile.ZipFile(BytesIO(raw), "r") as zf:
+            xml = zf.read("word/document.xml").decode("utf-8")
+            self.assertIn("إنذار رسمي", xml)
+            self.assertIn("<w:b/>", xml)
+            self.assertNotIn("**", xml)
+
+
+class DraftCleanupTests(SimpleTestCase):
+    def test_strips_lawyer_meta_and_advisory(self):
+        from juria.services.draft_cleanup import clean_draft_content, extract_advisory_note, infer_document_title
+
+        raw = (
+            "**إنذار رسمي بمقتضى القانون**\n\n"
+            "بين الطرفين.\n\n"
+            "---\n\n"
+            "ملاحظة للمحامي المراجع:\n"
+            "- أكمل الحقول\n"
+        )
+        cleaned = clean_draft_content(raw)
+        self.assertIn("إنذار رسمي", cleaned)
+        self.assertNotIn("ملاحظة للمحامي", cleaned)
+        self.assertNotIn("---", cleaned)
+        title = infer_document_title(cleaned, "MISE_EN_DEMEURE", "ar")
+        self.assertTrue(title.startswith("إنذار"))
+
+        body, note = extract_advisory_note(
+            "تحليل.\nتنبيه: هذا التحليل استرشادي فقط ولا يغني عن استشارة محامٍ مختص. لم تتوفر مصادر موثقة."
+        )
+        self.assertEqual(body, "تحليل.")
+        self.assertIn("استرشادي", note)
+
 
 class JuriaDisabledApiTests(APITestCase):
     def test_disabled_returns_503_json(self):
