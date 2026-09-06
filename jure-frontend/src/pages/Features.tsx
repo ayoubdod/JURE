@@ -427,7 +427,6 @@ const Features: React.FC = () => {
   const navigate = useNavigate();
   const { lang, dir, path } = useMarketingLang();
   const t = STRINGS[lang];
-  const isRtl = dir === "rtl";
 
   const go = (to: string) => navigate(to);
 
@@ -457,9 +456,7 @@ const Features: React.FC = () => {
           </p>
 
           <div
-            className={`mt-8 sm:mt-10 flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center w-full sm:w-auto ${
-              isRtl ? "sm:flex-row-reverse" : ""
-            }`}
+            className="mt-8 sm:mt-10 flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center w-full sm:w-auto"
           >
             <Button
               onClick={() => go(path("demo"))}
@@ -506,7 +503,7 @@ const Features: React.FC = () => {
 
       {/* Deep-dive cards */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 pb-14 sm:pb-16 md:pb-20">
-        <div className={`grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-6 ${isRtl ? "md:[direction:rtl]" : ""}`}>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-6">
           {deepCards.map((card, i) => {
             const Icon = card.icon;
             return (
@@ -593,9 +590,7 @@ const Features: React.FC = () => {
               <p className="text-white/70 text-base sm:text-lg break-words">{t.cta.subtitle}</p>
 
               <div
-                className={`mt-8 flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center w-full sm:w-auto ${
-                  isRtl ? "sm:flex-row-reverse" : ""
-                }`}
+                className="mt-8 flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center w-full sm:w-auto"
               >
                 <Button
                   size="lg"

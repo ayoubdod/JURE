@@ -18,7 +18,7 @@ import { eventBus } from '@/utils/eventBus';
 import { useToast } from '@/hooks/use-toast';
 
 export const SHEET_PANEL =
-  'flex flex-col gap-0 !p-0 border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 shadow-xl [&>button]:hidden !absolute !right-0 !top-0 !h-full !w-[min(100%,420px)] !max-w-[420px] !sm:max-w-[420px]';
+  'flex flex-col gap-0 !p-0 border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 shadow-xl [&>button]:hidden !absolute !end-0 !top-0 !h-full !w-[min(100%,420px)] !max-w-[420px] !sm:max-w-[420px]';
 
 export const EMBEDDED_OVERLAY = '!bg-transparent pointer-events-auto';
 

@@ -11,14 +11,14 @@ type Props = {
 };
 
 export default function NoteDetail({ note, onBack, onEdit }: Props) {
-  const { t, lang, dir } = useAppTranslation();
+  const { t, lang } = useAppTranslation();
   const n = t.notes;
   const matter = matterLabel(note);
 
   return (
     <article className="mx-auto max-w-3xl">
       <Button type="button" variant="ghost" className="-ms-2 mb-5 h-9 rounded-lg px-2" onClick={onBack}>
-        <ArrowLeft className={`me-1.5 h-4 w-4 ${dir === 'rtl' ? 'rotate-180' : ''}`} />
+        <ArrowLeft className="me-1.5 h-4 w-4 rtl:rotate-180" />
         {n.back}
       </Button>
 

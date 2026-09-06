@@ -245,6 +245,7 @@ export function RailIconButton({
   onClick?: () => void;
   children: React.ReactNode;
 }) {
+  const { dir } = useAppTranslation();
   return (
     <Tooltip>
       <TooltipTrigger asChild>
@@ -265,7 +266,7 @@ export function RailIconButton({
           {children}
         </button>
       </TooltipTrigger>
-      <TooltipContent side="right" className="max-w-[220px]">
+      <TooltipContent side={dir === 'rtl' ? 'left' : 'right'} className="max-w-[220px]">
         {label}
       </TooltipContent>
     </Tooltip>

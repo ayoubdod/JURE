@@ -514,7 +514,7 @@ const ScaleIcon: React.FC<{ className?: string }> = ({ className }) => (
   </svg>
 );
 
-function StepMock({ stepId, m, isRtl }: { stepId: string; m: DemoCopy["mock"]; isRtl: boolean }) {
+function StepMock({ stepId, m }: { stepId: string; m: DemoCopy["mock"] }) {
   switch (stepId) {
     case "dashboard":
       return (
@@ -584,8 +584,8 @@ function StepMock({ stepId, m, isRtl }: { stepId: string; m: DemoCopy["mock"]; i
             ))}
           </div>
           <div className="space-y-3">
-            <SoftCard className={isRtl ? "" : ""}>
-              <div className={`flex gap-2 ${isRtl ? "flex-row-reverse" : ""}`}>
+            <SoftCard>
+              <div className="flex gap-2">
                 <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[#A58CF4] to-[#A58CF4] flex items-center justify-center text-white text-[10px] font-bold shrink-0">
                   U
                 </div>
@@ -596,7 +596,7 @@ function StepMock({ stepId, m, isRtl }: { stepId: string; m: DemoCopy["mock"]; i
               delay={0.15}
               className="bg-gradient-to-r from-[#A58CF4] to-[#4D3680] text-white border-0"
             >
-              <div className={`flex gap-2 ${isRtl ? "flex-row-reverse" : ""}`}>
+              <div className="flex gap-2">
                 <div className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center shrink-0 landing-bot-pulse">
                   <Bot className="w-3.5 h-3.5" />
                 </div>
@@ -680,7 +680,7 @@ function StepMock({ stepId, m, isRtl }: { stepId: string; m: DemoCopy["mock"]; i
         <MockPane>
           <div className="grid sm:grid-cols-2 gap-3">
             <SoftCard>
-              <div className={`flex items-center gap-3 ${isRtl ? "flex-row-reverse" : ""}`}>
+              <div className="flex items-center gap-3">
                 <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#A58CF4] to-[#A58CF4] flex items-center justify-center text-white">
                   <UserCheck className="w-6 h-6" />
                 </div>
@@ -791,7 +791,7 @@ function StepMock({ stepId, m, isRtl }: { stepId: string; m: DemoCopy["mock"]; i
                 {["Ahmed H.", "Sarah B."].map((name, i) => (
                   <div
                     key={name}
-                    className={`flex items-center gap-2 text-xs ${isRtl ? "flex-row-reverse" : ""}`}
+                    className="flex items-center gap-2 text-xs"
                   >
                     <div
                       className={`w-7 h-7 rounded-full flex items-center justify-center text-white text-[10px] font-bold ${
@@ -809,7 +809,7 @@ function StepMock({ stepId, m, isRtl }: { stepId: string; m: DemoCopy["mock"]; i
             <SoftCard delay={0.1}>
               <p className="text-xs font-semibold mb-3">{m.team}</p>
               <div className="space-y-3">
-                <div className={`flex items-center gap-2 ${isRtl ? "flex-row-reverse" : ""}`}>
+                <div className="flex items-center gap-2">
                   <div className="w-8 h-8 rounded-full bg-[#A58CF4] text-white text-[10px] font-bold flex items-center justify-center">
                     AH
                   </div>
@@ -819,7 +819,7 @@ function StepMock({ stepId, m, isRtl }: { stepId: string; m: DemoCopy["mock"]; i
                   </div>
                   <span className="w-2 h-2 rounded-full bg-emerald-400" title={m.online} />
                 </div>
-                <div className={`flex items-center gap-2 ${isRtl ? "flex-row-reverse" : ""}`}>
+                <div className="flex items-center gap-2">
                   <div className="w-8 h-8 rounded-full bg-[#A58CF4] text-white text-[10px] font-bold flex items-center justify-center">
                     SB
                   </div>
@@ -889,7 +889,6 @@ const Demo: React.FC = () => {
   const navigate = useNavigate();
   const { lang, setLang, t } = useI18n();
   const reduce = useReducedMotion();
-  const isRtl = t.dir === "rtl";
   const [currentStep, setCurrentStep] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -944,7 +943,7 @@ const Demo: React.FC = () => {
               size="sm"
               className="landing-btn-secondary shrink-0 px-2.5 sm:px-3"
             >
-              <ArrowLeft className={`w-4 h-4 me-1.5 sm:me-2 ${isRtl ? "rotate-180" : ""}`} />
+              <ArrowLeft className="w-4 h-4 me-1.5 sm:me-2 rtl:rotate-180" />
               <span className="truncate max-w-[8rem] sm:max-w-none">{t.back}</span>
             </Button>
 
@@ -1000,9 +999,7 @@ const Demo: React.FC = () => {
         <Card className="landing-glass border-0 shadow-none overflow-hidden ring-1 ring-[#A58CF4]/12 dark:ring-[#A58CF4]/20">
           <CardHeader className="border-b border-[#A58CF4]/10 dark:border-[#A58CF4]/15 bg-gradient-to-r from-[#F4F1FF]/80 to-transparent dark:from-[#A58CF4]/15 dark:to-transparent pb-4">
             <div
-              className={`flex flex-col sm:flex-row items-center gap-4 text-center sm:text-start ${
-                isRtl ? "sm:flex-row-reverse sm:text-end" : ""
-              }`}
+              className="flex flex-col sm:flex-row items-center gap-4 text-center sm:text-start"
             >
               <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#A58CF4] to-[#4D3680] flex items-center justify-center text-white shrink-0 shadow-[0_0_24px_-4px_rgba(100,73,157,0.6)]">
                 {STEP_ICONS[active.id]}
@@ -1034,22 +1031,18 @@ const Demo: React.FC = () => {
                 exit={reduce ? undefined : { opacity: 0, y: -8 }}
                 transition={{ duration: 0.35 }}
               >
-                <StepMock stepId={active.id} m={t.mock} isRtl={isRtl} />
+                <StepMock stepId={active.id} m={t.mock} />
               </motion.div>
             </AnimatePresence>
 
-            <div
-              className={`flex items-center justify-between mt-6 sm:mt-8 gap-2 ${
-                isRtl ? "flex-row-reverse" : ""
-              }`}
-            >
+            <div className="flex items-center justify-between mt-6 sm:mt-8 gap-2">
               <Button
                 onClick={() => goStep(Math.max(0, currentStep - 1))}
                 variant="outline"
                 disabled={currentStep === 0}
                 className="border-[#A58CF4]/20"
               >
-                <ArrowLeft className={`w-4 h-4 me-2 ${isRtl ? "rotate-180" : ""}`} />
+                <ArrowLeft className="w-4 h-4 me-2 rtl:rotate-180" />
                 {t.prev}
               </Button>
 
@@ -1084,7 +1077,7 @@ const Demo: React.FC = () => {
                 className="border-[#A58CF4]/20"
               >
                 {t.next}
-                <ArrowRight className={`w-4 h-4 ms-2 ${isRtl ? "rotate-180" : ""}`} />
+                <ArrowRight className="w-4 h-4 ms-2 rtl:rotate-180" />
               </Button>
             </div>
           </CardContent>

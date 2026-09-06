@@ -8,6 +8,7 @@ import { Mail, Send, Phone, MapPin, ArrowRight } from "lucide-react";
 import MarketingShell from "@/components/landing/MarketingShell";
 import Reveal from "@/components/landing/Reveal";
 import { RouteSeo } from "@/marketing/Seo";
+import { useMarketingLang } from "@/marketing/MarketingLocale";
 import { CONTACT_INBOX, submitLandingInquiry } from "@/services/marketing/api";
 import { track, MarketingEvents } from "@/lib/analytics";
 
@@ -42,6 +43,7 @@ const contactEn = {
     email: "contact@jure.ma",
     phone: "+212 665236382",
     address: "Casablanca, Morocco",
+    viewStatus: "View status",
   },
   footer: { privacy: "Privacy", terms: "Terms", status: "Status", rights: "All rights reserved." },
 };
@@ -79,6 +81,7 @@ const STRINGS: Record<Lang, ContactCopy> = {
       email: "contact@jure.ma",
       phone: "+212 665236382",
       address: "Casablanca, Maroc",
+      viewStatus: "Voir le statut",
     },
     footer: { privacy: "Confidentialité", terms: "Conditions", status: "Statut", rights: "Tous droits réservés." },
   },
@@ -111,6 +114,7 @@ const STRINGS: Record<Lang, ContactCopy> = {
       email: "contact@jure.ma",
       phone: "+212 665236382",
       address: "الدار البيضاء، المغرب",
+      viewStatus: "عرض الحالة",
     },
     footer: { privacy: "الخصوصية", terms: "الشروط", status: "الحالة", rights: "جميع الحقوق محفوظة." },
   },
@@ -136,6 +140,7 @@ const useI18n = () => {
 
 const Contact: React.FC = () => {
   const navigate = useNavigate();
+  const { path } = useMarketingLang();
   const { lang, setLang, t } = useI18n();
   const [form, setForm] = useState({
     name: "",
@@ -146,7 +151,6 @@ const Contact: React.FC = () => {
     consent: false,
   });
   const [sending, setSending] = useState(false);
-  const isRtl = t.dir === "rtl";
 
   const onChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -270,9 +274,7 @@ const Contact: React.FC = () => {
                   />
                 </div>
                 <label
-                  className={`md:col-span-2 inline-flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300 ${
-                    isRtl ? "flex-row-reverse" : ""
-                  }`}
+                  className="md:col-span-2 inline-flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300"
                 >
                   <input
                     type="checkbox"
@@ -289,7 +291,7 @@ const Contact: React.FC = () => {
                     disabled={sending}
                     className="w-full sm:w-auto px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg landing-btn-primary"
                   >
-                    <Send className={`w-4 h-4 ${isRtl ? "ms-2" : "me-2"}`} /> {sending ? t.form.sending : t.hero.cta}
+                    <Send className="w-4 h-4 me-2" /> {sending ? t.form.sending : t.hero.cta}
                   </Button>
                 </div>
               </form>
@@ -302,7 +304,7 @@ const Contact: React.FC = () => {
               <h2 className="font-display text-xl sm:text-2xl font-bold tracking-tight mb-1 break-words">{t.info.title}</h2>
               <p className="text-slate-500 dark:text-slate-400 text-sm mb-6">JURE</p>
               <div className="space-y-4">
-                <div className={`flex items-center gap-3 ${isRtl ? "flex-row-reverse" : ""}`}>
+                <div className="flex items-center gap-3">
                   <div className="landing-icon w-10 h-10 rounded-xl flex items-center justify-center shrink-0">
                     <Mail className="w-5 h-5" />
                   </div>
@@ -313,13 +315,13 @@ const Contact: React.FC = () => {
                     {t.info.email}
                   </a>
                 </div>
-                <div className={`flex items-center gap-3 ${isRtl ? "flex-row-reverse" : ""}`}>
+                <div className="flex items-center gap-3">
                   <div className="landing-icon w-10 h-10 rounded-xl flex items-center justify-center shrink-0">
                     <Phone className="w-5 h-5" />
                   </div>
                   <span>{t.info.phone}</span>
                 </div>
-                <div className={`flex items-center gap-3 ${isRtl ? "flex-row-reverse" : ""}`}>
+                <div className="flex items-center gap-3">
                   <div className="landing-icon w-10 h-10 rounded-xl flex items-center justify-center shrink-0">
                     <MapPin className="w-5 h-5" />
                   </div>
@@ -328,10 +330,10 @@ const Contact: React.FC = () => {
                 <div className="pt-4">
                   <Button
                     variant="outline"
-                    onClick={() => navigate("/status")}
+                    onClick={() => navigate(path("status"))}
                     className="w-full landing-btn-secondary"
                   >
-                    {lang === "fr" ? "Voir le statut" : lang === "ar" ? "عرض الحالة" : "View Status"}
+                    {t.info.viewStatus}
                     <ArrowRight className="w-4 h-4 ms-2 rtl:rotate-180" />
                   </Button>
                 </div>

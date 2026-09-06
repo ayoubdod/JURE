@@ -100,7 +100,7 @@ export function NotificationDropdown({ phase, onRequestClose }: NotificationDrop
           'absolute end-0 top-full z-[100] mt-2 flex max-h-[min(560px,75dvh)] w-[min(100vw-1.25rem,400px)] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-950',
           'shadow-[0_4px_6px_rgba(0,0,0,0.04),0_12px_40px_rgba(15,23,42,0.12)]',
           // Keep panel inside the viewport on narrow screens (floating card, not full-screen)
-          'max-sm:fixed max-sm:left-3 max-sm:right-3 max-sm:top-14 max-sm:mt-0 max-sm:w-auto',
+          'max-sm:fixed max-sm:start-3 max-sm:end-3 max-sm:top-14 max-sm:mt-0 max-sm:w-auto',
           phase === 'in' && 'animate-notification-dropdown-in',
           phase === 'out' && 'animate-notification-dropdown-out'
         )}

@@ -6,6 +6,7 @@ import { MessageSquare, Heart, Award, Users, ArrowRight } from "lucide-react";
 import MarketingShell from "@/components/landing/MarketingShell";
 import Reveal from "@/components/landing/Reveal";
 import { RouteSeo } from "@/marketing/Seo";
+import { useMarketingLang } from "@/marketing/MarketingLocale";
 
 type Lang = "fr" | "en" | "ar";
 
@@ -22,6 +23,7 @@ const communityFr = {
         "Échangez sur des cas complexes, partagez vos pratiques et progressez avec des pairs qui utilisent JURE au quotidien.",
       cta: "Nous contacter",
       demo: "Voir la démo",
+      badge: "Communauté",
     },
     pillars: [
       {
@@ -62,6 +64,7 @@ const STRINGS: Record<Lang, CommunityCopy> = {
         "Discuss complex matters, share practice tips, and grow with peers who use JURE every day.",
       cta: "Contact us",
       demo: "View demo",
+      badge: "Community",
     },
     pillars: [
       {
@@ -97,6 +100,7 @@ const STRINGS: Record<Lang, CommunityCopy> = {
         "ناقش القضايا المعقدة، وشارك أفضل الممارسات، وتطوّر مع زملاء يستخدمون JURE يوميًا.",
       cta: "تواصل معنا",
       demo: "شاهد العرض",
+      badge: "مجتمع",
     },
     pillars: [
       {
@@ -143,8 +147,8 @@ const useI18n = () => {
 
 const Community: React.FC = () => {
   const navigate = useNavigate();
+  const { path } = useMarketingLang();
   const { lang, setLang, t } = useI18n();
-  const isRtl = t.dir === "rtl";
 
   return (
     <MarketingShell
@@ -164,7 +168,7 @@ const Community: React.FC = () => {
         <Reveal className="text-center max-w-3xl mx-auto min-w-0">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full landing-glass text-xs font-medium text-[#A58CF4] mb-6">
             <Users className="w-3.5 h-3.5" />
-            Community
+            {t.hero.badge}
           </div>
           <h1 className="font-display text-[2rem] leading-[1.15] sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight break-words text-[#64499D] dark:text-white">
             {t.hero.titleA}
@@ -177,14 +181,12 @@ const Community: React.FC = () => {
             {t.hero.subtitle}
           </p>
           <div
-            className={`mt-8 sm:mt-10 flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center w-full sm:w-auto ${
-              isRtl ? "sm:flex-row-reverse" : ""
-            }`}
+            className="mt-8 sm:mt-10 flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center w-full sm:w-auto"
           >
             <Button
               size="lg"
               className="w-full sm:w-auto px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg landing-btn-primary"
-              onClick={() => navigate("/contact")}
+              onClick={() => navigate(path("contact"))}
             >
               {t.hero.cta}
               <ArrowRight className="ms-2 h-5 w-5 rtl:rotate-180" />
@@ -193,7 +195,7 @@ const Community: React.FC = () => {
               size="lg"
               variant="outline"
               className="w-full sm:w-auto px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg landing-btn-secondary"
-              onClick={() => navigate("/demo")}
+              onClick={() => navigate(path("demo"))}
             >
               {t.hero.demo}
             </Button>
@@ -230,7 +232,7 @@ const Community: React.FC = () => {
             <Button
               size="lg"
               className="relative w-full sm:w-auto px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg landing-btn-on-dark"
-              onClick={() => navigate("/contact")}
+              onClick={() => navigate(path("contact"))}
             >
               {t.cta.primary}
             </Button>

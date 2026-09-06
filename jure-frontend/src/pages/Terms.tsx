@@ -6,6 +6,7 @@ import { FileText, Shield, Scale, CreditCard, Ban, ArrowRight } from "lucide-rea
 import MarketingShell from "@/components/landing/MarketingShell";
 import Reveal from "@/components/landing/Reveal";
 import { RouteSeo } from "@/marketing/Seo";
+import { useMarketingLang } from "@/marketing/MarketingLocale";
 
 type Lang = "fr" | "en" | "ar";
 
@@ -334,6 +335,7 @@ const useI18n = () => {
 const Terms: React.FC = () => {
   const { lang, setLang, t } = useI18n();
   const navigate = useNavigate();
+  const { path } = useMarketingLang();
   const lastUpdated = "2025-08-15";
   const go = (to: string) => navigate(to);
 
@@ -373,10 +375,10 @@ const Terms: React.FC = () => {
           <p className="mt-4 text-base sm:text-lg text-neutral-600 dark:text-neutral-300 break-words">{t.hero.subtitle}</p>
           <p className="mt-2 text-sm text-neutral-500">{t.hero.lastUpdated}: {lastUpdated}</p>
           <div className="mt-8 flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center w-full sm:w-auto">
-            <Button onClick={() => go("/contact")} className="w-full sm:w-auto px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg landing-btn-primary">
+            <Button onClick={() => go(path("contact"))} className="w-full sm:w-auto px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg landing-btn-primary">
               {t.hero.ctaPrimary} <ArrowRight className="ms-2 h-4 w-4 rtl:rotate-180" />
             </Button>
-            <Button variant="outline" onClick={() => go("/demo")} className="w-full sm:w-auto px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg border-[#A58CF4]/30">
+            <Button variant="outline" onClick={() => go(path("demo"))} className="w-full sm:w-auto px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg border-[#A58CF4]/30">
               {t.hero.ctaSecondary}
             </Button>
           </div>

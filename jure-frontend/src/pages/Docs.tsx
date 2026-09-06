@@ -6,6 +6,7 @@ import { BookOpen, Shield, Code2, PlugZap, FileText, GitBranch, ArrowRight } fro
 import MarketingShell from "@/components/landing/MarketingShell";
 import Reveal from "@/components/landing/Reveal";
 import { RouteSeo } from "@/marketing/Seo";
+import { useMarketingLang } from "@/marketing/MarketingLocale";
 
 type Lang = "fr" | "en" | "ar";
 
@@ -88,6 +89,7 @@ const useI18n = () => {
 const Docs: React.FC = () => {
   const { lang, setLang, t } = useI18n();
   const navigate = useNavigate();
+  const { path } = useMarketingLang();
 
   const tiles = [
     { icon: <BookOpen className="w-6 h-6" />, ...t.sections.start },
@@ -114,10 +116,10 @@ const Docs: React.FC = () => {
           </h1>
           <p className="mt-3 text-neutral-600 dark:text-neutral-300 break-words">{t.hero.subtitle}</p>
           <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-center w-full sm:w-auto">
-            <Button onClick={() => navigate("/status")} variant="outline" className="w-full sm:w-auto px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg landing-btn-secondary">
+            <Button onClick={() => navigate(path("status"))} variant="outline" className="w-full sm:w-auto px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg landing-btn-secondary">
               {t.cta.status}
             </Button>
-            <Button onClick={() => navigate("/contact")} className="w-full sm:w-auto px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg landing-btn-primary">
+            <Button onClick={() => navigate(path("contact"))} className="w-full sm:w-auto px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg landing-btn-primary">
               {t.cta.contact} <ArrowRight className="w-4 h-4 ms-2 rtl:rotate-180" />
             </Button>
           </div>
@@ -139,7 +141,7 @@ const Docs: React.FC = () => {
                 <p className="mt-2 text-sm text-slate-600 dark:text-slate-400 flex-1 break-words">{tile.desc}</p>
                 <Button
                   variant="outline"
-                  onClick={() => navigate("/docs")}
+                  onClick={() => navigate(path("docs"))}
                   className="w-full mt-4 border-[#A58CF4]/25 hover:bg-[#A58CF4]/10"
                 >
                   {t.cta.open}

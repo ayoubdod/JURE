@@ -29,7 +29,7 @@ import { useAppTranslation } from '@/i18n';
 const EditTask = () => {
   const [activeTab, setActiveTab] = useState('tasks');
   const { toast } = useToast();
-  const { t, tf, dir } = useAppTranslation();
+  const { t, tf } = useAppTranslation();
   const m = t.tasks.modal;
   const v = t.tasks.validation;
 
@@ -134,7 +134,7 @@ const EditTask = () => {
                 onClick={handleCancel}
                 className="flex items-center gap-2"
               >
-                <ArrowLeft size={16} className={dir === 'rtl' ? 'rotate-180' : undefined} />
+                <ArrowLeft size={16} className="rtl:rotate-180" />
                 {m.backToTasks}
               </Button>
               <div>
