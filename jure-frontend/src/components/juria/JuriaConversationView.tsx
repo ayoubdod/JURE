@@ -12,7 +12,7 @@ import { JuriaMarkdown } from '@/components/juria/JuriaMarkdown';
 import { JuriaComposer } from '@/components/juria/JuriaComposer';
 import { DocumentDraftingSection } from '@/components/juria/DocumentDraftingSection';
 import { CaseLinkDropdown } from '@/components/juria/CaseLinkDropdown';
-import { juriaModeVisual, splitJuriaSources } from '@/components/juria/juriaConstants';
+import { juriaModeVisual, safeDownloadFilename, splitJuriaAdvisory, splitJuriaSources } from '@/components/juria/juriaConstants';
 import useJuriaStore from '@/stores/juriaStore';
 import type { JuriaCaseContextPayload } from '@/types/juria';
 import { cn } from '@/lib/utils';
@@ -279,9 +279,14 @@ export function JuriaConversationView({
                             }),
                           })}
                         </p>
-                        <p className="mt-3 whitespace-pre-wrap border-t border-slate-100 pt-3 text-[13px] text-slate-700 dark:border-slate-800 dark:text-slate-200">
-                          {m.documentCard.previewLines}
-                        </p>
+                        {(m.advisoryNote || m.analysis?.advisory_note || t.juria.ungroundedAdvisory) && (
+                          <p className="mt-3 text-[12px] font-medium leading-relaxed text-[#FF7F50] dark:text-[#FF8A65]">
+                            {m.advisoryNote || m.analysis?.advisory_note || t.juria.ungroundedAdvisory}
+                          </p>
+                        )}
+                        <div className="mt-3 border-t border-slate-100 pt-3 dark:border-slate-800">
+                          <JuriaMarkdown content={m.documentCard.previewLines} />
+                        </div>
                         <div className="mt-3 flex flex-wrap gap-2">
                           <Button
                             size="sm"
@@ -291,7 +296,10 @@ export function JuriaConversationView({
                             onClick={() => {
                               const id = m.documentCard?.downloadMessageId;
                               if (!id) return;
-                              void downloadDocumentToFile(id, 'document.docx').catch((e) =>
+                              const name = safeDownloadFilename(
+                                m.documentCard?.fileName || m.documentCard?.typeName || 'document'
+                              );
+                              void downloadDocumentToFile(id, name).catch((e) =>
                                 toast({
                                   title: t.juria.toasts.downloadFailed,
                                   description: getJuriaErrorMessage(e),
@@ -314,9 +322,16 @@ export function JuriaConversationView({
                         </div>
                       </div>
                     : (() => {
-                        const { body, sources } = splitJuriaSources(m.content || '');
+                        const { body: withoutSources, sources } = splitJuriaSources(m.content || '');
+                        const { body, advisory: embeddedAdvisory } = splitJuriaAdvisory(withoutSources);
+                        const advisory = m.advisoryNote || m.analysis?.advisory_note || embeddedAdvisory;
                         return (
                           <div className="rounded-2xl rounded-ss-sm border border-slate-200 bg-white px-4 py-3 text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100">
+                            {advisory ? (
+                              <p className="mb-3 text-[12px] font-medium leading-relaxed text-[#FF7F50] dark:text-[#FF8A65]">
+                                {advisory}
+                              </p>
+                            ) : null}
                             {body ? <JuriaMarkdown content={body} /> : null}
                             {sources.length > 0 && (
                               <div className="mt-3 border-t border-slate-100 pt-3 dark:border-slate-800">

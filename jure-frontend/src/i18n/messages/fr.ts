@@ -4874,6 +4874,8 @@ export const fr: AppMessages = {
     openLink: 'Ouvrir le lien',
     pickDraftType: 'Quel type de document souhaitez-vous rédiger ?',
     generateDocument: 'Générer le document',
+    ungroundedAdvisory:
+      "Avertissement : cette analyse est indicative uniquement et ne remplace pas l'avis d'un avocat compétent. Aucune source vérifiée de la base du projet n'était disponible ; la réponse s'appuie sur les textes juridiques marocains généraux.",
     fab: {
       matterContext: 'Contexte : dossier #{reference} actif',
       quickActions: 'Actions rapides',

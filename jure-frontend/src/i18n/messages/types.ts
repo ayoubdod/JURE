@@ -4401,6 +4401,7 @@ export interface AppMessages {
     openLink: string;
     pickDraftType: string;
     generateDocument: string;
+    ungroundedAdvisory: string;
     fab: {
       matterContext: string;
       quickActions: string;

@@ -70,6 +70,8 @@ export interface JuriaApiSendMessageResponse {
 export interface JuriaApiDraftResponse {
   message: JuriaApiMessage;
   document_download_url: string;
+  document_title?: string;
+  advisory_note?: string;
   artifact_id?: string | null;
 }
 

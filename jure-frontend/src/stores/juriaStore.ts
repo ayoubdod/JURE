@@ -110,7 +110,8 @@ interface JuriaStoreState {
     conversationId: string,
     documentType: string,
     parameters: Record<string, string>,
-    linkedCaseId?: number | null
+    linkedCaseId?: number | null,
+    title?: string
   ) => Promise<void>;
 
   /** Save blob from message download endpoint. */
@@ -401,39 +402,71 @@ const useJuriaStore = create<JuriaStoreState>()((set, get) => ({
         }
       },
 
-      requestDraft: async (conversationId, documentType, parameters, linkedCaseId) => {
+      requestDraft: async (conversationId, documentType, parameters, linkedCaseId, titleHint) => {
         set({ processingConversationId: conversationId, juriaUnavailable: false });
         try {
           const res = await apiJuriaDraft(conversationId, {
             document_type: documentType,
             parameters,
             linked_case_id: linkedCaseId ?? null,
+            title: titleHint,
           });
+          const title = res.document_title?.trim() || titleHint || documentType.replace(/_/g, ' ');
+          const advisory =
+            res.advisory_note?.trim() ||
+            (typeof res.message.analysis?.advisory_note === 'string'
+              ? res.message.analysis.advisory_note
+              : '');
           const m: JuriaMessage = {
             id: res.message.id,
             role: 'assistant',
             content: res.message.content ?? '',
             createdAt: res.message.created_at,
             tokensUsed: res.message.tokens_used ?? undefined,
+            advisoryNote: advisory || undefined,
+            analysis: {
+              ...(res.message.analysis as JuriaMessage['analysis']),
+              ...(advisory ? { advisory_note: advisory } : {}),
+              document_title: title,
+            },
             documentCard: {
-              typeName: documentType.replace(/_/g, ' '),
+              typeName: title,
               previewLines: (res.message.content || '').split('\n').slice(0, 4).join('\n').trim() || '—',
               generatedAt: res.message.created_at,
               docxUrl: res.document_download_url,
               downloadMessageId: res.message.id,
+              fileName: `${title}.docx`,
+              artifactId: res.artifact_id ?? undefined,
             },
           };
 
-          set((s) => ({
-            conversations: s.conversations.map((c) =>
-              c.id === conversationId
-                ? { ...c, messages: [...c.messages, m], updatedAt: new Date().toISOString() }
-                : c
-            ),
-            activeTab: res.artifact_id ? 'artifacts' : s.activeTab,
-          }));
+          set((s) => {
+            const conv = s.conversations.find((c) => c.id === conversationId);
+            const threadId =
+              conv?.threadId ||
+              s.threads.find((th) => th.conversation_id === conversationId)?.id ||
+              s.activeThreadId;
+            const project = s.projects.find((p) => p.id === s.activeProjectId);
+            const canOpenArtifacts = Boolean(res.artifact_id) && project && !project.is_simple;
+
+            return {
+              conversations: s.conversations.map((c) =>
+                c.id === conversationId
+                  ? { ...c, messages: [...c.messages, m], updatedAt: new Date().toISOString() }
+                  : c
+              ),
+              threadMessages: threadId
+                ? {
+                    ...s.threadMessages,
+                    [threadId]: [...(s.threadMessages[threadId] ?? []), m],
+                  }
+                : s.threadMessages,
+              // Full projects: jump to Artifacts. Simple/quick chat: stay on Chat so the card is visible.
+              activeTab: canOpenArtifacts ? 'artifacts' : 'chat',
+            };
+          });
           const pid = get().activeProjectId;
-          if (pid) void get().loadArtifacts(pid).catch(() => undefined);
+          if (pid && res.artifact_id) void get().loadArtifacts(pid).catch(() => undefined);
           await get().loadUsage();
         } catch (e) {
           if (isJuriaDisabledError(e)) set({ juriaUnavailable: true });

@@ -18,6 +18,7 @@ from juria.services.document_text import (
     extract_document_text,
     text_to_docx_base64,
 )
+from juria.services.draft_cleanup import clean_draft_content, infer_document_title
 from juria.services.titles import sanitize_generated_title
 
 logger = logging.getLogger(__name__)
@@ -245,13 +246,14 @@ def draft_document(
         user_content = (
             f"Rédige un {label}.\n"
             "Utilise uniquement les informations fournies. Pour toute donnée manquante, "
-            "insère un placeholder [À COMPLÉTER] — n'invente pas d'identité, de montant "
-            "ou de date.\n\n"
+            "insère un placeholder court entre crochets (ex. [nom complet]) — n'invente pas "
+            "d'identité, de montant ou de date.\n\n"
             f"Type d'acte: {document_type}\n"
             f"Langue: {lang_hint}\n"
             f"Paramètres:\n{params_block}\n\n"
-            "Produis le texte complet de l'acte, prêt à être relu par un avocat. "
-            "Utilise des titres, listes et paragraphes clairs."
+            "Produis le texte COMPLET de l'acte uniquement, prêt à être relu. "
+            "Pas de markdown, pas de note méta pour l'avocat, pas d'avertissement IA. "
+            "Titres de sections et paragraphes clairs en texte brut."
         )
         result = _deepseek_chat(
             [
@@ -269,9 +271,13 @@ def draft_document(
                 {"role": "user", "content": user_content},
             ]
         )
+        content = clean_draft_content(result["content"] or "")
+        title = infer_document_title(content, document_type, language or lang)
+        rtl = (language or lang or "").lower() in ("ar", "darija")
         return {
-            "content": result["content"],
-            "docx_base64": text_to_docx_base64(result["content"]),
+            "content": content,
+            "title": title,
+            "docx_base64": text_to_docx_base64(content, rtl=rtl),
             "tokens_used": result["tokens_used"],
             "message_id": result["message_id"],
         }
@@ -354,7 +360,11 @@ def _mode_instructions(mode: str, lang: str) -> str:
                 "Distinguish doctrine / case law / statute."
             ),
             "DOCUMENT_DRAFTING": (
-                "Mode: legal drafting. Produce professional wording, correct legal terminology, clear structure."
+                "Mode: legal drafting. Produce a finished legal act in professional register. "
+                "Output ONLY the act itself — no preamble, no 'note to reviewing lawyer', "
+                "no AI disclaimer, no markdown (no **, ##, ---). "
+                "Use plain text with clear section headings and numbered lists. "
+                "Placeholders for missing facts must be short brackets like [full name]."
             ),
         }
     elif lang in ("ar", "darija"):
@@ -372,7 +382,11 @@ def _mode_instructions(mode: str, lang: str) -> str:
                 "ميّز بين الفقه / الاجتهاد / النص التشريعي."
             ),
             "DOCUMENT_DRAFTING": (
-                "الوضع: صياغة قانونية. أنتج صياغة مهنية ومصطلحات قانونية صحيحة وهيكلة واضحة."
+                "الوضع: صياغة قانونية. أنتج نصّ الوثيقة القانونية فقط بأسلوب مهني. "
+                "لا تُدرج مقدمة، ولا «ملاحظة للمحامي المراجع»، ولا تنبيه ذكاء اصطناعي، "
+                "ولا تنسيق ماركداون (بدون ** أو ## أو ---). "
+                "استخدم نصًا عاديًا بعناوين أقسام واضحة وقوائم مرقّمة. "
+                "البيانات الناقصة تُوضع بين قوسين معقوفين قصيرين مثل [الاسم الكامل]."
             ),
         }
     else:
@@ -390,8 +404,11 @@ def _mode_instructions(mode: str, lang: str) -> str:
                 "du projet. Distingue doctrine / jurisprudence / texte."
             ),
             "DOCUMENT_DRAFTING": (
-                "Mode: rédaction d'actes juridiques. Produis des formulations professionnelles, "
-                "terminologie juridique correcte, structure claire."
+                "Mode: rédaction d'actes juridiques. Produis UNIQUEMENT l'acte, registre professionnel. "
+                "Pas de préambule, pas de « note pour l'avocat réviseur », pas d'avertissement IA, "
+                "pas de markdown (pas de **, ##, ---). "
+                "Texte brut avec titres de sections clairs et listes numérotées. "
+                "Pour les données manquantes, placeholders courts entre crochets, ex. [nom complet]."
             ),
         }
     return bits.get(mode, bits["CHAT"])

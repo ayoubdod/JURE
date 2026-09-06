@@ -4847,6 +4847,8 @@ export const en: AppMessages = {
     openLink: 'Open link',
     pickDraftType: 'Which document would you like to draft?',
     generateDocument: 'Generate document',
+    ungroundedAdvisory:
+      'Notice: this analysis is advisory only and does not replace advice from a qualified lawyer. No verified sources from the project knowledge base were available, so the answer relies on general Moroccan legal texts.',
     fab: {
       matterContext: 'Context: matter #{reference} is active',
       quickActions: 'Quick actions',

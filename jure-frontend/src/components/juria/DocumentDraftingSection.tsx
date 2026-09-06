@@ -75,8 +75,9 @@ export function DocumentDraftingSection({
     if (!selected) return;
     const def = DOCUMENT_DRAFT_TYPES.find((t) => t.id === selected);
     const apiType = def?.apiType ?? 'AUTRE';
+    const title = t.juria.draftTypes[selected];
     try {
-      await requestDraft(conversationId, apiType, values, linkedCaseId ?? null);
+      await requestDraft(conversationId, apiType, values, linkedCaseId ?? null, title);
       setSelected(null);
       setValues({});
     } catch (e) {

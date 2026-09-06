@@ -1,6 +1,9 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Copy,
+  Download,
+  Eye,
+  FileText,
   MessageSquare,
   MoreHorizontal,
   Pencil,
@@ -21,6 +24,7 @@ import {
 import { JuriaMarkdown } from '@/components/juria/JuriaMarkdown';
 import { JuriaComposer } from '@/components/juria/JuriaComposer';
 import { DocumentDraftingSection } from '@/components/juria/DocumentDraftingSection';
+import { safeDownloadFilename, splitJuriaAdvisory } from '@/components/juria/juriaConstants';
 import useJuriaStore from '@/stores/juriaStore';
 import useUserStore from '@/stores/userStore';
 import UserAvatar from '@/components/common/UserAvatar';
@@ -35,7 +39,7 @@ import { JuriaSourcePreview } from '@/components/juria/JuriaSourcePreview';
 import { apiJuriaCreateArtifact } from '@/services/juria/api';
 import { JuriaTextPromptDialog } from '@/components/juria/JuriaTextPromptDialog';
 import { RailIconButton } from '@/components/juria/JuriaProjectSidebar';
-import { useAppTranslation, formatTime } from '@/i18n';
+import { useAppTranslation, formatDate, formatTime } from '@/i18n';
 
 export function JuriaChat({ project }: { project: JuriaProject }) {
   const { t, dir } = useAppTranslation();
@@ -54,6 +58,8 @@ export function JuriaChat({ project }: { project: JuriaProject }) {
   const threadMessages = useJuriaStore((s) => s.threadMessages);
   const send = useJuriaStore((s) => s.sendThreadMessage);
   const processing = useJuriaStore((s) => s.processingThreadId);
+  const processingDraft = useJuriaStore((s) => s.processingConversationId);
+  const downloadDocumentToFile = useJuriaStore((s) => s.downloadDocumentToFile);
   const language = useJuriaStore((s) => s.projectLanguage);
   const setLanguage = useJuriaStore((s) => s.setProjectLanguage);
   const editMessage = useJuriaStore((s) => s.editMessage);
@@ -94,7 +100,7 @@ export function JuriaChat({ project }: { project: JuriaProject }) {
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
-  }, [messages.length, processing]);
+  }, [messages.length, processing, processingDraft]);
 
   useEffect(() => {
     try {
@@ -276,13 +282,38 @@ export function JuriaChat({ project }: { project: JuriaProject }) {
                     content_markdown: m.content,
                     content_html: `<p>${m.content.replace(/\n/g, '</p><p>')}</p>`,
                     thread_id: activeThreadId ?? undefined,
-                  }).then(() => setTab('artifacts'));
+                  })
+                    .then(() => {
+                      if (project.is_simple) {
+                        toast({ title: chat.createArtifact });
+                      } else {
+                        setTab('artifacts');
+                      }
+                    })
+                    .catch((e) =>
+                      toast({
+                        variant: 'destructive',
+                        title: t.juria.toasts.draftFailed,
+                        description: getJuriaErrorMessage(e),
+                      })
+                    );
                 }}
                 onOpenSource={setPreviewHit}
                 onClausePrompt={(prompt) => setDraft(prompt)}
+                canOpenArtifacts={!project.is_simple}
+                onDownloadDoc={(messageId, filename) => {
+                  void downloadDocumentToFile(messageId, filename).catch((e) =>
+                    toast({
+                      title: t.juria.toasts.downloadFailed,
+                      description: getJuriaErrorMessage(e),
+                      variant: 'destructive',
+                    })
+                  );
+                }}
               />
             ))}
-            {processing === activeThreadId && (
+            {(processing === activeThreadId ||
+              (processingDraft && processingDraft === draftConversationId)) && (
               <div className="flex gap-2">
                 <img src="/images/juria-icon.png" alt="" className="h-8 w-8 rounded-full ring-1 ring-slate-200 dark:ring-slate-700" />
                 <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 dark:border-slate-700 dark:bg-slate-900">
@@ -394,6 +425,8 @@ function MessageBubble({
   onCreateArtifact,
   onOpenSource,
   onClausePrompt,
+  canOpenArtifacts,
+  onDownloadDoc,
 }: {
   m: JuriaMessage;
   currentUser: API.User | null;
@@ -408,6 +441,8 @@ function MessageBubble({
   onCreateArtifact: () => void;
   onOpenSource: (s: JuriaSourceHit) => void;
   onClausePrompt: (prompt: string) => void;
+  canOpenArtifacts?: boolean;
+  onDownloadDoc?: (messageId: string, filename: string) => void;
 }) {
   const { t, lang } = useAppTranslation();
   const actions = t.juria.workspace.actions;
@@ -489,6 +524,8 @@ function MessageBubble({
             onCreateArtifact={onCreateArtifact}
             onOpenSource={onOpenSource}
             onClausePrompt={onClausePrompt}
+            canOpenArtifacts={canOpenArtifacts}
+            onDownloadDoc={onDownloadDoc}
           />
         )}
         <p className={cn('mt-1 text-[10px] text-slate-400', isUser && 'text-end')}>{formatTime(m.createdAt, lang)}</p>
@@ -506,26 +543,96 @@ function AssistantBody({
   onCreateArtifact,
   onOpenSource,
   onClausePrompt,
+  canOpenArtifacts,
+  onDownloadDoc,
 }: {
   m: JuriaMessage;
   onRegenerate: () => void;
   onCreateArtifact: () => void;
   onOpenSource: (s: JuriaSourceHit) => void;
   onClausePrompt: (prompt: string) => void;
+  canOpenArtifacts?: boolean;
+  onDownloadDoc?: (messageId: string, filename: string) => void;
 }) {
-  const { t } = useAppTranslation();
+  const { t, tf, lang } = useAppTranslation();
   const actions = t.juria.workspace.actions;
   const chat = t.juria.workspace.chat;
   const [copied, setCopied] = useState(false);
   const analysis = m.analysis && !m.analysis.parse_error && typeof m.analysis.risk_score === 'number' ? m.analysis : null;
   const sources = (m.sources ?? []).filter((s) => s.document);
+  const { body, advisory: embeddedAdvisory } = splitJuriaAdvisory(m.content || '');
+  const card = m.documentCard;
+  const advisory =
+    m.advisoryNote || m.analysis?.advisory_note || embeddedAdvisory || (card ? t.juria.ungroundedAdvisory : '');
+
+  if (card) {
+    return (
+      <div className="rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-900">
+        <p className="flex items-center gap-1.5 text-xs font-medium text-slate-900 dark:text-white">
+          <FileText className="h-3.5 w-3.5 text-[#64499D]" />
+          {t.juria.generatedDocument}
+        </p>
+        <p className="mt-1 text-sm font-medium text-[#64499D]">{card.typeName}</p>
+        <p className="text-[11px] text-slate-500 dark:text-slate-400">
+          {tf(t.juria.generatedOn, {
+            date: formatDate(card.generatedAt, lang, {
+              month: 'short',
+              day: 'numeric',
+              year: 'numeric',
+            }),
+          })}
+        </p>
+        {advisory ? (
+          <p className="mt-3 text-[12px] font-medium leading-relaxed text-[#FF7F50] dark:text-[#FF8A65]">{advisory}</p>
+        ) : null}
+        <div className="mt-3 border-t border-slate-100 pt-3 dark:border-slate-800">
+          <JuriaMarkdown content={card.previewLines} />
+        </div>
+        <div className="mt-3 flex flex-wrap gap-2">
+          {card.downloadMessageId ? (
+            <Button
+              size="sm"
+              variant="outline"
+              className="gap-1"
+              type="button"
+              onClick={() =>
+                onDownloadDoc?.(
+                  card.downloadMessageId!,
+                  safeDownloadFilename(card.fileName || card.typeName || 'document')
+                )
+              }
+            >
+              <Download className="h-3.5 w-3.5" />
+              {t.juria.downloadDocx}
+            </Button>
+          ) : null}
+          {card.docxUrl ? (
+            <Button size="sm" variant="ghost" className="gap-1" type="button" asChild>
+              <a href={card.docxUrl} target="_blank" rel="noreferrer">
+                <Eye className="h-3.5 w-3.5" />
+                {t.juria.openLink}
+              </a>
+            </Button>
+          ) : null}
+          {canOpenArtifacts ? (
+            <Button size="sm" variant="ghost" className="gap-1" type="button" onClick={onCreateArtifact}>
+              {chat.createArtifact}
+            </Button>
+          ) : null}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="rounded-2xl rounded-ss-sm border border-slate-200 bg-white px-4 py-3 dark:border-slate-700 dark:bg-slate-900">
+      {advisory ? (
+        <p className="mb-3 text-[12px] font-medium leading-relaxed text-[#FF7F50] dark:text-[#FF8A65]">{advisory}</p>
+      ) : null}
       {analysis ? (
         <JuriaContractIntelligence analysis={analysis} onClausePrompt={onClausePrompt} />
       ) : (
-        <JuriaMarkdown content={m.content || ''} />
+        <JuriaMarkdown content={body || ''} />
       )}
       {sources.length > 0 && <JuriaSourcePanel sources={sources} onOpen={onOpenSource} />}
       <div className="mt-2 flex flex-wrap gap-1">
@@ -549,13 +656,15 @@ function AssistantBody({
           <RefreshCw className="h-3 w-3" />
           {actions.regenerate}
         </button>
-        <button
-          type="button"
-          className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] text-slate-400 hover:bg-slate-100"
-          onClick={onCreateArtifact}
-        >
-          {chat.createArtifact}
-        </button>
+        {canOpenArtifacts ? (
+          <button
+            type="button"
+            className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] text-slate-400 hover:bg-slate-100"
+            onClick={onCreateArtifact}
+          >
+            {chat.createArtifact}
+          </button>
+        ) : null}
       </div>
     </div>
   );
