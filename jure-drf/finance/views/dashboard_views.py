@@ -1,5 +1,6 @@
 from datetime import date
 
+from django.utils.translation import gettext as _
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -18,7 +19,7 @@ class FinanceTvaStatusView(APIView):
         cab = get_user_cabinet(request.user)
         if not cab:
             return Response(
-                {'detail': 'User is not attached to any cabinet.'},
+                {'detail': _('User is not attached to any cabinet.')},
                 status=status.HTTP_403_FORBIDDEN,
             )
         return Response(build_tva_status_payload(cab))
@@ -31,9 +32,11 @@ class FinanceDashboardView(APIView):
         cab = get_user_cabinet(request.user)
         if not cab:
             return Response(
-                {'detail': 'User is not attached to any cabinet.'},
+                {'detail': _('User is not attached to any cabinet.')},
                 status=status.HTTP_403_FORBIDDEN,
             )
+        # Default remains month for API callers that omit period; the finance page
+        # may pass period=year explicitly.
         period = request.query_params.get('period', 'month')
         if period not in ('month', 'quarter', 'year'):
             period = 'month'
@@ -41,5 +44,4 @@ class FinanceDashboardView(APIView):
             year = int(request.query_params.get('year', date.today().year))
         except (TypeError, ValueError):
             year = date.today().year
-        payload = build_dashboard_payload(cab, period, year)
-        return Response(payload)
+        return Response(build_dashboard_payload(cab, period, year))

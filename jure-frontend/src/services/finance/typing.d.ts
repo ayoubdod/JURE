@@ -50,6 +50,7 @@ declare namespace API {
     message: string;
     case_id?: number;
     case_reference?: string | null;
+    invoice_number?: string | null;
     amount?: number | null;
     due_date?: string | null;
   }
@@ -104,6 +105,14 @@ declare namespace API {
     linked_invoice_number: string | null;
     linked_invoice_id: number | null;
     date: string;
+  }
+
+  interface FinancePaymentDetail extends FinancePaymentListItem {
+    status?: 'CONFIRMED' | 'CANCELLED';
+    notes?: string | null;
+    payment_date?: string;
+    payment_method?: FinancePaymentMethod;
+    created_by_name?: string | null;
   }
 
   interface FinanceCaseSummary {

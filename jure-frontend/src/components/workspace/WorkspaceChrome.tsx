@@ -28,9 +28,10 @@ export function WorkspacePageHeader({
 export type WorkspaceKpiItem = {
   key: string;
   label: string;
-  value: number | null;
+  value: number | string | null;
   accent?: string;
   hint?: string;
+  extra?: React.ReactNode;
   icon?: LucideIcon;
   onClick?: () => void;
   active?: boolean;
@@ -90,13 +91,19 @@ export function WorkspaceKpiStrip({
                 {item.value == null ? (
                   <div className="mt-2 h-7 w-12 animate-pulse rounded bg-slate-200 dark:bg-slate-800" />
                 ) : (
-                  <p className="mt-2 text-[26px] font-semibold leading-none tabular-nums text-slate-900 dark:text-white">
+                  <p
+                    className={cn(
+                      'mt-2 font-semibold leading-tight tabular-nums text-slate-900 dark:text-white',
+                      typeof item.value === 'string' ? 'text-[18px] sm:text-[22px]' : 'text-[26px] leading-none'
+                    )}
+                  >
                     {item.value}
                   </p>
                 )}
                 {item.hint ? (
                   <p className="mt-1.5 truncate text-[12px] text-slate-400">{item.hint}</p>
                 ) : null}
+                {item.extra ? <div className="mt-2">{item.extra}</div> : null}
               </>
             );
             return item.onClick ? (

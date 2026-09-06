@@ -12,7 +12,7 @@ import { JuriaMarkdown } from '@/components/juria/JuriaMarkdown';
 import { JuriaComposer } from '@/components/juria/JuriaComposer';
 import { DocumentDraftingSection } from '@/components/juria/DocumentDraftingSection';
 import { CaseLinkDropdown } from '@/components/juria/CaseLinkDropdown';
-import { juriaModeVisual, safeDownloadFilename, splitJuriaAdvisory, splitJuriaSources } from '@/components/juria/juriaConstants';
+import { juriaModeVisual, safeDownloadFilename, splitJuriaAdvisory, splitJuriaSources, stripActMarkdown } from '@/components/juria/juriaConstants';
 import useJuriaStore from '@/stores/juriaStore';
 import type { JuriaCaseContextPayload } from '@/types/juria';
 import { cn } from '@/lib/utils';
@@ -285,7 +285,9 @@ export function JuriaConversationView({
                           </p>
                         )}
                         <div className="mt-3 border-t border-slate-100 pt-3 dark:border-slate-800">
-                          <JuriaMarkdown content={m.documentCard.previewLines} />
+                          <div className="whitespace-pre-wrap text-[13px] leading-relaxed text-slate-800 dark:text-slate-100">
+                            {stripActMarkdown(m.documentCard.previewLines)}
+                          </div>
                         </div>
                         <div className="mt-3 flex flex-wrap gap-2">
                           <Button
@@ -428,8 +430,18 @@ export function JuriaConversationView({
       </div>
 
       {conv.mode === 'DOCUMENT_DRAFTING' && (
-        <div className={cn('shrink-0 border-t border-slate-100 px-4 py-3 dark:border-slate-800', compact && 'py-2')}>
-          <DocumentDraftingSection conversationId={conv.id} compact={compact} linkedCaseId={conv.caseId ?? null} />
+        <div
+          className={cn(
+            'shrink-0 border-t border-slate-100 bg-slate-50/60 px-3 py-2.5 sm:px-4 dark:border-slate-800 dark:bg-slate-950/40',
+            compact && 'py-2'
+          )}
+        >
+          <DocumentDraftingSection
+            conversationId={conv.id}
+            compact={compact}
+            linkedCaseId={conv.caseId ?? null}
+            threadId={conv.threadId}
+          />
         </div>
       )}
 

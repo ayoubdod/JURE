@@ -73,6 +73,7 @@ export interface JuriaApiDraftResponse {
   document_title?: string;
   advisory_note?: string;
   artifact_id?: string | null;
+  thread_id?: string | null;
 }
 
 export interface JuriaApiUsage {

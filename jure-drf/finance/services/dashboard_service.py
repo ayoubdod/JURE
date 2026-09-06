@@ -6,6 +6,7 @@ from decimal import Decimal
 
 from django.db.models import Sum, Count
 from django.utils import timezone
+from django.utils.translation import gettext as _
 
 from cases.models import Case
 from finance.models import Expense, Invoice, Payment, TaxAdvance
@@ -17,10 +18,53 @@ def _cabinet_case_ids(cabinet):
     return Case.objects.filter(cabinet=cabinet).values_list('id', flat=True)
 
 
+def _client_display_name(client) -> str:
+    if client is None:
+        return ''
+    user = getattr(client, 'user', None)
+    if user is not None:
+        return f'{user.first_name} {user.last_name}'.strip()
+    return str(getattr(client, 'company_name', '') or getattr(client, 'name', '') or '')
+
+
 def _confirmed_payments(qs):
     if hasattr(Payment, 'Status'):
         return qs.filter(status=Payment.Status.CONFIRMED)
     return qs
+
+
+def _actionable_unpaid_tax_advances(case_ids):
+    """Unpaid acomptes only on cases that still have money outstanding.
+
+    Every new case gets a default 100 MAD UNPAID row. That is a per-matter
+    tracker, not a firm payable — so empty or fully settled cases must not
+    inflate dashboard alerts or the tax-advances KPI.
+    """
+    open_case_ids = Case.objects.filter(id__in=case_ids).exclude(
+        status__in=[
+            Case.CaseStatus.CLOSED,
+            Case.CaseStatus.ARCHIVED,
+            Case.CaseStatus.CANCELLED,
+            Case.CaseStatus.CONVERTED_TO_CASE,
+        ]
+    ).values_list('id', flat=True)
+    outstanding_case_ids = (
+        Invoice.objects.filter(
+            case_id__in=open_case_ids,
+            status__in=[
+                Invoice.Status.SENT,
+                Invoice.Status.PARTIALLY_PAID,
+                Invoice.Status.OVERDUE,
+            ],
+        )
+        .values_list('case_id', flat=True)
+        .distinct()
+    )
+    return TaxAdvance.objects.filter(
+        case_id__in=outstanding_case_ids,
+        status=TaxAdvance.Status.UNPAID,
+        amount__gt=0,
+    ).select_related('case')
 
 
 def _period_range(period: str, year: int):
@@ -96,10 +140,7 @@ def build_dashboard_payload(cabinet, period: str, year: int) -> dict:
     )
 
     tax_advances_unpaid = (
-        TaxAdvance.objects.filter(
-            case_id__in=case_ids,
-            status=TaxAdvance.Status.UNPAID,
-        ).aggregate(s=Sum('amount'))['s']
+        _actionable_unpaid_tax_advances(case_ids).aggregate(s=Sum('amount'))['s']
         or Decimal('0')
     )
 
@@ -162,15 +203,15 @@ def build_dashboard_payload(cabinet, period: str, year: int) -> dict:
     for inv in (
         Invoice.objects.filter(case_id__in=case_ids)
         .exclude(status=Invoice.Status.CANCELLED)
-        .select_related('fee', 'case')
+        .select_related('fee__lawyer', 'case__assigned_to')
     ):
         uid = None
         name = ''
-        if inv.fee and inv.fee.lawyer_id:
+        if inv.fee and inv.fee.lawyer_id and inv.fee.lawyer:
             uid = inv.fee.lawyer_id
             u = inv.fee.lawyer
             name = f'{u.first_name} {u.last_name}'.strip()
-        elif inv.case and inv.case.assigned_to_id:
+        elif inv.case and inv.case.assigned_to_id and inv.case.assigned_to:
             uid = inv.case.assigned_to_id
             u = inv.case.assigned_to
             name = f'{u.first_name} {u.last_name}'.strip()
@@ -190,33 +231,26 @@ def build_dashboard_payload(cabinet, period: str, year: int) -> dict:
     today = timezone.now().date()
     for inv in Invoice.objects.filter(case_id__in=case_ids, due_date__lt=today).exclude(
         status__in=[Invoice.Status.PAID, Invoice.Status.CANCELLED, Invoice.Status.DRAFT]
-    ):
+    ).select_related('case'):
         alerts.append(
             {
+                'id': f'invoice-{inv.id}',
                 'type': 'OVERDUE_INVOICE',
-                'message': f'Invoice {inv.invoice_number} is overdue.',
-                'case_id': str(inv.case_id),
+                'message': _('Invoice %(number)s is overdue.') % {'number': inv.invoice_number},
+                'case_id': inv.case_id,
+                'case_reference': inv.case.reference if inv.case else '',
+                'invoice_number': inv.invoice_number,
                 'amount': float(inv.amount_ttc),
                 'due_date': inv.due_date.isoformat() if inv.due_date else None,
-            }
-        )
-
-    for ta in TaxAdvance.objects.filter(case_id__in=case_ids, status=TaxAdvance.Status.UNPAID):
-        alerts.append(
-            {
-                'type': 'UNPAID_TAX_ADVANCE',
-                'message': 'Unpaid fiscal advance (acompte) for case.',
-                'case_id': str(ta.case_id),
-                'amount': float(ta.amount),
-                'due_date': None,
             }
         )
 
     if tva_to_pay > 0:
         alerts.append(
             {
+                'id': 'tva-due',
                 'type': 'TVA_DUE',
-                'message': 'Outstanding TVA on issued invoices.',
+                'message': _('Outstanding TVA on issued invoices.'),
                 'case_id': None,
                 'amount': float(tva_to_pay),
                 'due_date': None,
@@ -227,11 +261,10 @@ def build_dashboard_payload(cabinet, period: str, year: int) -> dict:
     for p in _confirmed_payments(
         Payment.objects.filter(case_id__in=case_ids)
     ).select_related('case', 'client__user')[:20]:
-        u = p.client.user
         recent_transactions.append(
             {
-                'case_reference': p.case.reference,
-                'client_name': f'{u.first_name} {u.last_name}'.strip(),
+                'case_reference': p.case.reference if p.case else '',
+                'client_name': _client_display_name(p.client),
                 'amount': float(p.amount),
                 'type': 'PAYMENT',
                 'date': p.payment_date.isoformat(),
@@ -243,11 +276,10 @@ def build_dashboard_payload(cabinet, period: str, year: int) -> dict:
         .exclude(status=Invoice.Status.CANCELLED)
         .select_related('case', 'client__user')[:20]
     ):
-        u = inv.client.user
         recent_transactions.append(
             {
-                'case_reference': inv.case.reference,
-                'client_name': f'{u.first_name} {u.last_name}'.strip(),
+                'case_reference': inv.case.reference if inv.case else '',
+                'client_name': _client_display_name(inv.client),
                 'amount': float(inv.amount_ttc),
                 'type': 'INVOICE',
                 'date': inv.issued_date.isoformat(),

@@ -4031,6 +4031,7 @@ export interface AppMessages {
       collected: string;
       byLawyerTitle: string;
       byLawyerEmpty: string;
+      lawyerFallback: string;
     };
     thresholdBanner: {
       title: string;
@@ -4055,10 +4056,19 @@ export interface AppMessages {
       title: string;
       empty: string;
       openCase: string;
+      overdueInvoice: string;
+      overdueInvoiceFallback: string;
+      tvaDue: string;
+      tvaDueAmount: string;
     };
     recentMovements: string;
     noMovements: string;
     viewAll: string;
+    view: {
+      mode: string;
+      table: string;
+      cards: string;
+    };
     columns: {
       case: string;
       client: string;
@@ -4084,6 +4094,8 @@ export interface AppMessages {
       reset: string;
       method: string;
       allMethods: string;
+      from: string;
+      to: string;
     };
     pagination: {
       range: string;
@@ -4108,9 +4120,19 @@ export interface AppMessages {
     txKinds: {
       PAIEMENT: string;
       HONORAIRE: string;
+      FACTURE: string;
     };
     emptyInvoices: string;
     emptyPayments: string;
+    paymentDetail: {
+      title: string;
+      loadFailed: string;
+      viewAria: string;
+    };
+    paymentStatuses: {
+      CONFIRMED: string;
+      CANCELLED: string;
+    };
     downloadPdf: string;
     previewPdf: string;
     toasts: {
@@ -4125,9 +4147,12 @@ export interface AppMessages {
       deleteFeeConfirm: string;
       deleteExpenseConfirm: string;
       deletePaymentConfirm: string;
+      paymentDeleted: string;
+      paymentNotFound: string;
       expenseSaved: string;
       expenseSaveFailed: string;
       loadCaseFailed: string;
+      taxAdvancePaid: string;
     };
     feeTypes: {
       FIXED: string;
@@ -4449,11 +4474,40 @@ export interface AppMessages {
     };
     editor: {
       list: string;
+      orderedList: string;
       bold: string;
       italic: string;
       underline: string;
+      strike: string;
+      alignLeft: string;
+      alignCenter: string;
+      alignRight: string;
+      indent: string;
+      outdent: string;
+      clearFormat: string;
+      heading1: string;
+      heading2: string;
+      heading3: string;
+      paragraph: string;
+      undo: string;
+      redo: string;
+      download: string;
+      saving: string;
       compareVersions: string;
       editNote: string;
+      noDiff: string;
+      closeCompare: string;
+      comparing: string;
+      compareFailed: string;
+      added: string;
+      removed: string;
+      onlyTouched: string;
+      modifiedLines: string;
+      restorePrevious: string;
+      restoreConfirm: string;
+      restoring: string;
+      restored: string;
+      restoreFailed: string;
     };
     intelligence: {
       title: string;
@@ -4700,13 +4754,20 @@ export interface AppMessages {
         createDoc: string;
         newDocument: string;
         save: string;
+        saved: string;
         export: string;
         duplicate: string;
         compare: string;
+        documents: string;
+        delete: string;
+        deleteConfirm: string;
+        deleted: string;
+        deleteFailed: string;
       };
       teamPanel: {
         invitePlaceholder: string;
         invite: string;
+        inviteRole: string;
         roles: {
           OWNER: string;
           EDITOR: string;

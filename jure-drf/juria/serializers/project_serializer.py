@@ -73,6 +73,7 @@ class JuriaProjectListSerializer(serializers.ModelSerializer):
     linked_case_reference = serializers.SerializerMethodField()
     member_count = serializers.SerializerMethodField()
     thread_count = serializers.SerializerMethodField()
+    message_count = serializers.SerializerMethodField()
 
     class Meta:
         model = JuriaProject
@@ -92,6 +93,7 @@ class JuriaProjectListSerializer(serializers.ModelSerializer):
             "is_simple",
             "member_count",
             "thread_count",
+            "message_count",
             "created_at",
             "updated_at",
             "archived_at",
@@ -114,6 +116,18 @@ class JuriaProjectListSerializer(serializers.ModelSerializer):
         if count is not None:
             return count
         return obj.threads.filter(is_deleted=False, is_archived=False).count()
+
+    def get_message_count(self, obj) -> int:
+        count = getattr(obj, "message_count", None)
+        if count is not None:
+            return count
+        from juria.models import JuriaMessage
+
+        return JuriaMessage.objects.filter(
+            thread__project=obj,
+            thread__is_deleted=False,
+            is_deleted=False,
+        ).count()
 
 
 class JuriaProjectDetailSerializer(JuriaProjectListSerializer):

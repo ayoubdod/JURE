@@ -1,6 +1,7 @@
 from decimal import Decimal
 
 from django.db.models import Sum
+from django.utils.translation import gettext as _
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -28,14 +29,14 @@ class CaseFinanceSummaryView(APIView):
         case = _case_in_cabinet_or_404(request.user, case_id)
         if case is None:
             return Response(
-                {'detail': 'User is not attached to any cabinet.'},
+                {'detail': _('User is not attached to any cabinet.')},
                 status=status.HTTP_403_FORBIDDEN,
             )
 
         fees = Fee.objects.filter(case=case).select_related('lawyer')
         invoices = _invoice_qs_for_case(case)
         payments = Payment.objects.filter(case=case).select_related(
-            'client__user', 'invoice', 'created_by'
+            'case', 'client__user', 'invoice', 'created_by'
         )
         expenses = Expense.objects.filter(case=case).select_related('client', 'created_by')
         tax_advance = TaxAdvance.objects.filter(case=case).first()

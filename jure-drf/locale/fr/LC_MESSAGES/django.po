@@ -569,3 +569,36 @@ msgstr "L'utilisateur doit appartenir à un cabinet pour ajouter des documents."
 
 msgid "This resource is private to another cabinet."
 msgstr "Cette ressource est privée à un autre cabinet."
+
+msgid "%(title)s (copy)"
+msgstr "%(title)s (copie)"
+
+msgid "Duplication"
+msgstr "Duplication"
+
+msgid "No previous version to restore."
+msgstr "Aucune version précédente à restaurer."
+
+msgid "Invalid version number."
+msgstr "Numéro de version invalide."
+
+msgid "Version must be between 1 and the previous version."
+msgstr "La version doit être entre 1 et la version précédente."
+
+msgid "Version not found."
+msgstr "Version introuvable."
+
+msgid "Restored from v%(version)s"
+msgstr "Restauré depuis v%(version)s"
+
+msgid "Invalid version numbers."
+msgstr "Numéros de version invalides."
+
+msgid "[html v%(version)s changed]"
+msgstr "[html v%(version)s modifié]"
+
+msgid "Invoice %(number)s is overdue."
+msgstr "La facture %(number)s est en retard."
+
+msgid "Outstanding TVA on issued invoices."
+msgstr "TVA due sur les factures émises."

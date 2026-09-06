@@ -28,9 +28,24 @@ export type PaymentFilters = {
   page_size?: number;
 };
 
-export const getFinanceDashboard = (year: number) =>
+/** Normalize list endpoints that may return paginated or bare arrays. */
+export function parseFinanceListResponse<T>(
+  data: API.Paginated<T> | T[] | { results?: T[]; data?: T[]; count?: number; last_page?: number }
+): { results: T[]; count: number; lastPage: number } {
+  if (Array.isArray(data)) {
+    return { results: data, count: data.length, lastPage: 1 };
+  }
+  const results = data.results ?? data.data ?? [];
+  return {
+    results,
+    count: data.count ?? results.length,
+    lastPage: Math.max(1, data.last_page ?? 1),
+  };
+}
+
+export const getFinanceDashboard = (year: number, period: 'month' | 'quarter' | 'year' = 'year') =>
   axiosInstance.get<API.FinanceDashboard>(`${FINANCE_BASE}dashboard/`, {
-    params: { year },
+    params: { year, period },
   });
 
 export const getInvoices = (filters?: InvoiceFilters) =>
@@ -93,7 +108,7 @@ export const getFeeDetail = (feeId: number) =>
 
 /** Firm-wide payment row (detail). */
 export const getPaymentDetail = (paymentId: number) =>
-  axiosInstance.get(`${FINANCE_BASE}payments/${paymentId}/`);
+  axiosInstance.get<API.FinancePaymentDetail>(`${FINANCE_BASE}payments/${paymentId}/`);
 
 export type PatchInvoiceStatusBody = {
   status: 'SENT' | 'CANCELLED';

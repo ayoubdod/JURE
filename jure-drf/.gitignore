@@ -82,3 +82,6 @@ allure-results
 
 # Local email HTML/text previews
 tmp/
+# Pytest / CI artifacts
+results.xml
+

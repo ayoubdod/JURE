@@ -105,22 +105,26 @@ class DocxBuilderTests(SimpleTestCase):
 
         raw = base64.b64decode(text_to_docx_base64("Bonjour\nMaroc"))
         with zipfile.ZipFile(BytesIO(raw), "r") as zf:
-            self.assertIn("word/document.xml", zf.namelist())
+            names = zf.namelist()
+            self.assertIn("word/document.xml", names)
+            self.assertIn("word/_rels/document.xml.rels", names)
+            self.assertIn("word/styles.xml", names)
             xml = zf.read("word/document.xml").decode("utf-8")
             self.assertIn("Bonjour", xml)
             self.assertIn("Maroc", xml)
 
-    def test_text_to_docx_renders_bold(self):
+    def test_text_to_docx_strips_markdown_markers(self):
         import base64
         import zipfile
         from io import BytesIO
 
-        raw = base64.b64decode(text_to_docx_base64("**إنذار رسمي**"))
+        raw = base64.b64decode(text_to_docx_base64("**إنذار رسمي**\n# Titre"))
         with zipfile.ZipFile(BytesIO(raw), "r") as zf:
             xml = zf.read("word/document.xml").decode("utf-8")
             self.assertIn("إنذار رسمي", xml)
-            self.assertIn("<w:b/>", xml)
+            self.assertIn("Titre", xml)
             self.assertNotIn("**", xml)
+            self.assertNotIn("#", xml)
 
 
 class DraftCleanupTests(SimpleTestCase):
@@ -138,6 +142,7 @@ class DraftCleanupTests(SimpleTestCase):
         self.assertIn("إنذار رسمي", cleaned)
         self.assertNotIn("ملاحظة للمحامي", cleaned)
         self.assertNotIn("---", cleaned)
+        self.assertNotIn("**", cleaned)
         title = infer_document_title(cleaned, "MISE_EN_DEMEURE", "ar")
         self.assertTrue(title.startswith("إنذار"))
 
@@ -146,6 +151,62 @@ class DraftCleanupTests(SimpleTestCase):
         )
         self.assertEqual(body, "تحليل.")
         self.assertIn("استرشادي", note)
+
+    def test_strips_french_preamble_and_markdown(self):
+        from juria.services.draft_cleanup import clean_draft_content
+
+        raw = (
+            "**AVERTISSEMENT PRÉALABLE**\n\n"
+            "Le présent document est un **modèle générique de contrat de bail** établi à titre d'assistance. "
+            "Il ne constitue pas un avis juridique.\n\n"
+            "---\n\n"
+            "# CONTRAT DE BAIL\n\n"
+            "**Entre les soussignés :**\n\n"
+            "## ARTICLE 1 – OBJET\n\n"
+            "Le Bailleur\n"
+            "**unclosed bold\n"
+            "#sansespace\n"
+        )
+        cleaned = clean_draft_content(raw)
+        self.assertTrue(cleaned.startswith("CONTRAT DE BAIL"))
+        self.assertNotIn("AVERTISSEMENT", cleaned)
+        self.assertNotIn("modèle générique", cleaned)
+        self.assertNotIn("**", cleaned)
+        self.assertNotIn("*", cleaned)
+        self.assertNotIn("#", cleaned)
+        self.assertIn("Entre les soussignés", cleaned)
+        self.assertIn("ARTICLE 1", cleaned)
+        self.assertIn("unclosed bold", cleaned)
+        self.assertIn("sansespace", cleaned)
+
+
+class ArtifactComparePlainTests(SimpleTestCase):
+    def test_prefers_html_over_stale_markdown(self):
+        from types import SimpleNamespace
+
+        from juria.views.artifact_views import _compare_version_texts, _touched_hunks, _touched_scraps
+
+        v1 = SimpleNamespace(
+            content_markdown="Texte original",
+            content_html="<p>Texte original</p>",
+        )
+        v2 = SimpleNamespace(
+            content_markdown="Texte original",
+            content_html="<p>Texte modifié avec différence</p>",
+        )
+        old, new = _compare_version_texts(v1, v2)
+        self.assertNotEqual(old, new)
+        self.assertIn("Texte modifié avec différence", "\n".join(new))
+        hunks = _touched_hunks(old, new)
+        scraps = _touched_scraps(hunks)
+        self.assertTrue(hunks)
+        self.assertTrue(any(s["op"] == "delete" for s in scraps))
+        self.assertTrue(any(s["op"] == "insert" for s in scraps))
+        # Letter/word level: should not dump the whole unchanged prefix as a scrap only
+        deleted = "".join(s["text"] for s in scraps if s["op"] == "delete")
+        inserted = "".join(s["text"] for s in scraps if s["op"] == "insert")
+        self.assertNotIn("Texte", deleted)  # shared word kept as equal context
+        self.assertTrue(deleted or inserted)
 
 
 class JuriaDisabledApiTests(APITestCase):
@@ -274,6 +335,7 @@ class JuriaProjectApiTests(APITestCase):
         thread = project.threads.first()
         self.assertEqual(thread.title, "Nouveau chat")
         self.assertFalse(thread.title_is_custom)
+        self.assertEqual(res.json().get("message_count"), 0)
 
     def test_rename_marks_project_name_custom(self):
         created = self.client.post(
@@ -834,7 +896,7 @@ class JuriaLookupIsolationTests(APITestCase):
         mixed = self.client.get(f"/api/v1/juria/projects/{mine_id}/artifacts/{artifact.id}/")
         self.assertEqual(mixed.status_code, 404)
         exported = self.client.get(
-            f"/api/v1/juria/projects/{mine_id}/artifacts/{artifact.id}/export/"
+            f"/api/v1/juria/projects/{mine_id}/artifacts/{artifact.id}/export/?export_format=docx"
         )
         self.assertEqual(exported.status_code, 404)
         copied = self.client.post(

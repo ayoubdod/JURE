@@ -96,7 +96,34 @@ function mergeRecords(...items: Array<Record<string, unknown> | null>): Record<s
   return out;
 }
 
-/** Month 1–12 from API (number, "3", "2025-03", "2025-03-01", …). */
+/** Month 1–12 from API (number, "3", "2025-03", "Jan", …). */
+const MONTH_ABBR: Record<string, number> = {
+  jan: 1,
+  janv: 1,
+  feb: 2,
+  fevr: 2,
+  févr: 2,
+  mar: 3,
+  mars: 3,
+  apr: 4,
+  avr: 4,
+  may: 5,
+  mai: 5,
+  jun: 6,
+  juin: 6,
+  jul: 7,
+  juil: 7,
+  aug: 8,
+  aout: 8,
+  août: 8,
+  sep: 9,
+  sept: 9,
+  oct: 10,
+  nov: 11,
+  dec: 12,
+  déc: 12,
+};
+
 function parseMonthOneToTwelve(v: unknown): number | null {
   if (v == null) return null;
   if (typeof v === 'number') {
@@ -110,6 +137,8 @@ function parseMonthOneToTwelve(v: unknown): number | null {
     const m = parseInt(iso[2], 10);
     if (m >= 1 && m <= 12) return m;
   }
+  const named = MONTH_ABBR[s.slice(0, 4).toLowerCase()] ?? MONTH_ABBR[s.slice(0, 3).toLowerCase()];
+  if (named) return named;
   const n = Number(s);
   if (Number.isFinite(n)) {
     if (n >= 1 && n <= 12) return n;
@@ -148,6 +177,7 @@ function monthlyAmounts(p: Record<string, unknown>): { billed: number; collected
       p,
       'collected',
       'encaisse',
+      'received',
       'amount_collected',
       'amountCollected',
       'total_collected',
@@ -234,7 +264,7 @@ function lawyerDisplayName(p: Record<string, unknown>): string {
   }
   if (!name) {
     const id = pick(p, 'lawyer_id', 'lawyerId', 'user_id', 'userId', 'pk', 'id');
-    if (id != null && String(id).trim() !== '') name = `Avocat #${id}`;
+    if (id != null && String(id).trim() !== '') name = `Lawyer #${id}`;
   }
   return name;
 }
@@ -254,6 +284,8 @@ const LAWYER_AMOUNT_KEYS = [
   'value',
   'sum',
   'billed',
+  'total_billed',
+  'totalBilled',
   'total_ca',
   'totalCa',
 ] as const;
@@ -296,7 +328,7 @@ function normalizeLawyers(raw: unknown): API.FinanceLawyerRevenue[] {
     if (typeof val === 'number' || (typeof val === 'string' && String(val).trim() !== '')) {
       const amt = num(val);
       const idMatch = /^(\d+)$/.exec(key);
-      const name = idMatch ? `Avocat #${idMatch[1]}` : key;
+      const name = idMatch ? `Lawyer #${idMatch[1]}` : key;
       out.push({ lawyer_name: name, amount: amt });
       continue;
     }
@@ -360,6 +392,7 @@ function normalizeAlerts(raw: unknown): API.FinanceAlert[] {
         type: 'OVERDUE_INVOICE',
         message: '',
         case_reference: null,
+        invoice_number: null,
         amount: null,
         due_date: null,
       };
@@ -373,6 +406,11 @@ function normalizeAlerts(raw: unknown): API.FinanceAlert[] {
         return c != null ? num(c) : undefined;
       })(),
       case_reference: (pick(p, 'case_reference', 'caseReference') as string | null | undefined) ?? null,
+      invoice_number: (() => {
+        const raw = pick(p, 'invoice_number', 'invoiceNumber');
+        if (typeof raw === 'string' && raw.trim()) return raw.trim();
+        return null;
+      })(),
       amount: (() => {
         const x = pick(p, 'amount', 'montant');
         return x == null ? null : num(x);
@@ -459,9 +497,9 @@ export function enrichMonthlyFromRecentTransactions(
   dashboard: API.FinanceDashboard,
   year: number
 ): API.FinanceDashboard {
+  const monthlySeries = dashboard.monthly ?? [];
   const hasMonthly =
-    dashboard.monthly.length > 0 &&
-    dashboard.monthly.some((m) => m.billed > 0 || m.collected > 0);
+    monthlySeries.length > 0 && monthlySeries.some((m) => m.billed > 0 || m.collected > 0);
   if (hasMonthly) return dashboard;
 
   const txs = dashboard.recent_transactions ?? [];
@@ -562,7 +600,8 @@ export function normalizeFinanceDashboardPayload(raw: unknown): API.FinanceDashb
     if (charts) recent_transactions = normalizeRecent(pick(charts, ...RECENT_KEYS));
   }
 
-  const statsSource = mergeRecords(root, kpisNode, kpisInCharts, charts, statsNode);
+  const nestedStats = mergeRecords(kpisNode, kpisInCharts, statsNode);
+  const statsSource = kpisNode || kpisInCharts || statsNode ? nestedStats : root;
 
   const rawTva = pick(root, 'tva_status', 'tvaStatus');
   const tva_status = rawTva != null && typeof rawTva === 'object' ? normalizeTvaPayload(rawTva) : null;

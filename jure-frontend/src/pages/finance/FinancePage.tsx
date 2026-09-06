@@ -1,9 +1,10 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router';
 import { Plus, Download, LayoutDashboard, FileText, Wallet } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { FinanceStatsStrip } from '@/components/finance/stats/FinanceStatsStrip';
+import { WorkspacePageHeader } from '@/components/workspace/WorkspaceChrome';
 import { InvoiceDetailPanel } from '@/components/finance/panel/InvoiceDetailPanel';
 import { navigateToCaseById } from '@/lib/caseRoutes';
 import { getFinanceDashboard } from '@/services/finance/api';
@@ -27,11 +28,18 @@ const EMPTY_STATS: API.FinanceDashboardStats = {
   tax_advances_unpaid_count: 0,
 };
 
+function emptyDashboard(year: number): API.FinanceDashboard {
+  return enrichLawyersFromRecentTransactions(
+    enrichMonthlyFromRecentTransactions(normalizeFinanceDashboardPayload(null), year),
+    year
+  );
+}
+
 const FinancePage: React.FC = () => {
   const navigate = useNavigate();
   const { t } = useAppTranslation();
   const year = new Date().getFullYear();
-  const [dashboard, setDashboard] = useState<API.FinanceDashboard | null>(null);
+  const [dashboard, setDashboard] = useState<API.FinanceDashboard>(() => emptyDashboard(year));
   const [loadError, setLoadError] = useState(false);
   const [dashReady, setDashReady] = useState(false);
   const [mainTab, setMainTab] = useState<'dashboard' | 'invoices' | 'payments'>('dashboard');
@@ -39,38 +47,47 @@ const FinancePage: React.FC = () => {
   const [invoiceEditId, setInvoiceEditId] = useState<number | null>(null);
   const [invoiceListEpoch, setInvoiceListEpoch] = useState(0);
   const [tvaStatus, setTvaStatus] = useState<TVAStatus | null>(null);
+  const [listToolbar, setListToolbar] = useState<ReactNode>(null);
+  const onListToolbarChange = useCallback((node: ReactNode | null) => {
+    setListToolbar(node);
+  }, []);
 
   useEffect(() => {
     getTVAStatus().then((s) => setTvaStatus((prev) => prev ?? s));
   }, []);
 
-  useEffect(() => {
-    setDashReady(false);
-    getFinanceDashboard(year)
+  const loadDashboard = useCallback(() => {
+    getFinanceDashboard(year, 'year')
       .then((res) => {
-        const normalized = normalizeFinanceDashboardPayload(res.data);
-        if (normalized.tva_status) {
-          setTvaStatus(normalized.tva_status);
+        try {
+          const normalized = normalizeFinanceDashboardPayload(res.data);
+          if (normalized.tva_status) {
+            setTvaStatus(normalized.tva_status);
+          }
+          setDashboard(
+            enrichLawyersFromRecentTransactions(
+              enrichMonthlyFromRecentTransactions(normalized, year),
+              year
+            )
+          );
+          setLoadError(false);
+        } catch {
+          setLoadError(true);
+          setDashboard(emptyDashboard(year));
         }
-        setDashboard(
-          enrichLawyersFromRecentTransactions(
-            enrichMonthlyFromRecentTransactions(normalized, year),
-            year
-          )
-        );
-        setLoadError(false);
       })
       .catch(() => {
         setLoadError(true);
-        setDashboard(
-          enrichLawyersFromRecentTransactions(
-            enrichMonthlyFromRecentTransactions(normalizeFinanceDashboardPayload(null), year),
-            year
-          )
-        );
+        setDashboard(emptyDashboard(year));
       })
-      .finally(() => setDashReady(true));
+      .finally(() => {
+        setDashReady(true);
+      });
   }, [year]);
+
+  useEffect(() => {
+    loadDashboard();
+  }, [loadDashboard]);
 
   const stats = dashboard?.stats ?? EMPTY_STATS;
 
@@ -115,93 +132,105 @@ const FinancePage: React.FC = () => {
 
   return (
     <div className="relative flex h-full min-h-0 flex-col overflow-hidden bg-transparent">
-      <div className="shrink-0 border-b border-slate-200/80 dark:border-slate-800 px-3 sm:px-4 py-4">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-          <div>
-            <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">{t.finance.title}</h1>
-            <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">{t.finance.subtitle}</p>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <Button
-              type="button"
-              className="h-10 bg-jure-600 hover:bg-jure-700"
-              onClick={() => navigate('/dashboard/cases')}
-            >
-              <Plus className="me-2 h-4 w-4" />
-              {t.finance.addPayment}
-            </Button>
-            <Button type="button" variant="outline" className="h-10" disabled>
-              <Download className="me-2 h-4 w-4" />
-              {t.finance.export}
-            </Button>
-          </div>
-        </div>
-      </div>
-
-      <FinanceStatsStrip
-        totalCaTtc={stripKpis.totalCaTtc}
-        totalCollected={stripKpis.totalCollected}
-        tvaUnpaid={stripKpis.tvaUnpaid}
-        taxAdvancesDueMad={taxAdvancesMad}
-        tvaRegime={tvaStatus?.regime}
-        tvaStatus={tvaStatus}
-        caTotalHint={stripKpis.caHint}
-        collectedHint={stripKpis.collectedHint}
-      />
-
-      <div className="min-h-0 flex-1 overflow-hidden px-3 py-4 sm:px-4">
-        <Tabs
-          value={mainTab}
-          onValueChange={(v) => setMainTab(v as typeof mainTab)}
-          className="flex h-full min-h-0 flex-col gap-0"
-        >
-          <TabsList className="mb-4 h-11 w-full max-w-md justify-start rounded-xl border border-slate-200 bg-slate-100/80 p-1 dark:border-slate-800 dark:bg-slate-900/50">
-            <TabsTrigger value="dashboard" className="rounded-lg px-4 data-[state=active]:bg-white data-[state=active]:shadow-sm dark:data-[state=active]:bg-slate-800">
-              <LayoutDashboard className="me-1.5 h-3.5 w-3.5" aria-hidden />
-              {t.finance.tabs.dashboard}
-            </TabsTrigger>
-            <TabsTrigger value="invoices" className="rounded-lg px-4 data-[state=active]:bg-white data-[state=active]:shadow-sm dark:data-[state=active]:bg-slate-800">
-              <FileText className="me-1.5 h-3.5 w-3.5" aria-hidden />
-              {t.finance.tabs.invoices}
-            </TabsTrigger>
-            <TabsTrigger
-              value="payments"
-              data-finance-tab="payments"
-              className="rounded-lg px-4 data-[state=active]:bg-white data-[state=active]:shadow-sm dark:data-[state=active]:bg-slate-800"
-            >
-              <Wallet className="me-1.5 h-3.5 w-3.5" aria-hidden />
-              {t.finance.tabs.payments}
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="dashboard" className="mt-0 min-h-0 flex-1 overflow-y-auto">
-            {!dashReady ? (
-              <div className="space-y-4 py-4">
-                <div className="h-64 animate-pulse rounded-xl bg-slate-200 dark:bg-slate-800" />
-                <div className="h-48 animate-pulse rounded-xl bg-slate-200 dark:bg-slate-800" />
+      <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto">
+        <div className="px-3 pb-8 pt-2 sm:px-4 lg:px-5">
+          <WorkspacePageHeader
+            title={t.finance.title}
+            subtitle={t.finance.subtitle}
+            actions={
+              <div className="flex w-full flex-wrap gap-2 sm:w-auto">
+                <Button
+                  type="button"
+                  size="sm"
+                  className="h-9 flex-1 bg-jure-600 px-3 text-[13px] font-semibold text-white hover:bg-jure-700 sm:flex-none"
+                  onClick={() => navigate('/dashboard/cases')}
+                >
+                  <Plus className="me-1.5 h-4 w-4" />
+                  {t.finance.addPayment}
+                </Button>
+                <Button type="button" variant="outline" size="sm" className="h-9" disabled>
+                  <Download className="me-1.5 h-4 w-4" />
+                  {t.finance.export}
+                </Button>
               </div>
-            ) : (
+            }
+          />
+
+          <FinanceStatsStrip
+            pending={!dashReady}
+            totalCaTtc={stripKpis.totalCaTtc}
+            totalCollected={stripKpis.totalCollected}
+            tvaUnpaid={stripKpis.tvaUnpaid}
+            taxAdvancesDueMad={taxAdvancesMad}
+            tvaRegime={tvaStatus?.regime}
+            tvaStatus={tvaStatus}
+            caTotalHint={stripKpis.caHint}
+            collectedHint={stripKpis.collectedHint}
+          />
+
+          <Tabs
+            value={mainTab}
+            onValueChange={(v) => setMainTab(v as typeof mainTab)}
+            className="mt-5 w-full min-w-0"
+          >
+            <div className="ws-toolbar-sticky sticky top-0 z-30 mb-3 min-w-0 w-full py-2">
+              <div className="min-w-0 rounded-xl border border-slate-200/90 bg-white p-1.5 shadow-[0_1px_2px_rgba(0,0,0,0.04)] dark:border-slate-800 dark:bg-slate-950 sm:p-2">
+              <TabsList className="mb-0 flex h-auto w-full min-w-0 justify-stretch gap-0 overflow-x-auto rounded-lg bg-transparent p-0 [scrollbar-width:none] dark:bg-transparent [&::-webkit-scrollbar]:hidden">
+              <TabsTrigger
+                value="dashboard"
+                className="min-w-0 flex-1 rounded-lg px-2 text-[12px] data-[state=active]:bg-slate-100 data-[state=active]:text-slate-900 data-[state=active]:shadow-none sm:px-4 sm:text-[13px] dark:data-[state=active]:bg-slate-800 dark:data-[state=active]:text-white"
+              >
+                <LayoutDashboard className="me-1 h-3.5 w-3.5 shrink-0" aria-hidden />
+                <span className="truncate">{t.finance.tabs.dashboard}</span>
+              </TabsTrigger>
+              <TabsTrigger
+                value="invoices"
+                className="min-w-0 flex-1 rounded-lg px-2 text-[12px] data-[state=active]:bg-slate-100 data-[state=active]:text-slate-900 data-[state=active]:shadow-none sm:px-4 sm:text-[13px] dark:data-[state=active]:bg-slate-800 dark:data-[state=active]:text-white"
+              >
+                <FileText className="me-1 h-3.5 w-3.5 shrink-0" aria-hidden />
+                <span className="truncate">{t.finance.tabs.invoices}</span>
+              </TabsTrigger>
+              <TabsTrigger
+                value="payments"
+                data-finance-tab="payments"
+                className="min-w-0 flex-1 rounded-lg px-2 text-[12px] data-[state=active]:bg-slate-100 data-[state=active]:text-slate-900 data-[state=active]:shadow-none sm:px-4 sm:text-[13px] dark:data-[state=active]:bg-slate-800 dark:data-[state=active]:text-white"
+              >
+                <Wallet className="me-1 h-3.5 w-3.5 shrink-0" aria-hidden />
+                <span className="truncate">{t.finance.tabs.payments}</span>
+              </TabsTrigger>
+            </TabsList>
+            {mainTab !== 'dashboard' && listToolbar ? (
+              <div className="mt-1.5 border-t border-slate-100 px-0.5 pt-1.5 dark:border-slate-800">
+                {listToolbar}
+              </div>
+            ) : null}
+              </div>
+            </div>
+
+            <TabsContent value="dashboard" className="mt-0 w-full min-w-0">
               <FinanceDashboardTab
                 dashboard={dashboard}
                 year={year}
-                showEmpty={showEmptyDashboard}
+                showEmpty={dashReady && showEmptyDashboard}
                 onViewAllPayments={() => setMainTab('payments')}
                 onOpenCase={(caseId) => openCaseById(caseId)}
+                onAlertsMutated={() => loadDashboard()}
                 tvaStatus={tvaStatus}
               />
-            )}
-          </TabsContent>
-          <TabsContent value="invoices" className="mt-0 min-h-0 flex-1 overflow-y-auto">
-            <FinanceInvoicesTab
-              listEpoch={invoiceListEpoch}
-              onOpenInvoice={(id) => setInvoicePanelId(id)}
-              onEditInvoice={(id) => setInvoiceEditId(id)}
-            />
-          </TabsContent>
-          <TabsContent value="payments" className="mt-0 min-h-0 flex-1 overflow-y-auto">
-            <FinancePaymentsTab />
-          </TabsContent>
-        </Tabs>
+            </TabsContent>
+            <TabsContent value="invoices" className="mt-0 w-full min-w-0">
+              <FinanceInvoicesTab
+                listEpoch={invoiceListEpoch}
+                onOpenInvoice={(id) => setInvoicePanelId(id)}
+                onEditInvoice={(id) => setInvoiceEditId(id)}
+                onToolbarChange={onListToolbarChange}
+              />
+            </TabsContent>
+            <TabsContent value="payments" className="mt-0 w-full min-w-0">
+              <FinancePaymentsTab onToolbarChange={onListToolbarChange} />
+            </TabsContent>
+          </Tabs>
+        </div>
       </div>
 
       <InvoiceDetailPanel

@@ -252,8 +252,10 @@ def draft_document(
             f"Langue: {lang_hint}\n"
             f"Paramètres:\n{params_block}\n\n"
             "Produis le texte COMPLET de l'acte uniquement, prêt à être relu. "
-            "Pas de markdown, pas de note méta pour l'avocat, pas d'avertissement IA. "
-            "Titres de sections et paragraphes clairs en texte brut."
+            "Commence directement par le titre de l'acte (ex. CONTRAT DE BAIL). "
+            "INTERDIT: avertissement préalable, disclaimer, modèle générique, note pour l'avocat, "
+            "markdown (** ## ---), ou tout texte hors de l'acte. "
+            "Titres de sections et paragraphes en texte brut."
         )
         result = _deepseek_chat(
             [
@@ -361,8 +363,9 @@ def _mode_instructions(mode: str, lang: str) -> str:
             ),
             "DOCUMENT_DRAFTING": (
                 "Mode: legal drafting. Produce a finished legal act in professional register. "
-                "Output ONLY the act itself — no preamble, no 'note to reviewing lawyer', "
-                "no AI disclaimer, no markdown (no **, ##, ---). "
+                "Start directly with the act title. "
+                "Output ONLY the act itself — no preamble, no preliminary warning, no generic-template disclaimer, "
+                "no 'note to reviewing lawyer', no markdown (no **, ##, ---). "
                 "Use plain text with clear section headings and numbered lists. "
                 "Placeholders for missing facts must be short brackets like [full name]."
             ),
@@ -383,8 +386,9 @@ def _mode_instructions(mode: str, lang: str) -> str:
             ),
             "DOCUMENT_DRAFTING": (
                 "الوضع: صياغة قانونية. أنتج نصّ الوثيقة القانونية فقط بأسلوب مهني. "
-                "لا تُدرج مقدمة، ولا «ملاحظة للمحامي المراجع»، ولا تنبيه ذكاء اصطناعي، "
-                "ولا تنسيق ماركداون (بدون ** أو ## أو ---). "
+                "ابدأ مباشرة بعنوان الوثيقة. "
+                "ممنوع: تنبيه مسبق، إخلاء مسؤولية، نموذج عام، ملاحظة للمحامي المراجع، "
+                "أو تنسيق ماركداون (بدون ** أو ## أو ---). "
                 "استخدم نصًا عاديًا بعناوين أقسام واضحة وقوائم مرقّمة. "
                 "البيانات الناقصة تُوضع بين قوسين معقوفين قصيرين مثل [الاسم الكامل]."
             ),
@@ -405,8 +409,9 @@ def _mode_instructions(mode: str, lang: str) -> str:
             ),
             "DOCUMENT_DRAFTING": (
                 "Mode: rédaction d'actes juridiques. Produis UNIQUEMENT l'acte, registre professionnel. "
-                "Pas de préambule, pas de « note pour l'avocat réviseur », pas d'avertissement IA, "
-                "pas de markdown (pas de **, ##, ---). "
+                "Commence par le titre de l'acte. "
+                "INTERDIT: « AVERTISSEMENT PRÉALABLE », disclaimer, modèle générique, "
+                "note pour l'avocat réviseur, markdown (**, ##, ---). "
                 "Texte brut avec titres de sections clairs et listes numérotées. "
                 "Pour les données manquantes, placeholders courts entre crochets, ex. [nom complet]."
             ),

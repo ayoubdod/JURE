@@ -568,3 +568,36 @@ msgstr "يجب أن ينتمي المستخدم إلى مكتب لإضافة م�
 
 msgid "This resource is private to another cabinet."
 msgstr "هذا المورد خاص بمكتب آخر."
+
+msgid "%(title)s (copy)"
+msgstr "%(title)s (نسخة)"
+
+msgid "Duplication"
+msgstr "تكرار"
+
+msgid "No previous version to restore."
+msgstr "لا توجد نسخة سابقة للاستعادة."
+
+msgid "Invalid version number."
+msgstr "رقم الإصدار غير صالح."
+
+msgid "Version must be between 1 and the previous version."
+msgstr "يجب أن يكون الإصدار بين 1 والإصدار السابق."
+
+msgid "Version not found."
+msgstr "الإصدار غير موجود."
+
+msgid "Restored from v%(version)s"
+msgstr "تمت الاستعادة من الإصدار %(version)s"
+
+msgid "Invalid version numbers."
+msgstr "أرقام الإصدار غير صالحة."
+
+msgid "[html v%(version)s changed]"
+msgstr "[html v%(version)s تم تعديله]"
+
+msgid "Invoice %(number)s is overdue."
+msgstr "الفاتورة %(number)s متأخرة."
+
+msgid "Outstanding TVA on issued invoices."
+msgstr "ضريبة القيمة المضافة المستحقة على الفواتير الصادرة."

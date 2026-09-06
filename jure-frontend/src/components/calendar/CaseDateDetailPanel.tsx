@@ -11,7 +11,7 @@ import {
   getCountdownDays,
   sourceTypeLabel,
 } from '@/lib/calendarEvents';
-import { EMBEDDED_OVERLAY, SHEET_PANEL } from '@/components/calendar/EmbeddedDetailPanels';
+import { SHEET_PANEL } from '@/components/calendar/EmbeddedDetailPanels';
 
 function formatDayMonthYear(iso: string, lang: Lang): string {
   const d = new Date(iso);
@@ -23,13 +23,12 @@ export default function CaseDateDetailPanel({
   event: ev,
   open,
   onOpenChange,
-  portalContainer,
   onViewCase,
 }: {
   event: CalendarEvent | null;
   open: boolean;
   onOpenChange: (v: boolean) => void;
-  portalContainer: HTMLElement | null;
+  portalContainer?: HTMLElement | null;
   onViewCase: (caseId: number) => void;
 }) {
   const { t, tf, lang, enumPretty } = useAppTranslation();
@@ -88,8 +87,8 @@ export default function CaseDateDetailPanel({
           : tf(t.cases.deadline.inDays, { days });
 
   return (
-    <Sheet modal={false} open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="end" container={portalContainer} overlayClassName={EMBEDDED_OVERLAY} className={SHEET_PANEL}>
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent side="end" className={SHEET_PANEL}>
         <header className="sticky top-0 z-20 shrink-0 border-b border-slate-200 dark:border-slate-800 bg-slate-50/95 dark:bg-slate-950/95 backdrop-blur-sm px-4 py-4 border-s-[3px] border-s-primary">
           <div className="flex items-start justify-between gap-2">
             <div className="flex flex-wrap items-center gap-2">

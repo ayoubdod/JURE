@@ -428,19 +428,67 @@ export async function apiJuriaDuplicateArtifact(projectId: string, artifactId: s
   return data;
 }
 
+export async function apiJuriaDeleteArtifact(projectId: string, artifactId: string) {
+  await axiosInstance.delete(`${BASE}projects/${projectId}/artifacts/${artifactId}/`);
+}
+
 export async function apiJuriaExportArtifact(projectId: string, artifactId: string, format: string) {
-  const { data } = await axiosInstance.get<Blob>(`${BASE}projects/${projectId}/artifacts/${artifactId}/export/`, {
-    params: { format },
+  const response = await axiosInstance.get<Blob>(`${BASE}projects/${projectId}/artifacts/${artifactId}/export/`, {
+    // DRF reserves `format` for renderer negotiation (docx/pdf → 404). Use export_format.
+    params: { export_format: format },
     responseType: 'blob',
   });
-  return data;
+  const raw = response.data;
+  const headerType = String(response.headers?.['content-type'] || raw?.type || '');
+  if (headerType.includes('application/json') || (raw.type && raw.type.includes('application/json'))) {
+    const text = await raw.text();
+    let detail = text;
+    try {
+      detail = JSON.parse(text)?.detail || text;
+    } catch {
+      /* keep raw */
+    }
+    throw new Error(typeof detail === 'string' ? detail : 'Export failed');
+  }
+  // Re-wrap with the server content-type so the OS/Office associate the file correctly.
+  const mime =
+    headerType.split(';')[0].trim() ||
+    (format === 'pdf'
+      ? 'application/pdf'
+      : format === 'docx'
+        ? 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+        : format === 'md'
+          ? 'text/markdown'
+          : 'text/plain');
+  return new Blob([raw], { type: mime });
 }
 
 export async function apiJuriaCompareArtifact(projectId: string, artifactId: string, from: number, to: number) {
   const { data } = await axiosInstance.get(`${BASE}projects/${projectId}/artifacts/${artifactId}/compare/`, {
     params: { from, to },
   });
-  return data as { from: number; to: number; old: string; new: string; diff: string[] };
+  return data as {
+    from: number;
+    to: number;
+    old: string;
+    new: string;
+    diff: string[];
+    identical?: boolean;
+    hunks?: { kind: string; segments: { op: string; text: string }[] }[];
+    scraps?: { op: string; text: string }[];
+  };
+}
+
+export async function apiJuriaRestoreArtifact(
+  projectId: string,
+  artifactId: string,
+  version?: number
+) {
+  const { data } = await axiosInstance.post<import('@/types/juria').JuriaArtifact>(
+    `${BASE}projects/${projectId}/artifacts/${artifactId}/restore/`,
+    version != null ? { version } : {}
+  );
+  return data;
 }
 
 export async function apiJuriaListActivity(projectId: string) {
