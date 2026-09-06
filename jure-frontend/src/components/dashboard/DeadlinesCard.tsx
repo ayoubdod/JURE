@@ -15,7 +15,7 @@ import ServerSelect from '@/components/common/ServerSelect';
 import DashboardCollapsibleCard from '@/components/dashboard/DashboardCollapsibleCard';
 import { useToast } from '@/hooks/use-toast';
 import { CalendarPlus, Loader2, Scale } from 'lucide-react';
-import { formatDate, useAppTranslation } from '@/i18n';
+import { formatDate, localizeApiMessage, useAppTranslation } from '@/i18n';
 import { isAxiosError } from 'axios';
 import {
   apiCalculateDeadline,
@@ -51,11 +51,11 @@ function drfErrorMessage(err: unknown, fallback: string, extraField?: string): s
     return fallback;
   }
   const data = err.response.data as Record<string, unknown>;
-  if (typeof data.detail === 'string') return data.detail;
+  if (typeof data.detail === 'string') return localizeApiMessage(data.detail, data.detail);
   if (extraField) {
     const field = data[extraField];
     const first = Array.isArray(field) ? field[0] : field;
-    if (typeof first === 'string') return first;
+    if (typeof first === 'string') return localizeApiMessage(first, first);
   }
   return fallback;
 }

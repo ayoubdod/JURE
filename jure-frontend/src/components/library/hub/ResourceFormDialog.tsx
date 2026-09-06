@@ -31,7 +31,7 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 import { isAxiosError } from 'axios';
 import { cn } from '@/lib/utils';
-import { useAppTranslation } from '@/i18n';
+import { useAppTranslation, localizeApiMessage } from '@/i18n';
 import { useToast } from '@/hooks/use-toast';
 import { getRemoteFieldsValidation } from '@/utils/functions';
 import {
@@ -264,7 +264,7 @@ const ResourceFormDialog = forwardRef<ResourceFormDialogRef, Props>(
           if (!Object.keys(remote).length) {
             toast({
               title: t.common.error,
-              description: err.response?.data?.detail || err.message,
+              description: localizeApiMessage(err.response?.data?.detail, err.message),
               variant: 'destructive',
             });
           }

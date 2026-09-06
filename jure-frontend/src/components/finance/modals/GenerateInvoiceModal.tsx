@@ -26,7 +26,7 @@ import { TVA_LEGAL_THRESHOLD_MAD } from '@/components/finance/tva/TVAProgressBar
 import { useToast } from '@/hooks/use-toast';
 import { isAxiosError } from 'axios';
 import { devError } from '@/utils/devLog';
-import { formatDate, useAppTranslation } from '@/i18n';
+import { formatDate, localizeApiMessage, useAppTranslation } from '@/i18n';
 
 type Props = {
   open: boolean;
@@ -141,7 +141,7 @@ export const GenerateInvoiceModal: React.FC<Props> = ({
           }
         }
       }
-      toast({ title: t.common.error, description: msg, variant: 'destructive' });
+      toast({ title: t.common.error, description: localizeApiMessage(msg, msg), variant: 'destructive' });
     } finally {
       setLoading(false);
     }

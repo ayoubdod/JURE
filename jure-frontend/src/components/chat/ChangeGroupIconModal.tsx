@@ -15,7 +15,7 @@ import {
   apiUploadConversationIcon,
 } from '@/services/conversations/api';
 import { useToast } from '@/hooks/use-toast';
-import { useAppTranslation } from '@/i18n';
+import { useAppTranslation, localizeApiMessage } from '@/i18n';
 
 export interface ChangeGroupIconModalRef {
   show: (conversation: API.Conversation) => void;
@@ -78,7 +78,7 @@ const ChangeGroupIconModal = forwardRef<ChangeGroupIconModalRef, ChangeGroupIcon
         if (isAxiosError(err)) {
           toast({
             title: t.common.error,
-            description: err.response?.data?.detail ?? m.updateFailed,
+            description: localizeApiMessage(err.response?.data?.detail, m.updateFailed),
             variant: 'destructive',
           });
         }
@@ -111,7 +111,7 @@ const ChangeGroupIconModal = forwardRef<ChangeGroupIconModalRef, ChangeGroupIcon
           if (isAxiosError(err)) {
             toast({
               title: t.common.error,
-              description: err.response?.data?.detail ?? m.uploadFailed,
+              description: localizeApiMessage(err.response?.data?.detail, m.uploadFailed),
               variant: 'destructive',
             });
           }

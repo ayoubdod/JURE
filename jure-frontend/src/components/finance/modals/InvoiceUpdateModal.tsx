@@ -16,7 +16,7 @@ import { getInvoiceDetail, updateInvoice, type UpdateInvoiceBody } from '@/servi
 import { useToast } from '@/hooks/use-toast';
 import { isAxiosError } from 'axios';
 import { devError } from '@/utils/devLog';
-import { useAppTranslation } from '@/i18n';
+import { useAppTranslation, localizeApiMessage } from '@/i18n';
 
 type Props = {
   open: boolean;
@@ -49,7 +49,7 @@ export const InvoiceUpdateModal: React.FC<Props> = ({
     const d = err.response?.data;
     if (d && typeof d === 'object' && !Array.isArray(d)) {
       const detail = (d as { detail?: unknown }).detail;
-      if (typeof detail === 'string' && detail.trim()) return detail;
+      if (typeof detail === 'string' && detail.trim()) return localizeApiMessage(detail, detail);
       const first = Object.entries(d).find(([, v]) => v != null);
       if (first) {
         const v = first[1];

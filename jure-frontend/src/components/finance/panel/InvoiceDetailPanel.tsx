@@ -12,7 +12,7 @@ import {
 } from '@/services/finance/api';
 import { invoiceExonerationNote } from '@/components/finance/tva/TVAProgressBar';
 import { useToast } from '@/hooks/use-toast';
-import { formatDate, useAppTranslation } from '@/i18n';
+import { formatDate, localizeAxiosPayload, useAppTranslation } from '@/i18n';
 import { isAxiosError } from 'axios';
 
 const statusClass: Record<API.FinanceInvoiceStatus, string> = {
@@ -121,11 +121,7 @@ export const InvoiceDetailPanel: React.FC<Props> = ({
     } catch (err) {
       let msg = toasts.deleteFailed;
       if (isAxiosError(err)) {
-        const d = err.response?.data;
-        if (typeof d === 'string') msg = d;
-        else if (d && typeof d === 'object' && 'detail' in d && typeof (d as { detail: string }).detail === 'string') {
-          msg = (d as { detail: string }).detail;
-        }
+        msg = localizeAxiosPayload(err.response?.data, toasts.deleteFailed);
       }
       toast({ title: t.common.error, description: msg, variant: 'destructive' });
     } finally {

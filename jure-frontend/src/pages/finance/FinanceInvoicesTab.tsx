@@ -18,7 +18,7 @@ import {
 } from '@/services/finance/api';
 import { useToast } from '@/hooks/use-toast';
 import { isAxiosError } from 'axios';
-import { useAppTranslation } from '@/i18n';
+import { useAppTranslation, localizeAxiosPayload } from '@/i18n';
 
 const STATUS_OPTS: API.FinanceInvoiceStatus[] = [
   'DRAFT',
@@ -90,11 +90,7 @@ export const FinanceInvoicesTab: React.FC<Props> = ({ onOpenInvoice, onEditInvoi
     } catch (err) {
       let msg = t.finance.toasts.deleteFailed;
       if (isAxiosError(err)) {
-        const d = err.response?.data;
-        if (typeof d === 'string') msg = d;
-        else if (d && typeof d === 'object' && 'detail' in d && typeof (d as { detail: string }).detail === 'string') {
-          msg = (d as { detail: string }).detail;
-        }
+        msg = localizeAxiosPayload(err.response?.data, t.finance.toasts.deleteFailed);
       }
       toast({ title: t.finance.toasts.errorTitle, description: msg, variant: 'destructive' });
     }

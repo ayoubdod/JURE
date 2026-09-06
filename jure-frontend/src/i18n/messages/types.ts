@@ -4413,6 +4413,7 @@ export interface AppMessages {
       title: string;
       hint: string;
       openInJuria: string;
+      chats: string;
     };
     draftFields: {
       bailleur: string;

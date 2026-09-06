@@ -9,6 +9,7 @@ import {
   type ResearchNote,
   type ResearchNotePayload,
 } from '@/services/research-notes/api';
+import { localizeApiMessage } from '@/i18n/errors';
 
 type SaveErrorCopy = {
   connectionSave: string;
@@ -36,8 +37,8 @@ export function useResearchNotes({ caseId, errors }: Options) {
       if (isAxiosError(err)) {
         if (!err.response) return errors.connectionSave;
         const data = err.response.data as { detail?: string; title?: string[] } | undefined;
-        if (typeof data?.detail === 'string') return data.detail;
-        if (Array.isArray(data?.title) && data.title[0]) return data.title[0];
+        if (typeof data?.detail === 'string') return localizeApiMessage(data.detail, data.detail);
+        if (Array.isArray(data?.title) && data.title[0]) return localizeApiMessage(data.title[0], data.title[0]);
       }
       return errors.save;
     },

@@ -17,8 +17,10 @@ export {
   isLang,
   dirForLang,
 } from './types';
+export { isBackendEmailUnverified } from './errors';
 export {
   detectInitialLanguage,
+  activeUiLang,
   applyDocumentLanguage,
   persistLanguage,
   readStoredLanguage,
@@ -37,7 +39,7 @@ export {
 export { LEGAL_GLOSSARY, glossaryTerm } from './glossary';
 export type { GlossaryKey } from './glossary';
 export { translateEnum, translateKnownEnum, enumOptions } from './enums';
-export { translateApiError, translateErrorCode } from './errors';
+export { translateApiError, translateErrorCode, localizeApiMessage, localizeAxiosPayload } from './errors';
 export { getMessages, messages } from './messages';
 
 /**

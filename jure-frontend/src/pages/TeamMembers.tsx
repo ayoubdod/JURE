@@ -72,7 +72,7 @@ import { useOnlineIds } from '@/hooks/useOnlinePresence';
 import { cn } from '@/lib/utils';
 import CompactSearch from '@/components/common/CompactSearch';
 import MobileFilterSheet, { FilterField } from '@/components/common/MobileFilterSheet';
-import { formatDate, useAppTranslation } from '@/i18n';
+import { formatDate, localizeApiMessage, useAppTranslation } from '@/i18n';
 import type { Lang } from '@/i18n';
 import { useShortcutAction } from '@/context/ShortcutsContext';
 import {
@@ -259,7 +259,7 @@ const TeamMembers: React.FC = () => {
       const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
       toast({
         title: t.common.error,
-        description: detail || t.team.toasts.inviteFailed,
+        description: localizeApiMessage(detail, t.team.toasts.inviteFailed),
         variant: 'destructive',
       });
     } finally {

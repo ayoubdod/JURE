@@ -25,7 +25,7 @@ import { AddPaymentModal } from '@/components/finance/modals/AddPaymentModal';
 import { InvoiceUpdateModal } from '@/components/finance/modals/InvoiceUpdateModal';
 import { useToast } from '@/hooks/use-toast';
 import { isAxiosError } from 'axios';
-import { useAppTranslation } from '@/i18n';
+import { useAppTranslation, localizeAxiosPayload } from '@/i18n';
 
 type Props = {
   caseId: number;
@@ -112,11 +112,7 @@ export const FinanceTab: React.FC<Props> = ({ caseId }) => {
     } catch (err) {
       let msg = toasts.deleteFailed;
       if (isAxiosError(err)) {
-        const d = err.response?.data;
-        if (typeof d === 'string') msg = d;
-        else if (d && typeof d === 'object' && 'detail' in d && typeof (d as { detail: string }).detail === 'string') {
-          msg = (d as { detail: string }).detail;
-        }
+        msg = localizeAxiosPayload(err.response?.data, toasts.deleteFailed);
       }
       toast({ title: t.common.error, description: msg, variant: 'destructive' });
     }

@@ -23,6 +23,14 @@ export function detectInitialLanguage(): Lang {
   return DEFAULT_LANG;
 }
 
+/** Language currently applied on `<html lang>`, then stored/browser fallback. */
+export function activeUiLang(): Lang {
+  if (typeof document !== 'undefined' && isLang(document.documentElement.lang)) {
+    return document.documentElement.lang;
+  }
+  return detectInitialLanguage();
+}
+
 export function applyDocumentLanguage(lang: Lang): void {
   if (typeof document === 'undefined') return;
   document.documentElement.setAttribute('lang', lang);

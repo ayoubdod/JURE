@@ -3,7 +3,7 @@
 import { useCallback, useState } from 'react';
 import { isAxiosError } from 'axios';
 import { apiConvertCase } from '@/services/case/api';
-import { useAppTranslation } from '@/i18n';
+import { useAppTranslation, localizeApiMessage } from '@/i18n';
 
 export function useConvertCase() {
   const [loading, setLoading] = useState(false);
@@ -56,7 +56,7 @@ export function useConvertCase() {
           if (status === 409) {
             setSubmitError(cw.alreadyConverted);
           } else if (status === 400 && msg) {
-            setSubmitError(msg);
+            setSubmitError(localizeApiMessage(msg, msg));
           } else if (status === 404) {
             setSubmitError(cw.convertNotFound);
           } else {

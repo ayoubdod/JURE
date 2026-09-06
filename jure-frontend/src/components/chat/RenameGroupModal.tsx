@@ -14,7 +14,7 @@ import { Label } from '@/components/ui/label';
 import { Loader2 } from 'lucide-react';
 import { apiRenameConversation } from '@/services/conversations/api';
 import { useToast } from '@/hooks/use-toast';
-import { useAppTranslation } from '@/i18n';
+import { useAppTranslation, localizeApiMessage } from '@/i18n';
 
 export interface RenameGroupModalRef {
   show: (conversation: API.Conversation) => void;
@@ -81,7 +81,7 @@ const RenameGroupModal = forwardRef<RenameGroupModalRef, RenameGroupModalProps>(
               (error.response?.data as { title?: string[]; detail?: string })?.title?.[0] ??
               (error.response?.data as { detail?: string })?.detail ??
               m.onlyGroups;
-            toast({ title: m.cannotRename, description: msg, variant: 'destructive' });
+            toast({ title: m.cannotRename, description: localizeApiMessage(msg, msg), variant: 'destructive' });
             return;
           }
           if (status === 403) {

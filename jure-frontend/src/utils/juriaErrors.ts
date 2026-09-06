@@ -1,6 +1,7 @@
 import type { AxiosError } from 'axios';
 import type { JuriaApiErrorBody } from '@/services/juria/types';
 import { detectInitialLanguage, tFor } from '@/i18n';
+import { localizeApiMessage } from '@/i18n/errors';
 
 function juriaErrorCopy() {
   return tFor(detectInitialLanguage()).juria.errors;
@@ -21,7 +22,7 @@ export function getJuriaErrorMessage(err: unknown): string {
   const copy = juriaErrorCopy();
 
   if (status === 503) {
-    return typeof data?.detail === 'string' ? data.detail : copy.unavailable;
+    return typeof data?.detail === 'string' ? localizeApiMessage(data.detail, data.detail) : copy.unavailable;
   }
   if (status === 500) {
     return copy.server;
@@ -33,7 +34,7 @@ export function getJuriaErrorMessage(err: unknown): string {
     return data?.error ?? copy.timeout;
   }
   if (status === 400) {
-    if (typeof data?.detail === 'string') return data.detail;
+    if (typeof data?.detail === 'string') return localizeApiMessage(data.detail, data.detail);
     return copy.invalidRequest;
   }
   if (ax.message === 'canceled' || ax.code === 'ERR_CANCELED') {

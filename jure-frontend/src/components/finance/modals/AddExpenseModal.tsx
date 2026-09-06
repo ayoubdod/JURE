@@ -20,7 +20,7 @@ import {
 } from '@/components/ui/select';
 import { addExpense } from '@/services/finance/api';
 import { useToast } from '@/hooks/use-toast';
-import { useAppTranslation } from '@/i18n';
+import { useAppTranslation, localizeAxiosPayload } from '@/i18n';
 import { isAxiosError } from 'axios';
 
 type Props = {
@@ -81,9 +81,7 @@ export const AddExpenseModal: React.FC<Props> = ({ open, onOpenChange, caseId, o
     } catch (err) {
       let msg = t.finance.toasts.expenseSaveFailed;
       if (isAxiosError(err)) {
-        const d = err.response?.data;
-        if (typeof d === 'string') msg = d;
-        else if (d && typeof d === 'object' && 'detail' in d) msg = String((d as { detail: unknown }).detail);
+        msg = localizeAxiosPayload(err.response?.data, t.finance.toasts.expenseSaveFailed);
       }
       toast({ title: t.common.error, description: msg, variant: 'destructive' });
     } finally {

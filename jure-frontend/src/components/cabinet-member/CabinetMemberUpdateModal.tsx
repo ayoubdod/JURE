@@ -49,7 +49,7 @@ import { cn } from '@/lib/utils';
 import { Switch } from '../ui/switch';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { useAppTranslation } from '@/i18n';
+import { useAppTranslation, localizeApiMessage } from '@/i18n';
 import { useToast } from '@/hooks/use-toast';
 
 const ALL_ROLES: API.Role[] = ['VIEWER', 'ASSISTANT', 'LAWYER', 'MANAGER', 'ADMIN', 'OWNER'];
@@ -262,7 +262,7 @@ const CabinetMemberUpdateModal = forwardRef<
         const payload = err.response?.data as { error?: string; detail?: string } | undefined;
         const msg = payload?.error ?? payload?.detail;
         if (typeof msg === 'string' && msg && keys.length === 0) {
-          mainForm.setError('role', { message: msg });
+          mainForm.setError('role', { message: localizeApiMessage(msg, msg) });
         }
         const focusKey = keys[0] === 'role' || (!keys[0] && msg) ? `${formId}-role-VIEWER` : keys[0] ? `${formId}-${keys[0]}` : null;
         if (focusKey) document.getElementById(focusKey)?.focus();
