@@ -343,38 +343,38 @@ export default function LitigationDetailWorkspace({
               ) : null}
             </div>
 
-            <div className="flex shrink-0 flex-wrap items-center gap-2">
-              <Button type="button" variant="outline" className="h-9 rounded-lg" onClick={addTask}>
-                {copy.addTask}
-              </Button>
-              {canEdit ? (
-                <Button type="button" variant="outline" className="hidden h-9 rounded-lg sm:inline-flex" onClick={() => setHearingOpen(true)}>
-                  {copy.addHearing}
-                </Button>
-              ) : null}
-              {canEdit ? (
-                <Button type="button" variant="outline" className="hidden h-9 rounded-lg md:inline-flex" onClick={() => setDeadlineOpen(true)}>
-                  {copy.addDeadline}
-                </Button>
-              ) : null}
-              {canEdit ? (
-                <Button
-                  type="button"
-                  className="h-9 rounded-lg bg-[#64499D] px-3 text-[12px] font-semibold text-white hover:bg-[#4D3680]"
-                  onClick={() => caseModalRef.current?.show(caseItem)}
-                >
-                  <Pencil className="h-4 w-4" />
-                  {copy.edit}
-                </Button>
-              ) : null}
+            <div className="flex shrink-0 items-center gap-2">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button type="button" variant="outline" className="h-9 rounded-lg px-2.5">
+                  <Button type="button" variant="outline" className="h-9 rounded-lg px-3">
                     <MoreHorizontal className="h-4 w-4" />
-                    <span className="sr-only sm:not-sr-only sm:ms-1">{pw.more}</span>
+                    <span className="ms-2">{pw.more}</span>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
+                <DropdownMenuContent align="end" className="w-52">
+                  <DropdownMenuItem onClick={addTask}>
+                    <CheckSquare className="h-4 w-4" />
+                    {copy.addTask}
+                  </DropdownMenuItem>
+                  {canEdit ? (
+                    <DropdownMenuItem onClick={() => setHearingOpen(true)}>
+                      <Gavel className="h-4 w-4" />
+                      {copy.addHearing}
+                    </DropdownMenuItem>
+                  ) : null}
+                  {canEdit ? (
+                    <DropdownMenuItem onClick={() => setDeadlineOpen(true)}>
+                      <Clock className="h-4 w-4" />
+                      {copy.addDeadline}
+                    </DropdownMenuItem>
+                  ) : null}
+                  {canEdit ? (
+                    <DropdownMenuItem onClick={() => caseModalRef.current?.show(caseItem)}>
+                      <Pencil className="h-4 w-4" />
+                      {copy.edit}
+                    </DropdownMenuItem>
+                  ) : null}
+                  <DropdownMenuSeparator />
                   {canEdit && caseItem.status !== CaseStatus.CLOSED ? (
                     <DropdownMenuItem onClick={() => setCloseOpen(true)}>
                       <Flag className="h-4 w-4" />
@@ -436,8 +436,8 @@ export default function LitigationDetailWorkspace({
           </div>
         </nav>
 
-        <div className="min-h-0 min-w-0 flex-1 overflow-y-auto">
-          <div className={cn('px-3 py-4 sm:px-5 lg:px-6', active === 'juria' && 'flex min-h-full flex-col p-0')}>
+        <div className={cn('min-h-0 min-w-0 flex-1', active === 'juria' ? 'flex flex-col overflow-hidden' : 'overflow-y-auto')}>
+          <div className={cn('px-3 py-4 sm:px-5 lg:px-6', active === 'juria' && 'flex h-full min-h-0 flex-1 flex-col overflow-hidden p-0')}>
             {active === 'overview' ? (
               <LitigationOverview
                 caseItem={caseItem}

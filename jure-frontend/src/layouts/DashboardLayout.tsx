@@ -12,9 +12,7 @@ import { TVAThresholdNotification } from '@/components/finance/tva/TVAThresholdN
 import { NotificationProvider } from '@/context/NotificationContext'
 import { MobileNavProvider } from '@/context/MobileNavContext'
 import { NotificationToastStack } from '@/components/notifications/NotificationToastStack'
-import { JuriaFloatingAssistant } from '@/components/juria/JuriaFloatingAssistant'
 import CallShell from '@/components/conversations/call/CallShell'
-import { JURIA_ENABLED } from '@/config/features'
 import { cn } from '@/lib/utils'
 import { ShortcutsProvider } from '@/context/ShortcutsContext'
 import CommandPalette from '@/components/shortcuts/CommandPalette'
@@ -196,8 +194,6 @@ const DashboardLayout = () => {
             <TVAThresholdNotification />
 
             <NotificationToastStack />
-
-            {JURIA_ENABLED ? <JuriaFloatingAssistant /> : null}
 
             <CallShell />
 

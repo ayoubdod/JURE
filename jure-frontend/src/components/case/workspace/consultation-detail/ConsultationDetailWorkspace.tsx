@@ -237,12 +237,31 @@ export default function ConsultationDetailWorkspace({
   const moreMenu = (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button type="button" variant="outline" className="h-9 rounded-lg px-2.5">
+        <Button type="button" variant="outline" className="h-9 rounded-lg px-3">
           <MoreHorizontal className="h-4 w-4" />
-          <span className="sr-only sm:not-sr-only sm:ms-1">{pw.more}</span>
+          <span className="ms-2">{pw.more}</span>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
+      <DropdownMenuContent align="end" className="w-52">
+        {canEdit ? (
+          <DropdownMenuItem onClick={() => caseModalRef.current?.show(caseItem)}>
+            <Pencil className="h-4 w-4" />
+            {copy.edit}
+          </DropdownMenuItem>
+        ) : null}
+        {canEdit && !isCancelled(caseItem) ? (
+          <DropdownMenuItem onClick={() => caseModalRef.current?.show(undefined, { followUpOf: caseItem })}>
+            <CalendarClock className="h-4 w-4" />
+            {t.cases.workspaces.consultation.actions.addFollowUp}
+          </DropdownMenuItem>
+        ) : null}
+        {canConvert ? (
+          <DropdownMenuItem onClick={() => setTypeSelectorOpen(true)}>
+            <ClipboardList className="h-4 w-4" />
+            {t.cases.workspaces.consultation.actions.convert}
+          </DropdownMenuItem>
+        ) : null}
+        {canEdit || canConvert ? <DropdownMenuSeparator /> : null}
         <DropdownMenuItem onClick={sendEmail}>{copy.sendEmail}</DropdownMenuItem>
         {canEdit && status !== 'COMPLETED' && status !== 'CANCELLED' ? (
           <DropdownMenuItem onClick={() => void patchOutcome('COMPLETED')}>{copy.markCompleted}</DropdownMenuItem>
@@ -327,37 +346,7 @@ export default function ConsultationDetailWorkspace({
               </div>
             </div>
 
-            <div className="flex shrink-0 flex-wrap items-center gap-2">
-              {canEdit ? (
-                <Button
-                  type="button"
-                  className="h-9 rounded-lg bg-[#64499D] px-3 text-[12px] font-semibold text-white hover:bg-[#4D3680]"
-                  onClick={() => caseModalRef.current?.show(caseItem)}
-                >
-                  <Pencil className="h-4 w-4" />
-                  {copy.edit}
-                </Button>
-              ) : null}
-              {canEdit && !isCancelled(caseItem) ? (
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="hidden h-9 rounded-lg sm:inline-flex"
-                  onClick={() => caseModalRef.current?.show(undefined, { followUpOf: caseItem })}
-                >
-                  {t.cases.workspaces.consultation.actions.addFollowUp}
-                </Button>
-              ) : null}
-              {canConvert ? (
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="hidden h-9 rounded-lg sm:inline-flex"
-                  onClick={() => setTypeSelectorOpen(true)}
-                >
-                  {t.cases.workspaces.consultation.actions.convert}
-                </Button>
-              ) : null}
+            <div className="flex shrink-0 items-center gap-2">
               {format === 'VIDEO' && videoLink ? (
                 <Button type="button" variant="outline" className="h-9 rounded-lg" asChild>
                   <a href={videoLink} target="_blank" rel="noreferrer">
@@ -419,8 +408,8 @@ export default function ConsultationDetailWorkspace({
           </div>
         </nav>
 
-        <div className="min-h-0 min-w-0 flex-1 overflow-y-auto">
-          <div className={cn('px-3 py-4 sm:px-5 lg:px-6', active === 'juria' && 'flex min-h-full flex-col p-0')}>
+        <div className={cn('min-h-0 min-w-0 flex-1', active === 'juria' ? 'flex flex-col overflow-hidden' : 'overflow-y-auto')}>
+          <div className={cn('px-3 py-4 sm:px-5 lg:px-6', active === 'juria' && 'flex h-full min-h-0 flex-1 flex-col overflow-hidden p-0')}>
             {active === 'overview' ? (
               <ConsultationOverview
                 caseItem={caseItem}
@@ -654,11 +643,7 @@ export default function ConsultationDetailWorkspace({
 
             {active === 'finance' && showFinance ? <FinanceTab caseId={caseItem.id} /> : null}
 
-            {active === 'juria' && JURIA_ENABLED ? (
-              <div className="flex min-h-[70vh] flex-col">
-                <JuriaCasePanel caseItem={caseItem} />
-              </div>
-            ) : null}
+            {active === 'juria' && JURIA_ENABLED ? <JuriaCasePanel caseItem={caseItem} /> : null}
 
             {active === 'activity' ? (
               <div className="space-y-3">

@@ -16,6 +16,9 @@ export function JuriaEmptyState({
   onPickMode,
   onPickStarter,
   onAsk,
+  showStarters = true,
+  showCaseLink = true,
+  linkedCase: linkedCaseProp,
 }: {
   onPickMode: (mode: JuriaMode) => void;
   onPickStarter: (text: string, mode?: JuriaMode) => void;
@@ -25,12 +28,17 @@ export function JuriaEmptyState({
     caseLink?: { id: number; reference?: string; title?: string },
     mode?: JuriaMode
   ) => void;
+  showStarters?: boolean;
+  showCaseLink?: boolean;
+  linkedCase?: { id: number; reference?: string; title?: string } | null;
 }) {
   const { t } = useAppTranslation();
   const [draft, setDraft] = useState('');
   const [file, setFile] = useState<File | null>(null);
   const [mode, setMode] = useState<JuriaMode>('CHAT');
-  const [linkedCase, setLinkedCase] = useState<{ id: number; reference?: string; title?: string } | null>(null);
+  const [linkedCase, setLinkedCase] = useState<{ id: number; reference?: string; title?: string } | null>(
+    linkedCaseProp ?? null
+  );
 
   const chips = [
     { text: t.juria.quickStarters.analyzeContract, mode: 'CONTRACT_ANALYSIS' as const },
@@ -44,7 +52,7 @@ export function JuriaEmptyState({
   const submit = () => {
     const text = draft.trim();
     if (!text && !file) return;
-    onAsk?.(text, file, linkedCase ?? undefined, mode);
+    onAsk?.(text, file, (linkedCaseProp ?? linkedCase) ?? undefined, mode);
   };
 
   return (
@@ -113,18 +121,20 @@ export function JuriaEmptyState({
       {onAsk ? (
         <div className="shrink-0 border-t border-slate-200 bg-white/95 backdrop-blur-md dark:border-slate-800 dark:bg-slate-950/95">
           <div className="mx-auto w-full max-w-3xl">
-            <div className="flex gap-1.5 overflow-x-auto px-3 pt-2.5 pb-1 [-ms-overflow-style:none] [scrollbar-width:none] sm:flex-wrap sm:justify-center sm:overflow-visible sm:px-4 [&::-webkit-scrollbar]:hidden">
-              {chips.map((chip) => (
-                <button
-                  key={chip.text}
-                  type="button"
-                  onClick={() => onPickStarter(chip.text, chip.mode)}
-                  className="shrink-0 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-[12px] text-slate-600 transition hover:border-[#64499D]/30 hover:text-[#64499D] dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"
-                >
-                  {chip.text}
-                </button>
-              ))}
-            </div>
+            {showStarters ? (
+              <div className="flex gap-1.5 overflow-x-auto px-3 pt-2.5 pb-1 [-ms-overflow-style:none] [scrollbar-width:none] sm:flex-wrap sm:justify-center sm:overflow-visible sm:px-4 [&::-webkit-scrollbar]:hidden">
+                {chips.map((chip) => (
+                  <button
+                    key={chip.text}
+                    type="button"
+                    onClick={() => onPickStarter(chip.text, chip.mode)}
+                    className="shrink-0 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-[12px] text-slate-600 transition hover:border-[#64499D]/30 hover:text-[#64499D] dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"
+                  >
+                    {chip.text}
+                  </button>
+                ))}
+              </div>
+            ) : null}
             <JuriaComposer
               variant="docked"
               mode={mode}
@@ -132,12 +142,12 @@ export function JuriaEmptyState({
               value={draft}
               onChange={setDraft}
               onSend={submit}
-              linkedCase={linkedCase ?? undefined}
+              linkedCase={(linkedCaseProp ?? linkedCase) ?? undefined}
               onLinkCase={(c) => setLinkedCase(c)}
-              onUnlinkCase={() => setLinkedCase(null)}
+              onUnlinkCase={linkedCaseProp ? undefined : () => setLinkedCase(null)}
               attachment={file}
               onAttachmentChange={setFile}
-              showCaseLink
+              showCaseLink={showCaseLink}
             />
           </div>
         </div>

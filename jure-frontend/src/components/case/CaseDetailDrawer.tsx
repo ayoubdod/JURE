@@ -34,7 +34,6 @@ import { useFinanceAccess } from '@/hooks/useFinanceAccess';
 import { FinanceTab } from '@/components/case/panel/tabs/FinanceTab';
 import { getTVAStatus, isCabinetTvaExonerated, type TVAStatus } from '@/services/financeService';
 import { JuriaCasePanel } from '@/components/juria/JuriaCasePanel';
-import useJuriaStore from '@/stores/juriaStore';
 import { JURIA_ENABLED } from '@/config/features';
 import DeadlinesCard from '@/components/dashboard/DeadlinesCard';
 import ResearchNotebookCard from '@/components/dashboard/ResearchNotebookCard';
@@ -196,19 +195,6 @@ const CaseDetailDrawer = forwardRef<CaseDetailDrawerRef, CaseDetailDrawerProps>(
       if (!showFinanceTab && casePanelTab === 'finance') setCasePanelTab('details');
     }, [showFinanceTab, casePanelTab]);
 
-    useEffect(() => {
-      if (!JURIA_ENABLED) return;
-      if (!open || !fetched) {
-        useJuriaStore.getState().setFabCaseContext(null);
-        return;
-      }
-      useJuriaStore.getState().setFabCaseContext({
-        id: fetched.id,
-        reference: fetched.reference ?? undefined,
-        title: fetched.title ?? undefined,
-      });
-    }, [open, fetched?.id, fetched?.reference, fetched?.title]);
-
     const patchListFromCase = useCallback(
       (c: API.Case) => {
         const patch: Partial<API.Case> = {};
@@ -347,7 +333,7 @@ const CaseDetailDrawer = forwardRef<CaseDetailDrawerRef, CaseDetailDrawerProps>(
               ? embedded
                 ? 'max-h-[min(92vh,100%)] h-[min(92vh,100%)] w-full max-w-[100vw] rounded-t-2xl border-t sm:max-w-full'
                 : 'h-[92vh] max-h-[100dvh] w-full max-w-[100vw] rounded-t-2xl border-t sm:max-w-full'
-              : 'h-full w-[min(100%,480px)] max-w-[480px] border-l'
+              : 'h-full w-[min(100%,480px)] max-w-[480px] border-s'
           )}
         >
         {fetched && !loading && !error && (

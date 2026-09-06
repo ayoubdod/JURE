@@ -556,7 +556,7 @@ function CaseMatterWorkspaceView({
           </TabsList>
         </div>
 
-        <div className="min-h-0 flex-1 overflow-y-auto">
+        <div className={cn('min-h-0 flex-1', activeTab === 'juria' ? 'flex flex-col overflow-hidden' : 'overflow-y-auto')}>
           <TabsContent value="overview" className="mt-0 px-4 py-6 sm:px-6 lg:px-8">
             <div className="mx-auto max-w-5xl space-y-8">
               {converted ? (
@@ -785,7 +785,7 @@ function CaseMatterWorkspaceView({
           ) : null}
 
           {JURIA_ENABLED ? (
-            <TabsContent value="juria" className="mt-0 flex min-h-[60vh] flex-col p-0">
+            <TabsContent value="juria" className="mt-0 flex min-h-0 flex-1 flex-col overflow-hidden p-0 data-[state=inactive]:hidden">
               {activeTab === 'juria' ? <JuriaCasePanel caseItem={caseItem} /> : null}
             </TabsContent>
           ) : null}

@@ -149,12 +149,14 @@ export function JuriaSidebar({
   variant = 'full',
   caseId,
   newConversationCase,
+  onConversationOpen,
 }: {
   variant?: 'full' | 'compact';
   /** When set, only conversations linked to this case are listed. */
   caseId?: number;
   /** Pre-link new conversations (e.g. case panel). */
   newConversationCase?: { id: number; reference?: string; title?: string };
+  onConversationOpen?: () => void;
 }) {
   const { t, tf } = useAppTranslation();
   const conversations = useJuriaStore((s) => s.conversations);
@@ -205,7 +207,7 @@ export function JuriaSidebar({
         'flex h-full min-h-0 flex-col border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950',
         variant === 'full'
           ? 'w-full shrink-0 border-e md:w-[280px]'
-          : 'w-full max-w-full shrink-0 border-b border-slate-200 sm:w-[220px] sm:border-b-0 sm:border-e dark:border-slate-800'
+          : 'h-full w-full min-h-0 min-w-0 shrink-0 border-e border-slate-200 dark:border-slate-800'
       )}
     >
       <div className="shrink-0 border-b border-slate-200 px-3 py-3 dark:border-slate-800">
@@ -278,7 +280,10 @@ export function JuriaSidebar({
                     key={c.id}
                     c={c}
                     active={c.id === activeId}
-                    onOpen={setActive}
+                    onOpen={(id) => {
+                      setActive(id);
+                      onConversationOpen?.();
+                    }}
                     onRename={rename}
                     onArchive={(id) => {
                       void archive(id).catch((e) =>
