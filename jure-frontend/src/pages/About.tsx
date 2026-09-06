@@ -298,7 +298,7 @@ const About: React.FC = () => {
               className="landing-cta-btn landing-btn-primary w-full sm:w-auto px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg font-medium"
             >
               {t.hero.ctaContact}
-              <ArrowRight className={`ms-2 h-5 w-5 ${isRtl ? "rotate-180" : ""}`} />
+              <ArrowRight className="ms-2 h-5 w-5 rtl:rotate-180" />
             </Button>
             <Button
               onClick={() => go("/demo")}

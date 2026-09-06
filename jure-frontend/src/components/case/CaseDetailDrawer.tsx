@@ -328,7 +328,7 @@ const CaseDetailDrawer = forwardRef<CaseDetailDrawerRef, CaseDetailDrawerProps>(
     const priority = fetched ? (getCaseData(fetched, 'priority') as string | undefined) : undefined;
     const showPriority = priority === 'HIGH' || priority === 'URGENT';
 
-    const side = drawerMobile ? 'bottom' : 'right';
+    const side = drawerMobile ? 'bottom' : 'end';
     const embedded = portalContainer != null;
 
     return (

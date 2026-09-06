@@ -105,8 +105,8 @@ const MediaGalleryDialog: React.FC<MediaGalleryDialogProps> = ({
 
             {mediaAttachments.length > 1 && (
               <>
-                <CarouselPrevious className="-left-4" />
-                <CarouselNext className="-right-4" />
+                <CarouselPrevious className="-start-4" />
+                <CarouselNext className="-end-4" />
               </>
             )}
           </Carousel>

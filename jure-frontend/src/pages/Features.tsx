@@ -467,7 +467,7 @@ const Features: React.FC = () => {
               className="landing-cta-btn landing-btn-primary w-full sm:w-auto px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg font-medium"
             >
               {t.hero.ctaPrimary}
-              <ArrowRight className={`ms-2 h-5 w-5 ${isRtl ? "rotate-180" : ""}`} />
+              <ArrowRight className="ms-2 h-5 w-5 rtl:rotate-180" />
             </Button>
             <Button
               onClick={() => go(path("contact"))}
@@ -558,7 +558,7 @@ const Features: React.FC = () => {
       {/* Coming soon */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 pb-14 sm:pb-16 md:pb-20">
         <Reveal>
-          <div className={`landing-glass rounded-2xl sm:rounded-3xl p-6 sm:p-8 md:p-10 min-w-0 ${isRtl ? "text-right" : "text-start"}`}>
+          <div className="landing-glass rounded-2xl sm:rounded-3xl p-6 sm:p-8 md:p-10 min-w-0 text-start">
             <div className="flex items-center gap-3 mb-3 min-w-0">
               <div className="landing-icon w-12 h-12 rounded-xl flex items-center justify-center shrink-0">
                 <Clock className="w-6 h-6" />

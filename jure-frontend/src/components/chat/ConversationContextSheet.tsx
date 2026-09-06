@@ -37,7 +37,7 @@ const ConversationContextSheet: React.FC<{
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
-        side="right"
+        side="end"
         className="flex w-[min(100vw,340px)] flex-col gap-0 p-0 sm:max-w-[340px]"
       >
         <SheetTitle className="sr-only">{t.conversations.contextTitle}</SheetTitle>

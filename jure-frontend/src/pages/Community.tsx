@@ -187,7 +187,7 @@ const Community: React.FC = () => {
               onClick={() => navigate("/contact")}
             >
               {t.hero.cta}
-              <ArrowRight className={`ms-2 h-5 w-5 ${isRtl ? "rotate-180" : ""}`} />
+              <ArrowRight className="ms-2 h-5 w-5 rtl:rotate-180" />
             </Button>
             <Button
               size="lg"

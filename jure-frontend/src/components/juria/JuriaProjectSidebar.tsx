@@ -57,7 +57,7 @@ export function JuriaProjectSidebar({
     return (
       <aside className="relative z-[1] hidden w-12 shrink-0 flex-col items-center border-e border-slate-200/80 bg-white/80 py-2 backdrop-blur-md dark:border-slate-800 dark:bg-slate-950/80 md:flex">
         <RailIconButton label={w.expandSidebar} onClick={onExpand}>
-          <PanelLeftOpen className="h-4 w-4" />
+          <PanelLeftOpen className="h-4 w-4 rtl:rotate-180" />
         </RailIconButton>
         <img src="/images/juria-icon.png" alt="" className="mt-2 h-7 w-7 rounded-lg object-contain ring-1 ring-[#64499D]/20" />
         <div className="mt-3 flex flex-col items-center gap-1">
@@ -129,7 +129,7 @@ export function JuriaProjectSidebar({
               aria-label={w.collapseSidebar}
               title={w.collapseSidebar}
             >
-              <PanelLeftClose className="h-4 w-4" />
+              <PanelLeftClose className="h-4 w-4 rtl:rotate-180" />
             </button>
           ) : null}
         </div>

@@ -220,19 +220,19 @@ const Pricing: React.FC = () => {
       <section className="max-w-3xl mx-auto px-4 sm:px-6 py-8">
         <Reveal>
           <div className="landing-glass landing-panel-glow rounded-3xl p-6 sm:p-10">
-            <div className={`flex items-center gap-2 mb-4 ${dir === "rtl" ? "flex-row-reverse" : ""}`}>
+            <div className="flex items-center gap-2 mb-4">
               <span className="text-[10px] font-semibold px-2.5 py-1 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400 uppercase tracking-wide">
                 {t.earlyBadge}
               </span>
             </div>
-            <h2 className={`text-xl sm:text-2xl font-bold text-slate-900 dark:text-white ${dir === "rtl" ? "text-right" : ""}`}>
+            <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white text-start">
               {t.earlyTitle}
             </h2>
-            <p className={`mt-3 text-sm sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed ${dir === "rtl" ? "text-right" : ""}`}>
+            <p className="mt-3 text-sm sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed text-start">
               {t.earlyBody}
             </p>
 
-            <div className={`mt-6 ${dir === "rtl" ? "text-right" : ""}`}>
+            <div className="mt-6 text-start">
               <div className="text-sm font-semibold text-slate-800 dark:text-slate-100 mb-3">
                 {t.includedTitle}
               </div>

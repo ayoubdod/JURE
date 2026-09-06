@@ -28,7 +28,7 @@ interface SolutionPageProps {
 
 const SolutionPage: React.FC<SolutionPageProps> = ({ routeKey }) => {
   const navigate = useNavigate();
-  const { lang, dir, path } = useMarketingLang();
+  const { lang, dir, dict, path } = useMarketingLang();
   const route = getRoute(routeKey);
   const content = SOLUTIONS_CONTENT[routeKey]?.[lang];
 
@@ -45,7 +45,7 @@ const SolutionPage: React.FC<SolutionPageProps> = ({ routeKey }) => {
     faqPageJsonLd(content.faqs),
   ];
 
-  const rtlText = dir === "rtl" ? "text-right" : "";
+  const rtlText = "text-start";
 
   const goDemo = () => {
     track(MarketingEvents.HeroPrimaryCta, { source: routeKey, lang });
@@ -59,7 +59,7 @@ const SolutionPage: React.FC<SolutionPageProps> = ({ routeKey }) => {
       <RouteSeo routeKey={routeKey} lang={lang} jsonLd={jsonLd} />
 
       <section className="max-w-7xl mx-auto px-4 sm:px-6 pt-12 sm:pt-16 pb-10">
-        <nav className={`flex items-center gap-1.5 text-xs text-slate-500 mb-8 ${rtlText}`} aria-label="Breadcrumb">
+        <nav className={`flex items-center gap-1.5 text-xs text-slate-500 mb-8 ${rtlText}`} aria-label={dict.a11y.breadcrumb}>
           <button type="button" onClick={() => navigate(path(""))} className="hover:text-[#A58CF4]">
             {homeRoute.label[lang]}
           </button>
@@ -81,7 +81,7 @@ const SolutionPage: React.FC<SolutionPageProps> = ({ routeKey }) => {
                 onClick={goDemo}
                 className="landing-btn-primary"
               >
-                {lang === "fr" ? "Voir JURE en action" : lang === "ar" ? "شاهد JURE عمليًا" : "See JURE in action"}
+                {dict.cta.seeInAction}
                 <ArrowRight className="w-4 h-4 ms-2 rtl:rotate-180" />
               </Button>
             </div>
@@ -143,11 +143,11 @@ const SolutionPage: React.FC<SolutionPageProps> = ({ routeKey }) => {
         />
       </section>
 
-      <FaqSection title={lang === "fr" ? "Questions fréquentes" : lang === "ar" ? "الأسئلة الشائعة" : "Frequently asked questions"} entries={content.faqs} />
+      <FaqSection title={dict.faqTitle} faqs={content.faqs} />
 
       <section className="max-w-4xl mx-auto px-4 sm:px-6 py-12">
         <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-4 text-center">
-          {lang === "fr" ? "Pages associées" : lang === "ar" ? "صفحات ذات صلة" : "Related"}
+          {dict.relatedPages}
         </h2>
         <div className="flex flex-wrap justify-center gap-3">
           {content.related.map((key) => {
@@ -165,7 +165,7 @@ const SolutionPage: React.FC<SolutionPageProps> = ({ routeKey }) => {
         <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white">{content.cta.title}</h2>
         <p className="mt-3 text-slate-600 dark:text-slate-300 max-w-2xl mx-auto">{content.cta.body}</p>
         <Button size="lg" onClick={goDemo} className="mt-8 landing-btn-primary">
-          {lang === "fr" ? "Voir JURE en action" : lang === "ar" ? "شاهد JURE عمليًا" : "See JURE in action"}
+          {dict.cta.seeInAction}
         </Button>
       </section>
     </MarketingShell>

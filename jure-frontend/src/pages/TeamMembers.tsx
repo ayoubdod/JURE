@@ -344,27 +344,27 @@ const TeamMembers: React.FC = () => {
           <DropdownMenuContent align="end" className="min-w-[200px] p-1.5" onClick={(e) => e.stopPropagation()}>
             {showResendForMember(member) && (
               <DropdownMenuItem onClick={() => setResendTarget(member)}>
-                <Send className="mr-2 h-3.5 w-3.5" />
+                <Send className="me-2 h-3.5 w-3.5" />
                 {t.team.resendInvitation}
               </DropdownMenuItem>
             )}
             <DropdownMenuItem onClick={() => handleCall(member)}>
-              <Phone className="mr-2 h-3.5 w-3.5" />
+              <Phone className="me-2 h-3.5 w-3.5" />
               {t.team.call}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => handleEmail(member)}>
-              <Mail className="mr-2 h-3.5 w-3.5" />
+              <Mail className="me-2 h-3.5 w-3.5" />
               {t.team.email}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => cabinetMemberUpdateModalRef.current?.show(member)}>
-              <Edit className="mr-2 h-3.5 w-3.5" />
+              <Edit className="me-2 h-3.5 w-3.5" />
               {t.common.edit}
             </DropdownMenuItem>
             <DropdownMenuItem
               className="text-red-600 focus:bg-red-50 focus:text-red-700 dark:text-red-400 dark:focus:bg-red-950/40"
               onClick={() => cabinetMemberDeleteModalRef.current?.show(member)}
             >
-              <Trash2 className="mr-2 h-3.5 w-3.5" />
+              <Trash2 className="me-2 h-3.5 w-3.5" />
               {t.common.delete}
             </DropdownMenuItem>
           </DropdownMenuContent>
@@ -475,7 +475,7 @@ const TeamMembers: React.FC = () => {
             }}
           >
             {t.team.view}
-            <ChevronRight className="h-3.5 w-3.5" aria-hidden />
+            <ChevronRight className="h-3.5 w-3.5 rtl:rotate-180" aria-hidden />
           </button>
           <Button
             variant="ghost"
@@ -486,7 +486,7 @@ const TeamMembers: React.FC = () => {
               cabinetMemberUpdateModalRef.current?.show(member);
             }}
           >
-            <Edit className="mr-1 h-3.5 w-3.5" />
+            <Edit className="me-1 h-3.5 w-3.5" />
             {t.common.edit}
           </Button>
         </div>
@@ -508,7 +508,7 @@ const TeamMembers: React.FC = () => {
       >
         <button
           type="button"
-          className="w-full rounded-none px-3 py-2.5 text-left min-h-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#64499D]/40 focus-visible:ring-inset"
+          className="w-full rounded-none px-3 py-2.5 text-start min-h-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#64499D]/40 focus-visible:ring-inset"
           onClick={() => openProfile(member)}
           aria-label={tf(t.team.aria.openMember, { name: fullName })}
         >
@@ -571,7 +571,7 @@ const TeamMembers: React.FC = () => {
             className="h-8 flex-1 text-[12px] text-[#64499D] hover:text-[#4D3680] dark:text-[#CFC2FF]"
             onClick={() => openProfile(member)}
           >
-            <Eye className="mr-1 h-3.5 w-3.5" />
+            <Eye className="me-1 h-3.5 w-3.5" />
             {t.team.viewProfile}
           </Button>
           <Button
@@ -580,7 +580,7 @@ const TeamMembers: React.FC = () => {
             className="h-8 flex-1 text-[12px]"
             onClick={() => cabinetMemberUpdateModalRef.current?.show(member)}
           >
-            <Edit className="mr-1 h-3.5 w-3.5" />
+            <Edit className="me-1 h-3.5 w-3.5" />
             {t.common.edit}
           </Button>
           {showResendForMember(member) && (
@@ -673,28 +673,28 @@ const TeamMembers: React.FC = () => {
             {statusBadgeText(member)}
           </span>
         </td>
-        <td className="px-3 py-2 align-middle text-right tabular-nums text-[12px] font-semibold text-slate-900 dark:text-white">
+        <td className="px-3 py-2 align-middle text-end tabular-nums text-[12px] font-semibold text-slate-900 dark:text-white">
           {inProgress}
         </td>
-        <td className="px-3 py-2 align-middle text-right tabular-nums text-[12px] font-semibold text-slate-900 dark:text-white">
+        <td className="px-3 py-2 align-middle text-end tabular-nums text-[12px] font-semibold text-slate-900 dark:text-white">
           {assignedTotal}
         </td>
         <td className="px-3 py-2 align-middle whitespace-nowrap text-[11px] text-slate-600 dark:text-slate-400">
           {formatJoined(member.date_joined as string, lang)}
         </td>
-        <td className="px-2 py-2 align-middle text-right" onClick={(e) => e.stopPropagation()}>
+        <td className="px-2 py-2 align-middle text-end" onClick={(e) => e.stopPropagation()}>
           <div className="flex items-center justify-end gap-0.5">
             {showResendForMember(member) && (
               <button
                 type="button"
                 onClick={() => setResendTarget(member)}
-                className="mr-1 rounded px-1.5 py-0.5 text-[10px] font-semibold text-amber-800 bg-amber-500/15 ring-1 ring-amber-500/25 dark:text-amber-200"
+                className="me-1 rounded px-1.5 py-0.5 text-[10px] font-semibold text-amber-800 bg-amber-500/15 ring-1 ring-amber-500/25 dark:text-amber-200"
               >
                 {t.team.resend}
               </button>
             )}
             <Button variant="ghost" size="sm" className="h-7 px-2 text-[12px]" onClick={() => openProfile(member)}>
-              <Eye className="mr-1 h-3.5 w-3.5" />
+              <Eye className="me-1 h-3.5 w-3.5" />
               {t.team.view}
             </Button>
             <DropdownMenu>
@@ -706,27 +706,27 @@ const TeamMembers: React.FC = () => {
               <DropdownMenuContent align="end" className="min-w-[200px] p-1.5">
                 {showResendForMember(member) && (
                   <DropdownMenuItem onClick={() => setResendTarget(member)}>
-                    <Send className="mr-2 h-3.5 w-3.5" />
+                    <Send className="me-2 h-3.5 w-3.5" />
                     {t.team.resendInvitation}
                   </DropdownMenuItem>
                 )}
                 <DropdownMenuItem onClick={() => handleCall(member)}>
-                  <Phone className="mr-2 h-3.5 w-3.5" />
+                  <Phone className="me-2 h-3.5 w-3.5" />
                   {t.team.call}
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => handleEmail(member)}>
-                  <Mail className="mr-2 h-3.5 w-3.5" />
+                  <Mail className="me-2 h-3.5 w-3.5" />
                   {t.team.email}
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => cabinetMemberUpdateModalRef.current?.show(member)}>
-                  <Edit className="mr-2 h-3.5 w-3.5" />
+                  <Edit className="me-2 h-3.5 w-3.5" />
                   {t.common.edit}
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   className="text-red-600 focus:text-red-600 dark:text-red-400"
                   onClick={() => cabinetMemberDeleteModalRef.current?.show(member)}
                 >
-                  <Trash2 className="mr-2 h-3.5 w-3.5" />
+                  <Trash2 className="me-2 h-3.5 w-3.5" />
                   {t.common.delete}
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -1134,7 +1134,7 @@ const TeamMembers: React.FC = () => {
                 ) : viewMode === 'list' ? (
                   <div className="overflow-hidden rounded-xl border border-slate-200/90 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04)] dark:border-slate-800 dark:bg-slate-950">
                     <div className="overflow-x-auto">
-                    <table className="w-full min-w-[880px] border-collapse text-left" aria-label={t.team.aria.list}>
+                    <table className="w-full min-w-[880px] border-collapse text-start" aria-label={t.team.aria.list}>
                       <thead>
                         <tr className="border-b border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-900/90">
                           {[
@@ -1150,7 +1150,7 @@ const TeamMembers: React.FC = () => {
                               key={h}
                               className={cn(
                                 'px-3 py-2.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400',
-                                i >= 3 && i <= 4 ? 'text-right' : i === 6 ? 'text-right' : 'text-left'
+                                i >= 3 && i <= 4 ? 'text-end' : i === 6 ? 'text-end' : 'text-start'
                               )}
                             >
                               {h}
@@ -1239,7 +1239,7 @@ const TeamMembers: React.FC = () => {
             >
               {resendLoading ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <Loader2 className="me-2 h-4 w-4 animate-spin" />
                   {t.team.resendDialog.sending}
                 </>
               ) : (

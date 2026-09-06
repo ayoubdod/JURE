@@ -42,7 +42,7 @@ const STRINGS: Record<MarketingLocale, { h1: string; intro: string; read: string
 
 const InsightsIndex: React.FC = () => {
   const navigate = useNavigate();
-  const { lang, dir, path } = useMarketingLang();
+  const { lang, dir, dict, path } = useMarketingLang();
   const t = STRINGS[lang];
   const homeRoute = getRoute("home");
   const insightsRoute = getRoute("insights");
@@ -68,7 +68,7 @@ const InsightsIndex: React.FC = () => {
       <RouteSeo routeKey="insights" lang={lang} jsonLd={jsonLd} />
 
       <nav
-        aria-label="breadcrumb"
+        aria-label={dict.a11y.breadcrumb}
         className="max-w-5xl mx-auto px-4 sm:px-6 pt-6 text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1"
       >
         <button
@@ -111,9 +111,7 @@ const InsightsIndex: React.FC = () => {
                   track(MarketingEvents.InsightOpened, { slug: article.slug, source: "index" });
                   navigate(path(`insights/${article.slug}`));
                 }}
-                className={`landing-glass landing-glass-glow rounded-2xl p-6 sm:p-8 w-full ${
-                  dir === "rtl" ? "text-right" : "text-start"
-                }`}
+                className="landing-glass landing-glass-glow rounded-2xl p-6 sm:p-8 w-full text-start"
               >
                 <div className="text-xs text-slate-400 dark:text-slate-500 mb-2">
                   {formatDate(article.datePublished)}

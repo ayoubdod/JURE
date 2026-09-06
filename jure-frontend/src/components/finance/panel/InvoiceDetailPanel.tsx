@@ -136,7 +136,7 @@ export const InvoiceDetailPanel: React.FC<Props> = ({
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
-        side="right"
+        side="end"
         className={cn(
           'flex w-full flex-col gap-0 border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 p-0 sm:max-w-md',
           '[&>button]:hidden'

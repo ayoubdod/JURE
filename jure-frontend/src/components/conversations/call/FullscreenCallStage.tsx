@@ -3,6 +3,7 @@ import { MoreHorizontal, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAppTranslation } from '@/i18n';
 import { useCallSessionStore } from '@/stores/callSessionStore';
+import { displayCallTitle } from '@/utils/webrtc';
 import CallTimer from './CallTimer';
 import CallControls from './CallControls';
 import VideoStage from './VideoStage';
@@ -100,7 +101,7 @@ const FullscreenCallStage: React.FC<{
 
   const title =
     mode === 'conference'
-      ? displayTitle?.trim() || call.groupCallTitle
+      ? displayCallTitle(displayTitle?.trim()) || call.groupCallTitle
       : remoteName;
 
   const peerCount = mode === 'conference' ? Math.max(peers.length + 1, 1) : 2;

@@ -305,7 +305,7 @@ const VideoStage: React.FC<{
           />
           {isCameraOff ? (
             <div className="absolute inset-0 flex items-center justify-center bg-slate-800 text-[10px] font-medium uppercase tracking-wide text-slate-300">
-              You
+              {t.conversations.you}
             </div>
           ) : null}
         </div>

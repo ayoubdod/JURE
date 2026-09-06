@@ -513,7 +513,7 @@ export default function AccountProfileForm() {
                   }
                   defaultCountry="US"
                   placeholder={t.settings.phonePlaceholder}
-                  className="[&_button]:h-10 [&_button]:rounded-l-lg [&_input]:h-10 [&_input]:rounded-lg [&_input]:border-slate-200 [&_input]:dark:border-zinc-700 [&_input]:focus-visible:ring-2 [&_input]:focus-visible:ring-[#64499D]/25 [&_input]:focus-visible:ring-offset-0"
+                  className="[&_button]:h-10 [&_button]:rounded-s-lg [&_input]:h-10 [&_input]:rounded-lg [&_input]:border-slate-200 [&_input]:dark:border-zinc-700 [&_input]:focus-visible:ring-2 [&_input]:focus-visible:ring-[#64499D]/25 [&_input]:focus-visible:ring-offset-0"
                 />
               </Field>
               <Field id="bio" label={t.settings.bio} error={profileForm.formState.errors.bio?.message} className="sm:col-span-2">

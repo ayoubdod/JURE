@@ -148,7 +148,7 @@ export function JuriaChat({ project }: { project: JuriaProject }) {
               aria-label={w.collapseThreads}
               title={w.collapseThreads}
             >
-              <PanelLeftClose className="h-3.5 w-3.5" />
+              <PanelLeftClose className="h-3.5 w-3.5 rtl:rotate-180" />
             </button>
           </div>
         </div>
@@ -211,7 +211,7 @@ export function JuriaChat({ project }: { project: JuriaProject }) {
       ) : (
         <div className="hidden w-12 shrink-0 flex-col items-center border-e border-slate-100 bg-white/50 py-2 dark:border-slate-800 dark:bg-slate-950/40 md:flex">
           <RailIconButton label={w.expandThreads} onClick={() => setThreadsOpen(true)}>
-            <PanelLeftOpen className="h-4 w-4" />
+            <PanelLeftOpen className="h-4 w-4 rtl:rotate-180" />
           </RailIconButton>
           <RailIconButton label={chat.newThread} onClick={() => void createThread(project.id, undefined, mode)}>
             <Plus className="h-4 w-4" />

@@ -197,6 +197,17 @@ export function displayMediaErrorMessage(stored: string | null | undefined): str
   return stored;
 }
 
+/** Maps leftover English call titles so the UI follows the active language. */
+export function displayCallTitle(stored: string | null | undefined): string | null {
+  if (!stored) return null;
+  const msgs = tFor(detectInitialLanguage());
+  const call = msgs.conversations.call;
+  if (stored === 'Group call') return call.groupCallTitle;
+  if (stored === 'Meeting') return msgs.appointments.meeting;
+  if (stored === 'Incoming call') return call.incoming;
+  return stored;
+}
+
 export async function getCallUserMedia(
   kind: CallKind,
   deviceIds?: { audioId?: string; videoId?: string }

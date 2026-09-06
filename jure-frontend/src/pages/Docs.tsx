@@ -118,7 +118,7 @@ const Docs: React.FC = () => {
               {t.cta.status}
             </Button>
             <Button onClick={() => navigate("/contact")} className="w-full sm:w-auto px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg landing-btn-primary">
-              {t.cta.contact} <ArrowRight className="w-4 h-4 ms-2" />
+              {t.cta.contact} <ArrowRight className="w-4 h-4 ms-2 rtl:rotate-180" />
             </Button>
           </div>
         </Reveal>

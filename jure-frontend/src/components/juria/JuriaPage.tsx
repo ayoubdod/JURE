@@ -231,7 +231,7 @@ export default function JuriaPage() {
             className="hidden h-9 w-9 md:inline-flex lg:hidden"
             onClick={() => setTabletOpen((v) => !v)}
           >
-            <PanelLeft className="h-4 w-4" />
+            <PanelLeft className="h-4 w-4 rtl:rotate-180" />
           </Button>
           <span className="truncate text-sm font-medium">
             {project ? project.name || t.juria.workspace.untitledChat : t.juria.name}

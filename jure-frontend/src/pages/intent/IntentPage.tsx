@@ -82,7 +82,7 @@ const IntentPage: React.FC<IntentPageProps> = ({ routeKey }) => {
 
   const isAiPage = FRAME_BY_KEY[routeKey] === "juria";
   const icons = isAiPage ? WORKFLOW_ICONS : MATTER_ICONS;
-  const rtlText = dir === "rtl" ? "text-right" : "";
+  const rtlText = "text-start";
 
   const frame = (() => {
     switch (FRAME_BY_KEY[routeKey]) {
@@ -108,7 +108,7 @@ const IntentPage: React.FC<IntentPageProps> = ({ routeKey }) => {
 
       {/* Breadcrumb */}
       <nav
-        aria-label="breadcrumb"
+        aria-label={dict.a11y.breadcrumb}
         className={`max-w-4xl mx-auto px-4 sm:px-6 pt-6 text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1 ${rtlText}`}
       >
         <button
@@ -262,7 +262,7 @@ const IntentPage: React.FC<IntentPageProps> = ({ routeKey }) => {
       </section>
 
       {/* FAQ */}
-      <FaqSection title={`FAQ — ${route.label[lang]}`} faqs={content.faqs} className="py-10" />
+      <FaqSection title={dict.faqTitle} faqs={content.faqs} className="py-10" />
 
       {/* Related pages (internal linking) */}
       <section className="max-w-4xl mx-auto px-4 sm:px-6 py-8">

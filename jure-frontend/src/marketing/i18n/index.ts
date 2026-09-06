@@ -12,6 +12,15 @@ export interface MarketingDict {
   };
   auth: { signin: string };
   themeToggle: { label: string; title: string };
+  a11y: {
+    skipToContent: string;
+    mainNav: string;
+    openMenu: string;
+    closeMenu: string;
+    breadcrumb: string;
+  };
+  faqTitle: string;
+  relatedPages: string;
   cta: {
     seeInAction: string;
     explorePlatform: string;
@@ -51,6 +60,15 @@ const en: MarketingDict = {
   },
   auth: { signin: "Sign in" },
   themeToggle: { label: "Toggle theme", title: "Toggle theme" },
+  a11y: {
+    skipToContent: "Skip to content",
+    mainNav: "Main navigation",
+    openMenu: "Open menu",
+    closeMenu: "Close menu",
+    breadcrumb: "Breadcrumb",
+  },
+  faqTitle: "Frequently asked questions",
+  relatedPages: "Related",
   cta: {
     seeInAction: "See JURE in action",
     explorePlatform: "Explore the platform",
@@ -90,6 +108,15 @@ const fr: MarketingDict = {
   },
   auth: { signin: "Se connecter" },
   themeToggle: { label: "Basculer le thème", title: "Basculer le thème" },
+  a11y: {
+    skipToContent: "Aller au contenu",
+    mainNav: "Navigation principale",
+    openMenu: "Ouvrir le menu",
+    closeMenu: "Fermer le menu",
+    breadcrumb: "Fil d'Ariane",
+  },
+  faqTitle: "Questions fréquentes",
+  relatedPages: "Pages associées",
   cta: {
     seeInAction: "Voir JURE en action",
     explorePlatform: "Explorer la plateforme",
@@ -129,6 +156,15 @@ const ar: MarketingDict = {
   },
   auth: { signin: "تسجيل الدخول" },
   themeToggle: { label: "تبديل المظهر", title: "تبديل المظهر" },
+  a11y: {
+    skipToContent: "تخطي إلى المحتوى",
+    mainNav: "التنقل الرئيسي",
+    openMenu: "فتح القائمة",
+    closeMenu: "إغلاق القائمة",
+    breadcrumb: "مسار التنقل",
+  },
+  faqTitle: "الأسئلة الشائعة",
+  relatedPages: "صفحات ذات صلة",
   cta: {
     seeInAction: "شاهد JURE عمليًا",
     explorePlatform: "استكشف المنصة",

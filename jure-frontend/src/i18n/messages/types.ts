@@ -3876,6 +3876,7 @@ export interface AppMessages {
       cameraDeniedHint: string;
       failedHint: string;
       tryAgain: string;
+      tapToHear: string;
       voiceCallWith: string;
       videoCallWith: string;
       activeCallTitle: string;
@@ -3909,6 +3910,7 @@ export interface AppMessages {
       inCallCount: string;
       waitingForOthers: string;
       isSpeaking: string;
+      speaking: string;
       microphone: string;
       camera: string;
       defaultMicrophone: string;

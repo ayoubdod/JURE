@@ -262,7 +262,6 @@ const Security: React.FC = () => {
   const navigate = useNavigate();
   const { lang, dir, path } = useMarketingLang();
   const t = STRINGS[lang];
-  const isRtl = dir === "rtl";
 
   return (
     <MarketingShell lang={lang} onLangChange={() => {}} dir={dir} activeNav="security">
@@ -299,7 +298,7 @@ const Security: React.FC = () => {
             const Icon = AVAILABLE_ICONS[i] || Shield;
             return (
               <Reveal key={item.title} delay={i * 0.04}>
-                <div className={`group landing-glass landing-glass-glow rounded-2xl p-5 sm:p-6 h-full min-w-0 ${isRtl ? "text-right" : "text-start"}`}>
+                <div className={`group landing-glass landing-glass-glow rounded-2xl p-5 sm:p-6 h-full min-w-0 text-start`}>
                   <div className="landing-icon w-11 h-11 rounded-xl flex items-center justify-center mb-4">
                     <Icon className="w-5 h-5" />
                   </div>
@@ -315,7 +314,7 @@ const Security: React.FC = () => {
       {/* Roadmap */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 pb-14 sm:pb-16">
         <Reveal>
-          <div className={`landing-glass rounded-2xl sm:rounded-3xl p-6 sm:p-8 md:p-10 min-w-0 ${isRtl ? "text-right" : "text-start"}`}>
+          <div className={`landing-glass rounded-2xl sm:rounded-3xl p-6 sm:p-8 md:p-10 min-w-0 text-start`}>
             <div className="flex items-center gap-3 mb-3 min-w-0">
               <div className="landing-icon w-12 h-12 rounded-xl flex items-center justify-center shrink-0">
                 <FileClock className="w-6 h-6" />
@@ -356,7 +355,7 @@ const Security: React.FC = () => {
             const Icon = PRINCIPLE_ICONS[i] || Shield;
             return (
               <Reveal key={item.title} delay={i * 0.05}>
-                <div className={`landing-glass rounded-2xl p-5 sm:p-6 h-full min-w-0 group ${isRtl ? "text-right" : "text-start"}`}>
+                <div className="landing-glass rounded-2xl p-5 sm:p-6 h-full min-w-0 group text-start">
                   <span className="landing-icon w-10 h-10 rounded-xl flex items-center justify-center mb-4">
                     <Icon className="w-5 h-5" />
                   </span>
@@ -381,7 +380,7 @@ const Security: React.FC = () => {
               onClick={() => navigate(path("contact"))}
             >
               {t.cta.primary}
-              <ArrowRight className={`ms-2 h-5 w-5 ${isRtl ? "rotate-180" : ""}`} />
+              <ArrowRight className="ms-2 h-5 w-5 rtl:rotate-180" />
             </Button>
           </div>
         </Reveal>

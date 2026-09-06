@@ -89,7 +89,7 @@ export default function CaseDateDetailPanel({
 
   return (
     <Sheet modal={false} open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" container={portalContainer} overlayClassName={EMBEDDED_OVERLAY} className={SHEET_PANEL}>
+      <SheetContent side="end" container={portalContainer} overlayClassName={EMBEDDED_OVERLAY} className={SHEET_PANEL}>
         <header className="sticky top-0 z-20 shrink-0 border-b border-slate-200 dark:border-slate-800 bg-slate-50/95 dark:bg-slate-950/95 backdrop-blur-sm px-4 py-4 border-s-[3px] border-s-primary">
           <div className="flex items-start justify-between gap-2">
             <div className="flex flex-wrap items-center gap-2">

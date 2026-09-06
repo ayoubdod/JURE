@@ -315,7 +315,7 @@ export default function AdministrativeDetailWorkspace({
             onClick={() => navigate(listPath)}
             className="inline-flex items-center gap-1.5 text-[13px] font-medium text-slate-500 hover:text-[#64499D]"
           >
-            <ArrowLeft className="h-4 w-4" />
+            <ArrowLeft className="h-4 w-4 rtl:rotate-180" />
             {copy.back}
           </button>
 

@@ -374,7 +374,7 @@ const Terms: React.FC = () => {
           <p className="mt-2 text-sm text-neutral-500">{t.hero.lastUpdated}: {lastUpdated}</p>
           <div className="mt-8 flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center w-full sm:w-auto">
             <Button onClick={() => go("/contact")} className="w-full sm:w-auto px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg landing-btn-primary">
-              {t.hero.ctaPrimary} <ArrowRight className="ms-2 h-4 w-4" />
+              {t.hero.ctaPrimary} <ArrowRight className="ms-2 h-4 w-4 rtl:rotate-180" />
             </Button>
             <Button variant="outline" onClick={() => go("/demo")} className="w-full sm:w-auto px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg border-[#A58CF4]/30">
               {t.hero.ctaSecondary}

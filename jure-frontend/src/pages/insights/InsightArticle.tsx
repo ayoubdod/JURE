@@ -29,7 +29,7 @@ const STRINGS: Record<MarketingLocale, { back: string; published: string; cta: s
 const InsightArticle: React.FC = () => {
   const navigate = useNavigate();
   const { slug = "" } = useParams<{ slug: string }>();
-  const { lang, dir, path } = useMarketingLang();
+  const { lang, dir, dict, path } = useMarketingLang();
   const [body, setBody] = useState<string | null>(null);
   const article = getArticle(slug);
   const t = STRINGS[lang];
@@ -76,7 +76,7 @@ const InsightArticle: React.FC = () => {
       <ArticleSeo lang={lang} articleSlug={slug} jsonLd={jsonLd} />
 
       <nav
-        aria-label="breadcrumb"
+        aria-label={dict.a11y.breadcrumb}
         className="max-w-3xl mx-auto px-4 sm:px-6 pt-6 text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1 flex-wrap"
       >
         <button
@@ -99,7 +99,7 @@ const InsightArticle: React.FC = () => {
       </nav>
 
       <article className="max-w-3xl mx-auto px-4 sm:px-6 py-10">
-        <header className={dir === "rtl" ? "text-right" : ""}>
+        <header className="text-start">
           <div className="text-xs text-slate-400 dark:text-slate-500 mb-3">
             {t.published} {formatDate(article.datePublished)}
           </div>
@@ -112,9 +112,7 @@ const InsightArticle: React.FC = () => {
         </header>
 
         <div
-          className={`mt-10 prose prose-slate dark:prose-invert max-w-none prose-headings:font-bold prose-a:text-[#A58CF4] dark:prose-a:text-[#A58CF4] prose-headings:scroll-mt-24 ${
-            dir === "rtl" ? "text-right" : ""
-          }`}
+          className="mt-10 prose prose-slate dark:prose-invert max-w-none prose-headings:font-bold prose-a:text-[#A58CF4] dark:prose-a:text-[#A58CF4] prose-headings:scroll-mt-24 text-start"
         >
           {body === null ? (
             <div className="space-y-3 animate-pulse" aria-hidden>

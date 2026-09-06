@@ -99,7 +99,7 @@ const ConversationHeader: React.FC<{
             className={cn(iconBtn, 'md:hidden')}
             aria-label={t.conversations.backAria}
           >
-            <ArrowLeft size={20} />
+            <ArrowLeft size={20} className="rtl:rotate-180" />
           </button>
         ) : null}
 
@@ -212,7 +212,7 @@ const ConversationHeader: React.FC<{
             className={cn(iconBtn, 'min-[1200px]:hidden')}
             aria-label={t.conversations.openContextAria}
           >
-            <PanelRight className="h-4 w-4" />
+            <PanelRight className="h-4 w-4 rtl:rotate-180" />
           </button>
         ) : null}
 

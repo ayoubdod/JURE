@@ -42,6 +42,9 @@ const demoFr = {
     cta: "Commencer maintenant",
     prev: "Précédent",
     next: "Suivant",
+    restart: "Recommencer",
+    play: "Lecture",
+    pause: "Pause",
     themeToggle: { label: "Basculer le thème", title: "Basculer le thème" },
     steps: [
       {
@@ -171,6 +174,9 @@ const STRINGS: Record<Lang, DemoCopy> = {
     cta: "Get started",
     prev: "Previous",
     next: "Next",
+    restart: "Restart",
+    play: "Play",
+    pause: "Pause",
     themeToggle: { label: "Toggle theme", title: "Toggle theme" },
     steps: [
       {
@@ -288,6 +294,9 @@ const STRINGS: Record<Lang, DemoCopy> = {
     cta: "ابدأ الآن",
     prev: "السابق",
     next: "التالي",
+    restart: "إعادة التشغيل",
+    play: "تشغيل",
+    pause: "إيقاف مؤقت",
     themeToggle: { label: "تبديل السمة", title: "تبديل السمة" },
     steps: [
       {
@@ -1054,7 +1063,7 @@ const Demo: React.FC = () => {
                   variant="outline"
                   size="icon"
                   className="border-[#A58CF4]/20"
-                  aria-label="restart"
+                  aria-label={t.restart}
                 >
                   <RotateCcw className="w-4 h-4" />
                 </Button>
@@ -1062,7 +1071,7 @@ const Demo: React.FC = () => {
                   onClick={() => setIsPlaying((p) => !p)}
                   size="icon"
                   className="landing-btn-primary"
-                  aria-label={isPlaying ? "pause" : "play"}
+                  aria-label={isPlaying ? t.pause : t.play}
                 >
                   {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
                 </Button>

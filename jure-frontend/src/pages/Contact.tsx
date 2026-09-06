@@ -332,7 +332,7 @@ const Contact: React.FC = () => {
                     className="w-full landing-btn-secondary"
                   >
                     {lang === "fr" ? "Voir le statut" : lang === "ar" ? "عرض الحالة" : "View Status"}
-                    <ArrowRight className={`w-4 h-4 ${isRtl ? "me-2 rotate-180" : "ms-2"}`} />
+                    <ArrowRight className="w-4 h-4 ms-2 rtl:rotate-180" />
                   </Button>
                 </div>
               </div>

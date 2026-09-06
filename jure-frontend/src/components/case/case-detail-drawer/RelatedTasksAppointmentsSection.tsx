@@ -220,7 +220,7 @@ export function RelatedTasksAppointmentsSection({
                             onOpenTask(task.id);
                           }}
                         >
-                          <ArrowRight className="h-4 w-4" />
+                          <ArrowRight className="h-4 w-4 rtl:rotate-180" />
                         </button>
                       </div>
                     </li>
@@ -316,7 +316,7 @@ export function RelatedTasksAppointmentsSection({
                             onOpenAppointment(a.id);
                           }}
                         >
-                          <ArrowRight className="h-4 w-4" />
+                          <ArrowRight className="h-4 w-4 rtl:rotate-180" />
                         </button>
                       </div>
                     </li>

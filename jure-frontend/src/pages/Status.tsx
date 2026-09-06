@@ -164,7 +164,7 @@ const Status: React.FC = () => {
 
           <div className="mt-8 flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center w-full sm:w-auto">
             <Button onClick={() => go("/contact")} className="w-full sm:w-auto px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg landing-btn-primary">
-              {t.hero.ctaPrimary} <ArrowRight className="ms-2 h-4 w-4" />
+              {t.hero.ctaPrimary} <ArrowRight className="ms-2 h-4 w-4 rtl:rotate-180" />
             </Button>
             <Button variant="outline" onClick={() => go("/docs")} className="w-full sm:w-auto px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg landing-btn-secondary">
               {t.hero.ctaSecondary}
