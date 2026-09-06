@@ -1,7 +1,10 @@
 from django.contrib.auth import get_user_model
 from django.db import transaction
+from django.db.models import Q
 from rest_framework import serializers
 from tasks.models import Appointment
+
+from core.utils import get_user_cabinet
 
 from ..icons import SUGGESTED_GROUP_ICONS
 from ..models import Conversation, ConversationMembership, Message
@@ -10,6 +13,17 @@ from .message import MessageSerializer
 from .users import UserThinSerializer
 
 User = get_user_model()
+
+
+def _set_pk_queryset(field, queryset):
+    """many=True PK fields wrap the RelatedField; update the inner queryset."""
+    if field is None:
+        return
+    inner = getattr(field, "child_relation", None) or getattr(field, "child", None)
+    if inner is not None and hasattr(inner, "queryset"):
+        inner.queryset = queryset
+    elif hasattr(field, "queryset"):
+        field.queryset = queryset
 
 
 class ConversationSerializer(serializers.ModelSerializer):
@@ -25,8 +39,25 @@ class ConversationSerializer(serializers.ModelSerializer):
     active_or_upcoming_appointment = serializers.SerializerMethodField()
 
     created_by = serializers.HiddenField(default=serializers.CurrentUserDefault())
-    participants = serializers.PrimaryKeyRelatedField(many=True, queryset=User.objects.all(), write_only=True)
+    participants = serializers.PrimaryKeyRelatedField(
+        many=True, queryset=User.objects.none(), write_only=True
+    )
     icon = serializers.ImageField(write_only=True, required=False)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        request = self.context.get("request")
+        user = getattr(request, "user", None) if request else None
+        if user is None or not getattr(user, "is_authenticated", False):
+            return
+        cabinet = get_user_cabinet(user)
+        if cabinet:
+            members = User.objects.filter(
+                Q(cabinet=cabinet, is_cabinet_member=True) | Q(pk=cabinet.owner_id)
+            ).distinct()
+            _set_pk_queryset(self.fields.get("participants"), members)
+        else:
+            _set_pk_queryset(self.fields.get("participants"), User.objects.none())
 
     class Meta:
         model = Conversation
@@ -60,15 +91,33 @@ class ConversationSerializer(serializers.ModelSerializer):
         participants = attrs.get("participants")
         if participants is not None and len(participants) == 0:
             raise serializers.ValidationError("At least one participant is required")
-        
+
+        request = self.context.get("request")
+        creator = getattr(request, "user", None) if request else None
+
+        if participants is not None:
+            cabinet = get_user_cabinet(creator) if creator else None
+            if not cabinet:
+                raise serializers.ValidationError("You must belong to a cabinet.")
+            for participant in participants:
+                if participant.pk == cabinet.owner_id:
+                    continue
+                if getattr(participant, "cabinet_id", None) != cabinet.id:
+                    raise serializers.ValidationError(
+                        "Participants must belong to your cabinet."
+                    )
+                if not getattr(participant, "is_cabinet_member", False):
+                    raise serializers.ValidationError(
+                        "Participants must be cabinet team members."
+                    )
+
         if participants is not None and attrs.get("type") == Conversation.Type.DIRECT:
             if len(participants) > 1:
                 raise serializers.ValidationError("Direct conversation must have exactly You and one other participant")
 
             participant = participants[0]
-            creator = self.context.get('request').user
 
-            if participant.id == creator.id:
+            if creator and participant.id == creator.id:
                 raise serializers.ValidationError("You cannot create a direct conversation with yourself")
 
         return attrs

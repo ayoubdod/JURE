@@ -37,7 +37,7 @@ Ruff is configured in `pyproject.toml`. It is **not** a merge gate yet (existing
 
 ## Frontend (`jure-frontend`)
 
-**Copy:** `src/App.tsx` (routing), `src/services/<domain>/api.ts`, `src/utils/axiosInstance.ts`, `src/components/case/CaseCreateModal.tsx`. Import appointment dialogs from `src/components/appointments/`. Profile UI lives in `src/components/team/TeamMemberProfile.tsx`. Consultation conversion type picker is `ConversionTypeSelector`, not the create-case `CaseTypeSelector`.
+**Copy:** `src/App.tsx` (routing), `src/services/<domain>/api.ts`, `src/utils/axiosInstance.ts`, `src/components/case/CaseModal.tsx`. Import appointment dialogs from `src/components/appointments/`. Profile UI lives in `src/components/team/TeamMemberProfile.tsx`. Consultation conversion type picker is `ConversionTypeSelector`, not the create-case `CaseTypeSelector`.
 
 **Do not copy:** unused scaffolds, mock `setTimeout` submits, a second `CaseTypeSelector`, or 1,000-line pages as a template.
 
@@ -45,7 +45,7 @@ Ruff is configured in `pyproject.toml`. It is **not** a merge gate yet (existing
 - New data access: add to `src/services/…`, not ad-hoc `fetch` in a page.
 - Forms: **yup** is what existing forms use. Do not introduce new **zod** schemas until yup is gone in a dedicated PR.
 - Dates: use whichever library the file already uses (`date-fns` or `dayjs`). Do not add a third.
-- TanStack Query is wrapped in `App.tsx` but **not used** (`useQuery` / `useMutation` are unused). Do not add a third fetching style. New work keeps axios + `services/` until Query is adopted or removed in a later phase. Do not remove `QueryClientProvider` in a drive-by change.
+- TanStack Query is wrapped in `App.tsx` but **not used** (`useQuery` / `useMutation` are unused). **Decision: keep axios + `services/` as the only data-access style.** Do not adopt Query incrementally beside existing fetches. Removing `QueryClientProvider` / the dependency is allowed only in a dedicated PR that deletes the unused wrapper end-to-end — not as drive-by cleanup.
 - Zustand for client state that spans routes; React Context for purely visual concerns (toasts, shortcuts).
 
 TypeScript: `strict` / `noImplicitAny` remain **false** so current sources compile. New `src/services/` code should still be typed without `any`. `@typescript-eslint/no-unused-vars` stays off so `npm run lint` matches today’s baseline.

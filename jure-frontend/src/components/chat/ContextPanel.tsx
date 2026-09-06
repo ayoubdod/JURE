@@ -172,13 +172,13 @@ const ContextPanel: React.FC<ContextPanelProps> = ({
         (getMemberPerson(m)?.email ?? '').toLowerCase() !== (currentUser?.email ?? '').toLowerCase()
       )
     : undefined;
-  const user = peer ? getMemberPerson(peer) : (conversation as any)?.other_participant;
+  const user = peer ? getMemberPerson(peer) : conversation?.other_participant;
   const peerImage =
-    getPersonImage((conversation as any)?.other_participant) ?? getPersonImage(user as Record<string, unknown>);
+    getPersonImage(conversation?.other_participant) ?? getPersonImage(user);
   const displayName =
-    (conversation as any)?.display_name ||
+    conversation?.display_name ||
     (conversation?.type === 'direct'
-      ? (conversation as any)?.other_participant?.full_name ||
+      ? conversation?.other_participant?.full_name ||
         `${user?.first_name ?? ''} ${user?.last_name ?? ''}`.trim() ||
         t.conversations.unknownContact
       : conversation?.title);
@@ -413,7 +413,7 @@ const ContextPanel: React.FC<ContextPanelProps> = ({
               {t.conversations.jobTitle}
             </p>
             <p className="text-slate-700 dark:text-slate-300">
-              {(user as any).role ? String((user as any).role).replace(/_/g, ' ') : '—'}
+              {user?.role ? String(user.role).replace(/_/g, ' ') : '—'}
             </p>
           </div>
           <div>

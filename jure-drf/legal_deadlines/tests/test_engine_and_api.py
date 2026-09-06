@@ -320,6 +320,30 @@ class LegalDeadlineAPITests(APITestCase):
         self.assertEqual(task_res.data["due_date"], created.data["final_deadline"])
         self.assertEqual(task_res.data["case"], self.case_a.id)
 
+    def test_cannot_assign_create_task_to_foreign_cabinet_user(self):
+        from tasks.models import Task
+
+        self.client.force_authenticate(self.user_a)
+        created = self.client.post(
+            "/api/v1/legal-deadlines/deadlines/",
+            {
+                "case": self.case_a.id,
+                "procedure_type": "cassation",
+                "triggering_date": "2026-02-01",
+            },
+            format="json",
+        )
+        self.assertEqual(created.status_code, status.HTTP_201_CREATED)
+        deadline_id = created.data["id"]
+        before = Task.objects.count()
+        task_res = self.client.post(
+            f"/api/v1/legal-deadlines/deadlines/{deadline_id}/create-task/",
+            {"title": "Should not assign", "assigned_to": self.user_b.id},
+            format="json",
+        )
+        self.assertEqual(task_res.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(Task.objects.count(), before)
+
     def test_domains_mvp_civil_only(self):
         self.client.force_authenticate(self.user_a)
         res = self.client.get("/api/v1/legal-deadlines/domains/")

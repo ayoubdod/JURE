@@ -52,6 +52,18 @@ declare namespace API {
     status?: string;
   };
 
+  /** Peer summary on direct conversations (list/detail). */
+  type ConversationParticipant = {
+    id?: number;
+    pk?: number;
+    email?: string;
+    full_name?: string;
+    first_name?: string;
+    last_name?: string;
+    image?: string;
+    role?: Role | string;
+  };
+
   type Conversation = {
     id: number;
     type: ConversationType;
@@ -62,7 +74,7 @@ declare namespace API {
     archived?: boolean;
     is_pinned?: boolean;
     is_temporary?: boolean;
-    other_participant?: { full_name?: string; first_name?: string; last_name?: string; image?: string; [k: string]: unknown };
+    other_participant?: ConversationParticipant;
     memberships: ConversationMembership[];
     readonly latest_message: Message;
     readonly unread_count: number;
@@ -91,6 +103,9 @@ declare namespace API {
     is_admin: boolean;
     joined_at: string;
     user: User;
+    /** Legacy / alternate shapes some payloads still use */
+    cabinet_member?: User;
+    member?: User;
   }
 
   type MessageAttachmentKind = 'image' | 'video' | 'audio' | 'file';
@@ -114,12 +129,25 @@ declare namespace API {
     sent_at: string;
   };
 
+  type MessageSender = number | {
+    id?: number;
+    pk?: number;
+    first_name?: string;
+    last_name?: string;
+    email?: string;
+    full_name?: string;
+    image?: string;
+  };
+
   type Message = {
     id: number;
     conversation: number;
-    sender: number | { id: number; first_name?: string; last_name?: string; email?: string; full_name?: string; image?: string; [k: string]: unknown };
+    sender: MessageSender;
     body?: string;
     content?: string;
+    /** Legacy aliases some WS/list payloads still send */
+    text?: string;
+    message?: string;
     reply_to?: number;
     forwarded_from?: number;
     edited_at?: string;
@@ -128,6 +156,7 @@ declare namespace API {
     is_deleted?: boolean;
     is_own?: boolean;
     is_pinned?: boolean;
+    isPinned?: boolean;
     delivered_count?: number;
     read_count?: number;
     attachments?: MessageAttachment[];

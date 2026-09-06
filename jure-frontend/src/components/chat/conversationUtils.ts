@@ -1,7 +1,6 @@
-export const getMemberPerson = (m: API.ConversationMembership) =>
-  (m as { user?: API.User; cabinet_member?: API.User; member?: API.User }).user ??
-  (m as { cabinet_member?: API.User }).cabinet_member ??
-  (m as { member?: API.User }).member;
+export const getMemberPerson = (
+  m: API.ConversationMembership
+): API.User | undefined => m.user ?? m.cabinet_member ?? m.member;
 
 export function getLinkedCase(c?: API.Conversation | null): API.LinkedCaseSummary | null {
   if (!c) return null;
@@ -37,7 +36,7 @@ export function findDirectConversationWithPeer(
   const userId = peer.userId ?? null;
   return conversations.find((c) => {
     if (c.type !== 'direct') return false;
-    const op = c.other_participant as { id?: number; email?: string } | undefined;
+    const op = c.other_participant;
     if (userId != null && op?.id === userId) return true;
     if (email && (op?.email ?? '').toLowerCase() === email) return true;
     const membership = getDirectPeer(c, currentEmail);
@@ -70,7 +69,7 @@ export function getDirectPeerInfo(
     op?.full_name ??
     (`${firstName ?? ''} ${lastName ?? ''}`.trim() || person?.email || unknownLabel);
   const initials = [firstName?.[0], lastName?.[0]].filter(Boolean).join('').toUpperCase() || '?';
-  const id = person?.id ?? (person as { pk?: number } | null)?.pk ?? null;
+  const id = person?.id ?? person?.pk ?? null;
   return { fullName, firstName, lastName, initials, id, email: person?.email, person };
 }
 

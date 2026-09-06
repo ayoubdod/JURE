@@ -27,6 +27,9 @@ declare namespace API {
         role?: Role
         permissions?: Permission[]
         is_platform_admin?: boolean
+        /** Present on some nested chat / membership payloads */
+        full_name?: string
+        pk?: number
         business_address?: string
         team_size?: string
         website?: string

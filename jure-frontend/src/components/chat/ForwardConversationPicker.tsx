@@ -16,6 +16,11 @@ import useUserStore from '@/stores/userStore';
 import { useAppTranslation } from '@/i18n';
 import { isOnlineUserId, personPresenceId } from '@/lib/presence';
 import { useOnlineIds } from '@/hooks/useOnlinePresence';
+import {
+  getConversationDisplayName,
+  getDirectPeer,
+  getMemberPerson,
+} from '@/components/chat/conversationUtils';
 
 interface ForwardConversationPickerProps {
   open: boolean;
@@ -51,12 +56,9 @@ const ForwardConversationPicker: React.FC<ForwardConversationPickerProps> = ({
     }
   }, [open, currentConversationId]);
 
-  const getMemberPerson = (m: API.ConversationMembership) =>
-    (m as any).user ?? (m as any).cabinet_member ?? (m as any).member;
-
   const filtered = search.trim()
     ? conversations.filter((c) => {
-        const dn = (c as any).display_name ?? c.title ?? '';
+        const dn = c.display_name ?? c.title ?? '';
         const members = c.memberships?.map((m) => {
           const p = getMemberPerson(m);
           return `${p?.first_name ?? ''} ${p?.last_name ?? ''} ${p?.email ?? ''}`.trim();
@@ -65,30 +67,16 @@ const ForwardConversationPicker: React.FC<ForwardConversationPickerProps> = ({
       })
     : conversations;
 
-  const getPeer = (c: API.Conversation) =>
-    c.type === 'direct'
-      ? c.memberships.find((m) =>
-          (getMemberPerson(m)?.email ?? '').toLowerCase() !== (currentUser?.email ?? '').toLowerCase()
-        )
-      : undefined;
-
   const getPeerPerson = (c: API.Conversation) => {
-    const peer = getPeer(c);
-    return peer ? getMemberPerson(peer) : (c as any).other_participant;
+    const peer = getDirectPeer(c, currentUser?.email);
+    return peer ? getMemberPerson(peer) : c.other_participant;
   };
 
-  const getDisplayName = (c: API.Conversation) => {
-    if ((c as any).display_name) return (c as any).display_name;
-    if (c.type === 'direct') {
-      const op = (c as any).other_participant;
-      const person = getPeerPerson(c);
-      return op?.full_name ?? (`${person?.first_name ?? ''} ${person?.last_name ?? ''}`.trim() || person?.email || t.conversations.unknownContact);
-    }
-    return c.title || t.conversations.groupFallback;
-  };
+  const getDisplayName = (c: API.Conversation) =>
+    getConversationDisplayName(c, currentUser?.email, t.conversations.unknownContact);
 
   const getPeerImage = (c: API.Conversation) =>
-    getPersonImage((c as any).other_participant) ?? getPersonImage(getPeerPerson(c) as Record<string, unknown>);
+    getPersonImage(c.other_participant) ?? getPersonImage(getPeerPerson(c));
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -142,8 +130,8 @@ const ForwardConversationPicker: React.FC<ForwardConversationPickerProps> = ({
                       </div>
                     ) : c.type === 'group' ? (
                       <GroupChatIcon
-                        iconUrl={(c as API.Conversation).icon_url}
-                        iconPresetEmoji={(c as API.Conversation).icon_preset_emoji}
+                        iconUrl={c.icon_url}
+                        iconPresetEmoji={c.icon_preset_emoji}
                         size="md"
                         className="shrink-0"
                       />

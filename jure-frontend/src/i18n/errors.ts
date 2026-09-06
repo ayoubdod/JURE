@@ -42,6 +42,8 @@ const PHRASE_TO_CODE: Record<string, string> = {
   'you do not have access to this conversation.': 'CONVERSATION_NO_ACCESS',
   'attendees must belong to your cabinet.': 'ATTENDEES_WRONG_CABINET',
   'attendees must be cabinet team members.': 'ATTENDEES_NOT_MEMBERS',
+  'participants must belong to your cabinet.': 'ATTENDEES_WRONG_CABINET',
+  'participants must be cabinet team members.': 'ATTENDEES_NOT_MEMBERS',
   'quantity cannot be negative.': 'QTY_NEGATIVE',
   'unit price cannot be negative.': 'PRICE_NEGATIVE',
   'expense amount cannot be negative.': 'EXPENSE_NEGATIVE',

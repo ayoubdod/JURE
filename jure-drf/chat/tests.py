@@ -45,6 +45,16 @@ def _make_user(email, first_name="User", last_name="One", *, with_cabinet=False)
     return user
 
 
+def _add_cabinet_member(cabinet, email, first_name="User", last_name="Two"):
+    """Team member in an existing cabinet (not a separate owner)."""
+    user = _make_user(email, first_name, last_name, with_cabinet=False)
+    user.cabinet = cabinet
+    user.is_cabinet_member = True
+    user.role = User.Role.LAWYER
+    user.save(update_fields=["cabinet", "is_cabinet_member", "role"])
+    return user
+
+
 class ChatModelsTest(TestCase):
     def setUp(self):
         self.user1 = _make_user("user1@test.com", "User", "One")
@@ -85,7 +95,9 @@ class ChatModelsTest(TestCase):
 class ChatAPITest(APITestCase):
     def setUp(self):
         self.user1 = _make_user("user1@test.com", "User", "One", with_cabinet=True)
-        self.user2 = _make_user("user2@test.com", "User", "Two", with_cabinet=True)
+        self.user2 = _add_cabinet_member(
+            self.user1.cabinet, "user2@test.com", "User", "Two"
+        )
         self.client = api_client_for(self.user1)
 
     def test_list_conversations(self):
@@ -237,8 +249,9 @@ class ChatAPITest(APITestCase):
         ConversationMembership.objects.create(
             conversation=group, user=self.user1, is_admin=True
         )
+        outsider = _make_user("case-out@test.com", "Out", "Sider", with_cabinet=True)
         foreign_case = _create_consultation(
-            self.user2.cabinet, self.user2, title="Theirs matter"
+            outsider.cabinet, outsider, title="Theirs matter"
         )
         response = self.client.post(
             reverse("chat-conversations-link-case", kwargs={"pk": group.id}),
@@ -251,6 +264,63 @@ class ChatAPITest(APITestCase):
         )
         group.refresh_from_db()
         self.assertIsNone(group.linked_case_id)
+
+    def test_cannot_create_conversation_with_foreign_cabinet_participant(self):
+        outsider = _make_user("dm-out@test.com", "Out", "Sider", with_cabinet=True)
+        before = Conversation.objects.count()
+        response = self.client.post(
+            reverse("chat-conversations-list"),
+            {"type": "direct", "participants": [outsider.id]},
+            format="json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(Conversation.objects.count(), before)
+        self.assertFalse(
+            ConversationMembership.objects.filter(user=outsider).exists()
+        )
+
+    def test_cannot_create_group_with_foreign_cabinet_participant(self):
+        outsider = _make_user("grp-out@test.com", "Out", "Sider", with_cabinet=True)
+        before = Conversation.objects.count()
+        response = self.client.post(
+            reverse("chat-conversations-list"),
+            {
+                "type": "group",
+                "title": "Cross-tenant",
+                "participants": [self.user2.id, outsider.id],
+            },
+            format="json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(Conversation.objects.count(), before)
+        self.assertFalse(
+            ConversationMembership.objects.filter(user=outsider).exists()
+        )
+
+    def test_cannot_share_foreign_case_in_message(self):
+        from cases.tests import _create_consultation
+
+        conv = _direct_conversation(self.user1, self.user2)
+        outsider = _make_user("share-out@test.com", "Out", "Sider", with_cabinet=True)
+        foreign_case = _create_consultation(
+            outsider.cabinet, outsider, title="Secret matter"
+        )
+        response = self.client.post(
+            reverse("chat-messages-list"),
+            {
+                "conversation": conv.id,
+                "messageType": Message.MessageType.SHARED_CASE,
+                "sharedCaseId": foreign_case.pk,
+                "body": "",
+            },
+            format="json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertFalse(
+            Message.objects.filter(
+                conversation=conv, shared_case_id=foreign_case.pk
+            ).exists()
+        )
 
     def test_cannot_forward_foreign_message(self):
         outsider = _make_user("fwd-out@test.com", "Out", "Sider", with_cabinet=True)
@@ -404,8 +474,10 @@ class ChatSerializersTest(TestCase):
 
 class DirectConversationReuseTests(TestCase):
     def setUp(self):
-        self.user1 = _make_user("reuse1@test.com", "User", "One")
-        self.user2 = _make_user("reuse2@test.com", "User", "Two")
+        self.user1 = _make_user("reuse1@test.com", "User", "One", with_cabinet=True)
+        self.user2 = _add_cabinet_member(
+            self.user1.cabinet, "reuse2@test.com", "User", "Two"
+        )
 
     def _save_direct(self, creator, other):
         request = APIRequestFactory().post("/")

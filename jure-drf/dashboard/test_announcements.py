@@ -437,6 +437,14 @@ class AnnouncementAPITest(APITestCase):
         self.assertIsNotNone(payload)
         self.assertEqual(payload["id"], ann.id)
 
+    def test_cannot_get_other_cabinet_announcement_by_id(self):
+        ann = _make_announcement(title="B detail", cabinets=[self.cab_b])
+        detail_url = reverse(
+            "announcement-detail", kwargs={"announcement_id": ann.id}
+        )
+        response = self.api_a.get(detail_url)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
     def test_tenant_isolation_preserved(self):
         _make_announcement(title="A", cabinets=[self.cab_a])
         _make_announcement(title="B", cabinets=[self.cab_b])
