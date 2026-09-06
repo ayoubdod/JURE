@@ -1,5 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
-import { Search, RotateCcw } from 'lucide-react';
+import React, { useCallback, useEffect, useLayoutEffect, useState, type ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -10,15 +9,20 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { InvoiceTable } from '@/components/finance/tables/InvoiceTable';
+import { FilterField } from '@/components/common/MobileFilterSheet';
+import { FinanceListToolbar } from '@/components/finance/FinanceListToolbar';
+import { useFinanceListView } from '@/components/finance/FinanceViewToggle';
 import {
   deleteInvoiceFinance,
   downloadInvoicePdfFile,
   getInvoices,
+  parseFinanceListResponse,
   previewInvoicePdfInNewTab,
 } from '@/services/finance/api';
 import { useToast } from '@/hooks/use-toast';
 import { isAxiosError } from 'axios';
 import { useAppTranslation, localizeAxiosPayload } from '@/i18n';
+import { useDebounce } from '@/hooks/use-debounce';
 
 const STATUS_OPTS: API.FinanceInvoiceStatus[] = [
   'DRAFT',
@@ -34,11 +38,17 @@ type Props = {
   onEditInvoice?: (id: number) => void;
   /** Increment from parent to refetch after mutation elsewhere */
   listEpoch?: number;
+  onToolbarChange?: (node: ReactNode | null) => void;
 };
 
-export const FinanceInvoicesTab: React.FC<Props> = ({ onOpenInvoice, onEditInvoice, listEpoch = 0 }) => {
+export const FinanceInvoicesTab: React.FC<Props> = ({
+  onOpenInvoice,
+  onEditInvoice,
+  listEpoch = 0,
+  onToolbarChange,
+}) => {
   const { toast } = useToast();
-  const { t, tf } = useAppTranslation();
+  const { t, tf, lang } = useAppTranslation();
   const [rows, setRows] = useState<API.FinanceInvoiceListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
@@ -50,6 +60,8 @@ export const FinanceInvoicesTab: React.FC<Props> = ({ onOpenInvoice, onEditInvoi
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
   const [search, setSearch] = useState('');
+  const debouncedSearch = useDebounce(search, 350);
+  const [view, setView] = useFinanceListView('jure.finance.invoices.view');
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -59,14 +71,14 @@ export const FinanceInvoicesTab: React.FC<Props> = ({ onOpenInvoice, onEditInvoi
         client: client || undefined,
         date_from: from || undefined,
         date_to: to || undefined,
-        search: search || undefined,
+        search: debouncedSearch.trim() || undefined,
         page,
         page_size: pageSize,
       });
-      const d = res.data;
-      setRows(d.results ?? []);
-      setTotalCount(d.count ?? 0);
-      setTotalPages(Math.max(1, d.last_page ?? 1));
+      const { results, count, lastPage } = parseFinanceListResponse<API.FinanceInvoiceListItem>(res.data);
+      setRows(results);
+      setTotalCount(count);
+      setTotalPages(lastPage);
     } catch {
       setRows([]);
       setTotalCount(0);
@@ -74,7 +86,7 @@ export const FinanceInvoicesTab: React.FC<Props> = ({ onOpenInvoice, onEditInvoi
     } finally {
       setLoading(false);
     }
-  }, [page, pageSize, status, client, from, to, search, listEpoch]);
+  }, [page, pageSize, status, client, from, to, debouncedSearch, listEpoch]);
 
   useEffect(() => {
     load();
@@ -129,17 +141,38 @@ export const FinanceInvoicesTab: React.FC<Props> = ({ onOpenInvoice, onEditInvoi
     else onOpenInvoice(row.id);
   };
 
-  const hasFilters = !!(status || client.trim() || from || to || search.trim());
+  const extraFilterCount = [status, client.trim(), from, to].filter(Boolean).length;
 
   const start = totalCount === 0 ? 0 : (page - 1) * pageSize + 1;
   const end = totalCount === 0 ? 0 : Math.min(page * pageSize, totalCount);
 
-  return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-end gap-2 rounded-xl border border-slate-200/90 bg-white p-3 dark:border-slate-800 dark:bg-slate-950">
-        <div className="min-w-[140px]">
-          <Select value={status || 'all'} onValueChange={(v) => setStatus(v === 'all' ? '' : v)}>
-            <SelectTrigger className="h-10">
+  useLayoutEffect(() => {
+    if (!onToolbarChange) return;
+    onToolbarChange(
+      <FinanceListToolbar
+        search={search}
+        onSearchChange={setSearch}
+        filterCount={extraFilterCount}
+        onReset={() => {
+          setStatus('');
+          setClient('');
+          setFrom('');
+          setTo('');
+          setSearch('');
+          setPage(1);
+        }}
+        view={view}
+        onViewChange={setView}
+      >
+        <FilterField label={t.finance.filters.status}>
+          <Select
+            value={status || 'all'}
+            onValueChange={(v) => {
+              setStatus(v === 'all' ? '' : v);
+              setPage(1);
+            }}
+          >
+            <SelectTrigger className="h-9 w-full">
               <SelectValue placeholder={t.finance.filters.status} />
             </SelectTrigger>
             <SelectContent>
@@ -151,50 +184,51 @@ export const FinanceInvoicesTab: React.FC<Props> = ({ onOpenInvoice, onEditInvoi
               ))}
             </SelectContent>
           </Select>
-        </div>
-        <Input
-          className="h-10 max-w-[160px]"
-          placeholder={t.finance.filters.client}
-          value={client}
-          onChange={(e) => setClient(e.target.value)}
-        />
-        <Input className="h-10 max-w-[150px]" type="date" value={from} onChange={(e) => setFrom(e.target.value)} />
-        <Input className="h-10 max-w-[150px]" type="date" value={to} onChange={(e) => setTo(e.target.value)} />
-        <div className="relative min-w-[180px] flex-1">
-          <Search className="absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+        </FilterField>
+        <FilterField label={t.finance.filters.client}>
           <Input
-            className="h-10 ps-9"
-            placeholder={t.finance.filters.search}
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-        </div>
-        <Button type="button" className="h-10 bg-jure-600 hover:bg-jure-700" onClick={() => load()}>
-          {t.finance.filters.filter}
-        </Button>
-        {hasFilters ? (
-          <Button
-            type="button"
-            variant="outline"
-            className="h-10"
-            onClick={() => {
-              setStatus('');
-              setClient('');
-              setFrom('');
-              setTo('');
-              setSearch('');
+            className="h-9 w-full"
+            placeholder={t.finance.filters.client}
+            value={client}
+            onChange={(e) => {
+              setClient(e.target.value);
               setPage(1);
             }}
-          >
-            <RotateCcw className="me-1.5 h-4 w-4" />
-            {t.finance.filters.reset}
-          </Button>
-        ) : null}
-      </div>
+          />
+        </FilterField>
+        <FilterField label={t.finance.filters.from}>
+          <Input
+            className="h-9 w-full"
+            type="date"
+            value={from}
+            onChange={(e) => {
+              setFrom(e.target.value);
+              setPage(1);
+            }}
+          />
+        </FilterField>
+        <FilterField label={t.finance.filters.to}>
+          <Input
+            className="h-9 w-full"
+            type="date"
+            value={to}
+            onChange={(e) => {
+              setTo(e.target.value);
+              setPage(1);
+            }}
+          />
+        </FilterField>
+      </FinanceListToolbar>
+    );
+    return () => onToolbarChange(null);
+  }, [onToolbarChange, search, extraFilterCount, view, status, client, from, to, lang]);
 
+  return (
+    <div className="space-y-4">
       <InvoiceTable
         rows={rows}
         loading={loading}
+        view={view}
         onRowClick={(row) => onOpenInvoice(row.id)}
         onView={(row) => onOpenInvoice(row.id)}
         onEdit={handleEdit}

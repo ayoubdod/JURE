@@ -24,7 +24,7 @@ import {
 import { JuriaMarkdown } from '@/components/juria/JuriaMarkdown';
 import { JuriaComposer } from '@/components/juria/JuriaComposer';
 import { DocumentDraftingSection } from '@/components/juria/DocumentDraftingSection';
-import { safeDownloadFilename, splitJuriaAdvisory } from '@/components/juria/juriaConstants';
+import { safeDownloadFilename, splitJuriaAdvisory, stripActMarkdown } from '@/components/juria/juriaConstants';
 import useJuriaStore from '@/stores/juriaStore';
 import useUserStore from '@/stores/userStore';
 import UserAvatar from '@/components/common/UserAvatar';
@@ -131,9 +131,11 @@ export function JuriaChat({ project }: { project: JuriaProject }) {
     }
   };
 
+  const isDirectChat = Boolean(project.is_simple);
+
   return (
     <div className="flex min-h-0 min-w-0 flex-1">
-      {threadsOpen ? (
+      {!isDirectChat && threadsOpen ? (
       <div className="hidden w-[220px] shrink-0 flex-col border-e border-slate-100 bg-white/50 md:flex dark:border-slate-800 dark:bg-slate-950/40">
         <div className="flex items-center justify-between px-3 py-2">
           <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">{chat.threads}</p>
@@ -213,8 +215,8 @@ export function JuriaChat({ project }: { project: JuriaProject }) {
             </div>
           ))}
         </div>
-      </div>
-      ) : (
+        </div>
+      ) : !isDirectChat ? (
         <div className="hidden w-12 shrink-0 flex-col items-center border-e border-slate-100 bg-white/50 py-2 dark:border-slate-800 dark:bg-slate-950/40 md:flex">
           <RailIconButton label={w.expandThreads} onClick={() => setThreadsOpen(true)}>
             <PanelLeftOpen className="h-4 w-4 rtl:rotate-180" />
@@ -236,7 +238,7 @@ export function JuriaChat({ project }: { project: JuriaProject }) {
             ))}
           </div>
         </div>
-      )}
+      ) : null}
 
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
         <div className="min-h-0 flex-1 overflow-y-auto px-3 py-4 sm:px-6">
@@ -277,13 +279,19 @@ export function JuriaChat({ project }: { project: JuriaProject }) {
                   if (parent) void editMessage(parent.id, parent.content, language);
                 }}
                 onCreateArtifact={() => {
+                  const title =
+                    (m.documentCard?.typeName || m.analysis?.document_title || m.content || chat.createArtifact)
+                      .toString()
+                      .slice(0, 120);
+                  const plain = stripActMarkdown(m.content || '');
                   void apiJuriaCreateArtifact(project.id, {
-                    title: (m.content || 'Artifact').slice(0, 80),
-                    content_markdown: m.content,
-                    content_html: `<p>${m.content.replace(/\n/g, '</p><p>')}</p>`,
+                    title,
+                    content_markdown: plain,
+                    content_html: `<p>${plain.replace(/\n/g, '</p><p>')}</p>`,
                     thread_id: activeThreadId ?? undefined,
                   })
                     .then(() => {
+                      void useJuriaStore.getState().loadArtifacts(project.id).catch(() => undefined);
                       if (project.is_simple) {
                         toast({ title: chat.createArtifact });
                       } else {
@@ -329,8 +337,12 @@ export function JuriaChat({ project }: { project: JuriaProject }) {
         </div>
 
         {mode === 'DOCUMENT_DRAFTING' && draftConversationId && (
-          <div className="shrink-0 border-t border-slate-100 px-4 py-3 dark:border-slate-800">
-            <DocumentDraftingSection conversationId={draftConversationId} linkedCaseId={project.linked_case_id ?? null} />
+          <div className="shrink-0 border-t border-slate-100 bg-slate-50/60 px-3 py-2.5 sm:px-4 dark:border-slate-800 dark:bg-slate-950/40">
+            <DocumentDraftingSection
+              conversationId={draftConversationId}
+              linkedCaseId={project.linked_case_id ?? null}
+              threadId={activeThreadId}
+            />
           </div>
         )}
 
@@ -586,7 +598,9 @@ function AssistantBody({
           <p className="mt-3 text-[12px] font-medium leading-relaxed text-[#FF7F50] dark:text-[#FF8A65]">{advisory}</p>
         ) : null}
         <div className="mt-3 border-t border-slate-100 pt-3 dark:border-slate-800">
-          <JuriaMarkdown content={card.previewLines} />
+          <div className="whitespace-pre-wrap text-[13px] leading-relaxed text-slate-800 dark:text-slate-100">
+            {stripActMarkdown(card.previewLines)}
+          </div>
         </div>
         <div className="mt-3 flex flex-wrap gap-2">
           {card.downloadMessageId ? (

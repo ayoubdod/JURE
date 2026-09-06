@@ -172,124 +172,141 @@ export default function JuriaPage() {
   }
 
   return (
-    <div
-      dir={dir}
-      className="relative flex h-full min-h-0 w-full overflow-hidden bg-transparent"
-    >
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,_rgba(100,73,157,0.08),_transparent_50%)]" />
-      {projectsNavOpen ? (
-        <div className={cn('relative z-[1]', tabletOpen ? 'hidden md:contents' : 'hidden lg:contents')}>
-          <JuriaProjectSidebar
-            onNewProject={() => setCreateOpen(true)}
-            onQuickChat={() => void startQuickChat()}
-            quickBusy={quickBusy}
-            onOpenProject={openProject}
-            onCollapse={() => setProjectsNavOpen(false)}
-          />
-        </div>
-      ) : (
-        <JuriaProjectSidebar
-          variant="rail"
-          onNewProject={() => setCreateOpen(true)}
-          onQuickChat={() => void startQuickChat()}
-          quickBusy={quickBusy}
-          onOpenProject={openProject}
-          onExpand={() => setProjectsNavOpen(true)}
-        />
-      )}
-
-
-      <Sheet open={isMobile && mobileOpen} onOpenChange={setMobileOpen}>
-        <SheetContent side="start" dir={dir} className="w-[min(100vw,20rem)] p-0 sm:max-w-sm">
-          <SheetHeader className="sr-only">
-            <SheetTitle>{w.projectsSheet}</SheetTitle>
-          </SheetHeader>
-          <JuriaProjectSidebar
-            onNewProject={() => setCreateOpen(true)}
-            onQuickChat={() => void startQuickChat()}
-            quickBusy={quickBusy}
-            onOpenProject={openProject}
-          />
-        </SheetContent>
-      </Sheet>
-
-      <div className="relative z-[1] flex min-h-0 min-w-0 flex-1 flex-col">
-        <div className="flex shrink-0 items-center gap-1 border-b border-slate-100 px-2 py-1 dark:border-slate-800 lg:hidden">
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="h-11 w-11 md:hidden"
-            onClick={() => setMobileOpen(true)}
+    <div className="relative h-full min-h-0 w-full overflow-hidden">
+      {/* Scale the workspace without clipping chrome (zoom + display:contents was hiding sidebar/header). */}
+      <div
+        dir={dir}
+        className="absolute left-0 top-0 flex overflow-hidden bg-transparent"
+        style={{
+          width: '133.333%',
+          height: '133.333%',
+          transform: 'scale(0.75)',
+          transformOrigin: 'top left',
+        }}
+      >
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,_rgba(100,73,157,0.08),_transparent_50%)]" />
+        {projectsNavOpen ? (
+          <div
+            className={cn(
+              'relative z-[1] hidden h-full shrink-0',
+              tabletOpen ? 'md:flex' : 'lg:flex',
+            )}
           >
-            <Menu className="h-5 w-5" />
-          </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="hidden h-9 w-9 md:inline-flex lg:hidden"
-            onClick={() => setTabletOpen((v) => !v)}
-          >
-            <PanelLeft className="h-4 w-4 rtl:rotate-180" />
-          </Button>
-          <span className="truncate text-sm font-medium">
-            {project ? project.name || t.juria.workspace.untitledChat : t.juria.name}
-          </span>
-        </div>
-
-        {archiveView && !project ? (
-          <JuriaArchiveView onOpenProject={openProject} />
-        ) : !project ? (
-          <div className="flex min-h-0 flex-1 flex-col items-center justify-center p-8 text-center">
-            <img
-              src="/images/juria-icon.png"
-              alt=""
-              className="mb-4 h-14 w-14 rounded-2xl ring-1 ring-[#64499D]/20"
+            <JuriaProjectSidebar
+              onNewProject={() => setCreateOpen(true)}
+              onQuickChat={() => void startQuickChat()}
+              quickBusy={quickBusy}
+              onOpenProject={openProject}
+              onCollapse={() => setProjectsNavOpen(false)}
             />
-            <h2 className="text-xl font-semibold text-slate-900 dark:text-white">{w.emptyTitle}</h2>
-            <p className="mt-2 max-w-md text-sm text-slate-500">{w.emptyHint}</p>
-            <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
-              <Button
-                className="gap-1.5 bg-[#64499D] hover:bg-[#4D3680]"
-                disabled={quickBusy}
-                onClick={() => void startQuickChat()}
-              >
-                <MessageSquare className="h-4 w-4" />
-                {quickBusy ? w.quickChatCreating : w.quickChat}
-              </Button>
-              <Button variant="outline" className="gap-1.5" onClick={() => setCreateOpen(true)}>
-                <Plus className="h-4 w-4" />
-                {w.newProject}
-              </Button>
-            </div>
           </div>
         ) : (
-          <>
-            <JuriaProjectHeader project={project} tab={tab} onTab={setTab} />
-            {!project.is_simple && tab === 'overview' && <JuriaOverview project={project} />}
-            {tab === 'chat' && !project.is_simple && (
-              <JuriaContextBar project={project} context={project.context} />
-            )}
-            {tab === 'chat' && <JuriaChat project={project} />}
-            {!project.is_simple && tab === 'sources' && <JuriaSourceList project={project} />}
-            {!project.is_simple && tab === 'documents' && <JuriaDocumentPanel projectId={project.id} />}
-            {!project.is_simple && tab === 'case' && <JuriaCaseHub project={project} />}
-            {!project.is_simple && tab === 'calendar' && <JuriaCaseHub project={project} surface="calendar" />}
-            {!project.is_simple && tab === 'tasks' && <JuriaCaseHub project={project} surface="tasks" />}
-            {!project.is_simple && tab === 'team' && <JuriaTeamPanel project={project} />}
-            {!project.is_simple && tab === 'artifacts' && <JuriaArtifactEditor projectId={project.id} />}
-            {!project.is_simple && tab === 'activity' && <JuriaActivityPanel />}
-            {!project.is_simple && tab === 'instructions' && <JuriaProjectSettings project={project} />}
-          </>
+          <JuriaProjectSidebar
+            variant="rail"
+            onNewProject={() => setCreateOpen(true)}
+            onQuickChat={() => void startQuickChat()}
+            quickBusy={quickBusy}
+            onOpenProject={openProject}
+            onExpand={() => setProjectsNavOpen(true)}
+          />
         )}
-      </div>
 
-      <JuriaCreateProjectModal
-        open={createOpen}
-        onOpenChange={setCreateOpen}
-        onCreated={(id) => openProject(id)}
-      />
+        <Sheet open={isMobile && mobileOpen} onOpenChange={setMobileOpen}>
+          <SheetContent side="start" dir={dir} className="w-[min(100vw,20rem)] p-0 sm:max-w-sm">
+            <SheetHeader className="sr-only">
+              <SheetTitle>{w.projectsSheet}</SheetTitle>
+            </SheetHeader>
+            <JuriaProjectSidebar
+              onNewProject={() => setCreateOpen(true)}
+              onQuickChat={() => void startQuickChat()}
+              quickBusy={quickBusy}
+              onOpenProject={openProject}
+            />
+          </SheetContent>
+        </Sheet>
+
+        <div className="relative z-[1] flex min-h-0 min-w-0 flex-1 flex-col">
+          <div className="flex shrink-0 items-center gap-1 border-b border-slate-100 px-2 py-1 dark:border-slate-800 lg:hidden">
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="h-11 w-11 md:hidden"
+              onClick={() => setMobileOpen(true)}
+            >
+              <Menu className="h-5 w-5" />
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="hidden h-9 w-9 md:inline-flex lg:hidden"
+              onClick={() => setTabletOpen((v) => !v)}
+            >
+              <PanelLeft className="h-4 w-4 rtl:rotate-180" />
+            </Button>
+            <span className="truncate text-sm font-medium">
+              {project ? project.name || t.juria.workspace.untitledChat : t.juria.name}
+            </span>
+          </div>
+
+          {archiveView && !project ? (
+            <JuriaArchiveView onOpenProject={openProject} />
+          ) : !project ? (
+            <div className="flex min-h-0 flex-1 flex-col items-center justify-center p-8 text-center">
+              <img
+                src="/images/juria-icon.png"
+                alt=""
+                className="mb-4 h-14 w-14 rounded-2xl ring-1 ring-[#64499D]/20"
+              />
+              <h2 className="text-xl font-semibold text-slate-900 dark:text-white">{w.emptyTitle}</h2>
+              <p className="mt-2 max-w-md text-sm text-slate-500">{w.emptyHint}</p>
+              <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
+                <Button
+                  className="gap-1.5 bg-[#64499D] hover:bg-[#4D3680]"
+                  disabled={quickBusy}
+                  onClick={() => void startQuickChat()}
+                >
+                  <MessageSquare className="h-4 w-4" />
+                  {quickBusy ? w.quickChatCreating : w.quickChat}
+                </Button>
+                <Button variant="outline" className="gap-1.5" onClick={() => setCreateOpen(true)}>
+                  <Plus className="h-4 w-4" />
+                  {w.newProject}
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <>
+              <JuriaProjectHeader project={project} tab={tab} onTab={setTab} />
+              {!project.is_simple && tab === 'overview' && <JuriaOverview project={project} />}
+              {tab === 'chat' && !project.is_simple && (
+                <JuriaContextBar project={project} context={project.context} />
+              )}
+              {tab === 'chat' && <JuriaChat project={project} />}
+              {!project.is_simple && tab === 'sources' && <JuriaSourceList project={project} />}
+              {!project.is_simple && tab === 'documents' && <JuriaDocumentPanel projectId={project.id} />}
+              {!project.is_simple && tab === 'case' && <JuriaCaseHub project={project} />}
+              {!project.is_simple && tab === 'calendar' && <JuriaCaseHub project={project} surface="calendar" />}
+              {!project.is_simple && tab === 'tasks' && <JuriaCaseHub project={project} surface="tasks" />}
+              {!project.is_simple && tab === 'team' && <JuriaTeamPanel project={project} />}
+              {!project.is_simple && tab === 'artifacts' && (
+                <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+                  <JuriaArtifactEditor projectId={project.id} />
+                </div>
+              )}
+              {!project.is_simple && tab === 'activity' && <JuriaActivityPanel />}
+              {!project.is_simple && tab === 'instructions' && <JuriaProjectSettings project={project} />}
+            </>
+          )}
+        </div>
+
+        <JuriaCreateProjectModal
+          open={createOpen}
+          onOpenChange={setCreateOpen}
+          onCreated={(id) => openProject(id)}
+        />
+      </div>
     </div>
   );
 }

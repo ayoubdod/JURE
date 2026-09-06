@@ -60,7 +60,7 @@ export function JuriaProjectHeader({
       { id: 'instructions' as const, label: w.tabs.instructions, Icon: Settings2 },
     ] satisfies { id: JuriaTab; label: string; Icon: typeof MessageSquare }[];
     if (project.is_simple) {
-      return all.filter((t) => t.id === 'chat');
+      return [];
     }
     return all;
   }, [project.is_simple, w.tabs]);
@@ -119,6 +119,7 @@ export function JuriaProjectHeader({
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
+      {tabs.length > 0 ? (
       <nav className="mt-3 flex gap-1 overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {tabs.map(({ id, label, Icon }) => (
           <button
@@ -137,6 +138,7 @@ export function JuriaProjectHeader({
           </button>
         ))}
       </nav>
+      ) : null}
       <JuriaTextPromptDialog
         open={renameOpen}
         onOpenChange={setRenameOpen}

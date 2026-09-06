@@ -2,6 +2,7 @@ import type { JuriaApiConversationDetail, JuriaApiConversationListItem, JuriaApi
 import { normalizeJuriaConversationId } from '@/services/juria/api';
 import type { JuriaConversation, JuriaMessage, JuriaMode } from '@/types/juria';
 import { detectInitialLanguage, tFor } from '@/i18n';
+import { stripActMarkdown } from '@/components/juria/juriaConstants';
 
 const MODES: JuriaMode[] = ['CHAT', 'CONTRACT_ANALYSIS', 'LEGAL_RESEARCH', 'DOCUMENT_DRAFTING'];
 
@@ -68,7 +69,7 @@ export function mapApiMessageToJuria(m: JuriaApiMessage): JuriaMessage {
       tFor(detectInitialLanguage()).juria.generatedDocument;
     msg.documentCard = {
       typeName,
-      previewLines: (m.content || '').split('\n').slice(0, 4).join('\n').trim() || '—',
+      previewLines: stripActMarkdown((m.content || '').split('\n').slice(0, 4).join('\n')) || '—',
       generatedAt: m.created_at,
       downloadMessageId: m.id,
       fileName: titleFromAnalysis ? `${titleFromAnalysis}.docx` : undefined,

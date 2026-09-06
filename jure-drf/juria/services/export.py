@@ -4,32 +4,41 @@ from __future__ import annotations
 
 import html
 import io
+import os
 import re
 import zipfile
+from functools import lru_cache
 from xml.sax.saxutils import escape
 
 from reportlab.lib.pagesizes import A4
-from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.lib.units import mm
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer
 
-from juria.services.document_text import text_to_docx_base64
+from juria.services.document_text import text_to_docx_bytes
 
 
 def _plain_from_html(value: str) -> str:
-    text = re.sub(r"<br\s*/?>", "\n", value or "", flags=re.I)
-    text = re.sub(r"</p>", "\n\n", text, flags=re.I)
-    text = re.sub(r"</h[1-6]>", "\n\n", text, flags=re.I)
-    text = re.sub(r"<li>", "• ", text, flags=re.I)
+    text = re.sub(r"(?i)<br\s*/?>", "\n", value or "")
+    text = re.sub(r"(?i)</p\s*>", "\n\n", text)
+    text = re.sub(r"(?i)</div\s*>", "\n", text)
+    text = re.sub(r"(?i)</h[1-6]\s*>", "\n\n", text)
+    text = re.sub(r"(?i)</li\s*>", "\n", text)
+    text = re.sub(r"(?i)<li[^>]*>", "• ", text)
     text = re.sub(r"<[^>]+>", "", text)
-    return html.unescape(text).strip()
+    text = html.unescape(text)
+    text = re.sub(r"\n{3,}", "\n\n", text)
+    return text.strip()
 
 
 def artifact_plain_text(artifact) -> str:
-    if artifact.content_markdown:
-        return artifact.content_markdown
+    # Prefer HTML from the editor canvas; markdown can be stale/empty after HTML-only saves.
     if artifact.content_html:
         return _plain_from_html(artifact.content_html)
+    if artifact.content_markdown:
+        return artifact.content_markdown
     return ""
 
 
@@ -40,7 +49,7 @@ def export_bytes(artifact, fmt: str) -> tuple[bytes, str, str]:
     fmt = (fmt or "docx").lower()
 
     if fmt in ("md", "markdown"):
-        return (artifact.content_markdown or body).encode("utf-8"), "text/markdown", f"{title}.md"
+        return (artifact.content_markdown or body).encode("utf-8"), "text/markdown; charset=utf-8", f"{title}.md"
     if fmt == "txt":
         return body.encode("utf-8"), "text/plain; charset=utf-8", f"{title}.txt"
     if fmt == "html":
@@ -53,22 +62,29 @@ def export_bytes(artifact, fmt: str) -> tuple[bytes, str, str]:
         return _to_odt(body, artifact.title), "application/vnd.oasis.opendocument.text", f"{title}.odt"
     if fmt == "pdf":
         return _to_pdf(body, artifact.title), "application/pdf", f"{title}.pdf"
-    # default docx
-    import base64
-
-    raw = base64.b64decode(text_to_docx_base64(body))
+    # default docx — complete OOXML package
+    raw = text_to_docx_bytes(body)
     return raw, "application/vnd.openxmlformats-officedocument.wordprocessingml.document", f"{title}.docx"
 
 
 def _to_rtf(text: str) -> str:
-    escaped = (
-        (text or "")
-        .replace("\\", "\\\\")
-        .replace("{", "\\{")
-        .replace("}", "\\}")
-        .replace("\n", "\\par\n")
-    )
-    return r"{\rtf1\ansi\deff0{\fonttbl{\f0 Times New Roman;}}\f0\fs24 " + escaped + "}"
+    """RTF with Unicode escapes so French/Arabic survive."""
+    parts = [r"{\rtf1\ansi\deff0\uc1{\fonttbl{\f0 Times New Roman;}}\f0\fs24 "]
+    for ch in text or "":
+        if ch == "\\":
+            parts.append(r"\\")
+        elif ch == "{":
+            parts.append(r"\{")
+        elif ch == "}":
+            parts.append(r"\}")
+        elif ch == "\n":
+            parts.append(r"\par" "\n")
+        elif ord(ch) < 128:
+            parts.append(ch)
+        else:
+            parts.append(f"\\u{ord(ch)}?")
+    parts.append("}")
+    return "".join(parts)
 
 
 def _to_odt(text: str, title: str) -> bytes:
@@ -101,13 +117,58 @@ def _to_odt(text: str, title: str) -> bytes:
     return buf.getvalue()
 
 
+@lru_cache(maxsize=1)
+def _pdf_font_name() -> str:
+    """Register a Unicode TTF so French accents (and Arabic when available) render."""
+    candidates = [
+        os.path.join(os.environ.get("WINDIR", r"C:\Windows"), "Fonts", "arial.ttf"),
+        os.path.join(os.environ.get("WINDIR", r"C:\Windows"), "Fonts", "segoeui.ttf"),
+        os.path.join(os.environ.get("WINDIR", r"C:\Windows"), "Fonts", "times.ttf"),
+        "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+        "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf",
+        "/System/Library/Fonts/Supplemental/Arial.ttf",
+    ]
+    for path in candidates:
+        if path and os.path.isfile(path):
+            try:
+                pdfmetrics.registerFont(TTFont("JuriaExport", path))
+                return "JuriaExport"
+            except Exception:
+                continue
+    return "Helvetica"
+
+
 def _to_pdf(text: str, title: str) -> bytes:
     buf = io.BytesIO()
-    doc = SimpleDocTemplate(buf, pagesize=A4, title=title or "document", leftMargin=18 * mm, rightMargin=18 * mm)
+    font = _pdf_font_name()
     styles = getSampleStyleSheet()
-    story = [Paragraph(escape(title or "Document"), styles["Title"]), Spacer(1, 8 * mm)]
+    title_style = ParagraphStyle(
+        "JuriaTitle",
+        parent=styles["Title"],
+        fontName=font,
+        fontSize=16,
+        leading=20,
+        spaceAfter=12,
+    )
+    body_style = ParagraphStyle(
+        "JuriaBody",
+        parent=styles["BodyText"],
+        fontName=font,
+        fontSize=11,
+        leading=15,
+        spaceAfter=4,
+    )
+    doc = SimpleDocTemplate(
+        buf,
+        pagesize=A4,
+        title=title or "document",
+        leftMargin=18 * mm,
+        rightMargin=18 * mm,
+        topMargin=18 * mm,
+        bottomMargin=18 * mm,
+    )
+    story = [Paragraph(escape(title or "Document"), title_style), Spacer(1, 6 * mm)]
     for line in (text or "").splitlines() or [""]:
-        story.append(Paragraph(escape(line) or "&nbsp;", styles["BodyText"]))
-        story.append(Spacer(1, 2 * mm))
+        story.append(Paragraph(escape(line) or "&nbsp;", body_style))
     doc.build(story)
     return buf.getvalue()

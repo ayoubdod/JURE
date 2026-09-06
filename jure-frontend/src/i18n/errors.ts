@@ -394,6 +394,21 @@ const PHRASE_TO_CODE: Record<string, string> = {
   'urls with credentials are not allowed.': 'LINK_NO_CREDENTIALS',
   'les url avec identifiants ne sont pas autorisées.': 'LINK_NO_CREDENTIALS',
   'عناوين url التي تحتوي على بيانات اعتماد غير مسموحة.': 'LINK_NO_CREDENTIALS',
+  'no previous version to restore.': 'ARTIFACT_NO_PREV_VERSION',
+  'aucune version précédente à restaurer.': 'ARTIFACT_NO_PREV_VERSION',
+  'لا توجد نسخة سابقة للاستعادة.': 'ARTIFACT_NO_PREV_VERSION',
+  'invalid version number.': 'ARTIFACT_INVALID_VERSION',
+  'numéro de version invalide.': 'ARTIFACT_INVALID_VERSION',
+  'رقم الإصدار غير صالح.': 'ARTIFACT_INVALID_VERSION',
+  'version must be between 1 and the previous version.': 'ARTIFACT_VERSION_RANGE',
+  'la version doit être entre 1 et la version précédente.': 'ARTIFACT_VERSION_RANGE',
+  'يجب أن يكون الإصدار بين 1 والإصدار السابق.': 'ARTIFACT_VERSION_RANGE',
+  'version not found.': 'ARTIFACT_VERSION_NOT_FOUND',
+  'version introuvable.': 'ARTIFACT_VERSION_NOT_FOUND',
+  'الإصدار غير موجود.': 'ARTIFACT_VERSION_NOT_FOUND',
+  'invalid version numbers.': 'ARTIFACT_INVALID_VERSIONS',
+  'numéros de version invalides.': 'ARTIFACT_INVALID_VERSIONS',
+  'أرقام الإصدار غير صالحة.': 'ARTIFACT_INVALID_VERSIONS',
 };
 
 const NAME_SIMILARITY_RE = /^name similarity:\s*(\d+)%$/i;

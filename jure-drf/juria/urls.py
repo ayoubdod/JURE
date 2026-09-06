@@ -6,6 +6,7 @@ from juria.views.artifact_views import (
     JuriaArtifactDetailView,
     JuriaArtifactDuplicateView,
     JuriaArtifactExportView,
+    JuriaArtifactRestoreView,
     JuriaProjectArtifactListCreateView,
 )
 from juria.views.conversation_views import (
@@ -97,6 +98,11 @@ urlpatterns = [
         "projects/<uuid:pk>/artifacts/<uuid:artifact_id>/compare/",
         JuriaArtifactCompareView.as_view(),
         name="juria-artifact-compare",
+    ),
+    path(
+        "projects/<uuid:pk>/artifacts/<uuid:artifact_id>/restore/",
+        JuriaArtifactRestoreView.as_view(),
+        name="juria-artifact-restore",
     ),
     path("projects/<uuid:pk>/activity/", JuriaProjectActivityView.as_view(), name="juria-project-activity"),
     path("projects/<uuid:project_id>/threads/", JuriaThreadListCreateView.as_view(), name="juria-thread-list"),

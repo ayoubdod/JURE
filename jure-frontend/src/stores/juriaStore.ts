@@ -47,6 +47,7 @@ import {
 import { mapApiDetailToConversation, mapApiListItemToConversation, mapApiMessageToJuria } from '@/utils/juriaMappers';
 import { getJuriaErrorMessage, isJuriaDisabledError, juriaMissingIdError } from '@/utils/juriaErrors';
 import { detectInitialLanguage, tFor } from '@/i18n';
+import { stripActMarkdown } from '@/components/juria/juriaConstants';
 
 function juriaFallbackError(e: unknown): Error {
   return new Error(getJuriaErrorMessage(e) || tFor(detectInitialLanguage()).errors.generic);
@@ -111,7 +112,8 @@ interface JuriaStoreState {
     documentType: string,
     parameters: Record<string, string>,
     linkedCaseId?: number | null,
-    title?: string
+    title?: string,
+    threadId?: string | null
   ) => Promise<void>;
 
   /** Save blob from message download endpoint. */
@@ -402,7 +404,7 @@ const useJuriaStore = create<JuriaStoreState>()((set, get) => ({
         }
       },
 
-      requestDraft: async (conversationId, documentType, parameters, linkedCaseId, titleHint) => {
+      requestDraft: async (conversationId, documentType, parameters, linkedCaseId, titleHint, threadIdHint) => {
         set({ processingConversationId: conversationId, juriaUnavailable: false });
         try {
           const res = await apiJuriaDraft(conversationId, {
@@ -431,7 +433,7 @@ const useJuriaStore = create<JuriaStoreState>()((set, get) => ({
             },
             documentCard: {
               typeName: title,
-              previewLines: (res.message.content || '').split('\n').slice(0, 4).join('\n').trim() || '—',
+              previewLines: stripActMarkdown((res.message.content || '').split('\n').slice(0, 4).join('\n')) || '—',
               generatedAt: res.message.created_at,
               docxUrl: res.document_download_url,
               downloadMessageId: res.message.id,
@@ -440,31 +442,62 @@ const useJuriaStore = create<JuriaStoreState>()((set, get) => ({
             },
           };
 
-          set((s) => {
-            const conv = s.conversations.find((c) => c.id === conversationId);
-            const threadId =
-              conv?.threadId ||
-              s.threads.find((th) => th.conversation_id === conversationId)?.id ||
-              s.activeThreadId;
-            const project = s.projects.find((p) => p.id === s.activeProjectId);
-            const canOpenArtifacts = Boolean(res.artifact_id) && project && !project.is_simple;
+          const threadId =
+            threadIdHint ||
+            res.thread_id ||
+            get().activeThreadId ||
+            get().conversations.find((c) => c.id === conversationId)?.threadId ||
+            get().threads.find((th) => th.conversation_id === conversationId)?.id ||
+            null;
 
+          set((s) => {
+            const nextThreadMessages =
+              threadId != null
+                ? {
+                    ...s.threadMessages,
+                    [threadId]: [...(s.threadMessages[threadId] ?? []).filter((x) => x.id !== m.id), m],
+                  }
+                : s.threadMessages;
             return {
               conversations: s.conversations.map((c) =>
                 c.id === conversationId
-                  ? { ...c, messages: [...c.messages, m], updatedAt: new Date().toISOString() }
+                  ? {
+                      ...c,
+                      messages: [...c.messages.filter((x) => x.id !== m.id), m],
+                      updatedAt: new Date().toISOString(),
+                    }
                   : c
               ),
-              threadMessages: threadId
-                ? {
-                    ...s.threadMessages,
-                    [threadId]: [...(s.threadMessages[threadId] ?? []), m],
-                  }
-                : s.threadMessages,
-              // Full projects: jump to Artifacts. Simple/quick chat: stay on Chat so the card is visible.
-              activeTab: canOpenArtifacts ? 'artifacts' : 'chat',
+              threadMessages: nextThreadMessages,
+              // Stay on chat so the draft card is visible immediately
+              activeTab: 'chat',
+              activeThreadId: threadId || s.activeThreadId,
             };
           });
+
+          // Authoritative refresh so the card survives any race with list reloads
+          if (threadId) {
+            await get().loadThreadMessages(threadId).catch(() => undefined);
+            // Re-apply document card fields in case the list mapper missed a transient path
+            set((s) => {
+              const rows = s.threadMessages[threadId] ?? [];
+              const idx = rows.findIndex((x) => x.id === m.id);
+              if (idx < 0) {
+                return {
+                  threadMessages: { ...s.threadMessages, [threadId]: [...rows, m] },
+                };
+              }
+              const merged = [...rows];
+              merged[idx] = {
+                ...merged[idx],
+                advisoryNote: merged[idx].advisoryNote || m.advisoryNote,
+                documentCard: merged[idx].documentCard || m.documentCard,
+                analysis: { ...m.analysis, ...merged[idx].analysis },
+              };
+              return { threadMessages: { ...s.threadMessages, [threadId]: merged } };
+            });
+          }
+
           const pid = get().activeProjectId;
           if (pid && res.artifact_id) void get().loadArtifacts(pid).catch(() => undefined);
           await get().loadUsage();
@@ -579,21 +612,30 @@ const useJuriaStore = create<JuriaStoreState>()((set, get) => ({
 
       createProject: async (body) => {
         const project = await apiJuriaCreateProject(body);
+        const next = {
+          ...project,
+          message_count: project.message_count ?? (body.is_simple ? 0 : project.message_count),
+        };
         set((s) => ({
-          projects: [project, ...s.projects.filter((p) => p.id !== project.id)],
-          activeProjectId: project.id,
+          projects: [next, ...s.projects.filter((p) => p.id !== next.id)],
+          activeProjectId: next.id,
           archiveView: false,
           activeTab: 'chat',
-          projectLanguage: project.preferred_language || 'fr',
+          projectLanguage: next.preferred_language || 'fr',
           activeThreadId: null,
           threads: [],
           threadMessages: {},
         }));
-        await get().loadProjectDetail(project.id);
-        return project.id;
+        await get().loadProjectDetail(next.id);
+        return next.id;
       },
 
       createQuickChat: async (opts) => {
+        const empty = get().projects.find((p) => p.is_simple && (p.message_count ?? 0) === 0);
+        if (empty) {
+          get().setActiveProject(empty.id);
+          return empty.id;
+        }
         const lang = opts?.language || get().projectLanguage || 'fr';
         return get().createProject({
           name: opts?.name,
@@ -730,10 +772,15 @@ const useJuriaStore = create<JuriaStoreState>()((set, get) => ({
                   }
                 : t
             ),
-            projects:
-              nextProjectName && res.project_id
-                ? s.projects.map((p) => (p.id === res.project_id ? { ...p, name: nextProjectName } : p))
-                : s.projects,
+            projects: s.projects.map((p) => {
+              const isTarget = res.project_id ? p.id === res.project_id : p.id === s.activeProjectId;
+              if (!isTarget) return p;
+              return {
+                ...p,
+                name: nextProjectName || p.name,
+                message_count: (p.message_count ?? 0) + 2,
+              };
+            }),
           }));
           const pid = get().activeProjectId;
           if (pid) void get().loadProjectDetail(pid).catch(() => undefined);

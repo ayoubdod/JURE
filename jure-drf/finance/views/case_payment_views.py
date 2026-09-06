@@ -1,4 +1,5 @@
 from django.shortcuts import get_object_or_404
+from django.utils.translation import gettext as _
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -19,11 +20,11 @@ class PaymentListCreateView(APIView):
         case = _case_in_cabinet_or_404(request.user, case_id)
         if case is None:
             return Response(
-                {'detail': 'User is not attached to any cabinet.'},
+                {'detail': _('User is not attached to any cabinet.')},
                 status=status.HTTP_403_FORBIDDEN,
             )
         qs = Payment.objects.filter(case=case).select_related(
-            'client__user', 'invoice', 'created_by'
+            'case', 'client__user', 'invoice', 'created_by'
         )
         return Response(PaymentSerializer(qs, many=True).data)
 
@@ -31,7 +32,7 @@ class PaymentListCreateView(APIView):
         case = _case_in_cabinet_or_404(request.user, case_id)
         if case is None:
             return Response(
-                {'detail': 'User is not attached to any cabinet.'},
+                {'detail': _('User is not attached to any cabinet.')},
                 status=status.HTTP_403_FORBIDDEN,
             )
         ser = PaymentCreateSerializer(

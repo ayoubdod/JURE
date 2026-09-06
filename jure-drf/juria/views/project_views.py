@@ -72,6 +72,14 @@ def _member_projects(user):
                 filter=Q(threads__is_deleted=False, threads__is_archived=False),
                 distinct=True,
             ),
+            message_count=Count(
+                "threads__messages",
+                filter=Q(
+                    threads__is_deleted=False,
+                    threads__messages__is_deleted=False,
+                ),
+                distinct=True,
+            ),
         )
         .distinct()
     )

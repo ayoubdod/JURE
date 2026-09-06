@@ -169,6 +169,24 @@ class JuriaConversationDraftView(JuriaEnabledMixin, APIView):
                 "document_title": title,
             },
         )
+        # Ensure the draft is visible on the project thread immediately
+        if msg.thread_id is None and conv.thread_id:
+            msg.thread_id = conv.thread_id
+            msg.save(update_fields=["thread_id"])
+        elif msg.thread_id is None and conv.project_id:
+            from juria.models import JuriaThread
+
+            thread = (
+                JuriaThread.objects.filter(project_id=conv.project_id, is_archived=False)
+                .order_by("-updated_at")
+                .first()
+            )
+            if thread:
+                msg.thread = thread
+                msg.save(update_fields=["thread"])
+                if not conv.thread_id:
+                    conv.thread = thread
+                    conv.save(update_fields=["thread", "updated_at"])
         conv.save(update_fields=["updated_at"])
         record_juria_usage(
             request.user,
@@ -177,37 +195,7 @@ class JuriaConversationDraftView(JuriaEnabledMixin, APIView):
             documents_drafted_delta=1,
         )
 
-        artifact_id = None
-        if conv.project_id:
-            import markdown as md
-
-            from juria.constants import ActivityAction, ArtifactType
-            from juria.models import JuriaArtifact, JuriaArtifactVersion
-            from juria.services.activity import log_activity
-
-            type_map = {c: c for c, _ in ArtifactType.choices}
-            art_type = type_map.get(document_type, ArtifactType.AUTRE)
-            art = JuriaArtifact.objects.create(
-                project=conv.project,
-                thread=conv.thread,
-                title=title[:255],
-                artifact_type=art_type,
-                content_markdown=content,
-                content_html=md.markdown(content or "", extensions=["extra"]),
-                created_by=request.user,
-                current_version=1,
-            )
-            JuriaArtifactVersion.objects.create(
-                artifact=art,
-                version_number=1,
-                content_html=art.content_html,
-                content_markdown=art.content_markdown,
-                created_by=request.user,
-                note="Génération Juria",
-            )
-            log_activity(conv.project, request.user, ActivityAction.ARTIFACT_CREATED, artifact_id=str(art.id))
-            artifact_id = str(art.id)
-
+        # Artifacts are created only when the user explicitly clicks "Add to artifact".
         download_url = ""
         if rel_path:
             download_url = request.build_absolute_uri(
@@ -228,7 +216,8 @@ class JuriaConversationDraftView(JuriaEnabledMixin, APIView):
                 "document_title": title,
                 "document_download_url": download_url,
                 "advisory_note": advisory,
-                "artifact_id": artifact_id,
+                "artifact_id": None,
+                "thread_id": str(msg.thread_id) if msg.thread_id else None,
             },
             status=status.HTTP_201_CREATED,
         )

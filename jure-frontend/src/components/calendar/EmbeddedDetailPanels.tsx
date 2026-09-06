@@ -18,9 +18,7 @@ import { eventBus } from '@/utils/eventBus';
 import { useToast } from '@/hooks/use-toast';
 
 export const SHEET_PANEL =
-  'flex flex-col gap-0 !p-0 border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 shadow-xl [&>button]:hidden !absolute !end-0 !top-0 !h-full !w-[min(100%,420px)] !max-w-[420px] !sm:max-w-[420px]';
-
-export const EMBEDDED_OVERLAY = '!bg-transparent pointer-events-auto';
+  'flex w-[min(calc(100vw-1.5rem),28rem)] flex-col gap-0 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 p-0 shadow-xl dark:border-slate-800 dark:bg-slate-950 sm:max-w-md !inset-y-3 !end-3 !h-auto max-h-[calc(100dvh-1.5rem)] [&>button]:hidden';
 
 function getCountdownDays(iso: string): number | null {
   const d = new Date(iso);
@@ -71,7 +69,6 @@ export function TaskDetailPanel({
   open,
   onOpenChange,
   onEdit,
-  portalContainer,
   onOpenCase,
   /** When set (e.g. case drawer open), hide the related-case row if it is this case — avoids redundant navigation. */
   contextCaseId = null,
@@ -81,7 +78,7 @@ export function TaskDetailPanel({
   open: boolean;
   onOpenChange: (v: boolean) => void;
   onEdit: (task: API.Task) => void;
-  portalContainer: HTMLElement | null;
+  portalContainer?: HTMLElement | null;
   onOpenCase: (id: number) => void;
   contextCaseId?: number | null;
   /** Optional quick-complete handler (e.g. dashboard). Hidden when task is already done. */
@@ -127,8 +124,8 @@ export function TaskDetailPanel({
   const tone = countdownTone(days, overdue);
 
   return (
-    <Sheet modal={false} open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="end" container={portalContainer} overlayClassName={EMBEDDED_OVERLAY} className={SHEET_PANEL}>
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent side="end" className={SHEET_PANEL}>
         <header className="sticky top-0 z-20 shrink-0 border-b border-slate-200 dark:border-slate-800 bg-slate-50/95 dark:bg-slate-950/95 backdrop-blur-sm px-4 py-4">
           <div className="flex items-start justify-between gap-2">
             <div className="flex flex-wrap items-center gap-2">
@@ -333,7 +330,6 @@ export function AppointmentDetailPanel({
   open,
   onOpenChange,
   onEdit,
-  portalContainer,
   onOpenCase,
   contextCaseId = null,
 }: {
@@ -341,7 +337,7 @@ export function AppointmentDetailPanel({
   open: boolean;
   onOpenChange: (v: boolean) => void;
   onEdit: (a: Appointment) => void;
-  portalContainer: HTMLElement | null;
+  portalContainer?: HTMLElement | null;
   onOpenCase: (id: number) => void;
   contextCaseId?: number | null;
 }) {
@@ -398,8 +394,8 @@ export function AppointmentDetailPanel({
   const cabinetClient = clientUserId != null ? lookupCabinet(clientUserId) : undefined;
 
   return (
-    <Sheet modal={false} open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="end" container={portalContainer} overlayClassName={EMBEDDED_OVERLAY} className={SHEET_PANEL}>
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent side="end" className={SHEET_PANEL}>
         <header className="sticky top-0 z-20 shrink-0 border-b border-slate-200 dark:border-slate-800 bg-slate-50/95 dark:bg-slate-950/95 backdrop-blur-sm px-4 py-4">
           <div className="flex items-start justify-between gap-2">
             <div className="flex flex-wrap items-center gap-2">

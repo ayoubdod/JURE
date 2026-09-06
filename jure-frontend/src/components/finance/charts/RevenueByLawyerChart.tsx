@@ -28,10 +28,16 @@ function formatAxisMad(v: number): string {
 }
 
 export const RevenueByLawyerChart: React.FC<Props> = ({ data }) => {
-  const { t, lang } = useAppTranslation();
+  const { t, tf, lang } = useAppTranslation();
   const rows = useMemo(
-    () => data.map((d) => ({ ...d, name: d.lawyer_name })),
-    [data]
+    () =>
+      data.map((d) => {
+        const raw = d.lawyer_name || '';
+        const m = /^Lawyer #(\d+)$/i.exec(raw);
+        const name = m ? tf(t.finance.charts.lawyerFallback, { id: m[1] }) : raw;
+        return { ...d, name };
+      }),
+    [data, t.finance.charts.lawyerFallback, tf]
   );
 
   const xAxisMax = useMemo(() => {
@@ -42,7 +48,7 @@ export const RevenueByLawyerChart: React.FC<Props> = ({ data }) => {
   return (
     <div className="rounded-xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-950 p-4 shadow-sm">
       <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-white">
-        <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#64499D] shadow-sm">
+        <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-jure-600 shadow-sm">
           <Users size={16} className="text-white" aria-hidden />
         </span>
         {t.finance.charts.byLawyerTitle}

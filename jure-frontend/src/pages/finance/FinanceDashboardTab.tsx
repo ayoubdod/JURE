@@ -19,6 +19,7 @@ type Props = {
   showEmpty: boolean;
   onViewAllPayments?: () => void;
   onOpenCase?: (caseId: number) => void;
+  onAlertsMutated?: () => void;
   tvaStatus?: TVAStatus | null;
 };
 
@@ -28,6 +29,7 @@ export const FinanceDashboardTab: React.FC<Props> = ({
   showEmpty,
   onViewAllPayments,
   onOpenCase,
+  onAlertsMutated,
   tvaStatus,
 }) => {
   const { t, tf, lang } = useAppTranslation();
@@ -43,7 +45,7 @@ export const FinanceDashboardTab: React.FC<Props> = ({
       .catch(() => setReceivables(null));
   }, [showEmpty, dashboard]);
 
-  if (showEmpty || !dashboard) {
+  if (showEmpty) {
     return (
       <WorkspaceEmptyState
         icon={Coins}
@@ -55,6 +57,15 @@ export const FinanceDashboardTab: React.FC<Props> = ({
           </Button>
         }
       />
+    );
+  }
+
+  if (!dashboard) {
+    return (
+      <div className="space-y-4 py-2">
+        <div className="h-64 animate-pulse rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950" />
+        <div className="h-48 animate-pulse rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950" />
+      </div>
     );
   }
 
@@ -101,20 +112,20 @@ export const FinanceDashboardTab: React.FC<Props> = ({
 
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-5">
         <div className="xl:col-span-3 min-w-0">
-          <MonthlyRevenueChart data={dashboard.monthly} year={year} />
+          <MonthlyRevenueChart data={dashboard.monthly ?? []} year={year} />
         </div>
         <div className="xl:col-span-2 min-w-0">
-          <RevenueByLawyerChart data={dashboard.revenue_by_lawyer} />
+          <RevenueByLawyerChart data={dashboard.revenue_by_lawyer ?? []} />
         </div>
       </div>
 
       {tvaStatus ? <TVAStatusWidget status={tvaStatus} /> : null}
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <FinanceAlerts alerts={dashboard.alerts} onOpenCase={onOpenCase} />
+        <FinanceAlerts alerts={dashboard.alerts} onOpenCase={onOpenCase} onMutated={onAlertsMutated} />
         <div className="rounded-xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-950 p-4 shadow-sm">
           <h3 className="mb-3 text-sm font-semibold text-slate-900 dark:text-white">{t.finance.recentMovements}</h3>
-          <div className="overflow-x-auto">
+          <div className="hidden overflow-x-auto sm:block">
             <table className="w-full text-start text-[12px]">
               <thead>
                 <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-500">
@@ -149,8 +160,8 @@ export const FinanceDashboardTab: React.FC<Props> = ({
                         >
                           {row.kind === 'PAIEMENT'
                             ? t.finance.txKinds.PAIEMENT
-                            : row.kind === 'HONORAIRE'
-                              ? t.finance.txKinds.HONORAIRE
+                            : row.kind === 'FACTURE' || row.kind === 'HONORAIRE'
+                              ? t.finance.txKinds.FACTURE
                               : row.kind}
                         </span>
                       </td>
@@ -160,6 +171,38 @@ export const FinanceDashboardTab: React.FC<Props> = ({
                 )}
               </tbody>
             </table>
+          </div>
+          <div className="space-y-2 sm:hidden">
+            {tx.length === 0 ? (
+              <p className="py-6 text-center text-[13px] text-slate-500">{t.finance.noMovements}</p>
+            ) : (
+              tx.map((row) => (
+                <div key={row.id} className="rounded-lg border border-slate-100 px-3 py-2.5 dark:border-slate-800">
+                  <div className="flex items-start justify-between gap-2">
+                    <p className="text-[13px] font-medium text-slate-900 dark:text-white">{row.client_name}</p>
+                    <p className="shrink-0 text-[13px] font-semibold tabular-nums">{formatMAD(row.amount, lang)}</p>
+                  </div>
+                  <p className="mt-0.5 font-mono text-[11px] text-slate-500">{row.case_reference}</p>
+                  <div className="mt-1.5 flex items-center justify-between gap-2">
+                    <span
+                      className={cn(
+                        'inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold uppercase',
+                        row.kind === 'PAIEMENT'
+                          ? 'bg-emerald-500/15 text-emerald-800 dark:text-emerald-300'
+                          : 'bg-blue-500/15 text-blue-800 dark:text-blue-300'
+                      )}
+                    >
+                      {row.kind === 'PAIEMENT'
+                        ? t.finance.txKinds.PAIEMENT
+                        : row.kind === 'FACTURE' || row.kind === 'HONORAIRE'
+                          ? t.finance.txKinds.FACTURE
+                          : row.kind}
+                    </span>
+                    <span className="text-[11px] tabular-nums text-slate-500">{row.date}</span>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
           <div className="mt-3 text-end">
             <button

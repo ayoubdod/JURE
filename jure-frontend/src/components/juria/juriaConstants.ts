@@ -1,5 +1,18 @@
 import type { LucideIcon } from 'lucide-react';
-import { FileSearch, MessageSquare, PenLine, Search } from 'lucide-react';
+import {
+  Building2,
+  ClipboardList,
+  FileSearch,
+  FileSignature,
+  FileText,
+  Gavel,
+  Mail,
+  MessageSquare,
+  PenLine,
+  Scale,
+  Search,
+  UserRound,
+} from 'lucide-react';
 import type { JuriaMode } from '@/types/juria';
 
 export function juriaModeVisual(mode: string | undefined) {
@@ -94,16 +107,16 @@ export type DocumentDraftTypeId =
 export const DOCUMENT_DRAFT_TYPES: {
   id: DocumentDraftTypeId;
   apiType: string;
-  icon: string;
+  Icon: LucideIcon;
 }[] = [
-  { id: 'bail', apiType: 'CONTRAT_BAIL', icon: '📄' },
-  { id: 'mise_en_demeure', apiType: 'MISE_EN_DEMEURE', icon: '✉️' },
-  { id: 'statuts_sarl', apiType: 'STATUTS_SARL', icon: '🏢' },
-  { id: 'procuration', apiType: 'PROCURATION', icon: '👤' },
-  { id: 'requete', apiType: 'REQUETE', icon: '⚖️' },
-  { id: 'contrat_travail', apiType: 'CONTRAT_TRAVAIL', icon: '📋' },
-  { id: 'conclusions', apiType: 'CONCLUSIONS', icon: '📑' },
-  { id: 'autre', apiType: 'AUTRE', icon: '🔄' },
+  { id: 'bail', apiType: 'CONTRAT_BAIL', Icon: FileSignature },
+  { id: 'mise_en_demeure', apiType: 'MISE_EN_DEMEURE', Icon: Mail },
+  { id: 'statuts_sarl', apiType: 'STATUTS_SARL', Icon: Building2 },
+  { id: 'procuration', apiType: 'PROCURATION', Icon: UserRound },
+  { id: 'requete', apiType: 'REQUETE', Icon: Scale },
+  { id: 'contrat_travail', apiType: 'CONTRAT_TRAVAIL', Icon: ClipboardList },
+  { id: 'conclusions', apiType: 'CONCLUSIONS', Icon: Gavel },
+  { id: 'autre', apiType: 'AUTRE', Icon: FileText },
 ];
 
 export function splitJuriaSources(content: string): { body: string; sources: string[] } {
@@ -135,6 +148,21 @@ export function splitJuriaAdvisory(content: string): { body: string; advisory: s
     }
   }
   return { body: body.join('\n').trim(), advisory: note.join(' ').trim() };
+}
+
+/** Strip markdown markers from act text for plain lawyer-ready display. */
+export function stripActMarkdown(text: string): string {
+  let out = text || '';
+  out = out.replace(/^[ \t]*#{1,6}[ \t]*/gm, '');
+  out = out.replace(/^\s*-{3,}\s*$/gm, '');
+  out = out.replace(/\*\*\*(.+?)\*\*\*/gs, '$1');
+  out = out.replace(/\*\*(.+?)\*\*/gs, '$1');
+  out = out.replace(/__(.+?)__/gs, '$1');
+  out = out.replace(/(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)/gs, '$1');
+  out = out.replace(/\*\*/g, '').replace(/__/g, '');
+  out = out.replace(/[*#`~]+/g, '');
+  out = out.replace(/\n{3,}/g, '\n\n');
+  return out.trim();
 }
 
 export function draftTypeLabel(

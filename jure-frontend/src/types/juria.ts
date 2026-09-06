@@ -135,6 +135,7 @@ export interface JuriaProject {
   is_simple?: boolean;
   member_count?: number;
   thread_count?: number;
+  message_count?: number;
   created_at: string;
   updated_at: string;
   archived_at?: string | null;

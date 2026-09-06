@@ -1,5 +1,5 @@
-import React, { useCallback, useEffect, useState } from 'react';
-import { Search, RotateCcw } from 'lucide-react';
+import React, { useCallback, useEffect, useLayoutEffect, useState, type ReactNode } from 'react';
+import { useNavigate } from 'react-router';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -10,8 +10,16 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { PaymentTable } from '@/components/finance/tables/PaymentTable';
-import { getPayments } from '@/services/finance/api';
-import { useAppTranslation } from '@/i18n';
+import { FilterField } from '@/components/common/MobileFilterSheet';
+import { FinanceListToolbar } from '@/components/finance/FinanceListToolbar';
+import { useFinanceListView } from '@/components/finance/FinanceViewToggle';
+import { PaymentDetailPanel } from '@/components/finance/panel/PaymentDetailPanel';
+import { deletePayment, getPayments, parseFinanceListResponse } from '@/services/finance/api';
+import { navigateToCaseById } from '@/lib/caseRoutes';
+import { useToast } from '@/hooks/use-toast';
+import { localizeAxiosPayload, useAppTranslation } from '@/i18n';
+import { useDebounce } from '@/hooks/use-debounce';
+import { isAxiosError } from 'axios';
 
 const METHOD_OPTS: API.FinancePaymentMethod[] = [
   'CASH',
@@ -21,8 +29,12 @@ const METHOD_OPTS: API.FinancePaymentMethod[] = [
   'OTHER',
 ];
 
-export const FinancePaymentsTab: React.FC = () => {
-  const { t, tf } = useAppTranslation();
+export const FinancePaymentsTab: React.FC<{
+  onToolbarChange?: (node: ReactNode | null) => void;
+}> = ({ onToolbarChange }) => {
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const { t, tf, lang } = useAppTranslation();
   const [rows, setRows] = useState<API.FinancePaymentListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
@@ -34,6 +46,9 @@ export const FinancePaymentsTab: React.FC = () => {
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
   const [search, setSearch] = useState('');
+  const debouncedSearch = useDebounce(search, 350);
+  const [view, setView] = useFinanceListView('jure.finance.payments.view');
+  const [viewRow, setViewRow] = useState<API.FinancePaymentListItem | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -43,14 +58,14 @@ export const FinancePaymentsTab: React.FC = () => {
         client: client || undefined,
         date_from: from || undefined,
         date_to: to || undefined,
-        search: search || undefined,
+        search: debouncedSearch.trim() || undefined,
         page,
         page_size: pageSize,
       });
-      const d = res.data;
-      setRows(d.results ?? []);
-      setTotalCount(d.count ?? 0);
-      setTotalPages(Math.max(1, d.last_page ?? 1));
+      const { results, count, lastPage } = parseFinanceListResponse<API.FinancePaymentListItem>(res.data);
+      setRows(results);
+      setTotalCount(count);
+      setTotalPages(lastPage);
     } catch {
       setRows([]);
       setTotalCount(0);
@@ -58,23 +73,44 @@ export const FinancePaymentsTab: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [page, pageSize, method, client, from, to, search]);
+  }, [page, pageSize, method, client, from, to, debouncedSearch]);
 
   useEffect(() => {
     load();
   }, [load]);
 
-  const hasFilters = !!(method || client.trim() || from || to || search.trim());
+  const extraFilterCount = [method, client.trim(), from, to].filter(Boolean).length;
 
   const start = totalCount === 0 ? 0 : (page - 1) * pageSize + 1;
   const end = totalCount === 0 ? 0 : Math.min(page * pageSize, totalCount);
 
-  return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-end gap-2 rounded-xl border border-slate-200/90 bg-white p-3 dark:border-slate-800 dark:bg-slate-950">
-        <div className="min-w-[140px]">
-          <Select value={method || 'all'} onValueChange={(v) => setMethod(v === 'all' ? '' : v)}>
-            <SelectTrigger className="h-10">
+  useLayoutEffect(() => {
+    if (!onToolbarChange) return;
+    onToolbarChange(
+      <FinanceListToolbar
+        search={search}
+        onSearchChange={setSearch}
+        filterCount={extraFilterCount}
+        onReset={() => {
+          setMethod('');
+          setClient('');
+          setFrom('');
+          setTo('');
+          setSearch('');
+          setPage(1);
+        }}
+        view={view}
+        onViewChange={setView}
+      >
+        <FilterField label={t.finance.filters.method}>
+          <Select
+            value={method || 'all'}
+            onValueChange={(v) => {
+              setMethod(v === 'all' ? '' : v);
+              setPage(1);
+            }}
+          >
+            <SelectTrigger className="h-9 w-full">
               <SelectValue placeholder={t.finance.filters.method} />
             </SelectTrigger>
             <SelectContent>
@@ -86,48 +122,70 @@ export const FinancePaymentsTab: React.FC = () => {
               ))}
             </SelectContent>
           </Select>
-        </div>
-        <Input
-          className="h-10 max-w-[160px]"
-          placeholder={t.finance.filters.client}
-          value={client}
-          onChange={(e) => setClient(e.target.value)}
-        />
-        <Input className="h-10 max-w-[150px]" type="date" value={from} onChange={(e) => setFrom(e.target.value)} />
-        <Input className="h-10 max-w-[150px]" type="date" value={to} onChange={(e) => setTo(e.target.value)} />
-        <div className="relative min-w-[180px] flex-1">
-          <Search className="absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+        </FilterField>
+        <FilterField label={t.finance.filters.client}>
           <Input
-            className="h-10 ps-9"
-            placeholder={t.finance.filters.search}
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-        </div>
-        <Button type="button" className="h-10 bg-jure-600 hover:bg-jure-700" onClick={() => load()}>
-          {t.finance.filters.filter}
-        </Button>
-        {hasFilters ? (
-          <Button
-            type="button"
-            variant="outline"
-            className="h-10"
-            onClick={() => {
-              setMethod('');
-              setClient('');
-              setFrom('');
-              setTo('');
-              setSearch('');
+            className="h-9 w-full"
+            placeholder={t.finance.filters.client}
+            value={client}
+            onChange={(e) => {
+              setClient(e.target.value);
               setPage(1);
             }}
-          >
-            <RotateCcw className="me-1.5 h-4 w-4" />
-            {t.finance.filters.reset}
-          </Button>
-        ) : null}
-      </div>
+          />
+        </FilterField>
+        <FilterField label={t.finance.filters.from}>
+          <Input
+            className="h-9 w-full"
+            type="date"
+            value={from}
+            onChange={(e) => {
+              setFrom(e.target.value);
+              setPage(1);
+            }}
+          />
+        </FilterField>
+        <FilterField label={t.finance.filters.to}>
+          <Input
+            className="h-9 w-full"
+            type="date"
+            value={to}
+            onChange={(e) => {
+              setTo(e.target.value);
+              setPage(1);
+            }}
+          />
+        </FilterField>
+      </FinanceListToolbar>
+    );
+    return () => onToolbarChange(null);
+  }, [onToolbarChange, search, extraFilterCount, view, method, client, from, to, lang]);
 
-      <PaymentTable rows={rows} loading={loading} onView={() => {}} onDelete={() => {}} />
+  const handleDelete = async (row: API.FinancePaymentListItem) => {
+    if (!window.confirm(t.finance.toasts.deletePaymentConfirm)) return;
+    try {
+      await deletePayment(row.case_id, row.id);
+      toast({ title: t.finance.toasts.paymentDeleted });
+      if (viewRow?.id === row.id) setViewRow(null);
+      load();
+    } catch (err) {
+      let msg = t.finance.toasts.deleteFailed;
+      if (isAxiosError(err)) {
+        msg = localizeAxiosPayload(err.response?.data, t.finance.toasts.deleteFailed);
+      }
+      toast({ title: t.finance.toasts.errorTitle, description: msg, variant: 'destructive' });
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      <PaymentTable
+        rows={rows}
+        loading={loading}
+        view={view}
+        onView={(row) => setViewRow(row)}
+        onDelete={handleDelete}
+      />
 
       {!loading && totalCount > 0 ? (
         <div className="flex flex-col items-center justify-between gap-3 border-t border-slate-200 pt-3 text-sm text-slate-600 dark:border-slate-800 dark:text-slate-400 sm:flex-row">
@@ -158,6 +216,21 @@ export const FinancePaymentsTab: React.FC = () => {
           </div>
         </div>
       ) : null}
+      <PaymentDetailPanel
+        paymentId={viewRow?.id ?? null}
+        preview={viewRow}
+        open={viewRow != null}
+        onOpenChange={(o) => {
+          if (!o) setViewRow(null);
+        }}
+        onNavigateCase={(caseId) => {
+          void navigateToCaseById(navigate, caseId);
+        }}
+        onDeleted={() => {
+          setViewRow(null);
+          load();
+        }}
+      />
     </div>
   );
 };

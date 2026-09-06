@@ -22,7 +22,7 @@ from juria.services.juria_api_service import (
     generate_conversation_title,
     send_chat_message,
 )
-from juria.services.draft_cleanup import extract_advisory_note, ungrounded_advisory
+from juria.services.draft_cleanup import clean_draft_content, extract_advisory_note, ungrounded_advisory
 from juria.services.retrieval import ensure_file_extracted
 from juria.services.sources import connect_upload
 from juria.services.titles import fallback_title_from_message, is_auto_title
@@ -111,14 +111,18 @@ def finalize_assistant_payload(
     mode: str = "CHAT",
 ) -> tuple[str, dict]:
     """Strip embedded advisory into analysis; inject coral-banner note when ungrounded."""
-    body, note = extract_advisory_note(content or "")
+    mode_u = (mode or "").upper()
+    raw = content or ""
+    if mode_u == "DOCUMENT_DRAFTING":
+        raw = clean_draft_content(raw)
+    body, note = extract_advisory_note(raw)
     out = dict(analysis or {})
     if note:
         out["advisory_note"] = note
     elif (
         not retrieved
         and not out.get("advisory_note")
-        and (mode or "").upper() in ("CONTRACT_ANALYSIS", "LEGAL_RESEARCH", "DOCUMENT_DRAFTING")
+        and mode_u in ("CONTRACT_ANALYSIS", "LEGAL_RESEARCH", "DOCUMENT_DRAFTING")
     ):
         out["advisory_note"] = ungrounded_advisory(language)
     return body, out

@@ -8,6 +8,15 @@ from finance.models import Invoice, Payment
 from finance.services.invoice_totals_service import invoice_amount_outstanding
 
 
+def _payment_client_display_name(client) -> str:
+    if client is None:
+        return ''
+    user = getattr(client, 'user', None)
+    if user is not None:
+        return f'{user.first_name} {user.last_name}'.strip()
+    return ''
+
+
 class PaymentSerializer(serializers.ModelSerializer):
     invoice = serializers.SerializerMethodField()
     created_by = serializers.PrimaryKeyRelatedField(read_only=True)
@@ -47,6 +56,22 @@ class PaymentSerializer(serializers.ModelSerializer):
         data = super().to_representation(instance)
         if 'amount' in data and data['amount'] is not None:
             data['amount'] = float(data['amount'])
+        case = instance.case
+        data['case_id'] = instance.case_id
+        data['case_reference'] = case.reference if case else ''
+        data['client_name'] = _payment_client_display_name(getattr(instance, 'client', None))
+        data['date'] = data.get('payment_date')
+        inv = data.get('invoice')
+        if isinstance(inv, dict):
+            data['linked_invoice_id'] = inv.get('id')
+            data['linked_invoice_number'] = inv.get('invoice_number')
+        else:
+            data['linked_invoice_id'] = None
+            data['linked_invoice_number'] = None
+        created = instance.created_by
+        data['created_by_name'] = (
+            f'{created.first_name} {created.last_name}'.strip() if created else None
+        )
         return data
 
 

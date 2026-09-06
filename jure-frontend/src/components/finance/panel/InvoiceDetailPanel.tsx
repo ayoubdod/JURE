@@ -66,7 +66,7 @@ export const InvoiceDetailPanel: React.FC<Props> = ({
         setData(null);
       })
       .finally(() => setLoading(false));
-  }, [open, invoiceId, toast, t]);
+  }, [open, invoiceId]);
 
   const totalPaid = data?.payments?.reduce((s, p) => s + p.amount, 0) ?? 0;
   const remaining = data ? data.amount_ttc - totalPaid : 0;
@@ -134,7 +134,8 @@ export const InvoiceDetailPanel: React.FC<Props> = ({
       <SheetContent
         side="end"
         className={cn(
-          'flex w-full flex-col gap-0 border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 p-0 sm:max-w-md',
+          'flex w-[min(calc(100vw-1.5rem),28rem)] flex-col gap-0 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 p-0 shadow-xl dark:border-slate-800 dark:bg-slate-950 sm:max-w-md',
+          '!inset-y-3 !end-3 !h-auto max-h-[calc(100dvh-1.5rem)]',
           '[&>button]:hidden'
         )}
       >
