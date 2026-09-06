@@ -45,7 +45,7 @@ Ruff is configured in `pyproject.toml`. It is **not** a merge gate yet (existing
 - New data access: add to `src/services/…`, not ad-hoc `fetch` in a page.
 - Forms: **yup** is what existing forms use. Do not introduce new **zod** schemas until yup is gone in a dedicated PR.
 - Dates: use whichever library the file already uses (`date-fns` or `dayjs`). Do not add a third.
-- TanStack Query is wrapped in `App.tsx` but **not used** (`useQuery` / `useMutation` are unused). **Decision: keep axios + `services/` as the only data-access style.** Do not adopt Query incrementally beside existing fetches. Removing `QueryClientProvider` / the dependency is allowed only in a dedicated PR that deletes the unused wrapper end-to-end — not as drive-by cleanup.
+- Data access: axios + `src/services/…` only. Do not add TanStack Query (or another fetching library) beside that.
 - Zustand for client state that spans routes; React Context for purely visual concerns (toasts, shortcuts).
 
 TypeScript: `strict` / `noImplicitAny` remain **false** so current sources compile. New `src/services/` code should still be typed without `any`. `@typescript-eslint/no-unused-vars` stays off so `npm run lint` matches today’s baseline.
