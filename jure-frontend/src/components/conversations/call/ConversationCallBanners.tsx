@@ -52,7 +52,7 @@ export const ActiveCallBanner: React.FC<{
     >
       <span className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-600 text-white">
         <Icon className="h-4 w-4" aria-hidden />
-        <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full bg-emerald-400 ring-2 ring-emerald-50 dark:ring-emerald-950 animate-pulse" />
+        <span className="absolute -end-0.5 -top-0.5 h-2.5 w-2.5 rounded-full bg-emerald-400 ring-2 ring-emerald-50 dark:ring-emerald-950 animate-pulse" />
       </span>
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-semibold tracking-tight">{title}</p>
@@ -118,7 +118,7 @@ export const MissedCallMessage: React.FC<{
           type="button"
           onClick={onDismiss}
           aria-label={t.notifications.dismiss}
-          className="absolute -right-1.5 -top-1.5 inline-flex h-6 w-6 items-center justify-center rounded-full border border-rose-200/80 bg-white text-rose-500 opacity-0 shadow-sm transition group-hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400 dark:border-rose-800 dark:bg-slate-900 dark:text-rose-300"
+          className="absolute -end-1.5 -top-1.5 inline-flex h-6 w-6 items-center justify-center rounded-full border border-rose-200/80 bg-white text-rose-500 opacity-0 shadow-sm transition group-hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400 dark:border-rose-800 dark:bg-slate-900 dark:text-rose-300"
         >
           <X className="h-3 w-3" />
         </button>

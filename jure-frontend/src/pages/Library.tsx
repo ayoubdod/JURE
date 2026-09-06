@@ -21,7 +21,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { useAppTranslation } from '@/i18n';
+import { localizeApiMessage, useAppTranslation } from '@/i18n';
 import { cn } from '@/lib/utils';
 import { isAxiosError } from 'axios';
 import { devError } from '@/utils/devLog';
@@ -144,7 +144,7 @@ const Library = () => {
         setRecent([]);
         setError(
           isAxiosError(err)
-            ? err.response?.data?.detail || t.library.toasts.loadErrorFallback
+            ? localizeApiMessage(err.response?.data?.detail, t.library.toasts.loadErrorFallback)
             : t.library.toasts.loadErrorFallback
         );
       })
@@ -206,7 +206,7 @@ const Library = () => {
         toast({
           title: t.library.toasts.copyFailedTitle,
           description: isAxiosError(err)
-            ? err.response?.data?.detail || t.library.toasts.copyFailedDesc
+            ? localizeApiMessage(err.response?.data?.detail, t.library.toasts.copyFailedDesc)
             : t.library.toasts.copyFailedDesc,
           variant: 'destructive',
         });

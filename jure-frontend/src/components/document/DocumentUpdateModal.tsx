@@ -375,19 +375,10 @@ const DocumentUpdateModal = forwardRef<DocumentUpdateModalRef, DocumentUpdateMod
           }
         }
       } else {
-        // Safer error message extraction
-        let errorMessage = m.unexpectedError;
-        if (err && typeof err === 'object') {
-          if ('message' in err && typeof err.message === 'string') {
-            errorMessage = err.message;
-          } else if ('toString' in err && typeof err.toString === 'function') {
-            errorMessage = err.toString();
-          }
-        }
         devError('Non-Axios error:', err);
         toast({
           title: t.common.error,
-          description: errorMessage,
+          description: m.unexpectedError,
           variant: "destructive",
         });
       }

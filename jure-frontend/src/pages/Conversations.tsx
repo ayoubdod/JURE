@@ -42,7 +42,7 @@ import { cn } from '@/lib/utils';
 import { navigateToCaseById, caseWorkspacePath } from '@/lib/caseRoutes';
 import { apiGetCase } from '@/services/case/api';
 import type { LinkedMatterTab } from '@/components/chat/LinkedMatterCard';
-import { useAppTranslation } from '@/i18n';
+import { localizeApiMessage, useAppTranslation } from '@/i18n';
 import { useShortcutAction } from '@/context/ShortcutsContext';
 import {
   GroupCallParticipantPicker,
@@ -792,8 +792,12 @@ const ConversationsPage: React.FC = () => {
             const data = err.response?.data as Record<string, unknown> | undefined;
             const detail =
               data && typeof data === 'object'
-                ? Object.entries(data)
-                    .map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(', ') : String(v)}`)
+                ? Object.values(data)
+                    .map((v) => {
+                      const raw = Array.isArray(v) ? String(v[0]) : String(v);
+                      return localizeApiMessage(raw, raw);
+                    })
+                    .filter(Boolean)
                     .join(' ')
                 : '';
             toast({

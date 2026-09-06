@@ -83,7 +83,7 @@ interface SheetContentProps
 const SheetContent = React.forwardRef<
   React.ElementRef<typeof SheetPrimitive.Content>,
   SheetContentProps
->(({ side = "right", className, children, overlayClassName, container, dir, ...props }, ref) => {
+>(({ side = "end", className, children, overlayClassName, container, dir, ...props }, ref) => {
   const { t } = useAppTranslation()
   return (
   <SheetPortal container={container ?? undefined}>

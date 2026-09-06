@@ -85,7 +85,104 @@ const PHRASE_TO_CODE: Record<string, string> = {
   'client is not in this cabinet.': 'CLIENT_NOT_IN_CABINET',
   'user must belong to a cabinet to create documents.': 'LIB_CREATE_CABINET',
   'this resource is private to another cabinet.': 'LIB_PRIVATE_CABINET',
+  'user must belong to a cabinet to add documents.': 'LIB_ADD_CABINET',
+  'this field is required.': 'FIELD_REQUIRED',
+  'this field may not be blank.': 'FIELD_BLANK',
+  'this field may not be null.': 'FIELD_NULL',
+  'enter a valid email address.': 'INVALID_EMAIL',
+  'a valid integer is required.': 'INVALID_INTEGER',
+  'this list may not be empty.': 'LIST_EMPTY',
+  'user not found.': 'USER_NOT_FOUND',
+  'case not found.': 'CASE_NOT_FOUND',
+  'you do not have access to this case.': 'CASE_NO_ACCESS',
+  'task not found.': 'TASK_NOT_FOUND',
+  'you do not have access to this task.': 'TASK_NO_ACCESS',
+  'appointment not found.': 'APPOINTMENT_NOT_FOUND',
+  'you do not have access to this appointment.': 'APPOINTMENT_NO_ACCESS',
+  'sharedcaseid is required for shared_case messages.': 'SHARE_CASE_ID_REQUIRED',
+  'sharedtaskid is required for shared_task messages.': 'SHARE_TASK_ID_REQUIRED',
+  'sharedappointmentid is required for shared_appointment messages.': 'SHARE_APPT_ID_REQUIRED',
+  'exactly one of sharedcaseid, sharedtaskid, or sharedappointmentid must be set for a shared message.':
+    'SHARE_EXACTLY_ONE',
+  'text messages cannot include sharedcaseid, sharedtaskid, or sharedappointmentid.': 'SHARE_TEXT_NO_IDS',
+  'invalid message_type.': 'INVALID_MESSAGE_TYPE',
+  'this password is too common.': 'PWD_TOO_COMMON',
+  'this password is too short. it must contain at least 8 characters.': 'PWD_TOO_SHORT',
+  'this password is entirely numeric.': 'PWD_NUMERIC',
+  "the two password fields didn't match.": 'PWD_MISMATCH',
+  'address is required for in-person consultations.': 'CONSULT_ADDRESS',
+  'a phone number is required for phone consultations.': 'CONSULT_PHONE',
+  'a video conference link is required for video consultations.': 'CONSULT_VIDEO',
+  'enter a valid url (https://…).': 'INVALID_HTTPS_URL',
+  'specify the legal domain when other is selected.': 'CONSULT_OTHER_DOMAIN',
+  'duration must be a number of minutes.': 'DURATION_NUMBER',
+  'duration must be between 1 and 1440 minutes.': 'DURATION_RANGE',
+  'duration or durationminutes is required.': 'DURATION_REQUIRED',
+  'court specialty is required.': 'COURT_SPECIALTY',
+  'please select a valid chamber for the selected jurisdiction.': 'INVALID_CHAMBER',
+  'filingdate must be before or equal to firsthearingdate.': 'FILING_BEFORE_HEARING',
+  'firsthearingdate must be before or equal to nexthearingdate.': 'HEARING_ORDER',
+  'startdate must be before or equal to duedate.': 'START_BEFORE_DUE',
+  'completiondate must be on or after startdate.': 'COMPLETION_AFTER_START',
+  'casetype must be one of: consultation, litigation, administrative.': 'CASE_TYPE_ENUM',
+  'must be one of: consultation, litigation, administrative.': 'CASE_TYPE_ENUM',
+  'case_specific_data must be an object for consultation cases.': 'CSD_OBJECT_CONSULTATION',
+  'case_specific_data must be an object for litigation cases.': 'CSD_OBJECT_LITIGATION',
+  'case_specific_data must be an object for administrative cases.': 'CSD_OBJECT_ADMIN',
+  'cannot assign case to user from different cabinet.': 'ASSIGNEE_WRONG_CABINET',
+  'you must accept the terms and conditions to create an account.': 'ACCEPT_TERMS',
+  'you must accept data processing consent to create an account.': 'ACCEPT_DATA',
+  'trade name is required.': 'TRADE_NAME_REQUIRED',
+  'practice type is required.': 'PRACTICE_TYPE_REQUIRED',
+  'jurisdiction is required.': 'JURISDICTION_REQUIRED',
+  'business address is required.': 'BUSINESS_ADDRESS_REQUIRED',
+  'team size must be at least 1.': 'TEAM_SIZE_MIN',
+  'amount cannot be negative.': 'AMOUNT_NEGATIVE',
+  'provide planned_amount, amount or amount_expected.': 'FEE_AMOUNT_REQUIRED',
+  'planned_amount, amount and amount_expected cannot both be set to different values.':
+    'FEE_AMOUNT_CONFLICT',
+  'lawyer must belong to the same cabinet as the case.': 'LAWYER_WRONG_CABINET',
+  'case must have a client to create an invoice.': 'CASE_NEEDS_CLIENT_INVOICE',
+  'provide amount_ht or at least one invoice item.': 'INVOICE_AMOUNT_OR_ITEMS',
+  'case must belong to a cabinet to create an invoice.': 'INVOICE_NEEDS_CABINET',
+  'exact name match': 'CONFLICT_EXACT_NAME',
+  'normalized name match': 'CONFLICT_NORMALIZED',
+  'same name tokens (order-independent)': 'CONFLICT_TOKENS',
+  'normalized organization-name match': 'CONFLICT_ORG_NORM',
+  'partial name match': 'CONFLICT_PARTIAL',
+  'shared name tokens': 'CONFLICT_SHARED_TOKENS',
+  'invalid case id.': 'INVALID_CASE_ID',
+  'case not found or not accessible.': 'CASE_NOT_FOUND_OR_INACCESSIBLE',
+  'link a case before attaching case documents.': 'LINK_CASE_BEFORE_DOCS',
+  'client not found.': 'CLIENT_NOT_FOUND',
 };
+
+const NAME_SIMILARITY_RE = /^name similarity:\s*(\d+)%$/i;
+const ORG_SIMILARITY_RE = /^organization-name similarity:\s*(\d+)%$/i;
+const CASE_REQUIRES_RE = /^(consultation|litigation|administrative) case requires:\s*(.+)$/i;
+const MUST_BE_ONE_RE = /^(\S+) must be one of:\s*(.+)$/i;
+
+function matchPattern(lang: Lang, normalized: string): string | null {
+  const t = getMessages(lang);
+  const codes = t.errors.codes;
+  const nameSim = NAME_SIMILARITY_RE.exec(normalized);
+  if (nameSim && codes.NAME_SIMILARITY) {
+    return interpolate(codes.NAME_SIMILARITY, { percent: nameSim[1] });
+  }
+  const orgSim = ORG_SIMILARITY_RE.exec(normalized);
+  if (orgSim && codes.ORG_NAME_SIMILARITY) {
+    return interpolate(codes.ORG_NAME_SIMILARITY, { percent: orgSim[1] });
+  }
+  const requires = CASE_REQUIRES_RE.exec(normalized);
+  if (requires && codes.CASE_REQUIRES) {
+    return interpolate(codes.CASE_REQUIRES, { kind: requires[1].toUpperCase(), fields: requires[2] });
+  }
+  const mustOne = MUST_BE_ONE_RE.exec(normalized);
+  if (mustOne && codes.FIELD_MUST_BE_ONE_OF) {
+    return interpolate(codes.FIELD_MUST_BE_ONE_OF, { field: mustOne[1], choices: mustOne[2] });
+  }
+  return null;
+}
 
 /**
  * Map backend error codes / known English messages to localized copy.
@@ -106,6 +203,9 @@ export function translateApiError(
   const mapped =
     PHRASE_TO_CODE[normalized.toLowerCase()] ?? PHRASE_TO_CODE[normalized];
   if (mapped && t.errors.codes[mapped]) return t.errors.codes[mapped];
+
+  const patterned = matchPattern(lang, normalized);
+  if (patterned) return patterned;
 
   return fallback ?? t.errors.generic;
 }

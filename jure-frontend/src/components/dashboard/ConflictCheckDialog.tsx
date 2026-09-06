@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useState } from 'react';
 import { Loader2, Search, ShieldAlert, ExternalLink } from 'lucide-react';
-import { useAppTranslation } from '@/i18n';
+import { localizeApiMessage, useAppTranslation } from '@/i18n';
 import { useNavigate } from 'react-router';
 import { navigateToCaseById } from '@/lib/caseRoutes';
 import { isAxiosError } from 'axios';
@@ -36,8 +36,13 @@ function MatchCard({
     status: string;
     match: string;
     viewMatter: string;
+    matterFallback: string;
   };
 }) {
+  const reason = localizeApiMessage(match.match_reason, match.match_reason);
+  const matterLabel = match.matter_reference
+    ? `#${match.matter_reference}`
+    : labels.matterFallback.replace('{id}', String(match.matter));
   return (
     <div className="rounded-lg border border-border/80 p-3 space-y-1.5 bg-background">
       <div className="flex items-start justify-between gap-2">
@@ -46,14 +51,14 @@ function MatchCard({
           {match.match_type_label || match.match_type}
         </span>
       </div>
-      <div className="text-xs text-muted-foreground">{match.match_reason}</div>
+      <div className="text-xs text-muted-foreground">{reason}</div>
       <div className="text-xs">
         <span className="text-muted-foreground">{labels.role}: </span>
         {match.role_label || match.role}
       </div>
       <div className="text-xs">
         <span className="font-medium">
-          {match.matter_reference ? `#${match.matter_reference}` : `Matter #${match.matter}`}
+          {matterLabel}
         </span>
         {match.matter_title ? ` — ${match.matter_title}` : null}
       </div>
@@ -125,8 +130,8 @@ export default function ConflictCheckDialog({
       if (isAxiosError(err)) {
         const detail = err.response?.data?.detail;
         const queryErr = err.response?.data?.query;
-        if (typeof detail === 'string') setError(detail);
-        else if (Array.isArray(queryErr)) setError(String(queryErr[0]));
+        if (typeof detail === 'string') setError(localizeApiMessage(detail, m.errorGeneric));
+        else if (Array.isArray(queryErr)) setError(localizeApiMessage(String(queryErr[0]), m.errorGeneric));
         else if (err.response?.status === 403) setError(m.errorForbidden);
         else setError(m.errorGeneric);
       } else {
@@ -215,6 +220,7 @@ export default function ConflictCheckDialog({
                         status: m.statusLabel,
                         match: m.matchLabel,
                         viewMatter: m.viewMatter,
+                        matterFallback: m.matterFallback,
                       }}
                     />
                   ))}
@@ -236,6 +242,7 @@ export default function ConflictCheckDialog({
                         status: m.statusLabel,
                         match: m.matchLabel,
                         viewMatter: m.viewMatter,
+                        matterFallback: m.matterFallback,
                       }}
                     />
                   ))}

@@ -1,4 +1,5 @@
 import { AxiosError } from 'axios';
+import { localizeApiMessage } from '@/i18n/errors';
 
 /** Maps backend field names to form field names for display */
 const BACKEND_TO_FORM: Record<string, string> = {
@@ -70,18 +71,18 @@ export function getCaseValidationErrors(error: AxiosError): Record<string, strin
 
     if (key === 'case_specific_data') {
       if (Array.isArray(value) && value[0]) {
-        result['case_specific_data'] = String(value[0]);
+        result['case_specific_data'] = localizeApiMessage(String(value[0]), String(value[0]));
       } else if (value && typeof value === 'object' && !Array.isArray(value)) {
         const nested = value as Record<string, unknown>;
         for (const [nestedKey, nestedVal] of Object.entries(nested)) {
           const nestedMsg = extractMessage(nestedVal);
           const formKey = BACKEND_TO_FORM[nestedKey] ?? nestedKey;
-          if (nestedMsg) result[formKey] = nestedMsg;
+          if (nestedMsg) result[formKey] = localizeApiMessage(nestedMsg, nestedMsg);
         }
       }
     } else {
       const formKey = BACKEND_TO_FORM[key] ?? key;
-      result[formKey] = msg;
+      result[formKey] = localizeApiMessage(msg, msg);
     }
   }
   return result;

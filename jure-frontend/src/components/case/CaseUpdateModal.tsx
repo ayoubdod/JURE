@@ -17,7 +17,7 @@ import { isAxiosError } from 'axios';
 import { useToast } from '@/hooks/use-toast';
 import { devError } from '@/utils/devLog';
 import { CaseCategory, CaseStatus } from '@/utils/constants';
-import { useAppTranslation } from '@/i18n';
+import { localizeAxiosPayload, useAppTranslation } from '@/i18n';
 import { clientDisplayName } from '@/services/case/caseType';
 import {
   CREATE_CANCEL_CLASS,
@@ -136,23 +136,12 @@ const CaseUpdateModal = forwardRef<CaseUpdateModalRef, CaseUpdateModalProps>(({ 
         });
         if (keys[0]) document.getElementById(`${formId}-${keys[0]}`)?.focus();
 
-        let msg = m.toasts.updateFailed;
-        const d = err.response?.data as Record<string, unknown> | string | undefined;
-        if (typeof d === 'string') msg = d;
-        else if (d && typeof d === 'object' && !Array.isArray(d)) {
-          const detail = (d as { detail?: unknown }).detail;
-          if (typeof detail === 'string') msg = detail;
-          else if (Array.isArray(detail) && detail.length > 0) msg = String(detail[0]);
-          else {
-            const first = Object.entries(d).find(([, v]) => v != null);
-            if (first) {
-              const v = first[1];
-              msg = `${first[0]}: ${Array.isArray(v) ? String(v[0]) : String(v)}`;
-            }
-          }
-        }
         if (keys.length === 0) {
-          toast({ title: t.common.error, description: msg, variant: 'destructive' });
+          toast({
+            title: t.common.error,
+            description: localizeAxiosPayload(err.response?.data, m.toasts.updateFailed),
+            variant: 'destructive',
+          });
         }
       } else {
         toast({

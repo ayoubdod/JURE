@@ -3310,6 +3310,7 @@ export interface AppMessages {
       errorGeneric: string;
       errorForbidden: string;
       runFromMatter: string;
+      matterFallback: string;
     };
     deadlines: {
       title: string;
