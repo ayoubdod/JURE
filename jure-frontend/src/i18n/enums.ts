@@ -44,6 +44,8 @@ export function translateKnownEnum(lang: Lang, value: string | null | undefined)
     t.enums.deadlineEvent,
     t.enums.deadlineDurationUnit,
     t.enums.deadlineComputation,
+    t.enums.conflictMatchType,
+    t.enums.conflictRole,
     ...Object.values(t.cases.modal.options),
   ];
   for (const map of maps) {

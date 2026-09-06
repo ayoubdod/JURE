@@ -3,7 +3,6 @@ import { lazy, Suspense, type ComponentType, type ReactNode } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createBrowserRouter, RouterProvider, Navigate, Outlet, useSearchParams } from "react-router"; // ✅ keep react-router
 import { HelmetProvider } from "react-helmet-async";
 import { useTheme } from "@/hooks/useTheme";
@@ -76,10 +75,8 @@ const AppointmentsPage = lazyRoute(() => import("./pages/Appointments"));
 const Settings = lazyRoute(() => import("./pages/Settings"));
 const FinancePage = lazyRoute(() => import("./pages/finance/FinancePage"));
 const NotificationsPage = lazyRoute(() => import("./pages/notifications/NotificationsPage"));
-const EditTask = lazyRoute(() => import("./components/EditTask"));
+const EditTask = lazyRoute(() => import("./components/task/EditTask"));
 const Support = lazyRoute(() => import("./pages/Support"));
-
-const queryClient = new QueryClient();
 
 /** Public marketing page: no auth required, lazy-loaded. */
 const pub = (element: ReactNode) => (
@@ -298,13 +295,11 @@ const AppContent = () => {
 
   return (
     <HelmetProvider>
-      <QueryClientProvider client={queryClient}>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <RouterProvider router={router} />
-        </TooltipProvider>
-      </QueryClientProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <RouterProvider router={router} />
+      </TooltipProvider>
     </HelmetProvider>
   );
 };

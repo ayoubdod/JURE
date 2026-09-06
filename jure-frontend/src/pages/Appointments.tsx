@@ -2,8 +2,8 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 import { Plus, CalendarClock, Calendar, CalendarDays, CheckCircle2, XCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import ScheduleAppointmentDialog, { ScheduleAppointmentDialogRef } from '@/components/ScheduleAppointmentDialog';
-import AppointmentUpdateModal, { AppointmentUpdateModalRef } from '@/components/AppointmentUpdateModal';
+import ScheduleAppointmentDialog, { ScheduleAppointmentDialogRef } from '@/components/appointments/ScheduleAppointmentDialog';
+import AppointmentUpdateModal, { AppointmentUpdateModalRef } from '@/components/appointments/AppointmentUpdateModal';
 import { AppointmentDetailPanel } from '@/components/calendar/EmbeddedDetailPanels';
 import AppointmentToolbar, { type AppointmentFiltersValue } from '@/components/appointments/AppointmentToolbar';
 import AppointmentList, { type AppointmentViewMode } from '@/components/appointments/AppointmentList';
@@ -313,7 +313,7 @@ const AppointmentsPage: React.FC = () => {
                 {a.goToCalendar}
               </Button>
               <Button size="sm" className="h-9 px-3 text-[12px] font-semibold rounded-md shadow-sm shadow-primary/15" onClick={openCreate}>
-                <Plus className="w-4 h-4 mr-1.5" strokeWidth={2.5} />
+                <Plus className="w-4 h-4 me-1.5" strokeWidth={2.5} />
                 {a.newAppointment}
               </Button>
             </div>
@@ -349,7 +349,7 @@ const AppointmentsPage: React.FC = () => {
           isLoading={loading}
           onPageChange={setPage}
           onPageSizeChange={handlePageSize}
-          itemLabel={t.sidebar.appointment.toLowerCase()}
+          itemLabel={t.sidebar.appointment}
         />
       )}
 

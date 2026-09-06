@@ -1,5 +1,7 @@
 # Guide pour exécuter le projet Jure DRF
 
+English setup (canonical): see [README.md](README.md) and the repo-root [README](../README.md).
+
 ## Prérequis
 
 - Python 3.11 ou supérieur

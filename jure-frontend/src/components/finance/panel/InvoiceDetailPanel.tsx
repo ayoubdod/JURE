@@ -12,7 +12,7 @@ import {
 } from '@/services/finance/api';
 import { invoiceExonerationNote } from '@/components/finance/tva/TVAProgressBar';
 import { useToast } from '@/hooks/use-toast';
-import { useAppTranslation } from '@/i18n';
+import { formatDate, localizeAxiosPayload, useAppTranslation } from '@/i18n';
 import { isAxiosError } from 'axios';
 
 const statusClass: Record<API.FinanceInvoiceStatus, string> = {
@@ -22,12 +22,6 @@ const statusClass: Record<API.FinanceInvoiceStatus, string> = {
   PAID: 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300',
   OVERDUE: 'bg-red-500/15 text-red-700 dark:text-red-300',
   CANCELLED: 'bg-slate-500/10 text-slate-500 line-through',
-};
-
-const methodLabel: Record<API.FinancePaymentMethod, string> = {
-  CASH: 'Cash',
-  VIREMENT_BANCAIRE: 'Virement',
-  CHEQUE: 'Chèque',
 };
 
 type Props = {
@@ -49,7 +43,10 @@ export const InvoiceDetailPanel: React.FC<Props> = ({
   onInvoiceMutated,
 }) => {
   const { toast } = useToast();
-  const { enumLabel } = useAppTranslation();
+  const { t, tf, lang, enumLabel } = useAppTranslation();
+  const ct = t.finance.caseTab;
+  const toasts = t.finance.toasts;
+  const dateOpts = { month: 'short' as const, day: 'numeric' as const, year: 'numeric' as const };
   const [data, setData] = useState<API.FinanceInvoiceDetail | null>(null);
   const [loading, setLoading] = useState(false);
   const [pdfLoading, setPdfLoading] = useState(false);
@@ -65,15 +62,15 @@ export const InvoiceDetailPanel: React.FC<Props> = ({
     getInvoiceDetail(invoiceId)
       .then((res) => setData(res.data))
       .catch(() => {
-        toast({ title: 'Erreur', description: 'Impossible de charger la facture.', variant: 'destructive' });
+        toast({ title: t.common.error, description: t.finance.modals.updateInvoice.loadFailed, variant: 'destructive' });
         setData(null);
       })
       .finally(() => setLoading(false));
-  }, [open, invoiceId, toast]);
+  }, [open, invoiceId, toast, t]);
 
   const totalPaid = data?.payments?.reduce((s, p) => s + p.amount, 0) ?? 0;
   const remaining = data ? data.amount_ttc - totalPaid : 0;
-  const exonerationNote = data ? invoiceExonerationNote(data) : null;
+  const exonerationNote = data ? invoiceExonerationNote(data, ct.tvaExemptNote) : null;
   const tvaExempt = data != null && data.tva_applicable === false;
 
   const handleDownloadPdf = async () => {
@@ -82,13 +79,13 @@ export const InvoiceDetailPanel: React.FC<Props> = ({
     try {
       await downloadInvoicePdfFile(data.id, data.case_id);
     } catch (err) {
-      let msg = 'Impossible de télécharger le PDF.';
+      let msg = toasts.pdfDownloadFailed;
       if (isAxiosError(err)) {
         const st = err.response?.status;
-        if (st === 403) msg = 'Accès refusé (rôle requis).';
-        else if (st === 404) msg = 'Facture introuvable.';
+        if (st === 403) msg = toasts.accessDenied;
+        else if (st === 404) msg = toasts.invoiceNotFound;
       }
-      toast({ title: 'Erreur', description: msg, variant: 'destructive' });
+      toast({ title: t.common.error, description: msg, variant: 'destructive' });
     } finally {
       setPdfLoading(false);
     }
@@ -100,13 +97,13 @@ export const InvoiceDetailPanel: React.FC<Props> = ({
     try {
       await previewInvoicePdfInNewTab(data.id, data.case_id);
     } catch (err) {
-      let msg = 'Impossible d’ouvrir l’aperçu.';
+      let msg = toasts.pdfPreviewFailed;
       if (isAxiosError(err)) {
         const st = err.response?.status;
-        if (st === 403) msg = 'Accès refusé (rôle requis).';
-        else if (st === 404) msg = 'Facture introuvable.';
+        if (st === 403) msg = toasts.accessDenied;
+        else if (st === 404) msg = toasts.invoiceNotFound;
       }
-      toast({ title: 'Erreur', description: msg, variant: 'destructive' });
+      toast({ title: t.common.error, description: msg, variant: 'destructive' });
     } finally {
       setPreviewLoading(false);
     }
@@ -114,23 +111,19 @@ export const InvoiceDetailPanel: React.FC<Props> = ({
 
   const handleDelete = async () => {
     if (data == null || data.status !== 'DRAFT') return;
-    if (!window.confirm('Supprimer définitivement ce brouillon de facture ?')) return;
+    if (!window.confirm(toasts.deleteConfirm)) return;
     setDeleteLoading(true);
     try {
       await deleteInvoiceFinance(data.id);
-      toast({ title: 'Facture supprimée' });
+      toast({ title: toasts.deleted });
       onInvoiceMutated?.();
       onOpenChange(false);
     } catch (err) {
-      let msg = 'Suppression impossible.';
+      let msg = toasts.deleteFailed;
       if (isAxiosError(err)) {
-        const d = err.response?.data;
-        if (typeof d === 'string') msg = d;
-        else if (d && typeof d === 'object' && 'detail' in d && typeof (d as { detail: string }).detail === 'string') {
-          msg = (d as { detail: string }).detail;
-        }
+        msg = localizeAxiosPayload(err.response?.data, toasts.deleteFailed);
       }
-      toast({ title: 'Erreur', description: msg, variant: 'destructive' });
+      toast({ title: t.common.error, description: msg, variant: 'destructive' });
     } finally {
       setDeleteLoading(false);
     }
@@ -139,7 +132,7 @@ export const InvoiceDetailPanel: React.FC<Props> = ({
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
-        side="right"
+        side="end"
         className={cn(
           'flex w-full flex-col gap-0 border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 p-0 sm:max-w-md',
           '[&>button]:hidden'
@@ -175,7 +168,7 @@ export const InvoiceDetailPanel: React.FC<Props> = ({
               size="icon"
               className="h-9 w-9 shrink-0"
               onClick={() => onOpenChange(false)}
-              aria-label="Fermer"
+              aria-label={t.common.close}
             >
               <X className="h-4 w-4" />
             </Button>
@@ -193,10 +186,10 @@ export const InvoiceDetailPanel: React.FC<Props> = ({
           {!loading && data && (
             <>
               <section className="space-y-3">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-slate-500">Détails facture</p>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-slate-500">{ct.invoiceDetails}</p>
                 <div className="rounded-xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-950 p-3 text-[13px] space-y-2">
                   <div className="flex justify-between gap-2">
-                    <span className="text-slate-500">Dossier lié</span>
+                    <span className="text-slate-500">{ct.linkedCase}</span>
                     <button
                       type="button"
                       className="font-mono text-jure-600 dark:text-jure-400 hover:underline"
@@ -206,7 +199,7 @@ export const InvoiceDetailPanel: React.FC<Props> = ({
                     </button>
                   </div>
                   <div>
-                    <span className="text-slate-500">Client</span>
+                    <span className="text-slate-500">{t.finance.columns.client}</span>
                     <p className="font-medium text-slate-900 dark:text-white">{data.client_name}</p>
                     {(data.client_ice || data.client_if) && (
                       <p className="text-[12px] text-slate-600">
@@ -218,64 +211,64 @@ export const InvoiceDetailPanel: React.FC<Props> = ({
                   </div>
                   <div className="grid grid-cols-1 gap-1 border-t border-slate-100 pt-2 dark:border-slate-800">
                     <div className="flex justify-between">
-                      <span className="text-slate-500">Montant HT</span>
-                      <span className="tabular-nums">{formatMAD(data.amount_ht)}</span>
+                      <span className="text-slate-500">{t.finance.columns.amountHt}</span>
+                      <span className="tabular-nums">{formatMAD(data.amount_ht, lang)}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-slate-500">{tvaExempt ? 'TVA' : 'TVA (20%)'}</span>
-                      <span className="tabular-nums">{formatMAD(data.tva)}</span>
+                      <span className="text-slate-500">{tvaExempt ? t.finance.columns.tva : ct.tva20}</span>
+                      <span className="tabular-nums">{formatMAD(data.tva, lang)}</span>
                     </div>
                     {exonerationNote ? (
                       <p className="text-[11px] italic text-[#94a3b8]">{exonerationNote}</p>
                     ) : null}
                     <div className="flex justify-between font-semibold">
-                      <span className="text-slate-700 dark:text-slate-200">Montant TTC</span>
-                      <span className="tabular-nums">{formatMAD(data.amount_ttc)}</span>
+                      <span className="text-slate-700 dark:text-slate-200">{t.finance.columns.ttc}</span>
+                      <span className="tabular-nums">{formatMAD(data.amount_ttc, lang)}</span>
                     </div>
                   </div>
                   <div className="flex justify-between text-[12px] text-slate-600">
-                    <span>Émission: {data.issue_date}</span>
-                    <span>Échéance: {data.due_date ?? '—'}</span>
+                    <span>{tf(ct.issued, { date: data.issue_date ? formatDate(data.issue_date, lang, dateOpts) : '—' })}</span>
+                    <span>{tf(ct.dueOn, { date: data.due_date ? formatDate(data.due_date, lang, dateOpts) : '—' })}</span>
                   </div>
                   {data.created_by_name ? (
-                    <p className="text-[12px] text-slate-500">Créée par: {data.created_by_name}</p>
+                    <p className="text-[12px] text-slate-500">{tf(ct.createdBy, { name: data.created_by_name })}</p>
                   ) : null}
                 </div>
               </section>
 
               <section className="mt-6 space-y-2">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-slate-500">Paiements liés</p>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-slate-500">{ct.linkedPayments}</p>
                 <div className="space-y-2">
                   {(data.payments ?? []).length === 0 ? (
-                    <p className="text-[13px] text-slate-500">Aucun paiement lié</p>
+                    <p className="text-[13px] text-slate-500">{ct.noLinkedPayments}</p>
                   ) : (
                     data.payments.map((p) => (
                       <div
                         key={p.id}
                         className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-950 px-3 py-2 text-[13px]"
                       >
-                        <span className="font-medium tabular-nums">{formatMAD(p.amount)}</span>
+                        <span className="font-medium tabular-nums">{formatMAD(p.amount, lang)}</span>
                         <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] dark:bg-slate-800">
-                          {enumLabel('paymentMethod', p.method) || methodLabel[p.method]}
+                          {enumLabel('paymentMethod', p.method) || p.method}
                         </span>
-                        <span className="text-slate-600">{p.date}</span>
+                        <span className="text-slate-600">{p.date ? formatDate(p.date, lang, dateOpts) : '—'}</span>
                         <span className="font-mono text-[12px] text-slate-500">{p.reference || '—'}</span>
                       </div>
                     ))
                   )}
                   <div className="flex justify-between border-t border-slate-200 pt-2 text-[13px] dark:border-slate-800">
-                    <span className="text-slate-600">Total payé</span>
-                    <span className="font-semibold tabular-nums">{formatMAD(totalPaid)}</span>
+                    <span className="text-slate-600">{ct.totalPaid}</span>
+                    <span className="font-semibold tabular-nums">{formatMAD(totalPaid, lang)}</span>
                   </div>
                   <div className="flex justify-between text-[13px]">
-                    <span className="text-slate-600">Restant dû</span>
+                    <span className="text-slate-600">{ct.remainingDue}</span>
                     <span
                       className={cn(
                         'font-semibold tabular-nums',
                         remaining <= 0 ? 'text-emerald-600' : 'text-amber-600'
                       )}
                     >
-                      {formatMAD(Math.max(0, remaining))}
+                      {formatMAD(Math.max(0, remaining), lang)}
                     </span>
                   </div>
                 </div>
@@ -286,9 +279,9 @@ export const InvoiceDetailPanel: React.FC<Props> = ({
 
         <footer className="sticky bottom-0 z-10 flex shrink-0 flex-col gap-2 border-t border-slate-200 dark:border-slate-800 bg-slate-50/95 px-4 py-3 backdrop-blur dark:bg-slate-950/95">
           <div className="text-[13px] font-medium">
-            Restant:{' '}
+            {ct.remainingColon}{' '}
             <span className={cn('tabular-nums', remaining <= 0 ? 'text-emerald-600' : 'text-amber-600')}>
-              {data ? formatMAD(Math.max(0, remaining)) : '—'}
+              {data ? formatMAD(Math.max(0, remaining), lang) : '—'}
             </span>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -301,7 +294,7 @@ export const InvoiceDetailPanel: React.FC<Props> = ({
               onClick={handleDownloadPdf}
             >
               <Download className="h-3.5 w-3.5" />
-              Télécharger PDF
+              {t.finance.downloadPdf}
             </Button>
             <Button
               type="button"
@@ -312,7 +305,7 @@ export const InvoiceDetailPanel: React.FC<Props> = ({
               onClick={handlePreviewPdf}
             >
               <ExternalLink className="h-3.5 w-3.5" />
-              Aperçu
+              {t.finance.previewPdf}
             </Button>
             <Button
               type="button"
@@ -321,7 +314,7 @@ export const InvoiceDetailPanel: React.FC<Props> = ({
               disabled={!data}
               onClick={() => data && onEdit?.(data)}
             >
-              Modifier
+              {t.common.edit}
             </Button>
             {data?.status === 'DRAFT' ? (
               <Button
@@ -333,11 +326,11 @@ export const InvoiceDetailPanel: React.FC<Props> = ({
                 onClick={handleDelete}
               >
                 <Trash2 className="h-3.5 w-3.5" />
-                Supprimer
+                {t.common.delete}
               </Button>
             ) : null}
             <Button type="button" variant="secondary" size="sm" className="h-9" disabled>
-              Clôturer
+              {ct.closeOut}
             </Button>
           </div>
         </footer>

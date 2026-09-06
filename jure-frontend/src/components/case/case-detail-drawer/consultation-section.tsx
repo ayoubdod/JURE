@@ -9,9 +9,9 @@ import { CaseClientLabel } from '@/components/client/CaseClientLabel';
 import { useAppTranslation } from '@/i18n';
 
 const FORMAT_ICONS: Record<string, React.ReactNode> = {
-  IN_PERSON: <Building2 className="inline h-3.5 w-3.5 mr-1 align-text-bottom text-slate-500" aria-hidden />,
-  PHONE: <Phone className="inline h-3.5 w-3.5 mr-1 align-text-bottom text-slate-500" aria-hidden />,
-  VIDEO: <Video className="inline h-3.5 w-3.5 mr-1 align-text-bottom text-slate-500" aria-hidden />,
+  IN_PERSON: <Building2 className="inline h-3.5 w-3.5 me-1 align-text-bottom text-slate-500" aria-hidden />,
+  PHONE: <Phone className="inline h-3.5 w-3.5 me-1 align-text-bottom text-slate-500" aria-hidden />,
+  VIDEO: <Video className="inline h-3.5 w-3.5 me-1 align-text-bottom text-slate-500" aria-hidden />,
 };
 
 export function ConsultationSection({

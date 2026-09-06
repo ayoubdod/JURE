@@ -1,6 +1,7 @@
 from decimal import Decimal
 
 from django.db import transaction
+from django.utils.translation import gettext as _
 from rest_framework import serializers
 
 from finance.models import Expense
@@ -60,9 +61,9 @@ class ExpenseWriteSerializer(serializers.ModelSerializer):
 
     def validate_amount(self, value):
         if value is None or Decimal(str(value)) < 0:
-            raise serializers.ValidationError('Expense amount cannot be negative.')
+            raise serializers.ValidationError(_('Expense amount cannot be negative.'))
         if Decimal(str(value)) == 0:
-            raise serializers.ValidationError('Expense amount must be greater than zero.')
+            raise serializers.ValidationError(_('Expense amount must be greater than zero.'))
         return value
 
     @transaction.atomic

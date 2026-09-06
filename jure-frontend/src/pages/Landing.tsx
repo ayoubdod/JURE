@@ -103,7 +103,7 @@ const FeatureRow: React.FC<{
         className={reverse ? "lg:order-2" : ""}
         duration={0.7}
       >
-        <div className={rtl ? "text-right" : "text-start"}>
+        <div className="text-start">
           <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#A58CF4] mb-3">
             {icon} {index}
             {badge && (
@@ -381,7 +381,7 @@ const Landing: React.FC = () => {
       <section className="max-w-7xl mx-auto px-4 sm:px-6 py-16 sm:py-24">
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
           <Reveal x={rtl ? 30 : -30}>
-            <div className={rtl ? "text-right" : "text-start"}>
+            <div className="text-start">
               <h2 className="text-2xl sm:text-4xl font-bold text-[#64499D] dark:text-white leading-tight tracking-tight">
                 {t.problem.title}
               </h2>
@@ -437,7 +437,7 @@ const Landing: React.FC = () => {
           </motion.div>
           <motion.div
             style={{ opacity: showcaseTextOpacity, x: showcaseTextX }}
-            className={rtl ? "text-right" : "text-start"}
+            className="text-start"
           >
             <span className="landing-kicker text-xs">
               {t.showcase.eyebrow}
@@ -576,7 +576,7 @@ const Landing: React.FC = () => {
           <div className="landing-juria-panel__particles" aria-hidden />
           <div className="relative grid lg:grid-cols-2 gap-10 lg:gap-14 items-center">
             <Reveal x={rtl ? 30 : -30}>
-              <div className={rtl ? "text-right" : "text-start"}>
+              <div className="text-start">
                 <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 border border-white/15 text-xs font-semibold text-[#E8DFFF] mb-4">
                   <Sparkles className="w-3.5 h-3.5" />
                   {t.pillars.ai.badge}
@@ -674,7 +674,7 @@ const Landing: React.FC = () => {
         <Reveal scale={0.98}>
           <div className="landing-band rounded-3xl text-white px-6 sm:px-12 py-10 sm:py-14">
             <div className="relative grid lg:grid-cols-2 gap-8 items-center">
-              <div className={rtl ? "text-right" : "text-start"}>
+              <div className="text-start">
                 <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#A58CF4] mb-3">
                   <ShieldCheck className="w-4 h-4" />
                 </span>
@@ -731,9 +731,7 @@ const Landing: React.FC = () => {
             <Reveal key={title} delay={i * 0.08} subtle>
               <Link
                 to={path(href)}
-                className={`group landing-glass landing-glass-glow rounded-2xl p-6 h-full w-full text-start block ${
-                  rtl ? "text-right" : ""
-                }`}
+                className="group landing-glass landing-glass-glow rounded-2xl p-6 h-full w-full text-start block"
               >
                 <span className="landing-icon w-10 h-10 rounded-xl flex items-center justify-center mb-4">
                   <Icon className="w-5 h-5" />

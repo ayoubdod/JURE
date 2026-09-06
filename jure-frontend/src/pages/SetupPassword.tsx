@@ -60,7 +60,7 @@ const SetupPassword = () => {
 
   if (!token) {
     return (
-      <AuroraPage className="flex items-center justify-center p-4">
+      <AuroraPage className="flex items-center justify-center p-4" documentTitle={t.auth.setupTitle}>
         <div className="w-full max-w-md">
           <div className="flex items-center justify-between mb-6">
             <div className="flex-1 flex justify-center">
@@ -97,7 +97,7 @@ const SetupPassword = () => {
   }
 
   return (
-    <AuroraPage className="flex items-center justify-center p-4">
+    <AuroraPage className="flex items-center justify-center p-4" documentTitle={t.auth.setupTitle}>
       <div className="w-full max-w-md">
         <div className="flex items-center justify-between mb-6">
           <div className="flex-1 flex justify-center">
@@ -145,6 +145,7 @@ const SetupPassword = () => {
                     size="icon"
                     className="absolute end-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                     onClick={() => setShowPassword(!showPassword)}
+                    aria-label={showPassword ? t.settings.hidePassword : t.settings.showPassword}
                   >
                     {showPassword ? <EyeOff className="h-4 w-4 text-slate-400 dark:text-slate-500" /> : <Eye className="h-4 w-4 text-slate-400 dark:text-slate-500" />}
                   </Button>
@@ -173,6 +174,7 @@ const SetupPassword = () => {
                     size="icon"
                     className="absolute end-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                     onClick={() => setShowConfirm(!showConfirm)}
+                    aria-label={showConfirm ? t.settings.hidePassword : t.settings.showPassword}
                   >
                     {showConfirm ? <EyeOff className="h-4 w-4 text-slate-400 dark:text-slate-500" /> : <Eye className="h-4 w-4 text-slate-400 dark:text-slate-500" />}
                   </Button>

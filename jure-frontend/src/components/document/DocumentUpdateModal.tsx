@@ -19,7 +19,7 @@ import { isAxiosError } from 'axios';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { DialogDescription } from '@radix-ui/react-dialog';
 import { Textarea } from '../ui/textarea';
-import TagsInput from '../TagsInput';
+import TagsInput from '@/components/common/TagsInput';
 import { useToast } from '@/hooks/use-toast';
 import { devError, devWarn } from '@/utils/devLog';
 import { useAppTranslation } from '@/i18n';
@@ -43,7 +43,7 @@ const schema = yup.object({
 });
 
 const DocumentUpdateModal = forwardRef<DocumentUpdateModalRef, DocumentUpdateModalProps>(({ onSuccess }, ref) => {
-  const { t, tf, enumOptions } = useAppTranslation();
+  const { t, tf, enumOptions, apiError } = useAppTranslation();
   const m = t.document.update;
   const [instance, setInstance] = useState<API.Document | null>(null);
   const [isOpen, setIsOpen] = useState(false);
@@ -344,9 +344,11 @@ const DocumentUpdateModal = forwardRef<DocumentUpdateModalRef, DocumentUpdateMod
             }
           }
           
-          const fullErrorMessage = status
-            ? `[${status} ${statusText || ''}] ${errorMessage}${backendIssue ? `\n\nBackend Issue: ${backendIssue}` : ''}`
-            : errorMessage;
+          const description = !status
+            ? t.errors.network
+            : status === 404
+              ? t.errors.notFound
+              : apiError(errorMessage, t.errors.generic);
 
           devError('Update failed:', {
             status,
@@ -358,7 +360,7 @@ const DocumentUpdateModal = forwardRef<DocumentUpdateModalRef, DocumentUpdateMod
 
           toast({
             title: m.updateFailedTitle,
-            description: fullErrorMessage,
+            description,
             variant: "destructive",
           });
           
@@ -373,19 +375,10 @@ const DocumentUpdateModal = forwardRef<DocumentUpdateModalRef, DocumentUpdateMod
           }
         }
       } else {
-        // Safer error message extraction
-        let errorMessage = m.unexpectedError;
-        if (err && typeof err === 'object') {
-          if ('message' in err && typeof err.message === 'string') {
-            errorMessage = err.message;
-          } else if ('toString' in err && typeof err.toString === 'function') {
-            errorMessage = err.toString();
-          }
-        }
         devError('Non-Axios error:', err);
         toast({
           title: t.common.error,
-          description: errorMessage,
+          description: m.unexpectedError,
           variant: "destructive",
         });
       }
@@ -477,11 +470,11 @@ const DocumentUpdateModal = forwardRef<DocumentUpdateModalRef, DocumentUpdateMod
                   {m.titleLabel}
                 </label>
                 <div className="relative">
-                  <Type className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                  <Type className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                   <Input 
                     {...mainForm.register('title')} 
                     placeholder={m.titlePlaceholder}
-                    className="pl-10 h-11 border-slate-300 dark:border-slate-700 focus:border-[#64499D] focus:ring-[#64499D]"
+                    className="ps-10 h-11 border-slate-300 dark:border-slate-700 focus:border-[#64499D] focus:ring-[#64499D]"
                   />
                 </div>
                 {mainForm.formState.errors.title && (
@@ -497,12 +490,12 @@ const DocumentUpdateModal = forwardRef<DocumentUpdateModalRef, DocumentUpdateMod
                   {m.categoryLabel}
                 </label>
                 <div className="relative">
-                  <Tags className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 z-10" />
+                  <Tags className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 z-10" />
                   <Select
                     value={mainForm.watch('category')}
                     onValueChange={(val: API.DocumentCategory) => mainForm.setValue('category', val)}
                   >
-                    <SelectTrigger className="pl-10 h-11 border-slate-300 dark:border-slate-700 focus:border-[#64499D] focus:ring-[#64499D]">
+                    <SelectTrigger className="ps-10 h-11 border-slate-300 dark:border-slate-700 focus:border-[#64499D] focus:ring-[#64499D]">
                       <SelectValue placeholder={m.categoryPlaceholder} />
                     </SelectTrigger>
                     <SelectContent>
@@ -588,7 +581,7 @@ const DocumentUpdateModal = forwardRef<DocumentUpdateModalRef, DocumentUpdateMod
                       className="h-9"
                       onClick={() => window.open(instance.file, '_blank')}
                     >
-                      <Eye size={14} className="mr-1" />
+                      <Eye size={14} className="me-1" />
                       {m.view}
                     </Button>
                     <Button
@@ -603,7 +596,7 @@ const DocumentUpdateModal = forwardRef<DocumentUpdateModalRef, DocumentUpdateMod
                         link.click();
                       }}
                     >
-                      <Download size={14} className="mr-1" />
+                      <Download size={14} className="me-1" />
                       {t.document.download}
                     </Button>
                   </div>
@@ -618,11 +611,11 @@ const DocumentUpdateModal = forwardRef<DocumentUpdateModalRef, DocumentUpdateMod
                 {m.replaceFile} <span className="text-slate-400 dark:text-slate-500 text-xs font-normal">{m.replaceFileOptional}</span>
               </label>
               <div className="relative">
-                <FileText className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <FileText className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                 <Input
                   type="file"
                   {...mainForm.register('file')}
-                  className="pl-10 h-11 border-slate-300 dark:border-slate-700 focus:border-[#64499D] focus:ring-[#64499D] cursor-pointer file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-[#64499D] file:text-white hover:file:bg-[#563d89]"
+                  className="ps-10 h-11 border-slate-300 dark:border-slate-700 focus:border-[#64499D] focus:ring-[#64499D] cursor-pointer file:me-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-[#64499D] file:text-white hover:file:bg-[#563d89]"
                 />
               </div>
               <p className="text-xs text-slate-500 dark:text-slate-400">
@@ -674,7 +667,7 @@ const DocumentUpdateModal = forwardRef<DocumentUpdateModalRef, DocumentUpdateMod
             >
               {isLoading ? (
                 <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  <Loader2 className="w-4 h-4 me-2 animate-spin" />
                   {m.updating}
                 </>
               ) : (

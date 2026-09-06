@@ -143,7 +143,7 @@ export default function CaseWorkspaceChrome({
           style={{ backgroundColor: JURE_PURPLE }}
           onClick={onCreate}
         >
-          <Plus className="w-4 h-4 mr-1.5" strokeWidth={2.5} />
+          <Plus className="w-4 h-4 me-1.5" strokeWidth={2.5} />
           {ctaLabel}
         </Button>
       ) : null}

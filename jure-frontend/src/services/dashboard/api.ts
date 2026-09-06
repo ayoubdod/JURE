@@ -64,6 +64,11 @@ export interface DashboardOverview {
     icon: string;
     message: string;
     ago: string;
+    /** Stable id for inferred rows; `log` keeps stored ActivityLog copy as-is. */
+    kind?: 'log' | 'task_completed' | 'client_added' | 'document_uploaded' | string;
+    title?: string;
+    /** ISO timestamp; prefer this over English `ago`. */
+    at?: string | null;
   }>;
 }
 

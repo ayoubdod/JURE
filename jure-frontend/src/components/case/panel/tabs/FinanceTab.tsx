@@ -25,6 +25,7 @@ import { AddPaymentModal } from '@/components/finance/modals/AddPaymentModal';
 import { InvoiceUpdateModal } from '@/components/finance/modals/InvoiceUpdateModal';
 import { useToast } from '@/hooks/use-toast';
 import { isAxiosError } from 'axios';
+import { useAppTranslation, localizeAxiosPayload } from '@/i18n';
 
 type Props = {
   caseId: number;
@@ -32,6 +33,9 @@ type Props = {
 
 export const FinanceTab: React.FC<Props> = ({ caseId }) => {
   const { toast } = useToast();
+  const { t, tf, lang } = useAppTranslation();
+  const ct = t.finance.caseTab;
+  const toasts = t.finance.toasts;
   const [data, setData] = useState<API.FinanceCasePayload | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
@@ -68,53 +72,49 @@ export const FinanceTab: React.FC<Props> = ({ caseId }) => {
   const remainingLabel = () => {
     if (!summary) return null;
     if (summary.remaining_status === 'settled' || summary.remaining <= 0) {
-      return <span className="text-emerald-600 dark:text-emerald-400 font-semibold">Soldé</span>;
+      return <span className="text-emerald-600 dark:text-emerald-400 font-semibold">{ct.settled}</span>;
     }
     if (summary.remaining_status === 'overdue') {
-      return <span className="text-red-600 dark:text-red-400 font-semibold">{formatMAD(summary.remaining)}</span>;
+      return <span className="text-red-600 dark:text-red-400 font-semibold">{formatMAD(summary.remaining, lang)}</span>;
     }
-    return <span className="text-amber-600 dark:text-amber-400 font-semibold">{formatMAD(summary.remaining)}</span>;
+    return <span className="text-amber-600 dark:text-amber-400 font-semibold">{formatMAD(summary.remaining, lang)}</span>;
   };
 
   const totalReceived = data?.payments?.reduce((s, p) => s + p.amount, 0) ?? 0;
 
   const handleDeleteFee = async (fee: API.FinanceCaseFee) => {
-    if (!window.confirm('Supprimer cet honoraire ?')) return;
+    if (!window.confirm(toasts.deleteFeeConfirm)) return;
     try {
       await deleteFee(caseId, fee.id);
       load();
     } catch {
-      toast({ title: 'Erreur', variant: 'destructive' });
+      toast({ title: t.common.error, variant: 'destructive' });
     }
   };
 
   const handleDeleteExpense = async (exp: API.FinanceExpense) => {
-    if (!window.confirm('Supprimer cette dépense ?')) return;
+    if (!window.confirm(toasts.deleteExpenseConfirm)) return;
     try {
       await deleteExpense(exp.id);
       load();
     } catch {
-      toast({ title: 'Erreur', variant: 'destructive' });
+      toast({ title: t.common.error, variant: 'destructive' });
     }
   };
 
   const handleDeleteInvoice = async (inv: API.FinanceCaseInvoice) => {
     if (inv.status !== 'DRAFT') return;
-    if (!window.confirm('Supprimer définitivement ce brouillon de facture ?')) return;
+    if (!window.confirm(toasts.deleteConfirm)) return;
     try {
       await deleteInvoiceFinance(inv.id);
-      toast({ title: 'Facture supprimée' });
+      toast({ title: toasts.deleted });
       load();
     } catch (err) {
-      let msg = 'Suppression impossible.';
+      let msg = toasts.deleteFailed;
       if (isAxiosError(err)) {
-        const d = err.response?.data;
-        if (typeof d === 'string') msg = d;
-        else if (d && typeof d === 'object' && 'detail' in d && typeof (d as { detail: string }).detail === 'string') {
-          msg = (d as { detail: string }).detail;
-        }
+        msg = localizeAxiosPayload(err.response?.data, toasts.deleteFailed);
       }
-      toast({ title: 'Erreur', description: msg, variant: 'destructive' });
+      toast({ title: t.common.error, description: msg, variant: 'destructive' });
     }
   };
 
@@ -122,13 +122,13 @@ export const FinanceTab: React.FC<Props> = ({ caseId }) => {
     try {
       await downloadInvoicePdfFile(inv.id, caseId);
     } catch (err) {
-      let msg = 'Impossible de télécharger le PDF.';
+      let msg = toasts.pdfDownloadFailed;
       if (isAxiosError(err)) {
         const st = err.response?.status;
-        if (st === 403) msg = 'Accès refusé (rôle requis).';
-        else if (st === 404) msg = 'Facture introuvable.';
+        if (st === 403) msg = toasts.accessDenied;
+        else if (st === 404) msg = toasts.invoiceNotFound;
       }
-      toast({ title: 'Erreur', description: msg, variant: 'destructive' });
+      toast({ title: t.common.error, description: msg, variant: 'destructive' });
     }
   };
 
@@ -136,23 +136,23 @@ export const FinanceTab: React.FC<Props> = ({ caseId }) => {
     try {
       await previewInvoicePdfInNewTab(inv.id, caseId);
     } catch (err) {
-      let msg = 'Impossible d’ouvrir l’aperçu.';
+      let msg = toasts.pdfPreviewFailed;
       if (isAxiosError(err)) {
         const st = err.response?.status;
-        if (st === 403) msg = 'Accès refusé (rôle requis).';
-        else if (st === 404) msg = 'Facture introuvable.';
+        if (st === 403) msg = toasts.accessDenied;
+        else if (st === 404) msg = toasts.invoiceNotFound;
       }
-      toast({ title: 'Erreur', description: msg, variant: 'destructive' });
+      toast({ title: t.common.error, description: msg, variant: 'destructive' });
     }
   };
 
   const handleDeletePayment = async (p: API.FinanceCasePayment) => {
-    if (!window.confirm('Supprimer ce paiement ?')) return;
+    if (!window.confirm(toasts.deletePaymentConfirm)) return;
     try {
       await deletePayment(caseId, p.id);
       load();
     } catch {
-      toast({ title: 'Erreur', variant: 'destructive' });
+      toast({ title: t.common.error, variant: 'destructive' });
     }
   };
 
@@ -161,7 +161,7 @@ export const FinanceTab: React.FC<Props> = ({ caseId }) => {
       await updateTaxAdvance(caseId, { status: 'PAID' });
       load();
     } catch {
-      toast({ title: 'Erreur', variant: 'destructive' });
+      toast({ title: t.common.error, variant: 'destructive' });
     }
   };
 
@@ -179,10 +179,10 @@ export const FinanceTab: React.FC<Props> = ({ caseId }) => {
     return (
       <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50/80 px-4 py-10 text-center dark:border-slate-700 dark:bg-slate-900/40">
         <p className="text-sm text-slate-600 dark:text-slate-400">
-          Impossible de charger les données financières de ce dossier.
+          {toasts.loadCaseFailed}
         </p>
         <Button type="button" size="sm" className="mt-3" variant="outline" onClick={load}>
-          Réessayer
+          {t.common.retry}
         </Button>
       </div>
     );
@@ -198,39 +198,39 @@ export const FinanceTab: React.FC<Props> = ({ caseId }) => {
     <div className="space-y-8 pb-4">
       <div className="flex flex-wrap gap-x-6 gap-y-2 rounded-xl border border-slate-200/90 bg-white px-4 py-3 text-[13px] dark:border-slate-800 dark:bg-slate-950">
         <span>
-          Honoraires: <strong className="tabular-nums">{formatMAD(summary.planned)}</strong>
+          {ct.honoraires}: <strong className="tabular-nums">{formatMAD(summary.planned, lang)}</strong>
         </span>
         <span>
-          Dépenses: <strong className="tabular-nums">{formatMAD(summary.total_expenses ?? 0)}</strong>
+          {ct.expenses}: <strong className="tabular-nums">{formatMAD(summary.total_expenses ?? 0, lang)}</strong>
         </span>
         <span>
-          Facturé: <strong className="tabular-nums">{formatMAD(summary.invoiced)}</strong>
+          {ct.invoiced}: <strong className="tabular-nums">{formatMAD(summary.invoiced, lang)}</strong>
         </span>
         <span>
-          Payé: <strong className="tabular-nums">{formatMAD(summary.paid)}</strong>
+          {ct.paid}: <strong className="tabular-nums">{formatMAD(summary.paid, lang)}</strong>
         </span>
         <span>
-          Net: <strong className="tabular-nums">{formatMAD(summary.net_position ?? 0)}</strong>
+          {ct.net}: <strong className="tabular-nums">{formatMAD(summary.net_position ?? 0, lang)}</strong>
         </span>
-        <span className="flex items-center gap-1">Restant: {remainingLabel()}</span>
+        <span className="flex items-center gap-1">{ct.remaining}: {remainingLabel()}</span>
       </div>
 
       <section>
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
           <h3 className="text-sm font-semibold text-slate-900 dark:text-white">
-            Honoraires <span className="text-slate-500">({fees.length})</span>
+            {ct.honoraires} <span className="text-slate-500">({fees.length})</span>
           </h3>
           <Button type="button" size="sm" className="h-9 bg-jure-600 hover:bg-jure-700" onClick={() => setAddFeeOpen(true)}>
-            <Plus className="mr-1.5 h-4 w-4" />
-            Ajouter
+            <Plus className="me-1.5 h-4 w-4" />
+            {ct.add}
           </Button>
         </div>
         {fees.length === 0 ? (
           <div className="flex flex-col items-center rounded-xl border border-dashed border-slate-300 bg-slate-50/80 py-10 dark:border-slate-700 dark:bg-slate-900/40">
             <Coins className="mb-2 h-10 w-10 text-slate-400" />
-            <p className="text-[13px] text-slate-600 dark:text-slate-400">Aucun honoraire défini</p>
+            <p className="text-[13px] text-slate-600 dark:text-slate-400">{ct.noHonoraires}</p>
             <Button type="button" size="sm" className="mt-3 bg-jure-600" onClick={() => setAddFeeOpen(true)}>
-              + Ajouter honoraire
+              {ct.addHonoraire}
             </Button>
           </div>
         ) : (
@@ -245,19 +245,19 @@ export const FinanceTab: React.FC<Props> = ({ caseId }) => {
       <section>
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
           <h3 className="text-sm font-semibold text-slate-900 dark:text-white">
-            Dépenses <span className="text-slate-500">({expenses.length})</span>
+            {ct.expenses} <span className="text-slate-500">({expenses.length})</span>
           </h3>
           <Button type="button" size="sm" variant="outline" className="h-9" onClick={() => setAddExpenseOpen(true)}>
-            <Plus className="mr-1.5 h-4 w-4" />
-            Ajouter dépense
+            <Plus className="me-1.5 h-4 w-4" />
+            {ct.addExpense}
           </Button>
         </div>
         {expenses.length === 0 ? (
           <div className="flex flex-col items-center rounded-xl border border-dashed border-slate-300 bg-slate-50/80 py-10 dark:border-slate-700 dark:bg-slate-900/40">
             <Receipt className="mb-2 h-10 w-10 text-slate-400" />
-            <p className="text-[13px] text-slate-600 dark:text-slate-400">Aucune dépense enregistrée pour ce dossier.</p>
+            <p className="text-[13px] text-slate-600 dark:text-slate-400">{ct.noExpenses}</p>
             <Button type="button" size="sm" className="mt-3" variant="outline" onClick={() => setAddExpenseOpen(true)}>
-              + Ajouter une dépense
+              {ct.addExpenseEmpty}
             </Button>
           </div>
         ) : (
@@ -270,14 +270,14 @@ export const FinanceTab: React.FC<Props> = ({ caseId }) => {
                 <div>
                   <p className="font-medium text-slate-900 dark:text-white">{e.description}</p>
                   <p className="text-slate-500">
-                    {e.category} · {e.expense_date}
-                    {e.billable ? ' · Facturable' : ' · Non facturable'}
+                    {t.finance.expenseCategories[e.category] ?? e.category} · {e.expense_date}
+                    {e.billable ? ` · ${ct.billable}` : ` · ${ct.nonBillable}`}
                   </p>
                 </div>
                 <div className="flex items-center gap-3">
-                  <strong className="tabular-nums">{formatMAD(e.amount)}</strong>
+                  <strong className="tabular-nums">{formatMAD(e.amount, lang)}</strong>
                   <Button type="button" size="sm" variant="ghost" className="text-red-600" onClick={() => handleDeleteExpense(e)}>
-                    Supprimer
+                    {t.common.delete}
                   </Button>
                 </div>
               </div>
@@ -289,19 +289,19 @@ export const FinanceTab: React.FC<Props> = ({ caseId }) => {
       <section>
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
           <h3 className="text-sm font-semibold text-slate-900 dark:text-white">
-            Factures <span className="text-slate-500">({invoices.length})</span>
+            {t.finance.tabs.invoices} <span className="text-slate-500">({invoices.length})</span>
           </h3>
           <Button type="button" size="sm" variant="outline" className="h-9" onClick={() => setGenInvOpen(true)}>
-            <FileText className="mr-1.5 h-4 w-4" />
-            + Générer facture
+            <FileText className="me-1.5 h-4 w-4" />
+            {ct.generateInvoice}
           </Button>
         </div>
         {invoices.length === 0 ? (
           <div className="flex flex-col items-center rounded-xl border border-dashed border-slate-300 bg-slate-50/80 py-10 dark:border-slate-700 dark:bg-slate-900/40">
             <FileText className="mb-2 h-10 w-10 text-slate-400" />
-            <p className="text-[13px] text-slate-600 dark:text-slate-400">Aucune facture générée</p>
+            <p className="text-[13px] text-slate-600 dark:text-slate-400">{ct.noInvoices}</p>
             <Button type="button" size="sm" className="mt-3" variant="outline" onClick={() => setGenInvOpen(true)}>
-              + Générer une facture
+              {ct.generateInvoiceEmpty}
             </Button>
           </div>
         ) : (
@@ -323,20 +323,20 @@ export const FinanceTab: React.FC<Props> = ({ caseId }) => {
       <section>
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
           <h3 className="text-sm font-semibold text-slate-900 dark:text-white">
-            Paiements{' '}
-            <span className="font-normal text-slate-500">(total {formatMAD(totalReceived)})</span>
+            {t.finance.tabs.payments}{' '}
+            <span className="font-normal text-slate-500">{tf(ct.paymentsTotal, { amount: formatMAD(totalReceived, lang) })}</span>
           </h3>
           <Button type="button" size="sm" className="h-9 bg-jure-600 hover:bg-jure-700" onClick={() => setAddPayOpen(true)}>
-            <Plus className="mr-1.5 h-4 w-4" />
-            Ajouter paiement
+            <Plus className="me-1.5 h-4 w-4" />
+            {ct.addPayment}
           </Button>
         </div>
         {payments.length === 0 ? (
           <div className="flex flex-col items-center rounded-xl border border-dashed border-slate-300 bg-slate-50/80 py-10 dark:border-slate-700 dark:bg-slate-900/40">
             <Wallet className="mb-2 h-10 w-10 text-slate-400" />
-            <p className="text-[13px] text-slate-600 dark:text-slate-400">Aucun paiement enregistré</p>
+            <p className="text-[13px] text-slate-600 dark:text-slate-400">{ct.noPayments}</p>
             <Button type="button" size="sm" className="mt-3 bg-jure-600" onClick={() => setAddPayOpen(true)}>
-              + Enregistrer un paiement
+              {ct.recordPayment}
             </Button>
           </div>
         ) : (
@@ -350,12 +350,12 @@ export const FinanceTab: React.FC<Props> = ({ caseId }) => {
 
       <section>
         <h3 className="mb-3 text-sm font-semibold text-slate-900 dark:text-white">
-          Acompte Fiscal (obligation marocaine)
+          {ct.taxAdvanceTitle}
         </h3>
         {tax ? (
           <TaxAdvanceCard tax={tax} onMarkPaid={tax.status === 'UNPAID' ? handleTaxPaid : undefined} />
         ) : (
-          <p className="text-[13px] text-slate-500">Aucun acompte fiscal pour ce dossier.</p>
+          <p className="text-[13px] text-slate-500">{ct.noTaxAdvance}</p>
         )}
       </section>
 

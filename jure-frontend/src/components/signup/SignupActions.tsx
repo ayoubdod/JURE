@@ -25,7 +25,7 @@ const SignupActions = ({
     <div className={cn('flex flex-col gap-2.5 pt-4', onPrev && 'sm:flex-row sm:items-center')}>
       {onPrev && backLabel && (
         <Button type="button" variant="outline" onClick={onPrev} className={cn(signupBackBtnClass, 'order-2 sm:order-1')}>
-          <ArrowLeft className="me-2 h-4 w-4" />
+          <ArrowLeft className="me-2 h-4 w-4 rtl:rotate-180" />
           {backLabel}
         </Button>
       )}
@@ -36,7 +36,7 @@ const SignupActions = ({
         className={cn(signupPrimaryBtnClass, nextFullWidth && 'flex-1', 'order-1 sm:order-2')}
       >
         {nextLabel}
-        <ArrowRight className="ms-2 h-4 w-4" />
+        <ArrowRight className="ms-2 h-4 w-4 rtl:rotate-180" />
       </Button>
     </div>
   );

@@ -5,7 +5,7 @@ import CaseModal, { CaseModalRef } from '@/components/case/CaseModal';
 import TaskCreateModal, { TaskCreateModalRef } from '@/components/task/TaskCreateModal';
 import ScheduleAppointmentDialog, {
   ScheduleAppointmentDialogRef,
-} from '@/components/ScheduleAppointmentDialog';
+} from '@/components/appointments/ScheduleAppointmentDialog';
 import CabinetMemberCreateModal, {
   CabinetMemberCreateModalRef,
 } from '@/components/cabinet-member/CabinetMemberCreateModal';

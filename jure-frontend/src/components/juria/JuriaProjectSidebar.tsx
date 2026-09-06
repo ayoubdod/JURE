@@ -57,7 +57,7 @@ export function JuriaProjectSidebar({
     return (
       <aside className="relative z-[1] hidden w-12 shrink-0 flex-col items-center border-e border-slate-200/80 bg-white/80 py-2 backdrop-blur-md dark:border-slate-800 dark:bg-slate-950/80 md:flex">
         <RailIconButton label={w.expandSidebar} onClick={onExpand}>
-          <PanelLeftOpen className="h-4 w-4" />
+          <PanelLeftOpen className="h-4 w-4 rtl:rotate-180" />
         </RailIconButton>
         <img src="/images/juria-icon.png" alt="" className="mt-2 h-7 w-7 rounded-lg object-contain ring-1 ring-[#64499D]/20" />
         <div className="mt-3 flex flex-col items-center gap-1">
@@ -129,7 +129,7 @@ export function JuriaProjectSidebar({
               aria-label={w.collapseSidebar}
               title={w.collapseSidebar}
             >
-              <PanelLeftClose className="h-4 w-4" />
+              <PanelLeftClose className="h-4 w-4 rtl:rotate-180" />
             </button>
           ) : null}
         </div>
@@ -206,7 +206,7 @@ export function JuriaProjectSidebar({
             void loadArchived();
           }}
           className={cn(
-            'flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-[12px] transition',
+            'flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-start text-[12px] transition',
             archiveView ? 'bg-[#64499D]/10 text-[#64499D]' : 'text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800/70'
           )}
         >
@@ -245,6 +245,7 @@ export function RailIconButton({
   onClick?: () => void;
   children: React.ReactNode;
 }) {
+  const { dir } = useAppTranslation();
   return (
     <Tooltip>
       <TooltipTrigger asChild>
@@ -265,7 +266,7 @@ export function RailIconButton({
           {children}
         </button>
       </TooltipTrigger>
-      <TooltipContent side="right" className="max-w-[220px]">
+      <TooltipContent side={dir === 'rtl' ? 'left' : 'right'} className="max-w-[220px]">
         {label}
       </TooltipContent>
     </Tooltip>
@@ -280,7 +281,7 @@ function ProjectRow({ p, active, onOpen }: { p: JuriaProject; active: boolean; o
       type="button"
       onClick={() => onOpen(p.id)}
       className={cn(
-        'group flex w-full items-start gap-2 rounded-lg px-2.5 py-2 text-left transition',
+        'group flex w-full items-start gap-2 rounded-lg px-2.5 py-2 text-start transition',
         active
           ? 'bg-[#64499D]/[0.08] ring-1 ring-[#64499D]/15'
           : 'hover:bg-slate-50 dark:hover:bg-slate-800/70'

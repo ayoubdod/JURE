@@ -58,7 +58,10 @@ type Props = {
 };
 
 export function AdministrativeConversionFields({ values, onChange, fieldErrors }: Props) {
-  const { enumPretty } = useAppTranslation();
+  const { t, enumPretty } = useAppTranslation();
+  const f = t.cases.modal.fields;
+  const p = t.cases.modal.placeholders;
+  const x = t.cases.modal.consultationWorkflow.convertExtras;
   const setDoc = (i: number, field: 'label' | 'completed', v: string | boolean) => {
     const next = [...values.required_documents];
     next[i] = { ...next[i], [field]: v };
@@ -73,7 +76,7 @@ export function AdministrativeConversionFields({ values, onChange, fieldErrors }
     <div className="space-y-4">
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
-          <Label className="text-[13px]">Duty Type</Label>
+          <Label className="text-[13px]">{f.dutyType}</Label>
           <Select value={values.duty_type} onValueChange={(v) => onChange({ duty_type: v })}>
             <SelectTrigger className="h-9">
               <SelectValue />
@@ -88,7 +91,7 @@ export function AdministrativeConversionFields({ values, onChange, fieldErrors }
           </Select>
         </div>
         <div className="space-y-2">
-          <Label className="text-[13px]">Priority</Label>
+          <Label className="text-[13px]">{f.priority}</Label>
           <Select value={values.priority} onValueChange={(v) => onChange({ priority: v })}>
             <SelectTrigger className="h-9">
               <SelectValue />
@@ -106,7 +109,7 @@ export function AdministrativeConversionFields({ values, onChange, fieldErrors }
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2 sm:col-span-2">
-          <Label className="text-[13px]">Institution / Authority</Label>
+          <Label className="text-[13px]">{f.institutionAuthority}</Label>
           <Input
             className="h-9"
             value={values.institution}
@@ -114,7 +117,7 @@ export function AdministrativeConversionFields({ values, onChange, fieldErrors }
           />
         </div>
         <div className="space-y-2 sm:col-span-2">
-          <Label className="text-[13px]">Institution Reference Number (optional)</Label>
+          <Label className="text-[13px]">{f.institutionReferenceNumber}</Label>
           <Input
             className="h-9"
             value={values.institution_reference_number}
@@ -125,7 +128,7 @@ export function AdministrativeConversionFields({ values, onChange, fieldErrors }
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
-          <Label className="text-[13px]">Start Date</Label>
+          <Label className="text-[13px]">{f.startDate}</Label>
           <Input
             type="date"
             className="h-9"
@@ -137,7 +140,7 @@ export function AdministrativeConversionFields({ values, onChange, fieldErrors }
           )}
         </div>
         <div className="space-y-2">
-          <Label className="text-[13px]">Due Date / Legal Deadline</Label>
+          <Label className="text-[13px]">{f.dueDateLegalDeadline}</Label>
           <Input
             type="date"
             className="h-9"
@@ -151,13 +154,13 @@ export function AdministrativeConversionFields({ values, onChange, fieldErrors }
       </div>
 
       <div className="space-y-2">
-        <Label className="text-[13px]">Required Documents</Label>
+        <Label className="text-[13px]">{f.requiredDocuments}</Label>
         <div className="space-y-2">
           {values.required_documents.map((item, i) => (
             <div key={i} className="flex gap-2 items-center">
               <Input
                 className="h-9 flex-1"
-                placeholder="Document label"
+                placeholder={p.documentName}
                 value={item.label}
                 onChange={(e) => setDoc(i, 'label', e.target.value)}
               />
@@ -166,7 +169,7 @@ export function AdministrativeConversionFields({ values, onChange, fieldErrors }
                   checked={item.completed}
                   onCheckedChange={(ch) => setDoc(i, 'completed', ch === true)}
                 />
-                Done
+                {x.done}
               </label>
               <Button type="button" variant="outline" size="icon" onClick={() => removeDoc(i)}>
                 <Trash2 className="h-4 w-4" />
@@ -174,14 +177,14 @@ export function AdministrativeConversionFields({ values, onChange, fieldErrors }
             </div>
           ))}
           <Button type="button" variant="outline" size="sm" onClick={addDoc}>
-            <Plus className="h-3.5 w-3.5 mr-1" />
-            Add document
+            <Plus className="h-3.5 w-3.5 me-1" />
+            {x.addDocument}
           </Button>
         </div>
       </div>
 
       <div className="space-y-2">
-        <Label className="text-[13px]">Status</Label>
+        <Label className="text-[13px]">{f.status}</Label>
         <Select value={values.status} onValueChange={(v) => onChange({ status: v })}>
           <SelectTrigger className="h-9">
             <SelectValue />

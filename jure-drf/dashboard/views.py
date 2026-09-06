@@ -25,20 +25,42 @@ from .models import Announcement, ActivityLog
 from .kpi import build_stat, calculate_growth, month_bounds, month_date_bounds
 
 # ---- helpers ----
-def user_cabinet(user):
-    return getattr(user, "cabinet", None)
-
 def format_ago(dt):
-    if not dt: return ""
+    """English relative time kept for older clients; UI prefers `at` + locale format."""
+    if not dt:
+        return ""
     delta = now() - dt
     s = int(delta.total_seconds())
-    if s < 60: return f"{s}s ago"
-    m = s//60
-    if m < 60: return f"{m}m ago"
-    h = m//60
-    if h < 24: return f"{h}h ago"
-    d = h//24
+    if s < 60:
+        return f"{s}s ago"
+    m = s // 60
+    if m < 60:
+        return f"{m}m ago"
+    h = m // 60
+    if h < 24:
+        return f"{h}h ago"
+    d = h // 24
     return f"{d}d ago"
+
+
+def _iso_dt(dt):
+    if not dt:
+        return None
+    if timezone.is_naive(dt):
+        dt = timezone.make_aware(dt, timezone.get_current_timezone())
+    return dt.isoformat()
+
+
+def _activity_item(*, icon, kind, message, title="", at=None, ago=None):
+    return {
+        "icon": icon,
+        "kind": kind,
+        "title": title or "",
+        "message": message,
+        "ago": format_ago(at) if ago is None else ago,
+        "at": _iso_dt(at),
+    }
+
 
 def derive_priority_for_case(case):
     # Take most urgent session priority if exists
@@ -184,30 +206,49 @@ class DashboardOverview(APIView):
 
         # --- Recent Activity stream (mix manual & inferred) ---
         stream = []
-        # manual ActivityLog first
+        # manual ActivityLog first — stored copy is English; kind=log so the UI can keep it as-is.
         for a in ActivityLog.objects.filter(cabinet=cab).order_by("-created")[:10]:
-            stream.append({"icon": "CheckSquare", "message": a.message, "ago": format_ago(a.created)})
+            stream.append(_activity_item(
+                icon="CheckSquare",
+                kind="log",
+                message=a.message,
+                at=a.created,
+            ))
 
         # if stream not enough, infer from other tables
         if len(stream) < 10:
-            # recent tasks completed
-            done_tasks = Task.objects.filter(cabinet=cab, status="done").order_by("-modified")[:5]
+            done_tasks = Task.objects.filter(
+                cabinet=cab, status=Task.TaskStatus.DONE
+            ).order_by("-modified")[:5]
             for t in done_tasks:
-                stream.append({"icon": "CheckSquare",
-                               "message": f"Task completed: {t.title}",
-                               "ago": format_ago(getattr(t, "modified", None))})
-            # recent clients
-            new_clients = User.objects.filter(cabinet=cab, is_cabinet_member=False).order_by("-id")[:5]
+                stream.append(_activity_item(
+                    icon="CheckSquare",
+                    kind="task_completed",
+                    title=t.title,
+                    message=f"Task completed: {t.title}",
+                    at=getattr(t, "modified", None),
+                ))
+            new_clients = User.objects.filter(
+                cabinet=cab, is_cabinet_member=False
+            ).order_by("-id")[:5]
             for cl in new_clients:
-                stream.append({"icon": "Users",
-                               "message": f"New client added: {getattr(cl, 'first_name', 'Client')} ",
-                               "ago": "today"})
-            # recent document uploads
+                name = (getattr(cl, "first_name", None) or "").strip() or "Client"
+                stream.append(_activity_item(
+                    icon="Users",
+                    kind="client_added",
+                    title=name,
+                    message=f"New client added: {name} ",
+                    at=getattr(cl, "date_joined", None),
+                ))
             docs = Document.objects.filter(cabinet=cab).order_by("-created")[:5]
             for d in docs:
-                stream.append({"icon": "ClipboardList",
-                               "message": f"Document uploaded: {d.title}",
-                               "ago": format_ago(d.created)})
+                stream.append(_activity_item(
+                    icon="ClipboardList",
+                    kind="document_uploaded",
+                    title=d.title,
+                    message=f"Document uploaded: {d.title}",
+                    at=d.created,
+                ))
 
         # --- KPIs snapshot (omit invented metrics until billing/WIP exists) ---
         open_high_risk = (

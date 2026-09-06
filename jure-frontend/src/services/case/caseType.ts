@@ -1,4 +1,7 @@
 import { getCaseData, formatDate, getCountdownDays } from '@/utils/caseCardHelpers';
+import { interpolate } from '@/i18n/format';
+import { detectInitialLanguage } from '@/i18n/locale';
+import { getMessages } from '@/i18n/messages';
 
 export type BackendCaseType = 'CONSULTATION' | 'LITIGATION' | 'ADMINISTRATIVE';
 
@@ -99,15 +102,17 @@ export function formatShortDate(iso: string | null | undefined): string {
 
 export function formatDuration(value: unknown): string {
   if (value == null || value === '') return '';
+  const minutesShort = getMessages(detectInitialLanguage()).calendar.minutesShort;
+  const asMinutes = (n: number | string) => interpolate(minutesShort, { n });
   if (typeof value === 'number' && Number.isFinite(value)) {
-    return `${value} min`;
+    return asMinutes(value);
   }
   const s = String(value);
-  if (s === '15min') return '15 min';
-  if (s === '30min') return '30 min';
-  if (s === '1h') return '60 min';
-  if (s === '2h') return '120 min';
-  if (/^\d+$/.test(s)) return `${s} min`;
+  if (s === '15min') return asMinutes(15);
+  if (s === '30min') return asMinutes(30);
+  if (s === '1h') return asMinutes(60);
+  if (s === '2h') return asMinutes(120);
+  if (/^\d+$/.test(s)) return asMinutes(s);
   return s;
 }
 

@@ -26,7 +26,7 @@ import { TVA_LEGAL_THRESHOLD_MAD } from '@/components/finance/tva/TVAProgressBar
 import { useToast } from '@/hooks/use-toast';
 import { isAxiosError } from 'axios';
 import { devError } from '@/utils/devLog';
-import { formatDate, useAppTranslation } from '@/i18n';
+import { formatDate, localizeApiMessage, useAppTranslation } from '@/i18n';
 
 type Props = {
   open: boolean;
@@ -141,7 +141,7 @@ export const GenerateInvoiceModal: React.FC<Props> = ({
           }
         }
       }
-      toast({ title: t.common.error, description: msg, variant: 'destructive' });
+      toast({ title: t.common.error, description: localizeApiMessage(msg, msg), variant: 'destructive' });
     } finally {
       setLoading(false);
     }
@@ -194,7 +194,7 @@ export const GenerateInvoiceModal: React.FC<Props> = ({
             <SelectContent>
               {fees.map((f) => (
                 <SelectItem key={f.id} value={String(f.id)}>
-                  {t.finance.feeTypes[f.fee_type as keyof typeof t.finance.feeTypes] ?? f.fee_type} · {formatMAD(f.planned_amount)}
+                  {t.finance.feeTypes[f.fee_type as keyof typeof t.finance.feeTypes] ?? f.fee_type} · {formatMAD(f.planned_amount, lang)}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -224,8 +224,8 @@ export const GenerateInvoiceModal: React.FC<Props> = ({
             {exonere ? (
               <>
                 <p className="mt-1 text-slate-800 dark:text-slate-200">{m.exemptLabel}</p>
-                <p className="mt-1 text-slate-600 dark:text-slate-400">{tf(m.tvaAmount, { amount: formatMAD(0) })}</p>
-                <p className="mt-1 font-semibold text-slate-900 dark:text-white">{tf(m.ttcEqualsHt, { amount: formatMAD(ttc) })}</p>
+                <p className="mt-1 text-slate-600 dark:text-slate-400">{tf(m.tvaAmount, { amount: formatMAD(0, lang) })}</p>
+                <p className="mt-1 font-semibold text-slate-900 dark:text-white">{tf(m.ttcEqualsHt, { amount: formatMAD(ttc, lang) })}</p>
                 <p className="mt-2 text-[12px] leading-relaxed text-slate-600 dark:text-slate-400">
                   {m.exemptionMention}
                 </p>
@@ -237,8 +237,8 @@ export const GenerateInvoiceModal: React.FC<Props> = ({
               </>
             ) : assujetti ? (
               <>
-                <p className="mt-1 text-slate-600 dark:text-slate-400">{tf(m.tvaRateLine, { amount: formatMAD(tva) })}</p>
-                <p className="mt-1 font-semibold text-slate-900 dark:text-white">{tf(m.ttcLine, { amount: formatMAD(ttc) })}</p>
+                <p className="mt-1 text-slate-600 dark:text-slate-400">{tf(m.tvaRateLine, { amount: formatMAD(tva, lang) })}</p>
+                <p className="mt-1 font-semibold text-slate-900 dark:text-white">{tf(m.ttcLine, { amount: formatMAD(ttc, lang) })}</p>
                 <p className="mt-2 text-[12px] leading-relaxed text-slate-600 dark:text-slate-400">
                   {tf(m.liabilityNote, {
                     date: formatCrossedDate(tvaStatus?.tva_became_applicable_at ?? tvaStatus?.crossed_at),
@@ -247,8 +247,8 @@ export const GenerateInvoiceModal: React.FC<Props> = ({
               </>
             ) : (
               <>
-                <p className="text-slate-600 dark:text-slate-400">{tf(m.tvaRateLine, { amount: formatMAD(tva) })}</p>
-                <p className="mt-1 font-semibold text-slate-900 dark:text-white">{tf(m.ttcLine, { amount: formatMAD(ttc) })}</p>
+                <p className="text-slate-600 dark:text-slate-400">{tf(m.tvaRateLine, { amount: formatMAD(tva, lang) })}</p>
+                <p className="mt-1 font-semibold text-slate-900 dark:text-white">{tf(m.ttcLine, { amount: formatMAD(ttc, lang) })}</p>
               </>
             )}
           </div>

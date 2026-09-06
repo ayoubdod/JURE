@@ -7,7 +7,7 @@
  */
 
 import { useCallSessionStore } from '@/stores/callSessionStore';
-import { unlockRemoteAudioPlayback } from '@/utils/webrtc';
+import { displayCallTitle, unlockRemoteAudioPlayback } from '@/utils/webrtc';
 import { detectInitialLanguage, interpolate, tFor } from '@/i18n';
 
 export const CALL_NOTIFICATION_TAG = 'jure-incoming-call';
@@ -177,10 +177,11 @@ export type IncomingCallNotifyOpts = {
 export async function showIncomingCallNotification(opts: IncomingCallNotifyOpts): Promise<void> {
   const kind = opts.kind === 'video' ? 'video' : 'voice';
   const copy = callCopy();
+  const callerName = displayCallTitle(opts.callerName) || opts.callerName;
   const title = kind === 'video' ? copy.incomingVideo : copy.incoming;
-  const body = interpolate(copy.callingBody, { name: opts.callerName });
+  const body = interpolate(copy.callingBody, { name: callerName });
 
-  startTitleFlash(opts.callerName, kind);
+  startTitleFlash(callerName, kind);
   vibrateRing();
 
   if (!isCallNotifyEnabled()) return;

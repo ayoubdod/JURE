@@ -1,5 +1,5 @@
 import { TaskPriority, TaskStatus } from '@/utils/constants';
-import type { AppMessages } from '@/i18n';
+import { detectInitialLanguage, tFor, type AppMessages } from '@/i18n';
 
 export type CaseDateSourceType = 'CASE_DEADLINE' | 'CASE_DUE_DATE' | 'CONSULTATION_DATE';
 
@@ -64,7 +64,8 @@ export function normalizeCaseDateRaw(raw: Record<string, unknown>, index: number
   const idBase = raw.id != null ? String(raw.id) : `idx-${index}`;
   const meta = (raw.meta as Record<string, unknown> | undefined) ?? {};
   const ref = String(meta.caseRef ?? rc?.reference ?? raw.caseRef ?? '');
-  const baseTitle = String(raw.title ?? raw.label ?? 'Case date');
+  const untitled = tFor(detectInitialLanguage()).calendar.sourceTypes.caseDate;
+  const baseTitle = String(raw.title ?? raw.label ?? untitled);
   const format = String(meta.format ?? raw.format ?? '');
   return {
     id: `case-date-${idBase}-${start}`,

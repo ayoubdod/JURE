@@ -3,10 +3,13 @@
 import { useCallback, useState } from 'react';
 import { isAxiosError } from 'axios';
 import { apiConvertCase } from '@/services/case/api';
+import { useAppTranslation, localizeApiMessage } from '@/i18n';
 
 export function useConvertCase() {
   const [loading, setLoading] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const { t } = useAppTranslation();
+  const cw = t.cases.modal.consultationWorkflow;
 
   const clearError = useCallback(() => setSubmitError(null), []);
 
@@ -30,7 +33,7 @@ export function useConvertCase() {
               : {}),
           };
         }
-        setSubmitError('Something went wrong, please try again.');
+        setSubmitError(t.errors.generic);
         return null;
       } catch (e: unknown) {
         if (isAxiosError(e)) {
@@ -51,23 +54,23 @@ export function useConvertCase() {
             (Array.isArray(errData?.non_field_errors) && errData.non_field_errors[0]) ||
             null;
           if (status === 409) {
-            setSubmitError('This consultation has already been converted.');
+            setSubmitError(cw.alreadyConverted);
           } else if (status === 400 && msg) {
-            setSubmitError(msg);
+            setSubmitError(localizeApiMessage(msg, msg));
           } else if (status === 404) {
-            setSubmitError('Consultation not found.');
+            setSubmitError(cw.convertNotFound);
           } else {
-            setSubmitError('Something went wrong, please try again.');
+            setSubmitError(t.errors.generic);
           }
         } else {
-          setSubmitError('Something went wrong, please try again.');
+          setSubmitError(t.errors.generic);
         }
         return null;
       } finally {
         setLoading(false);
       }
     },
-    []
+    [cw, t.errors.generic]
   );
 
   return { convert, loading, submitError, setSubmitError, clearError };

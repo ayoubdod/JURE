@@ -27,7 +27,7 @@ import CaseModal, { CaseModalRef } from '@/components/case/CaseModal';
 import CaseDeleteModal, { CaseDeleteModalRef } from '@/components/case/CaseDeleteModal';
 import ScheduleAppointmentDialog, {
   ScheduleAppointmentDialogRef,
-} from '@/components/ScheduleAppointmentDialog';
+} from '@/components/appointments/ScheduleAppointmentDialog';
 import TaskCreateModal, { TaskCreateModalRef } from '@/components/task/TaskCreateModal';
 import ClientProfilePreview, { ClientProfilePreviewRef } from '@/components/client/ClientProfilePreview';
 import { usePermission } from '@/hooks/usePermissions';
@@ -574,7 +574,7 @@ export default function LitigationWorkspace() {
                   className="h-9 px-3 text-[12px] font-semibold rounded-md shadow-sm shadow-primary/15"
                   onClick={openCreate}
                 >
-                  <Plus className="w-4 h-4 mr-1.5" strokeWidth={2.5} />
+                  <Plus className="w-4 h-4 me-1.5" strokeWidth={2.5} />
                   {copy.newCta}
                 </Button>
               ) : undefined

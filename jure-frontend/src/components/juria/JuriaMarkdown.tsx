@@ -52,8 +52,8 @@ export function JuriaMarkdown({ content, className }: { content: string; classNa
               {mapTextChildren(children)}
             </p>
           ),
-          ul: ({ children }) => <ul className="mb-2 list-disc pl-4 text-[13px] text-slate-800 dark:text-slate-100">{children}</ul>,
-          ol: ({ children }) => <ol className="mb-2 list-decimal pl-4 text-[13px] text-slate-800 dark:text-slate-100">{children}</ol>,
+          ul: ({ children }) => <ul className="mb-2 list-disc ps-4 text-[13px] text-slate-800 dark:text-slate-100">{children}</ul>,
+          ol: ({ children }) => <ol className="mb-2 list-decimal ps-4 text-[13px] text-slate-800 dark:text-slate-100">{children}</ol>,
           li: ({ children }) => <li className="mb-1">{mapTextChildren(children)}</li>,
           strong: ({ children }) => <strong className="font-semibold text-slate-900 dark:text-white">{children}</strong>,
           h1: ({ children }) => <h3 className="mb-1 text-sm font-semibold">{children}</h3>,
@@ -75,7 +75,7 @@ export function JuriaMarkdown({ content, className }: { content: string; classNa
             );
           },
           blockquote: ({ children }) => (
-            <blockquote className="border-l-2 border-indigo-300 pl-3 text-[13px] italic text-slate-600 dark:border-indigo-600 dark:text-slate-300">
+            <blockquote className="border-s-2 border-indigo-300 ps-3 text-[13px] italic text-slate-600 dark:border-indigo-600 dark:text-slate-300">
               {mapTextChildren(children)}
             </blockquote>
           ),

@@ -24,7 +24,7 @@ import CaseModal, { CaseModalRef } from '@/components/case/CaseModal';
 import CaseDeleteModal, { CaseDeleteModalRef } from '@/components/case/CaseDeleteModal';
 import ScheduleAppointmentDialog, {
   ScheduleAppointmentDialogRef,
-} from '@/components/ScheduleAppointmentDialog';
+} from '@/components/appointments/ScheduleAppointmentDialog';
 import TaskCreateModal, { TaskCreateModalRef } from '@/components/task/TaskCreateModal';
 import ConsultationCard from '@/components/case/cards/ConsultationCard';
 import LitigationCard from '@/components/case/cards/LitigationCard';
@@ -1048,6 +1048,13 @@ export default function CaseTypeWorkspace({ kind }: CaseTypeWorkspaceProps) {
           setPageSize(n);
           setPage(1);
         }}
+        paginationItemLabel={
+          kind === 'CONSULTATION'
+            ? copy.paginationLabel
+            : kind === 'LITIGATION'
+              ? copy.paginationLabel
+              : t.sidebar.administrative
+        }
         holderRef={setHolderEl}
         mobileList={mobileList}
         toolbarEnd={adminViewToggle}

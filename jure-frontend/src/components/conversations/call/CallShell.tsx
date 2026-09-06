@@ -2,8 +2,10 @@ import React from 'react';
 import CallDialog from '@/components/chat/CallDialog';
 import IncomingCallNotification from '@/components/conversations/call/IncomingCallNotification';
 import { useCallSessionStore, useWebRtcCall } from '@/stores/callSessionStore';
+import { useAppTranslation } from '@/i18n';
 import {
   attachRemoteMedia,
+  displayCallTitle,
   onRemoteAudioPlayBlocked,
   parkRemoteAudioIn,
   refreshRemoteAudioPlayback,
@@ -13,6 +15,7 @@ import {
  * App-level call UI. Mount once under DashboardLayout so calls survive navigation.
  */
 const CallShell: React.FC = () => {
+  const { t } = useAppTranslation();
   const bootstrap = useCallSessionStore((s) => s.bootstrap);
   React.useEffect(() => {
     bootstrap();
@@ -94,7 +97,7 @@ const CallShell: React.FC = () => {
           onClick={handleTapToHear}
           className="fixed bottom-24 left-1/2 z-[120] -translate-x-1/2 rounded-full bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg ring-1 ring-indigo-400/40"
         >
-          Tap to hear
+          {t.conversations.call.tapToHear}
         </button>
       ) : null}
 
@@ -102,7 +105,7 @@ const CallShell: React.FC = () => {
         <IncomingCallNotification
           visible
           kind={callState.kind}
-          callerName={callState.remoteUser.name}
+          callerName={displayCallTitle(callState.remoteUser.name) || callState.remoteUser.name}
           callerAvatar={callState.remoteUser.avatar}
           firstName={callState.remoteUser.firstName}
           lastName={callState.remoteUser.lastName}
@@ -120,8 +123,12 @@ const CallShell: React.FC = () => {
           callState={callState}
           remoteName={
             callState.mode === 'conference' && callState.displayTitle
-              ? callState.displayTitle
-              : callState.remoteUser?.name ?? callState.displayTitle ?? 'Call'
+              ? displayCallTitle(callState.displayTitle)
+                || callState.displayTitle
+                || t.conversations.call.groupCallTitle
+              : callState.remoteUser?.name
+                ?? displayCallTitle(callState.displayTitle)
+                ?? t.conversations.call.call
           }
           remoteAvatar={callState.remoteUser?.avatar}
           remoteFirstName={callState.remoteUser?.firstName}

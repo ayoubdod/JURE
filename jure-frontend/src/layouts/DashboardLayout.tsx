@@ -12,9 +12,7 @@ import { TVAThresholdNotification } from '@/components/finance/tva/TVAThresholdN
 import { NotificationProvider } from '@/context/NotificationContext'
 import { MobileNavProvider } from '@/context/MobileNavContext'
 import { NotificationToastStack } from '@/components/notifications/NotificationToastStack'
-import { JuriaFloatingAssistant } from '@/components/juria/JuriaFloatingAssistant'
 import CallShell from '@/components/conversations/call/CallShell'
-import { JURIA_ENABLED } from '@/config/features'
 import { cn } from '@/lib/utils'
 import { ShortcutsProvider } from '@/context/ShortcutsContext'
 import CommandPalette from '@/components/shortcuts/CommandPalette'
@@ -23,6 +21,8 @@ import QuickCreateHost from '@/components/shortcuts/QuickCreateHost'
 import { useIdleLogout } from '@/hooks/useIdleLogout'
 import AuroraBackground, { auroraForAppPath } from '@/components/common/AuroraBackground'
 import { restorePointerEvents } from '@/lib/unlockUi'
+import { Helmet } from 'react-helmet-async'
+import { useAppTranslation, type AppMessages } from '@/i18n'
 
 const isDashboardIndex = (path: string) =>
   path === '/dashboard' || path === '/dashboard/'
@@ -60,6 +60,35 @@ const isLibraryPage = (path: string) =>
 const isNotesPage = (path: string) =>
   path.startsWith('/dashboard/notes')
 
+function dashboardDocumentTitle(path: string, t: AppMessages): string {
+  if (path.startsWith('/dashboard/conversations') || path.startsWith('/dashboard/messages')) {
+    return t.sidebar.conversations
+  }
+  if (path.startsWith('/dashboard/calendar')) return t.sidebar.calendar
+  if (path.startsWith('/dashboard/tasks')) return t.sidebar.tasks
+  if (path.startsWith('/dashboard/appointments') || path.startsWith('/dashboard/appointment')) {
+    return t.sidebar.appointment
+  }
+  if (path.startsWith('/dashboard/team')) return t.sidebar.team
+  if (path.startsWith('/dashboard/cases/consultations')) return t.sidebar.consultation
+  if (path.startsWith('/dashboard/cases/litigation')) return t.sidebar.litigation
+  if (path.startsWith('/dashboard/cases/administrative')) return t.sidebar.administrative
+  if (path.startsWith('/dashboard/cases')) return t.sidebar.cases
+  if (path.startsWith('/dashboard/clients')) return t.sidebar.clients
+  if (path.startsWith('/dashboard/finance')) return t.finance.title
+  if (path.startsWith('/dashboard/juria') || path.startsWith('/dashboard/legal-ai')) {
+    return t.sidebar.legalAi
+  }
+  if (path.startsWith('/dashboard/library')) return t.sidebar.library
+  if (path.startsWith('/dashboard/notes')) return t.notes.pageTitle
+  if (path.startsWith('/dashboard/settings')) return t.settings.pageTitle
+  if (path.startsWith('/dashboard/support')) return t.support.pageTitle
+  if (path.startsWith('/dashboard/profile')) return t.sidebar.myProfile
+  if (path.startsWith('/dashboard/account')) return t.sidebar.account
+  if (path.startsWith('/dashboard/notifications')) return t.sidebar.notifications
+  return t.sidebar.dashboard
+}
+
 function readSidebarExpanded(): boolean {
   try {
     const stored = localStorage.getItem(SIDEBAR_EXPANDED_STORAGE_KEY)
@@ -72,6 +101,7 @@ function readSidebarExpanded(): boolean {
 
 const DashboardLayout = () => {
   useIdleLogout()
+  const { t } = useAppTranslation()
   const [activeTab, setActiveTab] = useState('')
   const [sidebarExpanded, setSidebarExpanded] = useState(readSidebarExpanded)
   const location = useLocation()
@@ -142,6 +172,9 @@ const DashboardLayout = () => {
           }
           style={{ ['--sidebar-rail-width' as string]: sidebarWidth }}
         >
+          <Helmet>
+            <title>{dashboardDocumentTitle(location.pathname, t)} | JURE</title>
+          </Helmet>
           <AuroraBackground intensity={auroraForAppPath(location.pathname)} />
           <Sidebar
             activeTab={activeTab}
@@ -161,8 +194,6 @@ const DashboardLayout = () => {
             <TVAThresholdNotification />
 
             <NotificationToastStack />
-
-            {JURIA_ENABLED ? <JuriaFloatingAssistant /> : null}
 
             <CallShell />
 

@@ -156,7 +156,7 @@ const CallControls: React.FC<{
                   <button
                     type="button"
                     role="menuitem"
-                    className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-slate-50 dark:hover:bg-slate-800"
+                    className="flex w-full items-center gap-2 px-3 py-2 text-start text-sm hover:bg-slate-50 dark:hover:bg-slate-800"
                     onClick={() => {
                       setMoreOpen(false);
                       onMinimize();
@@ -169,7 +169,7 @@ const CallControls: React.FC<{
                   <button
                     type="button"
                     role="menuitem"
-                    className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-slate-50 dark:hover:bg-slate-800"
+                    className="flex w-full items-center gap-2 px-3 py-2 text-start text-sm hover:bg-slate-50 dark:hover:bg-slate-800"
                     onClick={() => {
                       setMoreOpen(false);
                       onExpand();
@@ -183,7 +183,7 @@ const CallControls: React.FC<{
                   <button
                     type="button"
                     role="menuitem"
-                    className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-slate-50 dark:hover:bg-slate-800"
+                    className="flex w-full items-center gap-2 px-3 py-2 text-start text-sm hover:bg-slate-50 dark:hover:bg-slate-800"
                     onClick={() => {
                       setMoreOpen(false);
                       setDevicesOpen(true);
@@ -285,7 +285,7 @@ const CallControls: React.FC<{
                   <button
                     type="button"
                     role="menuitem"
-                    className="flex w-full items-center gap-2 px-3 py-2.5 text-left text-sm hover:bg-white/10"
+                    className="flex w-full items-center gap-2 px-3 py-2.5 text-start text-sm hover:bg-white/10"
                     onClick={() => {
                       setMoreOpen(false);
                       onMinimize();
@@ -298,7 +298,7 @@ const CallControls: React.FC<{
                   <button
                     type="button"
                     role="menuitem"
-                    className="flex w-full items-center gap-2 px-3 py-2.5 text-left text-sm hover:bg-white/10"
+                    className="flex w-full items-center gap-2 px-3 py-2.5 text-start text-sm hover:bg-white/10"
                     onClick={() => {
                       setMoreOpen(false);
                       setDevicesOpen(true);
@@ -538,7 +538,7 @@ const CallControls: React.FC<{
                   <button
                     type="button"
                     role="menuitem"
-                    className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-slate-50 dark:hover:bg-slate-800"
+                    className="flex w-full items-center gap-2 px-3 py-2 text-start text-sm hover:bg-slate-50 dark:hover:bg-slate-800"
                     onClick={() => {
                       setMoreOpen(false);
                       onMinimize();
@@ -551,7 +551,7 @@ const CallControls: React.FC<{
                   <button
                     type="button"
                     role="menuitem"
-                    className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-slate-50 dark:hover:bg-slate-800"
+                    className="flex w-full items-center gap-2 px-3 py-2 text-start text-sm hover:bg-slate-50 dark:hover:bg-slate-800"
                     onClick={() => {
                       setMoreOpen(false);
                       onExpand();
@@ -565,7 +565,7 @@ const CallControls: React.FC<{
                   <button
                     type="button"
                     role="menuitem"
-                    className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-slate-50 dark:hover:bg-slate-800"
+                    className="flex w-full items-center gap-2 px-3 py-2 text-start text-sm hover:bg-slate-50 dark:hover:bg-slate-800"
                     onClick={() => {
                       setMoreOpen(false);
                       setDevicesOpen(true);

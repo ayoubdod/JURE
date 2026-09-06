@@ -155,6 +155,7 @@ class Message(TimeStampedModel):
 
     def clean(self):
         from django.core.exceptions import ValidationError
+        from django.utils.translation import gettext as _
 
         super().clean()
         fk_count = sum(
@@ -168,17 +169,17 @@ class Message(TimeStampedModel):
             if x
         )
         if fk_count > 1:
-            raise ValidationError("Only one shared item reference is allowed per message.")
+            raise ValidationError(_("Only one shared item reference is allowed per message."))
         if self.message_type == self.MessageType.SHARED_CASE and not self.shared_case_id:
-            raise ValidationError("shared_case is required when message_type is SHARED_CASE.")
+            raise ValidationError(_("shared_case is required when message_type is SHARED_CASE."))
         if self.message_type == self.MessageType.SHARED_TASK and not self.shared_task_id:
-            raise ValidationError("shared_task is required when message_type is SHARED_TASK.")
+            raise ValidationError(_("shared_task is required when message_type is SHARED_TASK."))
         if self.message_type == self.MessageType.SHARED_APPOINTMENT and not self.shared_appointment_id:
-            raise ValidationError("shared_appointment is required when message_type is SHARED_APPOINTMENT.")
+            raise ValidationError(_("shared_appointment is required when message_type is SHARED_APPOINTMENT."))
         if self.message_type in self.call_message_types() and not self.shared_call_id:
-            raise ValidationError("shared_call is required for call history messages.")
+            raise ValidationError(_("shared_call is required for call history messages."))
         if self.message_type == self.MessageType.TEXT and fk_count:
-            raise ValidationError("Text messages cannot reference a shared item.")
+            raise ValidationError(_("Text messages cannot reference a shared item."))
 
 
 class MessagePin(TimeStampedModel):

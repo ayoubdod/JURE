@@ -507,7 +507,7 @@ const CaseViewModal = forwardRef<CaseViewModalRef, CaseViewModalProps>(
                       {instance.assigned_to ? (
                         <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-3 py-2.5 dark:border-zinc-800 dark:bg-zinc-950">
                           <UserAvatar
-                            image={getPersonImage(instance.assigned_to as Record<string, unknown>)}
+                            image={getPersonImage(instance.assigned_to)}
                             firstName={instance.assigned_to.first_name}
                             lastName={instance.assigned_to.last_name}
                             email={instance.assigned_to.email}
@@ -541,7 +541,7 @@ const CaseViewModal = forwardRef<CaseViewModalRef, CaseViewModalProps>(
                           onClick={addAssignee}
                           className="h-8 px-3 text-xs shadow-none"
                         >
-                          <UserPlus className="mr-1 h-3 w-3" />
+                          <UserPlus className="me-1 h-3 w-3" />
                           {t.common.add}
                         </Button>
                       </div>
@@ -558,7 +558,7 @@ const CaseViewModal = forwardRef<CaseViewModalRef, CaseViewModalProps>(
                             >
                               <div className="flex min-w-0 flex-1 items-center gap-3">
                                 <UserAvatar
-                                  image={getPersonImage(assignee as Record<string, unknown>)}
+                                  image={getPersonImage(assignee)}
                                   firstName={assignee.first_name}
                                   lastName={assignee.last_name}
                                   size="sm"
@@ -592,7 +592,7 @@ const CaseViewModal = forwardRef<CaseViewModalRef, CaseViewModalProps>(
                   <CreateFormSection index="03" title={modal.fields.relatedClient}>
                     <div className="flex items-start gap-4 rounded-xl border border-slate-200 bg-white px-3 py-3 dark:border-zinc-800 dark:bg-zinc-950">
                       <UserAvatar
-                        image={getPersonImage(instance.client as Record<string, unknown>)}
+                        image={getPersonImage(instance.client)}
                         firstName={
                           instance.client.client_type === 'COMPANY'
                             ? instance.client.last_name

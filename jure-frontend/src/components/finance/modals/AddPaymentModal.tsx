@@ -24,7 +24,7 @@ import { normalizeCaseFinancePayload } from '@/utils/normalizeCaseFinance';
 import { useToast } from '@/hooks/use-toast';
 import { isAxiosError } from 'axios';
 import { devError } from '@/utils/devLog';
-import { useAppTranslation } from '@/i18n';
+import { useAppTranslation, localizeApiMessage } from '@/i18n';
 
 type Props = {
   open: boolean;
@@ -132,7 +132,7 @@ export const AddPaymentModal: React.FC<Props> = ({ open, onOpenChange, caseId, i
           }
         }
       }
-      toast({ title: t.common.error, description: msg, variant: 'destructive' });
+      toast({ title: t.common.error, description: localizeApiMessage(msg, msg), variant: 'destructive' });
     } finally {
       setLoading(false);
     }

@@ -1,6 +1,7 @@
 import type { JuriaApiConversationDetail, JuriaApiConversationListItem, JuriaApiMessage } from '@/services/juria/types';
 import { normalizeJuriaConversationId } from '@/services/juria/api';
 import type { JuriaConversation, JuriaMessage, JuriaMode } from '@/types/juria';
+import { detectInitialLanguage, tFor } from '@/i18n';
 
 const MODES: JuriaMode[] = ['CHAT', 'CONTRACT_ANALYSIS', 'LEGAL_RESEARCH', 'DOCUMENT_DRAFTING'];
 
@@ -13,7 +14,7 @@ export function mapApiListItemToConversation(item: JuriaApiConversationListItem)
   const id = normalizeJuriaConversationId(item.id) ?? String(item.id ?? '');
   return {
     id,
-    title: (item.title || '').trim() || 'Conversation',
+    title: (item.title || '').trim() || tFor(detectInitialLanguage()).juria.newConversation,
     mode: mapMode(item.mode),
     caseId: item.linked_case_id ?? undefined,
     archived: Boolean(item.is_archived),
@@ -57,7 +58,7 @@ export function mapApiMessageToJuria(m: JuriaApiMessage): JuriaMessage {
 
   if (m.generated_document_path) {
     msg.documentCard = {
-      typeName: 'Document généré',
+      typeName: tFor(detectInitialLanguage()).juria.generatedDocument,
       previewLines: (m.content || '').split('\n').slice(0, 4).join('\n').trim() || '—',
       generatedAt: m.created_at,
       downloadMessageId: m.id,

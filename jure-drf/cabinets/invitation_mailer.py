@@ -24,11 +24,11 @@ SETUP_PASSWORD_PATH = "/setup-password"
 def _validate_email_address(email: str) -> None:
     """Raise ValidationError with a specific message if email is invalid."""
     if not email or not str(email).strip():
-        raise ValidationError("Invalid email address.")
+        raise ValidationError(_("Invalid email address."))
     try:
         validate_email(email.strip().lower())
     except ValidationError:
-        raise ValidationError("Invalid email address.")
+        raise ValidationError(_("Invalid email address."))
 
 
 class InvitationMailer:

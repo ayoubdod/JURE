@@ -13,25 +13,25 @@ export const LITIGATION_LEVEL_SECTIONS: Array<{
 }> = [
   {
     key: 'FIRST_INSTANCE',
-    accent: 'border-l-blue-500 bg-blue-50/70 dark:bg-blue-950/25',
+    accent: 'border-s-blue-500 bg-blue-50/70 dark:bg-blue-950/25',
     header: 'text-blue-800 dark:text-blue-200',
     count: 'bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-200',
   },
   {
     key: 'APPEAL',
-    accent: 'border-l-violet-500 bg-violet-50/70 dark:bg-violet-950/25',
+    accent: 'border-s-violet-500 bg-violet-50/70 dark:bg-violet-950/25',
     header: 'text-violet-800 dark:text-violet-200',
     count: 'bg-violet-100 text-violet-800 dark:bg-violet-900/50 dark:text-violet-200',
   },
   {
     key: 'CASSATION',
-    accent: 'border-l-slate-500 bg-slate-50/80 dark:bg-slate-900/40',
+    accent: 'border-s-slate-500 bg-slate-50/80 dark:bg-slate-900/40',
     header: 'text-slate-800 dark:text-slate-200',
     count: 'bg-slate-200 text-slate-800 dark:bg-slate-800 dark:text-slate-200',
   },
   {
     key: 'OTHER',
-    accent: 'border-l-amber-500 bg-amber-50/70 dark:bg-amber-950/25',
+    accent: 'border-s-amber-500 bg-amber-50/70 dark:bg-amber-950/25',
     header: 'text-amber-800 dark:text-amber-200',
     count: 'bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-200',
   },

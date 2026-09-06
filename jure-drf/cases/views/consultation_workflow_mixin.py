@@ -1,5 +1,6 @@
 """Follow-up, attachments, confirmation email, and schedule-conflict actions."""
 from django.db.models import Q
+from django.utils.translation import gettext as _
 from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
@@ -27,7 +28,7 @@ class ConsultationWorkflowMixin:
             )
         cab = get_user_cabinet(request.user)
         if not cab:
-            raise PermissionDenied("User has no cabinet.")
+            raise PermissionDenied(_("User has no cabinet."))
         try:
             child = execute_follow_up_creation(source, request.data, cab, request.user)
         except Exception as exc:

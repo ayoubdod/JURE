@@ -31,7 +31,7 @@ import { getRemoteFieldsValidation } from '@/utils/functions';
 import { isAxiosError } from 'axios';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { Textarea } from '../ui/textarea';
-import TagsInput from '../TagsInput';
+import TagsInput from '@/components/common/TagsInput';
 import { cn } from '@/lib/utils';
 import { Label } from '@/components/ui/label';
 import { useAppTranslation } from '@/i18n';
@@ -478,12 +478,12 @@ const DocumentCreateModal = forwardRef<DocumentCreateModalRef, DocumentCreateMod
                 >
                   {submitPhase === 'loading' ? (
                     <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      <Loader2 className="me-2 h-4 w-4 animate-spin" />
                       {m.creating}
                     </>
                   ) : submitPhase === 'success' ? (
                     <>
-                      <Check className="mr-2 h-4 w-4" />
+                      <Check className="me-2 h-4 w-4" />
                       {m.createdTitle}
                     </>
                   ) : (

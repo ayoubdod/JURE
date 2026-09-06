@@ -6,13 +6,13 @@ import { CheckCircle2, AlertTriangle, Clock, Server, Database, Network, ArrowRig
 import MarketingShell from "@/components/landing/MarketingShell";
 import Reveal from "@/components/landing/Reveal";
 import { RouteSeo } from "@/marketing/Seo";
+import { useMarketingLang } from "@/marketing/MarketingLocale";
 
 type Lang = "fr" | "en" | "ar";
 
-const STRINGS: Record<Lang, any> = {
-  fr: {
+const statusFr = {
     htmlLang: "fr",
-    dir: "ltr",
+    dir: "ltr" as "ltr" | "rtl",
     nav: { features: "Fonctionnalités", pricing: "Tarifs", about: "À propos", contact: "Contact" },
     auth: { signin: "Se connecter" },
     themeToggle: { label: "Basculer le thème", title: "Basculer le thème" },
@@ -33,7 +33,12 @@ const STRINGS: Record<Lang, any> = {
     incidents: { title: "Incidents récents", none: "Aucun incident au cours des 7 derniers jours." },
     uptime: { title: "Uptime (30 jours)", foot: "Chiffres à titre indicatif. Intégrez vos métriques réelles plus tard." },
     footer: { privacy: "Confidentialité", terms: "Conditions", status: "Statut", rights: "Tous droits réservés." },
-  },
+};
+
+type StatusCopy = typeof statusFr;
+
+const STRINGS: Record<Lang, StatusCopy> = {
+  fr: statusFr,
   en: {
     htmlLang: "en",
     dir: "ltr",
@@ -120,6 +125,7 @@ const Badge: React.FC<{ tone: "ok" | "minor" | "major"; text: string }> = ({ ton
 const Status: React.FC = () => {
   const { lang, setLang, t } = useI18n();
   const navigate = useNavigate();
+  const { path } = useMarketingLang();
   const go = (to: string) => navigate(to);
 
   // Demo component states (replace with live data later)
@@ -159,10 +165,10 @@ const Status: React.FC = () => {
           </div>
 
           <div className="mt-8 flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center w-full sm:w-auto">
-            <Button onClick={() => go("/contact")} className="w-full sm:w-auto px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg landing-btn-primary">
-              {t.hero.ctaPrimary} <ArrowRight className="ms-2 h-4 w-4" />
+            <Button onClick={() => go(path("contact"))} className="w-full sm:w-auto px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg landing-btn-primary">
+              {t.hero.ctaPrimary} <ArrowRight className="ms-2 h-4 w-4 rtl:rotate-180" />
             </Button>
-            <Button variant="outline" onClick={() => go("/docs")} className="w-full sm:w-auto px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg landing-btn-secondary">
+            <Button variant="outline" onClick={() => go(path("docs"))} className="w-full sm:w-auto px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg landing-btn-secondary">
               {t.hero.ctaSecondary}
             </Button>
           </div>

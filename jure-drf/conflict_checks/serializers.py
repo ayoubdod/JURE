@@ -1,3 +1,4 @@
+from django.utils.translation import gettext as _
 from rest_framework import serializers
 
 from cases.models import Case
@@ -154,7 +155,7 @@ class ConflictSearchSerializer(serializers.Serializer):
             return value
         cabinet = self.context.get("cabinet")
         if not cabinet or not Case.objects.filter(pk=value, cabinet=cabinet).exists():
-            raise serializers.ValidationError("Matter not found in your cabinet.")
+            raise serializers.ValidationError(_("Matter not found in your cabinet."))
         return value
 
     def validate_exclude_matter_id(self, value):

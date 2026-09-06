@@ -18,7 +18,7 @@ const typeClass: Record<API.FinanceAlertType, string> = {
 };
 
 export const FinanceAlerts: React.FC<Props> = ({ alerts, onOpenCase }) => {
-  const { t } = useAppTranslation();
+  const { t, lang } = useAppTranslation();
   const count = alerts.length;
   return (
     <div className="rounded-xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-950 p-4 shadow-sm">
@@ -61,7 +61,7 @@ export const FinanceAlerts: React.FC<Props> = ({ alerts, onOpenCase }) => {
                   <p className="font-medium text-slate-900 dark:text-white">{a.message}</p>
                   <div className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-[12px] text-slate-600 dark:text-slate-400">
                     {a.case_reference ? <span>{t.finance.columns.case}: {a.case_reference}</span> : null}
-                    {a.amount != null ? <span>{formatMAD(a.amount)}</span> : null}
+                    {a.amount != null ? <span>{formatMAD(a.amount, lang)}</span> : null}
                     {a.due_date ? <span>{a.due_date}</span> : null}
                   </div>
                   {typeof a.case_id === 'number' ? (

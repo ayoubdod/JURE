@@ -1,5 +1,6 @@
 # cases/views/consultation_convert_mixin.py
 """POST .../convert/ action for consultation → litigation/administrative."""
+from django.utils.translation import gettext as _
 from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
@@ -80,7 +81,7 @@ class ConsultationConvertMixin:
 
         cab = get_user_cabinet(request.user)
         if not cab:
-            raise PermissionDenied("User has no cabinet.")
+            raise PermissionDenied(_("User has no cabinet."))
 
         extra_data = request.data.copy()
         extra_data.pop("targetType", None)

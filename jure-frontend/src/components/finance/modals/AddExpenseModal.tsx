@@ -6,6 +6,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -19,6 +20,7 @@ import {
 } from '@/components/ui/select';
 import { addExpense } from '@/services/finance/api';
 import { useToast } from '@/hooks/use-toast';
+import { useAppTranslation, localizeAxiosPayload } from '@/i18n';
 import { isAxiosError } from 'axios';
 
 type Props = {
@@ -32,6 +34,8 @@ const CATEGORIES: API.FinanceExpenseCategory[] = ['TRAVEL', 'COURT', 'EXPERT', '
 
 export const AddExpenseModal: React.FC<Props> = ({ open, onOpenChange, caseId, onSuccess }) => {
   const { toast } = useToast();
+  const { t } = useAppTranslation();
+  const m = t.finance.modals.addExpense;
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState<API.FinanceExpenseCategory>('OTHER');
   const [amount, setAmount] = useState('');
@@ -70,18 +74,16 @@ export const AddExpenseModal: React.FC<Props> = ({ open, onOpenChange, caseId, o
         receipt_reference: receipt.trim() || undefined,
         currency: 'MAD',
       });
-      toast({ title: 'Dépense enregistrée' });
+      toast({ title: t.finance.toasts.expenseSaved });
       reset();
       onOpenChange(false);
       onSuccess();
     } catch (err) {
-      let msg = 'Impossible d’enregistrer la dépense.';
+      let msg = t.finance.toasts.expenseSaveFailed;
       if (isAxiosError(err)) {
-        const d = err.response?.data;
-        if (typeof d === 'string') msg = d;
-        else if (d && typeof d === 'object' && 'detail' in d) msg = String((d as { detail: unknown }).detail);
+        msg = localizeAxiosPayload(err.response?.data, t.finance.toasts.expenseSaveFailed);
       }
-      toast({ title: 'Erreur', description: msg, variant: 'destructive' });
+      toast({ title: t.common.error, description: msg, variant: 'destructive' });
     } finally {
       setSaving(false);
     }
@@ -91,15 +93,16 @@ export const AddExpenseModal: React.FC<Props> = ({ open, onOpenChange, caseId, o
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Ajouter une dépense</DialogTitle>
+          <DialogTitle>{m.title}</DialogTitle>
+          <DialogDescription>{m.description}</DialogDescription>
         </DialogHeader>
         <div className="space-y-3 py-2">
           <div className="space-y-1.5">
-            <Label htmlFor="exp-desc">Description</Label>
+            <Label htmlFor="exp-desc">{m.notes}</Label>
             <Input id="exp-desc" value={description} onChange={(e) => setDescription(e.target.value)} />
           </div>
           <div className="space-y-1.5">
-            <Label>Catégorie</Label>
+            <Label>{m.category}</Label>
             <Select value={category} onValueChange={(v) => setCategory(v as API.FinanceExpenseCategory)}>
               <SelectTrigger>
                 <SelectValue />
@@ -107,7 +110,7 @@ export const AddExpenseModal: React.FC<Props> = ({ open, onOpenChange, caseId, o
               <SelectContent>
                 {CATEGORIES.map((c) => (
                   <SelectItem key={c} value={c}>
-                    {c}
+                    {t.finance.expenseCategories[c]}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -115,7 +118,7 @@ export const AddExpenseModal: React.FC<Props> = ({ open, onOpenChange, caseId, o
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="exp-amt">Montant (MAD)</Label>
+              <Label htmlFor="exp-amt">{m.amountMad}</Label>
               <Input
                 id="exp-amt"
                 type="number"
@@ -126,7 +129,7 @@ export const AddExpenseModal: React.FC<Props> = ({ open, onOpenChange, caseId, o
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="exp-date">Date</Label>
+              <Label htmlFor="exp-date">{m.date}</Label>
               <Input
                 id="exp-date"
                 type="date"
@@ -138,21 +141,21 @@ export const AddExpenseModal: React.FC<Props> = ({ open, onOpenChange, caseId, o
           <div className="flex flex-wrap gap-4">
             <label className="flex items-center gap-2 text-sm">
               <Checkbox checked={billable} onCheckedChange={(v) => setBillable(Boolean(v))} />
-              Facturable
+              {m.billable}
             </label>
             <label className="flex items-center gap-2 text-sm">
               <Checkbox checked={reimbursable} onCheckedChange={(v) => setReimbursable(Boolean(v))} />
-              Remboursable
+              {m.reimbursable}
             </label>
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="exp-ref">Réf. justificatif (optionnel)</Label>
+            <Label htmlFor="exp-ref">{m.receiptRef}</Label>
             <Input id="exp-ref" value={receipt} onChange={(e) => setReceipt(e.target.value)} />
           </div>
         </div>
         <DialogFooter>
           <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-            Annuler
+            {t.common.cancel}
           </Button>
           <Button
             type="button"
@@ -160,7 +163,7 @@ export const AddExpenseModal: React.FC<Props> = ({ open, onOpenChange, caseId, o
             disabled={!canSubmit || saving}
             onClick={handleSubmit}
           >
-            {saving ? 'Enregistrement…' : 'Enregistrer'}
+            {saving ? m.saving : t.common.save}
           </Button>
         </DialogFooter>
       </DialogContent>

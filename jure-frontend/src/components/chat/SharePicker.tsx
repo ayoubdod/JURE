@@ -64,14 +64,14 @@ function CaseResultRow({ row, onPick }: { row: ShareableSearchCaseHit; onPick: (
     <button
       type="button"
       onClick={onPick}
-      className="w-full text-left px-2 py-2 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors border-b border-slate-100 dark:border-slate-800 last:border-0"
+      className="w-full text-start px-2 py-2 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors border-b border-slate-100 dark:border-slate-800 last:border-0"
     >
       <div className="flex items-center gap-2 min-w-0">
         <span className={cn('h-2 w-2 shrink-0 rounded-full', caseDotClass(row))} aria-hidden />
         <span className="font-mono text-[11px] text-slate-600 dark:text-slate-400 shrink-0">{ref}</span>
         <span className="text-[13px] font-medium text-slate-800 dark:text-slate-200 truncate">{row.title ?? '—'}</span>
       </div>
-      <div className="flex flex-wrap items-center gap-1.5 mt-1 pl-4">
+      <div className="flex flex-wrap items-center gap-1.5 mt-1 ps-4">
         {row.status && <span className={statusBadgeClass()}>{enumLabel('caseStatus', String(row.status)) || String(row.status).replace(/_/g, ' ')}</span>}
         <span className={statusBadgeClass()}>{caseTypeLabel(row, t)}</span>
         {row.priority && (
@@ -88,13 +88,13 @@ function TaskResultRow({ row, onPick }: { row: ShareableSearchTaskHit; onPick: (
     <button
       type="button"
       onClick={onPick}
-      className="w-full text-left px-2 py-2 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors border-b border-slate-100 dark:border-slate-800 last:border-0"
+      className="w-full text-start px-2 py-2 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors border-b border-slate-100 dark:border-slate-800 last:border-0"
     >
       <div className="flex items-center gap-2 min-w-0">
         <CheckSquare className="h-3.5 w-3.5 shrink-0 text-indigo-500" aria-hidden />
         <span className="text-[13px] font-medium text-slate-800 dark:text-slate-200 truncate">{row.title ?? '—'}</span>
       </div>
-      <div className="flex flex-wrap items-center gap-1.5 mt-1 pl-6">
+      <div className="flex flex-wrap items-center gap-1.5 mt-1 ps-6">
         {row.status && <span className={statusBadgeClass()}>{enumLabel('taskStatus', String(row.status)) || String(row.status).replace(/_/g, ' ')}</span>}
         {taskPriorityShow(row.priority) && (
           <span className="text-[10px] font-semibold rounded-full px-1.5 py-0.5 bg-rose-500/15 text-rose-700 dark:text-rose-400 ring-1 ring-rose-500/25">
@@ -130,13 +130,13 @@ function AppointmentResultRow({ row, onPick }: { row: ShareableSearchAppointment
     <button
       type="button"
       onClick={onPick}
-      className="w-full text-left px-2 py-2 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors border-b border-slate-100 dark:border-slate-800 last:border-0"
+      className="w-full text-start px-2 py-2 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors border-b border-slate-100 dark:border-slate-800 last:border-0"
     >
       <div className="flex items-center gap-2 min-w-0">
         <Calendar className="h-3.5 w-3.5 shrink-0 text-emerald-600" aria-hidden />
         <span className="text-[13px] font-medium text-slate-800 dark:text-slate-200 truncate">{row.title ?? '—'}</span>
       </div>
-      <div className="flex flex-wrap items-center gap-1.5 mt-1 pl-6">
+      <div className="flex flex-wrap items-center gap-1.5 mt-1 ps-6">
         {row.status && <span className={statusBadgeClass()}>{enumLabel('caseStatus', String(row.status)) || String(row.status).replace(/_/g, ' ')}</span>}
         {when && <span className="text-[11px] text-slate-500 dark:text-slate-400">{formatShortDate(when, intlLocale(lang))}</span>}
         {dur && <span className="text-[11px] text-slate-500 dark:text-slate-400">{dur}</span>}
@@ -287,12 +287,12 @@ export function SharePicker({
           </div>
           <div className="px-2 py-2 border-b border-slate-200 dark:border-slate-800">
             <div className="relative">
-              <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+              <Search className="absolute start-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
               <Input
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder={t.conversations.shareSearchPlaceholder}
-                className="h-8 pl-8 text-[13px]"
+                className="h-8 ps-8 text-[13px]"
               />
             </div>
           </div>

@@ -1,11 +1,16 @@
 import { AxiosError } from "axios"
+import { localizeApiMessage } from '@/i18n/errors'
 
 export const getRemoteFieldsValidation = <T>(error: AxiosError): Record<keyof T, string | undefined> => {
     if(error.response?.status === 400) {
         return Object.keys(error.response?.data as object).reduce((acc, key) => {
             const raw = (error.response?.data as Record<string, unknown>)[key]
             const first = Array.isArray(raw) ? raw[0] : raw
-            acc[key as keyof T] = typeof first === 'string' ? first : JSON.stringify(first)
+            if (typeof first === 'string') {
+                acc[key as keyof T] = localizeApiMessage(first, first)
+            } else {
+                acc[key as keyof T] = JSON.stringify(first)
+            }
             return acc
         }, {} as Record<keyof T, string | undefined>)
     }

@@ -6,6 +6,7 @@ import { apiCreateCase, apiUpdateCase } from '@/services/case/api';
 import { toBackendCaseCreatePayload, toBackendCaseUpdatePayload } from '@/services/case/payloadBuilder';
 import { getCaseValidationErrors } from '@/services/case/validationErrors';
 import { useToast } from '@/hooks/use-toast';
+import { useAppTranslation } from '@/i18n';
 import type { UseFormSetError } from 'react-hook-form';
 
 export type CaseFormSetError = UseFormSetError<Record<string, unknown>>;
@@ -17,6 +18,8 @@ export function useCaseForm(
 ) {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const { t } = useAppTranslation();
+  const toasts = t.cases.toasts;
 
   const handleCreate = useCallback(
     async (data: API.CaseCreatePayload) => {
@@ -30,11 +33,11 @@ export function useCaseForm(
         if (isAxiosError(err)) {
           const status = err.response?.status;
           if (status === 403) {
-            setError('case_specific_data' as never, { type: 'server', message: 'No cabinet or insufficient permissions.' });
+            setError('case_specific_data' as never, { type: 'server', message: toasts.noCabinet });
             return;
           }
           if (status === 401) {
-            setError('case_specific_data' as never, { type: 'server', message: 'Please sign in again.' });
+            setError('case_specific_data' as never, { type: 'server', message: toasts.signInAgain });
             return;
           }
           const mapped = getCaseValidationErrors(err);
@@ -46,14 +49,14 @@ export function useCaseForm(
             setError('case_specific_data' as never, { type: 'server', message: messages.join(' ') });
           }
           if (messages.length > 0) {
-            toast({ title: 'Could not save', description: messages[0], variant: 'destructive' });
+            toast({ title: toasts.saveFailed, description: messages[0], variant: 'destructive' });
           }
         }
       } finally {
         setIsLoading(false);
       }
     },
-    [setError, onSuccess, onHide, toast]
+    [setError, onSuccess, onHide, toast, toasts]
   );
 
   const handleUpdate = useCallback(
@@ -68,11 +71,11 @@ export function useCaseForm(
         if (isAxiosError(err)) {
           const status = err.response?.status;
           if (status === 403) {
-            setError('case_specific_data' as never, { type: 'server', message: 'No cabinet or insufficient permissions.' });
+            setError('case_specific_data' as never, { type: 'server', message: toasts.noCabinet });
             return;
           }
           if (status === 401) {
-            setError('case_specific_data' as never, { type: 'server', message: 'Please sign in again.' });
+            setError('case_specific_data' as never, { type: 'server', message: toasts.signInAgain });
             return;
           }
           const mapped = getCaseValidationErrors(err);
@@ -88,7 +91,7 @@ export function useCaseForm(
         setIsLoading(false);
       }
     },
-    [setError, onSuccess, onHide]
+    [setError, onSuccess, onHide, toasts]
   );
 
   return { handleCreate, handleUpdate, isLoading };

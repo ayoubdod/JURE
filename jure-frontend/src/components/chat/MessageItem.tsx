@@ -41,8 +41,8 @@ import {
   callMetaFromMessage,
   isCallMessageType,
 } from '@/components/conversations/call/CallHistoryMessage';
-import { useAppTranslation } from '@/i18n';
-import { attachmentFileName, attachmentHref } from './conversationUtils';
+import { formatTime, useAppTranslation } from '@/i18n';
+import { attachmentFileName, attachmentHref, getMemberPerson } from './conversationUtils';
 
 function formatAttachmentSize(bytes?: number | null): string {
   if (bytes == null || !Number.isFinite(bytes) || bytes <= 0) return '';
@@ -127,14 +127,10 @@ const MessageItem: React.FC<MessageItemProps> = ({
   isLastInGroup = true,
 }) => {
   const currentUser = useUserStore((s) => s.user);
-  const { t, tf } = useAppTranslation();
+  const { t, tf, lang } = useAppTranslation();
   const callCopy = t.conversations.call;
 
-  // Helper: get person object from membership (backend may use user or cabinet_member)
-  const getMemberPerson = (m: API.ConversationMembership) =>
-    (m as any).user ?? (m as any).cabinet_member ?? (m as any).member;
-
-  const senderObj = (msg as any).sender;
+  const senderObj = msg.sender;
   const isNestedSender = typeof senderObj === 'object' && senderObj != null;
   const senderId = isNestedSender ? senderObj?.id ?? senderObj?.pk : senderObj;
   const sender = !isNestedSender && conversation.memberships
@@ -150,7 +146,7 @@ const MessageItem: React.FC<MessageItemProps> = ({
       ? getMemberPerson(sender)
       : null;
   const senderName = senderUser
-    ? (senderUser as any).full_name?.trim() ||
+    ? senderUser.full_name?.trim() ||
       `${senderUser.first_name ?? ''} ${senderUser.last_name ?? ''}`.trim() ||
       senderUser.email?.split('@')[0] ||
       t.conversations.unknownContact
@@ -170,20 +166,17 @@ const MessageItem: React.FC<MessageItemProps> = ({
   const otherId = otherMembership ? (getMemberPerson(otherMembership)?.id ?? getMemberPerson(otherMembership)?.pk) : null;
 
   const isOwn =
-    (msg as any).is_own === true ||
+    msg.is_own === true ||
     (myId != null && senderId != null && (myId == senderId || String(myId) === String(senderId))) ||
     (senderUser?.email && currentUser?.email && senderUser.email.toLowerCase() === currentUser.email.toLowerCase()) ||
     (conversation.type === 'direct' && otherId != null && senderId != null && String(senderId) !== String(otherId));
-  const time = new Date((msg as any).sent_at ?? (msg as any).created ?? 0).toLocaleTimeString([], {
-    hour: '2-digit',
-    minute: '2-digit',
-  });
+  const time = formatTime(msg.sent_at ?? msg.created ?? 0, lang);
 
   const [isGalleryOpen, setIsGalleryOpen] = useState(false);
   const [galleryInitialIndex, setGalleryInitialIndex] = useState(0);
 
-  const isDeleted = (msg as any).is_deleted === true;
-  const body = msg.body ?? (msg as any).content ?? (msg as any).text ?? (msg as any).message ?? '';
+  const isDeleted = msg.is_deleted === true;
+  const body = msg.body ?? msg.content ?? msg.text ?? msg.message ?? '';
   const attachments = msg.attachments ?? [];
   const fileAttachments = attachments.filter((a) => a.kind === MessageAttachmentKind.FILE);
   const nonFileAttachments = attachments.filter((a) => a.kind !== MessageAttachmentKind.FILE);
@@ -195,11 +188,9 @@ const MessageItem: React.FC<MessageItemProps> = ({
   const sharedIds = isShared ? getSharedIds(msg) : null;
   const coercedShared = isShared && sharedIds ? coerceMessageSharedItem(msg, messageType, sharedIds) : null;
   const showPlaceholder = isDeleted || (!isShared && !isCallHistory && !body && !hasAttachments);
-  const editedAt = (msg as any).edited_at;
-  const isPinned =
-    (msg as { is_pinned?: boolean }).is_pinned === true ||
-    (msg as { isPinned?: boolean }).isPinned === true;
-  const forwardedDetail = (msg as any).forwarded_from_detail as API.ForwardedFromDetail | undefined;
+  const editedAt = msg.edited_at;
+  const isPinned = msg.is_pinned === true || msg.isPinned === true;
+  const forwardedDetail = msg.forwarded_from_detail ?? undefined;
   const showTextBubble =
     showPlaceholder ||
     isShared ||
@@ -283,7 +274,7 @@ const MessageItem: React.FC<MessageItemProps> = ({
     <>
       {canEdit && onEdit && (
         <ContextMenuItem onClick={() => onEdit(msg)}>
-          <Pencil className="mr-2 h-3.5 w-3.5" />
+          <Pencil className="me-2 h-3.5 w-3.5" />
           Edit
         </ContextMenuItem>
       )}
@@ -292,13 +283,13 @@ const MessageItem: React.FC<MessageItemProps> = ({
           onClick={() => onDelete(msg)}
           className="text-destructive focus:text-destructive"
         >
-          <Trash2 className="mr-2 h-3.5 w-3.5" />
+          <Trash2 className="me-2 h-3.5 w-3.5" />
           Delete
         </ContextMenuItem>
       )}
       {canForward && onForward && (
         <ContextMenuItem onClick={() => onForward(msg)}>
-          <Forward className="mr-2 h-3.5 w-3.5" />
+          <Forward className="me-2 h-3.5 w-3.5" />
           Forward
         </ContextMenuItem>
       )}
@@ -306,12 +297,12 @@ const MessageItem: React.FC<MessageItemProps> = ({
         <ContextMenuItem onClick={() => onPin(msg, !isPinned)}>
           {isPinned ? (
             <>
-              <PinOff className="mr-2 h-3.5 w-3.5" />
+              <PinOff className="me-2 h-3.5 w-3.5" />
               Unpin
             </>
           ) : (
             <>
-              <Pin className="mr-2 h-3.5 w-3.5" />
+              <Pin className="me-2 h-3.5 w-3.5" />
               Pin
             </>
           )}
@@ -324,7 +315,7 @@ const MessageItem: React.FC<MessageItemProps> = ({
     <>
       {canEdit && onEdit && (
         <DropdownMenuItem onClick={() => onEdit(msg)}>
-          <Pencil className="mr-2 h-3.5 w-3.5" />
+          <Pencil className="me-2 h-3.5 w-3.5" />
           Edit
         </DropdownMenuItem>
       )}
@@ -333,13 +324,13 @@ const MessageItem: React.FC<MessageItemProps> = ({
           onClick={() => onDelete(msg)}
           className="text-destructive focus:text-destructive"
         >
-          <Trash2 className="mr-2 h-3.5 w-3.5" />
+          <Trash2 className="me-2 h-3.5 w-3.5" />
           Delete
         </DropdownMenuItem>
       )}
       {canForward && onForward && (
         <DropdownMenuItem onClick={() => onForward(msg)}>
-          <Forward className="mr-2 h-3.5 w-3.5" />
+          <Forward className="me-2 h-3.5 w-3.5" />
           Forward
         </DropdownMenuItem>
       )}
@@ -347,12 +338,12 @@ const MessageItem: React.FC<MessageItemProps> = ({
         <DropdownMenuItem onClick={() => onPin(msg, !isPinned)}>
           {isPinned ? (
             <>
-              <PinOff className="mr-2 h-3.5 w-3.5" />
+              <PinOff className="me-2 h-3.5 w-3.5" />
               Unpin
             </>
           ) : (
             <>
-              <Pin className="mr-2 h-3.5 w-3.5" />
+              <Pin className="me-2 h-3.5 w-3.5" />
               Pin
             </>
           )}

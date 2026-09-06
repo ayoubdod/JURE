@@ -33,6 +33,10 @@ export interface AppMessages {
     tasks: string;
     notes: string;
     admin: string;
+    navAria: string;
+    collapse: string;
+    expand: string;
+    toggleItem: string;
   };
   header: {
     searchPlaceholder: string;
@@ -53,6 +57,14 @@ export interface AppMessages {
     notificationsEmptyTitle: string;
     notificationsEmptySubtitle: string;
     notificationsViewAll: string;
+    openNav: string;
+    searchAria: string;
+    moreActions: string;
+    lightMode: string;
+    darkMode: string;
+    orgLogo: string;
+    caseNumber: string;
+    clientNumber: string;
   };
   auth: {
     signInTitle: string;
@@ -382,6 +394,9 @@ export interface AppMessages {
       submit: string;
       createdTitle: string;
       createdDescription: string;
+      tagPlaceholder: string;
+      tagDuplicate: string;
+      tagInvalid: string;
     };
     update: {
       title: string;
@@ -585,6 +600,8 @@ export interface AppMessages {
       notificationUpdatedDesc: string;
       notificationEnabled: string;
       notificationDisabled: string;
+      notificationsUnsupported: string;
+      notificationPermissionBlocked: string;
       digestEnabledTitle: string;
       digestEnabledDesc: string;
       preferencesSavedTitle: string;
@@ -714,6 +731,7 @@ export interface AppMessages {
       ASSISTANT: string;
       VIEWER: string;
     };
+    noRole: string;
     roleDescriptions: {
       VIEWER: string;
       ASSISTANT: string;
@@ -800,6 +818,21 @@ export interface AppMessages {
       setupSentTitle: string;
       setupSentDesc: string;
       inviteFailed: string;
+      loadFailed: string;
+      updateFailed: string;
+    };
+    rolePage: {
+      overviewTitle: string;
+      overviewDesc: string;
+      membersCount: string;
+      permissionsLabel: string;
+      permissionsEnabled: string;
+      membersTitle: string;
+      membersDesc: string;
+      empty: string;
+      detailsTitle: string;
+      detailsDesc: string;
+      permissionsCount: string;
     };
     resendDialog: {
       title: string;
@@ -1086,10 +1119,74 @@ export interface AppMessages {
       readerZoomOut: string;
       readerFit: string;
       readerReset: string;
+      readerOpenTab: string;
+      readerDownloadToView: string;
+      readerFile: string;
       readerDownloadDocument: string;
       readerCloseDetails: string;
       readerAddedDate: string;
       readerAddedBy: string;
+    };
+    knowledgeHub: {
+      graphHint: string;
+      graphAria: string;
+      hubNode: string;
+      showingAffinity: string;
+      copilotAria: string;
+      copilotEmptyHint: string;
+      copilotEmptyTitle: string;
+      copilotEmptyBody: string;
+      copilotClose: string;
+      confidence: string;
+      riskBadge: string;
+      openPreview: string;
+      entitiesDetected: string;
+      people: string;
+      companies: string;
+      dates: string;
+      entitiesPending: string;
+      risksDeadlines: string;
+      riskPosture: string;
+      reviewRecommended: string;
+      keyClauses: string;
+      smartTags: string;
+      suggestedActions: string;
+      relatedTimeline: string;
+      relatedAfterPreview: string;
+      citationsScore: string;
+      indexed: string;
+      metricsAria: string;
+      metricTotal: string;
+      metricAiIndexed: string;
+      metricFolders: string;
+      metricPending: string;
+      metricUpdated: string;
+      metricScore: string;
+      aiCapabilities: string;
+      semanticClusters: string;
+      clusterMeta: string;
+      clusterHighRisk: string;
+      suggestedClassifications: string;
+      allClassified: string;
+      riskWatchlist: string;
+      noElevatedRisks: string;
+      collectionAiGenerated: string;
+      collectionRecent: string;
+      risk: {
+        high: string;
+        medium: string;
+        low: string;
+      };
+      capabilities: {
+        semanticSearch: { title: string; desc: string };
+        clauseExtraction: { title: string; desc: string };
+        riskDetection: { title: string; desc: string };
+        documentComparison: { title: string; desc: string };
+        ocrTranslation: { title: string; desc: string };
+        smartTags: { title: string; desc: string };
+        citationGraph: { title: string; desc: string };
+        versionIntelligence: { title: string; desc: string };
+      };
     };
   };
   profile: {
@@ -1199,6 +1296,20 @@ export interface AppMessages {
     toggleTheme: string;
     selectOption: string;
     selectError: string;
+    breadcrumb: string;
+    pagination: {
+      showing: string;
+      pageSize: string;
+      perPage: string;
+      navAria: string;
+      previousAria: string;
+      nextAria: string;
+      morePages: string;
+      defaultItems: string;
+    };
+    countrySearch: string;
+    countryEmpty: string;
+    selectCountry: string;
   };
   validation: {
     required: string;
@@ -1233,6 +1344,8 @@ export interface AppMessages {
     deadlineEvent: Record<string, string>;
     deadlineDurationUnit: Record<string, string>;
     deadlineComputation: Record<string, string>;
+    conflictMatchType: Record<string, string>;
+    conflictRole: Record<string, string>;
   };
   errors: {
     generic: string;
@@ -1246,6 +1359,8 @@ export interface AppMessages {
     title: string;
     description: string;
     returnHome: string;
+    documentTitle: string;
+    metaDescription: string;
   };
   routeError: {
     title: string;
@@ -1265,6 +1380,10 @@ export interface AppMessages {
     description: string;
   };
   sessionReplaced: {
+    title: string;
+    description: string;
+  };
+  sessionExpired: {
     title: string;
     description: string;
   };
@@ -1382,6 +1501,8 @@ export interface AppMessages {
       overdue: string;
       today: string;
       inDays: string;
+      inCountDays: string;
+      passed: string;
     };
     aria: {
       mattersList: string;
@@ -1420,6 +1541,13 @@ export interface AppMessages {
       viewCase: string;
       moreActions: string;
       overdueBy: string;
+    };
+    related: {
+      counts: string;
+      empty: string;
+      openTask: string;
+      openAppointment: string;
+      due: string;
     };
     workspaces: {
       navAria: string;
@@ -2009,6 +2137,8 @@ export interface AppMessages {
         originatingConsultation: string;
         viewConsultation: string;
         convertSuccess: string;
+        alreadyConverted: string;
+        convertNotFound: string;
         openCase: string;
         converted: string;
         emailSent: string;
@@ -2018,6 +2148,21 @@ export interface AppMessages {
         litigationOptionHint: string;
         administrativeOptionHint: string;
         followUpCreated: string;
+        convertExtras: {
+          notSet: string;
+          coCounselHint: string;
+          addCoCounsel: string;
+          addDeadline: string;
+          addDocument: string;
+          done: string;
+          memberFallback: string;
+          jurisdiction: string;
+          chamber: string;
+          copiedSection: string;
+          completeSection: string;
+          newCaseType: string;
+          deadlinePair: string;
+        };
       };
       sections: {
         basicInfo: string;
@@ -2170,6 +2315,9 @@ export interface AppMessages {
         createdDescription: string;
         fixFormTitle: string;
         fixFormDescription: string;
+        saveFailed: string;
+        noCabinet: string;
+        signInAgain: string;
       };
       options: {
         consultationType: {
@@ -2689,6 +2837,11 @@ export interface AppMessages {
       unassigned: string;
       notFound: string;
       attachments: string;
+      editTitle: string;
+      editSubtitle: string;
+      backToTasks: string;
+      assignment: string;
+      clientNamePlaceholder: string;
     };
     validation: {
       titleRequired: string;
@@ -2814,6 +2967,14 @@ export interface AppMessages {
       overdue: string;
       client: string;
       viewCase: string;
+    };
+    panel: {
+      related: string;
+      scheduledBy: string;
+      hoursEstimated: string;
+      durationMin: string;
+      conversationNumber: string;
+      dueOn: string;
     };
     fc: {
       today: string;
@@ -3074,6 +3235,7 @@ export interface AppMessages {
       openAria: string;
       loading: string;
       loadError: string;
+      noClient: string;
     };
     todayTasks: {
       title: string;
@@ -3091,6 +3253,11 @@ export interface AppMessages {
       loading: string;
       loadError: string;
       hoursAgo: string;
+      today: string;
+      taskCompleted: string;
+      clientAdded: string;
+      documentUploaded: string;
+      clientFallback: string;
     };
     priorityCritical: string;
     matterClose: {
@@ -3147,6 +3314,7 @@ export interface AppMessages {
       errorGeneric: string;
       errorForbidden: string;
       runFromMatter: string;
+      matterFallback: string;
     };
     deadlines: {
       title: string;
@@ -3713,6 +3881,7 @@ export interface AppMessages {
       cameraDeniedHint: string;
       failedHint: string;
       tryAgain: string;
+      tapToHear: string;
       voiceCallWith: string;
       videoCallWith: string;
       activeCallTitle: string;
@@ -3746,12 +3915,26 @@ export interface AppMessages {
       inCallCount: string;
       waitingForOthers: string;
       isSpeaking: string;
+      speaking: string;
       microphone: string;
       camera: string;
       defaultMicrophone: string;
       defaultCamera: string;
       defaultSpeaker: string;
       speakerUnsupported: string;
+      media: {
+        permissionVideo: string;
+        permissionVoice: string;
+        notFoundVideo: string;
+        notFoundVoice: string;
+        inUseVideo: string;
+        inUseVoice: string;
+        insecure: string;
+        accessVideo: string;
+        accessVoice: string;
+        establishConnection: string;
+        establishVideoConnection: string;
+      };
       callingBody: string;
       liveAudioAria: string;
       audioIdleAria: string;
@@ -3832,6 +4015,37 @@ export interface AppMessages {
       thresholdCrossed: string;
       exemptTooltip: string;
     };
+    tvaWidget: {
+      title: string;
+      currentRegime: string;
+      regimeLiable: string;
+      cumulativeCa: string;
+      legalThreshold: string;
+      firmCreated: string;
+      legalRef: string;
+      disclaimer: string;
+    };
+    charts: {
+      monthlyTitle: string;
+      billed: string;
+      collected: string;
+      byLawyerTitle: string;
+      byLawyerEmpty: string;
+    };
+    thresholdBanner: {
+      title: string;
+      body: string;
+      viewFinance: string;
+    };
+    receivables: {
+      title: string;
+      invoiced: string;
+      collected: string;
+      outstanding: string;
+      overdue: string;
+      agingCurrent: string;
+      noneOutstanding: string;
+    };
     empty: {
       title: string;
       description: string;
@@ -3908,11 +4122,84 @@ export interface AppMessages {
       pdfPreviewFailed: string;
       accessDenied: string;
       invoiceNotFound: string;
+      deleteFeeConfirm: string;
+      deleteExpenseConfirm: string;
+      deletePaymentConfirm: string;
+      expenseSaved: string;
+      expenseSaveFailed: string;
+      loadCaseFailed: string;
     };
     feeTypes: {
       FIXED: string;
       HOURLY: string;
       SUCCESS_FEE: string;
+    };
+    feeStatuses: {
+      PENDING: string;
+      INVOICED: string;
+      PAID: string;
+      PARTIAL: string;
+      PARTIALLY_PAID: string;
+      CANCELLED: string;
+    };
+    expenseCategories: {
+      TRAVEL: string;
+      COURT: string;
+      EXPERT: string;
+      ADMIN: string;
+      OTHER: string;
+    };
+    caseTab: {
+      settled: string;
+      honoraires: string;
+      expenses: string;
+      invoiced: string;
+      paid: string;
+      net: string;
+      remaining: string;
+      remainingColon: string;
+      add: string;
+      addHonoraire: string;
+      addExpense: string;
+      addExpenseEmpty: string;
+      noHonoraires: string;
+      noExpenses: string;
+      noInvoices: string;
+      generateInvoice: string;
+      generateInvoiceEmpty: string;
+      paymentsTotal: string;
+      addPayment: string;
+      recordPayment: string;
+      noPayments: string;
+      taxAdvanceTitle: string;
+      taxAdvanceAmount: string;
+      noTaxAdvance: string;
+      billable: string;
+      nonBillable: string;
+      planned: string;
+      paidPct: string;
+      lawyer: string;
+      overdueDue: string;
+      dueDays: string;
+      dueInDays: string;
+      dueLabel: string;
+      tva20: string;
+      ttcLabel: string;
+      invoiceDetails: string;
+      linkedCase: string;
+      issued: string;
+      dueOn: string;
+      createdBy: string;
+      linkedPayments: string;
+      noLinkedPayments: string;
+      totalPaid: string;
+      remainingDue: string;
+      closeOut: string;
+      markPaid: string;
+      taxPaid: string;
+      taxUnpaid: string;
+      paymentDate: string;
+      tvaExemptNote: string;
     };
     modals: {
       addPayment: {
@@ -3987,6 +4274,18 @@ export interface AppMessages {
         loadFailed: string;
         saveFailed: string;
         genericError: string;
+      };
+      addExpense: {
+        title: string;
+        description: string;
+        notes: string;
+        category: string;
+        amountMad: string;
+        date: string;
+        billable: string;
+        reimbursable: string;
+        receiptRef: string;
+        saving: string;
       };
     };
   };
@@ -4081,6 +4380,92 @@ export interface AppMessages {
       archiveFailed: string;
       deleteFailed: string;
       createFailed: string;
+      createLinkedFailed: string;
+      downloadFailed: string;
+      draftFailed: string;
+    };
+    errors: {
+      unavailable: string;
+      server: string;
+      apiUnavailable: string;
+      timeout: string;
+      invalidRequest: string;
+      missingId: string;
+      invalidId: string;
+    };
+    slowHint: string;
+    conversationMenuAria: string;
+    generatedDocument: string;
+    generatedOn: string;
+    downloadDocx: string;
+    openLink: string;
+    pickDraftType: string;
+    generateDocument: string;
+    fab: {
+      matterContext: string;
+      quickActions: string;
+      analyzeDoc: string;
+      analyzePrompt: string;
+      quickSearch: string;
+      searchPrompt: string;
+      draftAct: string;
+      draftPrompt: string;
+      askQuestion: string;
+      openFull: string;
+      askAria: string;
+    };
+    casePanel: {
+      title: string;
+      hint: string;
+      openInJuria: string;
+      chats: string;
+    };
+    draftFields: {
+      bailleur: string;
+      bailleurPlaceholder: string;
+      preneur: string;
+      loyer: string;
+      duree: string;
+      destinataire: string;
+      objetLitige: string;
+      delai: string;
+      denomination: string;
+      capital: string;
+      siege: string;
+      mandant: string;
+      mandataire: string;
+      pouvoirs: string;
+      juridiction: string;
+      demandeur: string;
+      defendeur: string;
+      employeur: string;
+      salarie: string;
+      poste: string;
+      affaire: string;
+      demandes: string;
+      objetDoc: string;
+      details: string;
+    };
+    editor: {
+      list: string;
+      bold: string;
+      italic: string;
+      underline: string;
+      compareVersions: string;
+      editNote: string;
+    };
+    intelligence: {
+      title: string;
+      riskScore: string;
+      high: string;
+      medium: string;
+      low: string;
+      missingClauses: string;
+      unusualClauses: string;
+      explain: string;
+      rewrite: string;
+      alternative: string;
+      clausePrompt: string;
     };
     fileTooLarge: string;
     workspace: {
@@ -4187,6 +4572,11 @@ export interface AppMessages {
         searchClient: string;
         searchGeneric: string;
         caseDocs: string;
+        linkCaseFirst: string;
+        noCaseDocuments: string;
+      };
+      composer: {
+        importDocument: string;
       };
       chat: {
         threads: string;
@@ -4238,6 +4628,9 @@ export interface AppMessages {
         noActivity: string;
         openChat: string;
         updatedAt: string;
+        noEvents: string;
+        noTasks: string;
+        court: string;
       };
       activity: {
         empty: string;
@@ -4287,6 +4680,8 @@ export interface AppMessages {
         linkAllLibraries: string;
         noDocuments: string;
         addFailed: string;
+        used: string;
+        page: string;
       };
       documents: {
         searchPlaceholder: string;
@@ -4307,6 +4702,16 @@ export interface AppMessages {
         export: string;
         duplicate: string;
         compare: string;
+      };
+      teamPanel: {
+        invitePlaceholder: string;
+        invite: string;
+        roles: {
+          OWNER: string;
+          EDITOR: string;
+          REVIEWER: string;
+          VIEWER: string;
+        };
       };
     };
   };

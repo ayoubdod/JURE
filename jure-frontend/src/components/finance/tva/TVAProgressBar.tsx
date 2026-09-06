@@ -1,20 +1,23 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
+import { detectInitialLanguage } from '@/i18n/locale';
+import { getMessages } from '@/i18n/messages';
 
 export const TVA_LEGAL_THRESHOLD_MAD = 500_000;
 
-/** Shown under invoice TVA lines when API marks invoice as non-VAT (exoneration). */
-export const TVA_EXONERATION_INVOICE_NOTE =
-  "Exonéré de TVA — CA cumulé < 500 000 MAD (Art. 89 CGI Maroc)";
-
-/** Prefer backend `tva_exoneration_note` when invoice is exonerated; fallback to default copy. */
-export function invoiceExonerationNote(inv: {
-  tva_applicable?: boolean;
-  tva_exoneration_note?: string | null;
-}): string | null {
+/** Prefer backend `tva_exoneration_note` when invoice is exonerated; fallback to catalog copy. */
+export function invoiceExonerationNote(
+  inv: {
+    tva_applicable?: boolean;
+    tva_exoneration_note?: string | null;
+  },
+  fallback?: string,
+): string | null {
   if (inv.tva_applicable !== false) return null;
   const n = inv.tva_exoneration_note?.trim();
-  return n || TVA_EXONERATION_INVOICE_NOTE;
+  if (n) return n;
+  if (fallback) return fallback;
+  return getMessages(detectInitialLanguage()).finance.caseTab.tvaExemptNote;
 }
 
 type Props = {

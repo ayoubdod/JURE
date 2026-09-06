@@ -9,6 +9,7 @@ const VoicePeerCard: React.FC<{
   peer: ConferencePeerSnapshot;
   large?: boolean;
 }> = ({ peer, large }) => {
+  const { t } = useAppTranslation();
   const audioRef = useRef<HTMLAudioElement>(null);
 
   useEffect(() => {
@@ -50,7 +51,7 @@ const VoicePeerCard: React.FC<{
         />
         {peer.isSpeaking ? (
           <span className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 rounded-full bg-emerald-500 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-white shadow">
-            Speaking
+            {t.conversations.call.speaking}
           </span>
         ) : null}
       </div>

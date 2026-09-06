@@ -427,7 +427,6 @@ const Features: React.FC = () => {
   const navigate = useNavigate();
   const { lang, dir, path } = useMarketingLang();
   const t = STRINGS[lang];
-  const isRtl = dir === "rtl";
 
   const go = (to: string) => navigate(to);
 
@@ -457,9 +456,7 @@ const Features: React.FC = () => {
           </p>
 
           <div
-            className={`mt-8 sm:mt-10 flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center w-full sm:w-auto ${
-              isRtl ? "sm:flex-row-reverse" : ""
-            }`}
+            className="mt-8 sm:mt-10 flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center w-full sm:w-auto"
           >
             <Button
               onClick={() => go(path("demo"))}
@@ -467,7 +464,7 @@ const Features: React.FC = () => {
               className="landing-cta-btn landing-btn-primary w-full sm:w-auto px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg font-medium"
             >
               {t.hero.ctaPrimary}
-              <ArrowRight className={`ms-2 h-5 w-5 ${isRtl ? "rotate-180" : ""}`} />
+              <ArrowRight className="ms-2 h-5 w-5 rtl:rotate-180" />
             </Button>
             <Button
               onClick={() => go(path("contact"))}
@@ -506,7 +503,7 @@ const Features: React.FC = () => {
 
       {/* Deep-dive cards */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 pb-14 sm:pb-16 md:pb-20">
-        <div className={`grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-6 ${isRtl ? "md:[direction:rtl]" : ""}`}>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-6">
           {deepCards.map((card, i) => {
             const Icon = card.icon;
             return (
@@ -558,7 +555,7 @@ const Features: React.FC = () => {
       {/* Coming soon */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 pb-14 sm:pb-16 md:pb-20">
         <Reveal>
-          <div className={`landing-glass rounded-2xl sm:rounded-3xl p-6 sm:p-8 md:p-10 min-w-0 ${isRtl ? "text-right" : "text-start"}`}>
+          <div className="landing-glass rounded-2xl sm:rounded-3xl p-6 sm:p-8 md:p-10 min-w-0 text-start">
             <div className="flex items-center gap-3 mb-3 min-w-0">
               <div className="landing-icon w-12 h-12 rounded-xl flex items-center justify-center shrink-0">
                 <Clock className="w-6 h-6" />
@@ -593,9 +590,7 @@ const Features: React.FC = () => {
               <p className="text-white/70 text-base sm:text-lg break-words">{t.cta.subtitle}</p>
 
               <div
-                className={`mt-8 flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center w-full sm:w-auto ${
-                  isRtl ? "sm:flex-row-reverse" : ""
-                }`}
+                className="mt-8 flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center w-full sm:w-auto"
               >
                 <Button
                   size="lg"

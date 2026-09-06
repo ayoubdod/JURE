@@ -4,10 +4,8 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { formatMAD } from '@/utils/formatMAD';
 import { getCountdownDays, getCountdownStyle } from '@/utils/caseCardHelpers';
-import { format } from 'date-fns';
-import { fr } from 'date-fns/locale';
+import { formatDate, useAppTranslation } from '@/i18n';
 import { invoiceExonerationNote } from '@/components/finance/tva/TVAProgressBar';
-import { useAppTranslation } from '@/i18n';
 
 type Inv = API.FinanceCaseInvoice;
 
@@ -29,32 +27,34 @@ type Props = {
 };
 
 export const InvoiceCard: React.FC<Props> = ({ invoice, onPdf, onPreviewPdf, onEdit, onDelete }) => {
-  const { enumLabel } = useAppTranslation();
+  const { t, tf, lang, enumLabel } = useAppTranslation();
+  const ct = t.finance.caseTab;
   const tvaExempt = invoice.tva_applicable === false;
-  const exonerationLine = invoiceExonerationNote(invoice);
+  const exonerationLine = invoiceExonerationNote(invoice, ct.tvaExemptNote);
   const due = invoice.due_date;
   const days = due ? getCountdownDays(due) : null;
   const style = days != null ? (days < 0 ? 'critical' : getCountdownStyle(days)) : 'normal';
+  const dateOpts = { month: 'short' as const, day: 'numeric' as const, year: 'numeric' as const };
 
   const dueLine = () => {
     if (!due) return '—';
-    const label = format(new Date(due), 'd MMM yyyy', { locale: fr });
+    const label = formatDate(due, lang, dateOpts);
     if (days == null) return label;
-    if (days < 0) return <span className="text-red-600 dark:text-red-400 font-semibold">En retard · {label}</span>;
+    if (days < 0) return <span className="text-red-600 dark:text-red-400 font-semibold">{tf(ct.overdueDue, { date: label })}</span>;
     if (days <= 3)
       return (
         <span className="text-red-600 dark:text-red-400 font-semibold">
-          {label} · {days}j
+          {tf(ct.dueDays, { date: label, n: days })}
         </span>
       );
     if (days <= 14)
       return (
         <span className="text-amber-600 dark:text-amber-400">
-          <AlertTriangle className="mr-1 inline h-3.5 w-3.5" />
-          {label} · {days}j
+          <AlertTriangle className="me-1 inline h-3.5 w-3.5" />
+          {tf(ct.dueDays, { date: label, n: days })}
         </span>
       );
-    return `${label} · dans ${days}j`;
+    return tf(ct.dueInDays, { date: label, n: days });
   };
 
   return (
@@ -64,7 +64,7 @@ export const InvoiceCard: React.FC<Props> = ({ invoice, onPdf, onPreviewPdf, onE
           <span className="font-mono text-[13px] text-slate-600 dark:text-slate-400">{invoice.number}</span>
           <span
             className={cn(
-              'ml-2 inline-flex rounded-full px-2 py-0.5 text-[11px] font-semibold uppercase',
+              'ms-2 inline-flex rounded-full px-2 py-0.5 text-[11px] font-semibold uppercase',
               statusClass[invoice.status]
             )}
           >
@@ -84,7 +84,7 @@ export const InvoiceCard: React.FC<Props> = ({ invoice, onPdf, onPreviewPdf, onE
               variant="outline"
               size="sm"
               className="h-8 gap-1 px-2 text-xs"
-              title="Aperçu"
+              title={t.finance.previewPdf}
               onClick={() => onPreviewPdf(invoice)}
             >
               <ExternalLink className="h-3.5 w-3.5" />
@@ -103,14 +103,14 @@ export const InvoiceCard: React.FC<Props> = ({ invoice, onPdf, onPreviewPdf, onE
         </div>
       </div>
       <div className="mt-2 space-y-1 text-[13px] text-slate-700 dark:text-slate-300">
-        <p>Montant HT: {formatMAD(invoice.amount_ht)}</p>
+        <p>{t.finance.columns.amountHt}: {formatMAD(invoice.amount_ht, lang)}</p>
         <p>
-          {tvaExempt ? 'TVA' : 'TVA (20%)'}: {formatMAD(invoice.tva)}
+          {tvaExempt ? t.finance.columns.tva : ct.tva20}: {formatMAD(invoice.tva, lang)}
         </p>
         {exonerationLine ? (
           <p className="text-[11px] italic leading-snug text-[#94a3b8]">{exonerationLine}</p>
         ) : null}
-        <p className="font-semibold text-slate-900 dark:text-white">TTC: {formatMAD(invoice.amount_ttc)}</p>
+        <p className="font-semibold text-slate-900 dark:text-white">{ct.ttcLabel}: {formatMAD(invoice.amount_ttc, lang)}</p>
         <p
           className={cn(
             'text-[12px]',
@@ -118,7 +118,7 @@ export const InvoiceCard: React.FC<Props> = ({ invoice, onPdf, onPreviewPdf, onE
             style === 'warning' && 'text-amber-600'
           )}
         >
-          Échéance: {dueLine()}
+          {ct.dueLabel}: {dueLine()}
         </p>
       </div>
     </div>

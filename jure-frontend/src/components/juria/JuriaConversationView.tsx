@@ -1,5 +1,4 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import dayjs from 'dayjs';
 import { Copy, Download, Eye, FileText, Link2, MoreHorizontal } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -21,7 +20,7 @@ import { useNavigate } from 'react-router';
 import { navigateToCaseById } from '@/lib/caseRoutes';
 import { useToast } from '@/hooks/use-toast';
 import { getJuriaErrorMessage } from '@/utils/juriaErrors';
-import { useAppTranslation } from '@/i18n';
+import { useAppTranslation, formatDate, formatTime } from '@/i18n';
 import useUserStore from '@/stores/userStore';
 import UserAvatar from '@/components/common/UserAvatar';
 
@@ -35,7 +34,7 @@ export function JuriaConversationView({
   showCaseLink?: boolean;
 }) {
   void _caseContext;
-  const { t, dir } = useAppTranslation();
+  const { t, tf, dir, lang } = useAppTranslation();
   const navigate = useNavigate();
   const { toast } = useToast();
   const currentUser = useUserStore((s) => s.user);
@@ -108,7 +107,7 @@ export function JuriaConversationView({
     } catch (e) {
       const msg = getJuriaErrorMessage(e);
       if (msg) {
-        toast({ title: 'Message non envoyé', description: msg, variant: 'destructive' });
+        toast({ title: t.juria.workspace.chat.sendFailed, description: msg, variant: 'destructive' });
       }
     }
   };
@@ -129,7 +128,10 @@ export function JuriaConversationView({
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <header className="hidden shrink-0 items-start justify-between gap-2 border-b border-slate-100 bg-white/95 px-4 py-3 backdrop-blur lg:flex dark:border-slate-800 dark:bg-slate-950/95">
+      <header className={cn(
+        'shrink-0 items-start justify-between gap-2 border-b border-slate-100 bg-white/95 backdrop-blur dark:border-slate-800 dark:bg-slate-950/95',
+        compact ? 'flex px-3 py-2' : 'hidden px-4 py-3 lg:flex'
+      )}>
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
             {(() => {
@@ -165,7 +167,7 @@ export function JuriaConversationView({
               onSelect={(c) => {
                 void createLinkedConversation(c).catch((e) =>
                   toast({
-                    title: 'Impossible de créer la conversation liée',
+                    title: t.juria.toasts.createLinkedFailed,
                     description: getJuriaErrorMessage(e),
                     variant: 'destructive',
                   })
@@ -175,38 +177,38 @@ export function JuriaConversationView({
           )}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-9 w-9" aria-label="Menu conversation">
+              <Button variant="ghost" size="icon" className="h-9 w-9" aria-label={t.juria.conversationMenuAria}>
                 <MoreHorizontal className="h-5 w-5" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-44">
               <DropdownMenuItem
                 onClick={() => {
-                  const t = window.prompt('Nouveau titre', conv.title);
-                  if (t) rename(conv.id, t);
+                  const next = window.prompt(t.juria.renamePrompt, conv.title);
+                  if (next) rename(conv.id, next);
                 }}
               >
-                Renommer
+                {t.juria.rename}
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={() => {
                   void archive(conv.id).catch((e) =>
-                    toast({ title: 'Archivage impossible', description: getJuriaErrorMessage(e), variant: 'destructive' })
+                    toast({ title: t.juria.toasts.archiveFailed, description: getJuriaErrorMessage(e), variant: 'destructive' })
                   );
                 }}
               >
-                Archiver
+                {t.juria.archive}
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 className="text-red-600"
                 onClick={() => {
                   void del(conv.id).catch((e) =>
-                    toast({ title: 'Suppression impossible', description: getJuriaErrorMessage(e), variant: 'destructive' })
+                    toast({ title: t.juria.toasts.deleteFailed, description: getJuriaErrorMessage(e), variant: 'destructive' })
                   );
                 }}
               >
-                Supprimer
+                {t.juria.delete}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -234,7 +236,7 @@ export function JuriaConversationView({
                         <p className="whitespace-pre-wrap">{m.content}</p>
                       </div>
                     : null}
-                    <p className="mt-1 text-end text-[10px] text-slate-400">{dayjs(m.createdAt).format('HH:mm')}</p>
+                    <p className="mt-1 text-end text-[10px] text-slate-400">{formatTime(m.createdAt, lang)}</p>
                   </div>
                   <UserAvatar
                     image={currentUser?.image}
@@ -265,11 +267,17 @@ export function JuriaConversationView({
                       <div className="rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-900">
                         <p className="flex items-center gap-1.5 text-xs font-medium text-slate-900 dark:text-white">
                           <FileText className="h-3.5 w-3.5 text-[#64499D]" />
-                          Document généré
+                          {t.juria.generatedDocument}
                         </p>
                         <p className="mt-1 text-sm font-medium text-[#64499D]">{m.documentCard.typeName}</p>
                         <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                          Généré le {dayjs(m.documentCard.generatedAt).format('DD MMM YYYY')}
+                          {tf(t.juria.generatedOn, {
+                            date: formatDate(m.documentCard.generatedAt, lang, {
+                              month: 'short',
+                              day: 'numeric',
+                              year: 'numeric',
+                            }),
+                          })}
                         </p>
                         <p className="mt-3 whitespace-pre-wrap border-t border-slate-100 pt-3 text-[13px] text-slate-700 dark:border-slate-800 dark:text-slate-200">
                           {m.documentCard.previewLines}
@@ -285,7 +293,7 @@ export function JuriaConversationView({
                               if (!id) return;
                               void downloadDocumentToFile(id, 'document.docx').catch((e) =>
                                 toast({
-                                  title: 'Téléchargement impossible',
+                                  title: t.juria.toasts.downloadFailed,
                                   description: getJuriaErrorMessage(e),
                                   variant: 'destructive',
                                 })
@@ -293,13 +301,13 @@ export function JuriaConversationView({
                             }}
                           >
                             <Download className="h-3.5 w-3.5" />
-                            Télécharger DOCX
+                            {t.juria.downloadDocx}
                           </Button>
                           {m.documentCard.docxUrl ?
                             <Button size="sm" variant="ghost" className="gap-1" type="button" asChild>
                               <a href={m.documentCard.docxUrl} target="_blank" rel="noreferrer">
                                 <Eye className="h-3.5 w-3.5" />
-                                Ouvrir le lien
+                                {t.juria.openLink}
                               </a>
                             </Button>
                           : null}
@@ -348,7 +356,7 @@ export function JuriaConversationView({
                       >
                         {t.juria.askFollowUp}
                       </button>
-                      <span className="ms-auto text-[10px] text-slate-400">{dayjs(m.createdAt).format('HH:mm')}</span>
+                      <span className="ms-auto text-[10px] text-slate-400">{formatTime(m.createdAt, lang)}</span>
                     </div>
                     {m.suggestions && m.suggestions.length > 0 && (
                       <div className="mt-2 flex gap-2 overflow-x-auto pb-1">
@@ -384,7 +392,7 @@ export function JuriaConversationView({
                   </div>
                   <span className="text-[13px] text-slate-500 dark:text-slate-300">
                     {slowHint
-                      ? 'Juria prend plus de temps que prévu...'
+                      ? t.juria.slowHint
                       : statusPhase === 0
                         ? t.juria.statusSearching
                         : statusPhase === 1
@@ -394,7 +402,7 @@ export function JuriaConversationView({
                 </div>
                 {showAbort && (
                   <Button size="sm" variant="outline" className="mt-2" type="button" onClick={cancelPending}>
-                    Annuler
+                    {t.common.cancel}
                   </Button>
                 )}
               </div>
@@ -424,7 +432,7 @@ export function JuriaConversationView({
           onLinkCase={(c) => {
             void createLinkedConversation(c).catch((e) =>
               toast({
-                title: 'Impossible de créer la conversation liée',
+                title: t.juria.toasts.createLinkedFailed,
                 description: getJuriaErrorMessage(e),
                 variant: 'destructive',
               })

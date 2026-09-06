@@ -1,4 +1,5 @@
 import axiosInstance from '@/utils/axiosInstance';
+import { detectInitialLanguage, tFor } from '@/i18n';
 import { devLog, devWarn } from '@/utils/devLog';
 
 const FALLBACK_ICE: RTCIceServer[] = [{ urls: ['stun:stun.l.google.com:19302'] }];
@@ -172,26 +173,39 @@ export function classifyMediaError(e: unknown): MediaErrorKind {
 
 export function mediaErrorMessage(kind: MediaErrorKind, callKind: CallKind): string {
   const wantsVideo = callKind === 'video';
+  const media = tFor(detectInitialLanguage()).conversations.call.media;
   switch (kind) {
     case 'permission':
-      return wantsVideo
-        ? 'Camera access is blocked. Allow camera and microphone access in your browser settings to use video calls.'
-        : 'Microphone access is blocked. Allow microphone access in your browser settings to use voice calls.';
+      return wantsVideo ? media.permissionVideo : media.permissionVoice;
     case 'not_found':
-      return wantsVideo
-        ? 'No camera or microphone was detected on this device.'
-        : 'No microphone was detected on this device.';
+      return wantsVideo ? media.notFoundVideo : media.notFoundVoice;
     case 'in_use':
-      return wantsVideo
-        ? 'Camera or microphone is already in use by another application.'
-        : 'Microphone is already in use by another application.';
+      return wantsVideo ? media.inUseVideo : media.inUseVoice;
     case 'insecure':
-      return 'Media devices require a secure (HTTPS) connection.';
+      return media.insecure;
     default:
-      return wantsVideo
-        ? 'Unable to access camera or microphone.'
-        : 'Unable to access microphone.';
+      return wantsVideo ? media.accessVideo : media.accessVoice;
   }
+}
+
+/** Maps leftover English store strings so the call UI follows the active language. */
+export function displayMediaErrorMessage(stored: string | null | undefined): string | null {
+  if (!stored) return null;
+  const media = tFor(detectInitialLanguage()).conversations.call.media;
+  if (stored === 'Unable to establish the connection.') return media.establishConnection;
+  if (stored === 'Unable to establish the video connection.') return media.establishVideoConnection;
+  return stored;
+}
+
+/** Maps leftover English call titles so the UI follows the active language. */
+export function displayCallTitle(stored: string | null | undefined): string | null {
+  if (!stored) return null;
+  const msgs = tFor(detectInitialLanguage());
+  const call = msgs.conversations.call;
+  if (stored === 'Group call') return call.groupCallTitle;
+  if (stored === 'Meeting') return msgs.appointments.meeting;
+  if (stored === 'Incoming call') return call.incoming;
+  return stored;
 }
 
 export async function getCallUserMedia(

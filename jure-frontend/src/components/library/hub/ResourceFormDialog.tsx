@@ -24,14 +24,14 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import TagsInput from '@/components/TagsInput';
+import TagsInput from '@/components/common/TagsInput';
 import { Check, FileText, Loader2, Upload, X } from 'lucide-react';
 import { useForm, type Resolver } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 import { isAxiosError } from 'axios';
 import { cn } from '@/lib/utils';
-import { useAppTranslation } from '@/i18n';
+import { useAppTranslation, localizeApiMessage } from '@/i18n';
 import { useToast } from '@/hooks/use-toast';
 import { getRemoteFieldsValidation } from '@/utils/functions';
 import {
@@ -264,7 +264,7 @@ const ResourceFormDialog = forwardRef<ResourceFormDialogRef, Props>(
           if (!Object.keys(remote).length) {
             toast({
               title: t.common.error,
-              description: err.response?.data?.detail || err.message,
+              description: localizeApiMessage(err.response?.data?.detail, err.message),
               variant: 'destructive',
             });
           }

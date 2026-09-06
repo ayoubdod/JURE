@@ -116,12 +116,12 @@ const ConsultationForm: React.FC<ConsultationFormProps> = ({
         }),
         city: yup.string().when('format', {
           is: 'IN_PERSON',
-          then: (s) => s.trim().required(cw?.cityRequired ?? 'City is required'),
+          then: (s) => s.trim().required(cw.cityRequired),
           otherwise: (s) => s.optional(),
         }),
         phone_number: yup.string().when('format', {
           is: 'PHONE',
-          then: (s) => s.trim().required(cw?.phoneRequired ?? 'A client or phone number is required for a phone consultation.'),
+          then: (s) => s.trim().required(cw.phoneRequired),
           otherwise: (s) => s.optional(),
         }),
         video_link: yup.string().when('format', {
@@ -129,8 +129,8 @@ const ConsultationForm: React.FC<ConsultationFormProps> = ({
           then: (s) =>
             s
               .trim()
-              .required(cw?.videoRequired ?? 'Video conference link is required')
-              .url(cw?.videoInvalid ?? 'Enter a valid URL'),
+              .required(cw.videoRequired)
+              .url(cw.videoInvalid),
           otherwise: (s) => s.optional(),
         }),
         legal_domain: yup
@@ -139,7 +139,7 @@ const ConsultationForm: React.FC<ConsultationFormProps> = ({
           .required(),
         custom_legal_domain: yup.string().when('legal_domain', {
           is: 'OTHER',
-          then: (s) => s.trim().required(cw?.customDomainRequired ?? 'Specify the legal domain'),
+          then: (s) => s.trim().required(cw.customDomainRequired),
           otherwise: (s) => s.optional(),
         }),
         legal_question: yup.string().trim().required(modal.validation.legalQuestionRequired),
@@ -212,7 +212,7 @@ const ConsultationForm: React.FC<ConsultationFormProps> = ({
           await apiUploadCaseAttachment(created.id, file);
         } catch {
           toast({
-            title: cw?.attachmentFailed ?? 'Upload failed',
+            title: cw.attachmentFailed,
             description: file.name,
             variant: 'destructive',
           });
@@ -307,7 +307,7 @@ const ConsultationForm: React.FC<ConsultationFormProps> = ({
         } catch {
           toast({
             title: modal.toasts.fixFormTitle,
-            description: cw?.followUpFailed ?? 'Could not create the follow-up consultation.',
+            description: cw.followUpFailed,
             variant: 'destructive',
           });
         } finally {
@@ -346,7 +346,7 @@ const ConsultationForm: React.FC<ConsultationFormProps> = ({
             </div>
           )}
 
-          <CreateFormSection index="01" title={cw?.sectionInfo ?? modal.sections.basicInfo}>
+          <CreateFormSection index="01" title={cw.sectionInfo}>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <CreateFormField id="consultation-reference" label={modal.fields.reference}>
                 <Input value={referenceDisplay} readOnly disabled className={CREATE_INPUT_CLASS} />
@@ -375,8 +375,8 @@ const ConsultationForm: React.FC<ConsultationFormProps> = ({
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="PREVENTIVE">{cw?.preventive ?? 'Preventive'}</SelectItem>
-                      <SelectItem value="REACTIVE">{cw?.reactive ?? 'Reactive'}</SelectItem>
+                      <SelectItem value="PREVENTIVE">{cw.preventive}</SelectItem>
+                      <SelectItem value="REACTIVE">{cw.reactive}</SelectItem>
                     </SelectContent>
                   </Select>
                 </CreateFormField>
@@ -384,7 +384,7 @@ const ConsultationForm: React.FC<ConsultationFormProps> = ({
             </div>
           </CreateFormSection>
 
-          <CreateFormSection index="02" title={cw?.sectionClient ?? modal.fields.relatedClient}>
+          <CreateFormSection index="02" title={cw.sectionClient}>
             <div className="space-y-3">
               <CreateFormField id="consultation-client" label={modal.fields.relatedClient}>
                 <ServerSelect
@@ -406,23 +406,23 @@ const ConsultationForm: React.FC<ConsultationFormProps> = ({
                 onClick={() => clientModalRef.current?.show()}
               >
                 <Plus className="h-4 w-4" />
-                {cw?.addClient ?? 'Add new client'}
+                {cw.addClient}
               </Button>
             </div>
           </CreateFormSection>
 
-          <CreateFormSection index="03" title={cw?.assignedAttorneys ?? modal.fields.assignedAttorney}>
+          <CreateFormSection index="03" title={cw.assignedAttorneys}>
             <TeamMemberMultiSelect
               value={attorneyIds}
               onChange={(ids) => {
                 form.setValue('assigned_attorney_ids', ids);
                 form.setValue('assigned_to', ids[0] ?? null);
               }}
-              placeholder={cw?.searchAttorneys ?? 'Search attorneys'}
+              placeholder={cw.searchAttorneys}
             />
           </CreateFormSection>
 
-          <CreateFormSection index="04" title={cw?.sectionScheduling ?? modal.sections.clientScheduling}>
+          <CreateFormSection index="04" title={cw.sectionScheduling}>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <CreateFormField
                 id="consultation-date"
@@ -441,7 +441,7 @@ const ConsultationForm: React.FC<ConsultationFormProps> = ({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="15min">{cw?.min15 ?? '15 minutes'}</SelectItem>
+                    <SelectItem value="15min">{cw.min15}</SelectItem>
                     <SelectItem value="30min">{modal.options.duration.min30}</SelectItem>
                     <SelectItem value="1h">{modal.options.duration.h1}</SelectItem>
                     <SelectItem value="2h">{modal.options.duration.h2}</SelectItem>
@@ -451,10 +451,10 @@ const ConsultationForm: React.FC<ConsultationFormProps> = ({
               </CreateFormField>
               {duration === 'CUSTOM' ? (
                 <>
-                  <CreateFormField id="custom-hours" label={cw?.hours ?? 'Hours'}>
+                  <CreateFormField id="custom-hours" label={cw.hours}>
                     <Input type="number" min={0} {...form.register('custom_hours')} className={CREATE_INPUT_CLASS} />
                   </CreateFormField>
-                  <CreateFormField id="custom-minutes" label={cw?.minutes ?? 'Minutes'}>
+                  <CreateFormField id="custom-minutes" label={cw.minutes}>
                     <Input type="number" min={0} max={59} {...form.register('custom_minutes')} className={CREATE_INPUT_CLASS} />
                   </CreateFormField>
                 </>
@@ -480,7 +480,7 @@ const ConsultationForm: React.FC<ConsultationFormProps> = ({
                 <>
                   <CreateFormField
                     id="address"
-                    label={cw?.address ?? 'Address'}
+                    label={cw.address}
                     required
                     error={form.formState.errors.address?.message}
                   >
@@ -488,14 +488,14 @@ const ConsultationForm: React.FC<ConsultationFormProps> = ({
                   </CreateFormField>
                   <CreateFormField
                     id="city"
-                    label={cw?.city ?? 'City'}
+                    label={cw.city}
                     required
                     error={form.formState.errors.city?.message}
                   >
                     <Input {...form.register('city')} className={CREATE_INPUT_CLASS} />
                   </CreateFormField>
                   <div className="sm:col-span-2">
-                    <CreateFormField id="address-instructions" label={cw?.addressInstructions ?? 'Additional instructions'}>
+                    <CreateFormField id="address-instructions" label={cw.addressInstructions}>
                       <Input {...form.register('address_instructions')} className={CREATE_INPUT_CLASS} />
                     </CreateFormField>
                   </div>
@@ -505,19 +505,19 @@ const ConsultationForm: React.FC<ConsultationFormProps> = ({
                 <div className="sm:col-span-2">
                   <CreateFormField
                     id="phone"
-                    label={cw?.clientPhone ?? 'Client phone'}
+                    label={cw.clientPhone}
                     required
                     error={form.formState.errors.phone_number?.message}
                   >
                     <Input
                       {...form.register('phone_number')}
-                      placeholder={clientPhone || cw?.phonePlaceholder || '+212 …'}
+                      placeholder={clientPhone || cw.phonePlaceholder}
                       className={CREATE_INPUT_CLASS}
                     />
                   </CreateFormField>
                   {!clientId && !form.watch('phone_number') ? (
                     <p className="text-[12px] text-amber-700 dark:text-amber-400">
-                      {cw?.phoneHint ?? 'A client or phone number is required for a phone consultation.'}
+                      {cw.phoneHint}
                     </p>
                   ) : null}
                 </div>
@@ -526,7 +526,7 @@ const ConsultationForm: React.FC<ConsultationFormProps> = ({
                 <div className="sm:col-span-2">
                   <CreateFormField
                     id="video"
-                    label={cw?.videoLink ?? 'Video conference link'}
+                    label={cw.videoLink}
                     required
                     error={form.formState.errors.video_link?.message}
                   >
@@ -563,7 +563,7 @@ const ConsultationForm: React.FC<ConsultationFormProps> = ({
               {legalDomain === 'OTHER' ? (
                 <CreateFormField
                   id="custom-domain"
-                  label={cw?.customDomain ?? 'Specify legal domain'}
+                  label={cw.customDomain}
                   required
                   error={form.formState.errors.custom_legal_domain?.message}
                 >
@@ -582,7 +582,7 @@ const ConsultationForm: React.FC<ConsultationFormProps> = ({
                   className={cn(CREATE_TEXTAREA_CLASS, 'min-h-[120px]')}
                 />
               </CreateFormField>
-              <CreateFormField id="facts" label={cw?.facts ?? 'Facts / additional context'}>
+              <CreateFormField id="facts" label={cw.facts}>
                 <Textarea {...form.register('facts_context')} className={cn(CREATE_TEXTAREA_CLASS, 'min-h-[100px]')} />
               </CreateFormField>
             </div>
@@ -644,7 +644,7 @@ const ConsultationForm: React.FC<ConsultationFormProps> = ({
             ) : null}
           </CreateFormSection>
 
-          <CreateFormSection index="07" title={cw?.sectionNotes ?? modal.sections.outcome}>
+          <CreateFormSection index="07" title={cw.sectionNotes}>
             <div className="space-y-4">
               <CreateFormField id="status" label={modal.fields.status}>
                 <Select
@@ -658,11 +658,11 @@ const ConsultationForm: React.FC<ConsultationFormProps> = ({
                     <SelectItem value="SCHEDULED">{modal.options.consultationStatus.SCHEDULED}</SelectItem>
                     <SelectItem value="COMPLETED">{modal.options.consultationStatus.COMPLETED}</SelectItem>
                     <SelectItem value="NO_SHOW">{modal.options.consultationStatus.NO_SHOW}</SelectItem>
-                    <SelectItem value="CANCELLED">{cw?.cancelled ?? 'Cancelled'}</SelectItem>
+                    <SelectItem value="CANCELLED">{cw.cancelled}</SelectItem>
                   </SelectContent>
                 </Select>
               </CreateFormField>
-              <CreateFormField id="notes" label={cw?.notes ?? 'Consultation notes & advice'}>
+              <CreateFormField id="notes" label={cw.notes}>
                 <Textarea {...form.register('advice_summary')} className={cn(CREATE_TEXTAREA_CLASS, 'min-h-[120px]')} />
               </CreateFormField>
             </div>

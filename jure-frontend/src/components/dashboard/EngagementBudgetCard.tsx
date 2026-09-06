@@ -1,10 +1,11 @@
 // src/components/dashboard/EngagementBudgetCard.tsx
 import { useMatterStore } from '@/stores/matterStore';
 import { useAppTranslation } from '@/i18n';
+import { formatMAD } from '@/utils/formatMAD';
 import DashboardCollapsibleCard from '@/components/dashboard/DashboardCollapsibleCard';
 
 export default function EngagementBudgetCard({ matterId }: { matterId?: string }) {
-  const { t, tf } = useAppTranslation();
+  const { t, tf, lang } = useAppTranslation();
   const b = t.dashboard.budget;
   const { matters } = useMatterStore();
   const m = matters.find((x) => x.id === matterId) ?? matters[0];
@@ -22,11 +23,11 @@ export default function EngagementBudgetCard({ matterId }: { matterId?: string }
     >
         <div className="flex justify-between text-sm text-slate-900 dark:text-white">
           <span>{b.budget}</span>
-          <span className="font-medium">${budget.toLocaleString()}</span>
+          <span className="font-medium">{formatMAD(budget, lang)}</span>
         </div>
         <div className="flex justify-between text-sm text-slate-900 dark:text-white">
           <span>{b.actual}</span>
-          <span className="font-medium">${actual.toLocaleString()}</span>
+          <span className="font-medium">{formatMAD(actual, lang)}</span>
         </div>
         <div className="h-2 w-full rounded-full bg-slate-100 dark:bg-slate-800">
           <div className="h-2 rounded-full bg-purple-600" style={{ width: `${pct}%` }} />

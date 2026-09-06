@@ -6,49 +6,53 @@ import { DOCUMENT_DRAFT_TYPES, type DocumentDraftTypeId } from '@/components/jur
 import useJuriaStore from '@/stores/juriaStore';
 import { useToast } from '@/hooks/use-toast';
 import { getJuriaErrorMessage } from '@/utils/juriaErrors';
-import { useAppTranslation } from '@/i18n';
+import { useAppTranslation, type AppMessages } from '@/i18n';
 
-const EXTRA_FIELDS: Record<DocumentDraftTypeId, { key: string; label: string; placeholder?: string }[]> = {
-  bail: [
-    { key: 'bailleur', label: 'Bailleur', placeholder: 'Nom / raison sociale' },
-    { key: 'preneur', label: 'Preneur' },
-    { key: 'loyer', label: 'Loyer (MAD)' },
-    { key: 'duree', label: 'Durée' },
-  ],
-  mise_en_demeure: [
-    { key: 'destinataire', label: 'Destinataire' },
-    { key: 'objet', label: 'Objet du litige' },
-    { key: 'delai', label: 'Délai de régularisation' },
-  ],
-  statuts_sarl: [
-    { key: 'denomination', label: 'Dénomination sociale' },
-    { key: 'capital', label: 'Capital social' },
-    { key: 'siege', label: 'Siège social' },
-  ],
-  procuration: [
-    { key: 'mandant', label: 'Mandant' },
-    { key: 'mandataire', label: 'Mandataire' },
-    { key: 'pouvoirs', label: 'Pouvoirs conférés' },
-  ],
-  requete: [
-    { key: 'juridiction', label: 'Juridiction' },
-    { key: 'demandeur', label: 'Demandeur' },
-    { key: 'defendeur', label: 'Défendeur' },
-  ],
-  contrat_travail: [
-    { key: 'employeur', label: 'Employeur' },
-    { key: 'salarie', label: 'Salarié' },
-    { key: 'poste', label: 'Poste' },
-  ],
-  conclusions: [
-    { key: 'affaire', label: 'Référence affaire' },
-    { key: 'demandes', label: 'Demandes principales' },
-  ],
-  autre: [
-    { key: 'objet', label: 'Objet du document' },
-    { key: 'details', label: 'Détails / clauses souhaitées' },
-  ],
-};
+type DraftFields = AppMessages['juria']['draftFields'];
+
+function extraFields(f: DraftFields): Record<DocumentDraftTypeId, { key: string; label: string; placeholder?: string }[]> {
+  return {
+    bail: [
+      { key: 'bailleur', label: f.bailleur, placeholder: f.bailleurPlaceholder },
+      { key: 'preneur', label: f.preneur },
+      { key: 'loyer', label: f.loyer },
+      { key: 'duree', label: f.duree },
+    ],
+    mise_en_demeure: [
+      { key: 'destinataire', label: f.destinataire },
+      { key: 'objet', label: f.objetLitige },
+      { key: 'delai', label: f.delai },
+    ],
+    statuts_sarl: [
+      { key: 'denomination', label: f.denomination },
+      { key: 'capital', label: f.capital },
+      { key: 'siege', label: f.siege },
+    ],
+    procuration: [
+      { key: 'mandant', label: f.mandant },
+      { key: 'mandataire', label: f.mandataire },
+      { key: 'pouvoirs', label: f.pouvoirs },
+    ],
+    requete: [
+      { key: 'juridiction', label: f.juridiction },
+      { key: 'demandeur', label: f.demandeur },
+      { key: 'defendeur', label: f.defendeur },
+    ],
+    contrat_travail: [
+      { key: 'employeur', label: f.employeur },
+      { key: 'salarie', label: f.salarie },
+      { key: 'poste', label: f.poste },
+    ],
+    conclusions: [
+      { key: 'affaire', label: f.affaire },
+      { key: 'demandes', label: f.demandes },
+    ],
+    autre: [
+      { key: 'objet', label: f.objetDoc },
+      { key: 'details', label: f.details },
+    ],
+  };
+}
 
 export function DocumentDraftingSection({
   conversationId,
@@ -65,7 +69,7 @@ export function DocumentDraftingSection({
   const requestDraft = useJuriaStore((s) => s.requestDraft);
   const { toast } = useToast();
 
-  const fields = useMemo(() => (selected ? EXTRA_FIELDS[selected] : []), [selected]);
+  const fields = useMemo(() => (selected ? extraFields(t.juria.draftFields)[selected] : []), [selected, t]);
 
   const handleGenerate = async () => {
     if (!selected) return;
@@ -77,7 +81,7 @@ export function DocumentDraftingSection({
       setValues({});
     } catch (e) {
       toast({
-        title: 'Génération impossible',
+        title: t.juria.toasts.draftFailed,
         description: getJuriaErrorMessage(e),
         variant: 'destructive',
       });
@@ -87,7 +91,7 @@ export function DocumentDraftingSection({
   return (
     <div className={compact ? 'space-y-3' : 'space-y-4'}>
       <p className="text-sm font-medium text-slate-800 dark:text-slate-100">
-        Quel type de document souhaitez-vous rédiger ?
+        {t.juria.pickDraftType}
       </p>
       <div className="grid grid-cols-2 gap-2">
         {DOCUMENT_DRAFT_TYPES.map((def) => (
@@ -98,7 +102,7 @@ export function DocumentDraftingSection({
               setSelected(def.id);
               setValues({});
             }}
-            className={`rounded-xl border p-3 text-left text-xs transition ${
+            className={`rounded-xl border p-3 text-start text-xs transition ${
               selected === def.id
                 ? 'border-indigo-500 bg-indigo-50 dark:border-indigo-500 dark:bg-indigo-950/40'
                 : 'border-slate-200 bg-white hover:border-slate-300 dark:border-slate-800 dark:bg-slate-900'
@@ -126,7 +130,7 @@ export function DocumentDraftingSection({
             </div>
           ))}
           <Button type="button" className="w-full bg-indigo-600 hover:bg-indigo-700" onClick={handleGenerate}>
-            Générer le document
+            {t.juria.generateDocument}
           </Button>
         </div>
       )}

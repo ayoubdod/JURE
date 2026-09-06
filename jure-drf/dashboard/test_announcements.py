@@ -8,7 +8,8 @@ from django.urls import reverse
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APIClient, APITestCase
-from rest_framework_simplejwt.tokens import RefreshToken
+
+from core.testing import api_client_for
 
 from cabinets.models import Cabinet
 from lawyers.models import LawyerProfile
@@ -42,10 +43,7 @@ def _create_cabinet_lawyer(email: str, phone: str, trade_name: str = "Cabinet"):
 
 
 def _auth_client(user) -> APIClient:
-    api = APIClient()
-    refresh = RefreshToken.for_user(user)
-    api.credentials(HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}")
-    return api
+    return api_client_for(user)
 
 
 def _make_announcement(*, title, cabinets, **kwargs):
@@ -438,6 +436,14 @@ class AnnouncementAPITest(APITestCase):
         payload = self.api_b.get(self.overview_url).json()["announcement"]
         self.assertIsNotNone(payload)
         self.assertEqual(payload["id"], ann.id)
+
+    def test_cannot_get_other_cabinet_announcement_by_id(self):
+        ann = _make_announcement(title="B detail", cabinets=[self.cab_b])
+        detail_url = reverse(
+            "announcement-detail", kwargs={"announcement_id": ann.id}
+        )
+        response = self.api_a.get(detail_url)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_tenant_isolation_preserved(self):
         _make_announcement(title="A", cabinets=[self.cab_a])

@@ -1,6 +1,7 @@
 from decimal import Decimal
 
 from django.db import transaction
+from django.utils.translation import gettext as _
 from rest_framework import serializers
 
 from finance.models import Invoice, Payment
@@ -70,19 +71,19 @@ class PaymentCreateSerializer(serializers.ModelSerializer):
 
     def validate_amount(self, value):
         if value is None or Decimal(str(value)) <= 0:
-            raise serializers.ValidationError('Payment amount must be greater than zero.')
+            raise serializers.ValidationError(_('Payment amount must be greater than zero.'))
         return value
 
     def validate_invoice_id(self, invoice):
         case = self.context.get('case')
         if invoice and case and invoice.case_id != case.id:
-            raise serializers.ValidationError('Invoice does not belong to this case.')
+            raise serializers.ValidationError(_('Invoice does not belong to this case.'))
         return invoice
 
     def validate(self, attrs):
         case = self.context.get('case')
         if case and not case.client_id:
-            raise serializers.ValidationError('Case must have a client to record a payment.')
+            raise serializers.ValidationError(_('Case must have a client to record a payment.'))
         invoice = attrs.get('invoice')
         amount = attrs.get('amount')
         if invoice and amount is not None:
@@ -114,7 +115,7 @@ class PaymentCreateSerializer(serializers.ModelSerializer):
         request = self.context['request']
         client_profile = get_or_create_firm_client(case.client)
         if not client_profile:
-            raise serializers.ValidationError('Could not resolve client profile for this case.')
+            raise serializers.ValidationError(_('Could not resolve client profile for this case.'))
         payment = Payment.objects.create(
             case=case,
             client=client_profile,

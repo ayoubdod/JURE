@@ -14,7 +14,8 @@ from decimal import Decimal
 from django.contrib.auth import get_user_model
 from rest_framework import status
 from rest_framework.test import APITestCase
-from rest_framework_simplejwt.tokens import RefreshToken
+
+from core.testing import access_token_for
 
 from cabinets.models import Cabinet
 from cases.models import Case
@@ -33,8 +34,7 @@ def _phone() -> str:
 
 
 def _auth(client, user):
-    token = RefreshToken.for_user(user).access_token
-    client.credentials(HTTP_AUTHORIZATION=f'Bearer {token}')
+    client.credentials(HTTP_AUTHORIZATION=f'Bearer {access_token_for(user)}')
 
 
 def _owner(prefix='owner', trade_name=None):

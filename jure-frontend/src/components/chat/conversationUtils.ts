@@ -1,7 +1,6 @@
-export const getMemberPerson = (m: API.ConversationMembership) =>
-  (m as { user?: API.User; cabinet_member?: API.User; member?: API.User }).user ??
-  (m as { cabinet_member?: API.User }).cabinet_member ??
-  (m as { member?: API.User }).member;
+export const getMemberPerson = (
+  m: API.ConversationMembership
+): API.User | undefined => m.user ?? m.cabinet_member ?? m.member;
 
 export function getLinkedCase(c?: API.Conversation | null): API.LinkedCaseSummary | null {
   if (!c) return null;
@@ -12,14 +11,6 @@ export function formatCaseRef(lc: API.LinkedCaseSummary): string {
   const ref = lc.reference?.trim();
   if (ref) return ref.startsWith('#') ? ref : `#${ref}`;
   return `#${lc.id}`;
-}
-
-export function humanizeToken(value?: string | null): string {
-  if (!value) return '';
-  return value
-    .replace(/_/g, ' ')
-    .toLowerCase()
-    .replace(/\b\w/g, (ch) => ch.toUpperCase());
 }
 
 export function parseLinkedCaseId(lc: API.LinkedCaseSummary): number | null {
@@ -45,7 +36,7 @@ export function findDirectConversationWithPeer(
   const userId = peer.userId ?? null;
   return conversations.find((c) => {
     if (c.type !== 'direct') return false;
-    const op = c.other_participant as { id?: number; email?: string } | undefined;
+    const op = c.other_participant;
     if (userId != null && op?.id === userId) return true;
     if (email && (op?.email ?? '').toLowerCase() === email) return true;
     const membership = getDirectPeer(c, currentEmail);
@@ -78,7 +69,7 @@ export function getDirectPeerInfo(
     op?.full_name ??
     (`${firstName ?? ''} ${lastName ?? ''}`.trim() || person?.email || unknownLabel);
   const initials = [firstName?.[0], lastName?.[0]].filter(Boolean).join('').toUpperCase() || '?';
-  const id = person?.id ?? (person as { pk?: number } | null)?.pk ?? null;
+  const id = person?.id ?? person?.pk ?? null;
   return { fullName, firstName, lastName, initials, id, email: person?.email, person };
 }
 
@@ -137,7 +128,11 @@ export function isSameCalendarDay(a?: string, b?: string): boolean {
   );
 }
 
-export function formatDateSeparator(iso: string, labels: { today: string; yesterday: string }): string {
+export function formatDateSeparator(
+  iso: string,
+  labels: { today: string; yesterday: string },
+  locale?: string
+): string {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return '';
   const now = new Date();
@@ -146,7 +141,7 @@ export function formatDateSeparator(iso: string, labels: { today: string; yester
   const diffDays = Math.round((today.getTime() - that.getTime()) / 86_400_000);
   if (diffDays === 0) return labels.today;
   if (diffDays === 1) return labels.yesterday;
-  return d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+  return d.toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric' });
 }
 
 const GROUP_WINDOW_MS = 5 * 60 * 1000;

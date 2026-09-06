@@ -8,6 +8,7 @@ import type {
   JuriaApiSendMessageResponse,
   JuriaApiUsage,
 } from '@/services/juria/types';
+import { juriaInvalidIdError, juriaMissingIdError } from '@/utils/juriaErrors';
 
 const BASE = '/juria/';
 
@@ -83,7 +84,7 @@ export async function apiJuriaCreateConversation(body: CreateConversationBody) {
   const { data } = await axiosInstance.post<{ id: string } | JuriaApiConversationDetail>(`${BASE}conversations/`, body);
   if (data && typeof data === 'object' && 'messages' in data && Array.isArray((data as JuriaApiConversationDetail).messages)) {
     const id = conversationIdFromPayload(data);
-    if (!id) throw new Error('Conversation créée sans identifiant.');
+    if (!id) throw juriaMissingIdError();
     return {
       ...(data as JuriaApiConversationDetail),
       id,
@@ -92,14 +93,14 @@ export async function apiJuriaCreateConversation(body: CreateConversationBody) {
     };
   }
   const id = conversationIdFromPayload(data);
-  if (!id) throw new Error('Conversation créée sans identifiant.');
+  if (!id) throw juriaMissingIdError();
   return apiJuriaGetConversation(id);
 }
 
 export async function apiJuriaGetConversation(conversationUuid: string) {
   const id = normalizeJuriaConversationId(conversationUuid);
   if (!id) {
-    throw new Error('Identifiant de conversation invalide.');
+    throw juriaInvalidIdError();
   }
   const { data } = await axiosInstance.get<JuriaApiConversationDetail>(`${BASE}conversations/${id}/`);
   return data;
@@ -107,7 +108,7 @@ export async function apiJuriaGetConversation(conversationUuid: string) {
 
 export async function apiJuriaArchiveConversation(conversationUuid: string) {
   const id = normalizeJuriaConversationId(conversationUuid);
-  if (!id) throw new Error('Identifiant de conversation invalide.');
+  if (!id) throw juriaInvalidIdError();
   await axiosInstance.delete(`${BASE}conversations/${id}/`);
 }
 
@@ -117,7 +118,7 @@ export async function apiJuriaSendMessage(
   opts?: { signal?: AbortSignal }
 ) {
   const id = normalizeJuriaConversationId(conversationUuid);
-  if (!id) throw new Error('Identifiant de conversation invalide.');
+  if (!id) throw juriaInvalidIdError();
   const fd = new FormData();
   fd.append('message', body.message);
   if (body.file) {
@@ -134,7 +135,7 @@ export async function apiJuriaSendMessage(
 
 export async function apiJuriaDraft(conversationUuid: string, body: DraftBody) {
   const id = normalizeJuriaConversationId(conversationUuid);
-  if (!id) throw new Error('Identifiant de conversation invalide.');
+  if (!id) throw juriaInvalidIdError();
   const { data } = await axiosInstance.post<JuriaApiDraftResponse>(`${BASE}conversations/${id}/draft/`, body);
   return data;
 }
@@ -480,7 +481,7 @@ export async function apiJuriaSendMessageWithLang(
   opts?: { signal?: AbortSignal }
 ) {
   const id = normalizeJuriaConversationId(conversationUuid);
-  if (!id) throw new Error('Identifiant de conversation invalide.');
+  if (!id) throw juriaInvalidIdError();
   const fd = new FormData();
   fd.append('message', body.message);
   if (body.language) fd.append('language', body.language);

@@ -55,6 +55,27 @@ build-backend = "poetry.core.masonry.api"
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.4.0"
 pytest-django = "^4.11.1"
+ruff = "^0.12.0"
 
 [tool.poetry]
 package-mode = false
+
+# Optional local check: poetry run ruff check .
+# Not a merge gate yet — do not mass-format the tree.
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+extend-exclude = [
+    ".venv",
+    "migrations",
+    "jure-drf",
+]
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]
+ignore = [
+    "E501",
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["core", "cases", "cabinets", "users", "finance", "juria", "chat"]

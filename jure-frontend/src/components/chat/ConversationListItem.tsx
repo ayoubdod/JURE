@@ -163,7 +163,7 @@ export const ConversationListItem: React.FC<{
         }
       }}
       className={cn(
-        'group relative flex cursor-pointer items-start gap-2.5 px-3 py-2.5 text-left transition-colors duration-200',
+        'group relative flex cursor-pointer items-start gap-2.5 px-3 py-2.5 text-start transition-colors duration-200',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#64499D]/35',
         active
           ? 'bg-[#F7F4FF] dark:bg-[#64499D]/15'

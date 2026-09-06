@@ -1,3 +1,5 @@
+import { useAppTranslation } from '@/i18n';
+
 interface LogoLoadingProps {
   /** Use full-screen centered layout (default: true) */
   fullScreen?: boolean;
@@ -23,12 +25,13 @@ const LogoLoading = ({
   size = 'lg',
   message,
 }: LogoLoadingProps) => {
+  const { t } = useAppTranslation();
   const content = (
     <div className="flex flex-col items-center justify-center gap-6" role="status" aria-busy="true">
       <div className="relative">
         <img
           src={logoUrl}
-          alt="Loading"
+          alt={t.common.loading}
           className={`${sizeClasses[size]} object-contain animate-logo-breathe`}
         />
         <div className="mt-6 flex justify-center gap-1.5">

@@ -56,7 +56,7 @@ const ForgotPassword = () => {
   };
 
   return (
-    <AuroraPage className="flex items-center justify-center p-4">
+    <AuroraPage className="flex items-center justify-center p-4" documentTitle={t.auth.forgotTitle}>
       <div className="absolute top-4 end-4 flex items-center gap-2">
         <LangSwitcher />
         <Button

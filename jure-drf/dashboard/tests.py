@@ -8,8 +8,9 @@ from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 from rest_framework import status
-from rest_framework.test import APIClient, APITestCase
-from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework.test import APITestCase
+
+from core.testing import api_client_for
 
 from cabinets.models import Cabinet
 from cases.models import Case
@@ -341,12 +342,10 @@ class DashboardStatsMoMTest(TestCase):
 
 class DashboardOverviewAPITest(APITestCase):
     def setUp(self):
-        self.api = APIClient()
         self.user, self.cabinet = _create_cabinet_lawyer(
             "api-lawyer@test.com", "+33630000001", "API Cabinet"
         )
-        refresh = RefreshToken.for_user(self.user)
-        self.api.credentials(HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}")
+        self.api = api_client_for(self.user)
         self.url = reverse("dashboard-overview")
         _, self.month_start, _ = month_bounds()
         self.prev_mid = self.month_start - relativedelta(months=1) + timedelta(days=10)
@@ -380,6 +379,26 @@ class DashboardOverviewAPITest(APITestCase):
         self.assertNotEqual(clients["change"], "+12%")
         for key in ("announcement", "recent_cases", "today_tasks", "recent_activity", "kpis"):
             self.assertIn(key, data)
+
+    def test_overview_activity_includes_kind_title_and_timestamp(self):
+        _create_task(
+            self.cabinet,
+            title="File brief",
+            due_date=timezone.localdate(),
+            status_value=Task.TaskStatus.DONE,
+        )
+        response = self.api.get(self.url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        completed = next(
+            item
+            for item in response.json()["recent_activity"]
+            if item.get("kind") == "task_completed"
+        )
+        self.assertEqual(completed["title"], "File brief")
+        self.assertIn("Task completed:", completed["message"])
+        self.assertEqual(completed["icon"], "CheckSquare")
+        self.assertTrue(completed["at"])
+        self.assertTrue(completed["ago"])
 
     def test_overview_tenant_isolation_via_api(self):
         other_user, other_cab = _create_cabinet_lawyer(

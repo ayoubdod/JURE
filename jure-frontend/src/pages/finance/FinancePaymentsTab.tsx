@@ -96,9 +96,9 @@ export const FinancePaymentsTab: React.FC = () => {
         <Input className="h-10 max-w-[150px]" type="date" value={from} onChange={(e) => setFrom(e.target.value)} />
         <Input className="h-10 max-w-[150px]" type="date" value={to} onChange={(e) => setTo(e.target.value)} />
         <div className="relative min-w-[180px] flex-1">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+          <Search className="absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
           <Input
-            className="h-10 pl-9"
+            className="h-10 ps-9"
             placeholder={t.finance.filters.search}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -121,7 +121,7 @@ export const FinancePaymentsTab: React.FC = () => {
               setPage(1);
             }}
           >
-            <RotateCcw className="mr-1.5 h-4 w-4" />
+            <RotateCcw className="me-1.5 h-4 w-4" />
             {t.finance.filters.reset}
           </Button>
         ) : null}

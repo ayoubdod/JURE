@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from django.db.models import Q
+from django.utils.translation import gettext as _
 from rest_framework.exceptions import PermissionDenied, ValidationError
 
 from cases.models import Case, CaseAttachment
@@ -25,7 +26,7 @@ def _bump_permission(project: JuriaProject, resource: str, level: str = Permissi
 
 def connect_case(project: JuriaProject, case: Case, user) -> JuriaProjectSource:
     if case.cabinet_id != project.cabinet_id:
-        raise PermissionDenied("Case is not in this cabinet.")
+        raise PermissionDenied(_("Case is not in this cabinet."))
     project.linked_case = case
     project.save(update_fields=["linked_case", "updated_at"])
     source, _ = JuriaProjectSource.objects.get_or_create(
@@ -42,7 +43,7 @@ def connect_case_documents(project: JuriaProject, attachment_ids: list[int], use
     if not attachment_ids:
         return []
     if not project.linked_case_id:
-        raise ValidationError({"case_document_ids": "Link a case before attaching case documents."})
+        raise ValidationError({"case_document_ids": _("Link a case before attaching case documents.")})
     atts = CaseAttachment.objects.filter(
         Q(case_id=project.linked_case_id) | Q(linked_cases=project.linked_case_id),
         pk__in=attachment_ids,
@@ -50,7 +51,7 @@ def connect_case_documents(project: JuriaProject, attachment_ids: list[int], use
     found = {a.id for a in atts}
     missing = [i for i in attachment_ids if i not in found]
     if missing:
-        raise PermissionDenied("One or more case documents are not accessible.")
+        raise PermissionDenied(_("One or more case documents are not accessible."))
     created = []
     for att in atts:
         src, _ = JuriaProjectSource.objects.get_or_create(
@@ -97,7 +98,7 @@ def connect_library_documents(
     found = {d.id for d in qs}
     missing = [i for i in document_ids if i not in found]
     if missing:
-        raise PermissionDenied("One or more library documents are not accessible.")
+        raise PermissionDenied(_("One or more library documents are not accessible."))
     created = []
     for doc in qs:
         kind = _library_kind_for_doc(doc)
@@ -148,12 +149,12 @@ def connect_flag(project: JuriaProject, kind: str, resource: str, user) -> Juria
 def connect_client(project: JuriaProject, client_id: int, user) -> JuriaProjectSource:
     client = User.objects.filter(pk=client_id).first()
     if client is None:
-        raise ValidationError({"client_id": "Client not found."})
+        raise ValidationError({"client_id": _("Client not found.")})
     from cases.models import Case
 
     allowed = Case.objects.filter(cabinet=project.cabinet, client_id=client_id).exists()
     if not allowed and getattr(client, "cabinet_id", None) != project.cabinet_id:
-        raise PermissionDenied("Client is not in this cabinet.")
+        raise PermissionDenied(_("Client is not in this cabinet."))
     src, _ = JuriaProjectSource.objects.get_or_create(
         project=project,
         kind=SourceKind.CLIENT,

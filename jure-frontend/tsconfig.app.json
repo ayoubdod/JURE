@@ -14,7 +14,8 @@
     "noEmit": true,
     "jsx": "react-jsx",
 
-    /* Linting */
+    /* Typecheck: keep loose so the existing app compiles.
+       Do not set "strict": true in a cleanup PR. See docs/ENGINEERING.md. */
     "strict": false,
     "noUnusedLocals": false,
     "noUnusedParameters": false,

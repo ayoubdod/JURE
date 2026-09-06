@@ -478,7 +478,7 @@ const CabinetMemberCreateModal = forwardRef<
                       onChange={(value) =>
                         mainForm.setValue('phone', value, { shouldValidate: true, shouldDirty: true })
                       }
-                      className="[&_button]:h-10 [&_button]:rounded-l-lg [&_input]:h-10 [&_input]:rounded-lg [&_input]:border-slate-200 [&_input]:dark:border-zinc-700 [&_input]:focus-visible:ring-2 [&_input]:focus-visible:ring-[#64499D]/25 [&_input]:focus-visible:ring-offset-0"
+                      className="[&_button]:h-10 [&_button]:rounded-s-lg [&_input]:h-10 [&_input]:rounded-lg [&_input]:border-slate-200 [&_input]:dark:border-zinc-700 [&_input]:focus-visible:ring-2 [&_input]:focus-visible:ring-[#64499D]/25 [&_input]:focus-visible:ring-offset-0"
                     />
                   </Field>
                   <Field
@@ -713,12 +713,12 @@ const CabinetMemberCreateModal = forwardRef<
             >
               {submitPhase === 'loading' ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <Loader2 className="me-2 h-4 w-4 animate-spin" />
                   {t.team.modal.creating}
                 </>
               ) : submitPhase === 'success' ? (
                 <>
-                  <Check className="mr-2 h-4 w-4" />
+                  <Check className="me-2 h-4 w-4" />
                   {t.team.modal.createdTitle}
                 </>
               ) : (

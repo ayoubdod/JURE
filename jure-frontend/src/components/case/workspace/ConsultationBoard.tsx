@@ -91,7 +91,7 @@ function ConsultationBoardCard({
               size="xs"
               firstName={lead.first_name}
               lastName={lead.last_name}
-              image={getPersonImage(lead as unknown as Record<string, unknown>)}
+              image={getPersonImage(lead)}
             />
             <span className="truncate text-[11px] text-slate-600 dark:text-slate-400">{personName(lead)}</span>
           </div>
@@ -144,7 +144,7 @@ export default function ConsultationBoard({
           <div
             key={col.status}
             className={cn(
-              'flex min-h-0 flex-col overflow-hidden rounded-xl border border-slate-200/90 border-l-[3px] dark:border-slate-800',
+              'flex min-h-0 flex-col overflow-hidden rounded-xl border border-slate-200/90 border-s-[3px] dark:border-slate-800',
               col.accent,
               isOpen ? 'md:h-full' : 'self-start'
             )}

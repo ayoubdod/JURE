@@ -38,23 +38,23 @@ export const InvoiceTable: React.FC<Props> = ({
   onDownloadPdf,
   onPreviewPdf,
 }) => {
-  const { t } = useAppTranslation();
+  const { t, lang } = useAppTranslation();
 
   return (
     <div className="overflow-hidden rounded-xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-950 shadow-sm">
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[960px] text-left text-[13px]">
+        <table className="w-full min-w-[960px] text-start text-[13px]">
           <thead className="border-b border-slate-200 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-900/50">
             <tr>
               <th className="py-3 px-4 font-semibold text-slate-600 dark:text-slate-400">{t.finance.columns.invoiceNumber}</th>
               <th className="py-3 px-4 font-semibold text-slate-600 dark:text-slate-400">{t.finance.columns.case}</th>
               <th className="py-3 px-4 font-semibold text-slate-600 dark:text-slate-400">{t.finance.columns.client}</th>
-              <th className="py-3 px-4 text-right font-semibold text-slate-600 dark:text-slate-400">{t.finance.columns.amountHt}</th>
-              <th className="py-3 px-4 text-right font-semibold text-slate-600 dark:text-slate-400">{t.finance.columns.tva}</th>
-              <th className="py-3 px-4 text-right font-semibold text-slate-600 dark:text-slate-400">{t.finance.columns.ttc}</th>
+              <th className="py-3 px-4 text-end font-semibold text-slate-600 dark:text-slate-400">{t.finance.columns.amountHt}</th>
+              <th className="py-3 px-4 text-end font-semibold text-slate-600 dark:text-slate-400">{t.finance.columns.tva}</th>
+              <th className="py-3 px-4 text-end font-semibold text-slate-600 dark:text-slate-400">{t.finance.columns.ttc}</th>
               <th className="py-3 px-4 font-semibold text-slate-600 dark:text-slate-400">{t.finance.columns.status}</th>
               <th className="py-3 px-4 font-semibold text-slate-600 dark:text-slate-400">{t.finance.columns.date}</th>
-              <th className="py-3 px-4 text-right font-semibold text-slate-600 dark:text-slate-400">{t.finance.columns.actions}</th>
+              <th className="py-3 px-4 text-end font-semibold text-slate-600 dark:text-slate-400">{t.finance.columns.actions}</th>
             </tr>
           </thead>
           <tbody>
@@ -76,7 +76,7 @@ export const InvoiceTable: React.FC<Props> = ({
               </tr>
             ) : (
               rows.map((row, idx) => {
-                const exonerationNote = invoiceExonerationNote(row);
+                const exonerationNote = invoiceExonerationNote(row, t.finance.caseTab.tvaExemptNote);
                 return (
                 <tr
                   key={row.id}
@@ -94,16 +94,16 @@ export const InvoiceTable: React.FC<Props> = ({
                     {row.case_reference}
                   </td>
                   <td className="px-4 py-3 text-slate-800 dark:text-slate-200">{row.client_name}</td>
-                  <td className="px-4 py-3 text-right tabular-nums">{formatMAD(row.amount_ht)}</td>
-                  <td className="px-4 py-3 text-right align-top">
-                    <div className="tabular-nums">{formatMAD(row.tva)}</div>
+                  <td className="px-4 py-3 text-end tabular-nums">{formatMAD(row.amount_ht, lang)}</td>
+                  <td className="px-4 py-3 text-end align-top">
+                    <div className="tabular-nums">{formatMAD(row.tva, lang)}</div>
                     {exonerationNote ? (
-                      <p className="mt-1 max-w-[14rem] text-left text-[11px] italic leading-snug text-slate-400">
+                      <p className="mt-1 max-w-[14rem] text-start text-[11px] italic leading-snug text-slate-400">
                         {exonerationNote}
                       </p>
                     ) : null}
                   </td>
-                  <td className="px-4 py-3 text-right tabular-nums font-medium">{formatMAD(row.amount_ttc)}</td>
+                  <td className="px-4 py-3 text-end tabular-nums font-medium">{formatMAD(row.amount_ttc, lang)}</td>
                   <td className="px-4 py-3">
                     <span
                       className={cn(
@@ -115,7 +115,7 @@ export const InvoiceTable: React.FC<Props> = ({
                     </span>
                   </td>
                   <td className="px-4 py-3 tabular-nums text-slate-600 dark:text-slate-400">{row.issue_date}</td>
-                  <td className="px-4 py-3 text-right" onClick={(e) => e.stopPropagation()}>
+                  <td className="px-4 py-3 text-end" onClick={(e) => e.stopPropagation()}>
                     <div className="inline-flex flex-wrap justify-end gap-1">
                       <Button
                         type="button"

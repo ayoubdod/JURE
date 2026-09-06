@@ -6,13 +6,13 @@ import { Shield, Lock, FileText, Globe, Cookie, ArrowRight } from "lucide-react"
 import MarketingShell from "@/components/landing/MarketingShell";
 import Reveal from "@/components/landing/Reveal";
 import { RouteSeo } from "@/marketing/Seo";
+import { useMarketingLang } from "@/marketing/MarketingLocale";
 
 type Lang = "fr" | "en" | "ar";
 
-const STRINGS: Record<Lang, any> = {
-  fr: {
+const privacyFr = {
     htmlLang: "fr",
-    dir: "ltr",
+    dir: "ltr" as "ltr" | "rtl",
     nav: { features: "Fonctionnalités", pricing: "Tarifs", about: "À propos", contact: "Contact" },
     auth: { signin: "Se connecter" },
     themeToggle: { label: "Basculer le thème", title: "Basculer le thème" },
@@ -84,7 +84,12 @@ const STRINGS: Record<Lang, any> = {
       },
     },
     footer: { privacy: "Confidentialité", terms: "Conditions", status: "Statut", rights: "Tous droits réservés." },
-  },
+};
+
+type PrivacyCopy = typeof privacyFr;
+
+const STRINGS: Record<Lang, PrivacyCopy> = {
+  fr: privacyFr,
   en: {
     htmlLang: "en",
     dir: "ltr",
@@ -272,6 +277,7 @@ const SectionCard: React.FC<{ icon: React.ReactNode; title: string; children?: R
 const Privacy: React.FC = () => {
   const { lang, setLang, t } = useI18n();
   const navigate = useNavigate();
+  const { path } = useMarketingLang();
   const lastUpdated = "2025-08-15";
 
   const go = (to: string) => navigate(to);
@@ -296,10 +302,10 @@ const Privacy: React.FC = () => {
           </p>
 
           <div className="mt-8 flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center w-full sm:w-auto">
-            <Button onClick={() => go("/contact")} className="w-full sm:w-auto px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg landing-btn-primary">
-              {t.hero.ctaPrimary} <ArrowRight className="ms-2 h-4 w-4" />
+            <Button onClick={() => go(path("contact"))} className="w-full sm:w-auto px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg landing-btn-primary">
+              {t.hero.ctaPrimary} <ArrowRight className="ms-2 h-4 w-4 rtl:rotate-180" />
             </Button>
-            <Button variant="outline" onClick={() => go("/status")} className="w-full sm:w-auto px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg border-[#A58CF4]/30">
+            <Button variant="outline" onClick={() => go(path("status"))} className="w-full sm:w-auto px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg border-[#A58CF4]/30">
               {t.hero.ctaSecondary}
             </Button>
           </div>

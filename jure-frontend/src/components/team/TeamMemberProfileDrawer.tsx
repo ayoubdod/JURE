@@ -265,7 +265,7 @@ const TeamMemberProfileDrawer = forwardRef<
               <div className="flex min-w-0 items-start gap-3">
                 <div className="relative mt-0.5 shrink-0">
                   <UserAvatar
-                    image={getPersonImage(data as Record<string, unknown>)}
+                    image={getPersonImage(data)}
                     firstName={data.first_name}
                     lastName={data.last_name}
                     size="md"
@@ -588,7 +588,7 @@ const TeamMemberProfileDrawer = forwardRef<
                                 ) : null}
                               </p>
                             </div>
-                            <ChevronRight className="h-4 w-4 shrink-0 text-slate-300" aria-hidden />
+                            <ChevronRight className="h-4 w-4 shrink-0 text-slate-300 rtl:rotate-180" aria-hidden />
                           </button>
                         </li>
                       );

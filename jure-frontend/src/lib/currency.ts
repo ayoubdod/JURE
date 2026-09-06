@@ -79,8 +79,7 @@ const FX_RATES_USD_SNAPSHOT: Record<Currency, number> = {
 };
 
 export function getFx(): Record<Currency, number> {
-  // If your app injects fresh rates, e.g. window.__FX_RATES = { MAD:10.1, ... }
-  const injected = isBrowser ? (window as any).__FX_RATES : undefined;
+  const injected = isBrowser ? window.__FX_RATES : undefined;
   return injected ? { ...FX_RATES_USD_SNAPSHOT, ...injected } : FX_RATES_USD_SNAPSHOT;
 }
 
@@ -116,3 +115,9 @@ export const USD_BASE = {
   monthly: { starter: 29, pro: 79, enterprise: 199 },
   yearly: { starter: 24, pro: 66, enterprise: 165 }, // per user / mo (billed yearly)
 };
+
+declare global {
+  interface Window {
+    __FX_RATES?: Partial<Record<Currency, number>>;
+  }
+}

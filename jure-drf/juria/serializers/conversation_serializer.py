@@ -1,3 +1,4 @@
+from django.utils.translation import gettext as _
 from rest_framework import serializers
 
 from juria.models import JuriaConversation, JuriaMessage
@@ -114,5 +115,5 @@ class JuriaConversationCreateSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         linked = attrs.get("linked_case_id")
         if linked is not None and not isinstance(linked, int):
-            raise serializers.ValidationError({"linked_case_id": "Invalid case id."})
+            raise serializers.ValidationError({"linked_case_id": _("Invalid case id.")})
         return attrs

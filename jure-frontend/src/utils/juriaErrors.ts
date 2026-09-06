@@ -1,31 +1,50 @@
 import type { AxiosError } from 'axios';
 import type { JuriaApiErrorBody } from '@/services/juria/types';
+import { detectInitialLanguage, tFor } from '@/i18n';
+import { localizeApiMessage } from '@/i18n/errors';
+
+function juriaErrorCopy() {
+  return tFor(detectInitialLanguage()).juria.errors;
+}
+
+export function juriaMissingIdError(): Error {
+  return new Error(juriaErrorCopy().missingId);
+}
+
+export function juriaInvalidIdError(): Error {
+  return new Error(juriaErrorCopy().invalidId);
+}
 
 export function getJuriaErrorMessage(err: unknown): string {
   const ax = err as AxiosError<JuriaApiErrorBody>;
   const status = ax.response?.status;
   const data = ax.response?.data;
+  const copy = juriaErrorCopy();
 
   if (status === 503) {
-    return typeof data?.detail === 'string' ? data.detail : 'Juria est indisponible pour le moment.';
+    return typeof data?.detail === 'string' ? localizeApiMessage(data.detail, data.detail) : copy.unavailable;
   }
   if (status === 500) {
-    return "Le serveur Juria a renvoyé une erreur. Vérifiez JURIA_ENABLED et DEEPSEEK_API_KEY sur Railway.";
+    return copy.server;
   }
   if (status === 401 || status === 402 || status === 429 || status === 502) {
-    return data?.error ?? "Juria API indisponible. Réessayez plus tard.";
+    return typeof data?.error === 'string'
+      ? localizeApiMessage(data.error, copy.apiUnavailable)
+      : copy.apiUnavailable;
   }
   if (status === 504) {
-    return data?.error ?? 'Juria met trop de temps à répondre. Réessayez.';
+    return typeof data?.error === 'string'
+      ? localizeApiMessage(data.error, copy.timeout)
+      : copy.timeout;
   }
   if (status === 400) {
-    if (typeof data?.detail === 'string') return data.detail;
-    return 'Requête invalide.';
+    if (typeof data?.detail === 'string') return localizeApiMessage(data.detail, data.detail);
+    return copy.invalidRequest;
   }
   if (ax.message === 'canceled' || ax.code === 'ERR_CANCELED') {
     return '';
   }
-  return 'Une erreur est survenue. Réessayez.';
+  return tFor(detectInitialLanguage()).errors.generic;
 }
 
 export function isJuriaDisabledError(err: unknown): boolean {

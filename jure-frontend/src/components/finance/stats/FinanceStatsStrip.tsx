@@ -35,7 +35,7 @@ export const FinanceStatsStrip: React.FC<Props> = ({
   caTotalHint,
   collectedHint,
 }) => {
-  const { t, tf } = useAppTranslation();
+  const { t, tf, lang } = useAppTranslation();
   const regime = tvaStatus?.regime ?? tvaRegime ?? null;
   const tvaExonere =
     tvaStatus != null ? isCabinetTvaExonerated(tvaStatus) : regime === 'EXONÉRÉ';
@@ -63,7 +63,7 @@ export const FinanceStatsStrip: React.FC<Props> = ({
     <div
       className={cn(
         cardBase,
-        tvaExonere ? 'border-l-[3px] border-l-emerald-500' : 'border-l-[3px] border-l-red-500'
+        tvaExonere ? 'border-s-[3px] border-s-emerald-500' : 'border-s-[3px] border-s-red-500'
       )}
     >
       <div className="flex items-start justify-between gap-2">
@@ -72,7 +72,7 @@ export const FinanceStatsStrip: React.FC<Props> = ({
             {t.finance.stats.tvaDue}
           </p>
           <p className="mt-1 text-xl sm:text-2xl font-bold tabular-nums text-slate-900 dark:text-white">
-            {formatMAD(tvaExonere ? 0 : tvaUnpaid)}
+            {formatMAD(tvaExonere ? 0 : tvaUnpaid, lang)}
           </p>
           {tvaExonere ? (
             <span className="mt-1 inline-flex rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-semibold text-emerald-800 dark:text-emerald-300">
@@ -90,8 +90,8 @@ export const FinanceStatsStrip: React.FC<Props> = ({
               <div className="flex items-center justify-between gap-1 text-[10px] text-slate-600 dark:text-slate-400">
                 <span className="tabular-nums">{Math.round(progressPct)} %</span>
                 {remainingBefore != null ? (
-                  <span className="text-right font-medium text-slate-700 dark:text-slate-300">
-                    {tf(t.finance.stats.beforeLiability, { amount: formatMAD(remainingBefore) })}
+                  <span className="text-end font-medium text-slate-700 dark:text-slate-300">
+                    {tf(t.finance.stats.beforeLiability, { amount: formatMAD(remainingBefore, lang) })}
                   </span>
                 ) : null}
               </div>
@@ -119,14 +119,14 @@ export const FinanceStatsStrip: React.FC<Props> = ({
   return (
     <div className="shrink-0 border-b border-slate-200/80 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-950 px-3 sm:px-4 py-4">
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        <div className={cn(cardBase, 'border-l-[3px] border-l-amber-500')}>
+        <div className={cn(cardBase, 'border-s-[3px] border-s-amber-500')}>
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
               <p className="text-[11px] font-medium uppercase tracking-[0.06em] text-slate-500 dark:text-slate-400">
                 {t.finance.stats.totalRevenue}
               </p>
               <p className="mt-1 text-xl sm:text-2xl font-bold tabular-nums text-slate-900 dark:text-white">
-                {formatMAD(totalCaTtc)}
+                {formatMAD(totalCaTtc, lang)}
               </p>
               {caTotalHint ? (
                 <p className="mt-1 text-[10px] leading-tight text-slate-500 dark:text-slate-400">{caTotalHint}</p>
@@ -137,14 +137,14 @@ export const FinanceStatsStrip: React.FC<Props> = ({
             </div>
           </div>
         </div>
-        <div className={cn(cardBase, 'border-l-[3px] border-l-emerald-500')}>
+        <div className={cn(cardBase, 'border-s-[3px] border-s-emerald-500')}>
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
               <p className="text-[11px] font-medium uppercase tracking-[0.06em] text-slate-500 dark:text-slate-400">
                 {t.finance.stats.collected}
               </p>
               <p className="mt-1 text-xl sm:text-2xl font-bold tabular-nums text-slate-900 dark:text-white">
-                {formatMAD(totalCollected)}
+                {formatMAD(totalCollected, lang)}
               </p>
               {collectedHint ? (
                 <p className="mt-1 text-[10px] leading-tight text-slate-500 dark:text-slate-400">{collectedHint}</p>
@@ -165,14 +165,14 @@ export const FinanceStatsStrip: React.FC<Props> = ({
         ) : (
           tvaCard
         )}
-        <div className={cn(cardBase, 'border-l-[3px] border-l-orange-500')}>
+        <div className={cn(cardBase, 'border-s-[3px] border-s-orange-500')}>
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
               <p className="text-[11px] font-medium uppercase tracking-[0.06em] text-slate-500 dark:text-slate-400">
                 {t.finance.stats.taxAdvancesDue}
               </p>
               <p className="mt-1 text-xl sm:text-2xl font-bold tabular-nums text-slate-900 dark:text-white">
-                {formatMAD(taxAdvancesDueMad)}
+                {formatMAD(taxAdvancesDueMad, lang)}
               </p>
             </div>
             <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-orange-500 shadow-sm">

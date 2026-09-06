@@ -223,7 +223,7 @@ export function JuriaCreateProjectModal({
       type="button"
       onClick={() => onChange(!checked)}
       className={cn(
-        'flex w-full items-start gap-3 rounded-xl border px-3 py-2.5 text-left transition',
+        'flex w-full items-start gap-3 rounded-xl border px-3 py-2.5 text-start transition',
         checked
           ? 'border-[#64499D]/40 bg-[#64499D]/[0.06]'
           : 'border-slate-200 bg-white hover:border-slate-300 dark:border-slate-800 dark:bg-slate-950'
@@ -378,7 +378,7 @@ export function JuriaCreateProjectModal({
                       type="button"
                       onClick={() => setSelectedCase(item)}
                       className={cn(
-                        'mb-1 w-full rounded-lg px-2 py-1.5 text-left text-xs',
+                        'mb-1 w-full rounded-lg px-2 py-1.5 text-start text-xs',
                         selectedCase?.id === item.id ? 'bg-[#64499D]/10' : 'hover:bg-slate-50'
                       )}
                     >
@@ -398,9 +398,9 @@ export function JuriaCreateProjectModal({
             {connectDocs && (
               <div className="max-h-36 overflow-y-auto rounded-xl border border-slate-200 p-2 text-xs dark:border-slate-800">
                 {!selectedCase ? (
-                  <p className="py-3 text-center text-slate-400">Liez d’abord un dossier.</p>
+                  <p className="py-3 text-center text-slate-400">{c.linkCaseFirst}</p>
                 ) : caseDocs.length === 0 ? (
-                  <p className="py-3 text-center text-slate-400">Aucun document sur ce dossier.</p>
+                  <p className="py-3 text-center text-slate-400">{c.noCaseDocuments}</p>
                 ) : (
                   caseDocs.map((d) => (
                     <label
@@ -475,7 +475,7 @@ export function JuriaCreateProjectModal({
                       type="button"
                       onClick={() => setSelectedClient(item)}
                       className={cn(
-                        'mb-1 w-full rounded-lg px-2 py-1.5 text-left',
+                        'mb-1 w-full rounded-lg px-2 py-1.5 text-start',
                         selectedClient?.id === item.id ? 'bg-[#64499D]/10' : 'hover:bg-slate-50'
                       )}
                     >

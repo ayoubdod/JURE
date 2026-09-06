@@ -24,7 +24,7 @@ import { getJuriaErrorMessage } from '@/utils/juriaErrors';
 import { JURIA_MODE_VISUAL, juriaModeVisual } from '@/components/juria/juriaConstants';
 import type { JuriaConversation, JuriaMode } from '@/types/juria';
 import { cn } from '@/lib/utils';
-import { useAppTranslation } from '@/i18n';
+import { useAppTranslation, formatTime } from '@/i18n';
 
 type GroupKey = 'today' | 'yesterday' | 'thisWeek' | 'older';
 
@@ -64,6 +64,7 @@ function ConversationRow({
   renamePrompt: string;
   previewFallback: string;
 }) {
+  const { lang } = useAppTranslation();
   const visual = juriaModeVisual(c.mode);
   const Icon = visual.Icon;
   const last = c.messages[c.messages.length - 1];
@@ -88,7 +89,7 @@ function ConversationRow({
             }
           }}
           className={cn(
-            'group relative w-full cursor-pointer rounded-lg border border-transparent px-2.5 py-2 text-left transition',
+            'group relative w-full cursor-pointer rounded-lg border border-transparent px-2.5 py-2 text-start transition',
             active
               ? 'border-[#64499D]/20 bg-[#64499D]/[0.06] dark:border-[#64499D]/30 dark:bg-[#64499D]/15'
               : 'hover:bg-slate-50 dark:hover:bg-slate-800/80'
@@ -100,7 +101,7 @@ function ConversationRow({
             <div className="min-w-0 flex-1">
               <div className="flex items-center justify-between gap-2">
                 <span className="line-clamp-1 text-[13px] font-medium text-slate-900 dark:text-slate-100">{c.title}</span>
-                <span className="shrink-0 text-[10px] text-slate-400">{dayjs(c.updatedAt).format('HH:mm')}</span>
+                <span className="shrink-0 text-[10px] text-slate-400">{formatTime(c.updatedAt, lang)}</span>
               </div>
               <p className="line-clamp-2 text-[11px] text-slate-500 dark:text-slate-400">{preview}</p>
               {c.caseReference && (
@@ -148,12 +149,14 @@ export function JuriaSidebar({
   variant = 'full',
   caseId,
   newConversationCase,
+  onConversationOpen,
 }: {
   variant?: 'full' | 'compact';
   /** When set, only conversations linked to this case are listed. */
   caseId?: number;
   /** Pre-link new conversations (e.g. case panel). */
   newConversationCase?: { id: number; reference?: string; title?: string };
+  onConversationOpen?: () => void;
 }) {
   const { t, tf } = useAppTranslation();
   const conversations = useJuriaStore((s) => s.conversations);
@@ -204,7 +207,7 @@ export function JuriaSidebar({
         'flex h-full min-h-0 flex-col border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950',
         variant === 'full'
           ? 'w-full shrink-0 border-e md:w-[280px]'
-          : 'w-full max-w-full shrink-0 border-b border-slate-200 sm:w-[220px] sm:border-b-0 sm:border-e dark:border-slate-800'
+          : 'h-full w-full min-h-0 min-w-0 shrink-0 border-e border-slate-200 dark:border-slate-800'
       )}
     >
       <div className="shrink-0 border-b border-slate-200 px-3 py-3 dark:border-slate-800">
@@ -277,7 +280,10 @@ export function JuriaSidebar({
                     key={c.id}
                     c={c}
                     active={c.id === activeId}
-                    onOpen={setActive}
+                    onOpen={(id) => {
+                      setActive(id);
+                      onConversationOpen?.();
+                    }}
                     onRename={rename}
                     onArchive={(id) => {
                       void archive(id).catch((e) =>

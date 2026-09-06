@@ -56,6 +56,8 @@ declare namespace API {
         documents?:API.Document[];
         /** True when invitation was sent but member has not completed setup */
         invitation_sent?: boolean;
+        position?: string;
+        department?: string;
     }
 
     export type CabinetMemberCreateForm = {

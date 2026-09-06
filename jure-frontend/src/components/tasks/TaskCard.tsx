@@ -84,7 +84,7 @@ export default memo(function TaskCard({
                   key={person.id || person.email}
                   size="xs"
                   className="ring-2 ring-white dark:ring-slate-950"
-                  image={getPersonImage(person as unknown as Record<string, unknown>) ?? row?.image}
+                  image={getPersonImage(person) ?? row?.image}
                   firstName={person.first_name ?? row?.first_name}
                   lastName={person.last_name ?? row?.last_name}
                   email={person.email ?? row?.email}

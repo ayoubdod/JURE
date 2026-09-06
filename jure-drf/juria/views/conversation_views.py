@@ -1,5 +1,6 @@
 from django.db.models import OuterRef, Subquery
 from django.shortcuts import get_object_or_404
+from django.utils.translation import gettext as _
 from rest_framework import generics, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -84,7 +85,7 @@ class JuriaConversationListCreateView(JuriaEnabledMixin, generics.ListCreateAPIV
         if linked_id is not None and case is None:
             from rest_framework.exceptions import ValidationError
 
-            raise ValidationError({"linked_case_id": "Case not found or not accessible."})
+            raise ValidationError({"linked_case_id": _("Case not found or not accessible.")})
         title = (serializer.validated_data.get("title") or "").strip()
         mode = serializer.validated_data.get("mode") or JuriaConversation.Mode.CHAT
         project = None

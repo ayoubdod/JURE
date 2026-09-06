@@ -10,10 +10,9 @@ import { submitLandingInquiry } from "@/services/marketing/api";
 
 type Lang = "fr" | "en" | "ar";
 
-const STRINGS: Record<Lang, any> = {
-  en: {
+const statusSubscribeEn = {
     htmlLang: "en",
-    dir: "ltr",
+    dir: "ltr" as "ltr" | "rtl",
     nav: { features: "Features", pricing: "Pricing", about: "About", contact: "Contact" },
     auth: { signin: "Sign in" },
     themeToggle: { label: "Toggle theme", title: "Toggle theme" },
@@ -35,7 +34,12 @@ const STRINGS: Record<Lang, any> = {
       sendFailed: "We could not send your request. Please email contact@jure.ma.",
     },
     footer: { privacy: "Privacy", terms: "Terms", status: "Status", rights: "All rights reserved." },
-  },
+};
+
+type StatusSubscribeCopy = typeof statusSubscribeEn;
+
+const STRINGS: Record<Lang, StatusSubscribeCopy> = {
+  en: statusSubscribeEn,
   fr: {
     htmlLang: "fr",
     dir: "ltr",

@@ -1,14 +1,13 @@
 import React from 'react';
-import dayjs from 'dayjs';
 import { ArchiveRestore, FolderOpen, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import useJuriaStore from '@/stores/juriaStore';
 import { useToast } from '@/hooks/use-toast';
 import { getJuriaErrorMessage } from '@/utils/juriaErrors';
-import { useAppTranslation } from '@/i18n';
+import { useAppTranslation, formatDate } from '@/i18n';
 
 export function JuriaArchiveView({ onOpenProject }: { onOpenProject?: (id: string) => void }) {
-  const { t, tf } = useAppTranslation();
+  const { t, tf, lang } = useAppTranslation();
   const w = t.juria.workspace;
   const items = useJuriaStore((s) => s.archivedProjects);
   const restore = useJuriaStore((s) => s.restoreProject);
@@ -40,9 +39,9 @@ export function JuriaArchiveView({ onOpenProject }: { onOpenProject?: (id: strin
                     {p.owner ? `${p.owner.first_name} ${p.owner.last_name}` : '—'}
                     {p.linked_case_title ? ` · ${p.linked_case_title}` : ''}
                     {p.archived_at
-                      ? ` · ${tf(w.archiveView.archivedOn, { date: dayjs(p.archived_at).format('DD MMM YYYY') })}`
+                      ? ` · ${tf(w.archiveView.archivedOn, { date: formatDate(p.archived_at, lang, { month: 'short' }) })}`
                       : ''}
-                    {` · ${tf(w.archiveView.lastActivity, { date: dayjs(p.updated_at).format('DD MMM YYYY') })}`}
+                    {` · ${tf(w.archiveView.lastActivity, { date: formatDate(p.updated_at, lang, { month: 'short' }) })}`}
                   </p>
                 </div>
                 <div className="flex gap-1">

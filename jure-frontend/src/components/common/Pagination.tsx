@@ -8,6 +8,7 @@ import {
   PaginationPrevious,
 } from '@/components/ui/pagination';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useAppTranslation } from '@/i18n';
 import { cn } from '@/lib/utils';
 
 interface PaginationProps {
@@ -22,6 +23,14 @@ interface PaginationProps {
   itemLabel?: string;
 }
 
+const DEFAULT_PAGE_SIZES = [
+  { value: '1', label: '1' },
+  { value: '5', label: '5' },
+  { value: '10', label: '10' },
+  { value: '20', label: '20' },
+  { value: '50', label: '50' },
+];
+
 const PaginationComponent: React.FC<PaginationProps> = ({
   currentPage,
   totalPages,
@@ -30,15 +39,12 @@ const PaginationComponent: React.FC<PaginationProps> = ({
   isLoading = false,
   onPageChange,
   onPageSizeChange,
-  pageSizeOptions = [
-    { value: '1', label: '1 per page' },
-    { value: '5', label: '5 per page' },
-    { value: '10', label: '10 per page' },
-    { value: '20', label: '20 per page' },
-    { value: '50', label: '50 per page' },
-  ],
-  itemLabel = 'cases',
+  pageSizeOptions = DEFAULT_PAGE_SIZES,
+  itemLabel,
 }) => {
+  const { t, tf } = useAppTranslation();
+  const items = itemLabel || t.common.pagination.defaultItems;
+
   if (isLoading) {
     return null;
   }
@@ -53,7 +59,7 @@ const PaginationComponent: React.FC<PaginationProps> = ({
     <div className="w-full border-t border-slate-200/90 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-900/30 py-2.5 px-2 sm:px-3">
       <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-xs text-slate-600 dark:text-slate-400 tabular-nums">
-          Showing {start}–{end} of {totalCount} {itemLabel}
+          {tf(t.common.pagination.showing, { start, end, total: totalCount, items })}
         </p>
         <div className="flex flex-wrap items-center justify-end gap-1.5 sm:gap-2">
           <Select
@@ -68,12 +74,12 @@ const PaginationComponent: React.FC<PaginationProps> = ({
                 'focus:ring-2 focus:ring-primary/25'
               )}
             >
-              <SelectValue placeholder="Page size" />
+              <SelectValue placeholder={t.common.pagination.pageSize} />
             </SelectTrigger>
             <SelectContent>
               {pageSizeOptions.map((option) => (
                 <SelectItem key={option.value} value={option.value}>
-                  {option.label}
+                  {tf(t.common.pagination.perPage, { n: option.value })}
                 </SelectItem>
               ))}
             </SelectContent>

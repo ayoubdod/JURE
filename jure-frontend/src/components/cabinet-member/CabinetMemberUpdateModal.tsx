@@ -49,7 +49,7 @@ import { cn } from '@/lib/utils';
 import { Switch } from '../ui/switch';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { useAppTranslation } from '@/i18n';
+import { useAppTranslation, localizeApiMessage } from '@/i18n';
 import { useToast } from '@/hooks/use-toast';
 
 const ALL_ROLES: API.Role[] = ['VIEWER', 'ASSISTANT', 'LAWYER', 'MANAGER', 'ADMIN', 'OWNER'];
@@ -262,7 +262,7 @@ const CabinetMemberUpdateModal = forwardRef<
         const payload = err.response?.data as { error?: string; detail?: string } | undefined;
         const msg = payload?.error ?? payload?.detail;
         if (typeof msg === 'string' && msg && keys.length === 0) {
-          mainForm.setError('role', { message: msg });
+          mainForm.setError('role', { message: localizeApiMessage(msg, msg) });
         }
         const focusKey = keys[0] === 'role' || (!keys[0] && msg) ? `${formId}-role-VIEWER` : keys[0] ? `${formId}-${keys[0]}` : null;
         if (focusKey) document.getElementById(focusKey)?.focus();
@@ -500,7 +500,7 @@ const CabinetMemberUpdateModal = forwardRef<
                         onChange={(value) =>
                           mainForm.setValue('phone', value, { shouldValidate: true, shouldDirty: true })
                         }
-                        className="[&_button]:h-10 [&_button]:rounded-l-lg [&_input]:h-10 [&_input]:rounded-lg [&_input]:border-slate-200 [&_input]:dark:border-zinc-700 [&_input]:focus-visible:ring-2 [&_input]:focus-visible:ring-[#64499D]/25 [&_input]:focus-visible:ring-offset-0"
+                        className="[&_button]:h-10 [&_button]:rounded-s-lg [&_input]:h-10 [&_input]:rounded-lg [&_input]:border-slate-200 [&_input]:dark:border-zinc-700 [&_input]:focus-visible:ring-2 [&_input]:focus-visible:ring-[#64499D]/25 [&_input]:focus-visible:ring-offset-0"
                       />
                     </Field>
                     <Field
@@ -714,12 +714,12 @@ const CabinetMemberUpdateModal = forwardRef<
               >
                 {submitPhase === 'loading' ? (
                   <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    <Loader2 className="me-2 h-4 w-4 animate-spin" />
                     {t.team.modal.updating}
                   </>
                 ) : submitPhase === 'success' ? (
                   <>
-                    <Check className="mr-2 h-4 w-4" />
+                    <Check className="me-2 h-4 w-4" />
                     {t.team.modal.updatedTitle}
                   </>
                 ) : (

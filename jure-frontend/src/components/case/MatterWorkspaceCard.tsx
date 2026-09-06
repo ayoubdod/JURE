@@ -34,11 +34,11 @@ const getAssignedName = (c: API.Case): string => {
   return '—';
 };
 
-const getCaseTitle = (caseItem: API.Case) =>
+const getCaseTitle = (caseItem: API.Case, untitled: string) =>
   (caseItem as API.Case & { title?: string }).title ||
   caseItem.reference ||
   CaseCategory.getLabel(caseItem.category) ||
-  'Untitled case';
+  untitled;
 
 const getTypeLabel = (c: API.Case): string => {
   const t = c.caseType ?? c.case_type;
@@ -57,13 +57,14 @@ const MatterWorkspaceCard = memo(function MatterWorkspaceCard({
   onOpen,
   onEdit,
 }: MatterWorkspaceCardProps) {
-  const { t, enumPretty } = useAppTranslation();
+  const { t, tf, enumPretty } = useAppTranslation();
   const [expanded, setExpanded] = useState(false);
   const priority = getCaseData(caseItem, 'priority') as string | undefined;
   const dateStr = getCaseDateForFilter(caseItem);
   const days = dateStr ? getCountdownDays(dateStr) : null;
   const style = days != null ? (days < 0 ? 'critical' : getCountdownStyle(days)) : null;
   const showPriority = priority === 'HIGH' || priority === 'URGENT' || priority === 'MEDIUM';
+  const title = getCaseTitle(caseItem, t.cases.untitledCase);
 
   const toggleExpand = (e: React.MouseEvent | React.KeyboardEvent) => {
     e.stopPropagation();
@@ -81,14 +82,14 @@ const MatterWorkspaceCard = memo(function MatterWorkspaceCard({
     >
       <button
         type="button"
-        className="w-full text-left px-3 py-2.5 min-h-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-inset rounded-lg"
+        className="w-full text-start px-3 py-2.5 min-h-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-inset rounded-lg"
         onClick={onOpen}
-        aria-label={`Open matter ${getCaseTitle(caseItem)}`}
+        aria-label={tf(t.cases.aria.openMatter, { title })}
       >
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0 flex-1">
             <p className="text-[14px] font-semibold text-slate-900 dark:text-white leading-snug line-clamp-2">
-              {truncateText(getCaseTitle(caseItem), 72)}
+              {truncateText(title, 72)}
             </p>
             <p className="mt-0.5 font-mono text-[11px] text-slate-500 dark:text-slate-400 tabular-nums truncate">
               {caseItem.reference || '—'}
@@ -147,7 +148,11 @@ const MatterWorkspaceCard = memo(function MatterWorkspaceCard({
               {formatDate(dateStr)}
               {days != null && (
                 <span className="opacity-80">
-                  {days < 0 ? `(${Math.abs(days)}d overdue)` : days === 0 ? '(Today)' : `(in ${days}d)`}
+                  {days < 0
+                    ? `(${tf(t.cases.deadline.overdue, { days: Math.abs(days) })})`
+                    : days === 0
+                      ? `(${t.cases.deadline.today})`
+                      : `(${tf(t.cases.deadline.inDays, { days })})`}
                 </span>
               )}
             </span>
@@ -162,7 +167,7 @@ const MatterWorkspaceCard = memo(function MatterWorkspaceCard({
           onClick={toggleExpand}
           aria-expanded={expanded}
         >
-          {expanded ? 'Less' : 'More'}
+          {expanded ? t.clients.less : t.clients.more}
           <ChevronDown
             className={cn('w-3.5 h-3.5 transition-transform duration-200 motion-reduce:transition-none', expanded && 'rotate-180')}
             aria-hidden
@@ -173,11 +178,11 @@ const MatterWorkspaceCard = memo(function MatterWorkspaceCard({
       {expanded && (
         <div className="px-3 pb-3 pt-1 space-y-2 border-t border-slate-100 dark:border-slate-800/80 animate-in fade-in-0 slide-in-from-top-1 duration-150 motion-reduce:animate-none">
           <dl className="grid grid-cols-[5.5rem_1fr] gap-x-2 gap-y-1.5 text-[12px]">
-            <dt className="text-slate-400 uppercase tracking-wider text-[10px] font-medium">Client</dt>
+            <dt className="text-slate-400 uppercase tracking-wider text-[10px] font-medium">{t.cases.card.client}</dt>
             <dd className="text-slate-700 dark:text-slate-300 truncate">{getClientName(caseItem.client)}</dd>
-            <dt className="text-slate-400 uppercase tracking-wider text-[10px] font-medium">Lawyer</dt>
+            <dt className="text-slate-400 uppercase tracking-wider text-[10px] font-medium">{t.cases.pageWorkspace.lawyer}</dt>
             <dd className="text-slate-700 dark:text-slate-300 truncate">{getAssignedName(caseItem)}</dd>
-            <dt className="text-slate-400 uppercase tracking-wider text-[10px] font-medium">Hearing</dt>
+            <dt className="text-slate-400 uppercase tracking-wider text-[10px] font-medium">{t.calendar.sourceTypes.hearing}</dt>
             <dd className="text-slate-700 dark:text-slate-300">{dateStr ? formatDate(dateStr) : '—'}</dd>
           </dl>
           <div className="flex gap-2 pt-1">
@@ -190,8 +195,8 @@ const MatterWorkspaceCard = memo(function MatterWorkspaceCard({
                 onOpen();
               }}
             >
-              <ExternalLink className="w-3.5 h-3.5 mr-1.5" aria-hidden />
-              Open
+              <ExternalLink className="w-3.5 h-3.5 me-1.5" aria-hidden />
+              {t.cases.workspace.administrative.actions.open}
             </Button>
             {onEdit && (
               <Button
@@ -204,8 +209,8 @@ const MatterWorkspaceCard = memo(function MatterWorkspaceCard({
                   onEdit();
                 }}
               >
-                <Pencil className="w-3.5 h-3.5 mr-1.5" aria-hidden />
-                Edit
+                <Pencil className="w-3.5 h-3.5 me-1.5" aria-hidden />
+                {t.common.edit}
               </Button>
             )}
           </div>

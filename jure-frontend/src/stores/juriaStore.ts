@@ -1,5 +1,4 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
 import type {
   JuriaActivity,
   JuriaArtifact,
@@ -46,9 +45,12 @@ import {
   type JuriaProjectCreateBody,
 } from '@/services/juria/api';
 import { mapApiDetailToConversation, mapApiListItemToConversation, mapApiMessageToJuria } from '@/utils/juriaMappers';
-import { getJuriaErrorMessage, isJuriaDisabledError } from '@/utils/juriaErrors';
+import { getJuriaErrorMessage, isJuriaDisabledError, juriaMissingIdError } from '@/utils/juriaErrors';
+import { detectInitialLanguage, tFor } from '@/i18n';
 
-type FabCase = { id: number; reference?: string; title?: string };
+function juriaFallbackError(e: unknown): Error {
+  return new Error(getJuriaErrorMessage(e) || tFor(detectInitialLanguage()).errors.generic);
+}
 
 interface JuriaStoreState {
   juriaUnavailable: boolean;
@@ -57,7 +59,6 @@ interface JuriaStoreState {
   usage: import('@/services/juria/types').JuriaApiUsage | null;
   conversations: JuriaConversation[];
   activeConversationId: string | null;
-  fabCaseContext: FabCase | null;
   processingConversationId: string | null;
 
   projects: JuriaProject[];
@@ -74,7 +75,6 @@ interface JuriaStoreState {
   activities: JuriaActivity[];
   processingThreadId: string | null;
 
-  setFabCaseContext: (c: FabCase | null) => void;
   clearJuriaUnavailable: () => void;
 
   loadConversations: (filters?: { linked_case?: number; mode?: JuriaMode; is_archived?: boolean }) => Promise<void>;
@@ -177,16 +177,13 @@ function mergeConversationLists(local: JuriaConversation[], incoming: JuriaConve
   return [...byId.values()].sort((a, b) => (a.updatedAt < b.updatedAt ? 1 : -1));
 }
 
-const useJuriaStore = create<JuriaStoreState>()(
-  persist(
-    (set, get) => ({
+const useJuriaStore = create<JuriaStoreState>()((set, get) => ({
       juriaUnavailable: false,
       listLoading: false,
       detailLoading: false,
       usage: null,
       conversations: [],
       activeConversationId: null,
-      fabCaseContext: null,
       processingConversationId: null,
 
       projects: [],
@@ -203,7 +200,6 @@ const useJuriaStore = create<JuriaStoreState>()(
       activities: [],
       processingThreadId: null,
 
-      setFabCaseContext: (c) => set({ fabCaseContext: c }),
       clearJuriaUnavailable: () => set({ juriaUnavailable: false }),
 
       loadUsage: async () => {
@@ -293,7 +289,7 @@ const useJuriaStore = create<JuriaStoreState>()(
         const conv = mapApiDetailToConversation(detail);
         const id = normalizeJuriaConversationId(conv.id);
         if (!id) {
-          throw new Error('Conversation créée sans identifiant.');
+          throw juriaMissingIdError();
         }
         conv.id = id;
         conv.archived = false;
@@ -396,7 +392,7 @@ const useJuriaStore = create<JuriaStoreState>()(
           await get().loadUsage();
         } catch (e) {
           if (isJuriaDisabledError(e)) set({ juriaUnavailable: true });
-          throw new Error(getJuriaErrorMessage(e) || 'Erreur');
+          throw juriaFallbackError(e);
         } finally {
           set((s) => ({
             processingConversationId:
@@ -441,7 +437,7 @@ const useJuriaStore = create<JuriaStoreState>()(
           await get().loadUsage();
         } catch (e) {
           if (isJuriaDisabledError(e)) set({ juriaUnavailable: true });
-          throw new Error(getJuriaErrorMessage(e) || 'Erreur');
+          throw juriaFallbackError(e);
         } finally {
           set({ processingConversationId: null });
         }
@@ -711,7 +707,7 @@ const useJuriaStore = create<JuriaStoreState>()(
           await get().loadUsage();
         } catch (e) {
           if (isJuriaDisabledError(e)) set({ juriaUnavailable: true });
-          throw new Error(getJuriaErrorMessage(e) || 'Erreur');
+          throw juriaFallbackError(e);
         } finally {
           set((s) => ({
             processingThreadId: s.processingThreadId === threadId ? null : s.processingThreadId,
@@ -770,12 +766,6 @@ const useJuriaStore = create<JuriaStoreState>()(
         const activities = await apiJuriaListActivity(projectId);
         set({ activities });
       },
-    }),
-    {
-      name: 'juria-fab-v1',
-      partialize: (s) => ({ fabCaseContext: s.fabCaseContext }),
-    }
-  )
-);
+}));
 
 export default useJuriaStore;

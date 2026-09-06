@@ -159,8 +159,8 @@ const Settings: React.FC = () => {
           title: t.settings.toasts.notificationUpdatedTitle,
           description:
             perm === 'unsupported'
-              ? 'Notifications are not supported in this browser.'
-              : 'Notification permission was blocked. Enable it in your browser settings.',
+              ? t.settings.toasts.notificationsUnsupported
+              : t.settings.toasts.notificationPermissionBlocked,
           variant: 'destructive',
         });
         setNotifications((prev) => ({ ...prev, [type]: false }));

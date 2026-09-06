@@ -265,3 +265,306 @@ msgstr "البريد الإلكتروني غير مُتحقق منه."
 #: .\users\serializers.py:354
 msgid "Phone is not verified."
 msgstr "الهاتف غير مُتحقق منه."
+
+#: chat/serializers/conversation.py
+msgid "At least one participant is required"
+msgstr "يجب وجود مشارك واحد على الأقل"
+
+#: chat/serializers/conversation.py
+msgid "You must belong to a cabinet."
+msgstr "يجب أن تنتمي إلى مكتب."
+
+#: chat/serializers/conversation.py
+msgid "Participants must belong to your cabinet."
+msgstr "يجب أن ينتمي المشاركون إلى مكتبك."
+
+#: chat/serializers/conversation.py
+msgid "Participants must be cabinet team members."
+msgstr "يجب أن يكون المشاركون أعضاء في المكتب."
+
+#: chat/serializers/conversation.py
+msgid "Direct conversation must have exactly You and one other participant"
+msgstr "يجب أن تتضمن المحادثة المباشرة أنت ومشاركاً آخر فقط"
+
+#: chat/serializers/conversation.py
+msgid "You cannot create a direct conversation with yourself"
+msgstr "لا يمكنك إنشاء محادثة مباشرة مع نفسك"
+
+#: tasks/serializers/appointment.py tasks/serializers/task.py
+msgid "Client must belong to your cabinet."
+msgstr "يجب أن ينتمي العميل إلى مكتبك."
+
+#: tasks/serializers/appointment.py tasks/serializers/task.py
+msgid "Client must not be a cabinet member."
+msgstr "يجب ألا يكون العميل عضواً في المكتب."
+
+#: tasks/serializers/appointment.py tasks/serializers/task.py
+msgid "Case must belong to your cabinet."
+msgstr "يجب أن تنتمي القضية إلى مكتبك."
+
+#: tasks/serializers/appointment.py
+msgid "You do not have access to this conversation."
+msgstr "ليس لديك صلاحية الوصول إلى هذه المحادثة."
+
+#: tasks/serializers/appointment.py
+msgid "Attendees must belong to your cabinet."
+msgstr "يجب أن ينتمي الحاضرون إلى مكتبك."
+
+#: tasks/serializers/appointment.py
+msgid "Attendees must be cabinet team members."
+msgstr "يجب أن يكون الحاضرون أعضاء في المكتب."
+
+msgid "Email is required."
+msgstr "البريد الإلكتروني مطلوب."
+
+msgid "A user with this email already exists."
+msgstr "يوجد مستخدم بهذا البريد الإلكتروني بالفعل."
+
+msgid "Invalid email address."
+msgstr "عنوان البريد الإلكتروني غير صالح."
+
+msgid "Phone number is required."
+msgstr "رقم الهاتف مطلوب."
+
+msgid "A user with this phone number already exists."
+msgstr "يوجد مستخدم برقم الهاتف هذا بالفعل."
+
+msgid "First name is required."
+msgstr "الاسم الأول مطلوب."
+
+msgid "First name must contain at least 2 characters."
+msgstr "يجب أن يحتوي الاسم الأول على حرفين على الأقل."
+
+msgid "Last name is required."
+msgstr "اسم العائلة مطلوب."
+
+msgid "Last name must contain at least 2 characters."
+msgstr "يجب أن يحتوي اسم العائلة على حرفين على الأقل."
+
+msgid "You must belong to a cabinet to create clients."
+msgstr "يجب أن تنتمي إلى مكتب لإنشاء عملاء."
+
+msgid "You must belong to a cabinet to create team members."
+msgstr "يجب أن تنتمي إلى مكتب لإنشاء أعضاء الفريق."
+
+msgid "Tags must be a list."
+msgstr "يجب أن تكون الوسوم قائمة."
+
+msgid "File is too large (max 25 MB)."
+msgstr "الملف كبير جدًا (الحد الأقصى 25 ميغابايت)."
+
+msgid "The uploaded file is empty."
+msgstr "الملف المرفوع فارغ."
+
+msgid "Quantity cannot be negative."
+msgstr "لا يمكن أن تكون الكمية سالبة."
+
+msgid "Unit price cannot be negative."
+msgstr "لا يمكن أن يكون سعر الوحدة سالبًا."
+
+msgid "Expense amount cannot be negative."
+msgstr "لا يمكن أن يكون مبلغ المصروف سالبًا."
+
+msgid "Expense amount must be greater than zero."
+msgstr "يجب أن يكون مبلغ المصروف أكبر من صفر."
+
+msgid "Payment amount must be greater than zero."
+msgstr "يجب أن يكون مبلغ الدفع أكبر من صفر."
+
+msgid "Invoice does not belong to this case."
+msgstr "الفاتورة لا تنتمي إلى هذه القضية."
+
+msgid "Case must have a client to record a payment."
+msgstr "يجب أن تحتوي القضية على عميل لتسجيل دفعة."
+
+msgid "Could not resolve client profile for this case."
+msgstr "تعذر حل ملف العميل لهذه القضية."
+
+msgid "Authentication required."
+msgstr "المصادقة مطلوبة."
+
+msgid "You cannot delete a conversation you are a participant of"
+msgstr "لا يمكنك حذف محادثة أنت مشارك فيها"
+
+msgid "Matter not found in your cabinet."
+msgstr "تعذر العثور على الملف في مكتبك."
+
+msgid "Title is required."
+msgstr "العنوان مطلوب."
+
+msgid "Invalid status."
+msgstr "حالة غير صالحة."
+
+msgid "Text messages cannot include sharedCaseId, sharedTaskId, or sharedAppointmentId."
+msgstr "لا يمكن لرسائل النص أن تتضمن sharedCaseId أو sharedTaskId أو sharedAppointmentId."
+
+msgid "Exactly one of sharedCaseId, sharedTaskId, or sharedAppointmentId must be set for a shared message."
+msgstr "يجب تعيين واحد فقط من sharedCaseId أو sharedTaskId أو sharedAppointmentId لرسالة مشتركة."
+
+msgid "sharedCaseId is required for SHARED_CASE messages."
+msgstr "sharedCaseId مطلوب لرسائل SHARED_CASE."
+
+msgid "Case not found."
+msgstr "القضية غير موجودة."
+
+msgid "You do not have access to this case."
+msgstr "ليس لديك صلاحية الوصول إلى هذه القضية."
+
+msgid "sharedTaskId is required for SHARED_TASK messages."
+msgstr "sharedTaskId مطلوب لرسائل SHARED_TASK."
+
+msgid "Task not found."
+msgstr "المهمة غير موجودة."
+
+msgid "You do not have access to this task."
+msgstr "ليس لديك صلاحية الوصول إلى هذه المهمة."
+
+msgid "sharedAppointmentId is required for SHARED_APPOINTMENT messages."
+msgstr "sharedAppointmentId مطلوب لرسائل SHARED_APPOINTMENT."
+
+msgid "Appointment not found."
+msgstr "الموعد غير موجود."
+
+msgid "You do not have access to this appointment."
+msgstr "ليس لديك صلاحية الوصول إلى هذا الموعد."
+
+msgid "Invalid message_type."
+msgstr "message_type غير صالح."
+
+msgid "Call history messages are created by the system only."
+msgstr "رسائل سجل المكالمات تُنشأ بواسطة النظام فقط."
+
+msgid "Please select a permanent JURE group conversation."
+msgstr "يرجى اختيار محادثة مجموعة JURE دائمة."
+
+msgid "Invalid user ID for assignment."
+msgstr "معرّف المستخدم غير صالح للتعيين."
+
+msgid "caseType must be one of: CONSULTATION, LITIGATION, ADMINISTRATIVE."
+msgstr "يجب أن يكون caseType أحد: CONSULTATION أو LITIGATION أو ADMINISTRATIVE."
+
+msgid "Must be one of: CONSULTATION, LITIGATION, ADMINISTRATIVE."
+msgstr "يجب أن يكون أحد: CONSULTATION أو LITIGATION أو ADMINISTRATIVE."
+
+msgid "Cannot assign case to user from different cabinet."
+msgstr "لا يمكن إسناد القضية إلى مستخدم من مكتب آخر."
+
+msgid "User has no cabinet."
+msgstr "المستخدم ليس لديه مكتب."
+
+msgid "Only one shared item reference is allowed per message."
+msgstr "يُسمح بمرجع عنصر مشارك واحد فقط لكل رسالة."
+
+msgid "shared_case is required when message_type is SHARED_CASE."
+msgstr "shared_case مطلوب عندما يكون message_type هو SHARED_CASE."
+
+msgid "shared_task is required when message_type is SHARED_TASK."
+msgstr "shared_task مطلوب عندما يكون message_type هو SHARED_TASK."
+
+msgid "shared_appointment is required when message_type is SHARED_APPOINTMENT."
+msgstr "shared_appointment مطلوب عندما يكون message_type هو SHARED_APPOINTMENT."
+
+msgid "shared_call is required for call history messages."
+msgstr "shared_call مطلوب لرسائل سجل المكالمات."
+
+msgid "Text messages cannot reference a shared item."
+msgstr "لا يمكن لرسائل النص الإشارة إلى عنصر مشارك."
+
+msgid "This link protocol is not allowed."
+msgstr "بروتوكول الرابط هذا غير مسموح."
+
+msgid "Protocol-relative URLs are not allowed."
+msgstr "عناوين URL النسبية للبروتوكول غير مسموحة."
+
+msgid "Enter a valid internal path."
+msgstr "أدخل مسارًا داخليًا صالحًا."
+
+msgid "Use an internal path (starting with /) or a valid HTTPS URL."
+msgstr "استخدم مسارًا داخليًا (يبدأ بـ /) أو عنوان HTTPS صالحًا."
+
+msgid "URLs with credentials are not allowed."
+msgstr "عناوين URL التي تحتوي على بيانات اعتماد غير مسموحة."
+
+msgid "Case is not in this cabinet."
+msgstr "القضية ليست في هذا المكتب."
+
+msgid "Link a case before attaching case documents."
+msgstr "اربط قضية قبل إرفاق مستندات القضية."
+
+msgid "One or more case documents are not accessible."
+msgstr "مستند واحد أو أكثر من مستندات القضية غير قابل للوصول."
+
+msgid "One or more library documents are not accessible."
+msgstr "مستند واحد أو أكثر من مستندات المكتبة غير قابل للوصول."
+
+msgid "Client not found."
+msgstr "العميل غير موجود."
+
+msgid "Client is not in this cabinet."
+msgstr "العميل ليس في هذا المكتب."
+
+msgid "No cabinet associated with this user."
+msgstr "لا يوجد مكتب مرتبط بهذا المستخدم."
+
+msgid "This project is archived."
+msgstr "هذا المشروع مؤرشف."
+
+msgid "Insufficient project role."
+msgstr "دور المشروع غير كافٍ."
+
+msgid "Project does not grant %(required)s on %(resource)s."
+msgstr "المشروع لا يمنح %(required)s على %(resource)s."
+
+msgid "This project role cannot modify content."
+msgstr "هذا الدور لا يسمح بتعديل المحتوى."
+
+msgid "This project role cannot manage members."
+msgstr "هذا الدور لا يسمح بإدارة الأعضاء."
+
+msgid "Only the project owner can perform this action."
+msgstr "مالك المشروع وحده يمكنه تنفيذ هذا الإجراء."
+
+msgid "User not found."
+msgstr "المستخدم غير موجود."
+
+msgid "User is not in this cabinet."
+msgstr "المستخدم ليس في هذا المكتب."
+
+msgid "You are not a participant in this conversation."
+msgstr "لست مشاركًا في هذه المحادثة."
+
+msgid "Case not found or not accessible."
+msgstr "القضية غير موجودة أو غير قابلة للوصول."
+
+msgid "Invalid case id."
+msgstr "معرّف القضية غير صالح."
+
+msgid "Shared library documents cannot be edited or deleted from a cabinet."
+msgstr "لا يمكن تعديل أو حذف مستندات المكتبة المشتركة من مكتب."
+
+msgid "User must belong to a cabinet to create documents."
+msgstr "يجب أن ينتمي المستخدم إلى مكتب لإنشاء مستندات."
+
+msgid "Shared library documents cannot be deleted from a cabinet."
+msgstr "لا يمكن حذف مستندات المكتبة المشتركة من مكتب."
+
+msgid "Only platform administrators can archive shared library resources."
+msgstr "مسؤولو المنصة وحدهم يمكنهم أرشفة موارد المكتبة المشتركة."
+
+msgid "Only administrators can archive library documents."
+msgstr "المسؤولون وحدهم يمكنهم أرشفة مستندات المكتبة."
+
+msgid "Only platform administrators can restore shared library resources."
+msgstr "مسؤولو المنصة وحدهم يمكنهم استعادة موارد المكتبة المشتركة."
+
+msgid "Only administrators can restore library documents."
+msgstr "المسؤولون وحدهم يمكنهم استعادة مستندات المكتبة."
+
+msgid "Only administrators can perform bulk library actions."
+msgstr "المسؤولون وحدهم يمكنهم تنفيذ إجراءات جماعية على المكتبة."
+
+msgid "User must belong to a cabinet to add documents."
+msgstr "يجب أن ينتمي المستخدم إلى مكتب لإضافة مستندات."
+
+msgid "This resource is private to another cabinet."
+msgstr "هذا المورد خاص بمكتب آخر."

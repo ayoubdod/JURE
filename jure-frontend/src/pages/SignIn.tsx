@@ -10,7 +10,7 @@ import { apiLoginUser } from '@/services/auth/api';
 import useUserStore from '@/stores/userStore';
 import { stampLastActivity } from '@/utils/idleSession';
 import { isAxiosError } from 'axios';
-import { useAppTranslation } from '@/i18n';
+import { useAppTranslation, isBackendEmailUnverified } from '@/i18n';
 import AuthSplitShell from '@/components/landing/AuthSplitShell';
 
 interface SignInFormData {
@@ -30,7 +30,7 @@ const SignIn = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { t } = useAppTranslation();
+  const { t, apiError } = useAppTranslation();
   const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
@@ -63,14 +63,11 @@ const SignIn = () => {
     const data = error.response?.data;
     const nonField = data?.non_field_errors?.[0];
     if (typeof nonField === 'string') {
-      if (nonField.includes("E-mail is not verified.") || nonField.includes("L'e-mail n'est pas vérifié.")) return t.auth.loginUnverifiedDescription;
-      if (nonField.includes("Phone is not verified.")) return t.auth.loginPhoneUnverifiedDescription;
-      if (nonField.includes("User account is disabled.")) return t.auth.loginAccountDisabledDescription;
-      if (nonField.includes("Unable to log in with provided credentials.")) return t.auth.loginInvalidCredentialsDescription;
-      return nonField;
+      if (isBackendEmailUnverified(nonField)) return t.auth.loginUnverifiedDescription;
+      return apiError(nonField, nonField);
     }
     const emailErr = data?.email?.[0];
-    if (typeof emailErr === 'string') return emailErr;
+    if (typeof emailErr === 'string') return apiError(emailErr, emailErr);
     return t.auth.loginErrorDescription;
   };
 
@@ -89,7 +86,7 @@ const SignIn = () => {
     } catch (error) {
       if (isAxiosError(error) && error.response?.status === 400) {
         const msg = error.response?.data?.non_field_errors?.[0];
-        const isEmailUnverified = typeof msg === 'string' && (msg.includes("E-mail is not verified.") || msg.includes("L'e-mail n'est pas vérifié."));
+        const isEmailUnverified = typeof msg === 'string' && isBackendEmailUnverified(msg);
         if (isEmailUnverified) {
           localStorage.setItem('pendingVerificationEmail', data.email);
           toast({
@@ -158,7 +155,7 @@ const SignIn = () => {
               type="button"
               onClick={() => setShowPassword((v) => !v)}
               className="absolute end-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
-              aria-label={t.auth.passwordLabel}
+              aria-label={showPassword ? t.settings.hidePassword : t.settings.showPassword}
             >
               {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>

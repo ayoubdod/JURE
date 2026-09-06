@@ -1,6 +1,7 @@
 from decimal import Decimal
 
 from django.db import transaction
+from django.utils.translation import gettext as _
 from rest_framework import serializers
 
 from finance.models import Expense, Fee, Invoice, InvoiceItem
@@ -10,6 +11,21 @@ from finance.services.invoice_totals_service import (
     invoice_amount_paid,
     replace_invoice_items,
 )
+
+
+def _assert_line_refs_on_case(case, items):
+    """Invoice lines may only point at fees/expenses on the same matter."""
+    if not case or not items:
+        return
+    for item in items:
+        fee_id = item.get('fee_id')
+        if fee_id and not Fee.objects.filter(pk=fee_id, case=case).exists():
+            raise serializers.ValidationError({'items': f'Fee {fee_id} not on this case.'})
+        expense_id = item.get('expense_id')
+        if expense_id and not Expense.objects.filter(pk=expense_id, case=case).exists():
+            raise serializers.ValidationError(
+                {'items': f'Expense {expense_id} not on this case.'}
+            )
 
 
 class InvoiceItemSerializer(serializers.ModelSerializer):
@@ -43,12 +59,12 @@ class InvoiceItemWriteSerializer(serializers.Serializer):
 
     def validate_quantity(self, value):
         if value is not None and value < 0:
-            raise serializers.ValidationError('Quantity cannot be negative.')
+            raise serializers.ValidationError(_('Quantity cannot be negative.'))
         return value
 
     def validate_unit_price(self, value):
         if value is not None and value < 0:
-            raise serializers.ValidationError('Unit price cannot be negative.')
+            raise serializers.ValidationError(_('Unit price cannot be negative.'))
         return value
 
 
@@ -233,17 +249,7 @@ class InvoiceCreateSerializer(serializers.ModelSerializer):
         elif Decimal(str(amount_ht)) < 0:
             raise serializers.ValidationError({'amount_ht': 'Amount cannot be negative.'})
 
-        # Validate fee/expense refs belong to case/cabinet
-        case = self.context.get('case')
-        for item in items:
-            fee_id = item.get('fee_id')
-            if fee_id and case and not Fee.objects.filter(pk=fee_id, case=case).exists():
-                raise serializers.ValidationError({'items': f'Fee {fee_id} not on this case.'})
-            expense_id = item.get('expense_id')
-            if expense_id and case and not Expense.objects.filter(pk=expense_id, case=case).exists():
-                raise serializers.ValidationError(
-                    {'items': f'Expense {expense_id} not on this case.'}
-                )
+        _assert_line_refs_on_case(self.context.get('case'), items)
         return attrs
 
     @transaction.atomic
@@ -322,6 +328,8 @@ class InvoiceUpdateSerializer(serializers.ModelSerializer):
                         **{k: ['Modification interdite pour ce statut.'] for k in blocked},
                     }
                 )
+        if inv is not None:
+            _assert_line_refs_on_case(inv.case, attrs.get('items'))
         return attrs
 
     @transaction.atomic

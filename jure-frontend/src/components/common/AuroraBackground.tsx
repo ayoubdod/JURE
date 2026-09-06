@@ -1,5 +1,6 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
+import { Helmet } from 'react-helmet-async';
 import '@/components/common/aurora.css';
 
 export type AuroraIntensity = 'strong' | 'medium' | 'subtle' | 'minimal';
@@ -47,14 +48,21 @@ const AuroraBackground: React.FC<AuroraBackgroundProps> = ({
 export function AuroraPage({
   intensity = 'medium',
   className,
+  documentTitle,
   children,
 }: {
   intensity?: AuroraIntensity;
   className?: string;
+  documentTitle?: string;
   children: React.ReactNode;
 }) {
   return (
     <div className="relative min-h-screen overflow-hidden bg-background">
+      {documentTitle ? (
+        <Helmet>
+          <title>{documentTitle} | JURE</title>
+        </Helmet>
+      ) : null}
       <AuroraBackground intensity={intensity} />
       <div className={cn('relative z-[1] min-h-screen', className)}>{children}</div>
     </div>

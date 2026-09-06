@@ -523,7 +523,7 @@ const LitigationForm: React.FC<LitigationFormProps> = ({
                   setConflictOpen(true);
                 }}
               >
-                <ShieldAlert className="w-4 h-4 mr-1" />
+                <ShieldAlert className="w-4 h-4 me-1" />
                 {t.dashboard.conflictCheck.runFromMatter}
               </Button>
             </div>
@@ -562,7 +562,7 @@ const LitigationForm: React.FC<LitigationFormProps> = ({
                 </div>
               ))}
               <Button type="button" variant="outline" size="sm" onClick={addThirdParty}>
-                <Plus className="w-4 h-4 mr-1" />
+                <Plus className="w-4 h-4 me-1" />
                 {modal.actions.addRow}
               </Button>
             </div>
@@ -806,7 +806,7 @@ const LitigationForm: React.FC<LitigationFormProps> = ({
                 </div>
               ))}
               <Button type="button" variant="outline" size="sm" onClick={addKeyDeadline}>
-                <Plus className="w-4 h-4 mr-1" />
+                <Plus className="w-4 h-4 me-1" />
                 {modal.actions.addDeadline}
               </Button>
             </div>

@@ -39,7 +39,7 @@ export type WorkspaceKpiItem = {
 function iconAccentClass(accent?: string) {
   if (!accent) return 'text-slate-500';
   if (accent.includes('text-') || accent.includes('text[')) return accent;
-  return accent.replace(/border-l-/g, 'text-');
+  return accent.replace(/border-s-/g, 'text-').replace(/border-l-/g, 'text-');
 }
 
 export function WorkspaceKpiStrip({

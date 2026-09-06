@@ -1107,7 +1107,7 @@ const Cases = () => {
               <TabsList className="h-auto w-full justify-start gap-0 rounded-none border-0 border-b border-slate-200 bg-transparent p-0 dark:border-slate-800">
                 <TabsTrigger
                   value="my"
-                  className="relative mr-5 rounded-none border-0 bg-transparent px-1 pb-2 text-[13px] font-medium text-slate-500 shadow-none after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:rounded-full after:bg-[#64499D] after:opacity-0 after:content-[''] data-[state=active]:bg-transparent data-[state=active]:font-semibold data-[state=active]:text-slate-900 data-[state=active]:shadow-none data-[state=active]:after:opacity-100 dark:text-slate-400 dark:data-[state=active]:text-white"
+                  className="relative me-5 rounded-none border-0 bg-transparent px-1 pb-2 text-[13px] font-medium text-slate-500 shadow-none after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:rounded-full after:bg-[#64499D] after:opacity-0 after:content-[''] data-[state=active]:bg-transparent data-[state=active]:font-semibold data-[state=active]:text-slate-900 data-[state=active]:shadow-none data-[state=active]:after:opacity-100 dark:text-slate-400 dark:data-[state=active]:text-white"
                 >
                   <span className="inline-flex items-center gap-1.5">
                     {t.cases.myCases}
@@ -1152,6 +1152,7 @@ const Cases = () => {
             setPageSize(n);
             setCurrentPage(1);
           }}
+          itemLabel={t.sidebar.cases}
           pageSizeOptions={[
             { value: '20', label: '20 per page' },
             { value: '50', label: '50 per page' },

@@ -25,7 +25,7 @@ import { addFee } from '@/services/finance/api';
 import { useToast } from '@/hooks/use-toast';
 import { isAxiosError } from 'axios';
 import { devError } from '@/utils/devLog';
-import { useAppTranslation } from '@/i18n';
+import { useAppTranslation, localizeApiMessage } from '@/i18n';
 
 type Props = {
   open: boolean;
@@ -94,7 +94,7 @@ export const AddFeeModal: React.FC<Props> = ({ open, onOpenChange, caseId, onSuc
           if (first) msg = `${first[0]}: ${Array.isArray(first[1]) ? first[1][0] : String(first[1])}`;
         }
       }
-      toast({ title: t.common.error, description: msg, variant: 'destructive' });
+      toast({ title: t.common.error, description: localizeApiMessage(msg, msg), variant: 'destructive' });
     } finally {
       setLoading(false);
     }

@@ -1,10 +1,12 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import type { EventClickArg, EventInput, LocaleInput } from '@fullcalendar/core';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import listPlugin from '@fullcalendar/list';
+import frLocale from '@fullcalendar/core/locales/fr';
+import arMaLocale from '@fullcalendar/core/locales/ar-ma';
 import { CalendarDays, MapPin, Video } from 'lucide-react';
 import { formatTime, useAppTranslation } from '@/i18n';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -27,6 +29,12 @@ const DESKTOP_TOOLBAR = {
   end: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek',
 };
 
+function fcLocaleFor(lang: string): LocaleInput | string {
+  if (lang === 'fr') return frLocale;
+  if (lang === 'ar') return arMaLocale;
+  return 'en';
+}
+
 export default function CalendarView({
   calendarRef,
   events,
@@ -41,7 +49,7 @@ export default function CalendarView({
   loading: boolean;
   emptyPeriod: boolean;
   emptyFiltered?: boolean;
-  onEventClick: (info: any) => void;
+  onEventClick: (info: EventClickArg) => void;
   onDatesSet: (arg: { start: Date; end: Date }) => void;
 }) {
   const { t, lang } = useAppTranslation();
@@ -61,7 +69,7 @@ export default function CalendarView({
     return events.map((e) => {
       const overdue = (e.type === 'task' || e.type === 'appointment') && isTaskAppointmentOverdue(e);
       const colors = pillColorForCalendarEvent(e);
-      const base: any = {
+      const mapped: EventInput = {
         id: e.id,
         title: e.title,
         start: e.start,
@@ -72,15 +80,15 @@ export default function CalendarView({
         borderColor: 'transparent',
         textColor: overdue ? '#1e293b' : colors.fg,
       };
-      if (overdue) base.classNames = ['fc-event-overdue-strike'];
-      return base;
+      if (overdue) mapped.classNames = ['fc-event-overdue-strike'];
+      return mapped;
     });
   }, [events]);
 
   useEffect(() => {
     const api = calendarRef.current?.getApi();
     if (!api) return;
-    api.setOption('locale', lang);
+    api.setOption('locale', fcLocaleFor(lang));
     api.setOption('buttonText', fcButtonText);
   }, [calendarRef, lang, fcButtonText]);
 
@@ -107,12 +115,12 @@ export default function CalendarView({
     <div className="h-full flex flex-col min-h-0 rounded-xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900/50 shadow-[0_4px_14px_rgba(15,23,42,0.06)] overflow-hidden">
       <div ref={cardRef} className="flex-1 min-h-0 relative fc-calendar-card">
         <FullCalendar
-          ref={calendarRef as any}
+          ref={calendarRef}
           plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin, listPlugin]}
           initialView={isMobile ? 'listWeek' : 'dayGridMonth'}
           headerToolbar={isMobile ? MOBILE_TOOLBAR : DESKTOP_TOOLBAR}
           buttonText={fcButtonText}
-          locale={lang}
+          locale={fcLocaleFor(lang)}
           titleFormat={isMobile ? { year: 'numeric', month: 'short' } : { year: 'numeric', month: 'long' }}
           height="100%"
           expandRows
@@ -170,7 +178,7 @@ export default function CalendarView({
             const event = arg.event;
             const ext = event.extendedProps as CalendarEvent & { overdue?: boolean };
             const time = event.start
-              ? formatTime(new Date(event.start as any), lang, { hour: '2-digit', minute: '2-digit', hour12: true })
+              ? formatTime(event.start, lang, { hour: '2-digit', minute: '2-digit', hour12: true })
               : '';
             const strike = ext?.overdue;
 

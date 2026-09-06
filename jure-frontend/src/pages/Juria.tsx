@@ -23,7 +23,7 @@ import "@/components/landing/landing.css";
 
 const JuriaPage: React.FC = () => {
   const navigate = useNavigate();
-  const { lang, dir, path } = useMarketingLang();
+  const { lang, dir, dict, path } = useMarketingLang();
   const t = JURIA_CONTENT[lang];
   const route = getRoute("juria");
   const homeRoute = getRoute("home");
@@ -38,7 +38,7 @@ const JuriaPage: React.FC = () => {
     faqPageJsonLd(t.faqs),
   ];
 
-  const rtlText = dir === "rtl" ? "text-right" : "";
+  const rtlText = "text-start";
 
   const goDemo = () => {
     track(MarketingEvents.HeroPrimaryCta, { source: "juria", lang });
@@ -50,7 +50,7 @@ const JuriaPage: React.FC = () => {
       <RouteSeo routeKey="juria" lang={lang} jsonLd={jsonLd} />
 
       <section className="max-w-7xl mx-auto px-4 sm:px-6 pt-12 sm:pt-16 pb-10">
-        <nav className={`flex items-center gap-1.5 text-xs text-slate-500 mb-8 ${rtlText}`} aria-label="Breadcrumb">
+        <nav className={`flex items-center gap-1.5 text-xs text-slate-500 mb-8 ${rtlText}`} aria-label={dict.a11y.breadcrumb}>
           <button type="button" onClick={() => navigate(path(""))} className="hover:text-[#A58CF4]">
             {homeRoute.label[lang]}
           </button>
@@ -132,7 +132,7 @@ const JuriaPage: React.FC = () => {
         </ol>
       </section>
 
-      <FaqSection title={t.faqsTitle} entries={t.faqs} />
+      <FaqSection title={t.faqsTitle} faqs={t.faqs} />
 
       <section className="max-w-4xl mx-auto px-4 sm:px-6 py-16 text-center">
         <CheckCircle2 className="w-10 h-10 text-[#A58CF4] mx-auto mb-4" />

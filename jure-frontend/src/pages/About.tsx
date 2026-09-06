@@ -17,6 +17,7 @@ import MarketingShell from "@/components/landing/MarketingShell";
 import Reveal from "@/components/landing/Reveal";
 import FeatureTile from "@/components/landing/FeatureTile";
 import { RouteSeo } from "@/marketing/Seo";
+import { useMarketingLang } from "@/marketing/MarketingLocale";
 
 /**
  * About Page
@@ -26,10 +27,9 @@ import { RouteSeo } from "@/marketing/Seo";
 
 type Lang = "fr" | "en" | "ar";
 
-const STRINGS: Record<Lang, any> = {
-  fr: {
+const aboutFr = {
     htmlLang: "fr",
-    dir: "ltr",
+    dir: "ltr" as "ltr" | "rtl",
     nav: { features: "Fonctionnalités", pricing: "Tarifs", about: "À propos", contact: "Contact" },
     auth: { signin: "Se connecter" },
     themeToggle: { label: "Basculer le thème", title: "Basculer le thème" },
@@ -89,7 +89,12 @@ const STRINGS: Record<Lang, any> = {
       secondary: "Essayer la démo",
     },
     footer: { privacy: "Confidentialité", terms: "Conditions", status: "Statut", rights: "Tous droits réservés." },
-  },
+};
+
+type AboutCopy = typeof aboutFr;
+
+const STRINGS: Record<Lang, AboutCopy> = {
+  fr: aboutFr,
   en: {
     htmlLang: "en",
     dir: "ltr",
@@ -246,9 +251,8 @@ const AvatarCircle: React.FC<{ initials: string }> = ({ initials }) => (
 
 const About: React.FC = () => {
   const navigate = useNavigate();
+  const { path } = useMarketingLang();
   const { lang, setLang, t } = useI18n();
-  const isRtl = t.dir === "rtl";
-  const dirClass = isRtl ? "md:flex-row-reverse" : "";
 
   const go = (to: string) => navigate(to);
 
@@ -284,20 +288,18 @@ const About: React.FC = () => {
           </p>
 
           <div
-            className={`mt-8 sm:mt-10 flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center w-full sm:w-auto ${
-              isRtl ? "sm:flex-row-reverse" : ""
-            }`}
+            className="mt-8 sm:mt-10 flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center w-full sm:w-auto"
           >
             <Button
-              onClick={() => go("/contact")}
+              onClick={() => go(path("contact"))}
               size="lg"
               className="landing-cta-btn landing-btn-primary w-full sm:w-auto px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg font-medium"
             >
               {t.hero.ctaContact}
-              <ArrowRight className={`ms-2 h-5 w-5 ${isRtl ? "rotate-180" : ""}`} />
+              <ArrowRight className="ms-2 h-5 w-5 rtl:rotate-180" />
             </Button>
             <Button
-              onClick={() => go("/demo")}
+              onClick={() => go(path("demo"))}
               variant="outline"
               size="lg"
               className="landing-btn-secondary w-full sm:w-auto px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg"
@@ -395,7 +397,7 @@ const About: React.FC = () => {
               {t.timeline.title}
             </h2>
 
-            <div className={`relative flex flex-col md:flex-row ${dirClass} gap-8`}>
+            <div className="relative flex flex-col md:flex-row gap-8">
               {t.timeline.items.map((step: { when: string; what: string }, i: number) => (
                 <div key={i} className="flex-1">
                   <div className="flex items-center gap-3">
@@ -426,9 +428,9 @@ const About: React.FC = () => {
             (m: { name: string; role: string; initials: string }, i: number) => (
               <Reveal key={i} delay={i * 0.06}>
                 <div className="landing-glass landing-glass-glow rounded-2xl p-5 sm:p-6 h-full min-w-0">
-                  <div className={`flex items-center gap-4 mb-4 ${isRtl ? "flex-row-reverse" : ""}`}>
+                  <div className="flex items-center gap-4 mb-4">
                     <AvatarCircle initials={m.initials} />
-                    <div className={`min-w-0 ${isRtl ? "text-end" : "text-start"}`}>
+                    <div className="min-w-0 text-start">
                       <h3 className="font-display text-lg font-semibold tracking-tight break-words">{m.name}</h3>
                       <p className="text-sm text-neutral-500 break-words">{m.role}</p>
                     </div>
@@ -458,14 +460,12 @@ const About: React.FC = () => {
               <p className="text-white/70 text-base sm:text-lg break-words">{t.cta.subtitle}</p>
 
               <div
-                className={`mt-8 flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center w-full sm:w-auto ${
-                  isRtl ? "sm:flex-row-reverse" : ""
-                }`}
+                className="mt-8 flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center w-full sm:w-auto"
               >
                 <Button
                   size="lg"
                   className="w-full sm:w-auto px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg font-medium landing-btn-on-dark"
-                  onClick={() => go("/contact")}
+                  onClick={() => go(path("contact"))}
                 >
                   {t.cta.primary}
                 </Button>
@@ -473,7 +473,7 @@ const About: React.FC = () => {
                   size="lg"
                   variant="outline"
                   className="w-full sm:w-auto px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg font-medium landing-btn-ghost-dark"
-                  onClick={() => go("/demo")}
+                  onClick={() => go(path("demo"))}
                 >
                   {t.cta.secondary}
                 </Button>

@@ -28,7 +28,7 @@ import { getRemoteFieldsValidation } from '@/utils/functions';
 import { isAxiosError } from 'axios';
 import { isValidPhoneNumber } from 'react-phone-number-input';
 import { cn } from '@/lib/utils';
-import { useAppTranslation } from '@/i18n';
+import { localizeApiMessage, useAppTranslation } from '@/i18n';
 import { useToast } from '@/hooks/use-toast';
 import { devError } from '@/utils/devLog';
 import { digitsOnly } from './ClientFormLayout';
@@ -165,7 +165,7 @@ const ClientUpdateModal = forwardRef<ClientUpdateModalRef, ClientUpdateModalProp
         if (typeof emailError === 'string' && emailError.toLowerCase().includes('already')) {
           mainForm.setError('email', { message: t.clients.validation.emailDuplicate });
         } else if (emailError) {
-          mainForm.setError('email', { message: emailError });
+          mainForm.setError('email', { message: localizeApiMessage(String(emailError), String(emailError)) });
         }
       }
       if (errorData?.phone && Array.isArray(errorData.phone)) {
@@ -173,7 +173,7 @@ const ClientUpdateModal = forwardRef<ClientUpdateModalRef, ClientUpdateModalProp
         if (typeof phoneError === 'string' && phoneError.toLowerCase().includes('already')) {
           mainForm.setError('phone', { message: t.clients.validation.phoneDuplicate });
         } else if (phoneError) {
-          mainForm.setError('phone', { message: phoneError });
+          mainForm.setError('phone', { message: localizeApiMessage(String(phoneError), String(phoneError)) });
         }
       }
 

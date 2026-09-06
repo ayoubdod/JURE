@@ -119,12 +119,12 @@ const DocumentDeleteModal = forwardRef<DocumentDeleteModalRef, DocumentDeleteMod
           >
             {isLoading ? (
               <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                <Loader2 className="w-4 h-4 me-2 animate-spin" />
                 {m.deleting}
               </>
             ) : (
               <>
-                <Trash2 className="w-4 h-4 mr-2" />
+                <Trash2 className="w-4 h-4 me-2" />
                 {m.submit}
               </>
             )}

@@ -4,7 +4,9 @@ import React from 'react';
 import { Calendar, CheckSquare, Folder } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { TaskPriority } from '@/utils/constants';
-import { useAppTranslation } from '@/i18n';
+import { detectInitialLanguage } from '@/i18n/locale';
+import { getMessages } from '@/i18n/messages';
+import { formatDate, formatTime, interpolate, useAppTranslation } from '@/i18n';
 
 export type SharedMessageKind = 'SHARED_CASE' | 'SHARED_TASK' | 'SHARED_APPOINTMENT';
 
@@ -16,41 +18,42 @@ function parseEntityId(id: string | number | undefined | null): number | null {
 
 function caseBorderClass(caseType: string | null | undefined): string {
   const t = String(caseType || '').toUpperCase();
-  if (t === 'LITIGATION') return 'border-l-rose-500';
-  if (t === 'CONSULTATION') return 'border-l-indigo-500';
-  return 'border-l-amber-400';
+  if (t === 'LITIGATION') return 'border-s-rose-500';
+  if (t === 'CONSULTATION') return 'border-s-indigo-500';
+  return 'border-s-amber-400';
 }
 
-function caseTypeBadgeLabel(caseType: string | null | undefined): string {
-  return String(caseType || '').replace(/_/g, ' ') || 'CASE';
-}
-
-function statusPill(): string {
-  return 'text-[10px] font-medium rounded-full px-1.5 py-0.5 bg-slate-500/10 text-slate-700 dark:text-slate-300 ring-1 ring-slate-500/20';
-}
-
-function formatDayMonth(iso?: string | null): string {
+function formatDayMonth(iso: string | null | undefined, lang: Parameters<typeof formatDate>[1]): string {
   if (!iso) return '—';
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return '—';
-  return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+  return formatDate(d, lang, { month: 'short' }) || '—';
 }
 
-function formatTime(iso?: string | null): string {
+function formatClock(iso: string | null | undefined, lang: Parameters<typeof formatTime>[1]): string {
   if (!iso) return '';
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return '';
-  return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  return formatTime(d, lang);
 }
 
-function formatDurationMinutes(minutes?: number | null): string {
+function formatDurationMinutes(
+  minutes: number | null | undefined,
+  hoursTpl: string,
+  minutesTpl: string
+): string {
   if (minutes == null || minutes <= 0) return '';
   if (minutes >= 60) {
     const h = Math.floor(minutes / 60);
     const m = minutes % 60;
-    return m ? `${h}h ${m}m` : `${h}h`;
+    const hours = interpolate(hoursTpl, { count: h });
+    return m ? `${hours} ${interpolate(minutesTpl, { n: m })}` : hours;
   }
-  return `${minutes}m`;
+  return interpolate(minutesTpl, { n: minutes });
+}
+
+function statusPill(): string {
+  return 'text-[10px] font-medium rounded-full px-1.5 py-0.5 bg-slate-500/10 text-slate-700 dark:text-slate-300 ring-1 ring-slate-500/20';
 }
 
 function priorityPill(p?: string | null): boolean {
@@ -204,15 +207,16 @@ export interface SharedMessageCardProps {
 }
 
 export function SharedMessageCard({ item, onOpenCase, onOpenTask, onOpenAppointment }: SharedMessageCardProps) {
-  const { enumPretty } = useAppTranslation();
+  const { t, tf, lang, enumPretty, enumLabel } = useAppTranslation();
   const baseCard =
-    'max-w-[320px] w-full text-left rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-sm px-3 py-2.5 transition-colors cursor-pointer hover:border-slate-300 dark:hover:border-slate-600 border-l-[3px]';
+    'max-w-[320px] w-full text-start rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-sm px-3 py-2.5 transition-colors cursor-pointer hover:border-slate-300 dark:hover:border-slate-600 border-s-[3px]';
 
   const nid = parseEntityId(item.id);
 
   if (item.type === 'CASE') {
     const ref = item.reference;
     const refDisplay = ref ? (ref.startsWith('#') ? ref : `#${ref}`) : nid != null ? `#${nid}` : '—';
+    const typeLabel = enumLabel('caseType', item.caseType) || enumPretty(item.caseType) || t.sidebar.cases;
     return (
       <button
         type="button"
@@ -223,20 +227,24 @@ export function SharedMessageCard({ item, onOpenCase, onOpenTask, onOpenAppointm
         <div className="flex items-center justify-between gap-2 mb-1">
           <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1">
             <Folder className="h-3 w-3" />
-            Case
+            {t.conversations.sharedCase}
           </span>
           {item.status ? <span className={statusPill()}>{enumPretty(String(item.status))}</span> : null}
         </div>
         <p className="text-[11px] text-slate-600 dark:text-slate-400 font-mono">
-          {refDisplay} · <span className="font-sans text-[10px] font-medium">{caseTypeBadgeLabel(item.caseType)}</span>
+          {refDisplay} · <span className="font-sans text-[10px] font-medium">{typeLabel}</span>
         </p>
         <p className="text-[13px] font-semibold text-slate-900 dark:text-slate-100 line-clamp-2 mt-0.5">
           {item.title?.trim() ? item.title : '—'}
         </p>
         <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
-          {item.assignedTo?.name && <span>Assigned: {item.assignedTo.name}</span>}
+          {item.assignedTo?.name && <span>{t.calendar.assignedTo}: {item.assignedTo.name}</span>}
           {item.assignedTo?.name && item.priority && <span> · </span>}
-          {item.priority && <span>Priority: {String(item.priority).toUpperCase()}</span>}
+          {item.priority && (
+            <span>
+              {t.cases.workspaces.priority}: {enumPretty(String(item.priority))}
+            </span>
+          )}
         </p>
       </button>
     );
@@ -246,14 +254,14 @@ export function SharedMessageCard({ item, onOpenCase, onOpenTask, onOpenAppointm
     return (
       <button
         type="button"
-        className={cn(baseCard, 'border-l-indigo-500')}
+        className={cn(baseCard, 'border-s-indigo-500')}
         onClick={() => nid != null && onOpenTask?.(nid)}
         disabled={nid == null}
       >
         <div className="flex items-center justify-between gap-2 mb-1">
           <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1">
             <CheckSquare className="h-3 w-3" />
-            Task
+            {t.conversations.sharedTask}
           </span>
           {item.status ? <span className={statusPill()}>{enumPretty(String(item.status))}</span> : null}
         </div>
@@ -261,11 +269,11 @@ export function SharedMessageCard({ item, onOpenCase, onOpenTask, onOpenAppointm
           {item.title?.trim() ? item.title : '—'}
         </p>
         <div className="flex flex-wrap items-center gap-1.5 mt-1 text-[11px] text-slate-500 dark:text-slate-400">
-          {item.dueDate && <span>Due: {formatDayMonth(item.dueDate)}</span>}
+          {item.dueDate && <span>{tf(t.conversations.dueLabel, { date: formatDayMonth(item.dueDate, lang) })}</span>}
           {item.dueDate && priorityPill(item.priority) && <span>·</span>}
           {priorityPill(item.priority) && (
             <span className="text-[10px] font-semibold text-rose-600 dark:text-rose-400">
-              {String(item.priority).toUpperCase()}
+              {enumPretty(String(item.priority))}
             </span>
           )}
         </div>
@@ -274,18 +282,22 @@ export function SharedMessageCard({ item, onOpenCase, onOpenTask, onOpenAppointm
   }
 
   const apptDate = item.date ?? item.dueDate;
-  const dur = formatDurationMinutes(item.duration ?? null);
+  const dur = formatDurationMinutes(
+    item.duration ?? null,
+    t.cases.workspaces.consultation.detail.hours,
+    t.calendar.minutesShort
+  );
   return (
     <button
       type="button"
-      className={cn(baseCard, 'border-l-emerald-500')}
+      className={cn(baseCard, 'border-s-emerald-500')}
       onClick={() => nid != null && onOpenAppointment?.(nid)}
       disabled={nid == null}
     >
       <div className="flex items-center justify-between gap-2 mb-1">
         <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1">
           <Calendar className="h-3 w-3" />
-          Appointment
+          {t.conversations.sharedAppointment}
         </span>
         {item.status ? <span className={statusPill()}>{enumPretty(String(item.status))}</span> : null}
       </div>
@@ -295,7 +307,7 @@ export function SharedMessageCard({ item, onOpenCase, onOpenTask, onOpenAppointm
       <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
         {apptDate && (
           <>
-            {formatDayMonth(apptDate)} · {formatTime(apptDate)}
+            {formatDayMonth(apptDate, lang)} · {formatClock(apptDate, lang)}
             {dur ? ` · ${dur}` : ''}
           </>
         )}
@@ -347,6 +359,19 @@ export function getSharedIds(msg: API.Message): {
   };
 }
 
+function defaultSharedPreviewLabels() {
+  const t = getMessages(detectInitialLanguage()).conversations;
+  return {
+    missedVideo: t.call.missedVideoCallTitle,
+    missedVoice: t.call.missedCallTitle,
+    videoCall: t.call.historyVideoCall,
+    voiceCall: t.call.historyVoiceCall,
+    sharedCase: t.sharedCase,
+    sharedTask: t.sharedTask,
+    sharedAppointment: t.sharedAppointment,
+  };
+}
+
 /** Conversation list / latest_message preview line */
 export function getSharedMessagePreviewText(
   msg: API.Message | undefined,
@@ -363,15 +388,7 @@ export function getSharedMessagePreviewText(
   if (!msg) return null;
   const mt = getMessageType(msg);
   if (mt === 'TEXT') return null;
-  const L = labels ?? {
-    missedVideo: 'Missed video call',
-    missedVoice: 'Missed voice call',
-    videoCall: 'Video call',
-    voiceCall: 'Voice call',
-    sharedCase: 'Shared case',
-    sharedTask: 'Shared task',
-    sharedAppointment: 'Shared appointment',
-  };
+  const L = labels ?? defaultSharedPreviewLabels();
   if (
     mt === 'CALL_VOICE' ||
     mt === 'CALL_VIDEO' ||

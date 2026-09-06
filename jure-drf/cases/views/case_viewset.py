@@ -2,10 +2,10 @@
 import logging
 
 from django.db.models import Count
-from django.shortcuts import get_object_or_404
+from django.utils.translation import gettext as _
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import permissions, status, viewsets
-from rest_framework.exceptions import PermissionDenied
+from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.response import Response
 
 from cabinets.permissions import HasCasesPermission
@@ -91,18 +91,23 @@ class CaseViewSet(CloseCaseMixin, ConsultationConvertMixin, ConsultationWorkflow
         cab = get_user_cabinet(user)
         if not cab:
             logger.warning("Case create denied: user %s has no cabinet", user.id)
-            raise PermissionDenied("User has no cabinet.")
+            raise PermissionDenied(_("User has no cabinet."))
 
         assignee_id = self.request.data.get("assigned_to_id") or self.request.data.get("assigned_to")
         if assignee_id:
             try:
-                assignee = get_object_or_404(User, pk=assignee_id)
-            except (ValueError, TypeError):
+                assignee = User.objects.get(pk=assignee_id)
+            except (User.DoesNotExist, ValueError, TypeError):
                 assignee = user
                 logger.warning(
                     "Invalid assigned_to/assigned_to_id=%s, defaulting to requester",
                     assignee_id,
                 )
+            else:
+                if get_user_cabinet(assignee) != cab:
+                    raise ValidationError(
+                        {"assigned_to": _("Cannot assign case to user from different cabinet.")}
+                    )
         else:
             assignee = user
 
@@ -126,7 +131,7 @@ class CaseViewSet(CloseCaseMixin, ConsultationConvertMixin, ConsultationWorkflow
         user = self.request.user
         cab = get_user_cabinet(user)
         if not cab:
-            raise PermissionDenied("User has no cabinet.")
+            raise PermissionDenied(_("User has no cabinet."))
         serializer.save(updated_by=user)
 
     def list(self, request, *args, **kwargs):

@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from django.shortcuts import get_object_or_404
+from django.utils.translation import gettext as _
 from rest_framework.exceptions import NotFound, PermissionDenied
 
 from core.utils import get_user_cabinet
@@ -33,7 +34,7 @@ class ProjectAccess:
 def require_cabinet(user):
     cabinet = get_user_cabinet(user)
     if not cabinet:
-        raise PermissionDenied("No cabinet associated with this user.")
+        raise PermissionDenied(_("No cabinet associated with this user."))
     return cabinet
 
 
@@ -51,7 +52,7 @@ def get_project_for_user(
     if project.status == ProjectStatus.DELETED:
         raise NotFound()
     if project.status == ProjectStatus.ARCHIVED and not allow_archived:
-        raise PermissionDenied("This project is archived.")
+        raise PermissionDenied(_("This project is archived."))
     member = JuriaProjectMember.objects.filter(project=project, user=user).first()
     if member is None:
         raise NotFound()
@@ -68,7 +69,7 @@ def get_project_for_user(
             },
         }.get(min_role, {ProjectRole.OWNER})
         if member.role not in allowed:
-            raise PermissionDenied("Insufficient project role.")
+            raise PermissionDenied(_("Insufficient project role."))
     return ProjectAccess(project=project, member=member, cabinet=cabinet)
 
 
@@ -96,7 +97,10 @@ def require_resource_permission(project: JuriaProject, resource: str, required: 
     if required == PermissionLevel.NONE:
         return
     if not has_resource_permission(project, resource, required):
-        raise PermissionDenied(f"Project does not grant {required} on {resource}.")
+        raise PermissionDenied(
+            _("Project does not grant %(required)s on %(resource)s.")
+            % {"required": required, "resource": resource}
+        )
 
 
 def require_source_kind_permission(project: JuriaProject, kind: str, required: str = PermissionLevel.READ) -> None:
@@ -118,17 +122,17 @@ def can_admin(member: JuriaProjectMember) -> bool:
 
 def require_write(member: JuriaProjectMember) -> None:
     if not can_write(member):
-        raise PermissionDenied("This project role cannot modify content.")
+        raise PermissionDenied(_("This project role cannot modify content."))
 
 
 def require_manage_members(member: JuriaProjectMember) -> None:
     if not can_manage_members(member):
-        raise PermissionDenied("This project role cannot manage members.")
+        raise PermissionDenied(_("This project role cannot manage members."))
 
 
 def require_admin(member: JuriaProjectMember) -> None:
     if not can_admin(member):
-        raise PermissionDenied("Only the project owner can perform this action.")
+        raise PermissionDenied(_("Only the project owner can perform this action."))
 
 
 def same_cabinet_user(cabinet, user_id: int):
@@ -136,10 +140,10 @@ def same_cabinet_user(cabinet, user_id: int):
 
     user = User.objects.filter(pk=user_id).first()
     if user is None:
-        raise NotFound("User not found.")
+        raise NotFound(_("User not found."))
     from core.utils import get_user_cabinet as _cab
 
     other = _cab(user)
     if other is None or other.id != cabinet.id:
-        raise PermissionDenied("User is not in this cabinet.")
+        raise PermissionDenied(_("User is not in this cabinet."))
     return user

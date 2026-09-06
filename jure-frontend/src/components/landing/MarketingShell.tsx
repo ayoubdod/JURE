@@ -117,7 +117,6 @@ const FOOTER_COMPANY_KEYS = ["about", "contact", "community", "insights"];
 const MarketingShell: React.FC<MarketingShellProps> = ({
   lang: langProp,
   onLangChange,
-  dir,
   activeNav = "none",
   children,
 }) => {
@@ -132,7 +131,6 @@ const MarketingShell: React.FC<MarketingShellProps> = ({
   // for any context still rendered outside the locale-prefixed tree.
   const lang: MarketingLang = isMarketingLocale(params.lang) ? params.lang : langProp;
   const dict = getMarketingDict(lang);
-  const isRtl = (dir ?? (lang === "ar" ? "rtl" : "ltr")) === "rtl";
 
   useEffect(() => {
     document.body.style.overflow = mobileOpen ? "hidden" : "";
@@ -178,9 +176,9 @@ const MarketingShell: React.FC<MarketingShellProps> = ({
     <div className="landing-root min-h-screen relative overflow-x-hidden text-[#64499D] dark:text-white bg-white dark:bg-[#64499D]">
       <a
         href="#main-content"
-        className="sr-only focus:fixed focus:left-3 focus:top-3 focus:z-50 focus:m-0 focus:inline-flex focus:h-auto focus:w-auto focus:overflow-visible focus:whitespace-normal focus:rounded-lg focus:bg-white focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-[#A58CF4] focus:shadow focus:outline-none focus:ring-2 focus:ring-[#A58CF4]"
+        className="sr-only focus:fixed focus:start-3 focus:top-3 focus:z-50 focus:m-0 focus:inline-flex focus:h-auto focus:w-auto focus:overflow-visible focus:whitespace-normal focus:rounded-lg focus:bg-white focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-[#A58CF4] focus:shadow focus:outline-none focus:ring-2 focus:ring-[#A58CF4]"
       >
-        Skip to content
+        {dict.a11y.skipToContent}
       </a>
 
       <header
@@ -195,7 +193,7 @@ const MarketingShell: React.FC<MarketingShellProps> = ({
                 ? "min-h-16 py-2 sm:py-2.5"
                 : "min-h-20 py-3 sm:py-3.5"
             }`}
-            aria-label="main navigation"
+            aria-label={dict.a11y.mainNav}
           >
             <Link to={localePath(lang)} className="shrink-0 min-w-0" onClick={closeMobile}>
               <JureLogo className="h-7 sm:h-8 w-auto" />
@@ -234,7 +232,7 @@ const MarketingShell: React.FC<MarketingShellProps> = ({
                 className="lg:hidden h-9 w-9 border-[#64499D]/15 dark:border-white/20 text-[#64499D] dark:text-white"
                 aria-expanded={mobileOpen}
                 aria-controls="marketing-mobile-menu"
-                aria-label={mobileOpen ? "Close menu" : "Open menu"}
+                aria-label={mobileOpen ? dict.a11y.closeMenu : dict.a11y.openMenu}
                 onClick={() => setMobileOpen((o) => !o)}
               >
                 {mobileOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
@@ -278,7 +276,7 @@ const MarketingShell: React.FC<MarketingShellProps> = ({
 
       <footer className="relative z-10 landing-band py-10 sm:py-14 mt-8 rounded-none">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <div className={`grid grid-cols-2 md:grid-cols-5 gap-8 ${isRtl ? "text-right" : ""}`}>
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-8 text-start">
             <div className="col-span-2 md:col-span-1">
               <Link to={localePath(lang)}>
                 <JureLogo inverted className="mb-3 h-7 w-auto" />

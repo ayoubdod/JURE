@@ -89,8 +89,8 @@ export default function CaseDateDetailPanel({
 
   return (
     <Sheet modal={false} open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" container={portalContainer} overlayClassName={EMBEDDED_OVERLAY} className={SHEET_PANEL}>
-        <header className="sticky top-0 z-20 shrink-0 border-b border-slate-200 dark:border-slate-800 bg-slate-50/95 dark:bg-slate-950/95 backdrop-blur-sm px-4 py-4 border-l-[3px] border-l-primary">
+      <SheetContent side="end" container={portalContainer} overlayClassName={EMBEDDED_OVERLAY} className={SHEET_PANEL}>
+        <header className="sticky top-0 z-20 shrink-0 border-b border-slate-200 dark:border-slate-800 bg-slate-50/95 dark:bg-slate-950/95 backdrop-blur-sm px-4 py-4 border-s-[3px] border-s-primary">
           <div className="flex items-start justify-between gap-2">
             <div className="flex flex-wrap items-center gap-2">
               {ev?.sourceType && (
@@ -118,7 +118,7 @@ export default function CaseDateDetailPanel({
               <X className="h-4 w-4" />
             </Button>
           </div>
-          <h2 className="mt-3 text-lg font-semibold leading-snug text-slate-900 dark:text-white pr-2">
+          <h2 className="mt-3 text-lg font-semibold leading-snug text-slate-900 dark:text-white pe-2">
             {ev?.title || '—'}
           </h2>
           <div className="mt-3 h-px bg-slate-200 dark:bg-slate-800" />
@@ -216,7 +216,7 @@ export default function CaseDateDetailPanel({
               }}
             >
               {cal.caseDateDetail.viewCase}
-              <ChevronRight className="h-4 w-4 ml-1" />
+              <ChevronRight className="h-4 w-4 ms-1 rtl:rotate-180" />
             </Button>
           )}
         </footer>

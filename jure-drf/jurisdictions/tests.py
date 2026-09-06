@@ -3,7 +3,8 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from rest_framework import status
 from rest_framework.test import APIClient, APITestCase
-from rest_framework_simplejwt.tokens import RefreshToken
+
+from core.testing import api_client_for
 
 from cabinets.models import Cabinet
 from dashboard.models import Announcement
@@ -68,10 +69,7 @@ def _create_cabinet(email, phone, trade_name, jurisdiction, practice_type=Cabine
 
 
 def _auth_client(user) -> APIClient:
-    api = APIClient()
-    refresh = RefreshToken.for_user(user)
-    api.credentials(HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}")
-    return api
+    return api_client_for(user)
 
 
 class JurisdictionApiTests(APITestCase):

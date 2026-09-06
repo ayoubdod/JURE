@@ -1,12 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { Shield, Users, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
+import { Shield, Users, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { apiGetCabinetMembers, apiUpdateCabinetMemberRole } from '@/services/cabinet-member/api';
 import UserAvatar, { getPersonImage } from '@/components/common/UserAvatar';
-import { getRoleDisplayName, getRoleDescription, DEFAULT_ROLE_PERMISSIONS } from '@/utils/permissions';
+import { DEFAULT_ROLE_PERMISSIONS } from '@/utils/permissions';
 import {
   Select,
   SelectContent,
@@ -15,12 +14,17 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
+import { useAppTranslation } from '@/i18n';
 
 const RoleManagement: React.FC = () => {
   const { toast } = useToast();
+  const { t, tf } = useAppTranslation();
+  const rp = t.team.rolePage;
   const [teamMembers, setTeamMembers] = useState<API.CabinetMember[]>([]);
   const [loading, setLoading] = useState(false);
   const [updatingMemberId, setUpdatingMemberId] = useState<number | null>(null);
+
+  const roleLabel = (role: API.Role) => t.team.roles[role] || role;
 
   useEffect(() => {
     loadTeamMembers();
@@ -33,8 +37,8 @@ const RoleManagement: React.FC = () => {
       setTeamMembers(response.data);
     } catch (error) {
       toast({
-        title: 'Error',
-        description: 'Failed to load team members.',
+        title: t.common.error,
+        description: t.team.toasts.loadFailed,
         variant: 'destructive',
       });
     } finally {
@@ -43,26 +47,6 @@ const RoleManagement: React.FC = () => {
   };
 
   const handleRoleChange = async (memberId: number, newRole: API.Role) => {
-    // setUpdatingMemberId(memberId);
-    // try {
-    //   await apiUpdateCabinetMemberRole({ id: memberId, role: newRole });
-    //   setTeamMembers((prev) =>
-    //     prev.map((m) => (m.id === memberId ? { ...m, role: newRole } : m))
-    //   );
-    //   toast({
-    //     title: 'Role updated',
-    //     description: `Team member role has been updated to ${getRoleDisplayName(newRole)}.`,
-    //   });
-    // } catch (error) {
-    //   toast({
-    //     title: 'Update failed',
-    //     description: 'Failed to update team member role.',
-    //     variant: 'destructive',
-    //   });
-    // } finally {
-    //   setUpdatingMemberId(null);
-    // }
-
     setUpdatingMemberId(memberId);
     await apiUpdateCabinetMemberRole({
       id: memberId,
@@ -73,8 +57,8 @@ const RoleManagement: React.FC = () => {
     })
     .catch((err)=>{
       toast({
-        title: 'Error',
-        description: 'Failed to update team member role.',
+        title: t.common.error,
+        description: t.team.toasts.updateFailed,
         variant: 'destructive',
       });
     })
@@ -101,10 +85,10 @@ const RoleManagement: React.FC = () => {
         <CardHeader>
           <div className="flex items-center gap-2">
             <Shield className="h-5 w-5 text-jure-600" />
-            <CardTitle>Role & Permissions Overview</CardTitle>
+            <CardTitle>{rp.overviewTitle}</CardTitle>
           </div>
           <CardDescription>
-            Manage what each team member can see and edit. Roles define default permissions that can be customized.
+            {rp.overviewDesc}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -120,17 +104,17 @@ const RoleManagement: React.FC = () => {
                 >
                   <div className="flex items-center justify-between">
                     <Badge className={cn('text-xs font-semibold', roleColors[role])}>
-                      {getRoleDisplayName(role)}
+                      {roleLabel(role)}
                     </Badge>
-                    <span className="text-xs text-muted-foreground">{memberCount} members</span>
+                    <span className="text-xs text-muted-foreground">{tf(rp.membersCount, { n: memberCount })}</span>
                   </div>
                   <p className="text-xs text-muted-foreground line-clamp-2">
-                    {getRoleDescription(role)}
+                    {t.team.roleDescriptions[role]}
                   </p>
                   <div className="pt-2 border-t border-border/60">
-                    <p className="text-xs font-medium text-foreground mb-1">Permissions:</p>
+                    <p className="text-xs font-medium text-foreground mb-1">{rp.permissionsLabel}</p>
                     <p className="text-xs text-muted-foreground">
-                      {permissions.length} permissions enabled
+                      {tf(rp.permissionsEnabled, { n: permissions.length })}
                     </p>
                   </div>
                 </div>
@@ -145,10 +129,10 @@ const RoleManagement: React.FC = () => {
         <CardHeader>
           <div className="flex items-center gap-2">
             <Users className="h-5 w-5 text-jure-600" />
-            <CardTitle>Team Member Roles</CardTitle>
+            <CardTitle>{rp.membersTitle}</CardTitle>
           </div>
           <CardDescription>
-            Assign roles to team members. Changes take effect immediately.
+            {rp.membersDesc}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -159,12 +143,12 @@ const RoleManagement: React.FC = () => {
           ) : teamMembers.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               <Users className="h-12 w-12 mx-auto mb-3 opacity-50" />
-              <p>No team members found.</p>
+              <p>{rp.empty}</p>
             </div>
           ) : (
             <div className="space-y-3">
               {teamMembers.map((member) => {
-                const fullName = `${member.first_name || ''} ${member.last_name || ''}`.trim() || 'Unnamed';
+                const fullName = `${member.first_name || ''} ${member.last_name || ''}`.trim() || t.team.unnamed;
                 const currentRole = member.role || 'VIEWER';
                 
                 return (
@@ -175,7 +159,7 @@ const RoleManagement: React.FC = () => {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-3">
                         <UserAvatar
-                          image={getPersonImage(member as Record<string, unknown>)}
+                          image={getPersonImage(member)}
                           firstName={member.first_name}
                           lastName={member.last_name}
                           size="md"
@@ -191,7 +175,7 @@ const RoleManagement: React.FC = () => {
                             roleColors[currentRole as API.Role]
                           )}
                         >
-                          {getRoleDisplayName(currentRole as API.Role)}
+                          {roleLabel(currentRole as API.Role)}
                         </Badge>
                       </div>
                     </div>
@@ -207,7 +191,7 @@ const RoleManagement: React.FC = () => {
                         <SelectContent>
                           {roles.map((role) => (
                             <SelectItem key={role} value={role}>
-                              {getRoleDisplayName(role)}
+                              {roleLabel(role)}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -227,9 +211,9 @@ const RoleManagement: React.FC = () => {
       {/* Permission Details */}
       <Card className="border border-border/60 shadow-sm">
         <CardHeader>
-          <CardTitle>Permission Details</CardTitle>
+          <CardTitle>{rp.detailsTitle}</CardTitle>
           <CardDescription>
-            Understanding what each permission allows team members to do.
+            {rp.detailsDesc}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -247,10 +231,10 @@ const RoleManagement: React.FC = () => {
                 <div key={role} className="border-b border-border/60 pb-4 last:border-0 last:pb-0">
                   <div className="flex items-center gap-2 mb-3">
                     <Badge className={cn('text-xs', roleColors[role])}>
-                      {getRoleDisplayName(role)}
+                      {roleLabel(role)}
                     </Badge>
                     <span className="text-sm text-muted-foreground">
-                      {permissions.length} permissions
+                      {tf(rp.permissionsCount, { n: permissions.length })}
                     </span>
                   </div>
                   <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-3">

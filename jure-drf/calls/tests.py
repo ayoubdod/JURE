@@ -134,3 +134,23 @@ class IceServersApiTests(APITestCase):
         turn = next(s for s in ice if s.get("username") == "jure")
         self.assertEqual(turn["credential"], "static-pass")
         self.assertTrue(any("transport=udp" in u for u in turn["urls"]))
+
+
+class ActiveCallIsolationTests(APITestCase):
+    def test_non_member_cannot_read_active_call(self):
+        from cases.tests import _create_cabinet_user
+        from chat.models import Conversation, ConversationMembership
+
+        user_a, _cab_a = _create_cabinet_user(email="call-a@test.com")
+        user_b, _cab_b = _create_cabinet_user(email="call-b@test.com")
+        conv = Conversation.objects.create(
+            type=Conversation.Type.DIRECT,
+            created_by=user_b,
+        )
+        ConversationMembership.objects.create(conversation=conv, user=user_b)
+        self.client.force_authenticate(user_a)
+        response = self.client.get(
+            "/api/v1/calls/active/",
+            {"conversation_id": conv.id},
+        )
+        self.assertEqual(response.status_code, 403)

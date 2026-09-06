@@ -2,6 +2,7 @@ import React from 'react';
 import { cn } from '@/lib/utils';
 import { getCountdownDays, getCountdownStyle } from '@/utils/caseCardHelpers';
 import { formatDrawerDate } from './format';
+import { useAppTranslation } from '@/i18n';
 
 export function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
@@ -53,6 +54,7 @@ export function TagList({ items }: { items: string[] }) {
 }
 
 export function BoolTag({ value }: { value: boolean | null | undefined }) {
+  const { t } = useAppTranslation();
   if (value == null) return <span className="text-[13px]">—</span>;
   return (
     <span
@@ -61,25 +63,25 @@ export function BoolTag({ value }: { value: boolean | null | undefined }) {
         value ? 'bg-blue-500/15 text-blue-700 dark:text-blue-400 ring-1 ring-blue-500/25' : 'bg-slate-500/12 text-slate-600 dark:text-slate-400 ring-1 ring-slate-500/20'
       )}
     >
-      {value ? 'Yes' : 'No'}
+      {value ? t.common.yes : t.common.no}
     </span>
   );
 }
 
 export function CountdownBadge({ dateIso }: { dateIso: string | null | undefined }) {
+  const { t, tf } = useAppTranslation();
   if (!dateIso) return null;
   const days = getCountdownDays(dateIso);
   if (days === null) return null;
-  const past = days < 0;
-  if (past) {
+  if (days < 0) {
     return (
       <span className="inline-flex items-center rounded-full bg-slate-200/80 dark:bg-slate-700 px-2 py-0.5 text-[10px] font-medium text-slate-600 dark:text-slate-300 line-through decoration-slate-500">
-        Passed
+        {t.cases.deadline.passed}
       </span>
     );
   }
   const st = getCountdownStyle(days);
-  const label = days === 0 ? 'Today' : `${days} days`;
+  const label = days === 0 ? t.cases.deadline.today : tf(t.cases.deadline.inCountDays, { days });
   return (
     <span
       className={cn(
@@ -89,7 +91,7 @@ export function CountdownBadge({ dateIso }: { dateIso: string | null | undefined
         st === 'normal' && 'bg-slate-200/90 dark:bg-slate-700 text-slate-700 dark:text-slate-200'
       )}
     >
-      {st === 'normal' ? `in ${days} days` : label}
+      {st === 'normal' && days !== 0 ? tf(t.cases.deadline.inCountDays, { days }) : label}
     </span>
   );
 }
@@ -103,6 +105,7 @@ export function TimelineRow({
   dateIso: string | null | undefined;
   highlight?: boolean;
 }) {
+  const { t } = useAppTranslation();
   const hasDate = dateIso && !Number.isNaN(new Date(dateIso).getTime());
   const days = hasDate ? getCountdownDays(dateIso!) : null;
   const past = days != null && days < 0;
@@ -110,7 +113,7 @@ export function TimelineRow({
   return (
     <div
       className={cn(
-        'relative flex gap-3 pl-1 py-2 border-b border-slate-100 dark:border-slate-800 last:border-0',
+        'relative flex gap-3 ps-1 py-2 border-b border-slate-100 dark:border-slate-800 last:border-0',
         highlight && 'rounded-md bg-amber-500/8 ring-1 ring-amber-500/25 -mx-1 px-2'
       )}
     >
@@ -124,7 +127,9 @@ export function TimelineRow({
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-[12px] font-medium text-slate-800 dark:text-slate-200">{label}</span>
           {highlight && (
-            <span className="text-[9px] font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400">Next</span>
+            <span className="text-[9px] font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400">
+              {t.common.next}
+            </span>
           )}
         </div>
         <div className="flex flex-wrap items-center gap-2">

@@ -2,8 +2,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { formatMAD } from '@/utils/formatMAD';
-import { format } from 'date-fns';
-import { fr } from 'date-fns/locale';
+import { formatDate, useAppTranslation } from '@/i18n';
 
 type T = API.FinanceTaxAdvance;
 
@@ -13,11 +12,13 @@ type Props = {
 };
 
 export const TaxAdvanceCard: React.FC<Props> = ({ tax, onMarkPaid }) => {
+  const { t, tf, lang } = useAppTranslation();
+  const ct = t.finance.caseTab;
   const paid = tax.status === 'PAID';
   return (
     <div className="rounded-xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-950 p-4 shadow-sm">
       <p className="text-[15px] font-semibold text-slate-900 dark:text-white">
-        ⚖️ Acompte fiscal: {formatMAD(tax.amount)}
+        ⚖️ {tf(ct.taxAdvanceAmount, { amount: formatMAD(tax.amount, lang) })}
       </p>
       <div className="mt-3">
         <span
@@ -28,19 +29,20 @@ export const TaxAdvanceCard: React.FC<Props> = ({ tax, onMarkPaid }) => {
               : 'bg-red-500/15 text-red-600 dark:text-red-400'
           )}
         >
-          {paid ? 'PAYÉ' : 'IMPAYÉ'}
+          {paid ? ct.taxPaid : ct.taxUnpaid}
         </span>
       </div>
       {paid && tax.paid_at ? (
         <p className="mt-2 text-[13px] text-slate-600 dark:text-slate-400">
-          Date de paiement:{' '}
-          {format(new Date(tax.paid_at), 'd MMM yyyy', { locale: fr })}
+          {tf(ct.paymentDate, {
+            date: formatDate(tax.paid_at, lang, { month: 'short', day: 'numeric', year: 'numeric' }),
+          })}
         </p>
       ) : null}
       {!paid && onMarkPaid ? (
         <div className="mt-4 flex justify-end">
           <Button type="button" size="sm" className="h-9 bg-emerald-600 hover:bg-emerald-700" onClick={onMarkPaid}>
-            ✓ Marquer comme payé
+            ✓ {ct.markPaid}
           </Button>
         </div>
       ) : null}

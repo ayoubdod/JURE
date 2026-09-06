@@ -1,17 +1,70 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { create } from 'zustand';
 import { subscribeWithSelector } from 'zustand/middleware';
 import useUserStore from './userStore';
 import { devError, devLog } from '@/utils/devLog';
 
-export interface WebSocketMessage {
+/** Inbox row from chat WS / MessageNotificationSerializer. */
+export type ChatInboxSender = {
+  id?: number;
+  first_name?: string;
+  last_name?: string;
+  email?: string;
+  full_name?: string;
+  image?: string;
+};
+
+export type ChatInboxNotification = {
+  id?: number;
+  sender?: ChatInboxSender;
+  body?: string;
+  created?: string;
+  unread?: boolean;
+  conversation_id?: number;
+  conversationId?: number;
+  conversation?: number | { id?: number };
+  is_message?: boolean;
+};
+
+export type ChatWsMessage = {
   type: string;
-  payload: any;
+  payload?: unknown;
+  user_id?: number;
+  online_user_ids?: number[];
+  online_member_ids?: number[];
+  online?: number[];
+};
+
+/** @deprecated Prefer ChatWsMessage — kept for callSessionStore subscribers. */
+export type WebSocketMessage = ChatWsMessage;
+
+const callMessageSubscribers = new Set<(msg: ChatWsMessage) => void>();
+
+function asRecord(value: unknown): Record<string, unknown> {
+  return value !== null && typeof value === 'object' && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : {};
 }
 
-const callMessageSubscribers = new Set<(msg: WebSocketMessage) => void>();
+function asNumberArray(value: unknown): number[] {
+  if (!Array.isArray(value)) return [];
+  return value.filter((x): x is number => typeof x === 'number' && Number.isFinite(x));
+}
 
-function conversationIdOf(n: { conversation_id?: unknown; conversationId?: unknown; conversation?: unknown } | null | undefined): number | null {
+function firstNumberArray(...candidates: unknown[]): number[] {
+  for (const c of candidates) {
+    const arr = asNumberArray(c);
+    if (arr.length > 0 || Array.isArray(c)) return arr;
+  }
+  return [];
+}
+
+function conversationIdOf(
+  n: {
+    conversation_id?: unknown;
+    conversationId?: unknown;
+    conversation?: unknown;
+  } | null | undefined
+): number | null {
   if (!n) return null;
   const raw = n.conversation_id ?? n.conversationId ?? n.conversation;
   if (typeof raw === 'number' && Number.isFinite(raw)) return raw;
@@ -22,7 +75,10 @@ function conversationIdOf(n: { conversation_id?: unknown; conversationId?: unkno
   return Number.isFinite(parsed) ? parsed : null;
 }
 
-function markInboxRead(notifications: any[], conversationId: number): any[] {
+function markInboxRead(
+  notifications: ChatInboxNotification[],
+  conversationId: number
+): ChatInboxNotification[] {
   return notifications.map((n) => {
     if (conversationIdOf(n) !== conversationId) return n;
     if (n?.unread === false) return n;
@@ -30,8 +86,17 @@ function markInboxRead(notifications: any[], conversationId: number): any[] {
   });
 }
 
+function inboxListFromPayload(payload: unknown): ChatInboxNotification[] {
+  if (Array.isArray(payload)) return payload as ChatInboxNotification[];
+  const record = asRecord(payload);
+  if (Array.isArray(record.notifications)) {
+    return record.notifications as ChatInboxNotification[];
+  }
+  return [];
+}
+
 /** Subscribe to `call.*` messages on the main chat WebSocket (signaling). */
-export function subscribeCallMessages(handler: (msg: WebSocketMessage) => void): () => void {
+export function subscribeCallMessages(handler: (msg: ChatWsMessage) => void): () => void {
   callMessageSubscribers.add(handler);
   return () => {
     callMessageSubscribers.delete(handler);
@@ -44,7 +109,7 @@ export interface ChatStore {
   isConnecting: boolean;
   connectionError: string | null;
   user: { id: number; email: string } | null;
-  notifications: any[];
+  notifications: ChatInboxNotification[];
   /** Last conversation.updated payload for subscribers to merge into their lists */
   lastConversationUpdated: API.Conversation | null;
   /** IDs of users/members currently connected to chat (from online_user_ids, online_member_ids, or online). In this app they are the same. */
@@ -90,15 +155,15 @@ const useChatStore = create<ChatStore>()(
         state.disconnect();
       }
 
-      set({ 
-        isConnecting: true, 
-        connectionError: null 
+      set({
+        isConnecting: true,
+        connectionError: null,
       });
 
       try {
         const userStore = useUserStore.getState();
         const accessToken = userStore.accessToken;
-        
+
         if (!accessToken) {
           throw new Error('No access token available');
         }
@@ -107,17 +172,17 @@ const useChatStore = create<ChatStore>()(
         const ws = new WebSocket(getChatWsUrl(accessToken));
 
         ws.onopen = () => {
-          set({ 
-            isConnected: true, 
-            isConnecting: false, 
+          set({
+            isConnected: true,
+            isConnecting: false,
             connectionError: null,
-            ws 
+            ws,
           });
         };
 
         ws.onmessage = (event) => {
           try {
-            const data: WebSocketMessage = JSON.parse(event.data);
+            const data = JSON.parse(event.data) as ChatWsMessage;
 
             if (typeof data.type === 'string' && data.type.startsWith('call.')) {
               callMessageSubscribers.forEach((fn) => {
@@ -132,20 +197,24 @@ const useChatStore = create<ChatStore>()(
             // Handle different message types from ChatConsumer
             switch (data.type) {
               case 'connection.established': {
-                const payload = data.payload ?? {};
-                const msg = data as any;
-                const notifications = Array.isArray(payload) ? payload : (payload?.notifications ?? payload ?? []);
-                let onlineIds =
-                  payload?.online_user_ids ??
-                  payload?.online_member_ids ??
-                  payload?.online ??
-                  payload?.users ??
-                  msg?.online_user_ids ??
-                  msg?.online_member_ids ??
-                  msg?.online ??
-                  [];
-                onlineIds = Array.isArray(onlineIds) ? onlineIds : [];
-                const connectingUserId = msg?.user_id ?? payload?.user_id;
+                const payload = data.payload;
+                const payloadObj = asRecord(payload);
+                const notifications = inboxListFromPayload(payload);
+                let onlineIds = firstNumberArray(
+                  payloadObj.online_user_ids,
+                  payloadObj.online_member_ids,
+                  payloadObj.online,
+                  payloadObj.users,
+                  data.online_user_ids,
+                  data.online_member_ids,
+                  data.online
+                );
+                const connectingUserId =
+                  typeof data.user_id === 'number'
+                    ? data.user_id
+                    : typeof payloadObj.user_id === 'number'
+                      ? payloadObj.user_id
+                      : undefined;
                 if (typeof connectingUserId === 'number' && !onlineIds.includes(connectingUserId)) {
                   onlineIds = [...onlineIds, connectingUserId];
                 }
@@ -154,23 +223,22 @@ const useChatStore = create<ChatStore>()(
               }
               case 'presence.list':
               case 'presence.update': {
-                const p = data.payload ?? {};
-                const msg = data as any;
-                let onlineIds =
-                  p?.online_user_ids ??
-                  p?.online_member_ids ??
-                  (Array.isArray(p) ? p : p?.online) ??
-                  p?.users ??
-                  msg?.online_user_ids ??
-                  msg?.online_member_ids ??
-                  msg?.online ??
-                  [];
-                onlineIds = Array.isArray(onlineIds) ? onlineIds : [];
+                const p = data.payload;
+                const payloadObj = asRecord(p);
+                const onlineIds = firstNumberArray(
+                  payloadObj.online_user_ids,
+                  payloadObj.online_member_ids,
+                  Array.isArray(p) ? p : payloadObj.online,
+                  payloadObj.users,
+                  data.online_user_ids,
+                  data.online_member_ids,
+                  data.online
+                );
                 set({ onlineIds });
                 break;
               }
               case 'notification.new': {
-                const payload = data.payload ?? {};
+                const payload = (data.payload ?? {}) as ChatInboxNotification;
                 const convId = conversationIdOf(payload);
                 const viewing = get().viewingConversationId;
                 const nextPayload =
@@ -178,15 +246,21 @@ const useChatStore = create<ChatStore>()(
                 set({ notifications: [nextPayload, ...get().notifications] });
                 break;
               }
-              case 'error':
+              case 'error': {
+                const err = asRecord(data.payload);
+                const message =
+                  typeof err.message === 'string' ? err.message : 'WebSocket error';
                 devError('WebSocket error:', data.payload);
-                set({ connectionError: data.payload.message });
+                set({ connectionError: message });
                 break;
-              case 'conversation.updated':
-                if (data.payload && typeof data.payload?.id === 'number') {
-                  set({ lastConversationUpdated: data.payload });
+              }
+              case 'conversation.updated': {
+                const updated = data.payload as API.Conversation | null | undefined;
+                if (updated && typeof updated.id === 'number') {
+                  set({ lastConversationUpdated: updated });
                 }
                 break;
+              }
               case 'session.replaced':
                 import('@/utils/sessionReplaced').then(({ handleSessionReplaced }) => {
                   handleSessionReplaced();
@@ -204,14 +278,15 @@ const useChatStore = create<ChatStore>()(
         };
 
         ws.onclose = (event) => {
-          set({ 
-            isConnected: false, 
-            isConnecting: false, 
+          set({
+            isConnected: false,
+            isConnecting: false,
             ws: null,
             user: null,
-            connectionError: event.code !== 1000 && event.code !== 4008
-              ? `Connection closed: ${event.reason || 'Unknown error'}`
-              : null
+            connectionError:
+              event.code !== 1000 && event.code !== 4008
+                ? `Connection closed: ${event.reason || 'Unknown error'}`
+                : null,
           });
           if (event.code === 4008) {
             import('@/utils/sessionReplaced').then(({ handleSessionReplaced }) => {
@@ -222,18 +297,17 @@ const useChatStore = create<ChatStore>()(
 
         ws.onerror = (error) => {
           devError('WebSocket error:', error);
-          set({ 
-            isConnected: false, 
-            isConnecting: false, 
-            connectionError: 'Connection failed' 
+          set({
+            isConnected: false,
+            isConnecting: false,
+            connectionError: 'Connection failed',
           });
         };
-
       } catch (error) {
         devError('Failed to connect to WebSocket:', error);
-        set({ 
-          isConnecting: false, 
-          connectionError: error instanceof Error ? error.message : 'Connection failed' 
+        set({
+          isConnecting: false,
+          connectionError: error instanceof Error ? error.message : 'Connection failed',
         });
       }
     },
@@ -242,11 +316,11 @@ const useChatStore = create<ChatStore>()(
       const state = get();
       if (state.ws) {
         state.ws.close();
-        set({ 
-          ws: null, 
-          isConnected: false, 
+        set({
+          ws: null,
+          isConnected: false,
           isConnecting: false,
-          user: null
+          user: null,
         });
       }
     },
@@ -266,6 +340,5 @@ useUserStore.subscribe((state) => {
     useChatStore.getState().disconnect();
   }
 });
-
 
 export default useChatStore;

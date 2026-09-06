@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import TeamMemberProfile, { ProfileWorkspaceSkeleton } from '../components/TeamMemberProfile';
+import TeamMemberProfile, { ProfileWorkspaceSkeleton } from '@/components/team/TeamMemberProfile';
 import { useNavigate, useParams } from 'react-router';
 import { apiGetCabinetMember, apiGetMyCabinetMember } from '@/services/cabinet-member/api';
 
