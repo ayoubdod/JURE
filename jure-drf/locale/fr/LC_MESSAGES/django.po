@@ -266,3 +266,306 @@ msgstr "L'e-mail n'est pas vérifié."
 #: .\users\serializers.py:354
 msgid "Phone is not verified."
 msgstr "Le téléphone n'est pas vérifié."
+
+#: chat/serializers/conversation.py
+msgid "At least one participant is required"
+msgstr "Au moins un participant est requis"
+
+#: chat/serializers/conversation.py
+msgid "You must belong to a cabinet."
+msgstr "Vous devez appartenir à un cabinet."
+
+#: chat/serializers/conversation.py
+msgid "Participants must belong to your cabinet."
+msgstr "Les participants doivent appartenir à votre cabinet."
+
+#: chat/serializers/conversation.py
+msgid "Participants must be cabinet team members."
+msgstr "Les participants doivent être des membres du cabinet."
+
+#: chat/serializers/conversation.py
+msgid "Direct conversation must have exactly You and one other participant"
+msgstr "Une conversation directe doit inclure exactement vous et un autre participant"
+
+#: chat/serializers/conversation.py
+msgid "You cannot create a direct conversation with yourself"
+msgstr "Vous ne pouvez pas créer une conversation directe avec vous-même"
+
+#: tasks/serializers/appointment.py tasks/serializers/task.py
+msgid "Client must belong to your cabinet."
+msgstr "Le client doit appartenir à votre cabinet."
+
+#: tasks/serializers/appointment.py tasks/serializers/task.py
+msgid "Client must not be a cabinet member."
+msgstr "Le client ne doit pas être un membre du cabinet."
+
+#: tasks/serializers/appointment.py tasks/serializers/task.py
+msgid "Case must belong to your cabinet."
+msgstr "Le dossier doit appartenir à votre cabinet."
+
+#: tasks/serializers/appointment.py
+msgid "You do not have access to this conversation."
+msgstr "Vous n'avez pas accès à cette conversation."
+
+#: tasks/serializers/appointment.py
+msgid "Attendees must belong to your cabinet."
+msgstr "Les participants doivent appartenir à votre cabinet."
+
+#: tasks/serializers/appointment.py
+msgid "Attendees must be cabinet team members."
+msgstr "Les participants doivent être des membres du cabinet."
+
+msgid "Email is required."
+msgstr "L'email est requis."
+
+msgid "A user with this email already exists."
+msgstr "Un utilisateur avec cet email existe déjà."
+
+msgid "Invalid email address."
+msgstr "Adresse e-mail invalide."
+
+msgid "Phone number is required."
+msgstr "Le numéro de téléphone est requis."
+
+msgid "A user with this phone number already exists."
+msgstr "Un utilisateur avec ce numéro de téléphone existe déjà."
+
+msgid "First name is required."
+msgstr "Le prénom est requis."
+
+msgid "First name must contain at least 2 characters."
+msgstr "Le prénom doit contenir au moins 2 caractères."
+
+msgid "Last name is required."
+msgstr "Le nom est requis."
+
+msgid "Last name must contain at least 2 characters."
+msgstr "Le nom doit contenir au moins 2 caractères."
+
+msgid "You must belong to a cabinet to create clients."
+msgstr "Vous devez appartenir à un cabinet pour créer des clients."
+
+msgid "You must belong to a cabinet to create team members."
+msgstr "Vous devez appartenir à un cabinet pour créer des membres."
+
+msgid "Tags must be a list."
+msgstr "Les tags doivent être une liste."
+
+msgid "File is too large (max 25 MB)."
+msgstr "Le fichier est trop volumineux (max. 25 Mo)."
+
+msgid "The uploaded file is empty."
+msgstr "Le fichier téléversé est vide."
+
+msgid "Quantity cannot be negative."
+msgstr "La quantité ne peut pas être négative."
+
+msgid "Unit price cannot be negative."
+msgstr "Le prix unitaire ne peut pas être négatif."
+
+msgid "Expense amount cannot be negative."
+msgstr "Le montant de la dépense ne peut pas être négatif."
+
+msgid "Expense amount must be greater than zero."
+msgstr "Le montant de la dépense doit être supérieur à zéro."
+
+msgid "Payment amount must be greater than zero."
+msgstr "Le montant du paiement doit être supérieur à zéro."
+
+msgid "Invoice does not belong to this case."
+msgstr "La facture n'appartient pas à ce dossier."
+
+msgid "Case must have a client to record a payment."
+msgstr "Le dossier doit avoir un client pour enregistrer un paiement."
+
+msgid "Could not resolve client profile for this case."
+msgstr "Impossible de résoudre le profil client pour ce dossier."
+
+msgid "Authentication required."
+msgstr "Authentification requise."
+
+msgid "You cannot delete a conversation you are a participant of"
+msgstr "Vous ne pouvez pas supprimer une conversation dont vous êtes participant"
+
+msgid "Matter not found in your cabinet."
+msgstr "Dossier introuvable dans votre cabinet."
+
+msgid "Title is required."
+msgstr "Le titre est requis."
+
+msgid "Invalid status."
+msgstr "Statut invalide."
+
+msgid "Text messages cannot include sharedCaseId, sharedTaskId, or sharedAppointmentId."
+msgstr "Les messages texte ne peuvent pas inclure sharedCaseId, sharedTaskId ou sharedAppointmentId."
+
+msgid "Exactly one of sharedCaseId, sharedTaskId, or sharedAppointmentId must be set for a shared message."
+msgstr "Exactement un de sharedCaseId, sharedTaskId ou sharedAppointmentId doit être défini pour un message partagé."
+
+msgid "sharedCaseId is required for SHARED_CASE messages."
+msgstr "sharedCaseId est requis pour les messages SHARED_CASE."
+
+msgid "Case not found."
+msgstr "Dossier introuvable."
+
+msgid "You do not have access to this case."
+msgstr "Vous n'avez pas accès à ce dossier."
+
+msgid "sharedTaskId is required for SHARED_TASK messages."
+msgstr "sharedTaskId est requis pour les messages SHARED_TASK."
+
+msgid "Task not found."
+msgstr "Tâche introuvable."
+
+msgid "You do not have access to this task."
+msgstr "Vous n'avez pas accès à cette tâche."
+
+msgid "sharedAppointmentId is required for SHARED_APPOINTMENT messages."
+msgstr "sharedAppointmentId est requis pour les messages SHARED_APPOINTMENT."
+
+msgid "Appointment not found."
+msgstr "Rendez-vous introuvable."
+
+msgid "You do not have access to this appointment."
+msgstr "Vous n'avez pas accès à ce rendez-vous."
+
+msgid "Invalid message_type."
+msgstr "message_type invalide."
+
+msgid "Call history messages are created by the system only."
+msgstr "Les messages d'historique d'appel sont créés uniquement par le système."
+
+msgid "Please select a permanent JURE group conversation."
+msgstr "Veuillez sélectionner une conversation de groupe JURE permanente."
+
+msgid "Invalid user ID for assignment."
+msgstr "Identifiant d'utilisateur invalide pour l'assignation."
+
+msgid "caseType must be one of: CONSULTATION, LITIGATION, ADMINISTRATIVE."
+msgstr "caseType doit être l'un de : CONSULTATION, LITIGATION, ADMINISTRATIVE."
+
+msgid "Must be one of: CONSULTATION, LITIGATION, ADMINISTRATIVE."
+msgstr "Doit être l'un de : CONSULTATION, LITIGATION, ADMINISTRATIVE."
+
+msgid "Cannot assign case to user from different cabinet."
+msgstr "Impossible d'assigner le dossier à un utilisateur d'un autre cabinet."
+
+msgid "User has no cabinet."
+msgstr "L'utilisateur n'a pas de cabinet."
+
+msgid "Only one shared item reference is allowed per message."
+msgstr "Une seule référence d'élément partagé est autorisée par message."
+
+msgid "shared_case is required when message_type is SHARED_CASE."
+msgstr "shared_case est requis lorsque message_type est SHARED_CASE."
+
+msgid "shared_task is required when message_type is SHARED_TASK."
+msgstr "shared_task est requis lorsque message_type est SHARED_TASK."
+
+msgid "shared_appointment is required when message_type is SHARED_APPOINTMENT."
+msgstr "shared_appointment est requis lorsque message_type est SHARED_APPOINTMENT."
+
+msgid "shared_call is required for call history messages."
+msgstr "shared_call est requis pour les messages d'historique d'appel."
+
+msgid "Text messages cannot reference a shared item."
+msgstr "Les messages texte ne peuvent pas référencer un élément partagé."
+
+msgid "This link protocol is not allowed."
+msgstr "Ce protocole de lien n'est pas autorisé."
+
+msgid "Protocol-relative URLs are not allowed."
+msgstr "Les URL relatives au protocole ne sont pas autorisées."
+
+msgid "Enter a valid internal path."
+msgstr "Saisissez un chemin interne valide."
+
+msgid "Use an internal path (starting with /) or a valid HTTPS URL."
+msgstr "Utilisez un chemin interne (commençant par /) ou une URL HTTPS valide."
+
+msgid "URLs with credentials are not allowed."
+msgstr "Les URL avec identifiants ne sont pas autorisées."
+
+msgid "Case is not in this cabinet."
+msgstr "Le dossier n'est pas dans ce cabinet."
+
+msgid "Link a case before attaching case documents."
+msgstr "Liez un dossier avant de joindre des documents du dossier."
+
+msgid "One or more case documents are not accessible."
+msgstr "Un ou plusieurs documents du dossier ne sont pas accessibles."
+
+msgid "One or more library documents are not accessible."
+msgstr "Un ou plusieurs documents de la bibliothèque ne sont pas accessibles."
+
+msgid "Client not found."
+msgstr "Client introuvable."
+
+msgid "Client is not in this cabinet."
+msgstr "Le client n'est pas dans ce cabinet."
+
+msgid "No cabinet associated with this user."
+msgstr "Aucun cabinet associé à cet utilisateur."
+
+msgid "This project is archived."
+msgstr "Ce projet est archivé."
+
+msgid "Insufficient project role."
+msgstr "Rôle projet insuffisant."
+
+msgid "Project does not grant %(required)s on %(resource)s."
+msgstr "Le projet n'accorde pas %(required)s sur %(resource)s."
+
+msgid "This project role cannot modify content."
+msgstr "Ce rôle projet ne peut pas modifier le contenu."
+
+msgid "This project role cannot manage members."
+msgstr "Ce rôle projet ne peut pas gérer les membres."
+
+msgid "Only the project owner can perform this action."
+msgstr "Seul le propriétaire du projet peut effectuer cette action."
+
+msgid "User not found."
+msgstr "Utilisateur introuvable."
+
+msgid "User is not in this cabinet."
+msgstr "L'utilisateur n'est pas dans ce cabinet."
+
+msgid "You are not a participant in this conversation."
+msgstr "Vous n'êtes pas participant à cette conversation."
+
+msgid "Case not found or not accessible."
+msgstr "Dossier introuvable ou inaccessible."
+
+msgid "Invalid case id."
+msgstr "Identifiant de dossier invalide."
+
+msgid "Shared library documents cannot be edited or deleted from a cabinet."
+msgstr "Les documents de bibliothèque partagés ne peuvent pas être modifiés ou supprimés depuis un cabinet."
+
+msgid "User must belong to a cabinet to create documents."
+msgstr "L'utilisateur doit appartenir à un cabinet pour créer des documents."
+
+msgid "Shared library documents cannot be deleted from a cabinet."
+msgstr "Les documents de bibliothèque partagés ne peuvent pas être supprimés depuis un cabinet."
+
+msgid "Only platform administrators can archive shared library resources."
+msgstr "Seuls les administrateurs de la plateforme peuvent archiver les ressources de bibliothèque partagées."
+
+msgid "Only administrators can archive library documents."
+msgstr "Seuls les administrateurs peuvent archiver les documents de bibliothèque."
+
+msgid "Only platform administrators can restore shared library resources."
+msgstr "Seuls les administrateurs de la plateforme peuvent restaurer les ressources de bibliothèque partagées."
+
+msgid "Only administrators can restore library documents."
+msgstr "Seuls les administrateurs peuvent restaurer les documents de bibliothèque."
+
+msgid "Only administrators can perform bulk library actions."
+msgstr "Seuls les administrateurs peuvent effectuer des actions groupées sur la bibliothèque."
+
+msgid "User must belong to a cabinet to add documents."
+msgstr "L'utilisateur doit appartenir à un cabinet pour ajouter des documents."
+
+msgid "This resource is private to another cabinet."
+msgstr "Cette ressource est privée à un autre cabinet."

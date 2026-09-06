@@ -1,6 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.db import transaction
 from django.db.models import Q
+from django.utils.translation import gettext as _
 from rest_framework import serializers
 from tasks.models import Appointment
 
@@ -90,7 +91,7 @@ class ConversationSerializer(serializers.ModelSerializer):
         attrs = super().validate(_attrs)
         participants = attrs.get("participants")
         if participants is not None and len(participants) == 0:
-            raise serializers.ValidationError("At least one participant is required")
+            raise serializers.ValidationError(_("At least one participant is required"))
 
         request = self.context.get("request")
         creator = getattr(request, "user", None) if request else None
@@ -98,27 +99,31 @@ class ConversationSerializer(serializers.ModelSerializer):
         if participants is not None:
             cabinet = get_user_cabinet(creator) if creator else None
             if not cabinet:
-                raise serializers.ValidationError("You must belong to a cabinet.")
+                raise serializers.ValidationError(_("You must belong to a cabinet."))
             for participant in participants:
                 if participant.pk == cabinet.owner_id:
                     continue
                 if getattr(participant, "cabinet_id", None) != cabinet.id:
                     raise serializers.ValidationError(
-                        "Participants must belong to your cabinet."
+                        _("Participants must belong to your cabinet.")
                     )
                 if not getattr(participant, "is_cabinet_member", False):
                     raise serializers.ValidationError(
-                        "Participants must be cabinet team members."
+                        _("Participants must be cabinet team members.")
                     )
 
         if participants is not None and attrs.get("type") == Conversation.Type.DIRECT:
             if len(participants) > 1:
-                raise serializers.ValidationError("Direct conversation must have exactly You and one other participant")
+                raise serializers.ValidationError(
+                    _("Direct conversation must have exactly You and one other participant")
+                )
 
             participant = participants[0]
 
             if creator and participant.id == creator.id:
-                raise serializers.ValidationError("You cannot create a direct conversation with yourself")
+                raise serializers.ValidationError(
+                    _("You cannot create a direct conversation with yourself")
+                )
 
         return attrs
 

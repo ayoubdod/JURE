@@ -1,4 +1,5 @@
 from django.db.models import Q
+from django.utils.translation import gettext as _
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
 
@@ -103,9 +104,9 @@ class TaskSerializer(serializers.ModelSerializer):
         if not cabinet or value is None:
             return value
         if getattr(value, 'cabinet_id', None) != getattr(cabinet, 'id', None):
-            raise serializers.ValidationError("Client must belong to your cabinet.")
+            raise serializers.ValidationError(_("Client must belong to your cabinet."))
         if getattr(value, 'is_cabinet_member', True):
-            raise serializers.ValidationError("Client must not be a cabinet member.")
+            raise serializers.ValidationError(_("Client must not be a cabinet member."))
         return value
 
     def validate_case(self, value):
@@ -114,7 +115,7 @@ class TaskSerializer(serializers.ModelSerializer):
         if not cabinet or value is None:
             return value
         if getattr(value, 'cabinet_id', None) != getattr(cabinet, 'id', None):
-            raise serializers.ValidationError("Case must belong to your cabinet.")
+            raise serializers.ValidationError(_("Case must belong to your cabinet."))
         return value
 
     def validate(self, attrs):

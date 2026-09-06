@@ -1,3 +1,4 @@
+from django.utils.translation import gettext as _
 from rest_framework import serializers
 
 from cases.models import Case
@@ -49,7 +50,7 @@ class ResearchNoteSerializer(serializers.ModelSerializer):
     def validate_title(self, value: str) -> str:
         title = (value or "").strip()
         if not title:
-            raise serializers.ValidationError("Title is required.")
+            raise serializers.ValidationError(_("Title is required."))
         return title
 
     def validate_matter(self, value):
@@ -59,7 +60,7 @@ class ResearchNoteSerializer(serializers.ModelSerializer):
         if cabinet is None:
             return value
         if value.cabinet_id != cabinet.id:
-            raise serializers.ValidationError("Matter not found in your cabinet.")
+            raise serializers.ValidationError(_("Matter not found in your cabinet."))
         return value
 
     def validate(self, attrs):

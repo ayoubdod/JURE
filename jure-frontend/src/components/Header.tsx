@@ -19,7 +19,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import LogoutModal, { LogoutModalRef } from './layout/LogoutModal';
 import useUserStore from '@/stores/userStore';
-import useChatStore from '@/stores/chatStore';
+import useChatStore, { type ChatInboxNotification } from '@/stores/chatStore';
 import { useDebounce } from '@/hooks/use-debounce';
 import { apiGetCases } from '@/services/case/api';
 import { apiGetClients } from '@/services/client/api';
@@ -39,14 +39,7 @@ import { HintKbd } from '@/components/shortcuts/Kbd';
 const pickFirstNonEmpty = (...values: Array<string | null | undefined>) =>
   values.find((value) => typeof value === 'string' && value.trim().length > 0)?.trim();
 
-interface ChatMessage {
-  id: number;
-  sender: { id: number; first_name: string; last_name: string; email: string; full_name: string };
-  body: string;
-  created: string;
-  unread: boolean;
-  conversation_id: number;
-}
+type ChatMessage = ChatInboxNotification;
 
 const Header = () => {
   const [profileOpen, setProfileOpen] = useState(false);
@@ -85,10 +78,10 @@ const Header = () => {
 
   const debouncedSearchValue = useDebounce(searchValue, 300);
   
-  const recentMessages: ChatMessage[] = (chatStore.notifications || []).filter((m: any) => m.is_message);
+  const recentMessages: ChatMessage[] = (chatStore.notifications || []).filter((m) => m.is_message);
 
   // Format message time: today = time only, else date + time
-  const formatMessageTime = (dateString: string): string => {
+  const formatMessageTime = (dateString?: string): string => {
     if (!dateString) return '';
     const date = new Date(dateString);
     const now = new Date();
@@ -107,19 +100,23 @@ const Header = () => {
   const groupedMessages = React.useMemo(() => {
     const byConv = new Map<number, ChatMessage[]>();
     for (const m of recentMessages) {
-      const convId = (m as any).conversation_id ?? (m as any).conversationId;
+      const convId = m.conversation_id ?? m.conversationId;
+      if (typeof convId !== 'number') continue;
       if (!byConv.has(convId)) byConv.set(convId, []);
       byConv.get(convId)!.push(m);
     }
     const result: GroupedMessage[] = [];
     byConv.forEach((msgs) => {
-      msgs.sort((a, b) => new Date((b as any).created).getTime() - new Date((a as any).created).getTime());
+      msgs.sort((a, b) => new Date(b.created ?? 0).getTime() - new Date(a.created ?? 0).getTime());
       const last = msgs[0];
-      const unreadCount = msgs.filter((m) => (m as any).unread).length;
+      const unreadCount = msgs.filter((m) => m.unread).length;
       const hasUnread = unreadCount > 0;
       result.push({ lastMessage: last, unreadCount, hasUnread });
     });
-    result.sort((a, b) => new Date((b.lastMessage as any).created).getTime() - new Date((a.lastMessage as any).created).getTime());
+    result.sort(
+      (a, b) =>
+        new Date(b.lastMessage.created ?? 0).getTime() - new Date(a.lastMessage.created ?? 0).getTime()
+    );
     return result;
   }, [recentMessages]);
   
@@ -253,7 +250,8 @@ const Header = () => {
   };
 
   const handleMessageClick = (message: ChatMessage) => {
-    const convId = message.conversation_id;
+    const convId = message.conversation_id ?? message.conversationId;
+    if (typeof convId !== 'number') return;
     useChatStore.getState().markConversationInboxRead(convId);
     void apiMarkConversationRead(convId).catch(() => {});
     setMessagesOpen(false);
@@ -669,27 +667,26 @@ const Header = () => {
               </div>
               <div className="divide-y divide-border max-h-80 overflow-y-auto">
                 {groupedMessages.map(({ lastMessage, unreadCount, hasUnread }) => {
-                  const sender = (lastMessage as any).sender as Record<string, unknown> | undefined;
+                  const sender = lastMessage.sender;
                   const sid = typeof sender?.id === 'number' ? sender.id : undefined;
                   const cab = sid != null ? lookupCabinet(sid) : undefined;
                   const imageUrl = (sender && getPersonImage(sender)) ?? cab?.image;
-                  const firstName = (sender?.first_name as string | undefined) ?? cab?.first_name;
-                  const lastName = (sender?.last_name as string | undefined) ?? cab?.last_name;
-                  const email = (sender?.email as string | undefined) ?? cab?.email;
+                  const firstName = sender?.first_name ?? cab?.first_name;
+                  const lastName = sender?.last_name ?? cab?.last_name;
+                  const email = sender?.email ?? cab?.email;
                   const displayName =
-                    (sender?.full_name as string | undefined)?.trim() ||
+                    sender?.full_name?.trim() ||
                     `${firstName ?? ''} ${lastName ?? ''}`.trim() ||
                     email ||
                     t.conversations.unknownContact;
-                  const convId =
-                    (lastMessage as any).conversation_id ?? (lastMessage as any).conversationId;
+                  const convId = lastMessage.conversation_id ?? lastMessage.conversationId;
                   const meta = typeof convId === 'number' ? conversationMetaById.get(convId) : undefined;
                   const isGroup = meta?.type === 'group';
                   const groupHeading =
                     (meta?.display_name ?? meta?.title)?.trim() || '';
                   return (
                   <div
-                    key={`${(lastMessage as any).conversation_id ?? lastMessage.id}`}
+                    key={`${convId ?? lastMessage.id}`}
                     className={`p-3 hover:bg-muted/50 cursor-pointer transition-colors ${hasUnread ? 'bg-primary/5' : ''}`}
                     onClick={() => handleMessageClick(lastMessage)}
                   >
@@ -717,7 +714,7 @@ const Header = () => {
                             {isGroup && groupHeading ? groupHeading : displayName}
                           </h4>
                           <span className="text-xs text-muted-foreground flex-shrink-0">
-                            {formatMessageTime((lastMessage as any).created)}
+                            {formatMessageTime(lastMessage.created)}
                             {unreadCount > 1 && (
                               <span className="ms-1">· {tf(t.header.messagesCount, { count: unreadCount })}</span>
                             )}

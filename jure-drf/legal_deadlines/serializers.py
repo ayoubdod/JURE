@@ -1,7 +1,8 @@
 from rest_framework import serializers
+from django.contrib.auth import get_user_model
+from django.utils.translation import gettext as _
 
 from cases.models import Case
-from django.contrib.auth import get_user_model
 
 from .models import CalculatedDeadline, DeadlineReminder, DeadlineRule, LegalHoliday, LegalSource
 
@@ -226,7 +227,7 @@ class CalculatedDeadlineUpdateSerializer(serializers.ModelSerializer):
             CalculatedDeadline.Status.OVERDUE,
         }
         if value not in allowed:
-            raise serializers.ValidationError("Invalid status.")
+            raise serializers.ValidationError(_("Invalid status."))
         return value
 
 

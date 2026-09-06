@@ -1,4 +1,5 @@
 from django.db.models import Q
+from django.utils.translation import gettext as _
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
 
@@ -125,9 +126,9 @@ class AppointmentSerializer(serializers.ModelSerializer):
         if not cabinet or value is None:
             return value
         if getattr(value, 'cabinet_id', None) != getattr(cabinet, 'id', None):
-            raise serializers.ValidationError("Client must belong to your cabinet.")
+            raise serializers.ValidationError(_("Client must belong to your cabinet."))
         if getattr(value, 'is_cabinet_member', True):
-            raise serializers.ValidationError("Client must not be a cabinet member.")
+            raise serializers.ValidationError(_("Client must not be a cabinet member."))
         return value
 
     def validate_case(self, value):
@@ -136,7 +137,7 @@ class AppointmentSerializer(serializers.ModelSerializer):
         if not cabinet or value is None:
             return value
         if getattr(value, 'cabinet_id', None) != getattr(cabinet, 'id', None):
-            raise serializers.ValidationError("Case must belong to your cabinet.")
+            raise serializers.ValidationError(_("Case must belong to your cabinet."))
         return value
 
     def validate_conversation(self, value):
@@ -149,12 +150,12 @@ class AppointmentSerializer(serializers.ModelSerializer):
             )
         if value.is_temporary:
             raise serializers.ValidationError(
-                'Please select a permanent JURE group conversation.'
+                _('Please select a permanent JURE group conversation.')
             )
         if not ConversationMembership.objects.filter(
             conversation=value, user=user, is_deleted=False
         ).exists():
-            raise serializers.ValidationError('You do not have access to this conversation.')
+            raise serializers.ValidationError(_('You do not have access to this conversation.'))
         return value
 
     def validate_attendee_ids(self, value):
@@ -166,9 +167,9 @@ class AppointmentSerializer(serializers.ModelSerializer):
             if member.pk == cabinet.owner_id:
                 continue
             if getattr(member, 'cabinet_id', None) != getattr(cabinet, 'id', None):
-                raise serializers.ValidationError('Attendees must belong to your cabinet.')
+                raise serializers.ValidationError(_('Attendees must belong to your cabinet.'))
             if not getattr(member, 'is_cabinet_member', False):
-                raise serializers.ValidationError('Attendees must be cabinet team members.')
+                raise serializers.ValidationError(_('Attendees must be cabinet team members.'))
         return _dedupe_users(value)
 
     def validate(self, attrs):

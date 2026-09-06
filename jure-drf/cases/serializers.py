@@ -5,6 +5,7 @@ type-specific sub-fields (case_specific_data) based on discriminator.
 from rest_framework.serializers import ModelSerializer
 from rest_framework import serializers
 from django.core.exceptions import ValidationError as DjangoValidationError
+from django.utils.translation import gettext as _
 from core.utils import get_user_cabinet
 
 from .models import Case, CaseAttachment
@@ -295,7 +296,7 @@ class CaseSerializer(ModelSerializer):
         """Ensure caseType is one of the allowed values."""
         if value not in CASE_TYPES:
             raise serializers.ValidationError(
-                'caseType must be one of: CONSULTATION, LITIGATION, ADMINISTRATIVE.'
+                _('caseType must be one of: CONSULTATION, LITIGATION, ADMINISTRATIVE.')
             )
         return value
 
@@ -307,7 +308,7 @@ class CaseSerializer(ModelSerializer):
             return value
         actor_cab = get_user_cabinet(request.user)
         if get_user_cabinet(value) != actor_cab:
-            raise serializers.ValidationError('Client must belong to your cabinet.')
+            raise serializers.ValidationError(_('Client must belong to your cabinet.'))
         return value
 
     def validate(self, attrs):
@@ -331,7 +332,7 @@ class CaseSerializer(ModelSerializer):
         if case_type:
             if case_type not in CASE_TYPES:
                 raise serializers.ValidationError(
-                    {'caseType': 'Must be one of: CONSULTATION, LITIGATION, ADMINISTRATIVE.'}
+                    {'caseType': _('Must be one of: CONSULTATION, LITIGATION, ADMINISTRATIVE.')}
                 )
             attrs['caseType'] = case_type
         case_specific_data = attrs.get('case_specific_data', None)
@@ -391,7 +392,7 @@ class CaseSerializer(ModelSerializer):
             member = found.get(uid)
             if member is None or get_user_cabinet(member) != actor_cab:
                 raise serializers.ValidationError(
-                    {'assigned_to': 'Cannot assign case to user from different cabinet.'}
+                    {'assigned_to': _('Cannot assign case to user from different cabinet.')}
                 )
 
     def create(self, validated_data):
@@ -444,7 +445,7 @@ class CaseSerializer(ModelSerializer):
                 try:
                     assignee = User.objects.get(pk=assigned_to_id)
                 except User.DoesNotExist:
-                    raise serializers.ValidationError('Invalid user ID for assignment.')
+                    raise serializers.ValidationError(_('Invalid user ID for assignment.'))
                 instance.assigned_to = assignee
             else:
                 instance.assigned_to = None

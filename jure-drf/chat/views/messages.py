@@ -2,6 +2,7 @@ from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
+from django.utils.translation import gettext as _
 from rest_framework import decorators, permissions, response, status, viewsets
 from rest_framework.exceptions import PermissionDenied
 
@@ -33,7 +34,7 @@ class MessageViewSet(viewsets.ModelViewSet):
         if not ConversationMembership.objects.filter(
             conversation=conv, user=self.request.user, is_deleted=False
         ).exists():
-            raise PermissionDenied("You are not a participant in this conversation.")
+            raise PermissionDenied(_("You are not a participant in this conversation."))
         serializer.save()
 
     def _ensure_participant(self, message: Message) -> bool:

@@ -29,6 +29,7 @@ app/
 
 - Permissions: cabinet membership + RBAC from `cabinets.permissions`. Extra checks (`IsFinanceAuthorized`, JURIA `require_*`) are additive.
 - User-facing strings: gettext. Code, comments, and commit messages: English.
+- After editing `locale/*/LC_MESSAGES/django.po`, run `poetry run python manage.py compilemessages -l fr -l ar` (needs GNU `msgfmt` on PATH). Until `.mo` files exist, Django returns English msgids; the frontend phrase map in `jure-frontend/src/i18n/errors.ts` still localizes them.
 - Canonical URL prefix: `/api/v1/`. Keep `/api/` aliases; do not add a third mount.
 - Tests: `poetry run pytest`. New business logic extracted into a service should get a test in the same change.
 - Authenticated API tests mint JWTs with `core.testing.access_token_for` (embeds `session_version`). Do not use `RefreshToken.for_user` — that omits `sv` and the API returns 401 `session_replaced`.

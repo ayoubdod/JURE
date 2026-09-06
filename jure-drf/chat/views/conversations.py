@@ -1,10 +1,12 @@
-from asgiref.sync import async_to_sync
-from channels.layers import get_channel_layer
 from django.contrib.auth import get_user_model
 from django.db.models import OuterRef, Subquery
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
+from django.utils.translation import gettext as _
 from rest_framework import decorators, permissions, response, serializers, status, viewsets
+
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
 
 from cabinets.permissions import HasConversationsPermission
 from cases.models import Case
@@ -82,7 +84,7 @@ class ConversationViewSet(viewsets.ModelViewSet):
 
             return super().destroy(request, *args, **kwargs)
 
-        raise serializers.ValidationError("You cannot delete a conversation you are a participant of")
+        raise serializers.ValidationError(_("You cannot delete a conversation you are a participant of"))
 
     def partial_update(self, request, *args, **kwargs):
         """Support PATCH with archived/is_pinned - update membership, title - rename group."""

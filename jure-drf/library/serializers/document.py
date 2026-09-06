@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+from django.utils.translation import gettext as _
 from rest_framework import serializers
 from django.http import QueryDict
 
@@ -190,7 +191,7 @@ class DocumentSerializer(serializers.ModelSerializer):
         if value is None:
             return None
         if not isinstance(value, list):
-            raise serializers.ValidationError("Tags must be a list.")
+            raise serializers.ValidationError(_("Tags must be a list."))
         value = [tag for tag in value if tag and isinstance(tag, str) and tag.strip()]
         if value:
             for tag in value:
@@ -210,9 +211,9 @@ class DocumentSerializer(serializers.ModelSerializer):
             )
         size = getattr(value, "size", None)
         if size is not None and size > MAX_DOCUMENT_BYTES:
-            raise serializers.ValidationError("File is too large (max 25 MB).")
+            raise serializers.ValidationError(_("File is too large (max 25 MB)."))
         if size == 0:
-            raise serializers.ValidationError("The uploaded file is empty.")
+            raise serializers.ValidationError(_("The uploaded file is empty."))
         return value
 
     def validate_status(self, value):

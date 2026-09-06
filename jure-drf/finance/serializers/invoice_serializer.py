@@ -1,6 +1,7 @@
 from decimal import Decimal
 
 from django.db import transaction
+from django.utils.translation import gettext as _
 from rest_framework import serializers
 
 from finance.models import Expense, Fee, Invoice, InvoiceItem
@@ -58,12 +59,12 @@ class InvoiceItemWriteSerializer(serializers.Serializer):
 
     def validate_quantity(self, value):
         if value is not None and value < 0:
-            raise serializers.ValidationError('Quantity cannot be negative.')
+            raise serializers.ValidationError(_('Quantity cannot be negative.'))
         return value
 
     def validate_unit_price(self, value):
         if value is not None and value < 0:
-            raise serializers.ValidationError('Unit price cannot be negative.')
+            raise serializers.ValidationError(_('Unit price cannot be negative.'))
         return value
 
 

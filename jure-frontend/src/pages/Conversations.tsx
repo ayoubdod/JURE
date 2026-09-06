@@ -36,6 +36,7 @@ import ChangeGroupIconModal, { ChangeGroupIconModalRef } from '@/components/chat
 import useChatStore from '@/stores/chatStore';
 import useCallsWsStore from '@/stores/callsWsStore';
 import useUserStore from '@/stores/userStore';
+import { getMemberPerson } from '@/components/chat/conversationUtils';
 import { useWebRtcCall } from '@/hooks/useWebRtcCall';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -89,8 +90,8 @@ const ConversationsPage: React.FC = () => {
         const data = res.data ?? [];
         const list = Array.isArray(data) ? data : [];
         if (includeArchived === 1) {
-          const active = list.filter((c) => !(c as any).archived);
-          const archived = list.filter((c) => (c as any).archived);
+          const active = list.filter((c) => !c.archived);
+          const archived = list.filter((c) => c.archived);
           setConversations(active);
           setArchivedConversations(archived);
         } else {
@@ -167,8 +168,8 @@ const ConversationsPage: React.FC = () => {
       .then((res) => {
         const data = res.data ?? [];
         const list = Array.isArray(data) ? data : [];
-        const active = list.filter((c) => !(c as any).archived);
-        const archived = list.filter((c) => (c as any).archived);
+        const active = list.filter((c) => !c.archived);
+        const archived = list.filter((c) => c.archived);
         setConversations(active);
         setArchivedConversations(archived);
       })
@@ -338,9 +339,6 @@ const ConversationsPage: React.FC = () => {
     apiUnpinConversation(conv.id).then(() => loadConversations(undefined, true)).catch((err) => handleApiError(err, 'actionUnpin'));
   };
 
-  const getMemberPerson = (m: API.ConversationMembership) =>
-    (m as any).user ?? (m as any).cabinet_member ?? (m as any).member;
-
   const handleSelectMember = useCallback(
     (memberId: number) => {
       const allConvs = [...conversations, ...archivedConversations];
@@ -348,14 +346,14 @@ const ConversationsPage: React.FC = () => {
         if (c.type !== 'direct') return false;
         const other = c.memberships?.find((m) => {
           const p = getMemberPerson(m);
-          const uid = p?.id ?? (p as any)?.pk;
+          const uid = p?.id ?? p?.pk;
           return uid != null && (uid === memberId || String(uid) === String(memberId));
         });
         return !!other;
       });
       if (existing) {
         selectConversation(existing.id);
-        if ((existing as any).archived) {
+        if (existing.archived) {
           apiUnarchiveConversation(existing.id)
             .then(() => loadConversations(undefined, true))
             .catch((err) => handleApiError(err, 'actionUnarchive'));
@@ -615,7 +613,7 @@ const ConversationsPage: React.FC = () => {
 
   const chatStore = useChatStore();
   const recentMessages = useMemo(
-    () => chatStore.notifications.filter((m: any) => m.is_message),
+    () => chatStore.notifications.filter((m) => m.is_message),
     [chatStore.notifications]
   );
 
@@ -628,7 +626,7 @@ const ConversationsPage: React.FC = () => {
   const lastConversationUpdated = chatStore.lastConversationUpdated;
   useEffect(() => {
     if (!lastConversationUpdated) return;
-    const updated = lastConversationUpdated as any;
+    const updated = lastConversationUpdated;
     const title = updated.display_name ?? updated.title ?? '';
     const merge = (c: API.Conversation) =>
       c.id === updated.id
@@ -1097,7 +1095,9 @@ const ConversationsPage: React.FC = () => {
         ref={renameGroupModalRef}
         onSuccess={(updated) => {
           const merge = (c: API.Conversation) =>
-            c.id === updated.id ? { ...c, ...updated, title: updated.title, display_name: (updated as any).display_name ?? updated.title } : c;
+            c.id === updated.id
+              ? { ...c, ...updated, title: updated.title, display_name: updated.display_name ?? updated.title }
+              : c;
           setConversations((prev) => prev.map(merge));
           setArchivedConversations((prev) => prev.map(merge));
         }}
@@ -1108,7 +1108,7 @@ const ConversationsPage: React.FC = () => {
         onSuccess={(updated) => {
           const merge = (c: API.Conversation) =>
             c.id === updated.id
-              ? { ...c, ...updated, icon_url: (updated as any).icon_url, icon_preset_emoji: (updated as any).icon_preset_emoji }
+              ? { ...c, ...updated, icon_url: updated.icon_url, icon_preset_emoji: updated.icon_preset_emoji }
               : c;
           setConversations((prev) => prev.map(merge));
           setArchivedConversations((prev) => prev.map(merge));

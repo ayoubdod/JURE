@@ -1,4 +1,5 @@
 from django.contrib.auth import get_user_model
+from django.utils.translation import gettext as _
 from django_countries.serializer_fields import CountryField
 from rest_flex_fields.serializers import FlexFieldsModelSerializer
 from rest_framework import serializers
@@ -103,44 +104,44 @@ class CabinetMemberCreateSerializer(ModelSerializer):
         if value:
             value = value.lower().strip()
         if not value:
-            raise serializers.ValidationError("Email is required.")
+            raise serializers.ValidationError(_("Email is required."))
         try:
             from django.core.validators import validate_email as django_validate_email
             django_validate_email(value)
         except Exception:  # ValidationError or any email format error
-            raise serializers.ValidationError("Invalid email address.")
+            raise serializers.ValidationError(_("Invalid email address."))
         queryset = User.objects.filter(email__iexact=value)
         if self.instance:
             queryset = queryset.exclude(pk=self.instance.pk)
         if queryset.exists():
-            raise serializers.ValidationError("A user with this email already exists.")
+            raise serializers.ValidationError(_("A user with this email already exists."))
         return value
     
     def validate_phone(self, value):
         """Check that the phone number is not already taken."""
         if not value:
-            raise serializers.ValidationError("Phone number is required.")
+            raise serializers.ValidationError(_("Phone number is required."))
         queryset = User.objects.filter(phone=value)
         if self.instance:
             queryset = queryset.exclude(pk=self.instance.pk)
         if queryset.exists():
-            raise serializers.ValidationError("A user with this phone number already exists.")
+            raise serializers.ValidationError(_("A user with this phone number already exists."))
         return value
     
     def validate_first_name(self, value):
         """Validate first name."""
         if not value or not value.strip():
-            raise serializers.ValidationError("First name is required.")
+            raise serializers.ValidationError(_("First name is required."))
         if len(value.strip()) < 2:
-            raise serializers.ValidationError("First name must contain at least 2 characters.")
+            raise serializers.ValidationError(_("First name must contain at least 2 characters."))
         return value.strip()
     
     def validate_last_name(self, value):
         """Validate last name."""
         if not value or not value.strip():
-            raise serializers.ValidationError("Last name is required.")
+            raise serializers.ValidationError(_("Last name is required."))
         if len(value.strip()) < 2:
-            raise serializers.ValidationError("Last name must contain at least 2 characters.")
+            raise serializers.ValidationError(_("Last name must contain at least 2 characters."))
         return value.strip()
     
     def validate(self, attrs):

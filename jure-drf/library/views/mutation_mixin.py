@@ -1,5 +1,6 @@
 import logging
 
+from django.utils.translation import gettext as _
 from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
@@ -21,7 +22,7 @@ class LibraryMutationMixin:
     def _deny_shared_mutation(self, instance: Document) -> None:
         if instance.is_shared and not is_platform_admin(self.request.user):
             raise PermissionDenied(
-                "Shared library documents cannot be edited or deleted from a cabinet."
+                _("Shared library documents cannot be edited or deleted from a cabinet.")
             )
 
     def _delete_stored_file(self, instance: Document) -> None:
@@ -38,7 +39,7 @@ class LibraryMutationMixin:
         user: User = self.request.user
         cabinet = get_user_cabinet(user)
         if not cabinet:
-            raise PermissionDenied("User must belong to a cabinet to create documents.")
+            raise PermissionDenied(_("User must belong to a cabinet to create documents."))
         extra = {
             'created_by': user,
             'updated_by': user,
@@ -73,7 +74,7 @@ class LibraryMutationMixin:
             if cabinet and LibrarySave.objects.filter(cabinet=cabinet, document=instance).exists():
                 LibrarySave.objects.filter(cabinet=cabinet, document=instance).delete()
                 return Response(status=status.HTTP_204_NO_CONTENT)
-            raise PermissionDenied("Shared library documents cannot be deleted from a cabinet.")
+            raise PermissionDenied(_("Shared library documents cannot be deleted from a cabinet."))
         self._deny_shared_mutation(instance)
         self.perform_destroy(instance)
         return Response(status=status.HTTP_204_NO_CONTENT)
@@ -83,9 +84,9 @@ class LibraryMutationMixin:
         instance = self._admin_get_object(pk) if can_publish_shared_library(request.user) else self.get_object()
         if instance.is_shared:
             if not can_publish_shared_library(request.user):
-                raise PermissionDenied("Only platform administrators can archive shared library resources.")
+                raise PermissionDenied(_("Only platform administrators can archive shared library resources."))
         elif not can_manage_content(request.user):
-            raise PermissionDenied("Only administrators can archive library documents.")
+            raise PermissionDenied(_("Only administrators can archive library documents."))
         instance.status = Document.DocumentStatus.ARCHIVED
         instance.updated_by = request.user
         instance.save(update_fields=['status', 'updated_by', 'modified'])
@@ -96,9 +97,9 @@ class LibraryMutationMixin:
         instance = self._admin_get_object(pk) if can_publish_shared_library(request.user) else self.get_object()
         if instance.is_shared:
             if not can_publish_shared_library(request.user):
-                raise PermissionDenied("Only platform administrators can restore shared library resources.")
+                raise PermissionDenied(_("Only platform administrators can restore shared library resources."))
         elif not can_manage_content(request.user):
-            raise PermissionDenied("Only administrators can restore library documents.")
+            raise PermissionDenied(_("Only administrators can restore library documents."))
         instance.status = Document.DocumentStatus.PUBLISHED
         instance.updated_by = request.user
         instance.save(update_fields=['status', 'updated_by', 'modified'])
@@ -111,7 +112,7 @@ class LibraryMutationMixin:
     @action(detail=False, methods=['post'], url_path='bulk')
     def bulk(self, request):
         if not can_manage_content(request.user):
-            raise PermissionDenied("Only administrators can perform bulk library actions.")
+            raise PermissionDenied(_("Only administrators can perform bulk library actions."))
         ids = request.data.get('ids') or []
         action_name = (request.data.get('action') or '').lower()
         if not isinstance(ids, list) or not ids:
@@ -148,11 +149,11 @@ class LibraryMutationMixin:
         source = self.get_object()
         cabinet = get_user_cabinet(request.user)
         if not cabinet:
-            raise PermissionDenied("User must belong to a cabinet to add documents.")
+            raise PermissionDenied(_("User must belong to a cabinet to add documents."))
         if source.visibility_scope == VisibilityScope.CABINET:
             if source.cabinet_id == cabinet.id:
                 return Response(self.get_serializer(source).data, status=status.HTTP_200_OK)
-            raise PermissionDenied("This resource is private to another cabinet.")
+            raise PermissionDenied(_("This resource is private to another cabinet."))
         LibrarySave.objects.get_or_create(
             cabinet=cabinet,
             document=source,

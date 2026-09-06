@@ -1,6 +1,7 @@
 import secrets
 
 from django.db.models import Count
+from django.utils.translation import gettext as _
 from rest_framework import serializers, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -53,7 +54,7 @@ class ClientViewSet(ModelViewSet):
         _cabinet = user.get_owned_cabinet_or_none()
         cabinet = _cabinet if _cabinet else user.cabinet
         if not cabinet:
-            raise serializers.ValidationError("You must belong to a cabinet to create clients.")
+            raise serializers.ValidationError(_("You must belong to a cabinet to create clients."))
         
         # Get validated data
         validated_data = serializer.validated_data.copy()

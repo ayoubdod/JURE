@@ -5,6 +5,7 @@ from datetime import timedelta
 from allauth.account.models import EmailAddress
 from django.db.models import Q
 from django.utils import timezone
+from django.utils.translation import gettext as _
 from rest_framework import decorators, response, status
 from rest_framework.permissions import IsAuthenticated
 from rest_flex_fields.views import FlexFieldsModelViewSet
@@ -142,7 +143,7 @@ class CabinetMemberViewSet(FlexFieldsModelViewSet):
         
         if not cabinet:
             from rest_framework import serializers as drf_serializers
-            raise drf_serializers.ValidationError("You must belong to a cabinet to create team members.")
+            raise drf_serializers.ValidationError(_("You must belong to a cabinet to create team members."))
         
         # Get validated data
         validated_data = serializer.validated_data.copy()

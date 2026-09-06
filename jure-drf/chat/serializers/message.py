@@ -1,6 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.db import transaction
+from django.utils.translation import gettext as _
 from rest_framework import serializers
 
 from cases.models import Case
@@ -128,7 +129,7 @@ class MessageSerializer(serializers.ModelSerializer):
         request = self.context.get("request")
         user = getattr(request, "user", None) if request else None
         if not user or not user.is_authenticated:
-            raise serializers.ValidationError("Authentication required.")
+            raise serializers.ValidationError(_("Authentication required."))
 
         initial = self.initial_data or {}
         if "messageType" in initial and initial["messageType"] is not None:
@@ -140,7 +141,7 @@ class MessageSerializer(serializers.ModelSerializer):
 
         if mt in Message.call_message_types():
             raise serializers.ValidationError(
-                {"message_type": "Call history messages are created by the system only."}
+                {"message_type": _("Call history messages are created by the system only.")}
             )
 
         sc_id = attrs.pop("sharedCaseId", None)
@@ -158,7 +159,9 @@ class MessageSerializer(serializers.ModelSerializer):
         if mt == Message.MessageType.TEXT:
             if id_count:
                 raise serializers.ValidationError(
-                    "Text messages cannot include sharedCaseId, sharedTaskId, or sharedAppointmentId."
+                    _(
+                        "Text messages cannot include sharedCaseId, sharedTaskId, or sharedAppointmentId."
+                    )
                 )
             attrs["shared_case"] = None
             attrs["shared_task"] = None
@@ -167,18 +170,24 @@ class MessageSerializer(serializers.ModelSerializer):
 
         if id_count != 1:
             raise serializers.ValidationError(
-                "Exactly one of sharedCaseId, sharedTaskId, or sharedAppointmentId must be set for a shared message."
+                _(
+                    "Exactly one of sharedCaseId, sharedTaskId, or sharedAppointmentId must be set for a shared message."
+                )
             )
 
         if mt == Message.MessageType.SHARED_CASE:
             if sc_id is None:
-                raise serializers.ValidationError("sharedCaseId is required for SHARED_CASE messages.")
+                raise serializers.ValidationError(
+                    _("sharedCaseId is required for SHARED_CASE messages.")
+                )
             try:
                 case = Case.objects.get(pk=sc_id)
             except Case.DoesNotExist:
-                raise serializers.ValidationError({"sharedCaseId": "Case not found."})
+                raise serializers.ValidationError({"sharedCaseId": _("Case not found.")})
             if not user_can_access_shared_case(user, case):
-                raise serializers.ValidationError({"sharedCaseId": "You do not have access to this case."})
+                raise serializers.ValidationError(
+                    {"sharedCaseId": _("You do not have access to this case.")}
+                )
             attrs["shared_case"] = case
             attrs["shared_task"] = None
             attrs["shared_appointment"] = None
@@ -186,13 +195,17 @@ class MessageSerializer(serializers.ModelSerializer):
 
         if mt == Message.MessageType.SHARED_TASK:
             if st_id is None:
-                raise serializers.ValidationError("sharedTaskId is required for SHARED_TASK messages.")
+                raise serializers.ValidationError(
+                    _("sharedTaskId is required for SHARED_TASK messages.")
+                )
             try:
                 task = Task.objects.get(pk=st_id)
             except Task.DoesNotExist:
-                raise serializers.ValidationError({"sharedTaskId": "Task not found."})
+                raise serializers.ValidationError({"sharedTaskId": _("Task not found.")})
             if not user_can_access_shared_task(user, task):
-                raise serializers.ValidationError({"sharedTaskId": "You do not have access to this task."})
+                raise serializers.ValidationError(
+                    {"sharedTaskId": _("You do not have access to this task.")}
+                )
             attrs["shared_case"] = None
             attrs["shared_task"] = task
             attrs["shared_appointment"] = None
@@ -201,22 +214,28 @@ class MessageSerializer(serializers.ModelSerializer):
         if mt == Message.MessageType.SHARED_APPOINTMENT:
             if sa_id is None:
                 raise serializers.ValidationError(
-                    {"sharedAppointmentId": "sharedAppointmentId is required for SHARED_APPOINTMENT messages."}
+                    {
+                        "sharedAppointmentId": _(
+                            "sharedAppointmentId is required for SHARED_APPOINTMENT messages."
+                        )
+                    }
                 )
             try:
                 appt = Appointment.objects.get(pk=sa_id)
             except Appointment.DoesNotExist:
-                raise serializers.ValidationError({"sharedAppointmentId": "Appointment not found."})
+                raise serializers.ValidationError(
+                    {"sharedAppointmentId": _("Appointment not found.")}
+                )
             if not user_can_access_shared_appointment(user, appt):
                 raise serializers.ValidationError(
-                    {"sharedAppointmentId": "You do not have access to this appointment."}
+                    {"sharedAppointmentId": _("You do not have access to this appointment.")}
                 )
             attrs["shared_case"] = None
             attrs["shared_task"] = None
             attrs["shared_appointment"] = appt
             return attrs
 
-        raise serializers.ValidationError({"message_type": "Invalid message_type."})
+        raise serializers.ValidationError({"message_type": _("Invalid message_type.")})
 
     def to_representation(self, instance: Message) -> dict:
         self.fields["sender"] = UserThinSerializer(read_only=True)

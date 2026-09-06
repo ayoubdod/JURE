@@ -2,6 +2,7 @@
 import logging
 
 from django.db.models import Count
+from django.utils.translation import gettext as _
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import permissions, status, viewsets
 from rest_framework.exceptions import PermissionDenied, ValidationError
@@ -90,7 +91,7 @@ class CaseViewSet(CloseCaseMixin, ConsultationConvertMixin, ConsultationWorkflow
         cab = get_user_cabinet(user)
         if not cab:
             logger.warning("Case create denied: user %s has no cabinet", user.id)
-            raise PermissionDenied("User has no cabinet.")
+            raise PermissionDenied(_("User has no cabinet."))
 
         assignee_id = self.request.data.get("assigned_to_id") or self.request.data.get("assigned_to")
         if assignee_id:
@@ -105,7 +106,7 @@ class CaseViewSet(CloseCaseMixin, ConsultationConvertMixin, ConsultationWorkflow
             else:
                 if get_user_cabinet(assignee) != cab:
                     raise ValidationError(
-                        {"assigned_to": "Cannot assign case to user from different cabinet."}
+                        {"assigned_to": _("Cannot assign case to user from different cabinet.")}
                     )
         else:
             assignee = user
@@ -130,7 +131,7 @@ class CaseViewSet(CloseCaseMixin, ConsultationConvertMixin, ConsultationWorkflow
         user = self.request.user
         cab = get_user_cabinet(user)
         if not cab:
-            raise PermissionDenied("User has no cabinet.")
+            raise PermissionDenied(_("User has no cabinet."))
         serializer.save(updated_by=user)
 
     def list(self, request, *args, **kwargs):
