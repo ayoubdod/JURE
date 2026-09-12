@@ -21,7 +21,7 @@ const termsFr = {
       subtitle:
         "Ces conditions régissent votre accès et votre utilisation de JURE. En utilisant le service, vous les acceptez.",
       ctaPrimary: "Nous contacter",
-      ctaSecondary: "Voir la démo",
+      ctaSecondary: "Explorer les fonctionnalités",
       lastUpdated: "Dernière mise à jour",
     },
     sections: {
@@ -125,7 +125,7 @@ const STRINGS: Record<Lang, TermsCopy> = {
       subtitle:
         "These Terms govern your access to and use of JURE. By using the service, you agree to them.",
       ctaPrimary: "Contact us",
-      ctaSecondary: "View demo",
+      ctaSecondary: "Explore features",
       lastUpdated: "Last updated",
     },
     sections: {
@@ -224,7 +224,7 @@ const STRINGS: Record<Lang, TermsCopy> = {
       subtitle:
         "تحكم هذه الشروط وصولك إلى JURE واستخدامك له. باستخدامك للخدمة فأنت توافق عليها.",
       ctaPrimary: "تواصل معنا",
-      ctaSecondary: "شاهد العرض",
+      ctaSecondary: "استكشف الميزات",
       lastUpdated: "آخر تحديث",
     },
     sections: {
@@ -262,12 +262,12 @@ const STRINGS: Record<Lang, TermsCopy> = {
       data: {
         title: "البيانات والخصوصية",
         text:
-          "نُعالج البيانات طبقًا لسياسة الخصوصية والقوانين المعمول بها.",
+          "نعالج البيانات طبقا لسياسة الخصوصية والقوانين المعمول بها.",
       },
       ai: {
         title: "ميزات الذكاء الاصطناعي",
         text:
-          "يجب مراجعة مخرجات الذكاء الاصطناعي من متخصص. تظل مسؤولًا عن القرارات.",
+          "يجب مراجعة مخرجات الذكاء الاصطناعي من متخصص. تظل مسؤولا عن القرارات.",
       },
       ip: {
         title: "الملكية الفكرية",
@@ -277,17 +277,17 @@ const STRINGS: Record<Lang, TermsCopy> = {
       warranty: {
         title: "الضمانات",
         text:
-          "تُقدَّم الخدمة «كما هي». نخلي المسؤولية عن الضمانات إلا حيث يقتضي القانون.",
+          "تقدم الخدمة «كما هي». نخلي المسؤولية عن الضمانات إلا حيث يقتضي القانون.",
       },
       liability: {
         title: "تحديد المسؤولية",
         text:
-          "في الحدود المسموح بها، تُحدَّد مسؤوليتنا الإجمالية بالمبالغ المدفوعة خلال 12 شهرًا السابقة.",
+          "في الحدود المسموح بها، تحدد مسؤوليتنا الإجمالية بالمبالغ المدفوعة خلال 12 شهرا السابقة.",
       },
       indemnity: {
         title: "التعويض",
         text:
-          "تُعوض JURE عن المطالبات الناتجة عن استخدام مخالف للشروط.",
+          "تعوض JURE عن المطالبات الناتجة عن استخدام مخالف للشروط.",
       },
       term: {
         title: "المدة والإنهاء",
@@ -295,14 +295,14 @@ const STRINGS: Record<Lang, TermsCopy> = {
           "قد نوقف/ننهي عند المخالفة. يمكنك الإنهاء وفق خطتك.",
       },
       law: {
-        title: "القانون المُنظّم",
+        title: "القانون المنظم",
         text:
-          "يُخصّص (مثلاً القانون المغربي ومحاكم الدار البيضاء).",
+          "يخصص (مثلا القانون المغربي ومحاكم الدار البيضاء).",
       },
       changes: {
         title: "التغييرات",
         text:
-          "قد نُعدّل الشروط. تسري التعديلات اعتبارًا من نشرها.",
+          "قد نعدل الشروط. تسري التعديلات اعتبارا من نشرها.",
       },
       contact: {
         title: "التواصل",
@@ -378,7 +378,7 @@ const Terms: React.FC = () => {
             <Button onClick={() => go(path("contact"))} className="w-full sm:w-auto px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg landing-btn-primary">
               {t.hero.ctaPrimary} <ArrowRight className="ms-2 h-4 w-4 rtl:rotate-180" />
             </Button>
-            <Button variant="outline" onClick={() => go(path("demo"))} className="w-full sm:w-auto px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg border-[#A58CF4]/30">
+            <Button variant="outline" onClick={() => go(path("features"))} className="w-full sm:w-auto px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg border-[#A58CF4]/30">
               {t.hero.ctaSecondary}
             </Button>
           </div>

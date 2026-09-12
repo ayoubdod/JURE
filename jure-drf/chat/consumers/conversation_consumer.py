@@ -169,3 +169,6 @@ class ConversationConsumer(AsyncJsonWebsocketConsumer):
 
     async def conversation_updated(self, event):
         await self.send_json({"type": "conversation.updated", "payload": event["payload"]})
+
+    async def conversation_removed(self, event):
+        await self.send_json({"type": "conversation.removed", "payload": event["payload"]})

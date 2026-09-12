@@ -8,15 +8,33 @@ import { track, MarketingEvents } from "@/lib/analytics";
 type SitelinkListProps = {
   lang: MarketingLocale;
   label: string;
+  variant?: "panel" | "inline";
 };
 
 /**
  * Google-style sitelink rows: bold title, one-line snippet, chevron, dividers.
  * Links must stay crawlable (real <a href>) so they can also become SERP sitelinks.
  */
-const SitelinkList: React.FC<SitelinkListProps> = ({ lang, label }) => {
+const SitelinkList: React.FC<SitelinkListProps> = ({ lang, label, variant = "panel" }) => {
   const links = getSitelinks(lang);
 
+  if (variant === "inline") {
+    return (
+      <nav aria-label={label} className="landing-sitelink-row">
+        {links.map((link) => (
+          <Link
+            key={link.key}
+            to={link.href}
+            onClick={() =>
+              track(MarketingEvents.SitelinkClick, { key: link.key, source: "home", lang })
+            }
+          >
+            {link.name}
+          </Link>
+        ))}
+      </nav>
+    );
+  }
   return (
     <nav
       aria-label={label}
@@ -36,7 +54,7 @@ const SitelinkList: React.FC<SitelinkListProps> = ({ lang, label }) => {
           }`}
         >
           <div className="min-w-0 flex-1">
-            <div className="text-[15px] font-semibold leading-snug text-[#64499D] dark:text-white group-hover:text-[#A58CF4] transition-colors">
+            <div className="text-[15px] font-semibold leading-snug text-[var(--jure-purple)] dark:text-white group-hover:text-[var(--jure-blue)] transition-colors">
               {link.name}
             </div>
             <p className="mt-0.5 truncate text-[13px] leading-snug text-neutral-500 dark:text-[#9aa0a6]">

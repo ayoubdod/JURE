@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useCallback, useEffect, useState } from 'react';
-import { ChevronRight, Mail, Users, Copy, Phone, Pin, FileText, ImageIcon, Play, Shield } from 'lucide-react';
+import { ChevronRight, Mail, Users, Copy, Phone, Pin, FileText, ImageIcon, Play, Settings2, Shield, UserPlus } from 'lucide-react';
 import GroupChatIcon from '@/components/chat/GroupChatIcon';
 import UserAvatar, { getPersonImage, PresenceDot } from '@/components/common/UserAvatar';
 import { Button } from '@/components/ui/button';
@@ -20,7 +20,7 @@ import { getCountdownDays, getCountdownStyle } from '@/utils/caseCardHelpers';
 import { isAxiosError } from 'axios';
 import { getMessageType } from '@/components/chat/SharedMessageCard';
 import LinkedMatterCard, { type LinkedMatterTab } from '@/components/chat/LinkedMatterCard';
-import { attachmentFileName, attachmentHref, getMemberPerson, isDocumentAttachment, isImageOrVideoAttachment } from '@/components/chat/conversationUtils';
+import { attachmentFileName, attachmentHref, getMemberPerson, isDocumentAttachment, isImageOrVideoAttachment, activeMemberships } from '@/components/chat/conversationUtils';
 import { useAppTranslation, intlLocale } from '@/i18n';
 import { isOnlineUserId, personPresenceId } from '@/lib/presence';
 import { useOnlineIds } from '@/hooks/useOnlinePresence';
@@ -46,6 +46,7 @@ interface ContextPanelProps {
   conversationFiles?: API.MessageAttachment[];
   variant?: 'inline' | 'overlay';
   hideToggle?: boolean;
+  onOpenGroupSettings?: (conversation: API.Conversation) => void;
 }
 
 type MainTab = 'contact' | 'tasks' | 'availability';
@@ -157,6 +158,7 @@ const ContextPanel: React.FC<ContextPanelProps> = ({
   conversationFiles = [],
   variant = 'inline',
   hideToggle = false,
+  onOpenGroupSettings,
 }) => {
   const { t, tf, lang, enumLabel } = useAppTranslation();
   const currentUser = useUserStore?.getState?.()?.user;
@@ -478,13 +480,34 @@ const ContextPanel: React.FC<ContextPanelProps> = ({
           {filesSection}
 
           <div>
-            <p className="mb-1.5 flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-              <Users className="h-3 w-3" />
-              {t.conversations.participants}
-            </p>
+            <div className="mb-1.5 flex items-center justify-between gap-2">
+              <p className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                <Users className="h-3 w-3" />
+                {t.conversations.participants}
+              </p>
+              {onOpenGroupSettings ? (
+                <div className="flex items-center gap-1">
+                  <button
+                    type="button"
+                    className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-semibold text-[#64499D] hover:bg-[#64499D]/10"
+                    onClick={() => onOpenGroupSettings(conversation)}
+                  >
+                    <UserPlus className="h-3 w-3" />
+                    {t.conversations.addMembersMenu}
+                  </button>
+                  <button
+                    type="button"
+                    className="inline-flex h-6 w-6 items-center justify-center rounded-md text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"
+                    aria-label={t.conversations.groupSettingsMenu}
+                    onClick={() => onOpenGroupSettings(conversation)}
+                  >
+                    <Settings2 className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              ) : null}
+            </div>
             <ul className="space-y-2">
-              {(conversation.memberships ?? [])
-                .filter((m) => !m.archived)
+              {activeMemberships(conversation)
                 .map((m) => {
                   const p = getMemberPerson(m) as API.User | undefined;
                   if (!p) return null;

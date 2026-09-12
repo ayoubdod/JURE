@@ -2,9 +2,8 @@ import type { MarketingLocale } from "../site";
 import type { FaqEntry } from "../structuredData";
 
 /**
- * Homepage copy — EN/FR/AR. Every claim maps to a shipped capability
- * (see the capability inventory). AI is framed as early access with
- * human review; nothing invented.
+ * Homepage copy — EN/FR/AR. Every claim maps to a shipped capability.
+ * AI is framed as early access with human review; nothing invented.
  */
 
 export interface HomeContent {
@@ -12,49 +11,54 @@ export interface HomeContent {
     eyebrow: string;
     h1a: string;
     h1b: string;
-    verbs: string;
     subtitle: string;
     ctaPrimary: string;
     ctaSecondary: string;
     ctaPricing: string;
-    trustChips: string[];
     imageAlt: string;
   };
   sitelinks: {
     title: string;
   };
-  problem: {
-    title: string;
-    body1: string;
-    body2: string;
-    fragments: string[];
-    convergenceTitle: string;
-    convergenceSub: string;
+  editorial: {
+    titleA: string;
+    titleB: string;
+    cards: Array<{ index: string; title: string; body: string }>;
   };
-  pillars: {
+  metrics: {
     title: string;
-    subtitle: string;
-    matter: { title: string; body: string; link: string };
-    ai: { title: string; badge: string; body: string; disclaimer: string; link: string };
-    documents: { title: string; body: string; link: string };
-    collaboration: { title: string; body: string; link: string };
+    items: Array<{
+      index: string;
+      kicker: string;
+      headline: string;
+      body: string;
+    }>;
   };
-  workflows: {
-    title: string;
-    subtitle: string;
-    docToMatter: { title: string; steps: string[] };
-    questionToResearch: { title: string; steps: string[]; note: string };
-  };
-  showcase: {
+  features: {
     eyebrow: string;
-    title: string;
+    headline: string;
     body: string;
+    close: string;
+    closeCta: string;
+    finaleTitle: string;
+    finaleBody: string;
+    cases: { category: string; title: string; body: string; link: string };
+    clients: { category: string; title: string; body: string; link: string };
+    calendar: { category: string; title: string; body: string; link: string };
+    documents: { category: string; title: string; body: string; link: string };
+    team: { category: string; title: string; body: string; link: string };
+    tasks: { category: string; title: string; body: string };
+    finance: { category: string; title: string; body: string };
+    juriaAi: { category: string; title: string; body: string };
+    knowledge: { category: string; title: string; body: string };
   };
-  trust: {
-    title: string;
-    subtitle: string;
-    stats: Array<{ value: number; suffix: string; label: string }>;
-    logoLabels: string[];
+  juria: {
+    badge: string;
+    titleA: string;
+    titleB: string;
+    body: string;
+    disclaimer: string;
+    link: string;
   };
   security: {
     title: string;
@@ -62,32 +66,26 @@ export interface HomeContent {
     items: string[];
     cta: string;
   };
-  audiences: {
-    title: string;
-    firms: { title: string; body: string };
-    departments: { title: string; body: string };
-    lawyers: { title: string; body: string };
-  };
   floats: {
-    notification: string;
-    deadline: string;
-    caseStatus: string;
-    client: string;
-    document: string;
-    aiSuggestion: string;
-    calendar: string;
-  };
-  insights: {
-    title: string;
-    subtitle: string;
-    readMore: string;
-    viewAll: string;
+    activeCases: string;
+    consultations: string;
+    documents: string;
+    juriaReady: string;
+    teamOnline: string;
+    clientMeta: string;
+    clientName: string;
+    nextConsult: string;
   };
   faq: {
+    eyebrow: string;
     title: string;
+    lead: string;
+    ctaPrompt: string;
+    cta: string;
     entries: FaqEntry[];
   };
   finalCta: {
+    kicker: string;
     title: string;
     body: string;
     primary: string;
@@ -98,74 +96,135 @@ export interface HomeContent {
 
 const en: HomeContent = {
   hero: {
-    eyebrow: "JURE · LegalTech Platform",
-    h1a: "The LegalTech Platform",
-    h1b: "for the Modern Legal Team",
-    verbs: "AI-powered legal work. Case management. Research. Documents. Collaboration. Security.",
+    eyebrow: "The operating system for modern law firms",
+    h1a: "Run your law firm.",
+    h1b: "Smarter.",
     subtitle:
-      "JURE is a LegalTech platform for law firms and legal teams — combining AI-powered legal research, matter management, document workflows and secure collaboration in one workspace. Built for modern practice across Morocco, MENA and Africa.",
-    ctaPrimary: "See JURE in action",
-    ctaSecondary: "Explore the platform",
+      "JURE brings cases, clients, documents, team collaboration and AI-powered legal intelligence into one workspace.",
+    ctaPrimary: "Get Started",
+    ctaSecondary: "Explore JURE",
     ctaPricing: "View pricing",
-    trustChips: [
-      "AI-assisted, human-in-the-loop",
-      "Secure by design",
-      "Built for legal teams",
-      "FR · EN · AR",
-    ],
-    imageAlt: "JURE legal workspace shown on a laptop",
+    imageAlt: "JURE workspace — cases, calendar, documents and JURIA in one interface",
   },
   sitelinks: {
     title: "Explore JURE",
   },
-  problem: {
-    title: "Legal work is fragmented. Your tools shouldn't be.",
-    body1:
-      "A single matter lives across email threads, shared drives, spreadsheets, chat apps and paper files. Every switch between tools loses context, duplicates work and hides deadlines.",
-    body2:
-      "Legal teams shouldn't need five disconnected tools to manage one matter.",
-    fragments: ["Research", "Documents", "Matter", "Tasks", "Knowledge", "Collaboration"],
-    convergenceTitle: "One legal workspace.",
-    convergenceSub: "Everything a matter needs, connected in one place.",
+  editorial: {
+    titleA: "Everything your firm needs.",
+    titleB: "One intelligent workspace.",
+    cards: [
+      {
+        index: "01",
+        title: "Manage",
+        body: "Cases, clients and consultations live in one place — with the structure each matter type actually needs.",
+      },
+      {
+        index: "02",
+        title: "Collaborate",
+        body: "Connect lawyers, assistants and teams around every matter, with messaging, files and calls in context.",
+      },
+      {
+        index: "03",
+        title: "Automate",
+        body: "Cut repetitive administrative work: deadlines, documents, assignments and follow-ups stay attached to the file.",
+      },
+      {
+        index: "04",
+        title: "Think with JURIA",
+        body: "Use AI-powered legal intelligence on the matter in front of you — while lawyers stay in control of every decision.",
+      },
+    ],
   },
-  pillars: {
-    title: "What you can do with JURE",
-    subtitle: "The operational and intellectual work of a legal team, in one platform.",
-    matter: {
-      title: "Matter management",
-      body: "Every case connects its client, documents, tasks, deadlines and team. Litigation, consultation and administrative matters each carry their own structure — with a shared calendar so nothing slips.",
+  metrics: {
+    title: "Built for modern legal teams",
+    items: [
+      {
+        index: "01",
+        kicker: "One workspace",
+        headline: "Run your entire firm from one place.",
+        body: "Manage matters, clients, documents, tasks, deadlines, collaboration, and billing without switching between disconnected tools.",
+      },
+      {
+        index: "02",
+        kicker: "Built for legal practice",
+        headline: "Work naturally across French, English, and Arabic.",
+        body: "JURE is designed for multilingual legal teams operating across Morocco, MENA, and international markets.",
+      },
+      {
+        index: "03",
+        kicker: "AI with lawyers in control",
+        headline: "AI assists. Lawyers decide.",
+        body: "Every AI-generated output is designed to remain subject to professional review before it is relied upon.",
+      },
+    ],
+  },
+  features: {
+    eyebrow: "The workspace, in practice",
+    headline: "A calm interface for the operational and intellectual work of law.",
+    body: "JURE brings the daily work of a law firm into one connected workspace — from the first client interaction to the matter, documents, deadlines, team and final outcome.",
+    close: "Everything connected. Intelligence when you need it.",
+    closeCta: "Explore JURE",
+    finaleTitle: "One workspace. One connected system.",
+    finaleBody:
+      "From the first client interaction to the final outcome, the work stays connected.",
+    cases: {
+      category: "Case management",
+      title: "Every matter, connected.",
+      body: "Every matter connects its client, documents, tasks, deadlines and team. Litigation, consultation and administrative files each carry the structure they need.",
       link: "Explore case management",
     },
-    ai: {
-      title: "Legal AI, built responsibly",
-      badge: "Early access",
-      body: "Juria, JURE's AI legal assistant, helps with contract analysis, research-style questions and document drafting — inside the matter you're working on. Output is clearly marked as AI-generated and always subject to lawyer review.",
-      disclaimer: "AI assists. Lawyers decide.",
-      link: "Meet Juria",
+    clients: {
+      category: "Client management",
+      title: "Know the client behind every matter.",
+      body: "Keep company and individual clients alongside the matters they belong to — with contacts, history and open files available from one profile.",
+      link: "Explore client management",
+    },
+    calendar: {
+      category: "Consultations & calendar",
+      title: "A calendar built around legal work.",
+      body: "Hearings, consultations, tasks and firm events share one calendar, so nothing slips between inboxes, spreadsheets or disconnected tools.",
+      link: "Explore practice management",
     },
     documents: {
-      title: "Documents & knowledge",
-      body: "A secure library for the firm's documents: upload, categorize, tag, search and preview PDF and Word files without leaving the workspace — and attach them directly to matters.",
+      category: "Documents & legal knowledge",
+      title: "Your firm's knowledge, within reach.",
+      body: "Upload, categorize, tag, search and preview PDF and Word files without leaving the workspace — and attach them directly to matters.",
       link: "Explore document management",
     },
-    collaboration: {
-      title: "Collaboration",
-      body: "Real-time team messaging, group conversations, file sharing and voice or video calls — connected to your matters, so the discussion and the work stay together.",
+    team: {
+      category: "Team management",
+      title: "Keep the firm connected to the work.",
+      body: "Roles, presence and assignments stay visible. Messaging, group conversations and calls remain connected to the matters your team is working on.",
       link: "Explore the platform",
     },
+    tasks: {
+      category: "Tasks & deadlines",
+      title: "Turn legal work into clear next steps.",
+      body: "Assign work to the responsible lawyer, attach it to the matter, and keep due dates and status visible — so the next step is never lost in an inbox.",
+    },
+    finance: {
+      category: "Finance & billing",
+      title: "Keep the business of the firm visible.",
+      body: "Fees, invoices and payments stay attached to the matter, so the operational work of the file and the economics of the file remain in the same place.",
+    },
+    juriaAi: {
+      category: "Juria AI",
+      title: "AI, inside the legal workflow.",
+      body: "Ask questions about the matter in front of you. Juria answers from the documents on the file — clearly marked as AI-assisted, and always subject to lawyer review.",
+    },
+    knowledge: {
+      category: "Firm knowledge",
+      title: "One knowledge layer for the firm.",
+      body: "Matter files feed the firm's library. Search once, find what the firm already knows, and reuse it on the next file.",
+    },
   },
-  workflows: {
-    title: "How legal work flows through JURE",
-    subtitle: "Real workflows, not feature lists.",
-    docToMatter: {
-      title: "From document to matter",
-      steps: ["Upload document", "Attach to matter", "Create tasks", "Set deadline", "Assign team"],
-    },
-    questionToResearch: {
-      title: "From question to reviewed analysis",
-      steps: ["Legal question", "AI research mode", "Draft analysis", "Lawyer review", "Legal decision"],
-      note: "The lawyer review step is not optional — it's how JURE is designed.",
-    },
+  juria: {
+    badge: "Early access",
+    titleA: "Meet JURIA.",
+    titleB: "Your firm's intelligent legal assistant.",
+    body: "JURIA helps with contract analysis, research-style questions and drafting — inside the matter you're working on. Output is clearly marked as AI-generated and always subject to lawyer review.",
+    disclaimer: "AI assists. Lawyers decide.",
+    link: "Meet JURIA",
   },
   security: {
     title: "Built for confidential legal work.",
@@ -178,175 +237,216 @@ const en: HomeContent = {
     ],
     cta: "Explore security",
   },
-  audiences: {
-    title: "Who JURE is for",
-    firms: {
-      title: "Law firms",
-      body: "Manage matters, clients, documents, deadlines, teams and firm finance in one place — from solo practices to multi-lawyer cabinets.",
-    },
-    departments: {
-      title: "Corporate legal departments",
-      body: "Centralize legal requests, documents and knowledge; give the team shared visibility over workloads and deadlines.",
-    },
-    lawyers: {
-      title: "Lawyers",
-      body: "Research, analyze, draft and manage your work faster — with AI assistance that keeps you in control.",
-    },
-  },
-  insights: {
-    title: "JURE Insights",
-    subtitle: "Original analysis on LegalTech, legal AI and the future of legal work.",
-    readMore: "Read article",
-    viewAll: "View all insights",
+  floats: {
+    activeCases: "Active cases",
+    consultations: "Consultations today",
+    documents: "Pending review",
+    juriaReady: "Legal analysis ready",
+    teamOnline: "Members online",
+    clientMeta: "Company · 2 open matters",
+    clientName: "Atlas Textile SARL",
+    nextConsult: "Upcoming consultation",
   },
   faq: {
-    title: "Frequently asked questions",
+    eyebrow: "FAQ",
+    title: "Questions, answered.",
+    lead: "A few things law firms and legal teams often ask before getting started with JURE.",
+    ctaPrompt: "Still have questions?",
+    cta: "Talk to us",
     entries: [
       {
         question: "What is JURE?",
         answer:
-          "JURE is legal practice management software for modern legal teams — a LegalTech platform, not the Latin phrase de jure. Law firms use one secure workspace to manage matters, clients, documents, tasks, deadlines and collaboration, with Juria — JURE's AI legal assistant — available in early access.",
-      },
-      {
-        question: "What is a LegalTech platform?",
-        answer:
-          "A LegalTech platform unifies the operational work of legal teams (matters, tasks, deadlines, documents, collaboration) and the intellectual work (research, analysis, drafting, knowledge) in a single system, instead of spreading it across disconnected tools.",
+          "JURE is a legal workspace designed for law firms and legal teams. It brings matters, clients, documents, tasks, deadlines, calendar, team collaboration, finance and AI-assisted legal work into one connected environment.",
       },
       {
         question: "Who is JURE designed for?",
         answer:
-          "Law firms of all sizes, corporate legal departments, solo lawyers and legal operations teams. The interface works in French, English and Arabic, including right-to-left layout.",
+          "JURE is built for law firms — from independent lawyers and small practices to larger firms — and for legal teams managing multiple matters, clients and collaborators.",
       },
       {
-        question: "Does JURE replace lawyers?",
+        question: "Can JURE manage different types of legal matters?",
         answer:
-          "No. JURE is built human-in-the-loop by design: AI output is clearly marked, and analysis, drafting suggestions and research always pass through lawyer review before any legal decision. AI augments legal professionals — it does not replace them.",
+          "Yes. JURE supports litigation, consultations and administrative matters, keeping the relevant client, documents, tasks, deadlines and team connected to each file.",
       },
       {
-        question: "How does JURE's legal AI work?",
+        question: "Can we manage our firm's documents and legal knowledge in JURE?",
         answer:
-          "Juria is JURE's AI legal assistant. It offers chat, contract analysis, research-style questions and document drafting, connected to the matter you're working on. It's currently in early access, and its output is always subject to human review.",
+          "Yes. Teams can upload, organize, categorize, tag, search and preview PDF and Word files, and attach them directly to matters and clients — so working knowledge stays in the same workspace.",
       },
       {
-        question: "How does JURE protect confidential legal information?",
+        question: "How does Juria, JURE's AI assistant, work?",
         answer:
-          "Each firm's data is isolated to its own workspace, access is controlled by roles and permissions, accounts require verified email sign-in, and traffic is encrypted in transit. Our security page transparently separates what's live today from what's on the roadmap.",
+          "Juria is JURE's AI legal assistant, available in early access. It assists with research-style questions, contract analysis and drafting inside the matter you are working on. Output is clearly marked as AI-generated and always subject to lawyer review.",
       },
       {
-        question: "Which languages does JURE support?",
+        question: "Is our firm's data secure?",
         answer:
-          "JURE works in French, English and Arabic, with full right-to-left support for Arabic — reflecting its roots in Morocco and multilingual legal markets.",
+          "Each firm's data is isolated to its own workspace. Access is controlled by roles and permissions, accounts require verified email sign-in, and traffic is encrypted in transit. Our security page separates what is live today from what is on the roadmap.",
       },
       {
-        question: "How is JURE different from traditional legal practice management software?",
+        question: "Can JURE support multiple lawyers and teams?",
         answer:
-          "Traditional practice management tools digitize administration. JURE is a LegalTech platform designed so matters, documents, knowledge, collaboration and AI assistance live in one workspace — keeping the intellectual work of law connected to the operational work of running it.",
+          "Yes. JURE supports team-based work with roles, assignments, messaging, calls and matter-level visibility, so everyone can see who is responsible for what.",
+      },
+      {
+        question: "Can JURE be adapted to our firm's workflow?",
+        answer:
+          "JURE is organized around how legal teams actually work. Matter types, roles, tasks, documents, deadlines and collaboration live in one workspace so the firm can run its operational rhythm without switching tools.",
+      },
+      {
+        question: "Does JURE replace our lawyers or legal judgment?",
+        answer:
+          "No. JURE is a professional workspace. Its purpose is to help legal professionals organize information, reduce administrative friction and work more efficiently — while keeping human judgment at the center.",
+      },
+      {
+        question: "How can we get started?",
+        answer:
+          "Start with a conversation about your firm's workflow and requirements. We can help you understand how JURE can fit into your practice.",
       },
     ],
-  },
-  showcase: {
-    eyebrow: "Product",
-    title: "One workspace. Full visibility.",
-    body: "See every matter, deadline and document in a single, calm interface — designed for how lawyers actually work.",
-  },
-  trust: {
-    title: "Built for firms that take trust seriously",
-    subtitle: "Precision, confidentiality and clarity — from the first login.",
-    stats: [
-      { value: 3, suffix: "", label: "Languages · FR · EN · AR" },
-      { value: 1, suffix: "", label: "Workspace for the whole firm" },
-      { value: 100, suffix: "%", label: "Human review on AI output" },
-    ],
-    logoLabels: ["Law firms", "Legal departments", "Solo practitioners"],
-  },
-  floats: {
-    notification: "New task assigned",
-    deadline: "Hearing in 3 days",
-    caseStatus: "Case · Active",
-    client: "Atlas Textile SARL",
-    document: "Lease agreement.pdf",
-    aiSuggestion: "Juria · Clause review ready",
-    calendar: "Thu · Commercial Court",
   },
   finalCta: {
-    title: "Spend less time managing.\nMore time practicing law.",
-    body: "JURE brings matters, documents, deadlines and collaboration into one LegalTech workspace — so your team can focus on the work that matters.",
-    primary: "Start with JURE",
-    secondary: "See JURE in action",
+    kicker: "Built for modern firms",
+    title: "Your firm deserves a better workspace.",
+    body: "Bring your practice, your team and your legal intelligence together with JURE.",
+    primary: "Get Started",
+    secondary: "Contact us",
     tagline: "LegalTech for modern legal teams — built responsibly.",
   },
 };
 
 const fr: HomeContent = {
   hero: {
-    eyebrow: "JURE · Plateforme LegalTech",
-    h1a: "La plateforme LegalTech",
-    h1b: "pour l'équipe juridique moderne",
-    verbs: "Travail juridique assisté par IA. Gestion de dossiers. Recherche. Documents. Collaboration. Sécurité.",
+    eyebrow: "Le système d'exploitation des cabinets modernes",
+    h1a: "Pilotez votre cabinet.",
+    h1b: "Plus intelligemment.",
     subtitle:
-      "JURE est une plateforme LegalTech pour cabinets d'avocats et équipes juridiques — recherche juridique assistée par IA, gestion de dossiers, flux documentaires et collaboration sécurisée dans un seul espace. Conçue pour la pratique moderne au Maroc, au Moyen-Orient et en Afrique.",
-    ctaPrimary: "Voir JURE en action",
-    ctaSecondary: "Explorer la plateforme",
+      "JURE réunit dossiers, clients, documents, collaboration d'équipe et intelligence juridique assistée par IA dans un seul espace de travail.",
+    ctaPrimary: "Commencer",
+    ctaSecondary: "Explorer JURE",
     ctaPricing: "Voir les tarifs",
-    trustChips: [
-      "IA assistée, validation humaine",
-      "Sécurisé par conception",
-      "Conçu pour les équipes juridiques",
-      "FR · EN · AR",
-    ],
-    imageAlt: "L’espace de travail juridique JURE sur un ordinateur portable",
+    imageAlt: "Espace de travail JURE — dossiers, agenda, documents et JURIA dans une seule interface",
   },
   sitelinks: {
     title: "Explorer JURE",
   },
-  problem: {
-    title: "Le travail juridique est fragmenté. Vos outils ne devraient pas l'être.",
-    body1:
-      "Un même dossier vit dans des fils d'e-mails, des disques partagés, des tableurs, des messageries et des dossiers papier. Chaque changement d'outil fait perdre le contexte, duplique le travail et masque les échéances.",
-    body2:
-      "Une équipe juridique ne devrait pas avoir besoin de cinq outils déconnectés pour gérer un seul dossier.",
-    fragments: ["Recherche", "Documents", "Dossier", "Tâches", "Connaissances", "Collaboration"],
-    convergenceTitle: "Un seul espace de travail juridique.",
-    convergenceSub: "Tout ce dont un dossier a besoin, connecté au même endroit.",
+  editorial: {
+    titleA: "Tout ce dont votre cabinet a besoin.",
+    titleB: "Un seul espace intelligent.",
+    cards: [
+      {
+        index: "01",
+        title: "Piloter",
+        body: "Dossiers, clients et consultations au même endroit — avec la structure propre à chaque type de dossier.",
+      },
+      {
+        index: "02",
+        title: "Collaborer",
+        body: "Reliez avocats, assistants et équipes autour de chaque affaire, avec messagerie, fichiers et appels dans le contexte.",
+      },
+      {
+        index: "03",
+        title: "Automatiser",
+        body: "Réduisez le travail administratif répétitif : échéances, documents, assignations et relances restent attachés au dossier.",
+      },
+      {
+        index: "04",
+        title: "Penser avec JURIA",
+        body: "Utilisez l'intelligence juridique assistée par IA sur le dossier en cours — les avocats restent maîtres de chaque décision.",
+      },
+    ],
   },
-  pillars: {
-    title: "Ce que vous pouvez faire avec JURE",
-    subtitle: "Le travail opérationnel et intellectuel d'une équipe juridique, sur une seule plateforme.",
-    matter: {
-      title: "Gestion des dossiers",
-      body: "Chaque dossier relie son client, ses documents, ses tâches, ses échéances et son équipe. Contentieux, consultation et dossiers administratifs ont chacun leur structure — avec un agenda partagé pour ne rien laisser passer.",
+  metrics: {
+    title: "Conçu pour les équipes juridiques modernes",
+    items: [
+      {
+        index: "01",
+        kicker: "Un seul espace",
+        headline: "Pilotez l'ensemble du cabinet depuis un seul endroit.",
+        body: "Gérez dossiers, clients, documents, tâches, échéances, collaboration et facturation sans passer d'un outil à l'autre.",
+      },
+      {
+        index: "02",
+        kicker: "Conçu pour la pratique du droit",
+        headline: "Travaillez naturellement en français, en anglais et en arabe.",
+        body: "JURE est conçu pour les équipes juridiques plurilingues qui opèrent au Maroc, au Moyen-Orient et à l'international.",
+      },
+      {
+        index: "03",
+        kicker: "L'IA sous contrôle de l'avocat",
+        headline: "L'IA assiste. L'avocat décide.",
+        body: "Chaque production générée par l'IA est conçue pour rester soumise à une relecture professionnelle avant d'être utilisée.",
+      },
+    ],
+  },
+  features: {
+    eyebrow: "L'espace de travail, en pratique",
+    headline: "Une interface calme pour le travail opérationnel et intellectuel du droit.",
+    body: "JURE rassemble le travail quotidien d'un cabinet dans un seul espace connecté — du premier échange avec le client au dossier, aux documents, aux échéances, à l'équipe et à l'issue.",
+    close: "Tout est relié. L'intelligence, au moment où vous en avez besoin.",
+    closeCta: "Explorer JURE",
+    finaleTitle: "Un espace de travail. Un système connecté.",
+    finaleBody:
+      "Du premier échange avec le client jusqu'à l'issue, le travail reste relié.",
+    cases: {
+      category: "Gestion des dossiers",
+      title: "Chaque affaire, reliée.",
+      body: "Chaque affaire relie son client, ses documents, ses tâches, ses échéances et son équipe. Contentieux, consultation et dossiers administratifs ont chacun la structure dont ils ont besoin.",
       link: "Explorer la gestion de dossiers",
     },
-    ai: {
-      title: "IA juridique, conçue de manière responsable",
-      badge: "Accès anticipé",
-      body: "Juria, l'assistant IA juridique de JURE, aide à l'analyse de contrats, aux questions de recherche et à la rédaction de documents — au sein du dossier sur lequel vous travaillez. Les résultats sont clairement identifiés comme générés par IA et toujours soumis à la relecture de l'avocat.",
-      disclaimer: "L'IA assiste. Les avocats décident.",
-      link: "Découvrir Juria",
+    clients: {
+      category: "Gestion des clients",
+      title: "Connaître le client derrière chaque affaire.",
+      body: "Gardez sociétés et particuliers à côté des dossiers qui les concernent — contacts, historique et affaires ouvertes dans un seul profil.",
+      link: "Explorer la gestion des clients",
+    },
+    calendar: {
+      category: "Consultations et agenda",
+      title: "Un agenda conçu pour le travail juridique.",
+      body: "Audiences, consultations, tâches et événements du cabinet partagent un seul agenda, pour que rien ne se perde entre messageries, tableurs et outils déconnectés.",
+      link: "Explorer la gestion de cabinet",
     },
     documents: {
-      title: "Documents & connaissances",
-      body: "Une bibliothèque sécurisée pour les documents du cabinet : importez, catégorisez, taguez, recherchez et prévisualisez les fichiers PDF et Word sans quitter l'espace de travail — et rattachez-les directement aux dossiers.",
+      category: "Documents et connaissances",
+      title: "La connaissance du cabinet, à portée de main.",
+      body: "Importez, catégorisez, taguez, recherchez et prévisualisez les fichiers PDF et Word sans quitter l'espace de travail — et rattachez-les directement aux dossiers.",
       link: "Explorer la gestion documentaire",
     },
-    collaboration: {
-      title: "Collaboration",
-      body: "Messagerie d'équipe en temps réel, conversations de groupe, partage de fichiers et appels audio ou vidéo — connectés à vos dossiers, pour que la discussion et le travail restent ensemble.",
+    team: {
+      category: "Gestion d'équipe",
+      title: "Garder le cabinet relié au travail.",
+      body: "Rôles, présence et assignations restent visibles. Messagerie, conversations de groupe et appels restent liés aux dossiers sur lesquels l'équipe travaille.",
       link: "Explorer la plateforme",
     },
+    tasks: {
+      category: "Tâches et échéances",
+      title: "Transformer le travail juridique en prochaines étapes claires.",
+      body: "Assignez le travail à l'avocat responsable, rattachez-le au dossier, et gardez échéances et statut visibles — pour que la prochaine étape ne se perde jamais dans une messagerie.",
+    },
+    finance: {
+      category: "Finance et facturation",
+      title: "Garder visible l'activité économique du cabinet.",
+      body: "Honoraires, factures et paiements restent attachés au dossier, pour que le travail opérationnel du fichier et son économie restent au même endroit.",
+    },
+    juriaAi: {
+      category: "Juria IA",
+      title: "L'IA, dans le flux de travail juridique.",
+      body: "Posez des questions sur le dossier devant vous. Juria répond à partir des documents du fichier — clairement identifié comme assisté par IA, et toujours soumis à la relecture de l'avocat.",
+    },
+    knowledge: {
+      category: "Connaissance du cabinet",
+      title: "Une couche de connaissance pour le cabinet.",
+      body: "Les documents des dossiers alimentent la bibliothèque du cabinet. Cherchez une fois, retrouvez ce que le cabinet sait déjà, et réutilisez-le sur le prochain dossier.",
+    },
   },
-  workflows: {
-    title: "Comment le travail juridique circule dans JURE",
-    subtitle: "De vrais flux de travail, pas des listes de fonctionnalités.",
-    docToMatter: {
-      title: "Du document au dossier",
-      steps: ["Importer le document", "Rattacher au dossier", "Créer les tâches", "Fixer l'échéance", "Assigner l'équipe"],
-    },
-    questionToResearch: {
-      title: "De la question à l'analyse validée",
-      steps: ["Question juridique", "Mode recherche IA", "Projet d'analyse", "Relecture par l'avocat", "Décision juridique"],
-      note: "L'étape de relecture par l'avocat n'est pas optionnelle — c'est la conception même de JURE.",
-    },
+  juria: {
+    badge: "Accès anticipé",
+    titleA: "Découvrez JURIA.",
+    titleB: "L'assistant juridique intelligent de votre cabinet.",
+    body: "JURIA aide à l'analyse de contrats, aux questions de recherche et à la rédaction — au sein du dossier sur lequel vous travaillez. Les résultats sont clairement identifiés comme générés par IA et toujours soumis à la relecture de l'avocat.",
+    disclaimer: "L'IA assiste. Les avocats décident.",
+    link: "Découvrir JURIA",
   },
   security: {
     title: "Conçu pour le travail juridique confidentiel.",
@@ -359,174 +459,215 @@ const fr: HomeContent = {
     ],
     cta: "Explorer la sécurité",
   },
-  audiences: {
-    title: "À qui s'adresse JURE",
-    firms: {
-      title: "Cabinets d'avocats",
-      body: "Gérez dossiers, clients, documents, échéances, équipes et finance du cabinet au même endroit — de l'avocat indépendant au cabinet pluridisciplinaire.",
-    },
-    departments: {
-      title: "Directions juridiques",
-      body: "Centralisez les demandes juridiques, les documents et les connaissances ; donnez à l'équipe une visibilité partagée sur les charges et les échéances.",
-    },
-    lawyers: {
-      title: "Avocats",
-      body: "Recherchez, analysez, rédigez et gérez votre travail plus vite — avec une assistance IA qui vous laisse le contrôle.",
-    },
-  },
-  insights: {
-    title: "JURE Insights",
-    subtitle: "Analyses originales sur la LegalTech, l'IA juridique et l'avenir du travail juridique.",
-    readMore: "Lire l'article",
-    viewAll: "Voir tous les articles",
+  floats: {
+    activeCases: "Dossiers actifs",
+    consultations: "Consultations aujourd'hui",
+    documents: "En relecture",
+    juriaReady: "Analyse juridique prête",
+    teamOnline: "Membres en ligne",
+    clientMeta: "Société · 2 dossiers ouverts",
+    clientName: "Atlas Textile SARL",
+    nextConsult: "Consultation à venir",
   },
   faq: {
-    title: "Questions fréquentes",
+    eyebrow: "FAQ",
+    title: "Des questions, des réponses.",
+    lead: "Ce que les cabinets et les équipes juridiques nous demandent le plus souvent avant de commencer avec JURE.",
+    ctaPrompt: "Encore une question ?",
+    cta: "Parler à l'équipe",
     entries: [
       {
         question: "Qu'est-ce que JURE ?",
         answer:
-          "JURE est un logiciel de gestion de cabinet pour les équipes juridiques modernes — une plateforme LegalTech, à ne pas confondre avec l'expression latine de jure. Les cabinets gèrent dossiers, clients, documents, tâches, échéances et collaboration dans un seul espace sécurisé, avec Juria — l'assistant IA juridique de JURE — en accès anticipé.",
-      },
-      {
-        question: "Qu'est-ce qu'une plateforme LegalTech ?",
-        answer:
-          "Une plateforme LegalTech unifie le travail opérationnel des équipes juridiques (dossiers, tâches, échéances, documents, collaboration) et le travail intellectuel (recherche, analyse, rédaction, connaissances) dans un seul système, au lieu de le disperser entre des outils déconnectés.",
+          "JURE est un espace de travail juridique conçu pour les cabinets et les équipes juridiques. Il réunit dossiers, clients, documents, tâches, échéances, agenda, collaboration d'équipe, finance et travail juridique assisté par IA dans un même environnement connecté.",
       },
       {
         question: "À qui s'adresse JURE ?",
         answer:
-          "Aux cabinets d'avocats de toutes tailles, aux directions juridiques d'entreprise, aux avocats indépendants et aux équipes de legal operations. L'interface fonctionne en français, anglais et arabe, y compris en écriture de droite à gauche.",
+          "JURE est conçu pour les cabinets d'avocats — de l'avocat indépendant au cabinet plus large — et pour les équipes juridiques qui gèrent plusieurs dossiers, clients et collaborateurs.",
       },
       {
-        question: "JURE remplace-t-il les avocats ?",
+        question: "JURE peut-il gérer différents types de dossiers ?",
         answer:
-          "Non. JURE est conçu avec validation humaine par principe : les résultats d'IA sont clairement identifiés, et l'analyse, les suggestions de rédaction et la recherche passent toujours par la relecture d'un avocat avant toute décision juridique. L'IA augmente les professionnels du droit — elle ne les remplace pas.",
+          "Oui. JURE prend en charge le contentieux, les consultations et les dossiers administratifs, en gardant le client, les documents, les tâches, les échéances et l'équipe reliés à chaque affaire.",
       },
       {
-        question: "Comment fonctionne l'IA juridique de JURE ?",
+        question: "Pouvons-nous gérer les documents et la connaissance du cabinet dans JURE ?",
         answer:
-          "Juria est l'assistant IA juridique de JURE. Il propose du chat, de l'analyse de contrats, des questions de recherche et de la rédaction de documents, connectés au dossier sur lequel vous travaillez. Il est actuellement en accès anticipé et ses résultats sont toujours soumis à une relecture humaine.",
+          "Oui. Les équipes peuvent importer, organiser, catégoriser, taguer, rechercher et prévisualiser des fichiers PDF et Word, et les rattacher directement aux dossiers et aux clients — pour que la connaissance de travail reste dans le même espace.",
       },
       {
-        question: "Comment JURE protège-t-il les informations juridiques confidentielles ?",
+        question: "Comment fonctionne Juria, l'assistant IA de JURE ?",
         answer:
-          "Les données de chaque cabinet sont isolées dans leur propre espace, l'accès est contrôlé par rôles et permissions, les comptes exigent une connexion avec e-mail vérifié, et le trafic est chiffré en transit. Notre page sécurité distingue de manière transparente ce qui est en production de ce qui est sur la feuille de route.",
+          "Juria est l'assistant juridique IA de JURE, en accès anticipé. Il aide aux questions de recherche, à l'analyse de contrats et à la rédaction, dans le dossier sur lequel vous travaillez. Les résultats sont clairement identifiés comme générés par IA et toujours soumis à la relecture de l'avocat.",
       },
       {
-        question: "Quelles langues JURE prend-il en charge ?",
+        question: "Les données de notre cabinet sont-elles protégées ?",
         answer:
-          "JURE fonctionne en français, anglais et arabe, avec prise en charge complète de l'écriture de droite à gauche pour l'arabe — reflet de ses racines au Maroc et des marchés juridiques multilingues.",
+          "Les données de chaque cabinet sont isolées dans leur propre espace. L'accès est contrôlé par rôles et permissions, les comptes exigent une connexion avec e-mail vérifié, et le trafic est chiffré en transit. Notre page sécurité distingue ce qui est en production de ce qui est sur la feuille de route.",
       },
       {
-        question: "En quoi JURE diffère-t-il d'un logiciel de gestion de cabinet traditionnel ?",
+        question: "JURE peut-il accueillir plusieurs avocats et équipes ?",
         answer:
-          "Les outils traditionnels numérisent l'administration. JURE est une plateforme LegalTech conçue pour que dossiers, documents, connaissances, collaboration et assistance IA vivent dans un même espace de travail — pour que le travail intellectuel du droit reste connecté au travail opérationnel du cabinet.",
+          "Oui. JURE prend en charge le travail d'équipe avec des rôles, des assignations, la messagerie, les appels et une visibilité par dossier, pour que chacun sache qui est responsable de quoi.",
+      },
+      {
+        question: "JURE peut-il s'adapter au fonctionnement de notre cabinet ?",
+        answer:
+          "JURE est organisé autour de la façon dont les équipes juridiques travaillent réellement. Types de dossiers, rôles, tâches, documents, échéances et collaboration vivent dans un seul espace, pour que le cabinet tienne son rythme opérationnel sans changer d'outil.",
+      },
+      {
+        question: "JURE remplace-t-il les avocats ou le jugement juridique ?",
+        answer:
+          "Non. JURE est un espace de travail professionnel. Son rôle est d'aider les juristes à organiser l'information, à réduire la friction administrative et à travailler plus efficacement — tout en gardant le jugement humain au centre.",
+      },
+      {
+        question: "Comment commencer ?",
+        answer:
+          "Commencez par un échange sur le fonctionnement et les besoins de votre cabinet. Nous vous aiderons à voir comment JURE peut s'intégrer à votre pratique.",
       },
     ],
-  },
-  showcase: {
-    eyebrow: "Produit",
-    title: "Un seul espace. Une vision claire.",
-    body: "Retrouvez chaque dossier, échéance et document dans une interface calme — conçue pour le quotidien des avocats.",
-  },
-  trust: {
-    title: "Conçu pour les cabinets qui prennent la confiance au sérieux",
-    subtitle: "Précision, confidentialité et clarté — dès la première connexion.",
-    stats: [
-      { value: 3, suffix: "", label: "Langues · FR · EN · AR" },
-      { value: 1, suffix: "", label: "Espace de travail pour tout le cabinet" },
-      { value: 100, suffix: "%", label: "Relecture humaine sur l'IA" },
-    ],
-    logoLabels: ["Cabinets d'avocats", "Directions juridiques", "Indépendants"],
-  },
-  floats: {
-    notification: "Nouvelle tâche assignée",
-    deadline: "Audience dans 3 jours",
-    caseStatus: "Dossier · Actif",
-    client: "Atlas Textile SARL",
-    document: "Contrat de bail.pdf",
-    aiSuggestion: "Juria · Analyse prête",
-    calendar: "Jeu · Tribunal de commerce",
   },
   finalCta: {
-    title: "Passez moins de temps à gérer.\nPlus de temps à pratiquer le droit.",
-    body: "JURE réunit dossiers, documents, échéances et collaboration dans un seul espace LegalTech — pour que votre équipe se concentre sur l'essentiel.",
-    primary: "Commencer avec JURE",
-    secondary: "Voir JURE en action",
+    kicker: "Pensé pour les cabinets modernes",
+    title: "Votre cabinet mérite un meilleur espace de travail.",
+    body: "Réunissez votre pratique, votre équipe et votre intelligence juridique avec JURE.",
+    primary: "Commencer",
+    secondary: "Nous contacter",
     tagline: "La LegalTech pour les équipes juridiques modernes — construite de manière responsable.",
   },
 };
 
 const ar: HomeContent = {
   hero: {
-    eyebrow: "JURE · منصة LegalTech",
-    h1a: "منصة LegalTech",
-    h1b: "للفريق القانوني الحديث",
-    verbs: "عمل قانوني بالذكاء الاصطناعي. إدارة القضايا. البحث. المستندات. التعاون. الأمان.",
+    eyebrow: "نظام التشغيل لمكاتب المحاماة الحديثة",
+    h1a: "أدر مكتبك.",
+    h1b: "بذكاء.",
     subtitle:
-      "JURE منصة LegalTech لمكاتب المحاماة والفرق القانونية — تجمع البحث القانوني المدعوم بالذكاء الاصطناعي وإدارة الملفات وسير عمل المستندات والتعاون الآمن في مساحة واحدة. صُممت للممارسة الحديثة في المغرب ومنطقة الشرق الأوسط وشمال أفريقيا وأفريقيا.",
-    ctaPrimary: "شاهد JURE عمليًا",
-    ctaSecondary: "استكشف المنصة",
+      "تجمع JURE القضايا والعملاء والمستندات وتعاون الفريق والذكاء القانوني المدعوم بالذكاء الاصطناعي في مساحة عمل واحدة.",
+    ctaPrimary: "ابدأ الآن",
+    ctaSecondary: "استكشف JURE",
     ctaPricing: "عرض الأسعار",
-    trustChips: [
-      "ذكاء اصطناعي بمراجعة بشرية",
-      "آمن بالتصميم",
-      "مصمم للفرق القانونية",
-      "FR · EN · AR",
-    ],
-    imageAlt: "مساحة عمل JURE القانونية على جهاز محمول",
+    imageAlt: "مساحة عمل JURE — الملفات والمفكرة والمستندات وجوريا في واجهة واحدة",
   },
   sitelinks: {
     title: "استكشف JURE",
   },
-  problem: {
-    title: "العمل القانوني مشتت. أدواتك لا ينبغي أن تكون كذلك.",
-    body1:
-      "الملف الواحد يعيش بين سلاسل البريد الإلكتروني والأقراص المشتركة وجداول البيانات وتطبيقات المراسلة والملفات الورقية. كل تنقل بين الأدوات يفقد السياق ويكرر العمل ويخفي المواعيد النهائية.",
-    body2: "لا ينبغي أن تحتاج الفرق القانونية إلى خمس أدوات منفصلة لإدارة ملف واحد.",
-    fragments: ["البحث", "المستندات", "الملف", "المهام", "المعرفة", "التعاون"],
-    convergenceTitle: "مساحة عمل قانونية واحدة.",
-    convergenceSub: "كل ما يحتاجه الملف، متصل في مكان واحد.",
+  editorial: {
+    titleA: "كل ما يحتاجه مكتبك.",
+    titleB: "مساحة عمل ذكية واحدة.",
+    cards: [
+      {
+        index: "01",
+        title: "أدر",
+        body: "الملفات والعملاء والاستشارات في مكان واحد — بهيكل يليق بكل نوع من القضايا.",
+      },
+      {
+        index: "02",
+        title: "تعاون",
+        body: "اربط المحامين والمساعدين والفرق حول كل ملف، مع المراسلة والملفات والمكالمات في سياق العمل.",
+      },
+      {
+        index: "03",
+        title: "أتمت",
+        body: "قلل العمل الإداري المتكرر: المواعيد والمستندات والتعيينات والمتابعات تبقى مرتبطة بالملف.",
+      },
+      {
+        index: "04",
+        title: "فكر مع جوريا",
+        body: "استخدم الذكاء القانوني المدعوم بالذكاء الاصطناعي على الملف أمامك — والمحامون يبقون مسيطرين على كل قرار.",
+      },
+    ],
   },
-  pillars: {
-    title: "ماذا يمكنك أن تفعل مع JURE",
-    subtitle: "العمل التشغيلي والفكري للفريق القانوني، في منصة واحدة.",
-    matter: {
-      title: "إدارة الملفات",
-      body: "كل قضية تربط موكلها ومستنداتها ومهامها ومواعيدها وفريقها. النزاعات والاستشارات والملفات الإدارية لكل منها هيكلها الخاص — مع مفكرة مشتركة حتى لا يفوت شيء.",
+  metrics: {
+    title: "مبنية للفرق القانونية الحديثة",
+    items: [
+      {
+        index: "01",
+        kicker: "مساحة عمل واحدة",
+        headline: "أدر مكتبك بالكامل من مكان واحد.",
+        body: "أدر القضايا والعملاء والمستندات والمهام والمواعيد والتعاون والفواتير دون التنقل بين أدوات منفصلة.",
+      },
+      {
+        index: "02",
+        kicker: "مبنية لممارسة القانون",
+        headline: "اعمل بسلاسة بالفرنسية والإنجليزية والعربية.",
+        body: "صممت JURE للفرق القانونية متعددة اللغات التي تعمل في المغرب والشرق الأوسط والأسواق الدولية.",
+      },
+      {
+        index: "03",
+        kicker: "ذكاء اصطناعي تحت سيطرة المحامي",
+        headline: "الذكاء الاصطناعي يساعد. المحامي يقرر.",
+        body: "كل مخرجات الذكاء الاصطناعي مصممة لتبقى خاضعة للمراجعة المهنية قبل الاعتماد عليها.",
+      },
+    ],
+  },
+  features: {
+    eyebrow: "مساحة العمل، عمليا",
+    headline: "واجهة هادئة للعمل التشغيلي والفكري في القانون.",
+    body: "تجمع JURE العمل اليومي لمكتب المحاماة في مساحة متصلة واحدة — من أول تواصل مع العميل إلى الملف والمستندات والمواعيد والفريق والنتيجة.",
+    close: "كل شيء متصل. والذكاء حين تحتاجونه.",
+    closeCta: "استكشف JURE",
+    finaleTitle: "مساحة عمل واحدة. نظام متصل واحد.",
+    finaleBody: "من أول تواصل مع العميل إلى النتيجة النهائية، يبقى العمل متصلا.",
+    cases: {
+      category: "إدارة القضايا",
+      title: "كل قضية، متصلة.",
+      body: "كل قضية تربط موكلها ومستنداتها ومهامها ومواعيدها وفريقها. النزاعات والاستشارات والملفات الإدارية لكل منها الهيكل الذي تحتاجه.",
       link: "استكشف إدارة القضايا",
     },
-    ai: {
-      title: "ذكاء اصطناعي قانوني، مبني بمسؤولية",
-      badge: "وصول مبكر",
-      body: "جوريا، مساعد الذكاء الاصطناعي القانوني من JURE، يساعد في تحليل العقود وأسئلة البحث وصياغة المستندات — داخل الملف الذي تعمل عليه. المخرجات موسومة بوضوح كنتاج ذكاء اصطناعي وتخضع دائمًا لمراجعة المحامي.",
-      disclaimer: "الذكاء الاصطناعي يساعد. والمحامون يقررون.",
-      link: "تعرّف على جوريا",
+    clients: {
+      category: "إدارة العملاء",
+      title: "اعرف العميل خلف كل قضية.",
+      body: "أبق الشركات والأفراد بجانب الملفات التي تخصهم — جهات الاتصال والسجل والملفات المفتوحة من ملف واحد.",
+      link: "استكشف إدارة العملاء",
+    },
+    calendar: {
+      category: "الاستشارات والمفكرة",
+      title: "مفكرة مبنية حول العمل القانوني.",
+      body: "الجلسات والاستشارات والمهام وأحداث المكتب تشترك في مفكرة واحدة، حتى لا يضيع شيء بين البريد والجداول والأدوات المنفصلة.",
+      link: "استكشف إدارة المكاتب",
     },
     documents: {
-      title: "المستندات والمعرفة",
-      body: "مكتبة آمنة لمستندات المكتب: ارفع وصنّف وضع الوسوم وابحث وعاين ملفات PDF وWord دون مغادرة مساحة العمل — واربطها مباشرة بالملفات.",
+      category: "المستندات والمعرفة القانونية",
+      title: "معرفة مكتبك، في متناول اليد.",
+      body: "ارفع وصنف وضع الوسوم وابحث وعاين ملفات PDF وWord دون مغادرة مساحة العمل — واربطها مباشرة بالملفات.",
       link: "استكشف إدارة المستندات",
     },
-    collaboration: {
-      title: "التعاون",
-      body: "مراسلة فورية للفريق ومحادثات جماعية ومشاركة ملفات ومكالمات صوتية ومرئية — متصلة بملفاتك، ليبقى النقاش والعمل معًا.",
+    team: {
+      category: "إدارة الفريق",
+      title: "أبق المكتب متصلا بالعمل.",
+      body: "الأدوار والحضور والتعيينات تبقى ظاهرة. المراسلة والمحادثات الجماعية والمكالمات تبقى مرتبطة بالملفات التي يعمل عليها الفريق.",
       link: "استكشف المنصة",
     },
+    tasks: {
+      category: "المهام والمواعيد",
+      title: "حول العمل القانوني إلى خطوات تالية واضحة.",
+      body: "عين العمل للمحامي المسؤول، واربطه بالملف، وأبق المواعيد والحالة ظاهرة — حتى لا تضيع الخطوة التالية في صندوق بريد.",
+    },
+    finance: {
+      category: "المالية والفوترة",
+      title: "أبق نشاط المكتب الاقتصادي ظاهرا.",
+      body: "الأتعاب والفواتير والمدفوعات تبقى مرتبطة بالملف، فيبقى العمل التشغيلي واقتصاد الملف في المكان نفسه.",
+    },
+    juriaAi: {
+      category: "جوريا",
+      title: "ذكاء اصطناعي داخل مسار العمل القانوني.",
+      body: "اسأل عن الملف الذي أمامك. تجيب جوريا من مستندات الملف — موسومة بوضوح كمساعدة بالذكاء الاصطناعي، وتخضع دائما لمراجعة المحامي.",
+    },
+    knowledge: {
+      category: "معرفة المكتب",
+      title: "طبقة معرفة واحدة للمكتب.",
+      body: "مستندات الملفات تغذي مكتبة المكتب. ابحث مرة، اعثر على ما يعرفه المكتب أصلا، وأعد استخدامه في الملف التالي.",
+    },
   },
-  workflows: {
-    title: "كيف يتدفق العمل القانوني عبر JURE",
-    subtitle: "مسارات عمل حقيقية، لا قوائم ميزات.",
-    docToMatter: {
-      title: "من المستند إلى الملف",
-      steps: ["رفع المستند", "الربط بالملف", "إنشاء المهام", "تحديد الموعد النهائي", "تعيين الفريق"],
-    },
-    questionToResearch: {
-      title: "من السؤال إلى تحليل مُراجَع",
-      steps: ["سؤال قانوني", "وضع البحث بالذكاء الاصطناعي", "مسودة التحليل", "مراجعة المحامي", "القرار القانوني"],
-      note: "خطوة مراجعة المحامي ليست اختيارية — هكذا صُممت JURE.",
-    },
+  juria: {
+    badge: "وصول مبكر",
+    titleA: "تعرف على جوريا.",
+    titleB: "المساعد القانوني الذكي لمكتبك.",
+    body: "تساعد جوريا في تحليل العقود وأسئلة البحث والصياغة — داخل الملف الذي تعمل عليه. المخرجات موسومة بوضوح كنتاج ذكاء اصطناعي وتخضع دائما لمراجعة المحامي.",
+    disclaimer: "الذكاء الاصطناعي يساعد. والمحامون يقررون.",
+    link: "تعرف على جوريا",
   },
   security: {
     title: "مصمم للعمل القانوني السري.",
@@ -534,106 +675,86 @@ const ar: HomeContent = {
     items: [
       "عزل البيانات لكل مكتب",
       "التحكم في الوصول حسب الأدوار",
-      "حسابات موثّقة ومُتحقق منها",
+      "حسابات موثقة ومتحقق منها",
       "تشفير أثناء النقل (TLS)",
     ],
     cta: "استكشف الأمان",
   },
-  audiences: {
-    title: "لمن صُممت JURE",
-    firms: {
-      title: "مكاتب المحاماة",
-      body: "أدر الملفات والعملاء والمستندات والمواعيد والفرق ومالية المكتب في مكان واحد — من المحامي المستقل إلى المكاتب متعددة المحامين.",
-    },
-    departments: {
-      title: "الإدارات القانونية للشركات",
-      body: "مركزة الطلبات القانونية والمستندات والمعرفة؛ وامنح الفريق رؤية مشتركة لأعباء العمل والمواعيد.",
-    },
-    lawyers: {
-      title: "المحامون",
-      body: "ابحث وحلّل وصِغ وأدر عملك أسرع — بمساعدة ذكاء اصطناعي تُبقيك مسيطرًا.",
-    },
-  },
-  insights: {
-    title: "رؤى JURE",
-    subtitle: "تحليلات أصلية حول التقنية القانونية والذكاء الاصطناعي القانوني ومستقبل العمل القانوني.",
-    readMore: "اقرأ المقال",
-    viewAll: "عرض كل الرؤى",
+  floats: {
+    activeCases: "ملفات نشطة",
+    consultations: "استشارات اليوم",
+    documents: "بانتظار المراجعة",
+    juriaReady: "التحليل القانوني جاهز",
+    teamOnline: "أعضاء متصلون",
+    clientMeta: "شركة · ملفان مفتوحان",
+    clientName: "أطلس للنسيج ش.ذ.م.م",
+    nextConsult: "استشارة قادمة",
   },
   faq: {
-    title: "الأسئلة الشائعة",
+    eyebrow: "الأسئلة الشائعة",
+    title: "أسئلة، وإجاباتها.",
+    lead: "أسئلة تتكرر لدى مكاتب المحاماة والفرق القانونية قبل البدء مع JURE.",
+    ctaPrompt: "ما زالت لديكم أسئلة؟",
+    cta: "تحدثوا إلينا",
     entries: [
       {
         question: "ما هي JURE؟",
         answer:
-          "JURE برنامج إدارة مكاتب المحاماة للفرق القانونية الحديثة — منصة LegalTech، وليست العبارة اللاتينية de jure. تدير المكاتب الملفات والعملاء والمستندات والمهام والمواعيد والتعاون في مساحة عمل آمنة واحدة، مع جوريا — مساعد الذكاء الاصطناعي القانوني من JURE — في مرحلة الوصول المبكر.",
+          "JURE مساحة عمل قانونية صممت لمكاتب المحاماة والفرق القانونية. تجمع الملفات والعملاء والمستندات والمهام والمواعيد والمفكرة وتعاون الفريق والمالية والعمل القانوني المدعوم بالذكاء الاصطناعي في بيئة متصلة واحدة.",
       },
       {
-        question: "ما هي منصة LegalTech؟",
+        question: "لمن صممت JURE؟",
         answer:
-          "منصة LegalTech توحّد العمل التشغيلي للفرق القانونية (الملفات والمهام والمواعيد والمستندات والتعاون) والعمل الفكري (البحث والتحليل والصياغة والمعرفة) في نظام واحد، بدلًا من تشتيته بين أدوات منفصلة.",
+          "صممت JURE لمكاتب المحاماة — من المحامي المستقل والمكاتب الصغيرة إلى المكاتب الأكبر — وللفرق القانونية التي تدير ملفات وعملاء ومتعاونين متعددين.",
       },
       {
-        question: "لمن صُممت JURE؟",
+        question: "هل تدير JURE أنواعا مختلفة من الملفات القانونية؟",
         answer:
-          "لمكاتب المحاماة بجميع أحجامها، والإدارات القانونية للشركات، والمحامين المستقلين، وفرق العمليات القانونية. تعمل الواجهة بالفرنسية والإنجليزية والعربية، بما في ذلك الكتابة من اليمين إلى اليسار.",
+          "نعم. تدعم JURE النزاعات والاستشارات والملفات الإدارية، مع إبقاء العميل والمستندات والمهام والمواعيد والفريق متصلين بكل ملف.",
       },
       {
-        question: "هل تحل JURE محل المحامين؟",
+        question: "هل يمكننا إدارة مستندات المكتب ومعرفته القانونية في JURE؟",
         answer:
-          "لا. صُممت JURE على مبدأ المراجعة البشرية: مخرجات الذكاء الاصطناعي موسومة بوضوح، ويمر التحليل واقتراحات الصياغة والبحث دائمًا بمراجعة محامٍ قبل أي قرار قانوني. الذكاء الاصطناعي يعزز المهنيين القانونيين — ولا يحل محلهم.",
+          "نعم. يمكن للفرق رفع المستندات وتنظيمها وتصنيفها ووضع الوسوم والبحث فيها ومعاينة ملفات PDF وWord، وربطها مباشرة بالملفات والعملاء — فتبقى معرفة العمل في مساحة واحدة.",
       },
       {
-        question: "كيف يعمل الذكاء الاصطناعي القانوني في JURE؟",
+        question: "كيف تعمل جوريا، مساعدة الذكاء الاصطناعي في JURE؟",
         answer:
-          "جوريا هو مساعد الذكاء الاصطناعي القانوني من JURE. يقدم المحادثة وتحليل العقود وأسئلة البحث وصياغة المستندات، متصلة بالملف الذي تعمل عليه. وهو حاليًا في مرحلة الوصول المبكر، ومخرجاته تخضع دائمًا لمراجعة بشرية.",
+          "جوريا هي المساعدة القانونية بالذكاء الاصطناعي من JURE، في مرحلة الوصول المبكر. تساعد في أسئلة البحث وتحليل العقود والصياغة داخل الملف الذي تعملون عليه. المخرجات موسومة بوضوح كنتاج ذكاء اصطناعي وتخضع دائما لمراجعة المحامي.",
       },
       {
-        question: "كيف تحمي JURE المعلومات القانونية السرية؟",
+        question: "هل بيانات مكتبنا آمنة؟",
         answer:
-          "بيانات كل مكتب معزولة في مساحته الخاصة، والوصول محكوم بالأدوار والصلاحيات، والحسابات تتطلب تسجيل دخول ببريد إلكتروني مُتحقق منه، وحركة البيانات مشفرة أثناء النقل. صفحة الأمان لدينا تفصل بشفافية بين ما هو متاح اليوم وما هو على خارطة الطريق.",
+          "بيانات كل مكتب معزولة في مساحته الخاصة. الوصول محكوم بالأدوار والصلاحيات، والحسابات تتطلب تسجيل دخول ببريد إلكتروني متحقق منه، وحركة البيانات مشفرة أثناء النقل. صفحة الأمان تفصل ما هو متاح اليوم عما هو على خارطة الطريق.",
       },
       {
-        question: "ما اللغات التي تدعمها JURE؟",
+        question: "هل تدعم JURE عدة محامين وفرق؟",
         answer:
-          "تعمل JURE بالفرنسية والإنجليزية والعربية، مع دعم كامل للكتابة من اليمين إلى اليسار — انعكاسًا لجذورها في المغرب والأسواق القانونية متعددة اللغات.",
+          "نعم. تدعم JURE العمل الجماعي بالأدوار والتعيينات والمراسلة والمكالمات والرؤية على مستوى الملف، حتى يعرف الجميع من المسؤول عن ماذا.",
       },
       {
-        question: "بماذا تختلف JURE عن برامج إدارة المكاتب التقليدية؟",
+        question: "هل يمكن تكييف JURE مع طريقة عمل مكتبنا؟",
         answer:
-          "الأدوات التقليدية ترقمن الإدارة فقط. أما JURE فمنصة LegalTech صُممت لتكون الملفات والمستندات والمعرفة والتعاون والمساعدة الذكية في مساحة عمل واحدة — ليبقى العمل الفكري للقانون متصلًا بالعمل التشغيلي للمكتب.",
+          "نظمت JURE حول طريقة عمل الفرق القانونية فعليا. أنواع الملفات والأدوار والمهام والمستندات والمواعيد والتعاون تعيش في مساحة واحدة، فيستطيع المكتب إدارة إيقاعه التشغيلي دون تبديل الأدوات.",
+      },
+      {
+        question: "هل تحل JURE محل المحامين أو الحكم القانوني؟",
+        answer:
+          "لا. JURE مساحة عمل مهنية. هدفها مساعدة المهنيين القانونيين على تنظيم المعلومات وتقليل الاحتكاك الإداري والعمل بكفاءة أكبر — مع إبقاء الحكم البشري في المركز.",
+      },
+      {
+        question: "كيف نبدأ؟",
+        answer:
+          "ابدأوا بمحادثة حول طريقة عمل مكتبكم واحتياجاته. نساعدكم على فهم كيف يمكن لـ JURE أن تنسجم مع ممارستكم.",
       },
     ],
-  },
-  showcase: {
-    eyebrow: "المنتج",
-    title: "مساحة واحدة. رؤية كاملة.",
-    body: "اطّلع على كل ملف وموعد ومستند في واجهة هادئة — مصممة لطريقة عمل المحامين فعليًا.",
-  },
-  trust: {
-    title: "مبنية للمكاتب التي تأخذ الثقة على محمل الجد",
-    subtitle: "دقة وسرية ووضوح — من أول تسجيل دخول.",
-    stats: [
-      { value: 3, suffix: "", label: "لغات · FR · EN · AR" },
-      { value: 1, suffix: "", label: "مساحة عمل للمكتب بأكمله" },
-      { value: 100, suffix: "%", label: "مراجعة بشرية لمخرجات الذكاء الاصطناعي" },
-    ],
-    logoLabels: ["مكاتب المحاماة", "الإدارات القانونية", "المحامون المستقلون"],
-  },
-  floats: {
-    notification: "مهمة جديدة مُسندة",
-    deadline: "جلسة خلال 3 أيام",
-    caseStatus: "ملف · نشط",
-    client: "أطلس للنسيج ش.ذ.م.م",
-    document: "عقد الإيجار.pdf",
-    aiSuggestion: "جوريا · المراجعة جاهزة",
-    calendar: "خميس · المحكمة التجارية",
   },
   finalCta: {
-    title: "اقضِ وقتًا أقل في الإدارة.\nووقتًا أكثر في ممارسة القانون.",
-    body: "تجمع JURE الملفات والمستندات والمواعيد والتعاون في مساحة LegalTech واحدة — ليركّز فريقك على العمل الأهم.",
-    primary: "ابدأ مع JURE",
-    secondary: "شاهد JURE عمليًا",
+    kicker: "للمكاتب الحديثة",
+    title: "مكتبك يستحق مساحة عمل أفضل.",
+    body: "اجمع ممارستك وفريقك وذكاءك القانوني مع JURE.",
+    primary: "ابدأ الآن",
+    secondary: "تواصل معنا",
     tagline: "LegalTech للفرق القانونية الحديثة — مبنية بمسؤولية.",
   },
 };

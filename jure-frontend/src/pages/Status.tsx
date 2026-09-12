@@ -20,7 +20,7 @@ const statusFr = {
       titleA: "Statut du service",
       subtitle: "Transparence en temps réel sur la disponibilité et les incidents.",
       ctaPrimary: "S’abonner aux alertes",
-      ctaSecondary: "Documentation",
+      ctaSecondary: "Fonctionnalités",
       overall: { ok: "Tous les systèmes opérationnels", minor: "Incidents mineurs", major: "Incident majeur" },
     },
     components: {
@@ -49,7 +49,7 @@ const STRINGS: Record<Lang, StatusCopy> = {
       titleA: "Service Status",
       subtitle: "Real-time transparency on availability and incidents.",
       ctaPrimary: "Subscribe to alerts",
-      ctaSecondary: "Docs",
+      ctaSecondary: "Features",
       overall: { ok: "All systems operational", minor: "Minor incidents", major: "Major incident" },
     },
     components: {
@@ -73,7 +73,7 @@ const STRINGS: Record<Lang, StatusCopy> = {
       titleA: "حالة الخدمة",
       subtitle: "شفافية آنية حول التوافر والحوادث.",
       ctaPrimary: "الاشتراك في التنبيهات",
-      ctaSecondary: "الوثائق",
+      ctaSecondary: "الميزات",
       overall: { ok: "كل الأنظمة تعمل", minor: "حوادث طفيفة", major: "حادث كبير" },
     },
     components: {
@@ -84,7 +84,7 @@ const STRINGS: Record<Lang, StatusCopy> = {
       status: { operational: "يعمل", degraded: "متدهور", outage: "انقطاع" },
     },
     incidents: { title: "الحوادث الأخيرة", none: "لا توجد حوادث خلال 7 أيام الماضية." },
-    uptime: { title: "الجاهزية (30 يومًا)", foot: "أرقام توضيحية. يمكن ربطها ببيانات حقيقية لاحقًا." },
+    uptime: { title: "الجاهزية (30 يوما)", foot: "أرقام توضيحية. يمكن ربطها ببيانات حقيقية لاحقا." },
     footer: { privacy: "الخصوصية", terms: "الشروط", status: "الحالة", rights: "جميع الحقوق محفوظة." },
   },
 };
@@ -168,7 +168,7 @@ const Status: React.FC = () => {
             <Button onClick={() => go(path("contact"))} className="w-full sm:w-auto px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg landing-btn-primary">
               {t.hero.ctaPrimary} <ArrowRight className="ms-2 h-4 w-4 rtl:rotate-180" />
             </Button>
-            <Button variant="outline" onClick={() => go(path("docs"))} className="w-full sm:w-auto px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg landing-btn-secondary">
+            <Button variant="outline" onClick={() => go(path("features"))} className="w-full sm:w-auto px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg landing-btn-secondary">
               {t.hero.ctaSecondary}
             </Button>
           </div>

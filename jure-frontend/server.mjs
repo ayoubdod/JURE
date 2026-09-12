@@ -63,7 +63,6 @@ const LEGACY_MARKETING_SLUGS = new Set([
   'legal-ai',
   'legal-case-management',
   'legal-practice-management',
-  'legal-research',
   'legal-document-management',
   'legal-operations',
   'legal-knowledge-management',
@@ -202,6 +201,27 @@ const app = express();
 
 app.get('/health', (_req, res) => {
   res.status(200).type('text/plain').send('ok');
+});
+
+/** Retired marketing pages → canonical replacements (single 301). */
+const RETIRED_MARKETING_REDIRECTS = new Map([
+  ['legal-research', 'legal-ai'],
+  ['docs', ''],
+  ['demo', 'features'],
+]);
+
+app.use((req, res, next) => {
+  if (req.method !== 'GET' && req.method !== 'HEAD') return next();
+  const trimmed = req.path.replace(/^\/+|\/+$/g, '');
+  const parts = trimmed.split('/');
+  const localeHead = LOCALES.includes(parts[0]) ? parts[0] : null;
+  const slug = localeHead ? parts.slice(1).join('/') : trimmed;
+  if (RETIRED_MARKETING_REDIRECTS.has(slug)) {
+    const target = RETIRED_MARKETING_REDIRECTS.get(slug);
+    const locale = localeHead || preferredLocale(req);
+    return res.redirect(301, `/${locale}${target ? `/${target}` : ''}`);
+  }
+  return next();
 });
 
 app.use((req, res, next) => {

@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowLeft, ImageIcon, Link2, MoreHorizontal, PanelRight, Phone, Trash2, Video } from 'lucide-react';
+import { ArrowLeft, ImageIcon, Link2, MoreHorizontal, PanelRight, Phone, Settings2, Trash2, UserPlus, Video } from 'lucide-react';
 import UserAvatar, { getPersonImage, PresenceDot } from '@/components/common/UserAvatar';
 import GroupChatIcon from './GroupChatIcon';
 import LinkedMatterChip from './LinkedMatterChip';
@@ -23,6 +23,7 @@ import {
   getDirectPeer,
   getDirectPeerInfo,
   getLinkedCase,
+  activeMemberships,
 } from './conversationUtils';
 
 const ConversationHeader: React.FC<{
@@ -36,6 +37,8 @@ const ConversationHeader: React.FC<{
   onOpenContext?: () => void;
   onDeleteConversation?: (conversation: API.Conversation) => void;
   onChangeIcon?: (conversation: API.Conversation) => void;
+  onOpenGroupSettings?: (conversation: API.Conversation) => void;
+  onAddMembers?: (conversation: API.Conversation) => void;
   onOpenLinkCaseModal?: () => void;
   onUnlinkConversationCase?: () => void | Promise<void>;
   onOpenLinkedCase?: (caseId: number) => void;
@@ -50,6 +53,8 @@ const ConversationHeader: React.FC<{
   onOpenContext,
   onDeleteConversation,
   onChangeIcon,
+  onOpenGroupSettings,
+  onAddMembers,
   onOpenLinkCaseModal,
   onUnlinkConversationCase,
   onOpenLinkedCase,
@@ -67,7 +72,7 @@ const ConversationHeader: React.FC<{
     conversation.display_name ||
     (isDirect ? peerInfo?.fullName : conversation.title) ||
     t.sidebar.chat;
-  const memberCount = (conversation.memberships ?? []).filter((m) => !m.archived).length;
+  const memberCount = activeMemberships(conversation).length;
   const matterType = linkedCase
     ? enumLabel('caseType', linkedCase.caseType ?? linkedCase.case_type)
     : '';
@@ -223,6 +228,16 @@ const ConversationHeader: React.FC<{
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
+            {!isDirect && onOpenGroupSettings ? (
+              <DropdownMenuItem onClick={() => onOpenGroupSettings(conversation)}>
+                <Settings2 className="me-2 h-4 w-4" /> {t.conversations.groupSettingsMenu}
+              </DropdownMenuItem>
+            ) : null}
+            {!isDirect && onAddMembers ? (
+              <DropdownMenuItem onClick={() => onAddMembers(conversation)}>
+                <UserPlus className="me-2 h-4 w-4" /> {t.conversations.addMembersMenu}
+              </DropdownMenuItem>
+            ) : null}
             {!isDirect && onChangeIcon ? (
               <DropdownMenuItem onClick={() => onChangeIcon(conversation)}>
                 <ImageIcon className="me-2 h-4 w-4" /> {t.conversations.changeIconMenu}
@@ -258,7 +273,12 @@ const ConversationHeader: React.FC<{
               onClick={() => onDeleteConversation?.(conversation)}
               className="text-red-600 focus:bg-red-50 focus:text-red-600 dark:focus:bg-red-950/30"
             >
-              <Trash2 className="me-2 h-4 w-4" /> {t.conversations.deleteConversation}
+              <Trash2 className="me-2 h-4 w-4" />{' '}
+              {isDirect
+                ? t.conversations.deleteConversation
+                : memberCount <= 1
+                  ? t.conversations.deleteGroupMenu
+                  : t.conversations.leaveGroupMenu}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

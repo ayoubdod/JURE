@@ -74,6 +74,8 @@ declare namespace API {
     archived?: boolean;
     is_pinned?: boolean;
     is_temporary?: boolean;
+    /** Whether the current user is a group admin. */
+    is_admin?: boolean;
     other_participant?: ConversationParticipant;
     memberships: ConversationMembership[];
     readonly latest_message: Message;
@@ -101,6 +103,7 @@ declare namespace API {
     id: number;
     archived: boolean;
     is_admin: boolean;
+    is_deleted?: boolean;
     joined_at: string;
     user: User;
     /** Legacy / alternate shapes some payloads still use */

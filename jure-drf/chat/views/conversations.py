@@ -1,17 +1,15 @@
 from django.contrib.auth import get_user_model
-from django.db.models import OuterRef, Subquery
+from django.db.models import OuterRef, Prefetch, Subquery
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django.utils.translation import gettext as _
 from rest_framework import decorators, permissions, response, serializers, status, viewsets
 
-from asgiref.sync import async_to_sync
-from channels.layers import get_channel_layer
-
 from cabinets.permissions import HasConversationsPermission
 from cases.models import Case
 from core.utils import get_user_cabinet
 
+from .. import group_members as gm
 from ..icons import SUGGESTED_GROUP_ICONS
 from ..models import Conversation, ConversationMembership, Message, MessagePin
 from ..serializers import ConversationSerializer, MessageSerializer
@@ -53,7 +51,14 @@ class ConversationViewSet(viewsets.ModelViewSet):
         if self.action == "list" and not self.request.query_params.get("include_archived"):
             qs = qs.filter(memberships__archived=False)
         # Multiple memberships__ filters add JOINs that can duplicate rows
-        qs = qs.distinct().select_related("linked_case")
+        qs = qs.distinct().select_related("linked_case").prefetch_related(
+            Prefetch(
+                "memberships",
+                queryset=ConversationMembership.objects.filter(is_deleted=False).select_related(
+                    "user"
+                ),
+            )
+        )
         # Annotate with current user's membership for ordering
         membership = ConversationMembership.objects.filter(
             conversation=OuterRef("pk"), user=self.request.user, is_deleted=False
@@ -67,24 +72,40 @@ class ConversationViewSet(viewsets.ModelViewSet):
         # Order: pinned first, then by most recent activity
         return qs.order_by("-_is_pinned", "-_last_activity", "-created")
 
+    def _serialized(self, conv: Conversation):
+        fresh = self.get_queryset().filter(pk=conv.pk).first()
+        return self.get_serializer(fresh or conv).data
+
     def destroy(self, request, *args, **kwargs):
-        
-        conversation : Conversation = self.get_object()
-        # return super().destroy(request, *args, **kwargs)
-
+        conversation: Conversation = self.get_object()
         user: User = request.user
+        conv_id = conversation.pk
 
+        if conversation.type == Conversation.Type.GROUP:
+            outcome = gm.leave_group(conversation, user)
+            if outcome == "deleted":
+                gm.broadcast_conversation_removed(conv_id, [user.id])
+                return response.Response(status=status.HTTP_204_NO_CONTENT)
+            gm.broadcast_conversation_removed(conv_id, [user.id])
+            remaining = Conversation.objects.filter(pk=conv_id).first()
+            if remaining:
+                gm.broadcast_conversation_updated(remaining, request)
+            return response.Response({"detail": "Conversation membership deleted"}, status=204)
 
-        if conversation.participants.contains(user):
+        membership = gm.membership_for(conversation, user)
+        if not membership:
+            raise serializers.ValidationError(
+                _("You cannot delete a conversation you are a participant of")
+            )
+        remaining = gm.active_memberships(conversation).exclude(user=user)
+        if remaining.exists():
+            membership.is_deleted = True
+            membership.save(update_fields=["is_deleted"])
+            gm.broadcast_conversation_removed(conv_id, [user.id])
+            return response.Response({"detail": "Conversation membership deleted"}, status=204)
 
-            if conversation.participants.count() > 1:
-
-                ConversationMembership.objects.filter(conversation=conversation, user=user).update(is_deleted=True)
-                return response.Response({"detail": "Conversation membership deleted"}, status=204)
-
-            return super().destroy(request, *args, **kwargs)
-
-        raise serializers.ValidationError(_("You cannot delete a conversation you are a participant of"))
+        gm.broadcast_conversation_removed(conv_id, [user.id])
+        return super().destroy(request, *args, **kwargs)
 
     def partial_update(self, request, *args, **kwargs):
         """Support PATCH with archived/is_pinned - update membership, title - rename group."""
@@ -110,7 +131,7 @@ class ConversationViewSet(viewsets.ModelViewSet):
                 )
             instance.title = str(title)[:255]
             instance.save(update_fields=["title"])
-            self._broadcast_conversation_updated(instance)
+            gm.broadcast_conversation_updated(instance, request)
 
         icon_preset = data.get("icon_preset")
         icon_file = (request.FILES or {}).get("icon") or (request.FILES or {}).get("icon_image")
@@ -131,7 +152,7 @@ class ConversationViewSet(viewsets.ModelViewSet):
                     instance.icon_image.delete(save=False)
                     instance.icon_image = None
                 instance.save(update_fields=["icon_preset", "icon_image"])
-            self._broadcast_conversation_updated(instance)
+            gm.broadcast_conversation_updated(instance, request)
 
         data = {k: v for k, v in (request.data or {}).items() if k not in ("archived", "is_pinned", "title", "icon_preset", "icon")}
         if data:
@@ -139,16 +160,6 @@ class ConversationViewSet(viewsets.ModelViewSet):
             serializer.is_valid(raise_exception=True)
             self.perform_update(serializer)
         return response.Response(self.get_serializer(instance).data)
-
-    def _broadcast_conversation_updated(self, conv: Conversation):
-        """Broadcast conversation update (e.g. rename) to all participants."""
-        channel_layer = get_channel_layer()
-        if channel_layer:
-            payload = ConversationSerializer(conv, context={"request": self.request}).data
-            event = {"type": "conversation.updated", "payload": payload}
-            async_to_sync(channel_layer.group_send)(f"conv-{conv.pk}", event)
-            for participant in conv.participants.all():
-                async_to_sync(channel_layer.group_send)(f"user-{participant.id}", event)
 
     @decorators.action(detail=True, methods=["GET"], url_path="pinned-messages")
     def pinned_messages(self, request, pk=None):
@@ -326,8 +337,68 @@ class ConversationViewSet(viewsets.ModelViewSet):
             return response.Response({"detail": "title is required"}, status=400)
         conv.title = str(title)[:255]
         conv.save(update_fields=["title"])
-        self._broadcast_conversation_updated(conv)
+        gm.broadcast_conversation_updated(conv, request)
         return response.Response(self.get_serializer(conv).data)
+
+    @decorators.action(detail=True, methods=["post"], url_path="members")
+    def add_members(self, request, pk=None):
+        conv = self.get_object()
+        raw_ids = (
+            (request.data or {}).get("user_ids")
+            or (request.data or {}).get("userIds")
+            or (request.data or {}).get("participants")
+            or []
+        )
+        if not isinstance(raw_ids, (list, tuple)):
+            return response.Response({"detail": _("user_ids must be a list.")}, status=400)
+        try:
+            ids = [int(x) for x in raw_ids]
+        except (TypeError, ValueError):
+            return response.Response({"detail": _("Invalid user id.")}, status=400)
+        users = list(User.objects.filter(pk__in=ids))
+        if len(users) != len(set(ids)):
+            return response.Response({"detail": _("One or more users were not found.")}, status=400)
+        gm.add_members(conv, request.user, users)
+        gm.broadcast_conversation_updated(conv, request)
+        return response.Response(self._serialized(conv))
+
+    @decorators.action(
+        detail=True,
+        methods=["delete", "patch"],
+        url_path=r"members/(?P<user_id>[0-9]+)",
+    )
+    def manage_member(self, request, pk=None, user_id=None):
+        conv = self.get_object()
+        try:
+            target = User.objects.get(pk=int(user_id))
+        except (User.DoesNotExist, TypeError, ValueError):
+            return response.Response({"detail": _("User not found.")}, status=404)
+
+        if request.method == "DELETE":
+            gm.remove_member(conv, request.user, target)
+            gm.broadcast_conversation_removed(conv.pk, [target.id])
+            gm.broadcast_conversation_updated(conv, request)
+            return response.Response(self._serialized(conv))
+
+        is_admin = (request.data or {}).get("is_admin")
+        if is_admin is None:
+            is_admin = (request.data or {}).get("isAdmin")
+        if is_admin is None:
+            return response.Response({"detail": _("is_admin is required.")}, status=400)
+        gm.set_member_admin(conv, request.user, target, bool(is_admin))
+        gm.broadcast_conversation_updated(conv, request)
+        return response.Response(self._serialized(conv))
+
+    @decorators.action(detail=True, methods=["post"], url_path="delete-group")
+    def delete_group(self, request, pk=None):
+        conv = self.get_object()
+        gm.require_group(conv)
+        gm.require_admin(conv, request.user)
+        conv_id = conv.pk
+        member_ids = gm.active_member_ids(conv)
+        gm.broadcast_conversation_removed(conv_id, member_ids, to_room=True)
+        conv.delete()
+        return response.Response(status=status.HTTP_204_NO_CONTENT)
 
     @decorators.action(detail=True, methods=["post", "delete"], url_path="link-case")
     def link_case(self, request, pk=None):

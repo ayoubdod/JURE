@@ -1,7 +1,6 @@
-// src/pages/Security.tsx — honest security page: shipped controls vs. roadmap.
+// src/pages/Security.tsx — honest security page in the Features / About deck language.
 import React from "react";
-import { useNavigate } from "react-router";
-import { Button } from "@/components/ui/button";
+import { Link } from "react-router";
 import {
   Shield,
   ShieldCheck,
@@ -24,31 +23,33 @@ import MarketingShell from "@/components/landing/MarketingShell";
 import Reveal from "@/components/landing/Reveal";
 import { useMarketingLang } from "@/marketing/MarketingLocale";
 import { RouteSeo } from "@/marketing/Seo";
+import { track, MarketingEvents } from "@/lib/analytics";
+import "@/components/landing/features-deck.css";
 
 type Lang = "fr" | "en" | "ar";
 
 type SecurityItem = { title: string; desc: string };
 
 type SecurityStrings = {
-  badge: string;
-  hero: { title: string; intro: string };
-  available: { title: string; subtitle: string; items: SecurityItem[] };
-  roadmap: { title: string; note: string; items: SecurityItem[] };
-  principles: { title: string; items: SecurityItem[] };
-  cta: { title: string; subtitle: string; primary: string };
+  hero: { titleA: string; titleB: string; note: string };
+  available: { titleA: string; titleB: string; note: string; items: SecurityItem[] };
+  roadmap: { titleA: string; titleB: string; note: string; items: SecurityItem[] };
+  principles: { titleA: string; titleB: string; note: string; items: SecurityItem[] };
+  cta: { title: string; subtitle: string; primary: string; secondary: string };
 };
 
 const STRINGS: Record<Lang, SecurityStrings> = {
   fr: {
-    badge: "Sécurité",
     hero: {
-      title: "Conçu pour le travail juridique confidentiel.",
-      intro:
+      titleA: "Conçu pour le travail juridique",
+      titleB: "confidentiel.",
+      note:
         "La confidentialité est le fondement de la pratique juridique. Plutôt que d'empiler des promesses, nous décrivons précisément les protections en place aujourd'hui — et celles sur lesquelles nous travaillons.",
     },
     available: {
-      title: "Disponible aujourd'hui",
-      subtitle: "Les contrôles réellement en place dans la plateforme, dès maintenant.",
+      titleA: "Disponible",
+      titleB: "aujourd'hui.",
+      note: "Les contrôles réellement en place dans la plateforme, dès maintenant.",
       items: [
         {
           title: "Isolation des données par cabinet",
@@ -85,7 +86,8 @@ const STRINGS: Record<Lang, SecurityStrings> = {
       ],
     },
     roadmap: {
-      title: "Sur notre feuille de route",
+      titleA: "Sur notre",
+      titleB: "feuille de route.",
       note:
         "Ces contrôles sont planifiés mais pas encore livrés. Nous publions nos avancées en toute transparence, sans les présenter comme acquises.",
       items: [
@@ -96,7 +98,9 @@ const STRINGS: Record<Lang, SecurityStrings> = {
       ],
     },
     principles: {
-      title: "Nos principes",
+      titleA: "Nos",
+      titleB: "principes.",
+      note: "Les règles qui guident chaque décision de sécurité produit.",
       items: [
         { title: "Moindre privilège", desc: "Chacun n'accède qu'à ce dont son rôle a besoin." },
         { title: "Isolation par défaut", desc: "Les données de chaque cabinet sont cloisonnées dès la conception." },
@@ -108,18 +112,20 @@ const STRINGS: Record<Lang, SecurityStrings> = {
       title: "Des questions sur la sécurité ?",
       subtitle: "Notre équipe peut vous présenter les contrôles en place et la feuille de route.",
       primary: "Parler à l'équipe",
+      secondary: "Voir les fonctionnalités",
     },
   },
   en: {
-    badge: "Security",
     hero: {
-      title: "Built for confidential legal work.",
-      intro:
+      titleA: "Built for confidential",
+      titleB: "legal work.",
+      note:
         "Confidentiality is the foundation of legal practice. Instead of stacking up checkbox claims, we describe exactly which protections are in place today — and which ones we're working on.",
     },
     available: {
-      title: "Available today",
-      subtitle: "The controls that are actually live in the platform, right now.",
+      titleA: "Available",
+      titleB: "today.",
+      note: "The controls that are actually live in the platform, right now.",
       items: [
         {
           title: "Per-firm data isolation",
@@ -156,7 +162,8 @@ const STRINGS: Record<Lang, SecurityStrings> = {
       ],
     },
     roadmap: {
-      title: "On our roadmap",
+      titleA: "On our",
+      titleB: "roadmap.",
       note:
         "These controls are planned but not shipped yet. We publish our progress transparently instead of presenting them as done.",
       items: [
@@ -167,7 +174,9 @@ const STRINGS: Record<Lang, SecurityStrings> = {
       ],
     },
     principles: {
-      title: "Our principles",
+      titleA: "Our",
+      titleB: "principles.",
+      note: "The rules that guide every product security decision.",
       items: [
         { title: "Least privilege", desc: "People only access what their role requires." },
         { title: "Isolation by default", desc: "Each firm's data is separated by design." },
@@ -179,29 +188,31 @@ const STRINGS: Record<Lang, SecurityStrings> = {
       title: "Questions about security?",
       subtitle: "Our team can walk you through the controls in place and the roadmap.",
       primary: "Talk to the team",
+      secondary: "Explore features",
     },
   },
   ar: {
-    badge: "الأمان",
     hero: {
-      title: "مصمم للعمل القانوني السري.",
-      intro:
-        "السرية هي أساس الممارسة القانونية. بدلًا من تكديس الادعاءات، نوضح بدقة ما هي الحمايات المتوفرة اليوم — وما الذي نعمل عليه.",
+      titleA: "مصمم للعمل القانوني",
+      titleB: "السري.",
+      note:
+        "السرية هي أساس الممارسة القانونية. بدلا من تكديس الادعاءات، نوضح بدقة ما هي الحمايات المتوفرة اليوم — وما الذي نعمل عليه.",
     },
     available: {
-      title: "متاح اليوم",
-      subtitle: "الضوابط المفعّلة فعليًا في المنصة الآن.",
+      titleA: "متاح",
+      titleB: "اليوم.",
+      note: "الضوابط المفعلة فعليا في المنصة الآن.",
       items: [
         {
           title: "عزل بيانات كل مكتب",
-          desc: "كل استعلام إلى الواجهة البرمجية محصور في بيانات مكتب المستخدم المسجّل.",
+          desc: "كل استعلام إلى الواجهة البرمجية محصور في بيانات مكتب المستخدم المسجل.",
         },
         {
           title: "تحكم في الوصول حسب الأدوار",
-          desc: "ستة أدوار — مالك، مدير النظام، مدير، محامٍ، مساعد، مطّلع — مع صلاحيات دقيقة.",
+          desc: "ستة أدوار — مالك، مدير النظام، مدير، محام، مساعد، مطلع — مع صلاحيات دقيقة.",
         },
         {
-          title: "جلسات موثّقة عبر JWT",
+          title: "جلسات موثقة عبر JWT",
           desc: "تدوير رموز الوصول وإدراج رموز التحديث في قائمة الحظر.",
         },
         {
@@ -210,46 +221,50 @@ const STRINGS: Record<Lang, SecurityStrings> = {
         },
         {
           title: "سياسات التحقق من كلمات المرور",
-          desc: "قواعد كلمات مرور مطبّقة على الخادم (Django).",
+          desc: "قواعد كلمات مرور مطبقة على الخادم (Django).",
         },
         {
           title: "قائمة سماح لأصول CORS",
-          desc: "لا يمكن استدعاء الواجهة البرمجية إلا من الأصول المسموح بها صراحةً.",
+          desc: "لا يمكن استدعاء الواجهة البرمجية إلا من الأصول المسموح بها صراحة.",
         },
         {
           title: "تشفير TLS أثناء النقل",
           desc: "إعادة توجيه HTTPS وتفعيل HSTS في بيئة الإنتاج.",
         },
         {
-          title: "وحدة مالية مقيّدة",
+          title: "وحدة مالية مقيدة",
           desc: "مالية المكتب متاحة فقط لدوري المالك ومدير النظام.",
         },
       ],
     },
     roadmap: {
-      title: "على خارطة الطريق",
+      titleA: "على",
+      titleB: "خارطة الطريق.",
       note:
-        "هذه الضوابط مخطط لها لكنها لم تُطلق بعد. ننشر تقدمنا بشفافية بدلًا من تقديمها كأمر منجز.",
+        "هذه الضوابط مخطط لها لكنها لم تطلق بعد. ننشر تقدمنا بشفافية بدلا من تقديمها كأمر منجز.",
       items: [
-        { title: "سجلات التدقيق", desc: "سجل لمن اطّلع على ماذا أو عدّله." },
-        { title: "التشفير في التخزين", desc: "تشفير البيانات المخزّنة، إضافةً إلى TLS أثناء النقل." },
-        { title: "SSO / SAML", desc: "تسجيل الدخول عبر مزوّد الهوية الخاص بكم." },
+        { title: "سجلات التدقيق", desc: "سجل لمن اطلع على ماذا أو عدله." },
+        { title: "التشفير في التخزين", desc: "تشفير البيانات المخزنة، إضافة إلى TLS أثناء النقل." },
+        { title: "SSO / SAML", desc: "تسجيل الدخول عبر مزود الهوية الخاص بكم." },
         { title: "ضوابط الاحتفاظ بالبيانات", desc: "سياسات لمدة الاحتفاظ بالبيانات وتوقيت حذفها." },
       ],
     },
     principles: {
-      title: "مبادئنا",
+      titleA: "مبادئنا",
+      titleB: "الأساسية.",
+      note: "القواعد التي توجه كل قرار أمني في المنتج.",
       items: [
         { title: "الحد الأدنى من الصلاحيات", desc: "لا يصل أحد إلا إلى ما يتطلبه دوره." },
-        { title: "العزل افتراضيًا", desc: "بيانات كل مكتب مفصولة بحكم التصميم." },
+        { title: "العزل افتراضيا", desc: "بيانات كل مكتب مفصولة بحكم التصميم." },
         { title: "مراجعة بشرية لمخرجات الذكاء الاصطناعي", desc: "نتائج الذكاء الاصطناعي مخصصة لمراجعة المحامي." },
-        { title: "الشفافية", desc: "نقول ما هو متوفر — وما ليس متوفرًا بعد." },
+        { title: "الشفافية", desc: "نقول ما هو متوفر — وما ليس متوفرا بعد." },
       ],
     },
     cta: {
       title: "أسئلة حول الأمان؟",
       subtitle: "يمكن لفريقنا شرح الضوابط المعمول بها وخارطة الطريق.",
       primary: "تحدث إلى الفريق",
+      secondary: "استكشف الميزات",
     },
   },
 };
@@ -257,134 +272,147 @@ const STRINGS: Record<Lang, SecurityStrings> = {
 const AVAILABLE_ICONS = [Building2, KeyRound, RefreshCw, MailCheck, Lock, Globe, ShieldCheck, Landmark];
 const ROADMAP_ICONS = [FileClock, Database, Fingerprint, Archive];
 const PRINCIPLE_ICONS = [KeyRound, Building2, UserCheck, Eye];
+const PANEL_TONES = ["dark", "mist", "photo", "accent"] as const;
 
 const Security: React.FC = () => {
-  const navigate = useNavigate();
   const { lang, dir, path } = useMarketingLang();
   const t = STRINGS[lang];
 
   return (
     <MarketingShell lang={lang} onLangChange={() => {}} dir={dir} activeNav="security">
       <RouteSeo routeKey="security" lang={lang} />
-
-      {/* Hero */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 pt-8 sm:pt-14 pb-10 sm:pb-12 md:pt-20 md:pb-16">
-        <Reveal className="text-center max-w-3xl mx-auto min-w-0">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full landing-glass text-xs font-medium text-[#A58CF4] mb-6">
-            <Shield className="w-3.5 h-3.5" />
-            {t.badge}
-          </div>
-          <h1 className="font-display text-[2rem] leading-[1.15] sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight break-words text-[#64499D] dark:text-white">
-            {t.hero.title}
-          </h1>
-          <p className="mt-6 text-base sm:text-lg text-neutral-600 dark:text-neutral-300 leading-relaxed break-words">
-            {t.hero.intro}
-          </p>
-        </Reveal>
-      </section>
-
-      <div className="landing-divider mb-12" aria-hidden />
-
-      {/* Available today */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 pb-14 sm:pb-16">
-        <Reveal className="text-center max-w-2xl mx-auto mb-8 sm:mb-10">
-          <h2 className="font-display text-2xl sm:text-3xl font-bold break-words">{t.available.title}</h2>
-          <p className="mt-3 text-sm sm:text-base text-neutral-600 dark:text-neutral-300 break-words">
-            {t.available.subtitle}
-          </p>
-        </Reveal>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-          {t.available.items.map((item, i) => {
-            const Icon = AVAILABLE_ICONS[i] || Shield;
-            return (
-              <Reveal key={item.title} delay={i * 0.04}>
-                <div className={`group landing-glass landing-glass-glow rounded-2xl p-5 sm:p-6 h-full min-w-0 text-start`}>
-                  <div className="landing-icon w-11 h-11 rounded-xl flex items-center justify-center mb-4">
-                    <Icon className="w-5 h-5" />
-                  </div>
-                  <h3 className="font-display text-lg font-semibold mb-2 break-words">{item.title}</h3>
-                  <p className="text-neutral-600 dark:text-neutral-300 text-sm leading-relaxed break-words">{item.desc}</p>
-                </div>
-              </Reveal>
-            );
-          })}
+      <div className="features-deck security-deck">
+        <div className="features-orbs" aria-hidden>
+          <span className="features-orb features-orb--a" />
+          <span className="features-orb features-orb--b" />
+          <span className="features-orb features-orb--c" />
+          <span className="features-orb features-orb--d" />
         </div>
-      </section>
 
-      {/* Roadmap */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 pb-14 sm:pb-16">
-        <Reveal>
-          <div className={`landing-glass rounded-2xl sm:rounded-3xl p-6 sm:p-8 md:p-10 min-w-0 text-start`}>
-            <div className="flex items-center gap-3 mb-3 min-w-0">
-              <div className="landing-icon w-12 h-12 rounded-xl flex items-center justify-center shrink-0">
-                <FileClock className="w-6 h-6" />
+        <section className="features-hero">
+          <div className="features-deck__inner">
+            <h1 className="features-hero__title security-hero__title">
+              {t.hero.titleA} <em>{t.hero.titleB}</em>
+            </h1>
+            <p className="features-hero__lead">{t.hero.note}</p>
+          </div>
+        </section>
+
+        <section className="features-block">
+          <div className="features-deck__inner">
+            <Reveal>
+              <div className="features-block__head">
+                <h2 className="features-block__title">
+                  {t.available.titleA} <em>{t.available.titleB}</em>
+                </h2>
+                <p className="features-block__lead">{t.available.note}</p>
               </div>
-              <h2 className="font-display text-xl sm:text-2xl font-bold break-words">{t.roadmap.title}</h2>
-            </div>
-            <p className="text-sm sm:text-base text-neutral-600 dark:text-neutral-300 mb-6 break-words">{t.roadmap.note}</p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {t.roadmap.items.map((item, i) => {
-                const Icon = ROADMAP_ICONS[i] || FileClock;
+            </Reveal>
+            <div className="security-grid security-grid--8">
+              {t.available.items.map((item, i) => {
+                const Icon = AVAILABLE_ICONS[i] ?? Shield;
+                const tone = PANEL_TONES[i % PANEL_TONES.length];
                 return (
-                  <div
-                    key={item.title}
-                    className="flex items-start gap-3 rounded-xl border border-dashed border-[#64499D]/15 dark:border-white/15 p-4 min-w-0"
-                  >
-                    <Icon className="w-5 h-5 text-[#A58CF4] dark:text-[#A58CF4] shrink-0 mt-0.5" />
-                    <div className="min-w-0">
-                      <div className="font-semibold text-sm sm:text-base break-words">{item.title}</div>
-                      <p className="text-neutral-600 dark:text-neutral-300 text-sm leading-relaxed break-words">
-                        {item.desc}
-                      </p>
-                    </div>
-                  </div>
+                  <Reveal key={item.title} delay={i * 0.03}>
+                    <article className={`about-panel about-panel--${tone}`}>
+                      <div className="about-panel__icon">
+                        <Icon className="w-5 h-5" />
+                      </div>
+                      <h3 className="about-panel__title">{item.title}</h3>
+                      <p className="about-panel__desc">{item.desc}</p>
+                    </article>
+                  </Reveal>
                 );
               })}
             </div>
           </div>
-        </Reveal>
-      </section>
+        </section>
 
-      {/* Principles */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 pb-14 sm:pb-16">
-        <Reveal className="text-center max-w-2xl mx-auto mb-8 sm:mb-10">
-          <h2 className="font-display text-2xl sm:text-3xl font-bold break-words">{t.principles.title}</h2>
-        </Reveal>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-          {t.principles.items.map((item, i) => {
-            const Icon = PRINCIPLE_ICONS[i] || Shield;
-            return (
-              <Reveal key={item.title} delay={i * 0.05}>
-                <div className="landing-glass rounded-2xl p-5 sm:p-6 h-full min-w-0 group text-start">
-                  <span className="landing-icon w-10 h-10 rounded-xl flex items-center justify-center mb-4">
-                    <Icon className="w-5 h-5" />
-                  </span>
-                  <h3 className="font-display text-base sm:text-lg font-semibold mb-1.5 break-words">{item.title}</h3>
-                  <p className="text-neutral-600 dark:text-neutral-300 text-sm leading-relaxed break-words">{item.desc}</p>
-                </div>
-              </Reveal>
-            );
-          })}
-        </div>
-      </section>
-
-      {/* CTA */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 pb-16 sm:pb-24">
-        <Reveal>
-          <div className="rounded-2xl sm:rounded-3xl p-6 sm:p-10 md:p-12 text-white landing-band text-center min-w-0">
-            <h2 className="relative font-display text-2xl sm:text-3xl md:text-4xl font-bold mb-3 break-words">{t.cta.title}</h2>
-            <p className="relative text-white/70 text-base sm:text-lg mb-8 break-words">{t.cta.subtitle}</p>
-            <Button
-              size="lg"
-              className="relative w-full sm:w-auto px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg landing-btn-on-dark"
-              onClick={() => navigate(path("contact"))}
-            >
-              {t.cta.primary}
-              <ArrowRight className="ms-2 h-5 w-5 rtl:rotate-180" />
-            </Button>
+        <section className="features-block">
+          <div className="features-deck__inner">
+            <Reveal>
+              <div className="features-block__head">
+                <h2 className="features-block__title">
+                  {t.roadmap.titleA} <em>{t.roadmap.titleB}</em>
+                </h2>
+                <p className="features-block__lead">{t.roadmap.note}</p>
+              </div>
+            </Reveal>
+            <div className="security-grid security-grid--4">
+              {t.roadmap.items.map((item, i) => {
+                const Icon = ROADMAP_ICONS[i] ?? FileClock;
+                return (
+                  <Reveal key={item.title} delay={i * 0.04}>
+                    <article className="about-panel about-panel--mist security-roadmap-card">
+                      <div className="about-panel__icon">
+                        <Icon className="w-5 h-5" />
+                      </div>
+                      <h3 className="about-panel__title">{item.title}</h3>
+                      <p className="about-panel__desc">{item.desc}</p>
+                    </article>
+                  </Reveal>
+                );
+              })}
+            </div>
           </div>
-        </Reveal>
-      </section>
+        </section>
+
+        <section className="features-block">
+          <div className="features-deck__inner">
+            <Reveal>
+              <div className="features-block__head">
+                <h2 className="features-block__title">
+                  {t.principles.titleA} <em>{t.principles.titleB}</em>
+                </h2>
+                <p className="features-block__lead">{t.principles.note}</p>
+              </div>
+            </Reveal>
+            <div className="security-grid security-grid--4">
+              {t.principles.items.map((item, i) => {
+                const Icon = PRINCIPLE_ICONS[i] ?? Shield;
+                const tone = PANEL_TONES[i % PANEL_TONES.length];
+                return (
+                  <Reveal key={item.title} delay={i * 0.04}>
+                    <article className={`about-panel about-panel--${tone}`}>
+                      <div className="about-panel__icon">
+                        <Icon className="w-5 h-5" />
+                      </div>
+                      <h3 className="about-panel__title">{item.title}</h3>
+                      <p className="about-panel__desc">{item.desc}</p>
+                    </article>
+                  </Reveal>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+
+        <section className="features-close">
+          <div className="features-deck__inner">
+            <h2 className="features-close__title">{t.cta.title}</h2>
+            <p className="features-close__lead">{t.cta.subtitle}</p>
+            <div className="features-close__actions">
+              <Link
+                to={path("contact")}
+                className="features-btn features-btn--dark"
+                onClick={() => track(MarketingEvents.SecurityCta, { source: "security_final", lang })}
+              >
+                {t.cta.primary}
+                <ArrowRight className="w-4 h-4 ms-2 rtl:rotate-180" />
+              </Link>
+              <Link
+                to={path("features")}
+                className="features-btn features-btn--ghost"
+                onClick={() =>
+                  track(MarketingEvents.SitelinkClick, { source: "security_final", lang, target: "features" })
+                }
+              >
+                {t.cta.secondary}
+              </Link>
+            </div>
+          </div>
+        </section>
+      </div>
     </MarketingShell>
   );
 };

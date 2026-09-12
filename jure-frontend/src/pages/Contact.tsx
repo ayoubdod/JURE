@@ -1,7 +1,6 @@
-// src/pages/Contact.tsx
-import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router";
-import { Button } from "@/components/ui/button";
+// src/pages/Contact.tsx — contact form in the same presentation language as Features / About.
+import React, { useState } from "react";
+import { Link } from "react-router";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Mail, Send, Phone, MapPin, ArrowRight } from "lucide-react";
@@ -11,93 +10,123 @@ import { RouteSeo } from "@/marketing/Seo";
 import { useMarketingLang } from "@/marketing/MarketingLocale";
 import { CONTACT_INBOX, submitLandingInquiry } from "@/services/marketing/api";
 import { track, MarketingEvents } from "@/lib/analytics";
+import "@/components/landing/features-deck.css";
 
 type Lang = "fr" | "en" | "ar";
 
-const contactEn = {
-  htmlLang: "en",
-  dir: "ltr" as const,
-  nav: { features: "Features", pricing: "Pricing", about: "About", contact: "Contact" },
-  auth: { signin: "Sign in" },
-  themeToggle: { label: "Toggle theme", title: "Toggle theme" },
+type ContactStrings = {
   hero: {
-    title: "Contact us",
-    subtitle: "Tell us about your needs. We’ll get back within 1 business day.",
-    cta: "Send message",
-    alt: "Email us",
-  },
+    titleA: string;
+    titleB: string;
+    note: string;
+    cta: string;
+    alt: string;
+  };
   form: {
-    name: "Full name",
-    email: "Work email",
-    company: "Company",
-    subject: "Subject",
-    message: "Message",
-    consent: "I agree to be contacted about JURE.",
-    required: "Please fill all required fields.",
-    sent: "Thank you! Your message has been sent.",
-    sendFailed: "We could not send your message. Please email contact@jure.ma.",
-    sending: "Sending…",
-  },
+    titleA: string;
+    titleB: string;
+    note: string;
+    name: string;
+    email: string;
+    company: string;
+    subject: string;
+    message: string;
+    consent: string;
+    required: string;
+    sent: string;
+    sendFailed: string;
+    sending: string;
+  };
   info: {
-    title: "Other ways to reach us",
-    email: "contact@jure.ma",
-    phone: "+212 665236382",
-    address: "Casablanca, Morocco",
-    viewStatus: "View status",
-  },
-  footer: { privacy: "Privacy", terms: "Terms", status: "Status", rights: "All rights reserved." },
+    titleA: string;
+    titleB: string;
+    note: string;
+    email: string;
+    phone: string;
+    address: string;
+    viewStatus: string;
+  };
 };
 
-type ContactCopy = typeof contactEn;
-
-const STRINGS: Record<Lang, ContactCopy> = {
-  en: contactEn,
-  fr: {
-    htmlLang: "fr",
-    dir: "ltr",
-    nav: { features: "Fonctionnalités", pricing: "Tarifs", about: "À propos", contact: "Contact" },
-    auth: { signin: "Se connecter" },
-    themeToggle: { label: "Basculer le thème", title: "Basculer le thème" },
+const STRINGS: Record<Lang, ContactStrings> = {
+  en: {
     hero: {
-      title: "Contactez-nous",
-      subtitle: "Parlez-nous de vos besoins. Réponse sous 1 jour ouvré.",
+      titleA: "Contact",
+      titleB: "us.",
+      note: "Tell us about your needs. We'll get back within 1 business day.",
+      cta: "Send message",
+      alt: "Email us",
+    },
+    form: {
+      titleA: "Send a",
+      titleB: "message.",
+      note: "Share a bit of context — we'll route it to the right person on the team.",
+      name: "Full name",
+      email: "Work email",
+      company: "Company",
+      subject: "Subject",
+      message: "Message",
+      consent: "I agree to be contacted about JURE.",
+      required: "Please fill all required fields.",
+      sent: "Thank you! Your message has been sent.",
+      sendFailed: "We could not send your message. Please email contact@jure.ma.",
+      sending: "Sending…",
+    },
+    info: {
+      titleA: "Other ways to",
+      titleB: "reach us.",
+      note: "Prefer email or a call? Use the channels below.",
+      email: "contact@jure.ma",
+      phone: "+212 665236382",
+      address: "Casablanca, Morocco",
+      viewStatus: "View status",
+    },
+  },
+  fr: {
+    hero: {
+      titleA: "Contactez",
+      titleB: "nous.",
+      note: "Parlez-nous de vos besoins. Réponse sous 1 jour ouvré.",
       cta: "Envoyer le message",
       alt: "Nous écrire",
     },
     form: {
+      titleA: "Envoyer un",
+      titleB: "message.",
+      note: "Donnez un peu de contexte — nous orientons votre demande vers la bonne personne.",
       name: "Nom complet",
       email: "Email professionnel",
       company: "Société",
       subject: "Objet",
       message: "Message",
-      consent: "J’accepte d’être recontacté au sujet de JURE.",
+      consent: "J'accepte d'être recontacté au sujet de JURE.",
       required: "Veuillez compléter tous les champs requis.",
       sent: "Merci ! Votre message a été envoyé.",
-      sendFailed: "Impossible d’envoyer le message. Écrivez-nous à contact@jure.ma.",
+      sendFailed: "Impossible d'envoyer le message. Écrivez-nous à contact@jure.ma.",
       sending: "Envoi…",
     },
     info: {
-      title: "Autres moyens",
+      titleA: "Autres",
+      titleB: "moyens.",
+      note: "Vous préférez un email ou un appel ? Utilisez les canaux ci-dessous.",
       email: "contact@jure.ma",
       phone: "+212 665236382",
       address: "Casablanca, Maroc",
       viewStatus: "Voir le statut",
     },
-    footer: { privacy: "Confidentialité", terms: "Conditions", status: "Statut", rights: "Tous droits réservés." },
   },
   ar: {
-    htmlLang: "ar",
-    dir: "rtl",
-    nav: { features: "الميزات", pricing: "الأسعار", about: "حول", contact: "اتصل بنا" },
-    auth: { signin: "تسجيل الدخول" },
-    themeToggle: { label: "تبديل السمة", title: "تبديل السمة" },
     hero: {
-      title: "تواصل معنا",
-      subtitle: "أخبرنا باحتياجاتك. سنرد خلال يوم عمل واحد.",
+      titleA: "تواصل",
+      titleB: "معنا.",
+      note: "أخبرنا باحتياجاتك. سنرد خلال يوم عمل واحد.",
       cta: "إرسال الرسالة",
       alt: "راسلنا",
     },
     form: {
+      titleA: "أرسل",
+      titleB: "رسالة.",
+      note: "شارك سياقاً موجزاً — سنوجّه طلبك إلى الشخص المناسب في الفريق.",
       name: "الاسم الكامل",
       email: "البريد المهني",
       company: "الشركة",
@@ -105,43 +134,25 @@ const STRINGS: Record<Lang, ContactCopy> = {
       message: "الرسالة",
       consent: "أوافق على التواصل معي بشأن JURE.",
       required: "يرجى تعبئة جميع الحقول المطلوبة.",
-      sent: "شكرًا! تم إرسال رسالتك.",
+      sent: "شكرا! تم إرسال رسالتك.",
       sendFailed: "تعذر إرسال الرسالة. راسلونا على contact@jure.ma.",
-      sending: "جارٍ الإرسال…",
+      sending: "جار الإرسال…",
     },
     info: {
-      title: "طرق أخرى للتواصل",
+      titleA: "طرق أخرى",
+      titleB: "للتواصل.",
+      note: "تفضل البريد أو الاتصال؟ استخدم القنوات أدناه.",
       email: "contact@jure.ma",
       phone: "+212 665236382",
       address: "الدار البيضاء، المغرب",
       viewStatus: "عرض الحالة",
     },
-    footer: { privacy: "الخصوصية", terms: "الشروط", status: "الحالة", rights: "جميع الحقوق محفوظة." },
   },
 };
 
-const useI18n = () => {
-  const [lang, setLang] = useState<Lang>(() => {
-    const s = localStorage.getItem("lang") as Lang | null;
-    if (s === "fr" || s === "en" || s === "ar") return s;
-    const nav = (navigator.language || "en").toLowerCase();
-    if (nav.startsWith("fr")) return "fr";
-    if (nav.startsWith("ar")) return "ar";
-    return "en";
-  });
-  useEffect(() => {
-    const pack = STRINGS[lang];
-    document.documentElement.setAttribute("lang", pack.htmlLang);
-    document.documentElement.setAttribute("dir", pack.dir);
-    localStorage.setItem("lang", lang);
-  }, [lang]);
-  return { lang, setLang, t: STRINGS[lang] };
-};
-
 const Contact: React.FC = () => {
-  const navigate = useNavigate();
-  const { path } = useMarketingLang();
-  const { lang, setLang, t } = useI18n();
+  const { lang, dir, path } = useMarketingLang();
+  const t = STRINGS[lang];
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -187,161 +198,152 @@ const Contact: React.FC = () => {
   };
 
   return (
-    <MarketingShell
-      lang={lang}
-      onLangChange={setLang}
-      labels={{
-        nav: { features: t.nav.features, about: t.nav.about, contact: t.nav.contact },
-        auth: t.auth,
-        themeToggle: t.themeToggle,
-        footer: t.footer,
-      }}
-      dir={t.dir}
-      activeNav="contact"
-    >
+    <MarketingShell lang={lang} onLangChange={() => {}} dir={dir} activeNav="contact">
       <RouteSeo routeKey="contact" lang={lang} />
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 pt-8 sm:pt-12 pb-14 sm:pb-16 md:pt-20 md:pb-20">
-        <Reveal className="text-center max-w-3xl mx-auto min-w-0">
-          <h1 className="font-display text-[2rem] leading-[1.15] sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight break-words text-[#64499D] dark:text-white">
-            {t.hero.title}
-          </h1>
-          <p className="mt-4 text-base sm:text-lg text-neutral-600 dark:text-neutral-300 break-words">{t.hero.subtitle}</p>
-          <div className="mt-6 flex justify-center gap-3">
-            <a
-              href={`mailto:${CONTACT_INBOX}`}
-              className="inline-flex items-center gap-2 text-sm underline underline-offset-4 hover:text-[#A58CF4] transition-colors"
-            >
-              <Mail className="w-4 h-4" /> {t.hero.alt}
-            </a>
-          </div>
-        </Reveal>
+      <div className="features-deck contact-deck">
+        <div className="features-orbs" aria-hidden>
+          <span className="features-orb features-orb--a" />
+          <span className="features-orb features-orb--b" />
+          <span className="features-orb features-orb--c" />
+          <span className="features-orb features-orb--d" />
+        </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 md:gap-6 mt-10 sm:mt-12">
-          {/* Form */}
-          <Reveal className="md:col-span-2 min-w-0" delay={0.05}>
-            <div className="landing-glass landing-glass-glow rounded-2xl p-5 sm:p-6 md:p-8 h-full min-w-0">
-              <h2 className="font-display text-xl sm:text-2xl font-bold tracking-tight mb-1 break-words">{t.hero.title}</h2>
-              <p className="text-slate-600 dark:text-slate-400 mb-6 break-words">{t.hero.subtitle}</p>
-              <form onSubmit={submit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm text-slate-700 dark:text-slate-300">{t.form.name}</label>
-                  <Input
-                    name="name"
-                    value={form.name}
-                    onChange={onChange}
-                    required
-                    className="mt-1 bg-white dark:bg-[#111] border-[#64499D]/15 dark:border-white/15"
-                  />
-                </div>
-                <div>
-                  <label className="text-sm text-slate-700 dark:text-slate-300">{t.form.email}</label>
-                  <Input
-                    type="email"
-                    name="email"
-                    value={form.email}
-                    onChange={onChange}
-                    required
-                    className="mt-1 bg-white dark:bg-[#111] border-[#64499D]/15 dark:border-white/15"
-                  />
-                </div>
-                <div>
-                  <label className="text-sm text-slate-700 dark:text-slate-300">{t.form.company}</label>
-                  <Input
-                    name="company"
-                    value={form.company}
-                    onChange={onChange}
-                    className="mt-1 bg-white dark:bg-[#111] border-[#64499D]/15 dark:border-white/15"
-                  />
-                </div>
-                <div>
-                  <label className="text-sm text-slate-700 dark:text-slate-300">{t.form.subject}</label>
-                  <Input
-                    name="subject"
-                    value={form.subject}
-                    onChange={onChange}
-                    className="mt-1 bg-white dark:bg-[#111] border-[#64499D]/15 dark:border-white/15"
-                  />
-                </div>
-                <div className="md:col-span-2">
-                  <label className="text-sm text-slate-700 dark:text-slate-300">{t.form.message}</label>
-                  <Textarea
-                    name="message"
-                    rows={6}
-                    value={form.message}
-                    onChange={onChange}
-                    required
-                    className="mt-1 bg-white dark:bg-[#111] border-[#64499D]/15 dark:border-white/15"
-                  />
-                </div>
-                <label
-                  className="md:col-span-2 inline-flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300"
-                >
-                  <input
-                    type="checkbox"
-                    name="consent"
-                    checked={form.consent}
-                    onChange={onChange}
-                    className="accent-[#A58CF4]"
-                  />
-                  {t.form.consent}
-                </label>
-                <div className="md:col-span-2">
-                  <Button
-                    type="submit"
-                    disabled={sending}
-                    className="w-full sm:w-auto px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg landing-btn-primary"
-                  >
-                    <Send className="w-4 h-4 me-2" /> {sending ? t.form.sending : t.hero.cta}
-                  </Button>
-                </div>
-              </form>
+        <section className="features-hero">
+          <div className="features-deck__inner">
+            <h1 className="features-hero__title contact-hero__title">
+              {t.hero.titleA} <em>{t.hero.titleB}</em>
+            </h1>
+            <p className="features-hero__lead">{t.hero.note}</p>
+            <div className="features-hero__actions">
+              <a href={`mailto:${CONTACT_INBOX}`} className="features-btn features-btn--ghost">
+                <Mail className="w-4 h-4 me-2" />
+                {t.hero.alt}
+              </a>
             </div>
-          </Reveal>
+          </div>
+        </section>
 
-          {/* Contact info */}
-          <Reveal delay={0.1} className="min-w-0">
-            <div className="landing-glass landing-glass-glow rounded-2xl p-5 sm:p-6 md:p-8 h-full min-w-0">
-              <h2 className="font-display text-xl sm:text-2xl font-bold tracking-tight mb-1 break-words">{t.info.title}</h2>
-              <p className="text-slate-500 dark:text-slate-400 text-sm mb-6">JURE</p>
-              <div className="space-y-4">
-                <div className="flex items-center gap-3">
-                  <div className="landing-icon w-10 h-10 rounded-xl flex items-center justify-center shrink-0">
-                    <Mail className="w-5 h-5" />
+        <section className="features-block contact-block">
+          <div className="features-deck__inner">
+            <div className="contact-layout">
+              <Reveal className="contact-form-wrap" delay={0.04}>
+                <div className="features-block__head contact-section-head">
+                  <h2 className="features-block__title">
+                    {t.form.titleA} <em>{t.form.titleB}</em>
+                  </h2>
+                  <p className="features-block__lead">{t.form.note}</p>
+                </div>
+                <form onSubmit={submit} className="contact-form about-panel about-panel--mist">
+                  <div className="contact-form__grid">
+                    <label className="contact-field">
+                      <span>{t.form.name}</span>
+                      <Input
+                        name="name"
+                        value={form.name}
+                        onChange={onChange}
+                        required
+                        className="contact-input"
+                      />
+                    </label>
+                    <label className="contact-field">
+                      <span>{t.form.email}</span>
+                      <Input
+                        type="email"
+                        name="email"
+                        value={form.email}
+                        onChange={onChange}
+                        required
+                        className="contact-input"
+                      />
+                    </label>
+                    <label className="contact-field">
+                      <span>{t.form.company}</span>
+                      <Input
+                        name="company"
+                        value={form.company}
+                        onChange={onChange}
+                        className="contact-input"
+                      />
+                    </label>
+                    <label className="contact-field">
+                      <span>{t.form.subject}</span>
+                      <Input
+                        name="subject"
+                        value={form.subject}
+                        onChange={onChange}
+                        className="contact-input"
+                      />
+                    </label>
+                    <label className="contact-field contact-field--full">
+                      <span>{t.form.message}</span>
+                      <Textarea
+                        name="message"
+                        rows={6}
+                        value={form.message}
+                        onChange={onChange}
+                        required
+                        className="contact-input"
+                      />
+                    </label>
+                    <label className="contact-consent contact-field--full">
+                      <input
+                        type="checkbox"
+                        name="consent"
+                        checked={form.consent}
+                        onChange={onChange}
+                      />
+                      <span>{t.form.consent}</span>
+                    </label>
+                    <div className="contact-field--full">
+                      <button
+                        type="submit"
+                        disabled={sending}
+                        className="features-btn features-btn--dark contact-submit"
+                      >
+                        <Send className="w-4 h-4 me-2" />
+                        {sending ? t.form.sending : t.hero.cta}
+                      </button>
+                    </div>
                   </div>
-                  <a
-                    href={`mailto:${CONTACT_INBOX}`}
-                    className="underline underline-offset-4 hover:text-[#A58CF4] transition-colors"
-                  >
-                    {t.info.email}
+                </form>
+              </Reveal>
+
+              <Reveal delay={0.1}>
+                <div className="features-block__head contact-section-head">
+                  <h2 className="features-block__title">
+                    {t.info.titleA} <em>{t.info.titleB}</em>
+                  </h2>
+                  <p className="features-block__lead">{t.info.note}</p>
+                </div>
+                <aside className="about-panel about-panel--dark contact-info">
+                  <a href={`mailto:${CONTACT_INBOX}`} className="contact-info__row">
+                    <span className="contact-info__icon">
+                      <Mail className="w-4 h-4" />
+                    </span>
+                    <span>{t.info.email}</span>
                   </a>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="landing-icon w-10 h-10 rounded-xl flex items-center justify-center shrink-0">
-                    <Phone className="w-5 h-5" />
+                  <div className="contact-info__row">
+                    <span className="contact-info__icon">
+                      <Phone className="w-4 h-4" />
+                    </span>
+                    <span>{t.info.phone}</span>
                   </div>
-                  <span>{t.info.phone}</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="landing-icon w-10 h-10 rounded-xl flex items-center justify-center shrink-0">
-                    <MapPin className="w-5 h-5" />
+                  <div className="contact-info__row">
+                    <span className="contact-info__icon">
+                      <MapPin className="w-4 h-4" />
+                    </span>
+                    <span>{t.info.address}</span>
                   </div>
-                  <span>{t.info.address}</span>
-                </div>
-                <div className="pt-4">
-                  <Button
-                    variant="outline"
-                    onClick={() => navigate(path("status"))}
-                    className="w-full landing-btn-secondary"
-                  >
+                  <Link to={path("status")} className="features-btn features-btn--ghost contact-info__status">
                     {t.info.viewStatus}
                     <ArrowRight className="w-4 h-4 ms-2 rtl:rotate-180" />
-                  </Button>
-                </div>
-              </div>
+                  </Link>
+                </aside>
+              </Reveal>
             </div>
-          </Reveal>
-        </div>
-      </section>
+          </div>
+        </section>
+      </div>
     </MarketingShell>
   );
 };

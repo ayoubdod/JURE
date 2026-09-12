@@ -2,7 +2,7 @@ import type { MarketingLocale } from "../site";
 import type { FaqEntry } from "../structuredData";
 
 /**
- * Audience solution pages — genuine value for law firms and legal departments.
+ * Audience solution page — law firms.
  * Claims map to shipped JURE capabilities only.
  */
 
@@ -173,16 +173,16 @@ export const SOLUTIONS_CONTENT: SolutionsContentMap = {
         "تحتاج مكاتب المحاماة إلى أكثر من خزانة ملفات وصندوق بريد. JURE منصة LegalTech تجمع الملفات والعملاء والمستندات والمواعيد وتعاون الفريق والمساعدة بالذكاء الاصطناعي في مساحة آمنة واحدة — ليعمل الشركاء والمساعدون من نفس صورة كل قضية.",
       whoTitle: "مصممة لممارسة المكتب، لا لأدوات مشاريع عامة",
       whoBody:
-        "سواء كنت محاميًا مستقلًا أو مكتبًا ناشئًا أو مكتبًا متعدد المحامين، الاحتكاك اليومي متشابه: ملفات مشتتة، مواعيد سهلة الفوات، وأدوات ذكاء اصطناعي خارج الملف. صُممت JURE لهذه الواقعية.",
+        "سواء كنت محاميا مستقلا أو مكتبا ناشئا أو مكتبا متعدد المحامين، الاحتكاك اليومي متشابه: ملفات مشتتة، مواعيد سهلة الفوات، وأدوات ذكاء اصطناعي خارج الملف. صممت JURE لهذه الواقعية.",
       challengesTitle: "ما الذي يعيق مكاتب المحاماة",
       challenges: [
         {
           title: "الملفات تعيش في أماكن كثيرة",
-          body: "البريد والأقراص المشتركة والجداول والمحادثات يحمل كل منها جزءًا من الحقيقة. إعادة بناء الملف يهدر الوقت ويخفي المخاطر.",
+          body: "البريد والأقراص المشتركة والجداول والمحادثات يحمل كل منها جزءا من الحقيقة. إعادة بناء الملف يهدر الوقت ويخفي المخاطر.",
         },
         {
           title: "المواعيد والمسؤوليات صعبة الرؤية",
-          body: "الجلسات والإيداعات والمهام الداخلية تفلت حين لا تُربط بالملف وتكون مرئية للفريق.",
+          body: "الجلسات والإيداعات والمهام الداخلية تفلت حين لا تربط بالملف وتكون مرئية للفريق.",
         },
         {
           title: "الذكاء الاصطناعي خارج الملف",
@@ -191,7 +191,7 @@ export const SOLUTIONS_CONTENT: SolutionsContentMap = {
       ],
       approachTitle: "كيف تدعم JURE مكاتب المحاماة",
       approachBody:
-        "تربط JURE كل ملف بموكله ومستنداته ومهامه ومواعيده والمحامين المعيَّنين. تبقى المراسلة والمكالمات مرتبطة بالعمل. وجوريا — مساعد الذكاء الاصطناعي من JURE في الوصول المبكر — يساعد في تحليل العقود وأسئلة البحث والصياغة داخل المساحة نفسها، مع مراجعة المحامي.",
+        "تربط JURE كل ملف بموكله ومستنداته ومهامه ومواعيده والمحامين المعينين. تبقى المراسلة والمكالمات مرتبطة بالعمل. وجوريا — مساعد الذكاء الاصطناعي من JURE في الوصول المبكر — يساعد في تحليل العقود وأسئلة البحث والصياغة داخل المساحة نفسها، مع مراجعة المحامي.",
       points: [
         "إدارة الملفات والقضايا مرتبطة بالعميل",
         "مكتبة مستندات مع معاينة PDF وDOCX",
@@ -205,7 +205,7 @@ export const SOLUTIONS_CONTENT: SolutionsContentMap = {
       workflowSteps: [
         "افتح أو أنشئ الملف واربط العميل",
         "ارفع المستندات واربطها بالملف",
-        "أنشئ المهام وحدد المواعيد وعيّن الفريق",
+        "أنشئ المهام وحدد المواعيد وعين الفريق",
         "تعاون عبر المحادثة أو المكالمات دون مغادرة الملف",
         "استخدم جوريا للمرور الأول — ثم مراجعة المحامي قبل الاعتماد",
       ],
@@ -218,12 +218,12 @@ export const SOLUTIONS_CONTENT: SolutionsContentMap = {
         {
           question: "هل يجب استبدال كل الأدوات دفعة واحدة؟",
           answer:
-            "صُممت JURE كمساحة أساسية للملفات والتعاون. تبدأ الفرق عادة بالملفات الجديدة وتنقل المستندات تدريجيًا.",
+            "صممت JURE كمساحة أساسية للملفات والتعاون. تبدأ الفرق عادة بالملفات الجديدة وتنقل المستندات تدريجيا.",
         },
         {
           question: "كيف يندمج الذكاء الاصطناعي في عمل المكتب؟",
           answer:
-            "جوريا مساعد JURE في الوصول المبكر يساعد في التحليل والبحث والصياغة داخل الملف. المخرجات موسومة كذكاء اصطناعي ويجب أن يراجعها محامٍ.",
+            "جوريا مساعد JURE في الوصول المبكر يساعد في التحليل والبحث والصياغة داخل الملف. المخرجات موسومة كذكاء اصطناعي ويجب أن يراجعها محام.",
         },
         {
           question: "ما اللغات التي تدعمها JURE للمكاتب؟",
@@ -234,220 +234,7 @@ export const SOLUTIONS_CONTENT: SolutionsContentMap = {
       related: ["legalCaseManagement", "legalPracticeManagement", "juria", "security"],
       cta: {
         title: "شاهد مساحة عمل مكتب حديثة",
-        body: "تجوّل في الملفات والمستندات والتعاون وجوريا داخل JURE — مصممة لممارسة مكاتب المحاماة.",
-      },
-    },
-  },
-
-  solutionsLegalDepartments: {
-    en: {
-      h1: "LegalTech for legal departments — visibility across legal work",
-      intro:
-        "In-house legal teams manage demand, not billable hours. JURE gives corporate legal departments a shared workspace for matters, documents, deadlines and collaboration — so leadership can see workload and the team can keep institutional knowledge in one place.",
-      whoTitle: "For counsel who run requests, not timesheets",
-      whoBody:
-        "Legal departments face volume from the business, pressure for visibility, and the risk that knowledge walks out when someone leaves. Generic project tools rarely map to matters, privileged documents and multilingual legal work.",
-      challengesTitle: "What legal departments need",
-      challenges: [
-        {
-          title: "Requests arrive from everywhere",
-          body: "Contracts, queries and approvals flow in from the business without a single place to track status, owner and deadline.",
-        },
-        {
-          title: "Visibility for leadership",
-          body: "General counsel and executives need a clear view of what legal is working on — without chasing status in email.",
-        },
-        {
-          title: "Knowledge continuity",
-          body: "Past positions, templates and matter history often live in personal inboxes. When a lawyer leaves, the department loses memory.",
-        },
-      ],
-      approachTitle: "How JURE supports legal departments",
-      approachBody:
-        "JURE centralizes matters and documents for the legal team, with tasks and deadlines visible to the people who need them. Collaboration stays inside the workspace. Juria can accelerate first drafts and contract reviews in early access — always subject to counsel review before anything is sent to the business.",
-      points: [
-        "Shared matter workspace for the legal team",
-        "Documents attached to matters with preview",
-        "Tasks and deadlines with clear ownership",
-        "Team messaging tied to the work",
-        "Role-based access for confidential matters",
-        "Juria AI assistance in early access with human review",
-        "FR · EN · AR for multilingual corporate groups",
-      ],
-      workflowTitle: "From business request to closed matter",
-      workflowSteps: [
-        "Capture the request as a matter with an owner",
-        "Attach contracts and related documents",
-        "Set tasks and deadlines visible to the team",
-        "Collaborate and escalate inside JURE",
-        "Use Juria for a first pass where useful — counsel validates before release",
-      ],
-      faqs: [
-        {
-          question: "Is JURE only for law firms?",
-          answer:
-            "No. Corporate legal departments use JURE to organize matters, documents and deadlines with shared visibility — without needing a full firm billing setup for day-to-day legal operations.",
-        },
-        {
-          question: "Can we control who sees sensitive matters?",
-          answer:
-            "Yes. Access is controlled by roles and permissions within the firm's (or department's) isolated workspace. Each organization's data is scoped to its own environment.",
-        },
-        {
-          question: "How does AI help in-house counsel?",
-          answer:
-            "Juria, in early access, can help with contract analysis and drafting assistance inside the matter. Counsel remains responsible for reviewing and approving anything that goes to the business.",
-        },
-        {
-          question: "Does JURE support multilingual groups?",
-          answer:
-            "Yes. The product interface works in French, English and Arabic, including right-to-left layout — useful for groups operating across Morocco, MENA and Africa.",
-        },
-      ],
-      related: ["legalOperations", "legalDocumentManagement", "juria", "security"],
-      cta: {
-        title: "Give legal a shared operating picture",
-        body: "See how JURE helps legal departments organize matters, documents and collaboration in one LegalTech workspace.",
-      },
-    },
-    fr: {
-      h1: "LegalTech pour directions juridiques — de la visibilité sur le travail juridique",
-      intro:
-        "Les directions juridiques gèrent la demande, pas des heures facturables. JURE leur offre un espace partagé pour dossiers, documents, échéances et collaboration — afin que la direction voie la charge et que l'équipe conserve la mémoire institutionnelle au même endroit.",
-      whoTitle: "Pour les juristes qui gèrent des demandes, pas des feuilles de temps",
-      whoBody:
-        "Volume venant du métier, besoin de visibilité, risque de perte de connaissance quand quelqu'un part : les outils projet génériques collent rarement aux dossiers, documents privilégiés et travail juridique multilingue.",
-      challengesTitle: "Ce dont les directions juridiques ont besoin",
-      challenges: [
-        {
-          title: "Les demandes arrivent de partout",
-          body: "Contrats, questions et validations affluent sans lieu unique pour suivre statut, responsable et échéance.",
-        },
-        {
-          title: "Visibilité pour la direction",
-          body: "Le general counsel et les dirigeants ont besoin de voir sur quoi travaille le juridique — sans chasser le statut par e-mail.",
-        },
-        {
-          title: "Continuité des connaissances",
-          body: "Positions passées, modèles et historique vivent souvent dans des boîtes mail personnelles. Quand un juriste part, le département perd de la mémoire.",
-        },
-      ],
-      approachTitle: "Comment JURE aide les directions juridiques",
-      approachBody:
-        "JURE centralise dossiers et documents pour l'équipe juridique, avec tâches et échéances visibles pour qui en a besoin. La collaboration reste dans l'espace de travail. Juria peut accélérer premiers jets et revues de contrats en accès anticipé — toujours soumis à la validation du juriste avant envoi au métier.",
-      points: [
-        "Espace de dossiers partagé pour l'équipe juridique",
-        "Documents rattachés aux dossiers avec prévisualisation",
-        "Tâches et échéances avec responsabilité claire",
-        "Messagerie d'équipe liée au travail",
-        "Accès par rôles pour les dossiers sensibles",
-        "Assistance IA Juria en accès anticipé avec relecture humaine",
-        "FR · EN · AR pour les groupes multilingues",
-      ],
-      workflowTitle: "De la demande métier au dossier clos",
-      workflowSteps: [
-        "Capturer la demande comme dossier avec un responsable",
-        "Attacher contrats et documents associés",
-        "Fixer tâches et échéances visibles pour l'équipe",
-        "Collaborer et escalader dans JURE",
-        "Utiliser Juria pour une première passe si utile — le juriste valide avant diffusion",
-      ],
-      faqs: [
-        {
-          question: "JURE est-il réservé aux cabinets ?",
-          answer:
-            "Non. Les directions juridiques utilisent JURE pour organiser dossiers, documents et échéances avec une visibilité partagée — sans avoir besoin d'une facturation de cabinet pour les opérations quotidiennes.",
-        },
-        {
-          question: "Peut-on contrôler qui voit les dossiers sensibles ?",
-          answer:
-            "Oui. L'accès est contrôlé par rôles et permissions dans l'espace isolé de l'organisation. Les données de chaque organisation restent dans son propre environnement.",
-        },
-        {
-          question: "Comment l'IA aide-t-elle le juridique interne ?",
-          answer:
-            "Juria, en accès anticipé, peut aider à l'analyse de contrats et à la rédaction dans le dossier. Le juriste reste responsable de la relecture et de l'approbation avant envoi au métier.",
-        },
-        {
-          question: "JURE convient-il aux groupes multilingues ?",
-          answer:
-            "Oui. L'interface fonctionne en français, anglais et arabe, y compris RTL — utile pour les groupes opérant au Maroc, au Moyen-Orient et en Afrique.",
-        },
-      ],
-      related: ["legalOperations", "legalDocumentManagement", "juria", "security"],
-      cta: {
-        title: "Donner au juridique une vision opérationnelle partagée",
-        body: "Découvrez comment JURE aide les directions juridiques à organiser dossiers, documents et collaboration dans une plateforme LegalTech.",
-      },
-    },
-    ar: {
-      h1: "LegalTech للإدارات القانونية — رؤية عبر العمل القانوني",
-      intro:
-        "تدير الإدارات القانونية الطلب لا الساعات القابلة للفوترة. تمنح JURE الإدارات القانونية للشركات مساحة مشتركة للملفات والمستندات والمواعيد والتعاون — ليتمكن القيادة من رؤية عبء العمل ويحافظ الفريق على المعرفة المؤسسية في مكان واحد.",
-      whoTitle: "للمستشارين الذين يديرون الطلبات لا جداول الوقت",
-      whoBody:
-        "تواجه الإدارات القانونية حجمًا من الأعمال، وضغطًا على الرؤية، وخطر فقدان المعرفة عند مغادرة شخص. نادرًا ما تناسب أدوات المشاريع العامة الملفات والمستندات المميزة والعمل القانوني متعدد اللغات.",
-      challengesTitle: "ما تحتاجه الإدارات القانونية",
-      challenges: [
-        {
-          title: "الطلبات تصل من كل جهة",
-          body: "العقود والاستفسارات والموافقات تتدفق من الأعمال دون مكان واحد لتتبع الحالة والمسؤول والموعد.",
-        },
-        {
-          title: "الرؤية للقيادة",
-          body: "يحتاج المستشار العام والتنفيذيون إلى صورة واضحة عما يعمل عليه الشؤون القانونية — دون ملاحقة الحالة عبر البريد.",
-        },
-        {
-          title: "استمرارية المعرفة",
-          body: "المواقف السابقة والقوالب وتاريخ الملفات غالبًا في صناديق بريد شخصية. عند مغادرة محامٍ تفقد الإدارة الذاكرة.",
-        },
-      ],
-      approachTitle: "كيف تدعم JURE الإدارات القانونية",
-      approachBody:
-        "تركّز JURE الملفات والمستندات لفريق الشؤون القانونية، مع مهام ومواعيد مرئية لمن يحتاجها. يبقى التعاون داخل مساحة العمل. ويمكن لجوريا تسريع المسودات الأولى ومراجعات العقود في الوصول المبكر — مع خضوع دائم لمراجعة المستشار قبل أي إرسال للأعمال.",
-      points: [
-        "مساحة ملفات مشتركة لفريق الشؤون القانونية",
-        "مستندات مربوطة بالملفات مع معاينة",
-        "مهام ومواعيد بمسؤولية واضحة",
-        "مراسلة فريق مرتبطة بالعمل",
-        "وصول حسب الأدوار للملفات الحساسة",
-        "مساعدة جوريا في الوصول المبكر مع مراجعة بشرية",
-        "FR · EN · AR للمجموعات متعددة اللغات",
-      ],
-      workflowTitle: "من طلب الأعمال إلى إغلاق الملف",
-      workflowSteps: [
-        "سجّل الطلب كملف مع مسؤول",
-        "أرفق العقود والمستندات ذات الصلة",
-        "حدد المهام والمواعيد المرئية للفريق",
-        "تعاون وتصعيد داخل JURE",
-        "استخدم جوريا للمرور الأول عند الحاجة — يتحقق المستشار قبل النشر",
-      ],
-      faqs: [
-        {
-          question: "هل JURE لمكاتب المحاماة فقط؟",
-          answer:
-            "لا. تستخدم الإدارات القانونية للشركات JURE لتنظيم الملفات والمستندات والمواعيد برؤية مشتركة — دون الحاجة لإعداد فوترة مكتب كامل للعمليات اليومية.",
-        },
-        {
-          question: "هل يمكننا التحكم في من يرى الملفات الحساسة؟",
-          answer:
-            "نعم. الوصول محكوم بالأدوار والصلاحيات داخل مساحة المنظمة المعزولة. تبقى بيانات كل منظمة في بيئتها الخاصة.",
-        },
-        {
-          question: "كيف يساعد الذكاء الاصطناعي المستشار الداخلي؟",
-          answer:
-            "جوريا في الوصول المبكر يمكنها المساعدة في تحليل العقود والصياغة داخل الملف. يبقى المستشار مسؤولًا عن المراجعة والموافقة قبل الإرسال للأعمال.",
-        },
-        {
-          question: "هل تدعم JURE المجموعات متعددة اللغات؟",
-          answer:
-            "نعم. تعمل الواجهة بالفرنسية والإنجليزية والعربية بما فيها RTL — مفيدة للمجموعات العاملة عبر المغرب ومنطقة الشرق الأوسط وشمال أفريقيا وأفريقيا.",
-        },
-      ],
-      related: ["legalOperations", "legalDocumentManagement", "juria", "security"],
-      cta: {
-        title: "امنح الشؤون القانونية صورة تشغيلية مشتركة",
-        body: "اكتشف كيف تساعد JURE الإدارات القانونية على تنظيم الملفات والمستندات والتعاون في منصة LegalTech واحدة.",
+        body: "تجول في الملفات والمستندات والتعاون وجوريا داخل JURE — مصممة لممارسة مكاتب المحاماة.",
       },
     },
   },

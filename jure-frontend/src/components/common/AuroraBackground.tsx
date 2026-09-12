@@ -70,8 +70,8 @@ export function AuroraPage({
 }
 
 const MARKETING_STRONG =
-  /\/(juria|demo|features|legal-ai|legal-research|responsible-legal-ai)(\/|$)/;
-const MARKETING_MINIMAL = /\/(privacy|terms|docs)(\/|$)/;
+  /\/(juria|features|legal-ai|responsible-legal-ai)(\/|$)/;
+const MARKETING_MINIMAL = /\/(privacy|terms)(\/|$)/;
 
 /** Landing + AI marketing: strong. Legal copy: minimal. Other marketing: medium. */
 export function auroraForMarketingPath(pathname: string): AuroraIntensity {

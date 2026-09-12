@@ -1,7 +1,6 @@
-// src/pages/About.tsx
-import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router";
-import { Button } from "@/components/ui/button";
+// src/pages/About.tsx — company story in the same presentation language as Features.
+import React from "react";
+import { Link } from "react-router";
 import {
   ArrowRight,
   Shield,
@@ -15,58 +14,119 @@ import {
 } from "lucide-react";
 import MarketingShell from "@/components/landing/MarketingShell";
 import Reveal from "@/components/landing/Reveal";
-import FeatureTile from "@/components/landing/FeatureTile";
 import { RouteSeo } from "@/marketing/Seo";
 import { useMarketingLang } from "@/marketing/MarketingLocale";
-
-/**
- * About Page
- * - Shared MarketingShell (nav / lang / theme / footer)
- * - Visual language aligned with Landing (glass, reveal, brand #A58CF4)
- */
+import { track, MarketingEvents } from "@/lib/analytics";
+import "@/components/landing/features-deck.css";
 
 type Lang = "fr" | "en" | "ar";
 
-const aboutFr = {
-    htmlLang: "fr",
-    dir: "ltr" as "ltr" | "rtl",
-    nav: { features: "Fonctionnalités", pricing: "Tarifs", about: "À propos", contact: "Contact" },
-    auth: { signin: "Se connecter" },
-    themeToggle: { label: "Basculer le thème", title: "Basculer le thème" },
+type AboutStrings = {
+  hero: {
+    eyebrow: string;
+    titleA: string;
+    titleB: string;
+    subtitle: string;
+    ctaPrimary: string;
+    ctaSecondary: string;
+    trust: string;
+  };
+  pillars: {
+    titleA: string;
+    titleB: string;
+    note: string;
+    mission: { title: string; desc: string };
+    vision: { title: string; desc: string };
+    values: { title: string; items: string[] };
+  };
+  impact: {
+    titleA: string;
+    titleB: string;
+    note: string;
+    items: { title: string; desc: string }[];
+  };
+  timeline: {
+    titleA: string;
+    titleB: string;
+    note: string;
+    items: { when: string; what: string }[];
+  };
+  team: {
+    titleA: string;
+    titleB: string;
+    note: string;
+    members: { name: string; role: string; initials: string; blurb: string }[];
+  };
+  cta: {
+    title: string;
+    subtitle: string;
+    primary: string;
+    secondary: string;
+  };
+};
+
+const STRINGS: Record<Lang, AboutStrings> = {
+  fr: {
     hero: {
-      titleA: "Nous construisons l’avenir du droit,",
+      eyebrow: "À propos de JURE",
+      titleA: "Nous construisons l'avenir du droit,",
       titleB: "avec et pour les juristes.",
       subtitle:
-        "JURE est une plateforme legaltech centrée sur l’exigence métier : IA responsable, gestion de dossiers fluide et collaboration sécurisée pour des cabinets modernes.",
-      ctaContact: "Parler à l’équipe",
-      ctaDemo: "Voir la démo",
-      trustLine: "Conçu pour la conformité (privacy-first, contrôle d’accès, traçabilité).",
+        "JURE est une plateforme legaltech centrée sur l'exigence métier : IA responsable, gestion de dossiers fluide et collaboration sécurisée pour des cabinets modernes.",
+      ctaPrimary: "Parler à l'équipe",
+      ctaSecondary: "Explorer les fonctionnalités",
+      trust: "Privacy-first • Contrôle d'accès • Traçabilité",
     },
     pillars: {
+      titleA: "Ce qui nous",
+      titleB: "guide.",
+      note: "Mission, vision et valeurs — le cadre qui oriente chaque décision produit.",
       mission: {
         title: "Notre mission",
-        desc: "Accélérer la pratique juridique sans compromis sur la qualité, l’éthique et la confidentialité.",
+        desc: "Accélérer la pratique juridique sans compromis sur la qualité, l'éthique et la confidentialité.",
       },
       vision: {
         title: "Notre vision",
-        desc: "Une pratique augmentée par l’IA, centrée sur l’humain, accessible à tous les cabinets.",
+        desc: "Une pratique augmentée par l'IA, centrée sur l'humain, accessible à tous les cabinets.",
       },
       values: {
         title: "Nos valeurs",
-        items: ["Intégrité & exigence", "Innovation responsable", "Impact métier mesurable", "Privacy-by-design", "Humain-dans-la-boucle"],
+        items: [
+          "Intégrité & exigence",
+          "Innovation responsable",
+          "Impact métier mesurable",
+          "Privacy-by-design",
+          "Humain-dans-la-boucle",
+        ],
       },
     },
     impact: {
-      title: "Ce qui nous distingue",
+      titleA: "Ce qui nous",
+      titleB: "distingue.",
+      note: "Des choix concrets pour accélérer le travail juridique sans sacrifier la confiance.",
       items: [
-        { title: "IA juridique pragmatique", desc: "Recherche, analyse et rédaction assistée, adaptées au terrain." },
-        { title: "Sécurité & conformité", desc: "Chiffrement, rôles, journaux, bonnes pratiques conformes." },
-        { title: "Collaboration efficace", desc: "Espaces d’équipe, checklists, tâches et partages maîtrisés." },
-        { title: "Connaissance vivante", desc: "Bibliothèque enrichie, recherche sémantique et références." },
+        {
+          title: "IA juridique pragmatique",
+          desc: "Recherche, analyse et rédaction assistée, adaptées au terrain.",
+        },
+        {
+          title: "Sécurité & conformité",
+          desc: "Chiffrement, rôles, journaux, bonnes pratiques conformes.",
+        },
+        {
+          title: "Collaboration efficace",
+          desc: "Espaces d'équipe, checklists, tâches et partages maîtrisés.",
+        },
+        {
+          title: "Connaissance vivante",
+          desc: "Bibliothèque enrichie, recherche sémantique et références.",
+        },
       ],
     },
     timeline: {
-      title: "Notre trajectoire",
+      titleA: "Notre",
+      titleB: "trajectoire.",
+      note: "De l'idéation aux pilotes — les étapes qui ont façonné la plateforme.",
       items: [
         { when: "2023", what: "Idéation & cadrage : premiers prototypes et entretiens utilisateurs." },
         { when: "2024", what: "MVP orienté dossiers & IA responsable, pilotes avec des cabinets." },
@@ -74,43 +134,53 @@ const aboutFr = {
       ],
     },
     team: {
-      title: "Équipe & leadership",
-      subtitle: "Une équipe pluridisciplinaire au croisement droit, produit et ingénierie.",
+      titleA: "Équipe",
+      titleB: "& leadership.",
+      note: "Une équipe pluridisciplinaire au croisement droit, produit et ingénierie.",
       members: [
-        { name: "Ayoub Hammady", role: "Fondateur & Legal-Tech Lead", initials: "AH" },
-        { name: "Product & Eng Team", role: "Produit • Front/Back • IA", initials: "PE" },
-        { name: "Advisory Circle", role: "Conformité • Méthodo • Marché", initials: "AC" },
+        {
+          name: "Ayoub Hammady",
+          role: "Fondateur & Legal-Tech Lead",
+          initials: "AH",
+          blurb: "Focalisé sur des solutions concrètes, du discovery au déploiement sécurisé.",
+        },
+        {
+          name: "Product & Eng Team",
+          role: "Produit • Front/Back • IA",
+          initials: "PE",
+          blurb: "Focalisé sur des solutions concrètes, du discovery au déploiement sécurisé.",
+        },
+        {
+          name: "Advisory Circle",
+          role: "Conformité • Méthodo • Marché",
+          initials: "AC",
+          blurb: "Focalisé sur des solutions concrètes, du discovery au déploiement sécurisé.",
+        },
       ],
     },
     cta: {
       title: "Prêt à transformer votre pratique ?",
-      subtitle: "Discutons de vos cas d’usage et de vos priorités.",
+      subtitle: "Discutons de vos cas d'usage et de vos priorités.",
       primary: "Nous contacter",
-      secondary: "Essayer la démo",
+      secondary: "Explorer les fonctionnalités",
     },
-    footer: { privacy: "Confidentialité", terms: "Conditions", status: "Statut", rights: "Tous droits réservés." },
-};
+  },
 
-type AboutCopy = typeof aboutFr;
-
-const STRINGS: Record<Lang, AboutCopy> = {
-  fr: aboutFr,
   en: {
-    htmlLang: "en",
-    dir: "ltr",
-    nav: { features: "Features", pricing: "Pricing", about: "About", contact: "Contact" },
-    auth: { signin: "Sign in" },
-    themeToggle: { label: "Toggle theme", title: "Toggle theme" },
     hero: {
-      titleA: "We’re building the future of law,",
+      eyebrow: "About JURE",
+      titleA: "We're building the future of law,",
       titleB: "with and for legal teams.",
       subtitle:
         "JURE is a legaltech platform obsessed with real-world outcomes: responsible AI, streamlined matter management, and secure collaboration for modern firms.",
-      ctaContact: "Talk to the team",
-      ctaDemo: "View demo",
-      trustLine: "Designed for compliance (privacy-first, access control, auditability).",
+      ctaPrimary: "Talk to the team",
+      ctaSecondary: "Explore features",
+      trust: "Privacy-first • Access control • Auditability",
     },
     pillars: {
+      titleA: "What",
+      titleB: "guides us.",
+      note: "Mission, vision, and values — the frame behind every product decision.",
       mission: {
         title: "Our mission",
         desc: "Speed up legal work without sacrificing quality, ethics, or confidentiality.",
@@ -121,20 +191,42 @@ const STRINGS: Record<Lang, AboutCopy> = {
       },
       values: {
         title: "Our values",
-        items: ["Integrity & rigor", "Responsible innovation", "Measurable impact", "Privacy-by-design", "Human-in-the-loop"],
+        items: [
+          "Integrity & rigor",
+          "Responsible innovation",
+          "Measurable impact",
+          "Privacy-by-design",
+          "Human-in-the-loop",
+        ],
       },
     },
     impact: {
-      title: "What sets us apart",
+      titleA: "What sets",
+      titleB: "us apart.",
+      note: "Concrete choices that accelerate legal work without trading away trust.",
       items: [
-        { title: "Pragmatic legal AI", desc: "Research, analysis, and assisted drafting built for the field." },
-        { title: "Security & compliance", desc: "Encryption, roles, logs, and sound compliance practices." },
-        { title: "Effective collaboration", desc: "Team spaces, checklists, tasks, and controlled sharing." },
-        { title: "Living knowledge", desc: "Enriched library, semantic search, and references." },
+        {
+          title: "Pragmatic legal AI",
+          desc: "Research, analysis, and assisted drafting built for the field.",
+        },
+        {
+          title: "Security & compliance",
+          desc: "Encryption, roles, logs, and sound compliance practices.",
+        },
+        {
+          title: "Effective collaboration",
+          desc: "Team spaces, checklists, tasks, and controlled sharing.",
+        },
+        {
+          title: "Living knowledge",
+          desc: "Enriched library, semantic search, and references.",
+        },
       ],
     },
     timeline: {
-      title: "Our journey",
+      titleA: "Our",
+      titleB: "journey.",
+      note: "From ideation to pilots — the milestones that shaped the platform.",
       items: [
         { when: "2023", what: "Ideation & scoping: early prototypes and user interviews." },
         { when: "2024", what: "MVP with responsible AI & matters, piloted with firms." },
@@ -142,38 +234,53 @@ const STRINGS: Record<Lang, AboutCopy> = {
       ],
     },
     team: {
-      title: "Team & leadership",
-      subtitle: "A cross-disciplinary crew at the intersection of law, product, and engineering.",
+      titleA: "Team",
+      titleB: "& leadership.",
+      note: "A cross-disciplinary crew at the intersection of law, product, and engineering.",
       members: [
-        { name: "Ayoub Hammady", role: "Founder & Legal-Tech Lead", initials: "AH" },
-        { name: "Product & Eng Team", role: "Product • Front/Back • AI", initials: "PE" },
-        { name: "Advisory Circle", role: "Compliance • Method • Market", initials: "AC" },
+        {
+          name: "Ayoub Hammady",
+          role: "Founder & Legal-Tech Lead",
+          initials: "AH",
+          blurb: "Focused on real outcomes, from discovery to secure deployment.",
+        },
+        {
+          name: "Product & Eng Team",
+          role: "Product • Front/Back • AI",
+          initials: "PE",
+          blurb: "Focused on real outcomes, from discovery to secure deployment.",
+        },
+        {
+          name: "Advisory Circle",
+          role: "Compliance • Method • Market",
+          initials: "AC",
+          blurb: "Focused on real outcomes, from discovery to secure deployment.",
+        },
       ],
     },
     cta: {
       title: "Ready to transform your practice?",
-      subtitle: "Let’s discuss your use cases and priorities.",
+      subtitle: "Let's discuss your use cases and priorities.",
       primary: "Contact us",
-      secondary: "Try the demo",
+      secondary: "Explore features",
     },
-    footer: { privacy: "Privacy", terms: "Terms", status: "Status", rights: "All rights reserved." },
   },
+
   ar: {
-    htmlLang: "ar",
-    dir: "rtl",
-    nav: { features: "الميزات", pricing: "الأسعار", about: "حول", contact: "اتصل بنا" },
-    auth: { signin: "تسجيل الدخول" },
-    themeToggle: { label: "تبديل السمة", title: "تبديل السمة" },
     hero: {
-      titleA: "نبني مستقبل القانون",
+      eyebrow: "حول JURE",
+      titleA: "نبني مستقبل القانون،",
       titleB: "مع الفرق القانونية ومن أجلها.",
       subtitle:
-        "JURE منصة قانونية تركّز على النتائج الواقعية: ذكاء اصطناعي مسؤول، إدارة قضايا مبسطة، وتعاون آمن للمكاتب الحديثة.",
-      ctaContact: "تحدث مع الفريق",
-      ctaDemo: "شاهد العرض",
-      trustLine: "مصممة للتوافق (خصوصية أولاً، تحكم بالصلاحيات، قابلية التدقيق).",
+        "JURE منصة قانونية تركز على النتائج الواقعية: ذكاء اصطناعي مسؤول، إدارة قضايا مبسطة، وتعاون آمن للمكاتب الحديثة.",
+      ctaPrimary: "تحدث مع الفريق",
+      ctaSecondary: "استكشف الميزات",
+      trust: "خصوصية أولاً • تحكم بالصلاحيات • قابلية التدقيق",
     },
     pillars: {
+      titleA: "ما",
+      titleB: "يوجّهنا.",
+      note: "المهمة والرؤية والقيم — الإطار الذي يقود كل قرار في المنتج.",
       mission: {
         title: "مهمتنا",
         desc: "تسريع العمل القانوني دون المساس بالجودة أو الأخلاقيات أو السرية.",
@@ -188,300 +295,273 @@ const STRINGS: Record<Lang, AboutCopy> = {
       },
     },
     impact: {
-      title: "ما يميزنا",
+      titleA: "ما",
+      titleB: "يميزنا.",
+      note: "خيارات عملية لتسريع العمل القانوني دون التفريط في الثقة.",
       items: [
         { title: "ذكاء قانوني عملي", desc: "بحث وتحليل وصياغة مدعومة مصممة للواقع العملي." },
         { title: "الأمن والامتثال", desc: "تشفير، أدوار، سجلات، وممارسات امتثال راسخة." },
-        { title: "تعاون فعّال", desc: "مساحات فرق وقوائم مهام ومشاركة مضبوطة." },
-        { title: "معرفة حيّة", desc: "مكتبة غنية وبحث دلالي ومراجع." },
+        { title: "تعاون فعال", desc: "مساحات فرق وقوائم مهام ومشاركة مضبوطة." },
+        { title: "معرفة حية", desc: "مكتبة غنية وبحث دلالي ومراجع." },
       ],
     },
     timeline: {
-      title: "رحلتنا",
+      titleA: "رحلتنا",
+      titleB: "حتى الآن.",
+      note: "من الفكرة إلى التجارب — المحطات التي شكّلت المنصة.",
       items: [
         { when: "2023", what: "فكرة وتحديد النطاق: نماذج أولية ومقابلات مستخدمين." },
         { when: "2024", what: "نسخة أولية مع ذكاء مسؤول وإدارة قضايا، تجارب مع مكاتب." },
-        { when: "2025", what: "نسخة تجريبية مطوّرة، متعددة اللغات (FR/EN/AR)، أمان ومتانة أعلى." },
+        { when: "2025", what: "نسخة تجريبية مطورة، متعددة اللغات (FR/EN/AR)، أمان ومتانة أعلى." },
       ],
     },
     team: {
-      title: "الفريق والقيادة",
-      subtitle: "فريق متعدد التخصصات يجمع القانون والمنتج والهندسة.",
+      titleA: "الفريق",
+      titleB: "والقيادة.",
+      note: "فريق متعدد التخصصات يجمع القانون والمنتج والهندسة.",
       members: [
-        { name: "أيوب حمادي", role: "المؤسس وقائد الحلول القانونية التقنية", initials: "أح" },
-        { name: "فريق المنتج والهندسة", role: "منتج • واجهات/خلفية • ذكاء اصطناعي", initials: "فه" },
-        { name: "دائرة استشارية", role: "امتثال • منهجيات • سوق", initials: "دس" },
+        {
+          name: "أيوب حمادي",
+          role: "المؤسس وقائد الحلول القانونية التقنية",
+          initials: "أح",
+          blurb: "يركز على النتائج الواقعية من الاستكشاف إلى النشر الآمن.",
+        },
+        {
+          name: "فريق المنتج والهندسة",
+          role: "منتج • واجهات/خلفية • ذكاء اصطناعي",
+          initials: "فه",
+          blurb: "يركز على النتائج الواقعية من الاستكشاف إلى النشر الآمن.",
+        },
+        {
+          name: "دائرة استشارية",
+          role: "امتثال • منهجيات • سوق",
+          initials: "دس",
+          blurb: "يركز على النتائج الواقعية من الاستكشاف إلى النشر الآمن.",
+        },
       ],
     },
     cta: {
       title: "جاهز لتحويل ممارستك؟",
       subtitle: "دعنا نناقش حالات الاستخدام والأولويات لديك.",
       primary: "تواصل معنا",
-      secondary: "جرّب العرض",
+      secondary: "استكشف الميزات",
     },
-    footer: { privacy: "الخصوصية", terms: "الشروط", status: "الحالة", rights: "جميع الحقوق محفوظة." },
   },
 };
 
-const useI18n = () => {
-  const [lang, setLang] = useState<Lang>(() => {
-    const stored = localStorage.getItem("lang") as Lang | null;
-    if (stored) return stored;
-    const nav = (navigator.language || "en").toLowerCase();
-    if (nav.startsWith("fr")) return "fr";
-    if (nav.startsWith("ar")) return "ar";
-    return "en";
-  });
-
-  useEffect(() => {
-    const pack = STRINGS[lang];
-    document.documentElement.setAttribute("lang", pack.htmlLang);
-    document.documentElement.setAttribute("dir", pack.dir);
-    localStorage.setItem("lang", lang);
-  }, [lang]);
-
-  return { lang, setLang, t: STRINGS[lang] };
-};
-
-const AvatarCircle: React.FC<{ initials: string }> = ({ initials }) => (
-  <div className="w-14 h-14 rounded-full grid place-items-center text-white font-semibold shrink-0 bg-[#64499D] dark:bg-white dark:text-[#64499D]">
-    {initials}
-  </div>
-);
+const IMPACT_ICONS = [BookOpen, Shield, Users, Award];
+const IMPACT_TONES = ["dark", "mist", "photo", "accent"] as const;
 
 const About: React.FC = () => {
-  const navigate = useNavigate();
-  const { path } = useMarketingLang();
-  const { lang, setLang, t } = useI18n();
-
-  const go = (to: string) => navigate(to);
-
-  const impactIcons = [BookOpen, Shield, Users, Award];
-  const impactAccents = ["#A58CF4", "#4D3680", "#3E2D71", "#A58CF4"];
+  const { lang, dir, path } = useMarketingLang();
+  const t = STRINGS[lang];
+  const pills = t.hero.trust.split("•").map((s) => s.trim()).filter(Boolean);
 
   return (
-    <MarketingShell
-      lang={lang}
-      onLangChange={setLang}
-      labels={{
-        nav: { features: t.nav.features, about: t.nav.about, contact: t.nav.contact },
-        auth: t.auth,
-        themeToggle: t.themeToggle,
-        footer: t.footer,
-      }}
-      dir={t.dir}
-      activeNav="about"
-    >
+    <MarketingShell lang={lang} onLangChange={() => {}} dir={dir} activeNav="about">
       <RouteSeo routeKey="about" lang={lang} />
-      {/* Hero */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 pt-8 sm:pt-14 pb-10 sm:pb-12 md:pt-24 md:pb-20">
-        <Reveal className="text-center max-w-4xl mx-auto min-w-0">
-          <h1 className="font-display text-[2rem] leading-[1.15] sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight break-words text-[#64499D] dark:text-white">
-            {t.hero.titleA}
-            <br />
-            <span className="landing-hero-shimmer bg-gradient-to-r from-[#A58CF4] via-[#C4B0EF] to-[#A58CF4] bg-clip-text text-transparent">
-              {t.hero.titleB}
-            </span>
-          </h1>
-          <p className="mt-6 text-base sm:text-lg md:text-xl text-neutral-600 dark:text-neutral-300 leading-relaxed break-words">
-            {t.hero.subtitle}
-          </p>
-
-          <div
-            className="mt-8 sm:mt-10 flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center w-full sm:w-auto"
-          >
-            <Button
-              onClick={() => go(path("contact"))}
-              size="lg"
-              className="landing-cta-btn landing-btn-primary w-full sm:w-auto px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg font-medium"
-            >
-              {t.hero.ctaContact}
-              <ArrowRight className="ms-2 h-5 w-5 rtl:rotate-180" />
-            </Button>
-            <Button
-              onClick={() => go(path("demo"))}
-              variant="outline"
-              size="lg"
-              className="landing-btn-secondary w-full sm:w-auto px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg"
-            >
-              {t.hero.ctaDemo}
-            </Button>
-          </div>
-
-          <p className="mt-6 text-sm text-neutral-500">{t.hero.trustLine}</p>
-        </Reveal>
-
-        {/* Pillars */}
-        <div className="mt-12 sm:mt-16 grid grid-cols-1 md:grid-cols-3 gap-5 md:gap-6">
-          <Reveal delay={0}>
-            <div className="landing-glass landing-glass-glow rounded-2xl p-5 sm:p-7 h-full min-w-0 group">
-              <div className="landing-icon w-12 h-12 rounded-xl flex items-center justify-center mb-4">
-                <Target className="w-6 h-6" />
-              </div>
-              <h3 className="font-display text-xl sm:text-2xl font-bold tracking-tight mb-2 break-words">
-                {t.pillars.mission.title}
-              </h3>
-              <p className="text-neutral-600 dark:text-neutral-400 leading-relaxed break-words">
-                {t.pillars.mission.desc}
-              </p>
-            </div>
-          </Reveal>
-
-          <Reveal delay={0.06}>
-            <div className="landing-glass landing-glass-glow rounded-2xl p-5 sm:p-7 h-full min-w-0 group">
-              <div className="landing-icon w-12 h-12 rounded-xl flex items-center justify-center mb-4">
-                <Zap className="w-6 h-6" />
-              </div>
-              <h3 className="font-display text-xl sm:text-2xl font-bold tracking-tight mb-2 break-words">
-                {t.pillars.vision.title}
-              </h3>
-              <p className="text-neutral-600 dark:text-neutral-400 leading-relaxed break-words">
-                {t.pillars.vision.desc}
-              </p>
-            </div>
-          </Reveal>
-
-          <Reveal delay={0.12}>
-            <div className="landing-glass landing-glass-glow rounded-2xl p-5 sm:p-7 h-full min-w-0 group">
-              <div className="landing-icon w-12 h-12 rounded-xl flex items-center justify-center mb-4">
-                <Heart className="w-6 h-6" />
-              </div>
-              <h3 className="font-display text-xl sm:text-2xl font-bold tracking-tight mb-3 break-words">
-                {t.pillars.values.title}
-              </h3>
-              <ul className="space-y-2 text-neutral-700 dark:text-neutral-300">
-                {t.pillars.values.items.map((v: string, i: number) => (
-                  <li key={i} className="flex items-start gap-2">
-                    <Check className="w-5 h-5 text-[#A58CF4] dark:text-[#A58CF4] shrink-0 mt-0.5" />
-                    <span>{v}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </Reveal>
+      <div className="features-deck about-deck">
+        <div className="features-orbs" aria-hidden>
+          <span className="features-orb features-orb--a" />
+          <span className="features-orb features-orb--b" />
+          <span className="features-orb features-orb--c" />
+          <span className="features-orb features-orb--d" />
         </div>
-      </section>
 
-      <div className="landing-divider mb-16 md:mb-20" aria-hidden />
-
-      {/* Differentiators */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 pb-14 sm:pb-16 md:pb-20">
-        <Reveal className="text-center mb-8 sm:mb-10 md:mb-14 min-w-0">
-          <h2 className="font-display text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight break-words">
-            {t.impact.title}
-          </h2>
-        </Reveal>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 md:gap-6">
-          {t.impact.items.map((it: { title: string; desc: string }, idx: number) => {
-            const Icon = impactIcons[idx] || Award;
-            return (
-              <FeatureTile
-                key={idx}
-                icon={<Icon className="w-6 h-6" />}
-                title={it.title}
-                description={it.desc}
-                accent={impactAccents[idx] || "#A58CF4"}
-                delay={idx * 0.04}
-              />
-            );
-          })}
-        </div>
-      </section>
-
-      {/* Timeline */}
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 pb-14 sm:pb-16 md:pb-20">
-        <Reveal>
-          <div className="relative rounded-2xl sm:rounded-3xl p-6 sm:p-8 md:p-12 text-white overflow-hidden landing-band">
-            <h2 className="relative font-display text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight mb-8 sm:mb-10 text-center break-words">
-              {t.timeline.title}
-            </h2>
-
-            <div className="relative flex flex-col md:flex-row gap-8">
-              {t.timeline.items.map((step: { when: string; what: string }, i: number) => (
-                <div key={i} className="flex-1">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl grid place-items-center bg-white/10 border border-white/15">
-                      <span className="text-lg font-semibold">{i + 1}</span>
-                    </div>
-                    <div className="font-display text-xl font-semibold">{step.when}</div>
-                  </div>
-                  <p className="mt-3 text-white/70 leading-relaxed">{step.what}</p>
-                </div>
+        <section className="features-hero">
+          <div className="features-deck__inner">
+            <p className="features-hero__kicker">{t.hero.eyebrow}</p>
+            <h1 className="features-hero__title about-hero__title">
+              {t.hero.titleA} <em>{t.hero.titleB}</em>
+            </h1>
+            <p className="features-hero__lead">{t.hero.subtitle}</p>
+            <div className="features-hero__actions">
+              <Link
+                to={path("contact")}
+                className="features-btn features-btn--dark"
+                onClick={() => track(MarketingEvents.ContactCta, { source: "about_hero", lang })}
+              >
+                {t.hero.ctaPrimary}
+                <ArrowRight className="w-4 h-4 ms-2 rtl:rotate-180" />
+              </Link>
+              <Link
+                to={path("features")}
+                className="features-btn features-btn--ghost"
+                onClick={() => track(MarketingEvents.SitelinkClick, { source: "about_hero", lang, target: "features" })}
+              >
+                {t.hero.ctaSecondary}
+              </Link>
+            </div>
+            <div className="features-hero__pills">
+              {pills.map((pill) => (
+                <span key={pill} className="features-pill">
+                  {pill}
+                </span>
               ))}
             </div>
           </div>
-        </Reveal>
-      </section>
+        </section>
 
-      {/* Team */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 pb-14 sm:pb-16 md:pb-24">
-        <Reveal className="text-center max-w-3xl mx-auto min-w-0">
-          <h2 className="font-display text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight mb-2 break-words">
-            {t.team.title}
-          </h2>
-          <p className="text-neutral-600 dark:text-neutral-300 break-words">{t.team.subtitle}</p>
-        </Reveal>
-
-        <div className="mt-8 sm:mt-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6">
-          {t.team.members.map(
-            (m: { name: string; role: string; initials: string }, i: number) => (
-              <Reveal key={i} delay={i * 0.06}>
-                <div className="landing-glass landing-glass-glow rounded-2xl p-5 sm:p-6 h-full min-w-0">
-                  <div className="flex items-center gap-4 mb-4">
-                    <AvatarCircle initials={m.initials} />
-                    <div className="min-w-0 text-start">
-                      <h3 className="font-display text-lg font-semibold tracking-tight break-words">{m.name}</h3>
-                      <p className="text-sm text-neutral-500 break-words">{m.role}</p>
-                    </div>
-                  </div>
-                  <p className="text-sm text-neutral-600 dark:text-neutral-300 leading-relaxed">
-                    {lang === "fr" &&
-                      "Focalisé sur des solutions concrètes, du discovery au déploiement sécurisé."}
-                    {lang === "en" &&
-                      "Focused on real outcomes, from discovery to secure deployment."}
-                    {lang === "ar" && "يركز على النتائج الواقعية من الاستكشاف إلى النشر الآمن."}
-                  </p>
-                </div>
-              </Reveal>
-            )
-          )}
-        </div>
-      </section>
-
-      {/* CTA */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 pb-16 sm:pb-24">
-        <Reveal>
-          <div className="relative rounded-2xl sm:rounded-3xl p-6 sm:p-10 md:p-14 text-white overflow-hidden landing-band">
-            <div className="relative text-center max-w-3xl mx-auto min-w-0">
-              <h3 className="font-display text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight mb-3 break-words">
-                {t.cta.title}
-              </h3>
-              <p className="text-white/70 text-base sm:text-lg break-words">{t.cta.subtitle}</p>
-
-              <div
-                className="mt-8 flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center w-full sm:w-auto"
-              >
-                <Button
-                  size="lg"
-                  className="w-full sm:w-auto px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg font-medium landing-btn-on-dark"
-                  onClick={() => go(path("contact"))}
-                >
-                  {t.cta.primary}
-                </Button>
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="w-full sm:w-auto px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg font-medium landing-btn-ghost-dark"
-                  onClick={() => go(path("demo"))}
-                >
-                  {t.cta.secondary}
-                </Button>
+        <section className="features-block">
+          <div className="features-deck__inner">
+            <Reveal>
+              <div className="features-block__head">
+                <h2 className="features-block__title">
+                  {t.pillars.titleA} <em>{t.pillars.titleB}</em>
+                </h2>
+                <p className="features-block__lead">{t.pillars.note}</p>
               </div>
+            </Reveal>
+            <div className="about-pillars">
+              <Reveal delay={0}>
+                <article className="about-panel about-panel--dark">
+                  <div className="about-panel__icon">
+                    <Target className="w-5 h-5" />
+                  </div>
+                  <h3 className="about-panel__title">{t.pillars.mission.title}</h3>
+                  <p className="about-panel__desc">{t.pillars.mission.desc}</p>
+                </article>
+              </Reveal>
+              <Reveal delay={0.06}>
+                <article className="about-panel about-panel--mist">
+                  <div className="about-panel__icon">
+                    <Zap className="w-5 h-5" />
+                  </div>
+                  <h3 className="about-panel__title">{t.pillars.vision.title}</h3>
+                  <p className="about-panel__desc">{t.pillars.vision.desc}</p>
+                </article>
+              </Reveal>
+              <Reveal delay={0.12}>
+                <article className="about-panel about-panel--accent">
+                  <div className="about-panel__icon">
+                    <Heart className="w-5 h-5" />
+                  </div>
+                  <h3 className="about-panel__title">{t.pillars.values.title}</h3>
+                  <ul className="about-panel__list">
+                    {t.pillars.values.items.map((v) => (
+                      <li key={v}>
+                        <Check className="w-4 h-4 shrink-0" />
+                        <span>{v}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </article>
+              </Reveal>
             </div>
           </div>
-        </Reveal>
-      </section>
+        </section>
+
+        <section className="features-block">
+          <div className="features-deck__inner">
+            <Reveal>
+              <div className="features-block__head">
+                <h2 className="features-block__title">
+                  {t.impact.titleA} <em>{t.impact.titleB}</em>
+                </h2>
+                <p className="features-block__lead">{t.impact.note}</p>
+              </div>
+            </Reveal>
+            <div className="about-impact">
+              {t.impact.items.map((item, idx) => {
+                const Icon = IMPACT_ICONS[idx] ?? Award;
+                const tone = IMPACT_TONES[idx] ?? "dark";
+                return (
+                  <Reveal key={item.title} delay={idx * 0.04}>
+                    <article className={`about-panel about-panel--${tone}`}>
+                      <div className="about-panel__icon">
+                        <Icon className="w-5 h-5" />
+                      </div>
+                      <h3 className="about-panel__title">{item.title}</h3>
+                      <p className="about-panel__desc">{item.desc}</p>
+                    </article>
+                  </Reveal>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+
+        <section className="features-block">
+          <div className="features-deck__inner">
+            <Reveal>
+              <div className="features-block__head">
+                <h2 className="features-block__title">
+                  {t.timeline.titleA} <em>{t.timeline.titleB}</em>
+                </h2>
+                <p className="features-block__lead">{t.timeline.note}</p>
+              </div>
+            </Reveal>
+            <div className="about-timeline">
+              {t.timeline.items.map((step, i) => (
+                <Reveal key={step.when} delay={i * 0.05}>
+                  <article className="about-timeline__item">
+                    <span className="about-timeline__index">{String(i + 1).padStart(2, "0")}</span>
+                    <div>
+                      <h3 className="about-timeline__when">{step.when}</h3>
+                      <p className="about-timeline__what">{step.what}</p>
+                    </div>
+                  </article>
+                </Reveal>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="features-block">
+          <div className="features-deck__inner">
+            <Reveal>
+              <div className="features-block__head">
+                <h2 className="features-block__title">
+                  {t.team.titleA} <em>{t.team.titleB}</em>
+                </h2>
+                <p className="features-block__lead">{t.team.note}</p>
+              </div>
+            </Reveal>
+            <div className="about-team">
+              {t.team.members.map((m, i) => (
+                <Reveal key={m.name} delay={i * 0.05}>
+                  <article className="about-panel about-panel--mist">
+                    <div className="about-team__head">
+                      <span className="about-team__avatar" aria-hidden>
+                        {m.initials}
+                      </span>
+                      <div>
+                        <h3 className="about-panel__title">{m.name}</h3>
+                        <p className="about-team__role">{m.role}</p>
+                      </div>
+                    </div>
+                    <p className="about-panel__desc">{m.blurb}</p>
+                  </article>
+                </Reveal>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="features-close">
+          <div className="features-deck__inner">
+            <h2 className="features-close__title">{t.cta.title}</h2>
+            <p className="features-close__lead">{t.cta.subtitle}</p>
+            <div className="features-close__actions">
+              <Link
+                to={path("contact")}
+                className="features-btn features-btn--dark"
+                onClick={() => track(MarketingEvents.ContactCta, { source: "about_final", lang })}
+              >
+                {t.cta.primary}
+                <ArrowRight className="w-4 h-4 ms-2 rtl:rotate-180" />
+              </Link>
+              <Link
+                to={path("features")}
+                className="features-btn features-btn--ghost"
+                onClick={() => track(MarketingEvents.SitelinkClick, { source: "about_final", lang, target: "features" })}
+              >
+                {t.cta.secondary}
+              </Link>
+            </div>
+          </div>
+        </section>
+      </div>
     </MarketingShell>
   );
 };

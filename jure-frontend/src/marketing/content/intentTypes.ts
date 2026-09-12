@@ -2,7 +2,7 @@ import type { MarketingLocale } from "../site";
 import type { FaqEntry } from "../structuredData";
 
 /**
- * Content contract for the 8 high-intent landing pages. Each page must be
+ * Content contract for the high-intent landing pages. Each page must be
  * genuinely useful (definition + education + product) — not a thin doorway
  * page — and must only describe capabilities JURE actually ships.
  */

@@ -7,7 +7,6 @@ import type { FaqEntry } from "../structuredData";
  */
 
 export interface JuriaContent {
-  eyebrow: string;
   h1: string;
   intro: string;
   relationTitle: string;
@@ -28,7 +27,6 @@ export interface JuriaContent {
 }
 
 const en: JuriaContent = {
-  eyebrow: "AI legal assistant by JURE",
   h1: "Juria — AI legal assistance inside your legal workspace",
   intro:
     "Juria is JURE's AI legal assistant for research-style questions, contract analysis, drafting help and knowledge workflows. It works inside the same secure workspace as your matters — not in a separate chatbot tab.",
@@ -97,7 +95,6 @@ const en: JuriaContent = {
 };
 
 const fr: JuriaContent = {
-  eyebrow: "Assistant IA juridique par JURE",
   h1: "Juria — l'assistance IA juridique dans votre espace de travail",
   intro:
     "Juria est l'assistant IA juridique de JURE pour les questions de recherche, l'analyse de contrats, l'aide à la rédaction et les flux de connaissances. Il travaille dans le même espace sécurisé que vos dossiers — pas dans un onglet chatbot séparé.",
@@ -166,7 +163,6 @@ const fr: JuriaContent = {
 };
 
 const ar: JuriaContent = {
-  eyebrow: "مساعد الذكاء الاصطناعي القانوني من JURE",
   h1: "جوريا — مساعدة ذكاء اصطناعي قانوني داخل مساحة عملك",
   intro:
     "جوريا هو مساعد الذكاء الاصطناعي القانوني من JURE لأسئلة البحث وتحليل العقود والمساعدة في الصياغة وسير عمل المعرفة. يعمل داخل مساحة العمل الآمنة نفسها مع ملفاتك — لا في تبويب روبوت محادثة منفصل.",
@@ -181,11 +177,11 @@ const ar: JuriaContent = {
     },
     {
       title: "تحليل العقود",
-      body: "ارفع عقودًا بصيغة PDF أو DOCX لإبراز النقاط الرئيسية وإشارات المخاطر — نقطة انطلاق منظمة لمراجعة المحامي، لا بديلًا عنها.",
+      body: "ارفع عقودا بصيغة PDF أو DOCX لإبراز النقاط الرئيسية وإشارات المخاطر — نقطة انطلاق منظمة لمراجعة المحامي، لا بديلا عنها.",
     },
     {
       title: "وضع البحث",
-      body: "توجّه في الأسئلة غير المألوفة بوضع بحث موجّه نحو القانون المغربي. يجب التحقق من كل مرجع في مصادر موثوقة.",
+      body: "توجه في الأسئلة غير المألوفة بوضع بحث موجه نحو القانون المغربي. يجب التحقق من كل مرجع في مصادر موثوقة.",
     },
     {
       title: "المساعدة في الصياغة",
@@ -197,11 +193,11 @@ const ar: JuriaContent = {
     "افتح الملف الذي تعمل عليه في JURE",
     "اطلب من جوريا — محادثة أو تحليل عقد أو صياغة",
     "استلم مسودة موسومة بوضوح كنتاج ذكاء اصطناعي",
-    "يراجع المحامي ويتحقق ويصحّح",
-    "استخدم النتيجة المُعتمدة في الملف",
+    "يراجع المحامي ويتحقق ويصحح",
+    "استخدم النتيجة المعتمدة في الملف",
   ],
   disclaimer:
-    "جوريا في مرحلة الوصول المبكر. الذكاء الاصطناعي يساعد؛ والمحامون يقررون. المخرجات تخضع دائمًا لمراجعة بشرية.",
+    "جوريا في مرحلة الوصول المبكر. الذكاء الاصطناعي يساعد؛ والمحامون يقررون. المخرجات تخضع دائما لمراجعة بشرية.",
   faqsTitle: "الأسئلة الشائعة",
   faqs: [
     {
@@ -217,18 +213,18 @@ const ar: JuriaContent = {
     {
       question: "هل جوريا متاحة للجميع؟",
       answer:
-        "جوريا حاليًا في مرحلة الوصول المبكر وتُطرح تدريجيًا ليُصقل مع فرق قانونية حقيقية قبل إتاحة أوسع.",
+        "جوريا حاليا في مرحلة الوصول المبكر وتطرح تدريجيا ليصقل مع فرق قانونية حقيقية قبل إتاحة أوسع.",
     },
     {
-      question: "هل يمكن لجوريا أن تحل محل محامٍ؟",
+      question: "هل يمكن لجوريا أن تحل محل محام؟",
       answer:
-        "لا. تسرّع جوريا المرور الأول والمسودات الأولى. أما الحكم والتحقق والمسؤولية المهنية فتبقى للمحامي.",
+        "لا. تسرع جوريا المرور الأول والمسودات الأولى. أما الحكم والتحقق والمسؤولية المهنية فتبقى للمحامي.",
     },
   ],
   ctaTitle: "شاهد جوريا داخل منصة JURE",
   ctaBody:
-    "المساعدة بالذكاء الاصطناعي تكون أكثر فائدة حيث يعيش العمل أصلًا. استكشف جوريا في سياقها — أو اطّلع على منصة LegalTech الكاملة من JURE.",
-  ctaPrimary: "شاهد JURE عمليًا",
+    "المساعدة بالذكاء الاصطناعي تكون أكثر فائدة حيث يعيش العمل أصلا. استكشف جوريا في سياقها — أو اطلع على منصة LegalTech الكاملة من JURE.",
+  ctaPrimary: "شاهد JURE عمليا",
   ctaSecondary: "استكشف الذكاء الاصطناعي القانوني",
   relatedLegalAi: "نظرة عامة على الذكاء الاصطناعي القانوني",
   relatedPlatform: "منصة JURE",

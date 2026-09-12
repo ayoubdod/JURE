@@ -49,7 +49,7 @@ export const MARKETING_ROUTES: MarketingRoute[] = [
     description: {
       en: "Run your law firm on JURE — legal practice management software with AI-powered research, matter management, documents, billing and team collaboration built in.",
       fr: "Gérez votre cabinet avec JURE — logiciel de gestion de cabinet avec recherche juridique assistée par IA, dossiers, documents, facturation et collaboration d'équipe.",
-      ar: "أدِر مكتبك مع JURE — برنامج إدارة مكاتب المحاماة يجمع البحث القانوني بالذكاء الاصطناعي وإدارة الملفات والمستندات والفوترة وتعاون الفريق.",
+      ar: "أدر مكتبك مع JURE — برنامج إدارة مكاتب المحاماة يجمع البحث القانوني بالذكاء الاصطناعي وإدارة الملفات والمستندات والفوترة وتعاون الفريق.",
     },
   },
   {
@@ -87,23 +87,6 @@ export const MARKETING_ROUTES: MarketingRoute[] = [
     },
   },
   {
-    key: "solutionsLegalDepartments",
-    slug: "solutions/legal-departments",
-    priority: 0.85,
-    changefreq: "monthly",
-    label: { en: "For legal departments", fr: "Pour les directions juridiques", ar: "للإدارات القانونية" },
-    title: {
-      en: "LegalTech for Legal Departments | JURE",
-      fr: "LegalTech pour directions juridiques | JURE",
-      ar: "LegalTech للإدارات القانونية | JURE",
-    },
-    description: {
-      en: "Give in-house legal teams shared visibility over matters, documents and deadlines — with secure collaboration and responsible AI assistance from JURE.",
-      fr: "Donnez aux équipes juridiques internes une visibilité partagée sur dossiers, documents et échéances — avec collaboration sécurisée et assistance IA responsable de JURE.",
-      ar: "امنح فرق الشؤون القانونية الداخلية رؤية مشتركة للملفات والمستندات والمواعيد — مع تعاون آمن ومساعدة ذكاء اصطناعي مسؤولة من JURE.",
-    },
-  },
-  {
     key: "features",
     slug: "features",
     priority: 0.9,
@@ -134,7 +117,7 @@ export const MARKETING_ROUTES: MarketingRoute[] = [
     description: {
       en: "JURE is a LegalTech platform for modern legal teams — born in Morocco, built for multilingual practice across MENA and Africa, combining AI-powered legal work with matter management, documents and secure collaboration.",
       fr: "JURE est une plateforme LegalTech pour les équipes juridiques modernes — née au Maroc, conçue pour la pratique multilingue au Moyen-Orient, en Afrique du Nord et en Afrique, alliant travail juridique assisté par IA, gestion de dossiers, documents et collaboration sécurisée.",
-      ar: "JURE منصة LegalTech للفرق القانونية الحديثة — انطلقت من المغرب وصُممت للممارسة متعددة اللغات عبر الشرق الأوسط وشمال أفريقيا وأفريقيا، تجمع العمل القانوني المدعوم بالذكاء الاصطناعي مع إدارة الملفات والمستندات والتعاون الآمن.",
+      ar: "JURE منصة LegalTech للفرق القانونية الحديثة — انطلقت من المغرب وصممت للممارسة متعددة اللغات عبر الشرق الأوسط وشمال أفريقيا وأفريقيا، تجمع العمل القانوني المدعوم بالذكاء الاصطناعي مع إدارة الملفات والمستندات والتعاون الآمن.",
     },
   },
   {
@@ -168,7 +151,7 @@ export const MARKETING_ROUTES: MarketingRoute[] = [
     description: {
       en: "Simple plans for solo lawyers, law firms and legal teams. Start with JURE and scale as your practice grows.",
       fr: "Des offres simples pour avocats indépendants, cabinets et équipes juridiques. Commencez avec JURE et évoluez avec votre pratique.",
-      ar: "خطط بسيطة للمحامين المستقلين ومكاتب المحاماة والفرق القانونية. ابدأ مع JURE وتوسّع مع نمو ممارستك.",
+      ar: "خطط بسيطة للمحامين المستقلين ومكاتب المحاماة والفرق القانونية. ابدأ مع JURE وتوسع مع نمو ممارستك.",
     },
   },
   {
@@ -185,41 +168,7 @@ export const MARKETING_ROUTES: MarketingRoute[] = [
     description: {
       en: "How JURE protects confidential legal work: per-firm data isolation, role-based access control, authenticated sessions, TLS in transit — and a transparent security roadmap.",
       fr: "Comment JURE protège le travail juridique confidentiel : isolation des données par cabinet, contrôle d'accès par rôles, sessions authentifiées, chiffrement TLS — et une feuille de route sécurité transparente.",
-      ar: "كيف تحمي JURE العمل القانوني السري: عزل بيانات كل مكتب، التحكم في الوصول حسب الأدوار، جلسات موثّقة، تشفير TLS أثناء النقل، وخارطة طريق أمنية شفافة.",
-    },
-  },
-  {
-    key: "demo",
-    slug: "demo",
-    priority: 0.9,
-    changefreq: "monthly",
-    label: { en: "See JURE in action", fr: "JURE en action", ar: "شاهد JURE عمليًا" },
-    title: {
-      en: "See JURE in Action — Interactive Product Demo",
-      fr: "JURE en action — Démo interactive du produit",
-      ar: "شاهد JURE عمليًا — عرض تفاعلي للمنتج",
-    },
-    description: {
-      en: "Walk through the JURE workspace: matters, documents, tasks, collaboration and legal AI. See how legal work comes together in one platform.",
-      fr: "Parcourez l'espace de travail JURE : dossiers, documents, tâches, collaboration et IA juridique. Découvrez comment le travail juridique se réunit sur une seule plateforme.",
-      ar: "تجوّل في مساحة عمل JURE: الملفات والمستندات والمهام والتعاون والذكاء الاصطناعي القانوني. اكتشف كيف يجتمع العمل القانوني في منصة واحدة.",
-    },
-  },
-  {
-    key: "docs",
-    slug: "docs",
-    priority: 0.4,
-    changefreq: "monthly",
-    label: { en: "Documentation", fr: "Documentation", ar: "الوثائق" },
-    title: {
-      en: "JURE Documentation",
-      fr: "Documentation JURE",
-      ar: "وثائق JURE",
-    },
-    description: {
-      en: "Guides and documentation for the JURE legal work platform.",
-      fr: "Guides et documentation de la plateforme de travail juridique JURE.",
-      ar: "أدلة ووثائق منصة العمل القانوني JURE.",
+      ar: "كيف تحمي JURE العمل القانوني السري: عزل بيانات كل مكتب، التحكم في الوصول حسب الأدوار، جلسات موثقة، تشفير TLS أثناء النقل، وخارطة طريق أمنية شفافة.",
     },
   },
   {
@@ -357,24 +306,7 @@ export const MARKETING_ROUTES: MarketingRoute[] = [
     description: {
       en: "How legal practice management software works and how JURE unifies matters, clients, calendar, tasks, documents and firm finance for law firms of any size.",
       fr: "Comment fonctionne un logiciel de gestion de cabinet et comment JURE unifie dossiers, clients, agenda, tâches, documents et finance du cabinet, quelle que soit sa taille.",
-      ar: "كيف يعمل برنامج إدارة مكتب المحاماة وكيف توحّد JURE الملفات والعملاء والمفكرة والمهام والمستندات ومالية المكتب لمكاتب من كل الأحجام.",
-    },
-  },
-  {
-    key: "legalResearch",
-    slug: "legal-research",
-    priority: 0.9,
-    changefreq: "monthly",
-    label: { en: "Legal research", fr: "Recherche juridique", ar: "البحث القانوني" },
-    title: {
-      en: "AI Legal Research — From Question to Reviewed Analysis | JURE",
-      fr: "Recherche juridique assistée par IA | JURE",
-      ar: "البحث القانوني بمساعدة الذكاء الاصطناعي | JURE",
-    },
-    description: {
-      en: "How AI-assisted legal research works, its limits, and how JURE's research mode helps lawyers move from question to analysis with human review at every step.",
-      fr: "Comment fonctionne la recherche juridique assistée par IA, ses limites, et comment le mode recherche de JURE aide les avocats à passer de la question à l'analyse avec validation humaine à chaque étape.",
-      ar: "كيف يعمل البحث القانوني بمساعدة الذكاء الاصطناعي وما حدوده، وكيف يساعد وضع البحث في JURE المحامين على الانتقال من السؤال إلى التحليل مع مراجعة بشرية في كل خطوة.",
+      ar: "كيف يعمل برنامج إدارة مكتب المحاماة وكيف توحد JURE الملفات والعملاء والمفكرة والمهام والمستندات ومالية المكتب لمكاتب من كل الأحجام.",
     },
   },
   {
@@ -391,7 +323,7 @@ export const MARKETING_ROUTES: MarketingRoute[] = [
     description: {
       en: "What legal document management software is and how JURE's document library organizes, previews and secures firm documents — connected to matters, tasks and teams.",
       fr: "Ce qu'est la gestion documentaire juridique et comment la bibliothèque JURE organise, prévisualise et sécurise les documents du cabinet — reliés aux dossiers, tâches et équipes.",
-      ar: "ما هي إدارة المستندات القانونية وكيف تنظّم مكتبة JURE مستندات المكتب وتعاينها وتؤمّنها — مرتبطة بالملفات والمهام والفرق.",
+      ar: "ما هي إدارة المستندات القانونية وكيف تنظم مكتبة JURE مستندات المكتب وتعاينها وتؤمنها — مرتبطة بالملفات والمهام والفرق.",
     },
   },
   {
@@ -425,7 +357,7 @@ export const MARKETING_ROUTES: MarketingRoute[] = [
     description: {
       en: "What legal knowledge management is and how JURE turns firm documents into an organized, searchable knowledge hub shared across the team.",
       fr: "Ce qu'est la gestion des connaissances juridiques et comment JURE transforme les documents du cabinet en un hub de connaissances organisé, consultable et partagé par l'équipe.",
-      ar: "ما هي إدارة المعرفة القانونية وكيف تحوّل JURE مستندات المكتب إلى مركز معرفة منظم وقابل للبحث ومشترك بين الفريق.",
+      ar: "ما هي إدارة المعرفة القانونية وكيف تحول JURE مستندات المكتب إلى مركز معرفة منظم وقابل للبحث ومشترك بين الفريق.",
     },
   },
   {
@@ -442,7 +374,7 @@ export const MARKETING_ROUTES: MarketingRoute[] = [
     description: {
       en: "JURE's approach to responsible AI in legal work: human review over AI output, transparency about limits, data protection, and why AI should augment lawyers, not replace them.",
       fr: "L'approche JURE de l'IA responsable dans le travail juridique : relecture humaine des résultats d'IA, transparence sur les limites, protection des données, et pourquoi l'IA doit augmenter les avocats, pas les remplacer.",
-      ar: "نهج JURE للذكاء الاصطناعي المسؤول في العمل القانوني: مراجعة بشرية لمخرجات الذكاء الاصطناعي، وشفافية بشأن الحدود، وحماية البيانات، ولماذا يجب أن يعزّز الذكاء الاصطناعي المحامين لا أن يحل محلهم.",
+      ar: "نهج JURE للذكاء الاصطناعي المسؤول في العمل القانوني: مراجعة بشرية لمخرجات الذكاء الاصطناعي، وشفافية بشأن الحدود، وحماية البيانات، ولماذا يجب أن يعزز الذكاء الاصطناعي المحامين لا أن يحل محلهم.",
     },
   },
 
@@ -475,12 +407,12 @@ export const INSIGHT_ARTICLES: InsightArticleMeta[] = [
     title: {
       en: "What Is LegalTech? How Technology Is Changing Legal Work",
       fr: "Qu'est-ce que la LegalTech ? Comment la technologie transforme le travail juridique",
-      ar: "ما هي التقنية القانونية؟ كيف تغيّر التكنولوجيا العمل القانوني",
+      ar: "ما هي التقنية القانونية؟ كيف تغير التكنولوجيا العمل القانوني",
     },
     description: {
       en: "A practical introduction to LegalTech: what it covers, how it evolved, what it changes for law firms and legal departments, and why emerging and multilingual markets matter.",
       fr: "Une introduction pratique à la LegalTech : ce qu'elle recouvre, son évolution, ce qu'elle change pour les cabinets et directions juridiques, et pourquoi les marchés émergents et multilingues comptent.",
-      ar: "مقدمة عملية للتقنية القانونية: ما الذي تشمله، كيف تطورت، ماذا تغيّر لمكاتب المحاماة والإدارات القانونية، ولماذا تهم الأسواق الناشئة ومتعددة اللغات.",
+      ar: "مقدمة عملية للتقنية القانونية: ما الذي تشمله، كيف تطورت، ماذا تغير لمكاتب المحاماة والإدارات القانونية، ولماذا تهم الأسواق الناشئة ومتعددة اللغات.",
     },
   },
   {
@@ -491,12 +423,12 @@ export const INSIGHT_ARTICLES: InsightArticleMeta[] = [
     title: {
       en: "LegalTech in Morocco: What Modern Legal Teams Actually Need",
       fr: "LegalTech au Maroc : de quoi les équipes juridiques modernes ont vraiment besoin",
-      ar: "التقنية القانونية في المغرب: ما تحتاجه الفرق القانونية الحديثة فعليًا",
+      ar: "التقنية القانونية في المغرب: ما تحتاجه الفرق القانونية الحديثة فعليا",
     },
     description: {
       en: "A practical map of LegalTech in Morocco: multilingual practice, civil-law workflows, what firms need before AI, and a responsible path to adoption.",
       fr: "Une carte pratique de la LegalTech au Maroc : pratique multilingue, flux de droit civil, ce dont les cabinets ont besoin avant l'IA, et un parcours d'adoption responsable.",
-      ar: "خريطة عملية للتقنية القانونية في المغرب: الممارسة متعددة اللغات، مسارات القانون المدني، ما تحتاجه المكاتب قبل الذكاء الاصطناعي، ومسار تبنٍّ مسؤول.",
+      ar: "خريطة عملية للتقنية القانونية في المغرب: الممارسة متعددة اللغات، مسارات القانون المدني، ما تحتاجه المكاتب قبل الذكاء الاصطناعي، ومسار تبن مسؤول.",
     },
   },
   {
@@ -512,7 +444,7 @@ export const INSIGHT_ARTICLES: InsightArticleMeta[] = [
     description: {
       en: "What legal AI means across MENA: multilingual constraints, confidentiality risks, a responsible adoption checklist, and why AI must serve lawyers — not replace them.",
       fr: "Ce que signifie l'IA juridique dans la région : contraintes multilingues, risques de confidentialité, checklist d'adoption responsable, et pourquoi l'IA doit servir les avocats — non les remplacer.",
-      ar: "ماذا يعني الذكاء الاصطناعي القانوني في المنطقة: قيود تعدد اللغات ومخاطر السرية وقائمة تحقق للتبنّي المسؤول، ولماذا يجب أن يخدم الذكاء الاصطناعي المحامين لا أن يحل محلهم.",
+      ar: "ماذا يعني الذكاء الاصطناعي القانوني في المنطقة: قيود تعدد اللغات ومخاطر السرية وقائمة تحقق للتبني المسؤول، ولماذا يجب أن يخدم الذكاء الاصطناعي المحامين لا أن يحل محلهم.",
     },
   },
   {
@@ -523,12 +455,12 @@ export const INSIGHT_ARTICLES: InsightArticleMeta[] = [
     title: {
       en: "Legal Technology for African Law Firms: Leapfrogging Without Skipping Foundations",
       fr: "Technologie juridique pour cabinets africains : leapfrog sans sauter les fondations",
-      ar: "التقنية القانونية لمكاتب المحاماة الأفريقية: قفز تكنولوجي دون تخطّي الأسس",
+      ar: "التقنية القانونية لمكاتب المحاماة الأفريقية: قفز تكنولوجي دون تخطي الأسس",
     },
     description: {
       en: "How African law firms can adopt modern LegalTech: matter hygiene first, then collaboration, then responsible AI — built for multilingual and civil-law practice.",
       fr: "Comment les cabinets africains peuvent adopter une LegalTech moderne : hygiène des dossiers d'abord, puis collaboration, puis IA responsable — pour une pratique multilingue et de droit civil.",
-      ar: "كيف يمكن لمكاتب المحاماة الأفريقية تبنّي LegalTech حديثة: نظافة الملفات أولًا ثم التعاون ثم الذكاء الاصطناعي المسؤول — للممارسة متعددة اللغات والقانون المدني.",
+      ar: "كيف يمكن لمكاتب المحاماة الأفريقية تبني LegalTech حديثة: نظافة الملفات أولا ثم التعاون ثم الذكاء الاصطناعي المسؤول — للممارسة متعددة اللغات والقانون المدني.",
     },
   },
   {
@@ -544,7 +476,7 @@ export const INSIGHT_ARTICLES: InsightArticleMeta[] = [
     description: {
       en: "What responsible AI means in legal practice: risks of unreviewed AI output, why human-in-the-loop is non-negotiable, and a practical framework for adopting AI in a law firm.",
       fr: "Ce que signifie l'IA responsable dans la pratique juridique : les risques des résultats d'IA non relus, pourquoi la validation humaine est non négociable, et un cadre pratique pour adopter l'IA en cabinet.",
-      ar: "ماذا يعني الذكاء الاصطناعي المسؤول في الممارسة القانونية: مخاطر المخرجات غير المراجَعة، ولماذا المراجعة البشرية غير قابلة للتفاوض، وإطار عملي لتبني الذكاء الاصطناعي في مكتب المحاماة.",
+      ar: "ماذا يعني الذكاء الاصطناعي المسؤول في الممارسة القانونية: مخاطر المخرجات غير المراجعة، ولماذا المراجعة البشرية غير قابلة للتفاوض، وإطار عملي لتبني الذكاء الاصطناعي في مكتب المحاماة.",
     },
   },
   {
@@ -560,7 +492,7 @@ export const INSIGHT_ARTICLES: InsightArticleMeta[] = [
     description: {
       en: "Legal teams spent a decade adding disconnected tools. The next decade is about convergence: why matters, documents, knowledge and AI belong in one workspace.",
       fr: "Les équipes juridiques ont passé une décennie à empiler des outils déconnectés. La prochaine décennie sera celle de la convergence : pourquoi dossiers, documents, connaissances et IA doivent se réunir dans un même espace de travail.",
-      ar: "أمضت الفرق القانونية عقدًا في إضافة أدوات منفصلة. العقد القادم هو عقد التقارب: لماذا تنتمي الملفات والمستندات والمعرفة والذكاء الاصطناعي إلى مساحة عمل واحدة.",
+      ar: "أمضت الفرق القانونية عقدا في إضافة أدوات منفصلة. العقد القادم هو عقد التقارب: لماذا تنتمي الملفات والمستندات والمعرفة والذكاء الاصطناعي إلى مساحة عمل واحدة.",
     },
   },
 ];

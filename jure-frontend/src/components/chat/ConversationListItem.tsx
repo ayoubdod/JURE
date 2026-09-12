@@ -7,6 +7,7 @@ import {
   Pencil,
   Pin,
   PinOff,
+  Settings2,
   Trash2,
 } from 'lucide-react';
 import UserAvatar, { getPersonImage, PresenceDot } from '@/components/common/UserAvatar';
@@ -91,6 +92,7 @@ export const ConversationListItem: React.FC<{
   onDelete?: (c: API.Conversation) => void;
   onRename?: (c: API.Conversation) => void;
   onChangeIcon?: (c: API.Conversation) => void;
+  onOpenGroupSettings?: (c: API.Conversation) => void;
   onOpenLinkedCase?: (caseId: number) => void;
 }> = ({
   conversation,
@@ -107,6 +109,7 @@ export const ConversationListItem: React.FC<{
   onDelete,
   onRename,
   onChangeIcon,
+  onOpenGroupSettings,
   onOpenLinkedCase,
 }) => {
   const { t, lang } = useAppTranslation();
@@ -148,7 +151,8 @@ export const ConversationListItem: React.FC<{
     onUnpin ||
     onDelete ||
     (onRename && conversation.type === 'group') ||
-    (onChangeIcon && conversation.type === 'group');
+    (onChangeIcon && conversation.type === 'group') ||
+    (onOpenGroupSettings && conversation.type === 'group');
 
   return (
     <div
@@ -258,6 +262,12 @@ export const ConversationListItem: React.FC<{
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                {conversation.type === 'group' && onOpenGroupSettings ? (
+                  <DropdownMenuItem onClick={() => onOpenGroupSettings(conversation)}>
+                    <Settings2 className="me-2 h-3.5 w-3.5" />
+                    {t.conversations.groupSettingsMenu}
+                  </DropdownMenuItem>
+                ) : null}
                 {conversation.type === 'group' && onRename ? (
                   <DropdownMenuItem onClick={() => onRename(conversation)}>
                     <Pencil className="me-2 h-3.5 w-3.5" />
@@ -300,7 +310,11 @@ export const ConversationListItem: React.FC<{
                     className="text-destructive focus:text-destructive"
                   >
                     <Trash2 className="me-2 h-3.5 w-3.5" />
-                    {t.common.delete}
+                    {conversation.type === 'group'
+                      ? (conversation.memberships ?? []).length <= 1
+                        ? t.conversations.deleteGroupMenu
+                        : t.conversations.leaveGroupMenu
+                      : t.common.delete}
                   </DropdownMenuItem>
                 ) : null}
               </DropdownMenuContent>

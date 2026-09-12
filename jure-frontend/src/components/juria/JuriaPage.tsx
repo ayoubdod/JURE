@@ -172,18 +172,10 @@ export default function JuriaPage() {
   }
 
   return (
-    <div className="relative h-full min-h-0 w-full overflow-hidden">
-      {/* Scale the workspace without clipping chrome (zoom + display:contents was hiding sidebar/header). */}
-      <div
-        dir={dir}
-        className="absolute left-0 top-0 flex overflow-hidden bg-transparent"
-        style={{
-          width: '133.333%',
-          height: '133.333%',
-          transform: 'scale(0.75)',
-          transformOrigin: 'top left',
-        }}
-      >
+    <div
+      dir={dir}
+      className="relative flex h-full min-h-0 w-full overflow-hidden bg-transparent"
+    >
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,_rgba(100,73,157,0.08),_transparent_50%)]" />
         {projectsNavOpen ? (
           <div
@@ -306,7 +298,6 @@ export default function JuriaPage() {
           onOpenChange={setCreateOpen}
           onCreated={(id) => openProject(id)}
         />
-      </div>
     </div>
   );
 }
