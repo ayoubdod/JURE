@@ -7,8 +7,9 @@ declare namespace API {
         phone: string
         bio: string
         image?: string
-        trade_name?: string
-        firm_name?: string
+    last_seen_at?: string | null
+    trade_name?: string
+    firm_name?: string
         logo?: string
         /** Timestamp when logo was last updated; used for cache-busting display */
         logo_version?: number

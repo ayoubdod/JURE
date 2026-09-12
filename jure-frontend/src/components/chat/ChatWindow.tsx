@@ -32,7 +32,7 @@ import {
 } from '@/stores/conversationCallBridge';
 import { useConversationCallPresenceStore } from '@/stores/conversationCallPresenceStore';
 import { useCallSessionStore } from '@/stores/callSessionStore';
-import { isOnlineUserId, personPresenceId } from '@/lib/presence';
+import { isOnlineUserId, personPresenceId, resolveLastSeenAt } from '@/lib/presence';
 import {
   ActiveCallBanner,
 } from '@/components/conversations/call/ConversationCallBanners';
@@ -126,6 +126,7 @@ const ChatWindow = forwardRef<
   const toastMsgs = t.conversations.toasts;
   const callCopy = t.conversations.call;
   const onlineIds = useChatStore((s) => s.onlineIds ?? []);
+  const lastSeenById = useChatStore((s) => s.lastSeenById ?? {});
   const callSessionStatus = useCallSessionStore((s) => s.ui.status);
   const callSessionConvId = useCallSessionStore((s) => s.ui.conversationId);
   const activeCall = useConversationCallPresenceStore((s) =>
@@ -500,8 +501,15 @@ const ChatWindow = forwardRef<
   const currentEmail = (useUserStore.getState().user?.email ?? '').toLowerCase();
   const peer = getDirectPeer(conversation, currentEmail);
   const peerPerson = peer ? getMemberPerson(peer) : conversation.other_participant;
+  const peerUserId = personPresenceId(peerPerson);
   const isPeerOnline =
-    conversation.type === 'direct' && isOnlineUserId(personPresenceId(peerPerson), onlineIds);
+    conversation.type === 'direct' && isOnlineUserId(peerUserId, onlineIds);
+  const peerLastSeenAt = resolveLastSeenAt(
+    peerUserId,
+    lastSeenById,
+    (peerPerson as { last_seen_at?: string | null } | undefined)?.last_seen_at ??
+      conversation.other_participant?.last_seen_at
+  );
 
   return (
     <div className="flex min-h-0 min-w-0 flex-1 flex-col bg-slate-50/70 dark:bg-slate-950/40">
@@ -509,6 +517,7 @@ const ChatWindow = forwardRef<
         conversation={conversation}
         isTyping={isTyping}
         isOnline={isPeerOnline}
+        lastSeenAt={peerLastSeenAt}
         callInProgress={callInProgress}
         onBack={onBack}
         onCallVoice={onCallVoice}
@@ -564,6 +573,7 @@ const ChatWindow = forwardRef<
       <div
         ref={messagesContainerRef}
         onScroll={handleMessagesScroll}
+        dir="ltr"
         className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto px-3 py-3 sm:px-4"
       >
         {messagesLoading && messages.length === 0 ? (

@@ -62,6 +62,7 @@ declare namespace API {
     last_name?: string;
     image?: string;
     role?: Role | string;
+    last_seen_at?: string | null;
   };
 
   type Conversation = {

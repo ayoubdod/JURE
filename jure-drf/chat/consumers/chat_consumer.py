@@ -9,7 +9,13 @@ from django.contrib.auth import get_user_model
 from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
 from rest_framework_simplejwt.tokens import UntypedToken
 
-from chat.presence import presence_add, presence_list, presence_remove
+from chat.presence import (
+    presence_add,
+    presence_last_seen_map,
+    presence_list,
+    presence_mark_offline,
+    presence_seed_from_db,
+)
 from chat.serializers import MessageNotificationSerializer
 
 from ..models import Message
@@ -76,17 +82,20 @@ class ChatConsumer(CallSignalingMixin, AsyncJsonWebsocketConsumer):
         await self.channel_layer.group_add(PRESENCE_GROUP, self.channel_name)
 
         online_ids = await asyncio.to_thread(presence_add, self.user.id)
+        last_seen = await self._cabinet_last_seen_map()
 
         await self.accept()
 
-        await self.send_notifications(online_ids)
-        await self._broadcast_presence(online_ids)
+        await self.send_notifications(online_ids, last_seen)
+        await self._broadcast_presence(online_ids, last_seen)
 
     async def disconnect(self, close_code):
         await self._discard_all_call_groups()
         if hasattr(self, "user"):
-            online_ids = await asyncio.to_thread(presence_remove, self.user.id)
-            await self._broadcast_presence(online_ids)
+            online_ids, last_seen_patch = await asyncio.to_thread(
+                presence_mark_offline, self.user.id
+            )
+            await self._broadcast_presence(online_ids, last_seen_patch)
         if hasattr(self, "channel_layer") and hasattr(self, "channel_name"):
             await self.channel_layer.group_discard(PRESENCE_GROUP, self.channel_name)
         if hasattr(self, "room_name"):
@@ -100,20 +109,51 @@ class ChatConsumer(CallSignalingMixin, AsyncJsonWebsocketConsumer):
                 self.channel_name,
             )
 
-    async def _broadcast_presence(self, online_ids: list[int]):
+    async def _cabinet_last_seen_map(self) -> dict[str, str]:
+        """Seed + return last-seen for cabinet peers so clients can show offline times."""
+        peer_ids = await self._cabinet_peer_ids()
+        seeded = await asyncio.to_thread(presence_seed_from_db, peer_ids)
+        cached = await asyncio.to_thread(presence_last_seen_map, peer_ids)
+        return {**seeded, **cached}
+
+    @database_sync_to_async
+    def _cabinet_peer_ids(self) -> list[int]:
+        from django.db.models import Q
+
+        user = self.user
+        cabinet_id = getattr(user, "cabinet_id", None)
+        if not cabinet_id:
+            owned = getattr(user, "owned_cabinet", None)
+            cabinet_id = getattr(owned, "id", None) if owned else None
+        if not cabinet_id:
+            return []
+        return list(
+            User.objects.filter(Q(cabinet_id=cabinet_id) | Q(owned_cabinet__id=cabinet_id))
+            .exclude(pk=user.id)
+            .values_list("id", flat=True)[:500]
+        )
+
+    async def _broadcast_presence(
+        self, online_ids: list[int], last_seen: dict[str, str] | None = None
+    ):
         """Broadcast presence.update to all connected chat users."""
         if self.channel_layer:
             payload = {
                 "online_user_ids": online_ids,
                 "online_member_ids": online_ids,
                 "online": online_ids,
+                "last_seen": last_seen or {},
             }
             await self.channel_layer.group_send(
                 PRESENCE_GROUP,
                 {"type": "presence.update", "payload": payload},
             )
 
-    async def send_notifications(self, online_ids: list[int] | None = None):
+    async def send_notifications(
+        self,
+        online_ids: list[int] | None = None,
+        last_seen: dict[str, str] | None = None,
+    ):
         """Send initial notifications to the authenticated user."""
         messages = await self.get_last_messages()
         serialized_data = await self.serialize_notifications(messages)
@@ -124,6 +164,7 @@ class ChatConsumer(CallSignalingMixin, AsyncJsonWebsocketConsumer):
             "online_user_ids": online_ids,
             "online_member_ids": online_ids,
             "online": online_ids,
+            "last_seen": last_seen or {},
         }
         await self.send_json(
             {

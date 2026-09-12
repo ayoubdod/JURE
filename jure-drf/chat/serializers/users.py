@@ -9,7 +9,7 @@ class UserThinSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ("id", "first_name", "last_name", "email", "full_name", "image")
+        fields = ("id", "first_name", "last_name", "email", "full_name", "image", "last_seen_at")
 
     def get_full_name(self, obj):
         fn = (getattr(obj, "first_name", None) or "").strip()

@@ -25,11 +25,13 @@ import {
   getLinkedCase,
   activeMemberships,
 } from './conversationUtils';
+import { formatPresenceLastSeen } from '@/lib/presence';
 
 const ConversationHeader: React.FC<{
   conversation: API.Conversation;
   isTyping?: boolean;
   isOnline?: boolean;
+  lastSeenAt?: string | null;
   callInProgress?: boolean;
   onBack?: () => void;
   onCallVoice?: () => void;
@@ -46,6 +48,7 @@ const ConversationHeader: React.FC<{
   conversation,
   isTyping,
   isOnline,
+  lastSeenAt,
   callInProgress,
   onBack,
   onCallVoice,
@@ -59,7 +62,7 @@ const ConversationHeader: React.FC<{
   onUnlinkConversationCase,
   onOpenLinkedCase,
 }) => {
-  const { t, tf, enumLabel } = useAppTranslation();
+  const { t, tf, enumLabel, lang } = useAppTranslation();
   const currentEmail = useUserStore((s) => s.user?.email);
   const isDirect = conversation.type === 'direct';
   const linkedCase = getLinkedCase(conversation);
@@ -83,13 +86,18 @@ const ConversationHeader: React.FC<{
           type: matterType || t.conversations.typeGroup,
         })
       : t.conversations.typeGroup;
+  const lastSeenLabel =
+    !isOnline && isDirect
+      ? formatPresenceLastSeen(lastSeenAt, lang, t.conversations.presenceLastSeen)
+      : null;
   const statusLabel = isTyping
     ? t.conversations.typing
     : isDirect
       ? isOnline
         ? t.conversations.presenceOnline
-        : t.conversations.presenceOffline
+        : lastSeenLabel || t.conversations.presenceOffline
       : tf(t.conversations.membersCount, { count: memberCount });
+  const showTypeSuffix = !isDirect;
 
   const iconBtn =
     'inline-flex h-11 w-11 md:h-9 md:w-9 items-center justify-center rounded-lg text-slate-500 transition-colors duration-150 hover:bg-slate-100 hover:text-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#64499D]/30 disabled:cursor-not-allowed disabled:opacity-45 dark:hover:bg-slate-800 dark:hover:text-slate-100';
@@ -144,8 +152,12 @@ const ConversationHeader: React.FC<{
             )}
           >
             {statusLabel}
-            <span className="mx-1 text-slate-300 dark:text-slate-600">·</span>
-            {typeLabel}
+            {showTypeSuffix ? (
+              <>
+                <span className="mx-1 text-slate-300 dark:text-slate-600">·</span>
+                {typeLabel}
+              </>
+            ) : null}
           </p>
           {linkedCase ? (
             <div className="mt-1 hidden min-[480px]:block">

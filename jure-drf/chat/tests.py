@@ -147,6 +147,20 @@ class ChatAPITest(APITestCase):
         self.assertEqual(response.data["body"], "Hello from API!")
         self.assertEqual(response.data["conversation"], conv.id)
 
+    def test_lawyer_can_delete_own_message(self):
+        """DELETE must not require cabinet conversations.delete (LAWYER lacks it)."""
+        lawyer = self.user2
+        self.assertEqual(lawyer.role, User.Role.LAWYER)
+        conv = _direct_conversation(self.user1, lawyer)
+        msg = Message.objects.create(
+            conversation=conv, sender=lawyer, body="Delete me"
+        )
+        client = api_client_for(lawyer)
+        response = client.delete(reverse("chat-messages-detail", kwargs={"pk": msg.id}))
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        msg.refresh_from_db()
+        self.assertTrue(msg.is_deleted)
+
     def test_get_messages(self):
         conv = _direct_conversation(self.user1, self.user2)
         Message.objects.create(
@@ -565,6 +579,32 @@ class GroupMembershipAPITest(APITestCase):
         )
         member_ids = {m["user"]["id"] for m in response.data["memberships"]}
         self.assertNotIn(self.member.id, member_ids)
+
+    def test_lawyer_group_admin_can_remove_member(self):
+        """Cabinet LAWYER lacks conversations.delete; group-admin remove must still work."""
+        conv = Conversation.objects.create(
+            type=Conversation.Type.GROUP,
+            title="Lawyer admin group",
+            created_by=self.member,
+        )
+        ConversationMembership.objects.create(
+            conversation=conv, user=self.member, is_admin=True
+        )
+        ConversationMembership.objects.create(conversation=conv, user=self.extra)
+        ConversationMembership.objects.create(conversation=conv, user=self.admin)
+        self.assertEqual(self.member.role, User.Role.LAWYER)
+        lawyer_client = api_client_for(self.member)
+        url = reverse(
+            "chat-conversations-manage-member",
+            kwargs={"pk": conv.id, "user_id": self.extra.id},
+        )
+        response = lawyer_client.delete(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertTrue(
+            ConversationMembership.objects.filter(
+                conversation=conv, user=self.extra, is_deleted=True
+            ).exists()
+        )
 
     def test_non_admin_cannot_remove_member(self):
         conv = self._create_group(self.member, self.extra)

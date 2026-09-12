@@ -3655,6 +3655,7 @@ export interface AppMessages {
     title: string;
     presenceOnline: string;
     presenceOffline: string;
+    presenceLastSeen: string;
     typeDirect: string;
     typeGroup: string;
     typeMatter: string;
@@ -3670,6 +3671,7 @@ export interface AppMessages {
     files: string;
     noFiles: string;
     noPinned: string;
+    pinHint: string;
     openMatter: string;
     viewDocuments: string;
     viewTasks: string;

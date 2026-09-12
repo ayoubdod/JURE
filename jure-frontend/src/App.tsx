@@ -3,7 +3,7 @@ import { lazy, Suspense, type ComponentType, type ReactNode } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { createBrowserRouter, RouterProvider, Navigate, Outlet, useSearchParams } from "react-router"; // ✅ keep react-router
+import { createBrowserRouter, RouterProvider, Navigate, Outlet, ScrollRestoration, useSearchParams } from "react-router"; // ✅ keep react-router
 import { HelmetProvider } from "react-helmet-async";
 import { useTheme } from "@/hooks/useTheme";
 
@@ -134,9 +134,16 @@ const LEGACY_MARKETING_SLUGS = [
   "solutions/legal-departments",
 ];
 
+const RootLayout = () => (
+  <>
+    <ScrollRestoration />
+    <Outlet />
+  </>
+);
+
 const router = createBrowserRouter([
   {
-    element: <Outlet />,
+    element: <RootLayout />,
     errorElement: <RouteError />,
     children: [
   // Localized public site: /en, /fr/features, /ar/security, ...
