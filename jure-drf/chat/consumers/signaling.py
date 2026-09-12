@@ -414,6 +414,21 @@ class CallSignalingMixin:
         )
         return count == len(ids)
 
+    @database_sync_to_async
+    def _dnd_user_ids(self, user_ids: list[int]) -> set[int]:
+        """Users in Do Not Disturb who must not be rung."""
+        from django.contrib.auth import get_user_model
+
+        User = get_user_model()
+        ids = list({int(u) for u in user_ids})
+        if not ids:
+            return set()
+        suppressed: set[int] = set()
+        for user in User.objects.filter(pk__in=ids):
+            if hasattr(user, "suppresses_interruptions") and user.suppresses_interruptions():
+                suppressed.add(int(user.pk))
+        return suppressed
+
     async def _display_name(self) -> str:
         def _name(u):
             full = (u.get_full_name() or "").strip()
@@ -716,6 +731,22 @@ class CallSignalingMixin:
             await self.send_json({"type": "error", "message": "not a participant"})
             return
 
+        dnd_ids = await self._dnd_user_ids(targets)
+        ring_targets = [t for t in targets if t not in dnd_ids]
+
+        # Direct call to someone on DND: never ring; caller sees declined.
+        if not is_conference and not ring_targets:
+            target_id = targets[0]
+            await self.send_json(
+                {
+                    "type": "call.rejected",
+                    "groupName": _pair_call_group(self.user.id, target_id),
+                    "conversationId": conv_id,
+                    "reason": "unavailable",
+                }
+            )
+            return
+
         kind = _normalize_call_kind(content.get("kind"))
         call_id = await _persist_call_started_async(conv_id, self.user.id, all_ids, kind)
 
@@ -729,7 +760,7 @@ class CallSignalingMixin:
                 "callerId": self.user.id,
                 "participantIds": all_ids,
                 "joinedIds": [self.user.id],
-                "ringingIds": list(targets),
+                "ringingIds": list(ring_targets),
                 "status": "ringing",
                 "startedAt": timezone.now().isoformat(),
                 "conversationId": conv_id,
@@ -758,7 +789,8 @@ class CallSignalingMixin:
         await _index_call_for_conversation(conv_id, group_name)
         await self.channel_layer.group_add(group_name, self.channel_name)
         self.call_groups_joined.add(group_name)
-        _schedule_ring_timeout(self, group_name)
+        if ring_targets:
+            _schedule_ring_timeout(self, group_name)
         await self._broadcast_room_active(conv_id, state, group_name)
 
         await self.send_json(
@@ -777,7 +809,7 @@ class CallSignalingMixin:
         )
 
         caller_name = await self._display_name()
-        for target_id in targets:
+        for target_id in ring_targets:
             incoming_payload = {
                 "type": "call.incoming",
                 "callerId": self.user.id,
@@ -796,6 +828,28 @@ class CallSignalingMixin:
             }
             await self.channel_layer.group_send(f"user_{target_id}", ring_event)
             await self.channel_layer.group_send(f"conv-{conv_id}", ring_event)
+
+        # Conference: if nobody is ringable (all DND), end as missed for invitees.
+        if is_conference and not ring_targets:
+            _cancel_ring_timeout(group_name)
+            await _persist_call_ended_async(state.get("callId"), "missed")
+            await _clear_call_index(conv_id)
+            await asyncio.to_thread(cache.delete, key)
+            await self.channel_layer.group_send(
+                group_name,
+                {
+                    "type": "call.ended",
+                    "sender_channel": self.channel_name,
+                    "group_name": group_name,
+                },
+            )
+            await self._broadcast_room_ended(
+                conv_id,
+                group_name,
+                reason="missed",
+                kind=kind,
+                caller_id=self.user.id,
+            )
 
     async def _handle_accept(self, content: dict):
         group_name = content.get("groupName", content.get("group_name"))

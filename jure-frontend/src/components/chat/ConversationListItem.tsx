@@ -13,6 +13,7 @@ import {
 import UserAvatar, { getPersonImage, PresenceDot } from '@/components/common/UserAvatar';
 import GroupChatIcon from './GroupChatIcon';
 import LinkedMatterChip from './LinkedMatterChip';
+import { ModeDot } from '@/components/header/ModeMenu';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -82,6 +83,7 @@ export const ConversationListItem: React.FC<{
   active?: boolean;
   currentEmail?: string;
   isOnline?: boolean;
+  isAway?: boolean;
   unreadCount: number;
   archived?: boolean;
   onSelect: (id: number) => void;
@@ -99,6 +101,7 @@ export const ConversationListItem: React.FC<{
   active,
   currentEmail,
   isOnline,
+  isAway,
   unreadCount,
   archived,
   onSelect,
@@ -201,7 +204,12 @@ export const ConversationListItem: React.FC<{
             className="h-10 w-10 shrink-0"
           />
         )}
-        <PresenceDot online={conversation.type === 'direct' && isOnline} />
+        <PresenceDot online={conversation.type === 'direct' && !!isOnline && !isAway} />
+        {conversation.type === 'direct' && isAway ? (
+          <span className="absolute -bottom-0.5 -end-0.5">
+            <ModeDot mode="AWAY" />
+          </span>
+        ) : null}
       </div>
 
       <div className="min-w-0 flex-1">

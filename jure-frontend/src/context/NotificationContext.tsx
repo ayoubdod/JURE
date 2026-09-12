@@ -16,6 +16,7 @@ import type { NotificationPrefs } from '@/types/notification';
 import { loadNotificationPrefs, saveNotificationPrefs, shouldAlertForNotificationType } from '@/utils/notificationPreferences';
 import { filterNotifications, normalizeNotification } from '@/utils/notificationUtils';
 import { isChatMessageNotification } from '@/utils/notificationNav';
+import { suppressesInterruptions } from '@/lib/presenceMode';
 import { devError } from '@/utils/devLog';
 
 const DROPDOWN_MAX = 80;
@@ -75,6 +76,8 @@ function parseWsPayload(data: Record<string, unknown>): AppNotification | null {
 export function NotificationProvider({ children }: { children: React.ReactNode }) {
   const isLoggedIn = useUserStore((s) => s.isLoggedIn);
   const accessToken = useUserStore((s) => s.accessToken);
+  const userMode = useUserStore((s) => s.user?.mode);
+  const userModeUntil = useUserStore((s) => s.user?.mode_until);
 
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -141,11 +144,16 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
       });
       const prefs = loadNotificationPrefs();
       const alert = shouldAlertForNotificationType(n.type, prefs);
-      if (!opts?.skipBadge && alert && !n.is_read) {
+      const dnd = suppressesInterruptions(userMode, userModeUntil);
+      const urgent = String(n.priority || '').toUpperCase() === 'URGENT';
+      const allowInterrupt = !dnd || urgent;
+      if (!opts?.skipBadge && alert && !n.is_read && allowInterrupt) {
+        setUnreadCount((c) => c + 1);
+      } else if (!opts?.skipBadge && alert && !n.is_read && dnd && !urgent) {
+        // Still count quietly so the inbox badge stays accurate when opening the panel.
         setUnreadCount((c) => c + 1);
       }
-      if (!opts?.skipToast && alert) {
-        const urgent = String(n.priority || '').toUpperCase() === 'URGENT';
+      if (!opts?.skipToast && alert && allowInterrupt) {
         setIncomingToasts((prev) => {
           const next: IncomingToastPayload[] = [
             ...prev,
@@ -153,7 +161,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
           ];
           return next.slice(-3);
         });
-        setAnimationTick((t) => t + 1);
+        setAnimationTick((tick) => tick + 1);
       }
       setHighlightNotificationId(String(n.id));
       if (highlightTimerRef.current) clearTimeout(highlightTimerRef.current);
@@ -166,7 +174,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
         }
       });
     },
-    []
+    [userMode, userModeUntil]
   );
 
   const markAsRead = useCallback(async (id: number | string) => {

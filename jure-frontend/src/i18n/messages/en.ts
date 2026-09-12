@@ -5273,4 +5273,38 @@ export const en: AppMessages = {
       },
     },
   },
+  mode: {
+    title: 'Mode',
+    until: 'Until {time}',
+    activate: 'Enable',
+    updateFailed: 'Could not update mode',
+    duringAbsence: '{count} notifications while you were away',
+    options: {
+      AVAILABLE: {
+        label: 'Available',
+        description: 'Available for messages and notifications',
+      },
+      DND: {
+        label: 'Do not disturb',
+        description: 'Silent notifications until you return',
+      },
+      AWAY: {
+        label: 'Away',
+        description: 'Temporarily unavailable',
+      },
+      INVISIBLE: {
+        label: 'Invisible',
+        description: 'Appear offline to teammates',
+      },
+    },
+    duration: 'Duration',
+    durations: {
+      untilOff: 'Until I turn it off',
+      m30: '30 minutes',
+      h1: '1 hour',
+      h2: '2 hours',
+      today: 'Today',
+      custom: 'Custom',
+    },
+  },
 };

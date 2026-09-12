@@ -32,6 +32,7 @@ import { apiListConversations, apiMarkConversationRead } from '@/services/conver
 import { useCabinetMemberDirectory } from '@/hooks/useCabinetMemberDirectory';
 import { devError } from '@/utils/devLog';
 import { NotificationBell } from '@/components/notifications/NotificationBell';
+import ModeMenu from '@/components/header/ModeMenu';
 import { useMobileNav } from '@/context/MobileNavContext';
 import { useShortcutAction, useShortcuts } from '@/context/ShortcutsContext';
 import { HintKbd } from '@/components/shortcuts/Kbd';
@@ -828,12 +829,19 @@ const Header = () => {
                       {user?.last_name?.charAt(0)}
                     </AvatarFallback>
                   </Avatar>
-                  <div>
-                    <h3 className="font-semibold text-foreground">
+                  <div className="min-w-0">
+                    <h3 className="truncate font-semibold text-foreground">
                       {user?.first_name} {user?.last_name}
                     </h3>
-                    <p className="text-xs text-muted-foreground">{t.sidebar.account}</p>
+                    <p className="truncate text-xs text-muted-foreground">
+                      {user?.role && user.role in (t.team.roles as Record<string, string>)
+                        ? (t.team.roles as Record<string, string>)[String(user.role)]
+                        : t.sidebar.account}
+                    </p>
                   </div>
+                </div>
+                <div className="mt-2.5 border-t border-slate-100 pt-2 dark:border-slate-800">
+                  <ModeMenu />
                 </div>
               </div>
               <div className="py-0.5">

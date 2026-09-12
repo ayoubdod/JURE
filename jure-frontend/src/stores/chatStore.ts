@@ -61,7 +61,26 @@ function parseLastSeenMap(value: unknown): Record<number, string> {
   return out;
 }
 
+function parseStatusMap(value: unknown): Record<number, string> {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return {};
+  const out: Record<number, string> = {};
+  for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
+    const id = Number(k);
+    if (!Number.isFinite(id) || typeof v !== 'string' || !v.trim()) continue;
+    out[id] = v.toUpperCase();
+  }
+  return out;
+}
+
 function mergeLastSeen(
+  prev: Record<number, string>,
+  patch: Record<number, string>
+): Record<number, string> {
+  if (!Object.keys(patch).length) return prev;
+  return { ...prev, ...patch };
+}
+
+function mergeStatuses(
   prev: Record<number, string>,
   patch: Record<number, string>
 ): Record<number, string> {
@@ -136,6 +155,8 @@ export interface ChatStore {
   onlineIds: number[];
   /** Last chat disconnect time by user id (ISO). */
   lastSeenById: Record<number, string>;
+  /** Peer workplace modes from presence payloads. */
+  statusById: Record<number, string>;
   /** Conversation currently open in the chat window — new inbox items for it are stored as read. */
   viewingConversationId: number | null;
 
@@ -164,6 +185,7 @@ const useChatStore = create<ChatStore>()(
     lastConversationRemovedId: null,
     onlineIds: [],
     lastSeenById: {},
+    statusById: {},
     viewingConversationId: null,
     // Connection methods
     connect: async () => {
@@ -234,20 +256,14 @@ const useChatStore = create<ChatStore>()(
                   data.online_member_ids,
                   data.online
                 );
-                const connectingUserId =
-                  typeof data.user_id === 'number'
-                    ? data.user_id
-                    : typeof payloadObj.user_id === 'number'
-                      ? payloadObj.user_id
-                      : undefined;
-                if (typeof connectingUserId === 'number' && !onlineIds.includes(connectingUserId)) {
-                  onlineIds = [...onlineIds, connectingUserId];
-                }
+                // Do not force-add self — Invisible users must stay off the online list.
                 const lastSeenPatch = parseLastSeenMap(payloadObj.last_seen);
+                const statusPatch = parseStatusMap(payloadObj.statuses);
                 set({
                   notifications,
                   onlineIds,
                   lastSeenById: mergeLastSeen(get().lastSeenById, lastSeenPatch),
+                  statusById: mergeStatuses(get().statusById, statusPatch),
                 });
                 break;
               }
@@ -265,10 +281,34 @@ const useChatStore = create<ChatStore>()(
                   data.online
                 );
                 const lastSeenPatch = parseLastSeenMap(payloadObj.last_seen);
+                const statusPatch = parseStatusMap(payloadObj.statuses);
                 set({
                   onlineIds,
                   lastSeenById: mergeLastSeen(get().lastSeenById, lastSeenPatch),
+                  statusById: mergeStatuses(get().statusById, statusPatch),
                 });
+                break;
+              }
+              case 'mode.changed': {
+                const payloadObj = asRecord(data.payload);
+                const mode =
+                  typeof payloadObj.mode === 'string' ? payloadObj.mode.toUpperCase() : null;
+                const modeUntil =
+                  typeof payloadObj.mode_until === 'string'
+                    ? payloadObj.mode_until
+                    : payloadObj.mode_until === null
+                      ? null
+                      : undefined;
+                if (mode) {
+                  const userStore = useUserStore.getState();
+                  if (userStore.user) {
+                    userStore.setUser({
+                      ...userStore.user,
+                      mode,
+                      ...(modeUntil !== undefined ? { mode_until: modeUntil } : {}),
+                    });
+                  }
+                }
                 break;
               }
               case 'notification.new': {

@@ -62,18 +62,19 @@ class CustomUserDetailsSerializer(UserDetailsSerializer):
             'client_type',
             'accept_terms',
             'accept_data_processing',
+            'mode',
+            'mode_until',
+            'last_seen_at',
         ]
-        read_only_fields = ('email', 'cabinet_id', 'jurisdiction', 'role', 'is_platform_admin', 'client_type')
-
-    def to_representation(self, instance):
-        """Build absolute URL for logo in response."""
-        data = super().to_representation(instance)
-        logo = data.get('logo')
-        if logo and not str(logo).startswith('http'):
-            request = self.context.get('request') if hasattr(self, 'context') else None
-            if request:
-                data['logo'] = request.build_absolute_uri(logo)
-        return data
+        read_only_fields = (
+            'email',
+            'cabinet_id',
+            'jurisdiction',
+            'role',
+            'is_platform_admin',
+            'client_type',
+            'last_seen_at',
+        )
 
     def get_cabinet_id(self, obj):
         cabinet = _cabinet_for_user(obj)
@@ -98,7 +99,15 @@ class CustomUserDetailsSerializer(UserDetailsSerializer):
     def update(self, instance, validated_data):
         """Update user and sync cabinet fields (logo, etc.) to the cabinet."""
         cabinet = _cabinet_for_user(instance)
-        cabinet_fields = ['logo', 'trade_name', 'structure_type', 'business_address', 'team_size', 'website', 'practice_type']
+        cabinet_fields = [
+            'logo',
+            'trade_name',
+            'structure_type',
+            'business_address',
+            'team_size',
+            'website',
+            'practice_type',
+        ]
         cabinet_data = {}
         for field in cabinet_fields:
             if field in validated_data:
@@ -109,4 +118,69 @@ class CustomUserDetailsSerializer(UserDetailsSerializer):
                 setattr(cabinet, key, value)
             cabinet.save(update_fields=list(cabinet_data.keys()))
 
-        return super().update(instance, validated_data)
+        mode = validated_data.get('mode', serializers.empty)
+        if mode is not serializers.empty:
+            if mode == User.PresenceMode.AVAILABLE:
+                validated_data['mode_until'] = None
+            elif mode in (User.PresenceMode.AWAY, User.PresenceMode.INVISIBLE):
+                validated_data.setdefault('mode_until', None)
+
+        instance = super().update(instance, validated_data)
+        self._notify_mode_changed(instance)
+        return instance
+
+    def _notify_mode_changed(self, instance: User) -> None:
+        """Ask the user's live chat socket to refresh presence; broadcast mode to peers."""
+        try:
+            from asgiref.sync import async_to_sync
+            from channels.layers import get_channel_layer
+            from chat.presence import presence_list
+
+            effective = instance.get_effective_mode()
+            public = instance.public_presence_mode()
+            channel_layer = get_channel_layer()
+            if not channel_layer:
+                return
+
+            async_to_sync(channel_layer.group_send)(
+                f"user_{instance.id}",
+                {
+                    "type": "mode.changed",
+                    "payload": {
+                        "mode": effective,
+                        "mode_until": instance.mode_until.isoformat()
+                        if instance.mode_until
+                        else None,
+                    },
+                },
+            )
+            # Also broadcast status for peers even if chat socket is briefly reconnecting.
+            # Peers see DND as Away.
+            online_ids = presence_list()
+            async_to_sync(channel_layer.group_send)(
+                "chat-presence",
+                {
+                    "type": "presence.update",
+                    "payload": {
+                        "online_user_ids": online_ids,
+                        "online_member_ids": online_ids,
+                        "online": online_ids,
+                        "statuses": {str(instance.id): public},
+                        "last_seen": {},
+                    },
+                },
+            )
+        except Exception:
+            pass
+
+    def to_representation(self, instance):
+        """Build absolute URL for logo; expose effective (non-expired) mode."""
+        if hasattr(instance, "get_effective_mode"):
+            instance.get_effective_mode()
+        data = super().to_representation(instance)
+        logo = data.get('logo')
+        if logo and not str(logo).startswith('http'):
+            request = self.context.get('request') if hasattr(self, 'context') else None
+            if request:
+                data['logo'] = request.build_absolute_uri(logo)
+        return data

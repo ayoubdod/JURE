@@ -31,6 +31,9 @@ declare namespace API {
         /** Present on some nested chat / membership payloads */
         full_name?: string
         pk?: number
+        mode?: 'AVAILABLE' | 'DND' | 'AWAY' | 'INVISIBLE' | string
+        mode_until?: string | null
+        last_seen_at?: string | null
         business_address?: string
         team_size?: string
         website?: string
@@ -47,6 +50,8 @@ declare namespace API {
         last_name?: string
         phone?: string
         bio?: string
+        mode?: 'AVAILABLE' | 'DND' | 'AWAY' | 'INVISIBLE'
+        mode_until?: string | null
     }
 
     type UserUpdateFormRemoteValidation = {

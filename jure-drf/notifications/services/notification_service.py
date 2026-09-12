@@ -85,6 +85,15 @@ def push_notification_via_websocket(notification: Notification) -> None:
         return
     if notification.notification_type in IN_APP_HIDDEN_TYPES:
         return
+    # DND: persist notification but suppress interruptive WS delivery (except urgent).
+    try:
+        recipient = notification.recipient
+        if recipient and recipient.suppresses_interruptions():
+            priority = str(getattr(notification, "priority", "") or "").upper()
+            if priority != "URGENT":
+                return
+    except Exception:
+        pass
     payload = notification_to_ws_payload(notification)
     if not payload.get("id"):
         return

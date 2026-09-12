@@ -6,6 +6,7 @@ import { filterNotifications, groupNotificationsByDate } from '@/utils/notificat
 import { NotificationFilters } from '@/components/notifications/NotificationFilters';
 import { NotificationItem } from '@/components/notifications/NotificationItem';
 import { NotificationPreferences } from '@/components/notifications/NotificationPreferences';
+import ModeMenu from '@/components/header/ModeMenu';
 import { cn } from '@/lib/utils';
 import { useAppTranslation, intlLocale } from '@/i18n';
 
@@ -149,7 +150,10 @@ export function NotificationDropdown({ phase, onRequestClose }: NotificationDrop
               </button>
             </div>
           </div>
-          <div className="mt-3">
+          <div className="mt-3 space-y-2">
+            <div className="rounded-xl border border-slate-100 bg-slate-50/80 px-1 py-0.5 dark:border-slate-800 dark:bg-slate-900/50">
+              <ModeMenu variant="inline" />
+            </div>
             <NotificationFilters variant="dropdown" value={activeFilter} onChange={setActiveFilter} />
           </div>
         </div>
