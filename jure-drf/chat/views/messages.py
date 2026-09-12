@@ -21,6 +21,20 @@ class MessageViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated, HasConversationsPermission]
     serializer_class = MessageSerializer
 
+    def get_permissions(self):
+        # Sender/participant-scoped actions must not require cabinet conversations.delete
+        # (LAWYER has create/edit/view but not delete).
+        if self.action in (
+            "destroy",
+            "update",
+            "partial_update",
+            "forward",
+            "pin",
+            "mark_read",
+        ):
+            return [permissions.IsAuthenticated()]
+        return super().get_permissions()
+
     def get_queryset(self):
         return (
             _message_queryset_with_shares()

@@ -356,11 +356,12 @@ const Composer: React.FC<{
             ref={textareaRef}
             value={text}
             rows={1}
+            dir="auto"
             onChange={(e) => setText(e.target.value)}
             placeholder={c.placeholder}
             disabled={busy}
             aria-label={c.placeholder}
-            className="max-h-36 min-h-[40px] flex-1 resize-none bg-transparent px-1.5 py-2.5 text-[15px] leading-snug text-slate-800 placeholder:text-slate-400 focus:outline-none disabled:cursor-not-allowed dark:text-slate-100 sm:min-h-[36px] sm:py-2 sm:text-[13px]"
+            className="max-h-36 min-h-[40px] flex-1 resize-none bg-transparent px-1.5 py-2.5 text-start text-[15px] leading-snug text-slate-800 placeholder:text-slate-400 focus:outline-none disabled:cursor-not-allowed dark:text-slate-100 sm:min-h-[36px] sm:py-2 sm:text-[13px]"
             onKeyDown={(e) => {
               if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();

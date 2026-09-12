@@ -22,8 +22,8 @@ import { getMessageType } from '@/components/chat/SharedMessageCard';
 import LinkedMatterCard, { type LinkedMatterTab } from '@/components/chat/LinkedMatterCard';
 import { attachmentFileName, attachmentHref, getMemberPerson, isDocumentAttachment, isImageOrVideoAttachment, activeMemberships } from '@/components/chat/conversationUtils';
 import { useAppTranslation, intlLocale } from '@/i18n';
-import { isOnlineUserId, personPresenceId } from '@/lib/presence';
-import { useOnlineIds } from '@/hooks/useOnlinePresence';
+import { isOnlineUserId, personPresenceId, formatPresenceLastSeen, resolveLastSeenAt } from '@/lib/presence';
+import { useOnlineIds, useLastSeenById } from '@/hooks/useOnlinePresence';
 
 interface ContextPanelProps {
   conversation?: API.Conversation;
@@ -164,6 +164,7 @@ const ContextPanel: React.FC<ContextPanelProps> = ({
   const currentUser = useUserStore?.getState?.()?.user;
   const { toast } = useToast();
   const onlineIds = useOnlineIds();
+  const lastSeenById = useLastSeenById();
   const [mainTab, setMainTab] = useState<MainTab>('contact');
   const [taskSubTab, setTaskSubTab] = useState<TaskSubTab>('active');
   const [workspace, setWorkspace] = useState<API.UserWorkspace | null>(null);
@@ -187,6 +188,27 @@ const ContextPanel: React.FC<ContextPanelProps> = ({
 
   const isDirect = conversation?.type === 'direct';
   const showTabs = isDirect && !!peerUserId;
+  const peerOnline = isOnlineUserId(peerUserId ?? personPresenceId(user), onlineIds);
+  const peerLastSeenAt = resolveLastSeenAt(
+    peerUserId ?? personPresenceId(user),
+    lastSeenById,
+    (user as { last_seen_at?: string | null } | undefined)?.last_seen_at ??
+      conversation?.other_participant?.last_seen_at
+  );
+  const peerLastSeenLabel =
+    !peerOnline && isDirect
+      ? formatPresenceLastSeen(peerLastSeenAt, lang, t.conversations.presenceLastSeen)
+      : null;
+  const roleKey = String(user?.role ?? '')
+    .toUpperCase()
+    .replace(/\s+/g, '_');
+  const roleLabel =
+    roleKey && roleKey in t.team.roles
+      ? t.team.roles[roleKey as keyof typeof t.team.roles]
+      : user?.role
+        ? String(user.role).replace(/_/g, ' ')
+        : '';
+  const peerPhone = (user as { phone?: string } | undefined)?.phone?.trim() || '';
 
   const pinnedSnippet = (msg: API.Message) => {
     const body = msg.body ?? (msg as { content?: string }).content ?? '';
@@ -275,19 +297,22 @@ const ContextPanel: React.FC<ContextPanelProps> = ({
 
   const upcoming = availability?.upcomingEvents ?? [];
 
-  const pinnedMessagesSection = (
-    <div>
-      <p className="mb-1.5 flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-        <Pin className="h-3 w-3" />
-        {t.conversations.pinned}
-      </p>
-      {panelPinnedMessages.length > 0 ? (
+  const pinnedMessagesSection =
+    panelPinnedMessages.length > 0 ? (
+      <div>
+        <p className="mb-2 flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+          <Pin className="h-3 w-3" />
+          {t.conversations.pinned}
+          <span className="rounded-full bg-slate-100 px-1.5 py-0.5 tabular-nums text-[9px] text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+            {panelPinnedMessages.length}
+          </span>
+        </p>
         <ul className="space-y-1.5">
           {panelPinnedMessages.map((msg) => (
             <li key={msg.id}>
               <button
                 type="button"
-                className="w-full rounded-md border border-slate-200 px-2 py-1.5 text-start text-[12px] text-slate-700 transition-colors line-clamp-3 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#64499D]/30 dark:border-slate-800 dark:text-slate-300 dark:hover:bg-slate-800/60"
+                className="w-full rounded-lg border border-amber-200/70 bg-amber-50/50 px-2.5 py-2 text-start text-[12px] text-slate-700 transition-colors line-clamp-3 hover:bg-amber-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#64499D]/30 dark:border-amber-900/40 dark:bg-amber-950/20 dark:text-slate-300 dark:hover:bg-amber-950/35"
                 onClick={() => onPanelPinnedMessageClick?.(msg.id)}
               >
                 {pinnedSnippet(msg)}
@@ -295,11 +320,8 @@ const ContextPanel: React.FC<ContextPanelProps> = ({
             </li>
           ))}
         </ul>
-      ) : (
-        <p className="text-[12px] text-slate-500">{t.conversations.noPinned}</p>
-      )}
-    </div>
-  );
+      </div>
+    ) : null;
 
   const mediaItems = conversationFiles.filter(isImageOrVideoAttachment);
   const documentItems = conversationFiles.filter(isDocumentAttachment);
@@ -375,92 +397,152 @@ const ContextPanel: React.FC<ContextPanelProps> = ({
     ) : null;
 
   const contactBlock = (
-    <>
-      <div className="flex items-center gap-3">
-        {conversation?.type === 'direct' && user ? (
-          <div className="relative shrink-0">
-            <UserAvatar
-              image={peerImage}
-              firstName={user.first_name}
-              lastName={user.last_name}
-              size="md"
-              className="shrink-0"
+    <div className="space-y-4">
+      <div className="relative overflow-hidden rounded-2xl border border-slate-200/90 bg-gradient-to-b from-[#F7F4FF] via-white to-white p-5 dark:border-slate-800 dark:from-[#24183F]/60 dark:via-slate-900/80 dark:to-slate-900/80">
+        <div
+          className="pointer-events-none absolute -top-10 start-1/2 h-28 w-40 -translate-x-1/2 rounded-full bg-[#64499D]/10 blur-2xl dark:bg-[#64499D]/20"
+          aria-hidden
+        />
+        <div className="relative flex flex-col items-center text-center">
+          {conversation?.type === 'direct' && user ? (
+            <div className="relative mb-3 shrink-0">
+              <UserAvatar
+                image={peerImage}
+                firstName={user.first_name}
+                lastName={user.last_name}
+                size="lg"
+                className="h-[4.5rem] w-[4.5rem] text-base shadow-md ring-4 ring-white dark:ring-slate-900"
+              />
+              <PresenceDot
+                online={peerOnline}
+                className="h-3.5 w-3.5 border-2 border-white dark:border-slate-900"
+              />
+            </div>
+          ) : conversation?.type === 'group' ? (
+            <GroupChatIcon
+              iconUrl={(conversation as API.Conversation).icon_url}
+              iconPresetEmoji={(conversation as API.Conversation).icon_preset_emoji}
+              size="lg"
+              className="mb-3 h-[4.5rem] w-[4.5rem] shrink-0"
             />
-            <PresenceDot online={isOnlineUserId(peerUserId ?? personPresenceId(user), onlineIds)} />
-          </div>
-        ) : conversation?.type === 'group' ? (
-          <GroupChatIcon
-            iconUrl={(conversation as API.Conversation).icon_url}
-            iconPresetEmoji={(conversation as API.Conversation).icon_preset_emoji}
-            size="lg"
-            className="shrink-0"
-          />
-        ) : (
-          <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center shrink-0">
-            <Users className="w-5 h-5 text-slate-500 dark:text-slate-400" />
-          </div>
-        )}
-        <div className="min-w-0 flex-1">
-          <p className="font-medium text-slate-800 dark:text-slate-200 truncate">{displayName}</p>
-          <p className="text-[11px] text-slate-500 dark:text-slate-500 truncate">
-            {conversation?.type === 'direct' ? t.conversations.typeDirect : t.conversations.typeGroup}
+          ) : (
+            <div className="mb-3 flex h-[4.5rem] w-[4.5rem] items-center justify-center rounded-full bg-slate-200 dark:bg-slate-700">
+              <Users className="h-7 w-7 text-slate-500 dark:text-slate-400" />
+            </div>
+          )}
+          <p className="max-w-full truncate text-[16px] font-semibold tracking-tight text-slate-900 dark:text-slate-100">
+            {displayName}
           </p>
+          {isDirect ? (
+            <p
+              className={cn(
+                'mt-1 inline-flex items-center gap-1.5 text-[11px] font-medium',
+                peerOnline
+                  ? 'text-emerald-600 dark:text-emerald-400'
+                  : 'text-slate-500 dark:text-slate-400'
+              )}
+            >
+              <span
+                className={cn(
+                  'h-1.5 w-1.5 rounded-full',
+                  peerOnline ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-600'
+                )}
+                aria-hidden
+              />
+              {peerOnline
+                ? t.conversations.presenceOnline
+                : peerLastSeenLabel || t.conversations.presenceOffline}
+            </p>
+          ) : (
+            <p className="mt-1 text-[11px] text-slate-500">{t.conversations.typeGroup}</p>
+          )}
+          {roleLabel ? (
+            <span className="mt-2.5 inline-flex rounded-full bg-white/90 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#64499D] shadow-sm ring-1 ring-[#64499D]/18 dark:bg-[#64499D]/25 dark:text-[#CFC2FF] dark:ring-[#8B6FD1]/35">
+              {roleLabel}
+            </span>
+          ) : null}
         </div>
       </div>
 
-      {user && (
-        <>
-          <div>
-            <p className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">
-              {t.conversations.jobTitle}
-            </p>
-            <p className="text-slate-700 dark:text-slate-300">
-              {user?.role ? String(user.role).replace(/_/g, ' ') : '—'}
-            </p>
-          </div>
-          <div>
-            <p className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-              <Mail className="w-3 h-3" />
-              {t.auth.emailLabel}
-            </p>
-            <div className="flex items-center gap-1 min-w-0">
-              <a
-                href={`mailto:${user.email}`}
-                className="text-slate-700 dark:text-slate-300 hover:text-primary truncate flex-1 min-w-0 text-[13px]"
-              >
-                {user.email || '—'}
-              </a>
-              {user.email && (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="h-7 w-7 shrink-0 text-slate-500"
-                  aria-label={t.auth.emailLabel}
-                  onClick={() => copyText(t.auth.emailLabel, user.email)}
+      {user && (user.email || peerPhone) ? (
+        <div className="overflow-hidden rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900/40">
+          {user.email ? (
+            <div className="flex items-center gap-2.5 border-b border-slate-100 px-3 py-2.5 last:border-b-0 dark:border-slate-800">
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#64499D]/8 text-[#64499D] dark:bg-[#64499D]/20 dark:text-[#CFC2FF]">
+                <Mail className="h-3.5 w-3.5" />
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                  {t.auth.emailLabel}
+                </p>
+                <a
+                  href={`mailto:${user.email}`}
+                  className="block truncate text-[12.5px] font-medium text-slate-800 hover:text-[#64499D] dark:text-slate-200"
                 >
-                  <Copy className="h-3.5 w-3.5" />
-                </Button>
-              )}
+                  {user.email}
+                </a>
+              </div>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 shrink-0 text-slate-400 hover:text-slate-700"
+                aria-label={t.auth.emailLabel}
+                onClick={() => copyText(t.auth.emailLabel, user.email)}
+              >
+                <Copy className="h-3.5 w-3.5" />
+              </Button>
             </div>
-          </div>
-          {(user as { phone?: string }).phone && (
-            <div>
-              <p className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                <Phone className="w-3 h-3" />
-                Phone
-              </p>
-              <p className="text-slate-700 dark:text-slate-300">{(user as { phone?: string }).phone}</p>
+          ) : null}
+          {peerPhone ? (
+            <div className="flex items-center gap-2.5 px-3 py-2.5">
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#64499D]/8 text-[#64499D] dark:bg-[#64499D]/20 dark:text-[#CFC2FF]">
+                <Phone className="h-3.5 w-3.5" />
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                  {t.support.phoneLabel}
+                </p>
+                <a
+                  href={`tel:${peerPhone}`}
+                  className="block truncate text-[12.5px] font-medium text-slate-800 hover:text-[#64499D] dark:text-slate-200"
+                >
+                  {peerPhone}
+                </a>
+              </div>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 shrink-0 text-slate-400 hover:text-slate-700"
+                aria-label={t.support.phoneLabel}
+                onClick={() => copyText(t.support.phoneLabel, peerPhone)}
+              >
+                <Copy className="h-3.5 w-3.5" />
+              </Button>
             </div>
-          )}
-        </>
-      )}
+          ) : null}
+        </div>
+      ) : null}
 
       {isDirect && conversation && (
         <>
           {pinnedMessagesSection}
           {mediaSection}
           {filesSection}
+          {!pinnedMessagesSection && !mediaSection && !filesSection ? (
+            <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50/60 px-3 py-6 text-center dark:border-slate-800 dark:bg-slate-900/30">
+              <span className="mx-auto mb-2 flex h-9 w-9 items-center justify-center rounded-full bg-white text-slate-400 shadow-sm ring-1 ring-slate-200 dark:bg-slate-800 dark:ring-slate-700">
+                <Pin className="h-3.5 w-3.5" />
+              </span>
+              <p className="text-[12px] font-medium text-slate-600 dark:text-slate-300">
+                {t.conversations.noPinned}
+              </p>
+              <p className="mt-1 text-[11px] leading-relaxed text-slate-400">
+                {t.conversations.pinHint}
+              </p>
+            </div>
+          ) : null}
         </>
       )}
 
@@ -507,45 +589,49 @@ const ContextPanel: React.FC<ContextPanelProps> = ({
               ) : null}
             </div>
             <ul className="space-y-2">
-              {activeMemberships(conversation)
-                .map((m) => {
-                  const p = getMemberPerson(m) as API.User | undefined;
-                  if (!p) return null;
-                  const img = getPersonImage(p as Record<string, unknown>);
-                  return (
-                    <li key={m.id} className="flex min-w-0 items-center gap-2">
-                      <div className="relative shrink-0">
-                        <UserAvatar
-                          firstName={p.first_name}
-                          lastName={p.last_name}
-                          image={img}
-                          size="sm"
-                          className="h-8 w-8 shrink-0"
-                        />
-                        <PresenceDot online={isOnlineUserId(personPresenceId(p), onlineIds)} />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-[12px] font-medium text-slate-800 dark:text-slate-200">
-                          {`${p.first_name ?? ''} ${p.last_name ?? ''}`.trim() || p.email || t.team.drawer.memberTypeActive}
-                        </p>
-                        {p.email ? (
-                          <p className="truncate text-[10px] text-slate-500">{p.email}</p>
-                        ) : null}
-                      </div>
-                      {m.is_admin ? (
-                        <span className="inline-flex shrink-0 items-center gap-0.5 text-[9px] font-semibold uppercase text-amber-800 dark:text-amber-400">
-                          <Shield className="h-3 w-3" />
-                          {t.cases.typeLabels.admin}
-                        </span>
+              {activeMemberships(conversation).map((m) => {
+                const p = getMemberPerson(m) as API.User | undefined;
+                if (!p) return null;
+                const img = getPersonImage(p as Record<string, unknown>);
+                return (
+                  <li
+                    key={m.id}
+                    className="flex min-w-0 items-center gap-2 rounded-lg px-1 py-1 hover:bg-slate-50 dark:hover:bg-slate-800/50"
+                  >
+                    <div className="relative shrink-0">
+                      <UserAvatar
+                        firstName={p.first_name}
+                        lastName={p.last_name}
+                        image={img}
+                        size="sm"
+                        className="h-8 w-8 shrink-0"
+                      />
+                      <PresenceDot online={isOnlineUserId(personPresenceId(p), onlineIds)} />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-[12px] font-medium text-slate-800 dark:text-slate-200">
+                        {`${p.first_name ?? ''} ${p.last_name ?? ''}`.trim() ||
+                          p.email ||
+                          t.team.drawer.memberTypeActive}
+                      </p>
+                      {p.email ? (
+                        <p className="truncate text-[10px] text-slate-500">{p.email}</p>
                       ) : null}
-                    </li>
-                  );
-                })}
+                    </div>
+                    {m.is_admin ? (
+                      <span className="inline-flex shrink-0 items-center gap-0.5 text-[9px] font-semibold uppercase text-amber-800 dark:text-amber-400">
+                        <Shield className="h-3 w-3" />
+                        {t.cases.typeLabels.admin}
+                      </span>
+                    ) : null}
+                  </li>
+                );
+              })}
             </ul>
           </div>
         </>
       )}
-    </>
+    </div>
   );
 
   const tasksSkeleton = (
@@ -589,12 +675,14 @@ const ContextPanel: React.FC<ContextPanelProps> = ({
       {wsLoading && !workspace ? (
         tasksSkeleton
       ) : filteredTasks.length === 0 ? (
-        <p className="text-[12px] text-slate-500 dark:text-slate-500 py-2">
-          {tf(
-            taskSubTab === 'active' ? t.conversations.noActiveTasksFor : t.conversations.noTasksFor,
-            { name: displayName?.split(' ')[0] ?? t.conversations.contact }
-          )}
-        </p>
+        <div className="rounded-xl border border-dashed border-slate-200 px-3 py-6 text-center dark:border-slate-800">
+          <p className="text-[12px] font-medium text-slate-600 dark:text-slate-300">
+            {tf(
+              taskSubTab === 'active' ? t.conversations.noActiveTasksFor : t.conversations.noTasksFor,
+              { name: displayName?.split(' ')[0] ?? t.conversations.contact }
+            )}
+          </p>
+        </div>
       ) : (
         <ul className="space-y-2">
           {filteredTasks.map((task) => {
@@ -658,32 +746,53 @@ const ContextPanel: React.FC<ContextPanelProps> = ({
         availabilitySkeleton
       ) : (
         <>
-          <div className="rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/40 p-3 shadow-sm">
-            <p className="text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-2">{t.conversations.workload}</p>
-            <div className="h-2 w-full rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden mb-2">
+          <div className="rounded-xl border border-slate-200 bg-white p-3.5 dark:border-slate-800 dark:bg-slate-900/40">
+            <div className="mb-2.5 flex items-center justify-between gap-2">
+              <p className="text-[11px] font-semibold text-slate-700 dark:text-slate-300">
+                {t.conversations.workload}
+              </p>
+              <p className={cn('text-[11px] font-bold', levelInfo.cls)}>{levelInfo.label}</p>
+            </div>
+            <div className="mb-3 h-2 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
               <div
                 className={cn('h-full rounded-full transition-all', workloadBarClass(assignedN))}
                 style={{ width: `${workloadFillPct(assignedN)}%` }}
               />
             </div>
-            <p className={cn('text-[11px] font-bold mb-2', levelInfo.cls)}>{levelInfo.label}</p>
-            <div className="text-[11px] text-slate-600 dark:text-slate-400 space-y-1">
-              <p>
-                <span className="inline-flex items-center gap-1">📁 {tf(t.conversations.assignedCount, { count: assignedN })}</span>
-                <span className="mx-1.5">·</span>
-                <span className="inline-flex items-center gap-1">⚡ {tf(t.conversations.inProgressCount, { count: inProgressN })}</span>
-              </p>
-              {urgentN > 0 && (
-                <p className="text-rose-700 dark:text-rose-400 font-medium">🔴 {tf(t.conversations.urgentCount, { count: urgentN })}</p>
-              )}
+            <div className="grid grid-cols-2 gap-2">
+              <div className="rounded-lg bg-slate-50 px-2.5 py-2 dark:bg-slate-800/60">
+                <p className="text-[10px] font-medium uppercase tracking-wide text-slate-400">
+                  {t.conversations.tasksTab}
+                </p>
+                <p className="mt-0.5 text-[13px] font-semibold tabular-nums text-slate-800 dark:text-slate-100">
+                  {assignedN}
+                </p>
+                <p className="text-[10px] text-slate-500">{tf(t.conversations.assignedCount, { count: assignedN })}</p>
+              </div>
+              <div className="rounded-lg bg-slate-50 px-2.5 py-2 dark:bg-slate-800/60">
+                <p className="text-[10px] font-medium uppercase tracking-wide text-slate-400">
+                  {t.conversations.tasksActive}
+                </p>
+                <p className="mt-0.5 text-[13px] font-semibold tabular-nums text-slate-800 dark:text-slate-100">
+                  {inProgressN}
+                </p>
+                <p className="text-[10px] text-slate-500">{tf(t.conversations.inProgressCount, { count: inProgressN })}</p>
+              </div>
             </div>
+            {urgentN > 0 ? (
+              <p className="mt-2.5 rounded-lg bg-rose-50 px-2.5 py-1.5 text-[11px] font-medium text-rose-700 dark:bg-rose-950/40 dark:text-rose-300">
+                {tf(t.conversations.urgentCount, { count: urgentN })}
+              </p>
+            ) : null}
           </div>
           <div>
-            <p className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
+            <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
               {t.conversations.upcoming}
             </p>
             {upcoming.length === 0 ? (
-              <p className="text-[12px] text-slate-500 dark:text-slate-500">{t.conversations.noUpcomingEvents}</p>
+              <div className="rounded-xl border border-dashed border-slate-200 px-3 py-5 text-center dark:border-slate-800">
+                <p className="text-[12px] text-slate-500">{t.conversations.noUpcomingEvents}</p>
+              </div>
             ) : (
               <ul className="space-y-2">
                 {upcoming.map((ev, idx) => {
@@ -691,23 +800,27 @@ const ContextPanel: React.FC<ContextPanelProps> = ({
                   return (
                     <li
                       key={`${ev.type}-${idx}`}
-                      className="rounded-md border border-slate-200/80 dark:border-slate-800 px-2 py-1.5"
+                      className="rounded-xl border border-slate-200/80 bg-white px-2.5 py-2 dark:border-slate-800 dark:bg-slate-900/40"
                     >
-                      <div className="flex items-center gap-2 min-w-0">
+                      <div className="flex min-w-0 items-center gap-2">
                         <span className={cn('h-2 w-2 shrink-0 rounded-full', eventDotClass(ev.type))} aria-hidden />
-                        <span className="text-[10px] font-medium text-slate-500 uppercase truncate">{ev.label ?? ev.type}</span>
+                        <span className="truncate text-[10px] font-medium uppercase text-slate-500">
+                          {ev.label ?? ev.type}
+                        </span>
                       </div>
-                      <p className="text-[12px] font-semibold text-slate-800 dark:text-slate-200 line-clamp-2 mt-0.5">{ev.title}</p>
-                      {iso && (
-                        <p className={cn('text-[11px] mt-0.5', eventDateTone(iso))}>
+                      <p className="mt-0.5 line-clamp-2 text-[12px] font-semibold text-slate-800 dark:text-slate-200">
+                        {ev.title}
+                      </p>
+                      {iso ? (
+                        <p className={cn('mt-0.5 text-[11px]', eventDateTone(iso))}>
                           {formatDayMonthYear(iso, intlLocale(lang))}
                         </p>
-                      )}
-                      {ev.caseReference && (
-                        <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 truncate">
+                      ) : null}
+                      {ev.caseReference ? (
+                        <p className="mt-0.5 truncate text-[10px] text-slate-500 dark:text-slate-400">
                           {ev.caseReference.startsWith('#') ? ev.caseReference : `#${ev.caseReference}`}
                         </p>
-                      )}
+                      ) : null}
                     </li>
                   );
                 })}
@@ -747,25 +860,31 @@ const ContextPanel: React.FC<ContextPanelProps> = ({
       >
         {(isOpen || variant === 'overlay') && (
           <>
-            <div className={cn(
-              'flex shrink-0 items-center justify-between border-b border-slate-200 px-3 py-2.5 dark:border-slate-800',
-              variant === 'overlay' && 'pe-12'
-            )}>
+            <div
+              className={cn(
+                'flex shrink-0 items-center justify-between gap-2 border-b border-slate-200 px-3 py-2.5 dark:border-slate-800',
+                variant === 'overlay' && 'pe-12'
+              )}
+            >
               {showTabs ? (
-                <div className="flex min-w-0 gap-3">
+                <div className="flex min-w-0 flex-1 rounded-lg border border-slate-200 bg-slate-50 p-0.5 dark:border-slate-800 dark:bg-slate-900/80">
                   {(['contact', 'tasks', 'availability'] as const).map((tab) => (
                     <button
                       key={tab}
                       type="button"
                       onClick={() => setMainTab(tab)}
                       className={cn(
-                        '-mb-[11px] border-b-2 pb-1 text-[10px] font-semibold uppercase tracking-wider transition-colors',
+                        'min-w-0 flex-1 truncate rounded-md px-1.5 py-1.5 text-[10px] font-semibold tracking-wide transition-colors',
                         mainTab === tab
-                          ? 'border-[#64499D] font-bold text-slate-900 dark:text-slate-100'
-                          : 'border-transparent font-medium text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+                          ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-800 dark:text-slate-100'
+                          : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
                       )}
                     >
-                      {tab === 'contact' ? t.conversations.contact : tab === 'tasks' ? t.conversations.tasksTab : t.conversations.availabilityTab}
+                      {tab === 'contact'
+                        ? t.conversations.contact
+                        : tab === 'tasks'
+                          ? t.conversations.tasksTab
+                          : t.conversations.availabilityTab}
                     </button>
                   ))}
                 </div>
@@ -786,7 +905,7 @@ const ContextPanel: React.FC<ContextPanelProps> = ({
                 </Button>
               ) : null}
             </div>
-            <div className="min-h-0 flex-1 space-y-5 overflow-y-auto p-3 text-[13px]">
+            <div className="min-h-0 flex-1 overflow-y-auto p-3 text-[13px]">
               {!conversation ? (
                 <p className="text-[12px] text-slate-500">{t.conversations.emptyTitle}</p>
               ) : showTabs ? (

@@ -50,6 +50,25 @@ function asNumberArray(value: unknown): number[] {
   return value.filter((x): x is number => typeof x === 'number' && Number.isFinite(x));
 }
 
+function parseLastSeenMap(value: unknown): Record<number, string> {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return {};
+  const out: Record<number, string> = {};
+  for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
+    const id = Number(k);
+    if (!Number.isFinite(id) || typeof v !== 'string' || !v.trim()) continue;
+    out[id] = v;
+  }
+  return out;
+}
+
+function mergeLastSeen(
+  prev: Record<number, string>,
+  patch: Record<number, string>
+): Record<number, string> {
+  if (!Object.keys(patch).length) return prev;
+  return { ...prev, ...patch };
+}
+
 function firstNumberArray(...candidates: unknown[]): number[] {
   for (const c of candidates) {
     const arr = asNumberArray(c);
@@ -115,6 +134,8 @@ export interface ChatStore {
   lastConversationRemovedId: number | null;
   /** IDs of users/members currently connected to chat (from online_user_ids, online_member_ids, or online). In this app they are the same. */
   onlineIds: number[];
+  /** Last chat disconnect time by user id (ISO). */
+  lastSeenById: Record<number, string>;
   /** Conversation currently open in the chat window — new inbox items for it are stored as read. */
   viewingConversationId: number | null;
 
@@ -142,6 +163,7 @@ const useChatStore = create<ChatStore>()(
     lastConversationUpdated: null,
     lastConversationRemovedId: null,
     onlineIds: [],
+    lastSeenById: {},
     viewingConversationId: null,
     // Connection methods
     connect: async () => {
@@ -221,7 +243,12 @@ const useChatStore = create<ChatStore>()(
                 if (typeof connectingUserId === 'number' && !onlineIds.includes(connectingUserId)) {
                   onlineIds = [...onlineIds, connectingUserId];
                 }
-                set({ notifications, onlineIds });
+                const lastSeenPatch = parseLastSeenMap(payloadObj.last_seen);
+                set({
+                  notifications,
+                  onlineIds,
+                  lastSeenById: mergeLastSeen(get().lastSeenById, lastSeenPatch),
+                });
                 break;
               }
               case 'presence.list':
@@ -237,7 +264,11 @@ const useChatStore = create<ChatStore>()(
                   data.online_member_ids,
                   data.online
                 );
-                set({ onlineIds });
+                const lastSeenPatch = parseLastSeenMap(payloadObj.last_seen);
+                set({
+                  onlineIds,
+                  lastSeenById: mergeLastSeen(get().lastSeenById, lastSeenPatch),
+                });
                 break;
               }
               case 'notification.new': {

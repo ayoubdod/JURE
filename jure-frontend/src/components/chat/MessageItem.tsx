@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import {
+  Ban,
   Check,
   CheckCheck,
   Download,
@@ -39,6 +40,7 @@ import {
   CallHistoryMessage,
   callHistoryTitle,
   callMetaFromMessage,
+  formatCallDuration,
   isCallMessageType,
 } from '@/components/conversations/call/CallHistoryMessage';
 import { formatTime, useAppTranslation } from '@/i18n';
@@ -180,6 +182,10 @@ const MessageItem: React.FC<MessageItemProps> = ({
   const attachments = msg.attachments ?? [];
   const fileAttachments = attachments.filter((a) => a.kind === MessageAttachmentKind.FILE);
   const nonFileAttachments = attachments.filter((a) => a.kind !== MessageAttachmentKind.FILE);
+  const mediaAttachments = nonFileAttachments.filter((a) =>
+    [MessageAttachmentKind.IMAGE, MessageAttachmentKind.VIDEO].includes(a.kind)
+  );
+  const audioAttachments = nonFileAttachments.filter((a) => a.kind === MessageAttachmentKind.AUDIO);
   const hasAttachments = attachments.length > 0;
   const messageType = getMessageType(msg);
   const isCallHistory = isCallMessageType(messageType);
@@ -191,23 +197,35 @@ const MessageItem: React.FC<MessageItemProps> = ({
   const editedAt = msg.edited_at;
   const isPinned = msg.is_pinned === true || msg.isPinned === true;
   const forwardedDetail = msg.forwarded_from_detail ?? undefined;
+  const showMediaBlock = !isDeleted && !isShared && mediaAttachments.length > 0;
+  const showAudioBlock = !isDeleted && !isShared && audioAttachments.length > 0;
   const showTextBubble =
     showPlaceholder ||
     isShared ||
     Boolean(forwardedDetail) ||
-    Boolean(String(body || '').trim()) ||
-    nonFileAttachments.length > 0;
+    Boolean(String(body || '').trim());
 
   const canEdit = isOwn && !isDeleted && !isShared && !isCallHistory && (body || hasAttachments);
-  const canDelete = isOwn && !isCallHistory;
+  const canDelete = isOwn && !isDeleted && !isCallHistory;
   const canForward = !isDeleted && !isCallHistory;
   const canPin = !isCallHistory;
 
   if (isCallHistory && !isDeleted) {
-    const { kind, outcome } = callMetaFromMessage(msg);
+    const { kind, outcome, durationSeconds } = callMetaFromMessage(msg);
     const missed = outcome === 'missed' || outcome === 'declined';
+    const declined = outcome === 'declined';
+    const duration = formatCallDuration(durationSeconds);
     const isGroup = conversation.type === 'group';
     const showSenderName = !isOwn && isGroup && senderName && isFirstInGroup;
+    const callSubtitle = missed
+      ? isOwn
+        ? declined
+          ? callCopy.declined
+          : callCopy.missed
+        : callCopy.missedCallSubtitle
+      : duration
+        ? undefined
+        : callCopy.ended;
 
     return (
       <div className={cn('group flex w-full items-start gap-2', isFirstInGroup ? 'mt-2' : 'mt-0.5', isOwn && 'justify-end')}>
@@ -226,7 +244,7 @@ const MessageItem: React.FC<MessageItemProps> = ({
         )}
         <div
           className={cn(
-            'flex min-w-0 max-w-[70%] flex-col',
+            'flex min-w-0 max-w-[85%] flex-col sm:max-w-[70%]',
             isOwn ? 'items-end' : 'items-start'
           )}
         >
@@ -245,7 +263,7 @@ const MessageItem: React.FC<MessageItemProps> = ({
               voice: callCopy.historyVoiceCall,
               video: callCopy.historyVideoCall,
             })}
-            subtitle={missed ? callCopy.missedCallSubtitle : undefined}
+            subtitle={callSubtitle}
             recallLabel={callCopy.missedCallRecall}
             onRecall={
               missed && onRecallCall
@@ -353,26 +371,111 @@ const MessageItem: React.FC<MessageItemProps> = ({
   );
 
   const isSending = typeof msg.id === 'number' && msg.id < 0;
+  // Layout stays LTR (own = right). Bubble radii are physical bottom-right / bottom-left.
   const bubbleRadius = isOwn
     ? cn('rounded-2xl', isLastInGroup ? 'rounded-br-md' : 'rounded-br-2xl')
     : cn('rounded-2xl', isLastInGroup ? 'rounded-bl-md' : 'rounded-bl-2xl');
 
-  const bubbleContent = showTextBubble ? (
+  const mediaBlock = showMediaBlock ? (
     <div
       className={cn(
-        'text-[13px] leading-relaxed',
-        isShared
-          ? 'rounded-none bg-transparent px-0 py-0 text-slate-900 dark:text-slate-100'
-          : cn('px-3 py-1.5', bubbleRadius),
-        !isShared &&
-          (isOwn
-            ? 'bg-[#64499D] text-white'
-            : 'border border-slate-200/90 bg-white text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100'),
+        'overflow-hidden',
+        bubbleRadius,
+        showTextBubble || showAudioBlock || fileAttachments.length > 0 ? 'mb-1.5' : null,
         isSending && 'opacity-80'
       )}
     >
-      {forwardedDetail && (
-        <div className="text-[11px] opacity-90 mb-1 flex items-center gap-1">
+      {mediaAttachments.length > 1 ? (
+        <div className="grid grid-cols-2 gap-0.5 overflow-hidden bg-slate-100 dark:bg-slate-800">
+          {mediaAttachments.slice(0, 4).map((attachment, index) => {
+            const src = attachmentHref(attachment.file, BACKEND_BASE_URL);
+            return (
+              <div
+                key={attachment.id}
+                className="relative aspect-square cursor-pointer overflow-hidden"
+                onClick={() => handleGalleryOpen(index)}
+              >
+                {attachment.kind === MessageAttachmentKind.IMAGE ? (
+                  <img src={src} alt="" className="h-full w-full object-cover" />
+                ) : (
+                  <video src={src} className="h-full w-full object-cover" />
+                )}
+                {index === 3 && mediaAttachments.length > 4 ? (
+                  <div
+                    className="absolute inset-0 flex cursor-pointer items-center justify-center bg-black/50 text-lg font-medium text-white hover:bg-black/60"
+                    onClick={() => handleGalleryOpen(3)}
+                  >
+                    +{mediaAttachments.length - 4}
+                  </div>
+                ) : null}
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+        mediaAttachments.map((attachment, index) => {
+          const src = attachmentHref(attachment.file, BACKEND_BASE_URL);
+          return attachment.kind === MessageAttachmentKind.IMAGE ? (
+            <img
+              key={attachment.id}
+              src={src}
+              alt=""
+              className="block max-h-[360px] max-w-full cursor-pointer object-cover hover:opacity-95"
+              onClick={() => handleGalleryOpen(index)}
+            />
+          ) : (
+            <video
+              key={attachment.id}
+              controls
+              src={src}
+              className="block max-h-[360px] max-w-full cursor-pointer object-cover"
+              onClick={() => handleGalleryOpen(index)}
+            />
+          );
+        })
+      )}
+    </div>
+  ) : null;
+
+  const audioBlock = showAudioBlock ? (
+    <div className={cn('flex w-full flex-col gap-1.5', (showMediaBlock || showTextBubble) && 'mt-1.5')}>
+      {audioAttachments.map((attachment) => (
+        <AudioControl
+          key={attachment.id}
+          audioSrc={attachmentHref(attachment.file, BACKEND_BASE_URL)}
+          isOwn={isOwn}
+          durationMs={attachment.duration_ms}
+        />
+      ))}
+    </div>
+  ) : null;
+
+  const bubbleContent = showTextBubble ? (
+    <div
+      dir="auto"
+      className={cn(
+        'text-[13px] leading-relaxed text-start',
+        isDeleted
+          ? cn(
+              'border border-dashed px-3 py-2',
+              bubbleRadius,
+              isOwn
+                ? 'border-[#64499D]/35 bg-[#64499D]/10 text-[#5a3f8f] dark:border-[#8B6FD1]/40 dark:bg-[#64499D]/15 dark:text-[#CFC2FF]'
+                : 'border-slate-300/90 bg-slate-50 text-slate-500 dark:border-slate-600 dark:bg-slate-900/50 dark:text-slate-400'
+            )
+          : isShared
+            ? 'rounded-none bg-transparent px-0 py-0 text-slate-900 dark:text-slate-100'
+            : cn('px-3 py-1.5', bubbleRadius),
+        !isDeleted &&
+          !isShared &&
+          (isOwn
+            ? 'bg-[#64499D] text-white'
+            : 'border border-slate-200/90 bg-white text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100'),
+        isSending && !isDeleted && 'opacity-80'
+      )}
+    >
+      {forwardedDetail && !isDeleted && (
+        <div className="mb-1 flex items-center gap-1 text-[11px] opacity-90">
           <Forward className="h-3 w-3 shrink-0" />
           <span>{t.conversations.forwarded}</span>
           {forwardedDetail.body && (
@@ -383,11 +486,16 @@ const MessageItem: React.FC<MessageItemProps> = ({
           )}
         </div>
       )}
-      {showPlaceholder ? (
-        <p className="italic opacity-75">{t.conversations.messageDeletedPreview}</p>
+      {isDeleted ? (
+        <p className="flex items-center gap-2 text-[12.5px] font-medium tracking-tight">
+          <Ban className="h-3.5 w-3.5 shrink-0 opacity-80" aria-hidden />
+          <span>{t.conversations.messageDeletedPreview}</span>
+        </p>
+      ) : showPlaceholder ? (
+        <p className="text-current/50">…</p>
       ) : isShared ? (
         coercedShared === 'deleted' || coercedShared === null ? (
-          <p className="text-[13px] italic text-slate-500 dark:text-slate-400 max-w-[320px]">
+          <p className="max-w-[320px] text-[13px] italic text-slate-500 dark:text-slate-400">
             {tf(t.conversations.sharedUnavailable, {
               item:
                 messageType === 'SHARED_CASE'
@@ -398,7 +506,7 @@ const MessageItem: React.FC<MessageItemProps> = ({
             })}
           </p>
         ) : (
-          <div className="flex flex-col gap-1.5 items-stretch max-w-[320px] w-full">
+          <div className="flex w-full max-w-[320px] flex-col items-stretch gap-1.5">
             <SharedMessageCard
               item={coercedShared}
               onOpenCase={onOpenSharedCase}
@@ -406,95 +514,19 @@ const MessageItem: React.FC<MessageItemProps> = ({
               onOpenAppointment={onOpenSharedAppointment}
             />
             {body?.trim() ? (
-              <p className="text-[13px] text-slate-800 dark:text-slate-200 break-words px-0.5">{body.trim()}</p>
+              <p className="break-words px-0.5 text-[13px] text-slate-800 dark:text-slate-200">{body.trim()}</p>
             ) : null}
           </div>
         )
-      ) : (
-        <>
-          {nonFileAttachments.length > 1 ? (
-            <>
-              <div className="grid grid-cols-2 gap-2">
-                {nonFileAttachments
-                  .filter((i) =>
-                    [MessageAttachmentKind.IMAGE, MessageAttachmentKind.VIDEO].includes(i.kind)
-                  )
-                  .slice(0, 4)
-                  .map((attachment, index) => {
-                    const src = attachmentHref(attachment.file, BACKEND_BASE_URL);
-                    return (
-                      <div
-                        key={attachment.id}
-                        className="aspect-square relative cursor-pointer rounded-[4px] overflow-hidden"
-                        onClick={() => handleGalleryOpen(index)}
-                      >
-                        {attachment.kind === MessageAttachmentKind.IMAGE && (
-                          <img src={src} alt="" className="w-full h-full object-cover" />
-                        )}
-                        {attachment.kind === MessageAttachmentKind.VIDEO && (
-                          <video src={src} controls className="w-full h-full object-cover" />
-                        )}
-                        {index === 3 && nonFileAttachments.length > 4 && (
-                          <div
-                            className="absolute inset-0 bg-black/50 text-white flex items-center justify-center text-lg font-medium cursor-pointer hover:bg-black/60"
-                            onClick={() => handleGalleryOpen(3)}
-                          >
-                            +{nonFileAttachments.length - 4}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-              </div>
-              {nonFileAttachments
-                .filter((i) => i.kind === MessageAttachmentKind.AUDIO)
-                .map((attachment) => (
-                  <AudioControl
-                    key={attachment.id}
-                    audioSrc={attachmentHref(attachment.file, BACKEND_BASE_URL)}
-                    isOwn={isOwn}
-                    durationMs={attachment.duration_ms}
-                  />
-                ))}
-            </>
-          ) : (
-            nonFileAttachments.map((attachment, index) => (
-              <React.Fragment key={attachment.id}>
-                {attachment.kind === MessageAttachmentKind.IMAGE && (
-                  <img
-                    src={attachmentHref(attachment.file, BACKEND_BASE_URL)}
-                    alt=""
-                    className="cursor-pointer hover:opacity-90 rounded-[4px] max-w-full"
-                    onClick={() => handleGalleryOpen(index)}
-                  />
-                )}
-                {attachment.kind === MessageAttachmentKind.VIDEO && (
-                  <video
-                    controls
-                    src={attachmentHref(attachment.file, BACKEND_BASE_URL)}
-                    className="cursor-pointer hover:opacity-90 rounded-[4px] max-w-full"
-                    onClick={() => handleGalleryOpen(index)}
-                  />
-                )}
-                {attachment.kind === MessageAttachmentKind.AUDIO && (
-                  <AudioControl
-                    audioSrc={attachmentHref(attachment.file, BACKEND_BASE_URL)}
-                    isOwn={isOwn}
-                    durationMs={attachment.duration_ms}
-                  />
-                )}
-              </React.Fragment>
-            ))
-          )}
-          {body ? <p className="break-words">{body}</p> : null}
-        </>
-      )}
+      ) : body ? (
+        <p className="break-words">{body}</p>
+      ) : null}
     </div>
   ) : null;
 
   const fileCards =
     !showPlaceholder && fileAttachments.length > 0 ? (
-      <div className={cn('flex w-full flex-col gap-1.5', showTextBubble && 'mt-1.5')}>
+      <div className={cn('flex w-full flex-col gap-1.5', (showTextBubble || showMediaBlock || showAudioBlock) && 'mt-1.5')}>
         {fileAttachments.map((attachment) => (
           <ChatFileAttachment key={attachment.id} file={attachment.file} size={attachment.size} />
         ))}
@@ -584,7 +616,9 @@ const MessageItem: React.FC<MessageItemProps> = ({
                   <Pin className="mt-1.5 h-3 w-3 shrink-0 text-[#64499D]" />
                 )}
                 <div className="min-w-0">
+                  {mediaBlock}
                   {bubbleContent}
+                  {audioBlock}
                   {fileCards}
                 </div>
               </div>

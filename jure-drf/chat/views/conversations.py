@@ -33,7 +33,23 @@ class ConversationViewSet(viewsets.ModelViewSet):
     queryset = Conversation.objects.all()
 
     def get_permissions(self):
-        if self.action in ("archive", "archive_bulk", "pin", "pin_bulk", "mark_read", "rename", "suggested_icons"):
+        # Participant/group-admin scoped actions — not cabinet RBAC.
+        # DELETE would otherwise require conversations.delete (OWNER/ADMIN only),
+        # which blocks lawyers who are group chat admins from removing members or leaving.
+        if self.action in (
+            "archive",
+            "archive_bulk",
+            "pin",
+            "pin_bulk",
+            "mark_read",
+            "rename",
+            "suggested_icons",
+            "add_members",
+            "manage_member",
+            "delete_group",
+            "destroy",
+            "link_case",
+        ):
             return [permissions.IsAuthenticated()]
         if self.action == "partial_update":
             data = getattr(self.request, "data", {}) or {}

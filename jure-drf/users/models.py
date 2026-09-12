@@ -178,6 +178,14 @@ class User(AbstractUser):
         help_text=_('Bumped on login to invalidate older access/refresh tokens.'),
     )
 
+    # Updated when the user disconnects from the chat WebSocket (last online).
+    last_seen_at = models.DateTimeField(
+        _('last seen at'),
+        null=True,
+        blank=True,
+        help_text=_('Last time the user was connected to chat.'),
+    )
+
     
     addresses : QuerySet['UserAddress']
     client_cases : QuerySet['Case']
