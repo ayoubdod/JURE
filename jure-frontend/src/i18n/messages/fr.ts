@@ -5303,4 +5303,38 @@ export const fr: AppMessages = {
       },
     },
   },
+  mode: {
+    title: 'Mode',
+    until: "Jusqu'à {time}",
+    activate: 'Activer',
+    updateFailed: 'Impossible de mettre à jour le mode',
+    duringAbsence: '{count} notifications pendant votre absence',
+    options: {
+      AVAILABLE: {
+        label: 'Disponible',
+        description: 'Disponible pour recevoir les messages et notifications',
+      },
+      DND: {
+        label: 'Ne pas déranger',
+        description: 'Notifications silencieuses',
+      },
+      AWAY: {
+        label: 'Absent',
+        description: 'Temporairement indisponible',
+      },
+      INVISIBLE: {
+        label: 'Invisible',
+        description: 'Votre présence apparaît hors ligne',
+      },
+    },
+    duration: 'Durée',
+    durations: {
+      untilOff: "Jusqu'à ce que je le désactive",
+      m30: '30 minutes',
+      h1: '1 heure',
+      h2: '2 heures',
+      today: "Aujourd'hui",
+      custom: 'Personnalisé',
+    },
+  },
 };

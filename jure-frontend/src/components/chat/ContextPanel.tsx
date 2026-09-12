@@ -26,6 +26,9 @@ import LinkedMatterCard, { type LinkedMatterTab } from '@/components/chat/Linked
 import { attachmentFileName, attachmentHref, getMemberPerson, isDocumentAttachment, isImageOrVideoAttachment, activeMemberships } from '@/components/chat/conversationUtils';
 import { useAppTranslation, intlLocale, formatTime } from '@/i18n';
 import { isOnlineUserId, personPresenceId, formatPresenceLastSeen, resolveLastSeenAt } from '@/lib/presence';
+import { isAwayLike, publicPresenceMode } from '@/lib/presenceMode';
+import { ModeDot } from '@/components/header/ModeMenu';
+import useChatStore from '@/stores/chatStore';
 import { useOnlineIds, useLastSeenById } from '@/hooks/useOnlinePresence';
 
 interface ContextPanelProps {
@@ -168,6 +171,7 @@ const ContextPanel: React.FC<ContextPanelProps> = ({
   const { toast } = useToast();
   const onlineIds = useOnlineIds();
   const lastSeenById = useLastSeenById();
+  const statusById = useChatStore((s) => s.statusById ?? {});
   const [mainTab, setMainTab] = useState<MainTab>('contact');
   const [taskSubTab, setTaskSubTab] = useState<TaskSubTab>('active');
   const [workspace, setWorkspace] = useState<API.UserWorkspace | null>(null);
@@ -191,9 +195,15 @@ const ContextPanel: React.FC<ContextPanelProps> = ({
 
   const isDirect = conversation?.type === 'direct';
   const showTabs = isDirect && !!peerUserId;
-  const peerOnline = isOnlineUserId(peerUserId ?? personPresenceId(user), onlineIds);
+  const peerPresenceId = peerUserId ?? personPresenceId(user);
+  const peerOnline = isOnlineUserId(peerPresenceId, onlineIds);
+  const peerMode = publicPresenceMode(
+    statusById[peerPresenceId ?? -1] ?? (user as { mode?: string } | undefined)?.mode,
+    null
+  );
+  const peerAway = peerOnline && isAwayLike(peerMode);
   const peerLastSeenAt = resolveLastSeenAt(
-    peerUserId ?? personPresenceId(user),
+    peerPresenceId,
     lastSeenById,
     (user as { last_seen_at?: string | null } | undefined)?.last_seen_at ??
       conversation?.other_participant?.last_seen_at
@@ -533,9 +543,14 @@ const ContextPanel: React.FC<ContextPanelProps> = ({
                 className="h-[4.5rem] w-[4.5rem] text-base shadow-md ring-4 ring-white dark:ring-slate-900"
               />
               <PresenceDot
-                online={peerOnline}
+                online={peerOnline && !peerAway}
                 className="h-3.5 w-3.5 border-2 border-white dark:border-slate-900"
               />
+              {peerAway ? (
+                <span className="absolute -bottom-0.5 -end-0.5">
+                  <ModeDot mode="AWAY" />
+                </span>
+              ) : null}
             </div>
           ) : conversation?.type === 'group' ? (
             <GroupChatIcon
@@ -556,20 +571,28 @@ const ContextPanel: React.FC<ContextPanelProps> = ({
             <p
               className={cn(
                 'mt-1 inline-flex items-center gap-1.5 text-[11px] font-medium',
-                peerOnline
+                peerOnline && !peerAway
                   ? 'text-emerald-600 dark:text-emerald-400'
-                  : 'text-slate-500 dark:text-slate-400'
+                  : peerAway
+                    ? 'text-amber-600 dark:text-amber-400'
+                    : 'text-slate-500 dark:text-slate-400'
               )}
             >
               <span
                 className={cn(
                   'h-1.5 w-1.5 rounded-full',
-                  peerOnline ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-600'
+                  peerOnline && !peerAway
+                    ? 'bg-emerald-500'
+                    : peerAway
+                      ? 'bg-amber-500'
+                      : 'bg-slate-300 dark:bg-slate-600'
                 )}
                 aria-hidden
               />
               {peerOnline
-                ? t.conversations.presenceOnline
+                ? peerAway
+                  ? t.mode.options.AWAY.label
+                  : t.conversations.presenceOnline
                 : peerLastSeenLabel || t.conversations.presenceOffline}
             </p>
           ) : (

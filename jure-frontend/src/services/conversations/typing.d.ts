@@ -63,6 +63,7 @@ declare namespace API {
     image?: string;
     role?: Role | string;
     last_seen_at?: string | null;
+    mode?: 'AVAILABLE' | 'DND' | 'AWAY' | 'INVISIBLE' | string;
   };
 
   type Conversation = {

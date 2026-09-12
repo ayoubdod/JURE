@@ -4818,4 +4818,26 @@ export interface AppMessages {
       };
     };
   };
+  mode: {
+    title: string;
+    until: string;
+    activate: string;
+    updateFailed: string;
+    duringAbsence: string;
+    options: {
+      AVAILABLE: { label: string; description: string };
+      DND: { label: string; description: string };
+      AWAY: { label: string; description: string };
+      INVISIBLE: { label: string; description: string };
+    };
+    duration: string;
+    durations: {
+      untilOff: string;
+      m30: string;
+      h1: string;
+      h2: string;
+      today: string;
+      custom: string;
+    };
+  };
 }

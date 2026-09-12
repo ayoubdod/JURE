@@ -14,6 +14,7 @@ import {
   clearIncomingCallNotification,
   showIncomingCallNotification,
 } from '@/utils/incomingCallNotify';
+import { suppressesInterruptions } from '@/lib/presenceMode';
 import { devError, devLog, devWarn } from '@/utils/devLog';
 import {
   addIceCandidate,
@@ -1042,6 +1043,22 @@ function onWsMessage(data: WebSocketMessage | CallsWsMessage) {
     if (st !== 'idle' && st !== 'ringing') return;
     const targetCallee = Number(m.target_user_id ?? m.targetUserId);
     if (Number.isFinite(targetCallee) && myId != null && targetCallee !== myId) return;
+
+    // Do Not Disturb: never ring locally (backend should also skip).
+    const me = useUserStore.getState().user;
+    if (suppressesInterruptions(me?.mode, me?.mode_until)) {
+      const gn = String(m.groupName ?? m.group_name ?? '');
+      if (gn) {
+        void useCallsWsStore.getState().connect().catch(() => {});
+        useChatStore.getState().connect().catch(() => {});
+        sendCallSignal(
+          { type: 'call.reject', groupName: gn },
+          Number(m.conversationId ?? m.conversation_id) || null
+        );
+      }
+      return;
+    }
+
     const callerId = Number(m.callerId ?? m.caller_id);
     const convId = Number(m.conversationId ?? m.conversation_id);
     const gn = String(m.groupName ?? m.group_name ?? `conversation-${convId}`);

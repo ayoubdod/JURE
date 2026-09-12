@@ -14,6 +14,7 @@ from chat.presence import (
     presence_last_seen_map,
     presence_list,
     presence_mark_offline,
+    presence_remove,
     presence_seed_from_db,
 )
 from chat.serializers import MessageNotificationSerializer
@@ -85,7 +86,19 @@ class ChatConsumer(CallSignalingMixin, AsyncJsonWebsocketConsumer):
         # handshake to time out (~5s) and presence never comes online.
         await self.accept()
 
-        online_ids = await asyncio.to_thread(presence_add, self.user.id)
+        mode = await self._effective_mode()
+        if mode == User.PresenceMode.INVISIBLE:
+            online_ids = await asyncio.to_thread(presence_list)
+        else:
+            online_ids = await asyncio.to_thread(presence_add, self.user.id)
+
+        # Peers see DND as Away.
+        public = (
+            User.PresenceMode.AWAY
+            if mode == User.PresenceMode.DND
+            else mode
+        )
+        statuses = {str(self.user.id): public}
         # Push presence first so green dots work even if inbox load is slow.
         await self.send_json(
             {
@@ -96,11 +109,12 @@ class ChatConsumer(CallSignalingMixin, AsyncJsonWebsocketConsumer):
                     "online_member_ids": online_ids,
                     "online": online_ids,
                     "last_seen": {},
+                    "statuses": statuses,
                 },
                 "user_id": self.user.id,
             }
         )
-        await self._broadcast_presence(online_ids, {})
+        await self._broadcast_presence(online_ids, {}, statuses=statuses)
 
         last_seen: dict[str, str] = {}
         try:
@@ -108,9 +122,9 @@ class ChatConsumer(CallSignalingMixin, AsyncJsonWebsocketConsumer):
         except Exception:
             last_seen = {}
 
-        await self.send_notifications(online_ids, last_seen)
+        await self.send_notifications(online_ids, last_seen, statuses=statuses)
         if last_seen:
-            await self._broadcast_presence(online_ids, last_seen)
+            await self._broadcast_presence(online_ids, last_seen, statuses=statuses)
 
     async def disconnect(self, close_code):
         await self._discard_all_call_groups()
@@ -156,8 +170,41 @@ class ChatConsumer(CallSignalingMixin, AsyncJsonWebsocketConsumer):
             .values_list("id", flat=True)[:500]
         )
 
+    @database_sync_to_async
+    def _effective_mode(self) -> str:
+        user = User.objects.filter(pk=self.user.id).first()
+        if not user:
+            return User.PresenceMode.AVAILABLE
+        self.user = user
+        return user.get_effective_mode()
+
+    async def mode_changed(self, event):
+        """Apply presence visibility when the user updates Mode via REST."""
+        mode = await self._effective_mode()
+        if mode == User.PresenceMode.INVISIBLE:
+            online_ids = await asyncio.to_thread(presence_remove, self.user.id)
+        else:
+            online_ids = await asyncio.to_thread(presence_add, self.user.id)
+        public = (
+            User.PresenceMode.AWAY
+            if mode == User.PresenceMode.DND
+            else mode
+        )
+        statuses = {str(self.user.id): public}
+        await self._broadcast_presence(online_ids, {}, statuses=statuses)
+        await self.send_json(
+            {
+                "type": "mode.changed",
+                "payload": event.get("payload")
+                or {"mode": mode, "mode_until": None},
+            }
+        )
+
     async def _broadcast_presence(
-        self, online_ids: list[int], last_seen: dict[str, str] | None = None
+        self,
+        online_ids: list[int],
+        last_seen: dict[str, str] | None = None,
+        statuses: dict[str, str] | None = None,
     ):
         """Broadcast presence.update to all connected chat users."""
         if self.channel_layer:
@@ -166,6 +213,7 @@ class ChatConsumer(CallSignalingMixin, AsyncJsonWebsocketConsumer):
                 "online_member_ids": online_ids,
                 "online": online_ids,
                 "last_seen": last_seen or {},
+                "statuses": statuses or {},
             }
             await self.channel_layer.group_send(
                 PRESENCE_GROUP,
@@ -176,6 +224,7 @@ class ChatConsumer(CallSignalingMixin, AsyncJsonWebsocketConsumer):
         self,
         online_ids: list[int] | None = None,
         last_seen: dict[str, str] | None = None,
+        statuses: dict[str, str] | None = None,
     ):
         """Send initial notifications to the authenticated user."""
         messages = await self.get_last_messages()
@@ -188,6 +237,7 @@ class ChatConsumer(CallSignalingMixin, AsyncJsonWebsocketConsumer):
             "online_member_ids": online_ids,
             "online": online_ids,
             "last_seen": last_seen or {},
+            "statuses": statuses or {},
         }
         await self.send_json(
             {

@@ -26,6 +26,9 @@ import {
   activeMemberships,
 } from './conversationUtils';
 import { formatPresenceLastSeen } from '@/lib/presence';
+import { publicPresenceMode, isAwayLike } from '@/lib/presenceMode';
+import useChatStore from '@/stores/chatStore';
+import { ModeDot } from '@/components/header/ModeMenu';
 
 const ConversationHeader: React.FC<{
   conversation: API.Conversation;
@@ -64,6 +67,7 @@ const ConversationHeader: React.FC<{
 }) => {
   const { t, tf, enumLabel, lang } = useAppTranslation();
   const currentEmail = useUserStore((s) => s.user?.email);
+  const statusById = useChatStore((s) => s.statusById ?? {});
   const isDirect = conversation.type === 'direct';
   const linkedCase = getLinkedCase(conversation);
   const peer = getDirectPeer(conversation, currentEmail);
@@ -71,6 +75,17 @@ const ConversationHeader: React.FC<{
     ? getDirectPeerInfo(conversation, peer, t.conversations.unknownContact)
     : null;
   const peerPerson = peerInfo?.person ?? conversation.other_participant;
+  const peerId =
+    typeof peerPerson?.id === 'number'
+      ? peerPerson.id
+      : typeof peerPerson?.pk === 'number'
+        ? peerPerson.pk
+        : undefined;
+  const peerMode = publicPresenceMode(
+    statusById[peerId ?? -1] ?? (peerPerson as { mode?: string } | undefined)?.mode,
+    null
+  );
+  const peerAway = isAwayLike(peerMode);
   const displayName =
     conversation.display_name ||
     (isDirect ? peerInfo?.fullName : conversation.title) ||
@@ -90,11 +105,13 @@ const ConversationHeader: React.FC<{
     !isOnline && isDirect
       ? formatPresenceLastSeen(lastSeenAt, lang, t.conversations.presenceLastSeen)
       : null;
+  const modeLabel =
+    isDirect && isOnline && peerAway ? t.mode.options.AWAY.label : null;
   const statusLabel = isTyping
     ? t.conversations.typing
     : isDirect
       ? isOnline
-        ? t.conversations.presenceOnline
+        ? modeLabel || t.conversations.presenceOnline
         : lastSeenLabel || t.conversations.presenceOffline
       : tf(t.conversations.membersCount, { count: memberCount });
   const showTypeSuffix = !isDirect;
@@ -125,7 +142,12 @@ const ConversationHeader: React.FC<{
               size="sm"
               className="h-9 w-9"
             />
-            <PresenceDot online={isOnline} />
+            <PresenceDot online={isOnline && !peerAway} />
+            {isOnline && peerAway ? (
+              <span className="absolute -bottom-0.5 -end-0.5">
+                <ModeDot mode="AWAY" />
+              </span>
+            ) : null}
           </div>
         ) : (
           <GroupChatIcon

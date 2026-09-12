@@ -10,6 +10,8 @@ import { useAppTranslation } from '@/i18n';
 import ConversationListItem from './ConversationListItem';
 import { getDirectPeer, getLinkedCase, getMemberPerson } from './conversationUtils';
 import { isCabinetMemberOnline, isOnlineUserId, personPresenceId } from '@/lib/presence';
+import { isAwayLike, publicPresenceMode } from '@/lib/presenceMode';
+import { ModeDot } from '@/components/header/ModeMenu';
 
 type ListFilter = 'all' | 'unread' | 'cases' | 'team' | 'archived';
 
@@ -73,8 +75,13 @@ const ConversationList: React.FC<Props> = ({
 
   const recentMessages = chatStore.notifications.filter((m: { is_message?: boolean }) => m.is_message);
   const onlineIds = chatStore.onlineIds ?? [];
+  const statusById = chatStore.statusById ?? {};
 
   const isMemberOnline = (member: API.CabinetMember) => isCabinetMemberOnline(member, onlineIds);
+  const memberPresenceMode = (member: API.CabinetMember) => {
+    const id = personPresenceId(member as Record<string, unknown>);
+    return publicPresenceMode(statusById[id ?? -1] ?? (member as { mode?: string }).mode);
+  };
 
   const membersForAvatars = useMemo(() => {
     const currentEmail = (currentUser?.email ?? '').toLowerCase();
@@ -139,7 +146,18 @@ const ConversationList: React.FC<Props> = ({
     if (c.type !== 'direct') return false;
     const peer = getDirectPeer(c, currentUser?.email);
     const person = peer ? getMemberPerson(peer) : c.other_participant;
-    return isOnlineUserId(personPresenceId(person), onlineIds);
+    const id = personPresenceId(person);
+    if (!isOnlineUserId(id, onlineIds)) return false;
+    return !isAwayLike(publicPresenceMode(statusById[id ?? -1] ?? (person as { mode?: string })?.mode));
+  };
+
+  const isPeerAway = (c: API.Conversation) => {
+    if (c.type !== 'direct') return false;
+    const peer = getDirectPeer(c, currentUser?.email);
+    const person = peer ? getMemberPerson(peer) : c.other_participant;
+    const id = personPresenceId(person);
+    if (!isOnlineUserId(id, onlineIds)) return false;
+    return isAwayLike(publicPresenceMode(statusById[id ?? -1] ?? (person as { mode?: string })?.mode));
   };
 
   return (
@@ -192,6 +210,7 @@ const ConversationList: React.FC<Props> = ({
             {membersForAvatars.map((m) => {
               const memberImage = getPersonImage(m as Record<string, unknown>);
               const isOnline = isMemberOnline(m);
+              const away = isOnline && isAwayLike(memberPresenceMode(m));
               const name = `${m.first_name ?? ''} ${m.last_name ?? ''}`.trim() || m.email;
               return (
                 <button
@@ -210,7 +229,12 @@ const ConversationList: React.FC<Props> = ({
                       size="sm"
                       className="h-8 w-8 ring-2 ring-transparent transition-shadow group-hover:ring-[#64499D]/30"
                     />
-                    {isOnline ? <PresenceDot online className="h-2 w-2 border" /> : null}
+                    {isOnline && !away ? <PresenceDot online className="h-2 w-2 border" /> : null}
+                    {away ? (
+                      <span className="absolute -bottom-0.5 -end-0.5">
+                        <ModeDot mode="AWAY" />
+                      </span>
+                    ) : null}
                   </div>
                 </button>
               );
@@ -249,6 +273,7 @@ const ConversationList: React.FC<Props> = ({
                 active={activeId === conversation.id}
                 currentEmail={currentUser?.email}
                 isOnline={isPeerOnline(conversation)}
+                isAway={isPeerAway(conversation)}
                 unreadCount={unreadFor(conversation)}
                 archived={filter === 'archived'}
                 onSelect={onSelectConversation}

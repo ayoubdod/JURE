@@ -2,6 +2,7 @@ from django.db import models
 from django.core.exceptions import ValidationError
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.utils.translation import gettext_lazy as _
+from django.utils import timezone
 from django.core.validators import MinLengthValidator, MaxLengthValidator, RegexValidator
 from phonenumber_field.modelfields import PhoneNumberField
 from django_countries.fields import CountryField
@@ -186,6 +187,26 @@ class User(AbstractUser):
         help_text=_('Last time the user was connected to chat.'),
     )
 
+    class PresenceMode(models.TextChoices):
+        AVAILABLE = 'AVAILABLE', _('Available')
+        DND = 'DND', _('Do not disturb')
+        AWAY = 'AWAY', _('Away')
+        INVISIBLE = 'INVISIBLE', _('Invisible')
+
+    mode = models.CharField(
+        _('mode'),
+        max_length=20,
+        choices=PresenceMode.choices,
+        default=PresenceMode.AVAILABLE,
+        help_text=_('Workplace availability mode (notifications + presence).'),
+    )
+    mode_until = models.DateTimeField(
+        _('mode until'),
+        null=True,
+        blank=True,
+        help_text=_('When set, mode automatically returns to Available after this time.'),
+    )
+
     
     addresses : QuerySet['UserAddress']
     client_cases : QuerySet['Case']
@@ -217,6 +238,35 @@ class User(AbstractUser):
     
     def is_client(self) :
         return self.client_cases.exists()
+
+    def get_effective_mode(self) -> str:
+        """Return current mode, auto-clearing expired timed modes."""
+        mode = self.mode or self.PresenceMode.AVAILABLE
+        until = self.mode_until
+        if until is not None and timezone.now() >= until:
+            if mode != self.PresenceMode.AVAILABLE or until is not None:
+                type(self).objects.filter(pk=self.pk).update(
+                    mode=self.PresenceMode.AVAILABLE,
+                    mode_until=None,
+                )
+                self.mode = self.PresenceMode.AVAILABLE
+                self.mode_until = None
+            return self.PresenceMode.AVAILABLE
+        return mode
+
+    def suppresses_interruptions(self) -> bool:
+        return self.get_effective_mode() == self.PresenceMode.DND
+
+    def public_presence_mode(self) -> str:
+        """Mode shown to other users (DND appears as Away)."""
+        mode = self.get_effective_mode()
+        if mode == self.PresenceMode.DND:
+            return self.PresenceMode.AWAY
+        return mode
+
+    def appears_online(self) -> bool:
+        """Whether the user should appear in the live online set."""
+        return self.get_effective_mode() != self.PresenceMode.INVISIBLE
 
     # Override username field to use email instead
     username = None

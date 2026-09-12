@@ -5272,4 +5272,38 @@ export const ar: AppMessages = {
       },
     },
   },
+  mode: {
+    title: 'الوضع',
+    until: 'حتى {time}',
+    activate: 'تفعيل',
+    updateFailed: 'تعذر تحديث الوضع',
+    duringAbsence: '{count} إشعارات أثناء غيابك',
+    options: {
+      AVAILABLE: {
+        label: 'متاح',
+        description: 'متاح لاستقبال الرسائل والإشعارات',
+      },
+      DND: {
+        label: 'عدم الإزعاج',
+        description: 'إشعارات صامتة',
+      },
+      AWAY: {
+        label: 'غائب',
+        description: 'غير متاح مؤقتاً',
+      },
+      INVISIBLE: {
+        label: 'مخفي',
+        description: 'تظهر غير متصل لأعضاء الفريق',
+      },
+    },
+    duration: 'المدة',
+    durations: {
+      untilOff: 'حتى أقوم بإيقافه',
+      m30: '30 دقيقة',
+      h1: 'ساعة واحدة',
+      h2: 'ساعتان',
+      today: 'اليوم',
+      custom: 'مخصص',
+    },
+  },
 };
