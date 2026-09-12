@@ -45,6 +45,10 @@ type MarketingShellProps = {
   labels?: MarketingLabels;
   dir?: "ltr" | "rtl";
   activeNav?: MarketingNavKey;
+  /** Transparent-on-purple nav that sits on a full-bleed dark hero (homepage). */
+  darkHero?: boolean;
+  /** Homepage closing CTA fused into the footer wash. */
+  closingCta?: React.ReactNode;
   children: React.ReactNode;
 };
 
@@ -65,7 +69,7 @@ const LangSwitcher: React.FC<{
         type="button"
         variant="outline"
         size="icon"
-        className="h-9 w-9 shrink-0 border-[#64499D]/15 dark:border-white/20 text-[#64499D] dark:text-white hover:bg-[#64499D]/5 dark:hover:bg-white/10"
+        className="landing-nav-icon h-9 w-9 shrink-0 hover:bg-[#20004D]/5 dark:hover:bg-white/10"
         aria-label={MARKETING_LANG_LABELS[lang]}
         title={MARKETING_LANG_LABELS[lang]}
       >
@@ -80,7 +84,7 @@ const LangSwitcher: React.FC<{
             if (code === lang) return;
             onNavigate(swapLocaleInPath(pathname, code), code);
           }}
-          className={code === lang ? "font-medium text-[#A58CF4]" : ""}
+          className={code === lang ? "font-medium text-[var(--jure-blue)]" : ""}
         >
           {MARKETING_LANG_LABELS[code]}
         </DropdownMenuItem>
@@ -98,15 +102,18 @@ const NAV_ITEMS: Array<{ key: Exclude<MarketingNavKey, "none">; slug: string }> 
   { key: "contact", slug: "contact" },
 ];
 
-const FOOTER_PLATFORM_SLUGS = ["features", "pricing", "security", "demo", "docs"];
+const FOOTER_PLATFORM_SLUGS = ["features", "pricing", "security"];
+const FOOTER_DOCS_LABEL: Record<MarketingLang, string> = {
+  en: "Documentation",
+  fr: "Documentation",
+  ar: "الوثائق",
+};
 const FOOTER_SOLUTION_KEYS = [
   "solutionsLawFirms",
-  "solutionsLegalDepartments",
   "juria",
   "legalAi",
   "legalCaseManagement",
   "legalPracticeManagement",
-  "legalResearch",
   "legalDocumentManagement",
   "legalOperations",
   "legalKnowledgeManagement",
@@ -118,6 +125,8 @@ const MarketingShell: React.FC<MarketingShellProps> = ({
   lang: langProp,
   onLangChange,
   activeNav = "none",
+  darkHero = false,
+  closingCta,
   children,
 }) => {
   const navigate = useNavigate();
@@ -155,10 +164,10 @@ const MarketingShell: React.FC<MarketingShellProps> = ({
     navigate(to);
   };
 
+  const overlayNav = darkHero && !navScrolled;
+
   const navCls = (key: MarketingNavKey) =>
-    activeNav === key
-      ? "text-[#A58CF4] font-semibold"
-      : "text-[#64499D]/80 dark:text-white/80 hover:text-[#A58CF4] transition-colors";
+    `landing-nav-link ${activeNav === key ? "landing-nav-link--active" : ""}`;
 
   const navLabel = (key: Exclude<MarketingNavKey, "none">) => dict.nav[key];
 
@@ -166,37 +175,41 @@ const MarketingShell: React.FC<MarketingShellProps> = ({
     <Link
       key={slug}
       to={localePath(lang, slug)}
-      className="block text-sm text-slate-400 hover:text-white transition-colors text-start"
+      className="landing-close__link"
     >
       {label}
     </Link>
   );
 
   return (
-    <div className="landing-root min-h-screen relative overflow-x-hidden text-[#64499D] dark:text-white bg-white dark:bg-[#64499D]">
+    <div
+      className={`landing-root min-h-screen relative overflow-x-hidden text-[var(--landing-ink)] bg-[var(--landing-canvas)] ${
+        darkHero ? "landing-root--dark-hero" : ""
+      }`}
+    >
       <a
         href="#main-content"
-        className="sr-only focus:fixed focus:start-3 focus:top-3 focus:z-50 focus:m-0 focus:inline-flex focus:h-auto focus:w-auto focus:overflow-visible focus:whitespace-normal focus:rounded-lg focus:bg-white focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-[#A58CF4] focus:shadow focus:outline-none focus:ring-2 focus:ring-[#A58CF4]"
+        className="sr-only focus:fixed focus:start-3 focus:top-3 focus:z-50 focus:m-0 focus:inline-flex focus:h-auto focus:w-auto focus:overflow-visible focus:whitespace-normal focus:rounded-lg focus:bg-white focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-[var(--jure-blue)] focus:shadow focus:outline-none focus:ring-2 focus:ring-[var(--jure-blue)]"
       >
         {dict.a11y.skipToContent}
       </a>
 
       <header
-        className={`landing-nav sticky top-0 z-30 transition-[padding,background-color,backdrop-filter,box-shadow,border-color] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+        className={`landing-nav fixed top-0 inset-x-0 z-30 px-4 sm:px-8 lg:px-10 pt-3 sm:pt-4 transition-[padding] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${
           navScrolled ? "landing-nav--scrolled" : ""
         }`}
       >
-        <div className="max-w-7xl mx-auto px-3 sm:px-6">
+        <div className="max-w-7xl mx-auto">
           <nav
-            className={`landing-nav__bar flex items-center justify-between gap-2 sm:gap-3 transition-[min-height,padding] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+            className={`landing-nav__bar flex items-center justify-between gap-2 sm:gap-3 transition-[min-height,padding,background-color,box-shadow] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${
               navScrolled
-                ? "min-h-16 py-2 sm:py-2.5"
-                : "min-h-20 py-3 sm:py-3.5"
+                ? "min-h-14 py-1.5 sm:py-2"
+                : "min-h-[3.75rem] py-2 sm:py-2.5"
             }`}
             aria-label={dict.a11y.mainNav}
           >
             <Link to={localePath(lang)} className="shrink-0 min-w-0" onClick={closeMobile}>
-              <JureLogo className="h-7 sm:h-8 w-auto" />
+              <JureLogo inverted={overlayNav} className="h-7 sm:h-8 w-auto" />
             </Link>
 
             <div className="hidden lg:flex items-center gap-5 text-sm font-medium">
@@ -217,7 +230,9 @@ const MarketingShell: React.FC<MarketingShellProps> = ({
                 pathname={location.pathname}
                 onNavigate={handleLangNavigate}
               />
-              <ThemeToggle label={dict.themeToggle.label} title={dict.themeToggle.title} />
+              <span className="landing-nav-icon-wrap inline-flex">
+                <ThemeToggle label={dict.themeToggle.label} title={dict.themeToggle.title} />
+              </span>
               <Button
                 asChild
                 size="sm"
@@ -229,7 +244,7 @@ const MarketingShell: React.FC<MarketingShellProps> = ({
                 type="button"
                 variant="outline"
                 size="icon"
-                className="lg:hidden h-9 w-9 border-[#64499D]/15 dark:border-white/20 text-[#64499D] dark:text-white"
+                className="landing-nav-icon lg:hidden h-9 w-9"
                 aria-expanded={mobileOpen}
                 aria-controls="marketing-mobile-menu"
                 aria-label={mobileOpen ? dict.a11y.closeMenu : dict.a11y.openMenu}
@@ -243,15 +258,15 @@ const MarketingShell: React.FC<MarketingShellProps> = ({
           {mobileOpen && (
             <div
               id="marketing-mobile-menu"
-              className="lg:hidden mt-2 landing-glass rounded-2xl p-3 flex flex-col gap-1"
+              className="lg:hidden mt-2 landing-nav-mobile p-3 flex flex-col gap-1"
             >
               {NAV_ITEMS.map((item) => (
                 <Link
                   key={item.key}
                   to={localePath(lang, item.slug)}
                   onClick={closeMobile}
-                  className={`w-full text-start px-3 py-3 rounded-xl text-sm font-medium hover:bg-[#64499D]/5 dark:hover:bg-white/8 transition-colors ${
-                    activeNav === item.key ? "text-[#A58CF4]" : ""
+                  className={`w-full text-start px-3 py-3 rounded-xl text-sm font-medium hover:bg-[#20004D]/5 dark:hover:bg-white/8 transition-colors ${
+                    activeNav === item.key ? "landing-nav-link--active" : "landing-nav-link"
                   }`}
                 >
                   {navLabel(item.key)}
@@ -270,36 +285,50 @@ const MarketingShell: React.FC<MarketingShellProps> = ({
         </div>
       </header>
 
-      <main id="main-content" className="relative z-10 min-w-0">
+      <main
+        id="main-content"
+        className={`relative z-10 min-w-0 ${darkHero ? "" : "landing-main-offset"}`}
+      >
         {children}
       </main>
 
-      <footer className="relative z-10 landing-band py-10 sm:py-14 mt-8 rounded-none">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-8 text-start">
-            <div className="col-span-2 md:col-span-1">
-              <Link to={localePath(lang)}>
-                <JureLogo inverted className="mb-3 h-7 w-auto" />
+      <footer
+        className={`landing-close ${closingCta ? "landing-close--cta" : ""}`}
+      >
+        <div className="landing-close__glow" aria-hidden />
+
+        {closingCta ? (
+          <div className="landing-close__cta-wrap">{closingCta}</div>
+        ) : null}
+
+        <div className="landing-close__body">
+          <div className="landing-close__grid">
+            <div className="landing-close__brand">
+              <Link to={localePath(lang)} className="inline-flex">
+                <JureLogo inverted className="h-7 w-auto" />
               </Link>
-              <p className="text-sm text-slate-400">{dict.footer.tagline}</p>
+              <p className="landing-close__tagline">{dict.footer.tagline}</p>
             </div>
 
             <div>
-              <h2 className="text-sm font-semibold text-slate-200 mb-3">
-                {dict.footer.platformHeading}
-              </h2>
-              <div className="space-y-2">
+              <h2 className="landing-close__heading">{dict.footer.platformHeading}</h2>
+              <div className="landing-close__links">
                 {FOOTER_PLATFORM_SLUGS.map((slug) =>
                   footerLink(getRoute(slug === "features" ? "features" : slug).label[lang], slug)
                 )}
+                <a
+                  href=""
+                  className="landing-close__link"
+                  onClick={(e) => e.preventDefault()}
+                >
+                  {FOOTER_DOCS_LABEL[lang]}
+                </a>
               </div>
             </div>
 
             <div>
-              <h2 className="text-sm font-semibold text-slate-200 mb-3">
-                {dict.footer.solutionsHeading}
-              </h2>
-              <div className="space-y-2">
+              <h2 className="landing-close__heading">{dict.footer.solutionsHeading}</h2>
+              <div className="landing-close__links">
                 {FOOTER_SOLUTION_KEYS.map((key) => {
                   const route = getRoute(key);
                   return footerLink(route.label[lang], route.slug);
@@ -308,10 +337,8 @@ const MarketingShell: React.FC<MarketingShellProps> = ({
             </div>
 
             <div>
-              <h2 className="text-sm font-semibold text-slate-200 mb-3">
-                {dict.footer.companyHeading}
-              </h2>
-              <div className="space-y-2">
+              <h2 className="landing-close__heading">{dict.footer.companyHeading}</h2>
+              <div className="landing-close__links">
                 {FOOTER_COMPANY_KEYS.map((key) => {
                   const route = getRoute(key);
                   return footerLink(route.label[lang], route.slug);
@@ -320,10 +347,8 @@ const MarketingShell: React.FC<MarketingShellProps> = ({
             </div>
 
             <div>
-              <h2 className="text-sm font-semibold text-slate-200 mb-3">
-                {dict.footer.legalHeading}
-              </h2>
-              <div className="space-y-2">
+              <h2 className="landing-close__heading">{dict.footer.legalHeading}</h2>
+              <div className="landing-close__links">
                 {footerLink(dict.footer.privacy, "privacy")}
                 {footerLink(dict.footer.terms, "terms")}
                 {footerLink(dict.footer.status, "status")}
@@ -331,9 +356,13 @@ const MarketingShell: React.FC<MarketingShellProps> = ({
             </div>
           </div>
 
-          <div className="mt-10 pt-6 border-t border-white/10 text-slate-400 text-sm text-center md:text-start">
+          <p className="landing-close__rights">
             © {year} JURE. {dict.footer.rights}
-          </div>
+          </p>
+        </div>
+
+        <div className="landing-close__monument" dir="ltr" aria-hidden="true">
+          <JureLogo inverted alt="" className="landing-close__wordmark" />
         </div>
       </footer>
     </div>

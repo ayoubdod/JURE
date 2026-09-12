@@ -27,6 +27,7 @@ interface Props {
   onDelete?: (c: API.Conversation) => void;
   onRename?: (c: API.Conversation) => void;
   onChangeIcon?: (c: API.Conversation) => void;
+  onOpenGroupSettings?: (c: API.Conversation) => void;
   activeId?: number;
   onSelectConversation: (id: number) => void;
   onNewChat?: () => void;
@@ -49,6 +50,7 @@ const ConversationList: React.FC<Props> = ({
   onDelete,
   onRename,
   onChangeIcon,
+  onOpenGroupSettings,
   activeId,
   onSelectConversation,
   onNewChat,
@@ -257,6 +259,7 @@ const ConversationList: React.FC<Props> = ({
                 onDelete={onDelete}
                 onRename={onRename}
                 onChangeIcon={onChangeIcon}
+                onOpenGroupSettings={onOpenGroupSettings}
                 onOpenLinkedCase={onOpenLinkedCase}
               />
             ))}

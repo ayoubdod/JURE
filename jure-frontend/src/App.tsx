@@ -32,11 +32,9 @@ const Terms = lazyRoute(() => import("./pages/Terms"));
 const Status = lazyRoute(() => import("./pages/Status"));
 const Contact = lazyRoute(() => import("./pages/Contact"));
 const StatusSubscribe = lazyRoute(() => import("./pages/StatusSubscribe"));
-const Docs = lazyRoute(() => import("./pages/Docs"));
 const Pricing = lazyRoute(() => import("./pages/Pricing"));
 const Community = lazyRoute(() => import("./pages/Community"));
 const Security = lazyRoute(() => import("./pages/Security"));
-const Demo = lazyRoute(() => import("./pages/Demo"));
 const JuriaPage = lazyRoute(() => import("./pages/Juria"));
 const SolutionPage = lazyRoute(() => import("./pages/solutions/SolutionPage"));
 const IntentPage = lazyRoute(() => import("./pages/intent/IntentPage"));
@@ -103,12 +101,11 @@ function LegacyChatRedirect() {
   );
 }
 
-/** Slugs of the 8 high-intent landing pages, mapped to registry keys. */
+/** Slugs of the high-intent landing pages, mapped to registry keys. */
 const INTENT_ROUTES: Array<{ slug: string; routeKey: string }> = [
   { slug: "legal-ai", routeKey: "legalAi" },
   { slug: "legal-case-management", routeKey: "legalCaseManagement" },
   { slug: "legal-practice-management", routeKey: "legalPracticeManagement" },
-  { slug: "legal-research", routeKey: "legalResearch" },
   { slug: "legal-document-management", routeKey: "legalDocumentManagement" },
   { slug: "legal-operations", routeKey: "legalOperations" },
   { slug: "legal-knowledge-management", routeKey: "legalKnowledgeManagement" },
@@ -117,7 +114,6 @@ const INTENT_ROUTES: Array<{ slug: string; routeKey: string }> = [
 
 const SOLUTION_ROUTES: Array<{ slug: string; routeKey: string }> = [
   { slug: "solutions/law-firms", routeKey: "solutionsLawFirms" },
-  { slug: "solutions/legal-departments", routeKey: "solutionsLegalDepartments" },
 ];
 
 /** Legacy unprefixed marketing URLs → locale-prefixed equivalents. */
@@ -130,7 +126,6 @@ const LEGACY_MARKETING_SLUGS = [
   "terms",
   "status",
   "status/subscribe",
-  "docs",
   "community",
   "security",
   "demo",
@@ -155,9 +150,11 @@ const router = createBrowserRouter([
       { path: "contact", element: pub(<Contact />) },
       { path: "pricing", element: pub(<Pricing />) },
       { path: "security", element: pub(<Security />) },
-      { path: "demo", element: pub(<Demo />) },
+      { path: "demo", element: <Navigate to="../features" replace relative="path" /> },
+      { path: "solutions/legal-departments", element: <Navigate to="../law-firms" replace relative="path" /> },
       { path: "juria", element: pub(<JuriaPage />) },
-      { path: "docs", element: pub(<Docs />) },
+      { path: "docs", element: <Navigate to=".." replace relative="path" /> },
+      { path: "legal-research", element: <Navigate to="../legal-ai" replace relative="path" /> },
       { path: "community", element: pub(<Community />) },
       { path: "privacy", element: pub(<Privacy />) },
       { path: "terms", element: pub(<Terms />) },
@@ -180,6 +177,11 @@ const router = createBrowserRouter([
   // Legacy unprefixed marketing URLs → 301 handled server-side; this is the
   // client-side fallback (dev server, stale service workers, direct SPA nav).
   { path: "/", element: <LegacyMarketingRedirect /> },
+  { path: "/docs", element: <LegacyMarketingRedirect /> },
+  {
+    path: "/legal-research",
+    element: <LegacyMarketingRedirect slug="legal-ai" />,
+  },
   ...LEGACY_MARKETING_SLUGS.map((slug) => ({
     path: `/${slug}`,
     element: <LegacyMarketingRedirect slug={slug} />,

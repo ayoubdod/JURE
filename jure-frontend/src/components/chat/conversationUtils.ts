@@ -2,6 +2,29 @@ export const getMemberPerson = (
   m: API.ConversationMembership
 ): API.User | undefined => m.user ?? m.cabinet_member ?? m.member;
 
+export function memberUserId(m: API.ConversationMembership): number | null {
+  const person = getMemberPerson(m);
+  const id = person?.id ?? person?.pk ?? null;
+  return typeof id === 'number' && Number.isFinite(id) ? id : null;
+}
+
+export function activeMemberships(c?: API.Conversation | null): API.ConversationMembership[] {
+  return (c?.memberships ?? []).filter((m) => !m.is_deleted);
+}
+
+export function isConversationAdmin(c: API.Conversation | undefined, userId?: number | null): boolean {
+  if (!c || c.type !== 'group') return false;
+  if (userId != null) {
+    const mine = activeMemberships(c).find((m) => memberUserId(m) === userId);
+    if (mine) return Boolean(mine.is_admin);
+  }
+  return c.is_admin === true;
+}
+
+export function isLastActiveMember(c?: API.Conversation | null): boolean {
+  return activeMemberships(c).length <= 1;
+}
+
 export function getLinkedCase(c?: API.Conversation | null): API.LinkedCaseSummary | null {
   if (!c) return null;
   return c.linkedCase ?? c.linked_case ?? null;

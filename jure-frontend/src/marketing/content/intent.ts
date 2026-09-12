@@ -1,7 +1,7 @@
 import type { IntentContentMap } from "./intentTypes";
 
 /**
- * Content for the 8 high-intent landing pages — EN/FR/AR.
+ * Content for the high-intent landing pages — EN/FR/AR.
  * Every claim maps to a shipped capability. Juria (legal AI) is always
  * framed as early access with mandatory lawyer review; nothing invented.
  */
@@ -97,7 +97,7 @@ export const INTENT_CONTENT: IntentContentMap = {
             "Because releasing legal AI responsibly matters more than releasing it fast. Early access lets us observe how the assistant behaves on real legal work, gather feedback from practicing lawyers and strengthen the review workflows before opening it more widely.",
         },
       ],
-      related: ["legalResearch", "responsibleLegalAi", "legalCaseManagement"],
+      related: ["juria", "responsibleLegalAi", "legalCaseManagement"],
       cta: {
         title: "Try legal AI where your work already lives",
         body: "Juria is in early access inside the JURE workspace — connected to your matters, with lawyer review at every step. See how AI assistance works when it is part of the platform, not a separate tab.",
@@ -189,7 +189,7 @@ export const INTENT_CONTENT: IntentContentMap = {
             "Parce que déployer l'IA juridique de manière responsable compte plus que la déployer vite. L'accès anticipé nous permet d'observer le comportement de l'assistant sur du vrai travail juridique, de recueillir les retours d'avocats en exercice et de renforcer les flux de relecture avant une ouverture plus large.",
         },
       ],
-      related: ["legalResearch", "responsibleLegalAi", "legalCaseManagement"],
+      related: ["juria", "responsibleLegalAi", "legalCaseManagement"],
       cta: {
         title: "Essayez l'IA juridique là où votre travail vit déjà",
         body: "Juria est en accès anticipé dans l'espace de travail JURE — connecté à vos dossiers, avec la relecture de l'avocat à chaque étape. Découvrez ce que donne l'assistance IA quand elle fait partie de la plateforme, et non d'un onglet séparé.",
@@ -198,18 +198,18 @@ export const INTENT_CONTENT: IntentContentMap = {
     ar: {
       h1: "الذكاء الاصطناعي القانوني للمحامين، في قلب العمل نفسه",
       intro:
-        "معظم أدوات الذكاء الاصطناعي للمحامين تعيش في نافذة منفصلة، بعيدة عن الملف الذي تعمل عليه فعلًا. تسلك JURE طريقًا مختلفًا: جوريا، مساعدنا للذكاء الاصطناعي القانوني، يعمل داخل مساحة العمل نفسها التي تضم ملفاتك ومستنداتك ومهامك. وهو متاح اليوم في مرحلة الوصول المبكر، مع مراجعة المحامي مدمجة في كل مسار عمل.",
+        "معظم أدوات الذكاء الاصطناعي للمحامين تعيش في نافذة منفصلة، بعيدة عن الملف الذي تعمل عليه فعلا. تسلك JURE طريقا مختلفا: جوريا، مساعدنا للذكاء الاصطناعي القانوني، يعمل داخل مساحة العمل نفسها التي تضم ملفاتك ومستنداتك ومهامك. وهو متاح اليوم في مرحلة الوصول المبكر، مع مراجعة المحامي مدمجة في كل مسار عمل.",
       definition: {
         title: "ما هي منصة الذكاء الاصطناعي القانوني؟",
-        body: "منصة الذكاء الاصطناعي القانوني تُطبّق النماذج اللغوية الكبيرة على العمل اليومي للمهنيين القانونيين: الإجابة عن الأسئلة القانونية، وتحليل العقود، وتلخيص المستندات، والمساعدة في صياغة المذكرات والبنود. وهي تختلف عن روبوت المحادثة العام في أمرين. أولًا، هي موجهة نحو المادة القانونية — النصوص التشريعية والاجتهاد القضائي واللغة التعاقدية — لا نحو المعرفة العامة. وثانيًا، وهو الأهم، أنها مصممة لمهنة تكون فيها للأخطاء عواقب حقيقية، لذلك تُدمج المنصة الجادة ضمانات واضحة: وسم مخرجات الذكاء الاصطناعي بوضوح، ومسارات عمل تُمرّر كل مسودة عبر مراجعة بشرية، وحماية للسرية تليق بمعلومات الموكلين المشمولة بالسر المهني. قيمة الذكاء الاصطناعي القانوني تكمن في سرعة المسودات الأولى؛ أما الحكم والتحقق والمسؤولية المهنية فتبقى للمحامي.",
+        body: "منصة الذكاء الاصطناعي القانوني تطبق النماذج اللغوية الكبيرة على العمل اليومي للمهنيين القانونيين: الإجابة عن الأسئلة القانونية، وتحليل العقود، وتلخيص المستندات، والمساعدة في صياغة المذكرات والبنود. وهي تختلف عن روبوت المحادثة العام في أمرين. أولا، هي موجهة نحو المادة القانونية — النصوص التشريعية والاجتهاد القضائي واللغة التعاقدية — لا نحو المعرفة العامة. وثانيا، وهو الأهم، أنها مصممة لمهنة تكون فيها للأخطاء عواقب حقيقية، لذلك تدمج المنصة الجادة ضمانات واضحة: وسم مخرجات الذكاء الاصطناعي بوضوح، ومسارات عمل تمرر كل مسودة عبر مراجعة بشرية، وحماية للسرية تليق بمعلومات الموكلين المشمولة بالسر المهني. قيمة الذكاء الاصطناعي القانوني تكمن في سرعة المسودات الأولى؛ أما الحكم والتحقق والمسؤولية المهنية فتبقى للمحامي.",
       },
       problem: {
         title: "لماذا لا يكفي روبوت محادثة منفصل",
-        body: "المحامون الذين يستخدمون روبوتات المحادثة العامة في عملهم القانوني يواجهون ثلاث مشكلات متكررة. ضياع السياق: فالذكاء الاصطناعي لا يعرف شيئًا عن الملف، فيبدأ كل سؤال من الصفر ويُنقل كل جواب يدويًا. والسرية في خطر: فلصق معلومات الموكلين في أداة عامة لا يستقيم مع واجب السر المهني. ولا توجد بنية للمراجعة: فالمخرجات تبدو متقنة سواء أكانت صحيحة أم خاطئة، ولا شيء في الأداة يذكّر بوجوب التحقق منها. النتيجة كتابة أسرع، لا عمل أكثر أمانًا.",
+        body: "المحامون الذين يستخدمون روبوتات المحادثة العامة في عملهم القانوني يواجهون ثلاث مشكلات متكررة. ضياع السياق: فالذكاء الاصطناعي لا يعرف شيئا عن الملف، فيبدأ كل سؤال من الصفر وينقل كل جواب يدويا. والسرية في خطر: فلصق معلومات الموكلين في أداة عامة لا يستقيم مع واجب السر المهني. ولا توجد بنية للمراجعة: فالمخرجات تبدو متقنة سواء أكانت صحيحة أم خاطئة، ولا شيء في الأداة يذكر بوجوب التحقق منها. النتيجة كتابة أسرع، لا عمل أكثر أمانا.",
       },
       approach: {
         title: "كيف تدمج JURE الذكاء الاصطناعي في العمل القانوني",
-        body: "تدمج JURE جوريا، مساعدها للذكاء الاصطناعي القانوني، مباشرة داخل مساحة العمل القانونية لا بجانبها. في مرحلة الوصول المبكر اليوم، يقدم جوريا محادثة للأسئلة القانونية، وتحليلًا للعقود، ووضع بحث موجهًا نحو القانون المغربي، ومساعدة في الصياغة — كل ذلك داخل المنصة التي تعيش فيها ملفاتك وعملاؤك ومستنداتك أصلًا. كل إجابة موسومة بوضوح كمخرجات ذكاء اصطناعي، ومسارات العمل في JURE مصممة بحيث يراجع المحامي مخرجات الذكاء الاصطناعي ويعتمدها قبل أن تُبنى عليها أي قرارات قانونية.",
+        body: "تدمج JURE جوريا، مساعدها للذكاء الاصطناعي القانوني، مباشرة داخل مساحة العمل القانونية لا بجانبها. في مرحلة الوصول المبكر اليوم، يقدم جوريا محادثة للأسئلة القانونية، وتحليلا للعقود، ووضع بحث موجها نحو القانون المغربي، ومساعدة في الصياغة — كل ذلك داخل المنصة التي تعيش فيها ملفاتك وعملاؤك ومستنداتك أصلا. كل إجابة موسومة بوضوح كمخرجات ذكاء اصطناعي، ومسارات العمل في JURE مصممة بحيث يراجع المحامي مخرجات الذكاء الاصطناعي ويعتمدها قبل أن تبنى عليها أي قرارات قانونية.",
         points: [
           "محادثة جوريا للأسئلة القانونية، في مرحلة الوصول المبكر",
           "تحليل عقود بصيغتي PDF وDOCX، مع النقاط الأساسية وإشارات المخاطر",
@@ -229,11 +229,11 @@ export const INTENT_CONTENT: IntentContentMap = {
         ],
       },
       useCases: {
-        title: "أين يساعد الذكاء الاصطناعي القانوني عمليًا",
+        title: "أين يساعد الذكاء الاصطناعي القانوني عمليا",
         items: [
           {
             title: "مراجعة عقد لعميل من الشركات الصغيرة والمتوسطة",
-            body: "يرسل العميل عقد توريد للمراجعة. يرفع المحامي ملف PDF إلى تحليل العقود في جوريا فيتلقى خلال دقائق النقاط الأساسية وإشارات المخاطر. يصبح هذا التحليل قائمة الانطلاق لمراجعة المحامي نفسه — لا بديلًا عنها.",
+            body: "يرسل العميل عقد توريد للمراجعة. يرفع المحامي ملف PDF إلى تحليل العقود في جوريا فيتلقى خلال دقائق النقاط الأساسية وإشارات المخاطر. يصبح هذا التحليل قائمة الانطلاق لمراجعة المحامي نفسه — لا بديلا عنها.",
           },
           {
             title: "المسودة الأولى لمذكرة قانونية",
@@ -241,7 +241,7 @@ export const INTENT_CONTENT: IntentContentMap = {
           },
           {
             title: "الاستئناس بمسألة غير مألوفة",
-            body: "قبل الغوص في بحث معمق، يستخدم المحامي وضع البحث في جوريا لرسم معالم الموضوع: المفاهيم ذات الصلة، والنصوص المحتملة، والأسئلة الواجب طرحها. ثم يُتحقق من كل مرجع في المصادر الموثوقة قبل الاعتماد على أي شيء.",
+            body: "قبل الغوص في بحث معمق، يستخدم المحامي وضع البحث في جوريا لرسم معالم الموضوع: المفاهيم ذات الصلة، والنصوص المحتملة، والأسئلة الواجب طرحها. ثم يتحقق من كل مرجع في المصادر الموثوقة قبل الاعتماد على أي شيء.",
           },
         ],
       },
@@ -253,17 +253,17 @@ export const INTENT_CONTENT: IntentContentMap = {
         {
           question: "هل جوريا متاح لكل مستخدمي JURE؟",
           answer:
-            "جوريا حاليًا في مرحلة الوصول المبكر: يُطرح تدريجيًا بدل تفعيله للجميع دفعة واحدة. هذا الإيقاع المتعمد يتيح لنا صقل المساعد مع فرق قانونية حقيقية قبل الإتاحة العامة.",
+            "جوريا حاليا في مرحلة الوصول المبكر: يطرح تدريجيا بدل تفعيله للجميع دفعة واحدة. هذا الإيقاع المتعمد يتيح لنا صقل المساعد مع فرق قانونية حقيقية قبل الإتاحة العامة.",
         },
         {
           question: "هل يذكر جوريا مصادره؟",
           answer:
-            "جوريا موجَّه للإشارة في إجاباته إلى المصادر القانونية التي يستند إليها، لكن JURE لا تقدم خاصية استشهادات منظمة، والمراجع المولدة بالذكاء الاصطناعي قد تكون خاطئة. يجب أن يتحقق المحامي من كل مرجع في المصادر الموثوقة قبل الاعتماد عليه.",
+            "جوريا موجه للإشارة في إجاباته إلى المصادر القانونية التي يستند إليها، لكن JURE لا تقدم خاصية استشهادات منظمة، والمراجع المولدة بالذكاء الاصطناعي قد تكون خاطئة. يجب أن يتحقق المحامي من كل مرجع في المصادر الموثوقة قبل الاعتماد عليه.",
         },
         {
           question: "هل يمكن لتحليل العقود في جوريا أن يحل محل مراجعة المحامي؟",
           answer:
-            "لا. تحليل العقود يُنتج نقاطًا أساسية وإشارات مخاطر تُسرّع مراجعة المحامي — إنه نقطة انطلاق منظمة، لا رأيًا قانونيًا. ويبقى المحامي مسؤولًا عن التقدير النهائي.",
+            "لا. تحليل العقود ينتج نقاطا أساسية وإشارات مخاطر تسرع مراجعة المحامي — إنه نقطة انطلاق منظمة، لا رأيا قانونيا. ويبقى المحامي مسؤولا عن التقدير النهائي.",
         },
         {
           question: "ما صيغ الملفات التي يقبلها تحليل العقود؟",
@@ -281,10 +281,10 @@ export const INTENT_CONTENT: IntentContentMap = {
             "لأن طرح الذكاء الاصطناعي القانوني بمسؤولية أهم من طرحه بسرعة. يتيح لنا الوصول المبكر مراقبة سلوك المساعد على عمل قانوني حقيقي، وجمع ملاحظات محامين ممارسين، وتقوية مسارات المراجعة قبل التوسع في الإتاحة.",
         },
       ],
-      related: ["legalResearch", "responsibleLegalAi", "legalCaseManagement"],
+      related: ["juria", "responsibleLegalAi", "legalCaseManagement"],
       cta: {
-        title: "جرّب الذكاء الاصطناعي القانوني حيث يعيش عملك أصلًا",
-        body: "جوريا في مرحلة الوصول المبكر داخل مساحة عمل JURE — متصل بملفاتك، مع مراجعة المحامي في كل خطوة. اكتشف كيف تعمل المساعدة الذكية حين تكون جزءًا من المنصة لا نافذة منفصلة.",
+        title: "جرب الذكاء الاصطناعي القانوني حيث يعيش عملك أصلا",
+        body: "جوريا في مرحلة الوصول المبكر داخل مساحة عمل JURE — متصل بملفاتك، مع مراجعة المحامي في كل خطوة. اكتشف كيف تعمل المساعدة الذكية حين تكون جزءا من المنصة لا نافذة منفصلة.",
       },
     },
   },
@@ -468,20 +468,20 @@ export const INTENT_CONTENT: IntentContentMap = {
       },
     },
     ar: {
-      h1: "إدارة قضايا تُبقي كل ملف متكاملًا",
+      h1: "إدارة قضايا تبقي كل ملف متكاملا",
       intro:
-        "الملف أكثر من مجرد إضبارة: إنه موكل ومستندات ومهام وآجال وفريق يجب أن يتقدموا معًا. تمنح إدارة القضايا في JURE كل ملف مساحة عمل واحدة يبقى فيها كل ذلك متصلًا — للنزاعات والاستشارات والملفات الإدارية على السواء.",
+        "الملف أكثر من مجرد إضبارة: إنه موكل ومستندات ومهام وآجال وفريق يجب أن يتقدموا معا. تمنح إدارة القضايا في JURE كل ملف مساحة عمل واحدة يبقى فيها كل ذلك متصلا — للنزاعات والاستشارات والملفات الإدارية على السواء.",
       definition: {
         title: "ما هو برنامج إدارة القضايا القانونية؟",
-        body: "برنامج إدارة القضايا ينظّم كل ما يحتاجه مكتب المحاماة أو الفريق القانوني لمعالجة ملف من فتحه إلى إقفاله. جوهره ربط الأطراف المعنية (الموكل والمحامون المسؤولون)، والعمل المطلوب (المهام والجلسات والإيداعات)، وقيود الزمن (الآجال والمواعيد وآجال التقادم)، والمادة (المستندات والمراسلات) حول سجل ملف واحد. إدارة القضايا الجيدة تستبدل النظام غير الرسمي الذي تسير عليه معظم المكاتب فعليًا — الذاكرة وصناديق البريد والورق — ببنية يراها الفريق كله. ومعيار النجاح بسيط: أن يستطيع أي شخص مخوَّل بالعمل على الملف فتحه وفهم حالته وموعده النهائي القادم ومن يقوم بماذا، دون أن يسأل من حوله.",
+        body: "برنامج إدارة القضايا ينظم كل ما يحتاجه مكتب المحاماة أو الفريق القانوني لمعالجة ملف من فتحه إلى إقفاله. جوهره ربط الأطراف المعنية (الموكل والمحامون المسؤولون)، والعمل المطلوب (المهام والجلسات والإيداعات)، وقيود الزمن (الآجال والمواعيد وآجال التقادم)، والمادة (المستندات والمراسلات) حول سجل ملف واحد. إدارة القضايا الجيدة تستبدل النظام غير الرسمي الذي تسير عليه معظم المكاتب فعليا — الذاكرة وصناديق البريد والورق — ببنية يراها الفريق كله. ومعيار النجاح بسيط: أن يستطيع أي شخص مخول بالعمل على الملف فتحه وفهم حالته وموعده النهائي القادم ومن يقوم بماذا، دون أن يسأل من حوله.",
       },
       problem: {
         title: "كلفة الملفات المبعثرة",
-        body: "حين يعيش الملف بين بريد إلكتروني وقرص مشترك وإضبارة ورقية وذاكرة شخص ما، تتبع ذلك ثلاث إخفاقات. الآجال تعتمد على الأفراد: فإذا غاب الشخص الوحيد الذي يتابع أجل التقادم، بقي الخطر خفيًا حتى يصير طارئًا. وإعادة بناء السياق مكلفة: فكل تسليم أو سؤال عن الحالة يعني إعادة تركيب الملف من شذرات. والإشراف يتحول إلى تخمين: فلا يرى الشركاء أعباء العمل ولا التقدم دون مقاطعة الجميع. لا شيء من ذلك مشكلة كفاءة — إنها مشكلات بنية، وتتفاقم مع نمو المكتب.",
+        body: "حين يعيش الملف بين بريد إلكتروني وقرص مشترك وإضبارة ورقية وذاكرة شخص ما، تتبع ذلك ثلاث إخفاقات. الآجال تعتمد على الأفراد: فإذا غاب الشخص الوحيد الذي يتابع أجل التقادم، بقي الخطر خفيا حتى يصير طارئا. وإعادة بناء السياق مكلفة: فكل تسليم أو سؤال عن الحالة يعني إعادة تركيب الملف من شذرات. والإشراف يتحول إلى تخمين: فلا يرى الشركاء أعباء العمل ولا التقدم دون مقاطعة الجميع. لا شيء من ذلك مشكلة كفاءة — إنها مشكلات بنية، وتتفاقم مع نمو المكتب.",
       },
       approach: {
         title: "كيف تبني JURE هيكل الملف",
-        body: "في JURE، كل ملف هو مساحة عمل. يحمل نوعًا — نزاع أو استشارة أو ملف إداري — ويرتبط بسجل الموكل، والمستندات المرفقة، والمهام بأولوياتها ومواعيدها النهائية، وأعضاء الفريق المعينين عليه. تظهر الآجال والمواعيد على مفكرة مشتركة على مستوى المكتب، مع تذكيرات وإشعارات داخل التطبيق وعبر البريد الإلكتروني، حتى لا تبقى التواريخ في رأس شخص واحد. وكل ذلك محصور في نطاق مكتبك ومحكوم بالتحكم في الوصول حسب الأدوار.",
+        body: "في JURE، كل ملف هو مساحة عمل. يحمل نوعا — نزاع أو استشارة أو ملف إداري — ويرتبط بسجل الموكل، والمستندات المرفقة، والمهام بأولوياتها ومواعيدها النهائية، وأعضاء الفريق المعينين عليه. تظهر الآجال والمواعيد على مفكرة مشتركة على مستوى المكتب، مع تذكيرات وإشعارات داخل التطبيق وعبر البريد الإلكتروني، حتى لا تبقى التواريخ في رأس شخص واحد. وكل ذلك محصور في نطاق مكتبك ومحكوم بالتحكم في الوصول حسب الأدوار.",
         points: [
           "ملفات مصنفة: نزاع أو استشارة أو ملف إداري",
           "كل ملف مرتبط بسجل موكله",
@@ -497,29 +497,29 @@ export const INTENT_CONTENT: IntentContentMap = {
           "افتح الملف وحدد نوعه",
           "أرفق المستندات وأنشئ المهام",
           "حدد الآجال على المفكرة المشتركة",
-          "عيّن الفريق وتابع التقدم",
+          "عين الفريق وتابع التقدم",
         ],
       },
       useCases: {
-        title: "إدارة القضايا عمليًا",
+        title: "إدارة القضايا عمليا",
         items: [
           {
             title: "إدارة آجال النزاعات",
-            body: "ملف النزاع يحمل آجالًا إجرائية لا تحتمل التأخير. في JURE، يصبح كل أجل مهمة مؤرخة أو موعدًا في المفكرة يراه كامل الفريق المعين، مع تذكيرات قبل حلوله. لم يعد الأجل رهين ذاكرة شخص واحد.",
+            body: "ملف النزاع يحمل آجالا إجرائية لا تحتمل التأخير. في JURE، يصبح كل أجل مهمة مؤرخة أو موعدا في المفكرة يراه كامل الفريق المعين، مع تذكيرات قبل حلوله. لم يعد الأجل رهين ذاكرة شخص واحد.",
           },
           {
             title: "ملف استشارة لعميل من الشركات",
-            body: "تطلب شركة رأيًا في مسألة تجارية. يفتح المحامي ملف استشارة، ويرفق مستندات العميل، ويتابع الصياغة كمهام، ويحفظ التبادل منظمًا — فيبقى الرأي وأسسه وتسلسله الزمني في مكان واحد إذا عادت المسألة.",
+            body: "تطلب شركة رأيا في مسألة تجارية. يفتح المحامي ملف استشارة، ويرفق مستندات العميل، ويتابع الصياغة كمهام، ويحفظ التبادل منظما — فيبقى الرأي وأسسه وتسلسله الزمني في مكان واحد إذا عادت المسألة.",
           },
           {
-            title: "إدماج محامٍ متعاون جديد",
-            body: "ينضم محامٍ متعاون في منتصف ملف. بدل إعادة توجيه سلاسل البريد، يعيّنه المكتب على الملف: فيرى فورًا الموكل والمستندات والمهام المفتوحة والآجال القادمة، ويبدأ المساهمة من اليوم الأول.",
+            title: "إدماج محام متعاون جديد",
+            body: "ينضم محام متعاون في منتصف ملف. بدل إعادة توجيه سلاسل البريد، يعينه المكتب على الملف: فيرى فورا الموكل والمستندات والمهام المفتوحة والآجال القادمة، ويبدأ المساهمة من اليوم الأول.",
           },
         ],
       },
       security: {
         title: "الملفات تبقى داخل المكتب",
-        body: "كل ملف وسجل موكل ومستند في JURE محصور في مساحة عمل مكتبك الخاصة، معزولًا عن كل مكتب آخر على المنصة. وداخل المكتب، يحدد التحكم في الوصول حسب الأدوار من يستطيع الاطلاع على الملفات وإدارتها — من المالك إلى المطالع فقط.",
+        body: "كل ملف وسجل موكل ومستند في JURE محصور في مساحة عمل مكتبك الخاصة، معزولا عن كل مكتب آخر على المنصة. وداخل المكتب، يحدد التحكم في الوصول حسب الأدوار من يستطيع الاطلاع على الملفات وإدارتها — من المالك إلى المطالع فقط.",
       },
       faqs: [
         {
@@ -540,7 +540,7 @@ export const INTENT_CONTENT: IntentContentMap = {
         {
           question: "من في المكتب يستطيع رؤية الملف؟",
           answer:
-            "الوصول محكوم بصلاحيات حسب الأدوار داخل مكتبك، بأدوار تتدرج من المالك إلى المطالع فقط. ولا تكون الملفات مرئية أبدًا خارج مساحة عمل مكتبك.",
+            "الوصول محكوم بصلاحيات حسب الأدوار داخل مكتبك، بأدوار تتدرج من المالك إلى المطالع فقط. ولا تكون الملفات مرئية أبدا خارج مساحة عمل مكتبك.",
         },
         {
           question: "هل تناسب إدارة القضايا في JURE المحامي المستقل؟",
@@ -550,7 +550,7 @@ export const INTENT_CONTENT: IntentContentMap = {
       ],
       related: ["legalPracticeManagement", "legalDocumentManagement", "legalOperations"],
       cta: {
-        title: "امنح كل ملف بيتًا واحدًا",
+        title: "امنح كل ملف بيتا واحدا",
         body: "شاهد كيف يبدو الملف في JURE حين يعيش موكله ومستنداته ومهامه وآجاله وفريقه في مساحة واحدة متصلة.",
       },
     },
@@ -740,17 +740,17 @@ export const INTENT_CONTENT: IntentContentMap = {
         "إدارة المكتب هي كل ما يقوم به المكتب حول القانون نفسه: العملاء والمفكرات والمهام والمستندات والمال والفريق. تجمع JURE هذه العمليات على مستوى المكتب في مساحة العمل نفسها التي تضم الملفات التي تخدمها — فلا تعود إدارة المكتب مهنة ثانية موزعة على خمس أدوات أخرى.",
       definition: {
         title: "ما هو برنامج إدارة مكتب المحاماة؟",
-        body: "برنامج إدارة مكتب المحاماة هو نظام تشغيل المكتب. فبينما تركز إدارة القضايا على كل ملف على حدة، تغطي إدارة المكتب الكيان كله: قاعدة العملاء، والمفكرة المشتركة للمواعيد والآجال، وتوزيع المهام على الفريق، ومكتبة المستندات، والفوترة والمدفوعات، والأدوار والصلاحيات التي تقرر من يفعل ماذا. تاريخيًا، جمّعت المكاتب كل ذلك من أدوات متفرقة — مفكرة هنا، وجدول فواتير هناك، وملفات على قرص مشترك. يستبدل برنامج إدارة المكتب هذه الرقعة المتنافرة بنظام واحد: فالمعلومة المدخلة مرة واحدة (عميل، أجل، فاتورة) تصبح مرئية حيثما احتاجها المكتب، وفق قواعد وصول يتحكم فيها المكتب نفسه.",
+        body: "برنامج إدارة مكتب المحاماة هو نظام تشغيل المكتب. فبينما تركز إدارة القضايا على كل ملف على حدة، تغطي إدارة المكتب الكيان كله: قاعدة العملاء، والمفكرة المشتركة للمواعيد والآجال، وتوزيع المهام على الفريق، ومكتبة المستندات، والفوترة والمدفوعات، والأدوار والصلاحيات التي تقرر من يفعل ماذا. تاريخيا، جمعت المكاتب كل ذلك من أدوات متفرقة — مفكرة هنا، وجدول فواتير هناك، وملفات على قرص مشترك. يستبدل برنامج إدارة المكتب هذه الرقعة المتنافرة بنظام واحد: فالمعلومة المدخلة مرة واحدة (عميل، أجل، فاتورة) تصبح مرئية حيثما احتاجها المكتب، وفق قواعد وصول يتحكم فيها المكتب نفسه.",
       },
       problem: {
         title: "ضريبة الأدوات المتفرقة على المكاتب",
-        body: "تعمل معظم المكاتب على رقعة متنافرة: أداة للمفكرة، وأخرى للملفات، وجدول للفواتير، والبريد الإلكتروني لكل ما تبقى. وتُدفع الضريبة يوميًا. العميل نفسه موجود في أربعة أماكن بثلاث كتابات مختلفة. موعد نُقل في مفكرة يضيع في أخرى. لا أحد يعرف هل سُددت فاتورة دون سؤال من أرسلها. ولأن هذه الأدوات لا تعرف الأدوار، تكون المعلومات الحساسة — المالية خصوصًا — إما مفرطة الانتشار أو حبيسة عند شخص واحد. يعمل المكتب بجد، لكن معلوماته تعمل ضده.",
+        body: "تعمل معظم المكاتب على رقعة متنافرة: أداة للمفكرة، وأخرى للملفات، وجدول للفواتير، والبريد الإلكتروني لكل ما تبقى. وتدفع الضريبة يوميا. العميل نفسه موجود في أربعة أماكن بثلاث كتابات مختلفة. موعد نقل في مفكرة يضيع في أخرى. لا أحد يعرف هل سددت فاتورة دون سؤال من أرسلها. ولأن هذه الأدوات لا تعرف الأدوار، تكون المعلومات الحساسة — المالية خصوصا — إما مفرطة الانتشار أو حبيسة عند شخص واحد. يعمل المكتب بجد، لكن معلوماته تعمل ضده.",
       },
       approach: {
-        title: "كيف توحّد JURE إدارة المكتب",
-        body: "تضع JURE عمليات المكتب في مساحة عمل واحدة محصورة في نطاق المكتب نفسه. تُدار الملفات والعملاء معًا؛ وتعيش المواعيد والآجال على مفكرة مشتركة واحدة؛ وتحمل المهام أولويات ومواعيد نهائية ومكلفين عبر الفريق؛ وترتبط مكتبة المستندات بالملفات التي توثقها. أما مالية المكتب — الفواتير والمدفوعات والأتعاب ولوحات المتابعة — فمدمجة ومقصورة على دوري المالك والمدير، لتتبع الرؤية المالية المسؤولية. ويحكم التحكم في الوصول حسب الأدوار، من المالك إلى المطالع، مساحة العمل كلها.",
+        title: "كيف توحد JURE إدارة المكتب",
+        body: "تضع JURE عمليات المكتب في مساحة عمل واحدة محصورة في نطاق المكتب نفسه. تدار الملفات والعملاء معا؛ وتعيش المواعيد والآجال على مفكرة مشتركة واحدة؛ وتحمل المهام أولويات ومواعيد نهائية ومكلفين عبر الفريق؛ وترتبط مكتبة المستندات بالملفات التي توثقها. أما مالية المكتب — الفواتير والمدفوعات والأتعاب ولوحات المتابعة — فمدمجة ومقصورة على دوري المالك والمدير، لتتبع الرؤية المالية المسؤولية. ويحكم التحكم في الوصول حسب الأدوار، من المالك إلى المطالع، مساحة العمل كلها.",
         points: [
-          "ملفات وعملاء يُدارون لكل مكتب، في مكان واحد",
+          "ملفات وعملاء يدارون لكل مكتب، في مكان واحد",
           "مفكرة مشتركة للمواعيد والآجال",
           "مهام بأولويات ومواعيد نهائية ومكلفين عبر الفريق",
           "مكتبة مستندات مرتبطة بالملفات",
@@ -763,12 +763,12 @@ export const INTENT_CONTENT: IntentContentMap = {
           "راجع المفكرة المشتركة",
           "اعمل على الملفات والمهام والمستندات",
           "تعاون عبر المراسلة والمكالمات",
-          "سجّل الفواتير والمدفوعات (المالك/المدير)",
+          "سجل الفواتير والمدفوعات (المالك/المدير)",
           "استعرض لوحات متابعة المكتب",
         ],
       },
       useCases: {
-        title: "إدارة المكتب عمليًا",
+        title: "إدارة المكتب عمليا",
         items: [
           {
             title: "مكتب ينمو ويتجاوز جداوله",
@@ -776,7 +776,7 @@ export const INTENT_CONTENT: IntentContentMap = {
           },
           {
             title: "ضبط الأدوار عند التوظيف",
-            body: "يوظف المكتب مساعِدة ومحاميًا مبتدئًا. بفضل الوصول حسب الأدوار من المالك إلى المطالع، ينال كل عضو جديد الرؤية التي يتطلبها دوره — فتدير المساعِدة المفكرة والمستندات، بينما تبقى البيانات المالية للمالكين والمديرين.",
+            body: "يوظف المكتب مساعدة ومحاميا مبتدئا. بفضل الوصول حسب الأدوار من المالك إلى المطالع، ينال كل عضو جديد الرؤية التي يتطلبها دوره — فتدير المساعدة المفكرة والمستندات، بينما تبقى البيانات المالية للمالكين والمديرين.",
           },
           {
             title: "شريك يراجع حصيلة الشهر",
@@ -812,280 +812,13 @@ export const INTENT_CONTENT: IntentContentMap = {
         {
           question: "ما الفرق بين إدارة المكتب وإدارة القضايا؟",
           answer:
-            "إدارة القضايا تنظم العمل داخل ملف واحد؛ أما إدارة المكتب فتدير المكتب حول الملفات كلها — العملاء والمفكرة وأعباء العمل والمستندات والمالية. وفي JURE هما منصة واحدة، فلا يُعاد إدخال شيء بين نظامين.",
+            "إدارة القضايا تنظم العمل داخل ملف واحد؛ أما إدارة المكتب فتدير المكتب حول الملفات كلها — العملاء والمفكرة وأعباء العمل والمستندات والمالية. وفي JURE هما منصة واحدة، فلا يعاد إدخال شيء بين نظامين.",
         },
       ],
       related: ["legalCaseManagement", "legalOperations", "legalDocumentManagement"],
       cta: {
         title: "منصة واحدة للمكتب وللعمل",
-        body: "اكتشف كيف تُشغّل JURE الملفات والعملاء والمفكرة والمهام والمستندات ومالية المكتب معًا — بأدوار تُبقي كل شيء في اليد الصحيحة.",
-      },
-    },
-  },
-
-  // ---------------------------------------------------------------------------
-  // Legal research
-  // ---------------------------------------------------------------------------
-  legalResearch: {
-    en: {
-      h1: "AI-assisted legal research, with the lawyer in charge",
-      intro:
-        "AI can compress the first hours of legal research into minutes — and it can also invent authorities that do not exist. This page explains how AI-assisted research actually works, where its limits are, and how JURE's research mode is designed around one non-negotiable step: lawyer verification before anything is relied on.",
-      definition: {
-        title: "What is AI-assisted legal research?",
-        body: "AI-assisted legal research uses large language models to help lawyers move from a legal question to a working analysis. Instead of starting with keyword searches across databases, the lawyer describes the question in plain language and receives a structured, research-style answer: the relevant concepts, the legal texts likely to apply, and lines of reasoning to test. It is best understood as a first pass, not a final one. Language models generate plausible text; they do not guarantee that a cited article, judgment or rule actually exists or says what the answer claims. That is why serious AI-assisted research always pairs the speed of generation with a verification step, where a lawyer checks every reference against authoritative sources before it enters any legal work product.",
-      },
-      problem: {
-        title: "Slow to start, dangerous to trust blindly",
-        body: "Traditional research has a cold-start problem: on an unfamiliar question, the first hours go to simply finding the right terrain — which texts, which concepts, which terms to search. Raw chatbots solve the cold start but create a worse problem: confidently phrased answers that may rest on invented or misread authorities, a risk that has already embarrassed lawyers in real proceedings. Legal teams are caught between a slow method they trust and a fast one they cannot. What is missing is not a smarter chatbot — it is a workflow that uses AI speed while making verification a structural step rather than a personal virtue.",
-      },
-      approach: {
-        title: "How research works in JURE",
-        body: "Juria, JURE's legal AI assistant, includes a dedicated research mode in early access. It answers legal questions in a research style, oriented to Moroccan law, and is instructed to reference the legal sources it relies on — references the lawyer then verifies, because JURE deliberately treats them as leads, not proof. The draft analysis takes shape inside the same workspace as the matter it serves, and JURE's workflow places lawyer review before any conclusion is used. The research gets faster; the responsibility stays where it belongs.",
-        points: [
-          "A dedicated research mode in Juria, in early access",
-          "Research-style answers oriented to Moroccan law",
-          "Answers instructed to reference legal sources — as leads for the lawyer to verify",
-          "Draft analyses developed in the same workspace as the matter",
-          "Lawyer review before any conclusion is relied on",
-        ],
-      },
-      workflow: {
-        title: "From question to reviewed analysis",
-        steps: [
-          "Frame the legal question",
-          "Run it in Juria's research mode",
-          "Read the draft and its referenced sources",
-          "Lawyer verifies sources and corrects",
-          "Finalize the analysis for the matter",
-        ],
-      },
-      useCases: {
-        title: "AI-assisted research in practice",
-        items: [
-          {
-            title: "Preparing a consultation answer",
-            body: "A client asks a question at the edge of the lawyer's usual practice area. Research mode produces a structured first map of the issue in minutes. The lawyer verifies each referenced text, corrects the framing and turns the draft into a reliable consultation answer.",
-          },
-          {
-            title: "Before a client meeting",
-            body: "With an hour before a meeting, a lawyer uses research mode to refresh the key rules on the topic and anticipate likely questions. Nothing goes to the client unverified — but the lawyer walks in oriented instead of guessing.",
-          },
-          {
-            title: "An associate's research memo, reviewed by a senior",
-            body: "An associate drafts a research memo with Juria's help, verifying every reference along the way. The senior lawyer reviews the memo as they always would — except the associate spent the time on verification and analysis instead of on the blank page.",
-          },
-        ],
-      },
-      security: {
-        title: "Research questions are client information",
-        body: "The questions a firm researches often reveal exactly what a client is facing. In JURE, research happens inside the firm's own isolated workspace rather than in a consumer chatbot, and role-based access control governs who in the team can see the matters that research relates to.",
-      },
-      faqs: [
-        {
-          question: "Does JURE replace legal databases and official sources?",
-          answer:
-            "No. Juria's research mode helps you frame, orient and draft — but verification happens in authoritative sources, as it always has. Think of it as a faster first pass, not a replacement for official texts and case law.",
-        },
-        {
-          question: "How accurate are Juria's research answers?",
-          answer:
-            "Like all large language models, Juria can be wrong and can produce references that are inaccurate or do not exist. That is precisely why JURE's research workflow makes lawyer verification a structural step: no AI answer should be relied on before a lawyer has checked it against authoritative sources.",
-        },
-        {
-          question: "Which jurisdiction does the research mode cover?",
-          answer:
-            "The research mode is oriented to Moroccan law and answers in a research style. For any jurisdiction, its output must be verified against official sources before use.",
-        },
-        {
-          question: "Can I trust the sources Juria mentions?",
-          answer:
-            "Treat them as leads, not citations. Juria is instructed to reference the legal sources behind its answers, but JURE does not offer a structured citation feature, and each reference must be independently verified by a lawyer before it appears in any work product.",
-        },
-        {
-          question: "Is the research mode available to everyone?",
-          answer:
-            "Research mode is part of Juria, which is currently in early access. It is being rolled out progressively so we can refine it with practicing lawyers before general availability.",
-        },
-      ],
-      related: ["legalAi", "responsibleLegalAi", "legalKnowledgeManagement"],
-      cta: {
-        title: "Research faster. Verify always.",
-        body: "See how Juria's research mode, in early access, turns a legal question into a draft analysis — with lawyer review built into the workflow, not left to chance.",
-      },
-    },
-    fr: {
-      h1: "La recherche juridique assistée par IA, sous le contrôle de l'avocat",
-      intro:
-        "L'IA peut compresser en minutes les premières heures d'une recherche juridique — et elle peut aussi inventer des sources qui n'existent pas. Cette page explique comment fonctionne réellement la recherche assistée par IA, où sont ses limites, et comment le mode recherche de JURE est conçu autour d'une étape non négociable : la vérification par l'avocat avant toute utilisation.",
-      definition: {
-        title: "Qu'est-ce que la recherche juridique assistée par IA ?",
-        body: "La recherche juridique assistée par IA utilise les grands modèles de langage pour aider les avocats à passer d'une question juridique à une analyse de travail. Au lieu de commencer par des recherches par mots-clés dans des bases de données, l'avocat décrit sa question en langage courant et reçoit une réponse structurée, de style recherche : les notions pertinentes, les textes probablement applicables, des pistes de raisonnement à tester. Il faut la comprendre comme un premier passage, pas un dernier. Les modèles de langage génèrent du texte plausible ; ils ne garantissent pas qu'un article, un arrêt ou une règle cités existent réellement ou disent ce que la réponse affirme. C'est pourquoi une recherche assistée sérieuse associe toujours la vitesse de génération à une étape de vérification, où l'avocat contrôle chaque référence dans les sources faisant autorité avant qu'elle n'entre dans un travail juridique.",
-      },
-      problem: {
-        title: "Lente à démarrer, dangereuse à croire aveuglément",
-        body: "La recherche traditionnelle a un problème de démarrage à froid : sur une question inhabituelle, les premières heures servent seulement à trouver le bon terrain — quels textes, quelles notions, quels termes chercher. Les chatbots bruts résolvent le démarrage à froid mais créent un problème pire : des réponses formulées avec assurance qui peuvent reposer sur des sources inventées ou mal lues — un risque qui a déjà embarrassé des avocats dans de vraies procédures. Les équipes juridiques sont coincées entre une méthode lente en laquelle elles ont confiance et une méthode rapide qu'elles ne peuvent pas croire. Ce qui manque, ce n'est pas un chatbot plus malin — c'est un flux de travail qui exploite la vitesse de l'IA en faisant de la vérification une étape structurelle, pas une vertu personnelle.",
-      },
-      approach: {
-        title: "Comment la recherche fonctionne dans JURE",
-        body: "Juria, l'assistant IA juridique de JURE, comprend un mode recherche dédié, en accès anticipé. Il répond aux questions juridiques dans un style de recherche, orienté vers le droit marocain, et a pour consigne de mentionner les sources juridiques sur lesquelles il s'appuie — des références que l'avocat vérifie ensuite, car JURE les traite délibérément comme des pistes, pas comme des preuves. Le projet d'analyse prend forme dans le même espace de travail que le dossier qu'il sert, et le flux de JURE place la relecture de l'avocat avant toute utilisation d'une conclusion. La recherche accélère ; la responsabilité reste où elle doit être.",
-        points: [
-          "Un mode recherche dédié dans Juria, en accès anticipé",
-          "Des réponses de style recherche orientées vers le droit marocain",
-          "Des réponses avec mention des sources juridiques — des pistes à vérifier par l'avocat",
-          "Des projets d'analyse développés dans le même espace que le dossier",
-          "La relecture de l'avocat avant toute conclusion utilisée",
-        ],
-      },
-      workflow: {
-        title: "De la question à l'analyse validée",
-        steps: [
-          "Formuler la question juridique",
-          "La soumettre au mode recherche de Juria",
-          "Lire le projet et ses sources mentionnées",
-          "L'avocat vérifie les sources et corrige",
-          "Finaliser l'analyse pour le dossier",
-        ],
-      },
-      useCases: {
-        title: "La recherche assistée en pratique",
-        items: [
-          {
-            title: "Préparer la réponse à une consultation",
-            body: "Un client pose une question aux confins du domaine habituel de l'avocat. Le mode recherche produit en quelques minutes une première cartographie structurée du sujet. L'avocat vérifie chaque texte mentionné, corrige le cadrage et transforme le projet en réponse de consultation fiable.",
-          },
-          {
-            title: "Avant un rendez-vous client",
-            body: "À une heure d'un rendez-vous, un avocat utilise le mode recherche pour rafraîchir les règles clés du sujet et anticiper les questions probables. Rien ne part chez le client sans vérification — mais l'avocat arrive orienté plutôt qu'à l'aveugle.",
-          },
-          {
-            title: "La note de recherche d'un collaborateur, relue par un senior",
-            body: "Un collaborateur rédige une note de recherche avec l'aide de Juria, en vérifiant chaque référence au fil de l'eau. L'avocat senior relit la note comme il l'a toujours fait — sauf que le collaborateur a passé son temps sur la vérification et l'analyse plutôt que sur la page blanche.",
-          },
-        ],
-      },
-      security: {
-        title: "Les questions de recherche sont des informations clients",
-        body: "Les questions qu'un cabinet recherche révèlent souvent exactement ce que traverse un client. Dans JURE, la recherche se fait dans l'espace isolé du cabinet plutôt que dans un chatbot grand public, et le contrôle d'accès par rôles régit qui, dans l'équipe, voit les dossiers auxquels la recherche se rapporte.",
-      },
-      faqs: [
-        {
-          question: "JURE remplace-t-il les bases de données juridiques et les sources officielles ?",
-          answer:
-            "Non. Le mode recherche de Juria aide à cadrer, s'orienter et rédiger — mais la vérification se fait dans les sources faisant autorité, comme elle l'a toujours été. Voyez-y un premier passage plus rapide, pas un remplacement des textes officiels et de la jurisprudence.",
-        },
-        {
-          question: "Quelle est la fiabilité des réponses de recherche de Juria ?",
-          answer:
-            "Comme tout grand modèle de langage, Juria peut se tromper et produire des références inexactes ou inexistantes. C'est précisément pourquoi le flux de recherche de JURE fait de la vérification par l'avocat une étape structurelle : aucune réponse d'IA ne doit être utilisée avant qu'un avocat ne l'ait contrôlée dans les sources faisant autorité.",
-        },
-        {
-          question: "Quelle juridiction le mode recherche couvre-t-il ?",
-          answer:
-            "Le mode recherche est orienté vers le droit marocain et répond dans un style de recherche. Quelle que soit la juridiction, ses résultats doivent être vérifiés dans les sources officielles avant usage.",
-        },
-        {
-          question: "Peut-on se fier aux sources que Juria mentionne ?",
-          answer:
-            "Traitez-les comme des pistes, pas comme des citations. Juria a pour consigne de mentionner les sources juridiques derrière ses réponses, mais JURE ne propose pas de fonctionnalité de citations structurées, et chaque référence doit être vérifiée indépendamment par un avocat avant de figurer dans un travail juridique.",
-        },
-        {
-          question: "Le mode recherche est-il disponible pour tout le monde ?",
-          answer:
-            "Le mode recherche fait partie de Juria, actuellement en accès anticipé. Il est déployé progressivement pour que nous puissions l'affiner avec des avocats en exercice avant la disponibilité générale.",
-        },
-      ],
-      related: ["legalAi", "responsibleLegalAi", "legalKnowledgeManagement"],
-      cta: {
-        title: "Recherchez plus vite. Vérifiez toujours.",
-        body: "Découvrez comment le mode recherche de Juria, en accès anticipé, transforme une question juridique en projet d'analyse — avec la relecture de l'avocat intégrée au flux de travail, pas laissée au hasard.",
-      },
-    },
-    ar: {
-      h1: "بحث قانوني بمساعدة الذكاء الاصطناعي، والمحامي هو المتحكم",
-      intro:
-        "يستطيع الذكاء الاصطناعي ضغط الساعات الأولى من البحث القانوني في دقائق — ويستطيع أيضًا اختلاق مراجع لا وجود لها. تشرح هذه الصفحة كيف يعمل البحث بمساعدة الذكاء الاصطناعي فعليًا، وأين حدوده، وكيف صُمم وضع البحث في JURE حول خطوة غير قابلة للتفاوض: تحقق المحامي قبل الاعتماد على أي شيء.",
-      definition: {
-        title: "ما هو البحث القانوني بمساعدة الذكاء الاصطناعي؟",
-        body: "البحث القانوني بمساعدة الذكاء الاصطناعي يستخدم النماذج اللغوية الكبيرة لمساعدة المحامين على الانتقال من سؤال قانوني إلى تحليل عملي. فبدل البدء بالبحث بالكلمات المفتاحية في قواعد البيانات، يصف المحامي سؤاله بلغة عادية ويتلقى إجابة منظمة بأسلوب بحثي: المفاهيم ذات الصلة، والنصوص المرجح انطباقها، وخطوط استدلال تُختبر. وأفضل فهم له أنه مرور أول، لا أخير. فالنماذج اللغوية تولّد نصًا معقولًا في ظاهره؛ لكنها لا تضمن أن الفصل أو الحكم أو القاعدة المذكورة موجودة فعلًا أو تقول ما تدعيه الإجابة. لهذا يقرن البحثُ الجاد بمساعدة الذكاء الاصطناعي سرعةَ التوليد دائمًا بخطوة تحقق، يراجع فيها المحامي كل مرجع في المصادر الموثوقة قبل أن يدخل أي عمل قانوني.",
-      },
-      problem: {
-        title: "بطيء في الانطلاق، خطير عند الثقة العمياء",
-        body: "للبحث التقليدي مشكلة انطلاقة باردة: ففي مسألة غير مألوفة، تذهب الساعات الأولى لمجرد إيجاد الأرضية الصحيحة — أي النصوص وأي المفاهيم وأي المصطلحات تُبحث. تحل روبوتات المحادثة الخام مشكلة الانطلاقة لكنها تخلق مشكلة أسوأ: إجابات واثقة الصياغة قد تستند إلى مراجع مختلقة أو مقروءة خطأً — وهو خطر أحرج محامين فعلًا في إجراءات حقيقية. فتجد الفرق القانونية نفسها بين طريقة بطيئة تثق بها وطريقة سريعة لا تستطيع تصديقها. والمفقود ليس روبوتًا أذكى — بل مسار عمل يستثمر سرعة الذكاء الاصطناعي ويجعل التحقق خطوة بنيوية لا فضيلة شخصية.",
-      },
-      approach: {
-        title: "كيف يعمل البحث في JURE",
-        body: "يتضمن جوريا، مساعد JURE للذكاء الاصطناعي القانوني، وضع بحث مخصصًا في مرحلة الوصول المبكر. يجيب عن الأسئلة القانونية بأسلوب بحثي، موجهًا نحو القانون المغربي، وهو موجَّه للإشارة إلى المصادر القانونية التي يستند إليها — مراجع يتحقق منها المحامي بعد ذلك، لأن JURE تتعامل معها عمدًا كخيوط بحث لا كأدلة. تتشكل مسودة التحليل داخل مساحة العمل نفسها التي تضم الملف الذي تخدمه، ويضع مسار عمل JURE مراجعة المحامي قبل استخدام أي استنتاج. يتسارع البحث؛ وتبقى المسؤولية حيث يجب أن تكون.",
-        points: [
-          "وضع بحث مخصص في جوريا، في مرحلة الوصول المبكر",
-          "إجابات بأسلوب بحثي موجهة نحو القانون المغربي",
-          "إجابات موجَّهة للإشارة إلى المصادر القانونية — كخيوط يتحقق منها المحامي",
-          "مسودات تحليل تتطور في مساحة العمل نفسها مع الملف",
-          "مراجعة المحامي قبل الاعتماد على أي استنتاج",
-        ],
-      },
-      workflow: {
-        title: "من السؤال إلى تحليل مُراجَع",
-        steps: [
-          "صِغ السؤال القانوني",
-          "شغّله في وضع البحث في جوريا",
-          "اقرأ المسودة ومصادرها المذكورة",
-          "يتحقق المحامي من المصادر ويصحح",
-          "أنجز التحليل النهائي للملف",
-        ],
-      },
-      useCases: {
-        title: "البحث بمساعدة الذكاء الاصطناعي عمليًا",
-        items: [
-          {
-            title: "إعداد جواب استشارة",
-            body: "يطرح عميل سؤالًا على حافة مجال الممارسة المعتاد للمحامي. ينتج وضع البحث في دقائق خريطة أولى منظمة للمسألة. يتحقق المحامي من كل نص مذكور، ويصحح التأطير، ويحوّل المسودة إلى جواب استشارة موثوق.",
-          },
-          {
-            title: "قبل اجتماع مع عميل",
-            body: "قبل ساعة من الاجتماع، يستخدم المحامي وضع البحث لتحديث معرفته بالقواعد الأساسية للموضوع وتوقع الأسئلة المحتملة. لا شيء يصل إلى العميل دون تحقق — لكن المحامي يدخل الاجتماع متمكنًا لا مخمنًا.",
-          },
-          {
-            title: "مذكرة بحث لمتعاون يراجعها محامٍ أقدم",
-            body: "يحرر محامٍ متعاون مذكرة بحث بمساعدة جوريا، متحققًا من كل مرجع أولًا بأول. يراجع المحامي الأقدم المذكرة كعادته — غير أن المتعاون أنفق وقته في التحقق والتحليل بدل الصفحة البيضاء.",
-          },
-        ],
-      },
-      security: {
-        title: "أسئلة البحث معلومات عن الموكلين",
-        body: "الأسئلة التي يبحثها المكتب كثيرًا ما تكشف بالضبط ما يواجهه الموكل. في JURE، يجري البحث داخل مساحة المكتب المعزولة لا في روبوت محادثة عام، ويحكم التحكم في الوصول حسب الأدوار من في الفريق يرى الملفات التي يتعلق بها البحث.",
-      },
-      faqs: [
-        {
-          question: "هل تحل JURE محل قواعد البيانات القانونية والمصادر الرسمية؟",
-          answer:
-            "لا. يساعدك وضع البحث في جوريا على التأطير والاستئناس والصياغة — أما التحقق فيجري في المصادر الموثوقة كما كان دائمًا. اعتبره مرورًا أول أسرع، لا بديلًا عن النصوص الرسمية والاجتهاد القضائي.",
-        },
-        {
-          question: "ما مدى دقة إجابات البحث في جوريا؟",
-          answer:
-            "كسائر النماذج اللغوية الكبيرة، قد يخطئ جوريا وقد ينتج مراجع غير دقيقة أو غير موجودة. ولهذا بالتحديد يجعل مسار البحث في JURE تحققَ المحامي خطوة بنيوية: لا ينبغي الاعتماد على أي إجابة ذكاء اصطناعي قبل أن يراجعها محامٍ في المصادر الموثوقة.",
-        },
-        {
-          question: "أي قانون يغطيه وضع البحث؟",
-          answer:
-            "وضع البحث موجه نحو القانون المغربي ويجيب بأسلوب بحثي. وأيًا كانت الولاية القضائية، يجب التحقق من مخرجاته في المصادر الرسمية قبل الاستخدام.",
-        },
-        {
-          question: "هل يمكن الوثوق بالمصادر التي يذكرها جوريا؟",
-          answer:
-            "تعامل معها كخيوط بحث لا كاستشهادات. جوريا موجَّه للإشارة إلى المصادر القانونية وراء إجاباته، لكن JURE لا تقدم خاصية استشهادات منظمة، ويجب أن يتحقق محامٍ من كل مرجع على حدة قبل أن يظهر في أي عمل قانوني.",
-        },
-        {
-          question: "هل وضع البحث متاح للجميع؟",
-          answer:
-            "وضع البحث جزء من جوريا، وهو حاليًا في مرحلة الوصول المبكر. يُطرح تدريجيًا لنصقله مع محامين ممارسين قبل الإتاحة العامة.",
-        },
-      ],
-      related: ["legalAi", "responsibleLegalAi", "legalKnowledgeManagement"],
-      cta: {
-        title: "ابحث أسرع. وتحقق دائمًا.",
-        body: "اكتشف كيف يحوّل وضع البحث في جوريا، في مرحلة الوصول المبكر، سؤالًا قانونيًا إلى مسودة تحليل — مع مراجعة المحامي مدمجة في مسار العمل، لا متروكة للصدفة.",
+        body: "اكتشف كيف تشغل JURE الملفات والعملاء والمفكرة والمهام والمستندات ومالية المكتب معا — بأدوار تبقي كل شيء في اليد الصحيحة.",
       },
     },
   },
@@ -1271,20 +1004,20 @@ export const INTENT_CONTENT: IntentContentMap = {
     ar: {
       h1: "مكتبة آمنة للمستندات التي يقوم عليها عمل المكتب",
       intro:
-        "ينتج العمل القانوني المستندات باستمرار — عقودًا ومذكرات ومراسلات ووثائق إثبات — ويفقدها باستمرار أيضًا في صناديق البريد والأقراص المشتركة. تمنح JURE المكتب مكتبة مستندات آمنة واحدة: منظمة بالفئات والوسوم، قابلة للمعاينة في المتصفح، وقابلة للإرفاق مباشرة بالملفات التي تنتمي إليها.",
+        "ينتج العمل القانوني المستندات باستمرار — عقودا ومذكرات ومراسلات ووثائق إثبات — ويفقدها باستمرار أيضا في صناديق البريد والأقراص المشتركة. تمنح JURE المكتب مكتبة مستندات آمنة واحدة: منظمة بالفئات والوسوم، قابلة للمعاينة في المتصفح، وقابلة للإرفاق مباشرة بالملفات التي تنتمي إليها.",
       definition: {
         title: "ما هو برنامج إدارة المستندات القانونية؟",
-        body: "برنامج إدارة المستندات القانونية يمنح المكتب مكانًا واحدًا مضبوطًا لتخزين مستنداته وتنظيمها واسترجاعها. ثلاثة أمور تميزه عن القرص المشترك العادي. أولًا، بنية مصممة للعمل القانوني: تُصنّف المستندات بالفئات والوسوم، وتوصف بالعناوين والأوصاف، وتُربط بالملفات والعملاء الذين تخصهم. ثانيًا، الاسترجاع: فالمحامي الباحث عن مستند يبحث بموضوعه، لا بتذكر أي مجلد اختاره أحدهم قبل سنتين. ثالثًا، الضبط: فلأن المستندات القانونية سرية في الغالب، يُحكم الوصول إليها بقواعد صلاحيات المكتب نفسه لا بمن يصادف أن بيده رابط. والهدف بسيط — أن يجد أي شخص مخوَّل المستند الصحيح في ثوانٍ، وألا يجده أحد سواه إطلاقًا.",
+        body: "برنامج إدارة المستندات القانونية يمنح المكتب مكانا واحدا مضبوطا لتخزين مستنداته وتنظيمها واسترجاعها. ثلاثة أمور تميزه عن القرص المشترك العادي. أولا، بنية مصممة للعمل القانوني: تصنف المستندات بالفئات والوسوم، وتوصف بالعناوين والأوصاف، وتربط بالملفات والعملاء الذين تخصهم. ثانيا، الاسترجاع: فالمحامي الباحث عن مستند يبحث بموضوعه، لا بتذكر أي مجلد اختاره أحدهم قبل سنتين. ثالثا، الضبط: فلأن المستندات القانونية سرية في الغالب، يحكم الوصول إليها بقواعد صلاحيات المكتب نفسه لا بمن يصادف أن بيده رابط. والهدف بسيط — أن يجد أي شخص مخول المستند الصحيح في ثوان، وألا يجده أحد سواه إطلاقا.",
       },
       problem: {
-        title: "أين تعيش مستندات المكتب فعليًا اليوم",
-        body: "في معظم المكاتب، تعيش المستندات حيث حطّت: مرفقة برسالة بريد، أو محفوظة على سطح مكتب، أو ملقاة في مجلد مشترك لا يفهم منطقه إلا من أنشأه. والعواقب مألوفة. العثور على مستند يعني سؤال من أرشفه. وإرسال المرفق الخطأ على بعد نقرة واحدة. وملفات سرية قابعة في صناديق بريد شخصية دون أي قواعد وصول. وحين يغادر أحدهم المكتب، يغادر نظامُ تصنيفه معه. المشكلة ليست الإهمال — بل أن البريد والأقراص العامة لم تُصمم يومًا لتكون النظام الوثائقي لمكتب محاماة.",
+        title: "أين تعيش مستندات المكتب فعليا اليوم",
+        body: "في معظم المكاتب، تعيش المستندات حيث حطت: مرفقة برسالة بريد، أو محفوظة على سطح مكتب، أو ملقاة في مجلد مشترك لا يفهم منطقه إلا من أنشأه. والعواقب مألوفة. العثور على مستند يعني سؤال من أرشفه. وإرسال المرفق الخطأ على بعد نقرة واحدة. وملفات سرية قابعة في صناديق بريد شخصية دون أي قواعد وصول. وحين يغادر أحدهم المكتب، يغادر نظام تصنيفه معه. المشكلة ليست الإهمال — بل أن البريد والأقراص العامة لم تصمم يوما لتكون النظام الوثائقي لمكتب محاماة.",
       },
       approach: {
         title: "كيف تعمل مكتبة المستندات في JURE",
-        body: "تمنح JURE كل مكتب مكتبة مستندات آمنة محصورة في مساحته الخاصة. تُرفع المستندات مرة واحدة، وتُنظم بالفئات والوسوم، وتوصف بعنوان ووصف يغذيان البحث. وتُعاين ملفات PDF وDOCX والصور والفيديو مباشرة في المتصفح، فلا تعود مراجعة مستند تعني تنزيله. وتُرفق المستندات مباشرة بالملفات، فيبقى كل ملف بجوار المهام والآجال التي يتعلق بها، ويمكن مشاركة الملفات في محادثات الفريق. ويحكم التحكم في الوصول حسب الأدوار من يرى ماذا — والمكتبة داخلية لفريق المكتب.",
+        body: "تمنح JURE كل مكتب مكتبة مستندات آمنة محصورة في مساحته الخاصة. ترفع المستندات مرة واحدة، وتنظم بالفئات والوسوم، وتوصف بعنوان ووصف يغذيان البحث. وتعاين ملفات PDF وDOCX والصور والفيديو مباشرة في المتصفح، فلا تعود مراجعة مستند تعني تنزيله. وترفق المستندات مباشرة بالملفات، فيبقى كل ملف بجوار المهام والآجال التي يتعلق بها، ويمكن مشاركة الملفات في محادثات الفريق. ويحكم التحكم في الوصول حسب الأدوار من يرى ماذا — والمكتبة داخلية لفريق المكتب.",
         points: [
-          "ارفع مرة واحدة، ونظّم بالفئات والوسوم",
+          "ارفع مرة واحدة، ونظم بالفئات والوسوم",
           "ابحث بالعنوان والوصف",
           "عاين PDF وDOCX والصور والفيديو في المتصفح",
           "أرفق المستندات مباشرة بالملفات",
@@ -1295,18 +1028,18 @@ export const INTENT_CONTENT: IntentContentMap = {
         title: "حياة المستند في JURE",
         steps: [
           "ارفع المستند",
-          "صنّفه وضَع له الوسوم",
+          "صنفه وضع له الوسوم",
           "عاينه دون تنزيل",
           "أرفقه بالملف",
-          "اعثر عليه لاحقًا بالعنوان أو الوسم أو الفئة",
+          "اعثر عليه لاحقا بالعنوان أو الوسم أو الفئة",
         ],
       },
       useCases: {
-        title: "إدارة المستندات عمليًا",
+        title: "إدارة المستندات عمليا",
         items: [
           {
             title: "عقد وارد من عميل",
-            body: "يرسل عميل عقدًا موقعًا بالبريد الإلكتروني. بدل أن يبقى في صندوق محامٍ واحد، يُرفع إلى المكتبة، ويوسم، ويُمنح عنوانًا واضحًا، ويُرفق بملف العميل — فيراه الفريق المعين منذ تلك اللحظة.",
+            body: "يرسل عميل عقدا موقعا بالبريد الإلكتروني. بدل أن يبقى في صندوق محام واحد، يرفع إلى المكتبة، ويوسم، ويمنح عنوانا واضحا، ويرفق بملف العميل — فيراه الفريق المعين منذ تلك اللحظة.",
           },
           {
             title: "بناء مجموعة نماذج المكتب",
@@ -1314,24 +1047,24 @@ export const INTENT_CONTENT: IntentContentMap = {
           },
           {
             title: "العثور على سابقة العام الماضي",
-            body: "يحتاج محامٍ متعاون إلى المذكرة التي حررها المكتب في قضية مشابهة العام الماضي. ولأنها عُنونت ووُصفت ووُسمت عند الأرشفة، يجدها البحث بتلك المصطلحات في ثوانٍ — مع معاينة في المتصفح للتأكد أنها المستند الصحيح.",
+            body: "يحتاج محام متعاون إلى المذكرة التي حررها المكتب في قضية مشابهة العام الماضي. ولأنها عنونت ووصفت ووسمت عند الأرشفة، يجدها البحث بتلك المصطلحات في ثوان — مع معاينة في المتصفح للتأكد أنها المستند الصحيح.",
           },
         ],
       },
       security: {
         title: "المستندات أكثر ما يحوزه المكتب سرية",
-        body: "مكتبة المستندات معزولة لكل مكتب: لا يكون أي مستند مرئيًا خارج مساحة عملك أبدًا. وداخل المكتب، يقرر التحكم في الوصول حسب الأدوار من يستطيع الاطلاع على المستندات وإدارتها، والمكتبة مصممة للفريق الداخلي — فلا توجد واجهة مشاركة خارجية يمكن أن تُضبط خطأً.",
+        body: "مكتبة المستندات معزولة لكل مكتب: لا يكون أي مستند مرئيا خارج مساحة عملك أبدا. وداخل المكتب، يقرر التحكم في الوصول حسب الأدوار من يستطيع الاطلاع على المستندات وإدارتها، والمكتبة مصممة للفريق الداخلي — فلا توجد واجهة مشاركة خارجية يمكن أن تضبط خطأ.",
       },
       faqs: [
         {
           question: "ما أنواع الملفات التي يمكن معاينتها في JURE؟",
           answer:
-            "تُعاين مستندات PDF وDOCX والصور وملفات الفيديو مباشرة في المتصفح، ليتحقق الفريق من محتوى المستند دون تنزيله.",
+            "تعاين مستندات PDF وDOCX والصور وملفات الفيديو مباشرة في المتصفح، ليتحقق الفريق من محتوى المستند دون تنزيله.",
         },
         {
           question: "كيف يعمل البحث عن المستندات في JURE؟",
           answer:
-            "يعمل البحث على عناوين المستندات وأوصافها، مقترنة بالفئات والوسوم التي تحددها. لذا تستحق جودة التسمية والوسم الثواني القليلة التي تتطلبها — فالمستند الموصوف جيدًا يجده أي عضو في الفريق، لا من أرشفه فقط.",
+            "يعمل البحث على عناوين المستندات وأوصافها، مقترنة بالفئات والوسوم التي تحددها. لذا تستحق جودة التسمية والوسم الثواني القليلة التي تتطلبها — فالمستند الموصوف جيدا يجده أي عضو في الفريق، لا من أرشفه فقط.",
         },
         {
           question: "هل تقدم JURE إدارة إصدارات للمستندات؟",
@@ -1351,7 +1084,7 @@ export const INTENT_CONTENT: IntentContentMap = {
       ],
       related: ["legalKnowledgeManagement", "legalCaseManagement", "legalPracticeManagement"],
       cta: {
-        title: "امنح مستندات المكتب بيتًا آمنًا واحدًا",
+        title: "امنح مستندات المكتب بيتا آمنا واحدا",
         body: "اكتشف كيف تنظم مكتبة JURE مستنداتك وتعاينها وتحميها — وتربط كل واحد منها بالملف الذي ينتمي إليه.",
       },
     },
@@ -1538,18 +1271,18 @@ export const INTENT_CONTENT: IntentContentMap = {
     ar: {
       h1: "العمليات القانونية: رؤية مشتركة لكل العمل القانوني",
       intro:
-        "العمليات القانونية هي فن تشغيل العمل القانوني كنظام: من يفعل ماذا، وما الذي يستحق ومتى، وكيف تُصرف طاقة الفريق. توفر JURE الطبقة التشغيلية — مفكرة مشتركة، ومهام منظمة، وأنواع ملفات متسقة، وأدوار ومالية المكتب — التي تجعل هذه الرؤية حقيقة.",
+        "العمليات القانونية هي فن تشغيل العمل القانوني كنظام: من يفعل ماذا، وما الذي يستحق ومتى، وكيف تصرف طاقة الفريق. توفر JURE الطبقة التشغيلية — مفكرة مشتركة، ومهام منظمة، وأنواع ملفات متسقة، وأدوار ومالية المكتب — التي تجعل هذه الرؤية حقيقة.",
       definition: {
         title: "ما هي العمليات القانونية؟",
-        body: "العمليات القانونية (legal operations) هي إدارة الجانب التشغيلي للعمل القانوني: المسارات، وأعباء العمل، والآجال، والأدوات، والمعرفة، والميزانية. نشأت في الإدارات القانونية للشركات لكنها تنطبق بالقدر نفسه على مكاتب المحاماة — أينما وجب تخطيط العمل القانوني وتوزيعه وتتبعه بين أكثر من شخص. فحيث يسأل المحامي: «ماذا يقتضي القانون هنا؟»، تسأل العمليات القانونية: «كيف يُنجز هذا العمل بموثوقية؟»: كيف تُفتح الملفات وتُهيكل، وكيف تُسند المهام وتُرتب أولوياتها، وكيف تُتابع الآجال حتى لا يعتمد شيء على ذاكرة شخص واحد، وكيف ترى القيادة أعباء العمل والكلفة. العمليات القانونية الجيدة لا تُغرق العمل القانوني في البيروقراطية؛ بل تزيل الاحتكاكات الخفية التي تجعل المحامين الجيدين بطيئين.",
+        body: "العمليات القانونية (legal operations) هي إدارة الجانب التشغيلي للعمل القانوني: المسارات، وأعباء العمل، والآجال، والأدوات، والمعرفة، والميزانية. نشأت في الإدارات القانونية للشركات لكنها تنطبق بالقدر نفسه على مكاتب المحاماة — أينما وجب تخطيط العمل القانوني وتوزيعه وتتبعه بين أكثر من شخص. فحيث يسأل المحامي: «ماذا يقتضي القانون هنا؟»، تسأل العمليات القانونية: «كيف ينجز هذا العمل بموثوقية؟»: كيف تفتح الملفات وتهيكل، وكيف تسند المهام وترتب أولوياتها، وكيف تتابع الآجال حتى لا يعتمد شيء على ذاكرة شخص واحد، وكيف ترى القيادة أعباء العمل والكلفة. العمليات القانونية الجيدة لا تغرق العمل القانوني في البيروقراطية؛ بل تزيل الاحتكاكات الخفية التي تجعل المحامين الجيدين بطيئين.",
       },
       problem: {
         title: "عمل قانوني بلا طبقة تشغيلية",
-        body: "في فرق كثيرة، لا تعيش الحالة التشغيلية للعمل القانوني في أي مكان: فهي موزعة بين صناديق البريد وقوائم المهام الشخصية وذاكرة المحامين الأقدم. والأعراض متوقعة. أعباء العمل غير مرئية، فيغرق متعاون بينما ينتظر آخر التكليف. والآجال تظهر كطوارئ لا كخطط. وكل سؤال عن الحالة يكلف مقاطعة. وقرارات القيادة — التوظيف والتسعير والأولويات — تُتخذ على انطباعات لا على ما يُظهره العمل فعلًا. الفريق مليء بالأكفاء؛ والمفقود صورة تشغيلية مشتركة يراها الجميع.",
+        body: "في فرق كثيرة، لا تعيش الحالة التشغيلية للعمل القانوني في أي مكان: فهي موزعة بين صناديق البريد وقوائم المهام الشخصية وذاكرة المحامين الأقدم. والأعراض متوقعة. أعباء العمل غير مرئية، فيغرق متعاون بينما ينتظر آخر التكليف. والآجال تظهر كطوارئ لا كخطط. وكل سؤال عن الحالة يكلف مقاطعة. وقرارات القيادة — التوظيف والتسعير والأولويات — تتخذ على انطباعات لا على ما يظهره العمل فعلا. الفريق مليء بالأكفاء؛ والمفقود صورة تشغيلية مشتركة يراها الجميع.",
       },
       approach: {
         title: "JURE بوصفها الطبقة التشغيلية",
-        body: "تمنح JURE الفرق القانونية الصورة التشغيلية على المنصة نفسها التي يجري فيها العمل. مفكرة مشتركة على مستوى المكتب تحمل المواعيد والآجال. ومهام لها أولويات ومواعيد نهائية ومكلفون، فيصبح توزيع العمل صريحًا لا محفوظًا في الذاكرة. وملفات تتبع بنية متسقة — نزاع واستشارة وملف إداري — تجعلها قابلة للمقارنة والإشراف. ووصول حسب الأدوار، من المالك إلى المطالع، يطابق الأداة مع طريقة تفويض الفريق فعليًا. وللمالكين والمديرين، تضيف مالية المكتب الفواتير والمدفوعات والأتعاب ولوحات المتابعة إلى الصورة نفسها.",
+        body: "تمنح JURE الفرق القانونية الصورة التشغيلية على المنصة نفسها التي يجري فيها العمل. مفكرة مشتركة على مستوى المكتب تحمل المواعيد والآجال. ومهام لها أولويات ومواعيد نهائية ومكلفون، فيصبح توزيع العمل صريحا لا محفوظا في الذاكرة. وملفات تتبع بنية متسقة — نزاع واستشارة وملف إداري — تجعلها قابلة للمقارنة والإشراف. ووصول حسب الأدوار، من المالك إلى المطالع، يطابق الأداة مع طريقة تفويض الفريق فعليا. وللمالكين والمديرين، تضيف مالية المكتب الفواتير والمدفوعات والأتعاب ولوحات المتابعة إلى الصورة نفسها.",
         points: [
           "مفكرة فريق مشتركة للمواعيد والآجال",
           "مهام بأولويات ومواعيد نهائية ومكلفين",
@@ -1563,17 +1296,17 @@ export const INTENT_CONTENT: IntentContentMap = {
         steps: [
           "هيكل الملفات حسب النوع",
           "خطط العمل كمهام مؤرخة ومرتبة الأولوية",
-          "وزّع المهام على الفريق",
+          "وزع المهام على الفريق",
           "تابع التقدم على المفكرة المشتركة",
           "راجع المالية ولوحات المتابعة (المالك/المدير)",
         ],
       },
       useCases: {
-        title: "العمليات القانونية عمليًا",
+        title: "العمليات القانونية عمليا",
         items: [
           {
             title: "إدارة قانونية تكتسب الرؤية",
-            body: "فريق قانوني في شركة يعالج طلبات من كل الأقسام دون رؤية مشتركة لما هو جارٍ. هيكلة كل طلب كملف بمهام وآجال في JURE تحول الطابور الخفي إلى طابور مرئي — يُشرف عليه من مكان واحد بدل إعادة تركيبه من صناديق البريد.",
+            body: "فريق قانوني في شركة يعالج طلبات من كل الأقسام دون رؤية مشتركة لما هو جار. هيكلة كل طلب كملف بمهام وآجال في JURE تحول الطابور الخفي إلى طابور مرئي — يشرف عليه من مكان واحد بدل إعادة تركيبه من صناديق البريد.",
           },
           {
             title: "موازنة أعباء العمل بين المتعاونين",
@@ -1581,7 +1314,7 @@ export const INTENT_CONTENT: IntentContentMap = {
           },
           {
             title: "حوكمة الآجال على مستوى المكتب",
-            body: "بدل أن يتابع كل محامٍ تواريخه على حدة، تعيش كل الآجال على مفكرة المكتب المشتركة مع تذكيرات وإشعارات. فيحصل المكتب على جواب واحد للسؤال التشغيلي الأهم: ما الذي يستحق، ومتى.",
+            body: "بدل أن يتابع كل محام تواريخه على حدة، تعيش كل الآجال على مفكرة المكتب المشتركة مع تذكيرات وإشعارات. فيحصل المكتب على جواب واحد للسؤال التشغيلي الأهم: ما الذي يستحق، ومتى.",
           },
         ],
       },
@@ -1593,12 +1326,12 @@ export const INTENT_CONTENT: IntentContentMap = {
         {
           question: "هل العمليات القانونية للفرق الكبيرة فقط؟",
           answer:
-            "لا. حتى مكتب من محاميَين يستفيد من مهام صريحة ومفكرة مشتركة وبنية ملفات متسقة. العمليات القانونية ليست مسألة عدد — بل مسألة هل حالة العمل مرئية أم حبيسة الرؤوس.",
+            "لا. حتى مكتب من محاميين يستفيد من مهام صريحة ومفكرة مشتركة وبنية ملفات متسقة. العمليات القانونية ليست مسألة عدد — بل مسألة هل حالة العمل مرئية أم حبيسة الرؤوس.",
         },
         {
           question: "ماذا تمنح JURE المسؤول عن العمليات القانونية؟",
           answer:
-            "مكانًا واحدًا لرؤية الحالة التشغيلية لعمل الفريق: ملفات مهيكلة حسب النوع، ومهام بمكلفين وأولويات ومواعيد نهائية، وآجال على مفكرة مشتركة — وللمالكين والمديرين، مالية المكتب بفواتيرها ومدفوعاتها وأتعابها ولوحات متابعتها.",
+            "مكانا واحدا لرؤية الحالة التشغيلية لعمل الفريق: ملفات مهيكلة حسب النوع، ومهام بمكلفين وأولويات ومواعيد نهائية، وآجال على مفكرة مشتركة — وللمالكين والمديرين، مالية المكتب بفواتيرها ومدفوعاتها وأتعابها ولوحات متابعتها.",
         },
         {
           question: "هل تتضمن JURE تقارير أو لوحات متابعة؟",
@@ -1613,7 +1346,7 @@ export const INTENT_CONTENT: IntentContentMap = {
         {
           question: "كيف تساعد JURE على توحيد طريقة عمل الفريق؟",
           answer:
-            "بمنح العمل شكلًا متسقًا: كل ملف له نوع وموكل وفريق؛ وكل مهمة لها مكلف وأولوية وموعد نهائي؛ وكل أجل يعيش على المفكرة المشتركة. التوحيد يأتي من البنية، لا من وثيقة إجراءات لا يقرأها أحد.",
+            "بمنح العمل شكلا متسقا: كل ملف له نوع وموكل وفريق؛ وكل مهمة لها مكلف وأولوية وموعد نهائي؛ وكل أجل يعيش على المفكرة المشتركة. التوحيد يأتي من البنية، لا من وثيقة إجراءات لا يقرأها أحد.",
         },
       ],
       related: ["legalPracticeManagement", "legalCaseManagement", "legalKnowledgeManagement"],
@@ -1709,7 +1442,7 @@ export const INTENT_CONTENT: IntentContentMap = {
             "Your firm. Categories and tags are yours to design, and role-based access control determines who can manage the library's structure and contents.",
         },
       ],
-      related: ["legalDocumentManagement", "legalResearch", "legalOperations"],
+      related: ["legalDocumentManagement", "legalAi", "legalOperations"],
       cta: {
         title: "Stop paying twice for the same thinking",
         body: "See how the JURE library turns your firm's documents into an organized, searchable knowledge base the whole team can draw on.",
@@ -1796,27 +1529,27 @@ export const INTENT_CONTENT: IntentContentMap = {
             "Votre cabinet. Les catégories et les tags sont les vôtres, et le contrôle d'accès par rôles détermine qui peut gérer la structure et le contenu de la bibliothèque.",
         },
       ],
-      related: ["legalDocumentManagement", "legalResearch", "legalOperations"],
+      related: ["legalDocumentManagement", "legalAi", "legalOperations"],
       cta: {
         title: "Cessez de payer deux fois la même réflexion",
         body: "Découvrez comment la bibliothèque JURE transforme les documents de votre cabinet en une base de connaissances organisée et consultable, au service de toute l'équipe.",
       },
     },
     ar: {
-      h1: "حوّل مستندات المكتب إلى معرفة يستفيد منها الفريق كله",
+      h1: "حول مستندات المكتب إلى معرفة يستفيد منها الفريق كله",
       intro:
-        "كل مكتب يملك أصلًا قاعدة معرفة — لكنها مبعثرة بين صناديق البريد وأسطح المكاتب وذاكرة أكثر أعضائه خبرة. إدارة المعرفة القانونية هي فن جعل هذه المعرفة منظمة وقابلة للعثور عليها ومشتركة. ومكتبة المستندات في JURE، بفئاتها ووسومها وبحثها، هي نقطة انطلاق هذا العمل.",
+        "كل مكتب يملك أصلا قاعدة معرفة — لكنها مبعثرة بين صناديق البريد وأسطح المكاتب وذاكرة أكثر أعضائه خبرة. إدارة المعرفة القانونية هي فن جعل هذه المعرفة منظمة وقابلة للعثور عليها ومشتركة. ومكتبة المستندات في JURE، بفئاتها ووسومها وبحثها، هي نقطة انطلاق هذا العمل.",
       definition: {
         title: "ما هي إدارة المعرفة القانونية؟",
-        body: "إدارة المعرفة القانونية هي ممارسة التقاط ما يتعلمه الفريق القانوني — العقود النموذجية، والبنود المجرَّبة، والمذكرات السابقة، ومذكرات البحث، وأجوبة الاستشارات — وتنظيمه ليجده الفريق كله ويعيد استخدامه. وتقوم على ثلاث عادات. الالتقاط: حين يُنتج عمل ذو قيمة باقية، يُحفظ في مكان مشترك بدل أن يُترك في ملفات شخص واحد. والوصف: يُمنح كل عنصر عنوانًا ووصفًا وتصنيفًا ذا معنى، لأن المعرفة التي لا يمكن العثور عليها لا وجود لها. وإعادة الاستخدام: أول خطوة اعتيادية للفريق في أي عمل جديد هي مراجعة ما أنجزه المكتب من قبل. المكاتب التي تدير معرفتها جيدًا تكف عن دفع ثمن التفكير نفسه مرتين، وتبقى خبرتها بعد المغادرين بدل أن ترحل معهم.",
+        body: "إدارة المعرفة القانونية هي ممارسة التقاط ما يتعلمه الفريق القانوني — العقود النموذجية، والبنود المجربة، والمذكرات السابقة، ومذكرات البحث، وأجوبة الاستشارات — وتنظيمه ليجده الفريق كله ويعيد استخدامه. وتقوم على ثلاث عادات. الالتقاط: حين ينتج عمل ذو قيمة باقية، يحفظ في مكان مشترك بدل أن يترك في ملفات شخص واحد. والوصف: يمنح كل عنصر عنوانا ووصفا وتصنيفا ذا معنى، لأن المعرفة التي لا يمكن العثور عليها لا وجود لها. وإعادة الاستخدام: أول خطوة اعتيادية للفريق في أي عمل جديد هي مراجعة ما أنجزه المكتب من قبل. المكاتب التي تدير معرفتها جيدا تكف عن دفع ثمن التفكير نفسه مرتين، وتبقى خبرتها بعد المغادرين بدل أن ترحل معهم.",
       },
       problem: {
         title: "معرفة تغادر في نهاية اليوم",
-        body: "في معظم المكاتب، تعود المعرفة إلى الأفراد بمحض الصدفة. أفضل بند لحالة معينة قابع في ملفات شريك قديمة. والمذكرة التي تجيب عن سؤال هذا الشهر كُتبت قبل ثلاث سنوات — بيد شخص غادر منذ ذلك الحين. ويقضي المتعاون الجديد أسابيع في إعادة اكتشاف ما يعرفه المكتب جماعيًا بالفعل. لا شيء من هذا قصور في الموهبة؛ إنه غياب مكان مشترك وعادة مشتركة. والكلفة خفية لكنها دائمة: بحث مكرر، ومستندات متضاربة، وإدماج بطيء، وخبرة تعبر الباب مع كل مغادرة.",
+        body: "في معظم المكاتب، تعود المعرفة إلى الأفراد بمحض الصدفة. أفضل بند لحالة معينة قابع في ملفات شريك قديمة. والمذكرة التي تجيب عن سؤال هذا الشهر كتبت قبل ثلاث سنوات — بيد شخص غادر منذ ذلك الحين. ويقضي المتعاون الجديد أسابيع في إعادة اكتشاف ما يعرفه المكتب جماعيا بالفعل. لا شيء من هذا قصور في الموهبة؛ إنه غياب مكان مشترك وعادة مشتركة. والكلفة خفية لكنها دائمة: بحث مكرر، ومستندات متضاربة، وإدماج بطيء، وخبرة تعبر الباب مع كل مغادرة.",
       },
       approach: {
         title: "كيف تصبح JURE مركز معرفة المكتب",
-        body: "تمنح مكتبة المستندات في JURE المكتب مكانًا مشتركًا واحدًا لبناء قاعدة معرفته. تشكل الفئات والوسوم تصنيفًا يصممه المكتب لنفسه — حسب مجال الممارسة أو نوع المستند أو أي تقسيم يناسب عمله. وتجعل العناوين والأوصاف كل عنصر قابلًا للعثور عليه بالبحث، وتتيح المعاينة في المتصفح فحص المستند قبل إعادة استخدامه. وتبقى المعرفة موصولة بالعمل: فالمستندات تُرفق بالملفات، والملفات تُشارك في محادثات الفريق. ولنكن واضحين بشأن حدود اليوم: يعمل البحث على العناوين والأوصاف والفئات والوسوم — والوصف المتقن هو ما يمنح المكتبة قوتها.",
+        body: "تمنح مكتبة المستندات في JURE المكتب مكانا مشتركا واحدا لبناء قاعدة معرفته. تشكل الفئات والوسوم تصنيفا يصممه المكتب لنفسه — حسب مجال الممارسة أو نوع المستند أو أي تقسيم يناسب عمله. وتجعل العناوين والأوصاف كل عنصر قابلا للعثور عليه بالبحث، وتتيح المعاينة في المتصفح فحص المستند قبل إعادة استخدامه. وتبقى المعرفة موصولة بالعمل: فالمستندات ترفق بالملفات، والملفات تشارك في محادثات الفريق. ولنكن واضحين بشأن حدود اليوم: يعمل البحث على العناوين والأوصاف والفئات والوسوم — والوصف المتقن هو ما يمنح المكتبة قوتها.",
         points: [
           "مكتبة مشتركة واحدة لمستندات المكتب كله",
           "فئات ووسوم: تصنيف يصممه المكتب بنفسه",
@@ -1829,26 +1562,26 @@ export const INTENT_CONTENT: IntentContentMap = {
         title: "من ناتج العمل إلى معرفة المكتب",
         steps: [
           "احفظ المستند في المكتبة",
-          "عنونه وصِفه بوضوح",
-          "صنّفه بالفئات والوسوم",
+          "عنونه وصفه بوضوح",
+          "صنفه بالفئات والوسوم",
           "يجده الفريق بالبحث",
           "أعد استخدامه في الملف التالي",
         ],
       },
       useCases: {
-        title: "إدارة المعرفة عمليًا",
+        title: "إدارة المعرفة عمليا",
         items: [
           {
             title: "بناء مجموعة بنود ونماذج",
-            body: "يجمع المكتب أقوى عقوده النموذجية وبنوده في المكتبة تحت فئة مخصصة، لكل منها وصف يبين متى يُستخدم. فتنطلق الصياغة من حصيلة خبرة المكتب المتراكمة بدل صفحة بيضاء أو بريد قديم.",
+            body: "يجمع المكتب أقوى عقوده النموذجية وبنوده في المكتبة تحت فئة مخصصة، لكل منها وصف يبين متى يستخدم. فتنطلق الصياغة من حصيلة خبرة المكتب المتراكمة بدل صفحة بيضاء أو بريد قديم.",
           },
           {
-            title: "إدماج محامٍ متعاون جديد",
+            title: "إدماج محام متعاون جديد",
             body: "بدل تعلم طريقة عمل المكتب بالملاحظة والتقليد، يتصفح المتعاون الجديد المكتبة: المذكرات المعيارية، والعقود النموذجية، وأجوبة الاستشارات السابقة. فتتحول أسابيع التمرس الضمني إلى أيام قراءة — مع معاينة لكل مستند.",
           },
           {
             title: "التقاط استشارة لإعادة الاستخدام",
-            body: "جواب استشارة جيد التوثيق يُحفظ في المكتبة بعنوان ووصف يسميان المسألة التي يحسمها. وحين يصل سؤال مشابه في العام التالي، يجده البحث — أيًا كان السائل، وأيًا كان كاتبه الأصلي.",
+            body: "جواب استشارة جيد التوثيق يحفظ في المكتبة بعنوان ووصف يسميان المسألة التي يحسمها. وحين يصل سؤال مشابه في العام التالي، يجده البحث — أيا كان السائل، وأيا كان كاتبه الأصلي.",
           },
         ],
       },
@@ -1860,7 +1593,7 @@ export const INTENT_CONTENT: IntentContentMap = {
         {
           question: "ما الفرق بين إدارة المعرفة وإدارة المستندات؟",
           answer:
-            "إدارة المستندات تنظم الملفات التي يحتاجها المكتب لتسيير ملفاته؛ أما إدارة المعرفة فتنتقي الجزء الجدير بإعادة الاستخدام — النماذج والبنود والمذكرات والأجوبة السابقة — وتصفه ليجده الفريق فعلًا. وفي JURE يجري الأمران في المكتبة نفسها: الفرق في العادة، لا في الأداة.",
+            "إدارة المستندات تنظم الملفات التي يحتاجها المكتب لتسيير ملفاته؛ أما إدارة المعرفة فتنتقي الجزء الجدير بإعادة الاستخدام — النماذج والبنود والمذكرات والأجوبة السابقة — وتصفه ليجده الفريق فعلا. وفي JURE يجري الأمران في المكتبة نفسها: الفرق في العادة، لا في الأداة.",
         },
         {
           question: "هل يستطيع الذكاء الاصطناعي في JURE البحث في مكتبة مستندات مكتبي أو الاستدلال عليها؟",
@@ -1870,12 +1603,12 @@ export const INTENT_CONTENT: IntentContentMap = {
         {
           question: "كيف يجد الفريق المعرفة في المكتبة؟",
           answer:
-            "بالبحث في العناوين والأوصاف وبتصفح الفئات والوسوم. ولهذا فإن إجادة وصف المستندات هي العادة المحورية في إدارة المعرفة: عنوان دقيق ووصف دقيق يجعلان العنصر قابلًا للعثور عليه من الجميع، وإلى الأبد.",
+            "بالبحث في العناوين والأوصاف وبتصفح الفئات والوسوم. ولهذا فإن إجادة وصف المستندات هي العادة المحورية في إدارة المعرفة: عنوان دقيق ووصف دقيق يجعلان العنصر قابلا للعثور عليه من الجميع، وإلى الأبد.",
         },
         {
           question: "كيف يبدأ مكتب صغير بإدارة المعرفة؟",
           answer:
-            "ابدأ بنطاق ضيق: اختر فئة واحدة — العقود النموذجية مثلًا — واتفقوا على بضعة وسوم، وصِف كل مستند عند أرشفته. مجموعة صغيرة جيدة الوصف خير من مجموعة كبيرة بلا عناوين؛ وسينمو التصنيف مع نمو المكتب.",
+            "ابدأ بنطاق ضيق: اختر فئة واحدة — العقود النموذجية مثلا — واتفقوا على بضعة وسوم، وصف كل مستند عند أرشفته. مجموعة صغيرة جيدة الوصف خير من مجموعة كبيرة بلا عناوين؛ وسينمو التصنيف مع نمو المكتب.",
         },
         {
           question: "من يقرر طريقة تنظيم المكتبة؟",
@@ -1883,10 +1616,10 @@ export const INTENT_CONTENT: IntentContentMap = {
             "مكتبك أنت. فالفئات والوسوم من تصميمك، والتحكم في الوصول حسب الأدوار يحدد من يستطيع إدارة بنية المكتبة ومحتواها.",
         },
       ],
-      related: ["legalDocumentManagement", "legalResearch", "legalOperations"],
+      related: ["legalDocumentManagement", "legalAi", "legalOperations"],
       cta: {
-        title: "كفّ عن دفع ثمن التفكير نفسه مرتين",
-        body: "اكتشف كيف تحوّل مكتبة JURE مستندات مكتبك إلى قاعدة معرفة منظمة قابلة للبحث ينهل منها الفريق كله.",
+        title: "كف عن دفع ثمن التفكير نفسه مرتين",
+        body: "اكتشف كيف تحول مكتبة JURE مستندات مكتبك إلى قاعدة معرفة منظمة قابلة للبحث ينهل منها الفريق كله.",
       },
     },
   },
@@ -1981,7 +1714,7 @@ export const INTENT_CONTENT: IntentContentMap = {
             "Four things at minimum: whether AI output is distinguishable from human work, whether the workflow enforces review before use, where client data goes and who can access it, and whether the vendor is transparent about the tool's limits. These are the criteria JURE is built to meet — and fair criteria to hold any tool to, including ours.",
         },
       ],
-      related: ["legalAi", "legalResearch", "legalCaseManagement"],
+      related: ["legalAi", "juria", "legalCaseManagement"],
       cta: {
         title: "AI assists. Lawyers decide.",
         body: "See how JURE puts responsible AI into practice: labeled output, review-first workflows and an early-access rollout shaped with practicing lawyers.",
@@ -2073,7 +1806,7 @@ export const INTENT_CONTENT: IntentContentMap = {
             "Quatre choses au minimum : si les résultats d'IA se distinguent du travail humain, si le flux impose la relecture avant usage, où vont les données clients et qui y accède, et si l'éditeur est transparent sur les limites de l'outil. Ce sont les critères que JURE est construit pour remplir — et des critères légitimes à opposer à tout outil, y compris le nôtre.",
         },
       ],
-      related: ["legalAi", "legalResearch", "legalCaseManagement"],
+      related: ["legalAi", "juria", "legalCaseManagement"],
       cta: {
         title: "L'IA assiste. Les avocats décident.",
         body: "Découvrez comment JURE met l'IA responsable en pratique : des résultats identifiés, des flux de relecture d'abord, et un déploiement en accès anticipé façonné avec des avocats en exercice.",
@@ -2082,21 +1815,21 @@ export const INTENT_CONTENT: IntentContentMap = {
     ar: {
       h1: "الذكاء الاصطناعي القانوني المسؤول: ما معناه، وكيف تبنيه JURE",
       intro:
-        "يطرح الذكاء الاصطناعي في العمل القانوني سؤالًا يميل السوق إلى تجاوزه: ليس «كم يستطيع الذكاء الاصطناعي أن يفعل؟» بل «كيف نستخدمه دون المساس بالواجبات التي يدين بها المحامون لموكليهم؟». تعرض هذه الصفحة معنى الذكاء الاصطناعي القانوني المسؤول — وخيارات التصميم المحددة التي تمارسه بها JURE، من وسم مخرجات الذكاء الاصطناعي إلى مسارات المراجعة أولًا والطرح المتدرج في مرحلة الوصول المبكر.",
+        "يطرح الذكاء الاصطناعي في العمل القانوني سؤالا يميل السوق إلى تجاوزه: ليس «كم يستطيع الذكاء الاصطناعي أن يفعل؟» بل «كيف نستخدمه دون المساس بالواجبات التي يدين بها المحامون لموكليهم؟». تعرض هذه الصفحة معنى الذكاء الاصطناعي القانوني المسؤول — وخيارات التصميم المحددة التي تمارسه بها JURE، من وسم مخرجات الذكاء الاصطناعي إلى مسارات المراجعة أولا والطرح المتدرج في مرحلة الوصول المبكر.",
       definition: {
         title: "ما هو الذكاء الاصطناعي القانوني المسؤول؟",
-        body: "الذكاء الاصطناعي القانوني المسؤول هو استخدام الذكاء الاصطناعي في العمل القانوني بشروط تصون المسؤولية المهنية. ويقوم على أربعة التزامات. المراجعة البشرية: مخرجات الذكاء الاصطناعي مسودة تخضع لحكم المحامي، لا بديل عنه أبدًا — فالمحامي الذي يوقّع يبقى هو المؤلف. والشفافية بشأن الحدود: النماذج اللغوية تولّد نصًا معقول الظاهر وقد تخطئ بثقة، فيجب أن يعرف المستخدم ما تستطيعه الأداة وما لا تستطيعه. والسرية: معلومات الموكلين التي يعالجها الذكاء الاصطناعي يجب أن تبقى تحت الحماية نفسها التي يخضع لها كل ما يحوزه المكتب. ووضوح المصدر: ينبغي لكل من يقرأ مستندًا أن يميز ما جاء من الذكاء الاصطناعي وما جاء من المحامي. بهذه الشروط، يغيّر الذكاء الاصطناعي سرعة العمل القانوني — لا موضع المسؤولية.",
+        body: "الذكاء الاصطناعي القانوني المسؤول هو استخدام الذكاء الاصطناعي في العمل القانوني بشروط تصون المسؤولية المهنية. ويقوم على أربعة التزامات. المراجعة البشرية: مخرجات الذكاء الاصطناعي مسودة تخضع لحكم المحامي، لا بديل عنه أبدا — فالمحامي الذي يوقع يبقى هو المؤلف. والشفافية بشأن الحدود: النماذج اللغوية تولد نصا معقول الظاهر وقد تخطئ بثقة، فيجب أن يعرف المستخدم ما تستطيعه الأداة وما لا تستطيعه. والسرية: معلومات الموكلين التي يعالجها الذكاء الاصطناعي يجب أن تبقى تحت الحماية نفسها التي يخضع لها كل ما يحوزه المكتب. ووضوح المصدر: ينبغي لكل من يقرأ مستندا أن يميز ما جاء من الذكاء الاصطناعي وما جاء من المحامي. بهذه الشروط، يغير الذكاء الاصطناعي سرعة العمل القانوني — لا موضع المسؤولية.",
       },
       problem: {
-        title: "المخاطر الحقيقية للذكاء الاصطناعي غير المراجَع في القانون",
-        body: "لم تعد أنماط الفشل افتراضية. فقد عاقبت محاكم محامين على مذكرات استشهدت بقضايا اختلقها الذكاء الاصطناعي. ولُصقت وقائع سرية في روبوتات محادثة عامة ممارساتها في البيانات مجهولة. وثمة خطر أدق يتراكم يوميًا: نص ذكاء اصطناعي سلس لكنه خاطئ قليلًا — قاعدة تجاوزها الزمن، أو استثناء قُرئ خطأً — يُمتص في العمل لأنه بدا صحيحًا. والخيط المشترك ليس أن الذكاء الاصطناعي استُخدم، بل أنه استُخدم بلا بنية: بلا وسم، وبلا خطوة تحقق، وبلا حدود سرية. وإطار «هل سيحل الذكاء الاصطناعي محل المحامين؟» يخطئ الهدف؛ فالسؤال الفاعل هو: هل ما يزال العمل المدعوم بالذكاء الاصطناعي يمر عبر حكم محامٍ؟",
+        title: "المخاطر الحقيقية للذكاء الاصطناعي غير المراجع في القانون",
+        body: "لم تعد أنماط الفشل افتراضية. فقد عاقبت محاكم محامين على مذكرات استشهدت بقضايا اختلقها الذكاء الاصطناعي. ولصقت وقائع سرية في روبوتات محادثة عامة ممارساتها في البيانات مجهولة. وثمة خطر أدق يتراكم يوميا: نص ذكاء اصطناعي سلس لكنه خاطئ قليلا — قاعدة تجاوزها الزمن، أو استثناء قرئ خطأ — يمتص في العمل لأنه بدا صحيحا. والخيط المشترك ليس أن الذكاء الاصطناعي استخدم، بل أنه استخدم بلا بنية: بلا وسم، وبلا خطوة تحقق، وبلا حدود سرية. وإطار «هل سيحل الذكاء الاصطناعي محل المحامين؟» يخطئ الهدف؛ فالسؤال الفاعل هو: هل ما يزال العمل المدعوم بالذكاء الاصطناعي يمر عبر حكم محام؟",
       },
       approach: {
         title: "خيارات التصميم في JURE",
-        body: "المسؤولية في JURE مبنية في المنتج، لا ملحقة به كإخلاء مسؤولية. مخرجات جوريا، مساعدنا للذكاء الاصطناعي القانوني، موسومة بوضوح كمولدة بالذكاء الاصطناعي، فلا يلتبس مصدرها أبدًا. ومسارات العمل تقدم المراجعة أولًا: فالتحليلات وأجوبة البحث واقتراحات الصياغة تُعامل كمدخلات لمراجعة المحامي، ومخططات مسارات JURE نفسها تضع خطوة المراجعة قبل أي قرار. ويُطرح جوريا في مرحلة الوصول المبكر، تدريجيًا، ليُصقل مع محامين ممارسين بدل أن يُطلق على نطاق واسع ويُرقّع لاحقًا. ويبقى عمل الموكلين داخل مساحة المكتب المعزولة، محكومًا بالوصول حسب الأدوار — لا ملصوقًا في أدوات خارجية.",
+        body: "المسؤولية في JURE مبنية في المنتج، لا ملحقة به كإخلاء مسؤولية. مخرجات جوريا، مساعدنا للذكاء الاصطناعي القانوني، موسومة بوضوح كمولدة بالذكاء الاصطناعي، فلا يلتبس مصدرها أبدا. ومسارات العمل تقدم المراجعة أولا: فالتحليلات وأجوبة البحث واقتراحات الصياغة تعامل كمدخلات لمراجعة المحامي، ومخططات مسارات JURE نفسها تضع خطوة المراجعة قبل أي قرار. ويطرح جوريا في مرحلة الوصول المبكر، تدريجيا، ليصقل مع محامين ممارسين بدل أن يطلق على نطاق واسع ويرقع لاحقا. ويبقى عمل الموكلين داخل مساحة المكتب المعزولة، محكوما بالوصول حسب الأدوار — لا ملصوقا في أدوات خارجية.",
         points: [
           "مخرجات ذكاء اصطناعي موسومة بوضوح كمولدة بالذكاء الاصطناعي",
-          "مسارات عمل تقدم المراجعة أولًا: اعتماد المحامي قبل القرارات",
+          "مسارات عمل تقدم المراجعة أولا: اعتماد المحامي قبل القرارات",
           "طرح متعمد لجوريا في مرحلة الوصول المبكر",
           "شفافية بشأن ما يستطيعه الذكاء الاصطناعي وما لا يستطيعه",
           "عمل الموكلين محفوظ في مساحة المكتب المعزولة المحكومة بالأدوار",
@@ -2105,11 +1838,11 @@ export const INTENT_CONTENT: IntentContentMap = {
       workflow: {
         title: "المراجعة البشرية، خطوة خطوة",
         steps: [
-          "يؤطّر المحامي المهمة",
-          "يصوغ جوريا — موسومًا كمخرجات ذكاء اصطناعي",
-          "تُراجع المراجع في المصادر",
+          "يؤطر المحامي المهمة",
+          "يصوغ جوريا — موسوما كمخرجات ذكاء اصطناعي",
+          "تراجع المراجع في المصادر",
           "يراجع المحامي ويصحح",
-          "يقرر المحامي ويوقّع",
+          "يقرر المحامي ويوقع",
         ],
       },
       useCases: {
@@ -2117,37 +1850,37 @@ export const INTENT_CONTENT: IntentContentMap = {
         items: [
           {
             title: "اعتماد سياسة للذكاء الاصطناعي في مكتب",
-            body: "يريد مكتب أن يستفيد محاموه من الذكاء الاصطناعي دون استخدام منفلت لروبوتات المحادثة العامة. ولأن JURE تسم مخرجات الذكاء الاصطناعي وتبني المراجعة في مسار العمل، يمكن أن تكون سياسة المكتب قصيرة وقابلة للتطبيق: المساعدة الذكية تجري في مساحة العمل، ولا يخرج شيء مولد بالذكاء الاصطناعي دون مراجعة محامٍ.",
+            body: "يريد مكتب أن يستفيد محاموه من الذكاء الاصطناعي دون استخدام منفلت لروبوتات المحادثة العامة. ولأن JURE تسم مخرجات الذكاء الاصطناعي وتبني المراجعة في مسار العمل، يمكن أن تكون سياسة المكتب قصيرة وقابلة للتطبيق: المساعدة الذكية تجري في مساحة العمل، ولا يخرج شيء مولد بالذكاء الاصطناعي دون مراجعة محام.",
           },
           {
             title: "الصراحة مع الموكلين بشأن استخدام الذكاء الاصطناعي",
-            body: "يسأل موكل: هل يمس الذكاء الاصطناعي ملفي؟ يستطيع المحامي الإجابة بدقة: الذكاء الاصطناعي يساعد في المسودات والتحليل داخل مساحة المكتب الخاصة، وكل مخرجاته موسومة ويراجعها محامٍ، والمكتب — لا روبوت خارجي — هو من يحوز البيانات.",
+            body: "يسأل موكل: هل يمس الذكاء الاصطناعي ملفي؟ يستطيع المحامي الإجابة بدقة: الذكاء الاصطناعي يساعد في المسودات والتحليل داخل مساحة المكتب الخاصة، وكل مخرجاته موسومة ويراجعها محام، والمكتب — لا روبوت خارجي — هو من يحوز البيانات.",
           },
           {
             title: "تدريب المبتدئين على التحقق لا التصديق",
-            body: "المحامون الناشئون مع الذكاء الاصطناعي يحتاجون عادة التحقق من اليوم الأول. وسمُ JURE ومسارُ المراجعة أولًا يجعلان هذا الانضباط مرئيًا في الأداة نفسها: المسودة الذكية موسومة بصفتها تلك، والخطوة التالية في المسار هي دائمًا تدقيق المحامي بنفسه.",
+            body: "المحامون الناشئون مع الذكاء الاصطناعي يحتاجون عادة التحقق من اليوم الأول. وسم JURE ومسار المراجعة أولا يجعلان هذا الانضباط مرئيا في الأداة نفسها: المسودة الذكية موسومة بصفتها تلك، والخطوة التالية في المسار هي دائما تدقيق المحامي بنفسه.",
           },
         ],
       },
       security: {
         title: "السرية شرط مسبق، لا ميزة",
-        body: "لا تكون أي ممارسة للذكاء الاصطناعي مسؤولة إذا تسربت بيانات الموكلين في الطريق. تُبقي JURE الملفات والمستندات والعمل المدعوم بالذكاء الاصطناعي داخل مساحة كل مكتب المعزولة، مع تحكم في الوصول حسب الأدوار من المالك إلى المطالع يحدد من يرى ماذا.",
+        body: "لا تكون أي ممارسة للذكاء الاصطناعي مسؤولة إذا تسربت بيانات الموكلين في الطريق. تبقي JURE الملفات والمستندات والعمل المدعوم بالذكاء الاصطناعي داخل مساحة كل مكتب المعزولة، مع تحكم في الوصول حسب الأدوار من المالك إلى المطالع يحدد من يرى ماذا.",
       },
       faqs: [
         {
           question: "لماذا المراجعة البشرية غير قابلة للتفاوض في الذكاء الاصطناعي القانوني؟",
           answer:
-            "لأن المسؤولية لا تُفوَّض إلى نموذج. تنتج النماذج اللغوية نصًا معقول الظاهر دون ضمان صحته، بينما يجيب المحامي عن الدقة مهنيًا وأخلاقيًا. المراجعة هي الآلية التي تتيح للمهنة استثمار سرعة الذكاء الاصطناعي دون التخلي عن واجب العناية.",
+            "لأن المسؤولية لا تفوض إلى نموذج. تنتج النماذج اللغوية نصا معقول الظاهر دون ضمان صحته، بينما يجيب المحامي عن الدقة مهنيا وأخلاقيا. المراجعة هي الآلية التي تتيح للمهنة استثمار سرعة الذكاء الاصطناعي دون التخلي عن واجب العناية.",
         },
         {
           question: "هل تضمن JURE صحة إجابات جوريا؟",
           answer:
-            "لا — واعتبار إجابات أي ذكاء اصطناعي مضمونة هو في ذاته انعدام مسؤولية. قد تكون مخرجات جوريا ناقصة أو خاطئة، ولهذا بالضبط تُوسم كمولدة بالذكاء الاصطناعي، ولهذا تمررها مسارات JURE عبر مراجعة محامٍ قبل أن تُبنى عليها أي قرارات.",
+            "لا — واعتبار إجابات أي ذكاء اصطناعي مضمونة هو في ذاته انعدام مسؤولية. قد تكون مخرجات جوريا ناقصة أو خاطئة، ولهذا بالضبط توسم كمولدة بالذكاء الاصطناعي، ولهذا تمررها مسارات JURE عبر مراجعة محام قبل أن تبنى عليها أي قرارات.",
         },
         {
           question: "لماذا سؤال «هل سيحل الذكاء الاصطناعي محل المحامين؟» هو السؤال الخطأ؟",
           answer:
-            "لأنه يخلط بين إنتاج النص وممارسة القانون. يسرّع الذكاء الاصطناعي المسودات والملخصات والبحث الأولي؛ لكنه لا يحمل المسؤولية المهنية، ولا يزن مصالح موكل، ولا يوقّع مذكرة. السؤال المفيد هو: هل ما يزال العمل المدعوم بالذكاء الاصطناعي يمر عبر حكم محامٍ — وفي JURE يمر كذلك بحكم التصميم.",
+            "لأنه يخلط بين إنتاج النص وممارسة القانون. يسرع الذكاء الاصطناعي المسودات والملخصات والبحث الأولي؛ لكنه لا يحمل المسؤولية المهنية، ولا يزن مصالح موكل، ولا يوقع مذكرة. السؤال المفيد هو: هل ما يزال العمل المدعوم بالذكاء الاصطناعي يمر عبر حكم محام — وفي JURE يمر كذلك بحكم التصميم.",
         },
         {
           question: "لماذا تطرح JURE ذكاءها الاصطناعي في مرحلة الوصول المبكر؟",
@@ -2157,18 +1890,18 @@ export const INTENT_CONTENT: IntentContentMap = {
         {
           question: "كيف أميز ما هو مولد بالذكاء الاصطناعي في JURE؟",
           answer:
-            "مخرجات جوريا موسومة بوضوح كمولدة بالذكاء الاصطناعي أينما ظهرت. يبقى المصدر مرئيًا، فيعرف المحامي المراجع دائمًا أي نص صدر عن المساعد وما يزال يتطلب تحققًا.",
+            "مخرجات جوريا موسومة بوضوح كمولدة بالذكاء الاصطناعي أينما ظهرت. يبقى المصدر مرئيا، فيعرف المحامي المراجع دائما أي نص صدر عن المساعد وما يزال يتطلب تحققا.",
         },
         {
           question: "ماذا ينبغي أن يتحقق منه المكتب قبل اعتماد أي أداة ذكاء اصطناعي قانوني؟",
           answer:
-            "أربعة أمور على الأقل: هل تتميز مخرجات الذكاء الاصطناعي عن العمل البشري، وهل يفرض مسار العمل المراجعة قبل الاستخدام، وأين تذهب بيانات الموكلين ومن يصل إليها، وهل المزود شفاف بشأن حدود الأداة. هذه هي المعايير التي بُنيت JURE لتستوفيها — وهي معايير عادلة تُطبق على أي أداة، بما فيها أداتنا.",
+            "أربعة أمور على الأقل: هل تتميز مخرجات الذكاء الاصطناعي عن العمل البشري، وهل يفرض مسار العمل المراجعة قبل الاستخدام، وأين تذهب بيانات الموكلين ومن يصل إليها، وهل المزود شفاف بشأن حدود الأداة. هذه هي المعايير التي بنيت JURE لتستوفيها — وهي معايير عادلة تطبق على أي أداة، بما فيها أداتنا.",
         },
       ],
-      related: ["legalAi", "legalResearch", "legalCaseManagement"],
+      related: ["legalAi", "juria", "legalCaseManagement"],
       cta: {
         title: "الذكاء الاصطناعي يساعد. والمحامون يقررون.",
-        body: "اكتشف كيف تضع JURE الذكاء الاصطناعي المسؤول موضع التطبيق: مخرجات موسومة، ومسارات تقدم المراجعة أولًا، وطرح في مرحلة الوصول المبكر يتشكل مع محامين ممارسين.",
+        body: "اكتشف كيف تضع JURE الذكاء الاصطناعي المسؤول موضع التطبيق: مخرجات موسومة، ومسارات تقدم المراجعة أولا، وطرح في مرحلة الوصول المبكر يتشكل مع محامين ممارسين.",
       },
     },
   },

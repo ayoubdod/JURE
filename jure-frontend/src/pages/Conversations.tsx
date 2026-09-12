@@ -33,6 +33,7 @@ import { isAxiosError } from 'axios';
 import DeleteChatModal, { DeleteChatModalRef } from '@/components/chat/DeleteChatModal';
 import RenameGroupModal, { RenameGroupModalRef } from '@/components/chat/RenameGroupModal';
 import ChangeGroupIconModal, { ChangeGroupIconModalRef } from '@/components/chat/ChangeGroupIconModal';
+import GroupSettingsDialog from '@/components/chat/GroupSettingsDialog';
 import useChatStore from '@/stores/chatStore';
 import useCallsWsStore from '@/stores/callsWsStore';
 import useUserStore from '@/stores/userStore';
@@ -59,6 +60,7 @@ const ConversationsPage: React.FC = () => {
   const [activeId, setActiveId] = useState<number | undefined>(undefined);
   const [contextPanelOpen, setContextPanelOpen] = useState(true);
   const [contextSheetOpen, setContextSheetOpen] = useState(false);
+  const [groupSettingsOpen, setGroupSettingsOpen] = useState(false);
   const [conversationFiles, setConversationFiles] = useState<API.MessageAttachment[]>([]);
   const [isTyping, setIsTyping] = useState(false);
   const newChatModalRef = useRef<NewChatModalRef>(null);
@@ -637,6 +639,17 @@ const ConversationsPage: React.FC = () => {
     chatStore.clearConversationUpdate();
   }, [lastConversationUpdated]);
 
+  const lastConversationRemovedId = chatStore.lastConversationRemovedId;
+  useEffect(() => {
+    if (lastConversationRemovedId == null) return;
+    const removedId = lastConversationRemovedId;
+    setConversations((prev) => prev.filter((c) => c.id !== removedId));
+    setArchivedConversations((prev) => prev.filter((c) => c.id !== removedId));
+    if (activeId === removedId) setActiveId(undefined);
+    setGroupSettingsOpen(false);
+    chatStore.clearConversationRemoved();
+  }, [lastConversationRemovedId, activeId]);
+
   const handleConversationPatch = useCallback((conversationId: number, patch: Partial<API.Conversation>) => {
     const merge = (c: API.Conversation) => (c.id === conversationId ? ({ ...c, ...patch } as API.Conversation) : c);
     setConversations((prev) => prev.map(merge));
@@ -851,6 +864,10 @@ const ConversationsPage: React.FC = () => {
         onDelete={(conv) => deleteChatModalRef.current?.show(conv)}
         onRename={(conv) => renameGroupModalRef.current?.show(conv)}
         onChangeIcon={(conv) => changeGroupIconModalRef.current?.show(conv)}
+        onOpenGroupSettings={(conv) => {
+          setActiveId(conv.id);
+          setGroupSettingsOpen(true);
+        }}
         activeId={activeId}
         onSelectConversation={selectConversation}
         onNewChat={() => newChatModalRef.current?.show()}
@@ -881,10 +898,11 @@ const ConversationsPage: React.FC = () => {
           callInProgress={callInProgress}
           onJoinActiveCall={handleJoinActiveCall}
           onRecallMissedCall={handleRecallMissedCall}
-          onOpenSettings={() => {}}
+          onOpenSettings={() => setGroupSettingsOpen(true)}
           onStartNewChat={() => newChatModalRef.current?.show()}
           onDeleteConversation={(conv) => deleteChatModalRef.current?.show(conv)}
           onChangeIcon={(conv) => changeGroupIconModalRef.current?.show(conv)}
+          onOpenGroupSettings={() => setGroupSettingsOpen(true)}
           onConversationOpen={debouncedRefetch}
           onNavigateToConversation={(id) => setActiveId(id)}
           isTyping={isTyping}
@@ -992,6 +1010,7 @@ const ConversationsPage: React.FC = () => {
           panelPinnedMessages={pinnedForContext}
           onPanelPinnedMessageClick={(id) => chatWindowRef.current?.scrollToMessage(id)}
           conversationFiles={conversationFiles}
+          onOpenGroupSettings={() => setGroupSettingsOpen(true)}
         />
       </div>
 
@@ -1024,6 +1043,10 @@ const ConversationsPage: React.FC = () => {
             chatWindowRef.current?.scrollToMessage(id);
           }}
           conversationFiles={conversationFiles}
+          onOpenGroupSettings={() => {
+            setContextSheetOpen(false);
+            setGroupSettingsOpen(true);
+          }}
         />
       </ConversationContextSheet>
 
@@ -1078,6 +1101,28 @@ const ConversationsPage: React.FC = () => {
           }
           selectConversation(conversation.id);
           loadConversations(undefined, true);
+        }}
+      />
+
+      <GroupSettingsDialog
+        conversation={activeConversation?.type === 'group' ? activeConversation : null}
+        open={groupSettingsOpen && activeConversation?.type === 'group'}
+        onOpenChange={setGroupSettingsOpen}
+        onUpdated={(updated) => {
+          const merge = (c: API.Conversation) =>
+            c.id === updated.id ? { ...c, ...updated } : c;
+          setConversations((prev) => prev.map(merge));
+          setArchivedConversations((prev) => prev.map(merge));
+        }}
+        onRename={(conv) => renameGroupModalRef.current?.show(conv)}
+        onChangeIcon={(conv) => changeGroupIconModalRef.current?.show(conv)}
+        onLeave={(conv) => {
+          setGroupSettingsOpen(false);
+          deleteChatModalRef.current?.show(conv);
+        }}
+        onDeleteGroup={(conv) => {
+          setGroupSettingsOpen(false);
+          deleteChatModalRef.current?.show(conv, { deleteForEveryone: true });
         }}
       />
 

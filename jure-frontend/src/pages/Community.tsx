@@ -22,7 +22,7 @@ const communityFr = {
       subtitle:
         "Échangez sur des cas complexes, partagez vos pratiques et progressez avec des pairs qui utilisent JURE au quotidien.",
       cta: "Nous contacter",
-      demo: "Voir la démo",
+      demo: "Explorer les fonctionnalités",
       badge: "Communauté",
     },
     pillars: [
@@ -63,7 +63,7 @@ const STRINGS: Record<Lang, CommunityCopy> = {
       subtitle:
         "Discuss complex matters, share practice tips, and grow with peers who use JURE every day.",
       cta: "Contact us",
-      demo: "View demo",
+      demo: "Explore features",
       badge: "Community",
     },
     pillars: [
@@ -95,11 +95,11 @@ const STRINGS: Record<Lang, CommunityCopy> = {
     themeToggle: { label: "تبديل السمة", title: "تبديل السمة" },
     hero: {
       titleA: "مجتمع",
-      titleB: "من المحامين يتقدم معًا",
+      titleB: "من المحامين يتقدم معا",
       subtitle:
-        "ناقش القضايا المعقدة، وشارك أفضل الممارسات، وتطوّر مع زملاء يستخدمون JURE يوميًا.",
+        "ناقش القضايا المعقدة، وشارك أفضل الممارسات، وتطور مع زملاء يستخدمون JURE يوميا.",
       cta: "تواصل معنا",
-      demo: "شاهد العرض",
+      demo: "استكشف الميزات",
       badge: "مجتمع",
     },
     pillars: [
@@ -195,7 +195,7 @@ const Community: React.FC = () => {
               size="lg"
               variant="outline"
               className="w-full sm:w-auto px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg landing-btn-secondary"
-              onClick={() => navigate(path("demo"))}
+              onClick={() => navigate(path("features"))}
             >
               {t.hero.demo}
             </Button>

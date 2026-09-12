@@ -2,7 +2,6 @@ import { useMemo, useState, type FormEvent } from 'react';
 import { Link } from 'react-router';
 import {
   Activity,
-  BookOpen,
   Check,
   Clock,
   Copy,
@@ -166,12 +165,6 @@ const Support = () => {
       title: s.resources.shortcuts,
       hint: s.resources.shortcutsHint,
       onClick: () => setHelpOpen(true),
-    },
-    {
-      to: '/docs',
-      icon: BookOpen,
-      title: s.resources.docs,
-      hint: s.resources.docsHint,
     },
     {
       to: '/status',

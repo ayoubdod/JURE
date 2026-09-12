@@ -60,6 +60,30 @@ export const apiCreateConversation = (payload: { participants: number[]; title?:
 export const apiDeleteConversation = (conversationId: number) =>
   axiosInstance.delete(`/chat/conversations/${conversationId}/`);
 
+export const apiAddConversationMembers = (conversationId: number, userIds: number[]) =>
+  axiosInstance.post<API.Conversation>(
+    `/chat/conversations/${conversationId}/members/`,
+    { user_ids: userIds },
+    { headers: jsonHeaders }
+  );
+
+export const apiRemoveConversationMember = (conversationId: number, userId: number) =>
+  axiosInstance.delete<API.Conversation>(`/chat/conversations/${conversationId}/members/${userId}/`);
+
+export const apiSetConversationMemberAdmin = (
+  conversationId: number,
+  userId: number,
+  isAdmin: boolean
+) =>
+  axiosInstance.patch<API.Conversation>(
+    `/chat/conversations/${conversationId}/members/${userId}/`,
+    { is_admin: isAdmin },
+    { headers: jsonHeaders }
+  );
+
+export const apiDeleteGroupConversation = (conversationId: number) =>
+  axiosInstance.post(`/chat/conversations/${conversationId}/delete-group/`);
+
 /** Rename a group conversation. Only group conversations (type === "group") can be renamed. */
 export const apiRenameConversation = (conversationId: number, title: string) =>
   axiosInstance.patch<API.Conversation>(

@@ -498,3 +498,145 @@ class DirectConversationReuseTests(TestCase):
         second = self._save_direct(self.user1, self.user2)
         self.assertEqual(first.id, second.id)
         self.assertEqual(Conversation.objects.filter(type=Conversation.Type.DIRECT).count(), 1)
+
+
+class GroupMembershipAPITest(APITestCase):
+    def setUp(self):
+        self.admin = _make_user("gadmin@test.com", "Ada", "Min", with_cabinet=True)
+        self.member = _add_cabinet_member(
+            self.admin.cabinet, "gmember@test.com", "Mem", "Ber"
+        )
+        self.extra = _add_cabinet_member(
+            self.admin.cabinet, "gextra@test.com", "Ex", "Tra"
+        )
+        self.client = api_client_for(self.admin)
+
+    def _create_group(self, *participants):
+        conv = Conversation.objects.create(
+            type=Conversation.Type.GROUP,
+            title="Partners",
+            created_by=self.admin,
+        )
+        ConversationMembership.objects.create(
+            conversation=conv, user=self.admin, is_admin=True
+        )
+        for user in participants:
+            ConversationMembership.objects.create(conversation=conv, user=user)
+        return conv
+
+    def test_add_member_after_create(self):
+        conv = self._create_group(self.member)
+        url = reverse("chat-conversations-add-members", kwargs={"pk": conv.id})
+        response = self.client.post(url, {"user_ids": [self.extra.id]}, format="json")
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertTrue(
+            ConversationMembership.objects.filter(
+                conversation=conv, user=self.extra, is_deleted=False
+            ).exists()
+        )
+        member_ids = {m["user"]["id"] for m in response.data["memberships"]}
+        self.assertIn(self.extra.id, member_ids)
+        self.assertTrue(response.data["is_admin"])
+
+    def test_non_admin_can_add_member(self):
+        conv = self._create_group(self.member)
+        member_client = api_client_for(self.member)
+        url = reverse("chat-conversations-add-members", kwargs={"pk": conv.id})
+        response = member_client.post(url, {"user_ids": [self.extra.id]}, format="json")
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertTrue(
+            ConversationMembership.objects.filter(
+                conversation=conv, user=self.extra, is_deleted=False
+            ).exists()
+        )
+
+    def test_admin_can_remove_member(self):
+        conv = self._create_group(self.member, self.extra)
+        url = reverse(
+            "chat-conversations-manage-member",
+            kwargs={"pk": conv.id, "user_id": self.member.id},
+        )
+        response = self.client.delete(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertTrue(
+            ConversationMembership.objects.filter(
+                conversation=conv, user=self.member, is_deleted=True
+            ).exists()
+        )
+        member_ids = {m["user"]["id"] for m in response.data["memberships"]}
+        self.assertNotIn(self.member.id, member_ids)
+
+    def test_non_admin_cannot_remove_member(self):
+        conv = self._create_group(self.member, self.extra)
+        member_client = api_client_for(self.member)
+        url = reverse(
+            "chat-conversations-manage-member",
+            kwargs={"pk": conv.id, "user_id": self.extra.id},
+        )
+        response = member_client.delete(url)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_admin_can_promote_and_delete_group(self):
+        conv = self._create_group(self.member)
+        patch_url = reverse(
+            "chat-conversations-manage-member",
+            kwargs={"pk": conv.id, "user_id": self.member.id},
+        )
+        promoted = self.client.patch(patch_url, {"is_admin": True}, format="json")
+        self.assertEqual(promoted.status_code, status.HTTP_200_OK, promoted.data)
+        self.assertTrue(
+            ConversationMembership.objects.get(
+                conversation=conv, user=self.member
+            ).is_admin
+        )
+        delete_url = reverse("chat-conversations-delete-group", kwargs={"pk": conv.id})
+        deleted = self.client.post(delete_url)
+        self.assertEqual(deleted.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertFalse(Conversation.objects.filter(pk=conv.id).exists())
+
+    def test_non_admin_cannot_delete_group(self):
+        conv = self._create_group(self.member)
+        member_client = api_client_for(self.member)
+        url = reverse("chat-conversations-delete-group", kwargs={"pk": conv.id})
+        response = member_client.post(url)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertTrue(Conversation.objects.filter(pk=conv.id).exists())
+
+    def test_leave_when_others_remain_does_not_delete(self):
+        conv = self._create_group(self.member)
+        url = reverse("chat-conversations-detail", kwargs={"pk": conv.id})
+        response = self.client.delete(url)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertTrue(Conversation.objects.filter(pk=conv.id).exists())
+        self.assertTrue(
+            ConversationMembership.objects.filter(
+                conversation=conv, user=self.member, is_admin=True, is_deleted=False
+            ).exists()
+        )
+
+    def test_last_member_leave_deletes_group(self):
+        conv = self._create_group()
+        url = reverse("chat-conversations-detail", kwargs={"pk": conv.id})
+        response = self.client.delete(url)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertFalse(Conversation.objects.filter(pk=conv.id).exists())
+
+    def test_last_remaining_member_can_delete_after_others_left(self):
+        conv = self._create_group(self.member)
+        ConversationMembership.objects.filter(
+            conversation=conv, user=self.member
+        ).update(is_deleted=True)
+        url = reverse("chat-conversations-detail", kwargs={"pk": conv.id})
+        response = self.client.delete(url)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertFalse(Conversation.objects.filter(pk=conv.id).exists())
+
+    def test_cannot_add_foreign_cabinet_member(self):
+        conv = self._create_group(self.member)
+        outsider = _make_user("g-out@test.com", "Out", "Sider", with_cabinet=True)
+        url = reverse("chat-conversations-add-members", kwargs={"pk": conv.id})
+        response = self.client.post(url, {"user_ids": [outsider.id]}, format="json")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertFalse(
+            ConversationMembership.objects.filter(conversation=conv, user=outsider).exists()
+        )

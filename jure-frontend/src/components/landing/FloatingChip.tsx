@@ -8,6 +8,8 @@ type FloatingChipProps = {
   delay?: number;
   /** Float duration in seconds (3–5 recommended) */
   duration?: number;
+  /** Slight physical tilt in degrees */
+  rotate?: number;
 };
 
 /** Extremely subtle vertical float for product chrome accents. */
@@ -16,6 +18,7 @@ const FloatingChip: React.FC<FloatingChipProps> = ({
   className = "",
   delay = 0,
   duration = 4.2,
+  rotate = 0,
 }) => {
   const reduce = useReducedMotion();
 
@@ -24,14 +27,16 @@ const FloatingChip: React.FC<FloatingChipProps> = ({
       className={`landing-float-chip ${className}`}
       style={
         reduce
-          ? undefined
+          ? { transform: rotate ? `rotate(${rotate}deg)` : undefined }
           : {
               animationDuration: `${duration}s`,
               animationDelay: `${delay}s`,
             }
       }
     >
-      {children}
+      <div style={rotate ? { transform: `rotate(${rotate}deg)` } : undefined}>
+        {children}
+      </div>
     </div>
   );
 };

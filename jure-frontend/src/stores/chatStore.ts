@@ -112,6 +112,7 @@ export interface ChatStore {
   notifications: ChatInboxNotification[];
   /** Last conversation.updated payload for subscribers to merge into their lists */
   lastConversationUpdated: API.Conversation | null;
+  lastConversationRemovedId: number | null;
   /** IDs of users/members currently connected to chat (from online_user_ids, online_member_ids, or online). In this app they are the same. */
   onlineIds: number[];
   /** Conversation currently open in the chat window — new inbox items for it are stored as read. */
@@ -124,6 +125,7 @@ export interface ChatStore {
   connect: () => Promise<void>;
   disconnect: () => void;
   clearConversationUpdate: () => void;
+  clearConversationRemoved: () => void;
   setViewingConversationId: (id: number | null) => void;
   markConversationInboxRead: (conversationId: number) => void;
 }
@@ -138,6 +140,7 @@ const useChatStore = create<ChatStore>()(
     ws: null,
     notifications: [],
     lastConversationUpdated: null,
+    lastConversationRemovedId: null,
     onlineIds: [],
     viewingConversationId: null,
     // Connection methods
@@ -261,6 +264,14 @@ const useChatStore = create<ChatStore>()(
                 }
                 break;
               }
+              case 'conversation.removed': {
+                const payload = asRecord(data.payload);
+                const removedId = payload.id;
+                if (typeof removedId === 'number') {
+                  set({ lastConversationRemovedId: removedId });
+                }
+                break;
+              }
               case 'session.replaced':
                 import('@/utils/sessionReplaced').then(({ handleSessionReplaced }) => {
                   handleSessionReplaced();
@@ -326,6 +337,7 @@ const useChatStore = create<ChatStore>()(
     },
 
     clearConversationUpdate: () => set({ lastConversationUpdated: null }),
+    clearConversationRemoved: () => set({ lastConversationRemovedId: null }),
     setViewingConversationId: (id) => set({ viewingConversationId: id }),
     markConversationInboxRead: (conversationId) => {
       set({ notifications: markInboxRead(get().notifications, conversationId) });

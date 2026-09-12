@@ -1,10 +1,9 @@
-// src/pages/insights/InsightArticle.tsx — single JURE Insights article.
+// src/pages/insights/InsightArticle.tsx — single article in the deck language.
 import React, { useEffect, useState } from "react";
-import { Navigate, useNavigate, useParams } from "react-router";
+import { Link, Navigate, useParams } from "react-router";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { ArrowLeft, ChevronRight } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { ArrowLeft, ChevronRight, ArrowRight } from "lucide-react";
 import MarketingShell from "@/components/landing/MarketingShell";
 import { useMarketingLang } from "@/marketing/MarketingLocale";
 import { ArticleSeo } from "@/marketing/Seo";
@@ -18,16 +17,15 @@ import {
 } from "@/marketing/structuredData";
 import { hasArticleBody, loadArticleBody } from "@/marketing/content/insights/loader";
 import { track, MarketingEvents } from "@/lib/analytics";
-import "@/components/landing/landing.css";
+import "@/components/landing/features-deck.css";
 
 const STRINGS: Record<MarketingLocale, { back: string; published: string; cta: string }> = {
   en: { back: "All insights", published: "Published", cta: "See JURE in action" },
   fr: { back: "Tous les articles", published: "Publié le", cta: "Voir JURE en action" },
-  ar: { back: "كل الرؤى", published: "نُشر في", cta: "شاهد JURE عمليًا" },
+  ar: { back: "كل الرؤى", published: "نشر في", cta: "شاهد JURE عمليا" },
 };
 
 const InsightArticle: React.FC = () => {
-  const navigate = useNavigate();
   const { slug = "" } = useParams<{ slug: string }>();
   const { lang, dir, dict, path } = useMarketingLang();
   const [body, setBody] = useState<string | null>(null);
@@ -74,76 +72,61 @@ const InsightArticle: React.FC = () => {
   return (
     <MarketingShell lang={lang} onLangChange={() => {}} dir={dir} activeNav="insights">
       <ArticleSeo lang={lang} articleSlug={slug} jsonLd={jsonLd} />
+      <div className="features-deck insights-deck">
+        <div className="features-orbs" aria-hidden>
+          <span className="features-orb features-orb--a" />
+          <span className="features-orb features-orb--b" />
+          <span className="features-orb features-orb--c" />
+          <span className="features-orb features-orb--d" />
+        </div>
 
-      <nav
-        aria-label={dict.a11y.breadcrumb}
-        className="max-w-3xl mx-auto px-4 sm:px-6 pt-6 text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1 flex-wrap"
-      >
-        <button
-          type="button"
-          onClick={() => navigate(path())}
-          className="hover:text-[#A58CF4] dark:hover:text-[#A58CF4]"
-        >
-          {homeRoute.label[lang]}
-        </button>
-        <ChevronRight className="w-3 h-3 rtl:rotate-180" />
-        <button
-          type="button"
-          onClick={() => navigate(path("insights"))}
-          className="hover:text-[#A58CF4] dark:hover:text-[#A58CF4]"
-        >
-          {insightsRoute.label[lang]}
-        </button>
-        <ChevronRight className="w-3 h-3 rtl:rotate-180" />
-        <span className="text-slate-700 dark:text-slate-200 font-medium">{article.label[lang]}</span>
-      </nav>
+        <div className="features-deck__inner">
+          <nav aria-label={dict.a11y.breadcrumb} className="insights-breadcrumb">
+            <Link to={path()}>{homeRoute.label[lang]}</Link>
+            <ChevronRight className="w-3 h-3 rtl:rotate-180" aria-hidden />
+            <Link to={path("insights")}>{insightsRoute.label[lang]}</Link>
+            <ChevronRight className="w-3 h-3 rtl:rotate-180" aria-hidden />
+            <span>{article.label[lang]}</span>
+          </nav>
+        </div>
 
-      <article className="max-w-3xl mx-auto px-4 sm:px-6 py-10">
-        <header className="text-start">
-          <div className="text-xs text-slate-400 dark:text-slate-500 mb-3">
-            {t.published} {formatDate(article.datePublished)}
+        <article className="features-deck__inner insights-article">
+          <header className="insights-article__header">
+            <p className="insights-article__meta">
+              {t.published} {formatDate(article.datePublished)}
+            </p>
+            <h1 className="insights-article__title">{article.title[lang]}</h1>
+            <p className="insights-article__lead">{article.description[lang]}</p>
+          </header>
+
+          <div className="insights-article__body">
+            {body === null ? (
+              <div className="insights-article__skeleton" aria-hidden>
+                {[...Array(8)].map((_, i) => (
+                  <div key={i} />
+                ))}
+              </div>
+            ) : (
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>{body}</ReactMarkdown>
+            )}
           </div>
-          <h1 className="text-3xl sm:text-4xl font-bold leading-tight text-slate-900 dark:text-white">
-            {article.title[lang]}
-          </h1>
-          <p className="mt-4 text-base sm:text-lg text-slate-600 dark:text-slate-300 leading-relaxed">
-            {article.description[lang]}
-          </p>
-        </header>
 
-        <div
-          className="mt-10 prose prose-slate dark:prose-invert max-w-none prose-headings:font-bold prose-a:text-[#A58CF4] dark:prose-a:text-[#A58CF4] prose-headings:scroll-mt-24 text-start"
-        >
-          {body === null ? (
-            <div className="space-y-3 animate-pulse" aria-hidden>
-              {[...Array(8)].map((_, i) => (
-                <div key={i} className="h-4 rounded bg-slate-200/70 dark:bg-slate-700/50" />
-              ))}
-            </div>
-          ) : (
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>{body}</ReactMarkdown>
-          )}
-        </div>
-
-        <div className="mt-12 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-[#A58CF4]/10 dark:border-[#A58CF4]/15 pt-8">
-          <button
-            type="button"
-            onClick={() => navigate(path("insights"))}
-            className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#A58CF4] dark:text-[#A58CF4] hover:underline"
-          >
-            <ArrowLeft className="w-4 h-4 rtl:rotate-180" /> {t.back}
-          </button>
-          <Button
-            onClick={() => {
-              track(MarketingEvents.DemoOpened, { source: `article_${slug}`, lang });
-              navigate(path("demo"));
-            }}
-            className="landing-btn-primary"
-          >
-            {t.cta}
-          </Button>
-        </div>
-      </article>
+          <footer className="insights-article__footer">
+            <Link to={path("insights")} className="insights-article__back">
+              <ArrowLeft className="w-4 h-4 rtl:rotate-180" />
+              {t.back}
+            </Link>
+            <Link
+              to={path("features")}
+              className="features-btn features-btn--dark"
+              onClick={() => track(MarketingEvents.HeroPrimaryCta, { source: `article_${slug}`, lang })}
+            >
+              {t.cta}
+              <ArrowRight className="w-4 h-4 ms-2 rtl:rotate-180" />
+            </Link>
+          </footer>
+        </article>
+      </div>
     </MarketingShell>
   );
 };

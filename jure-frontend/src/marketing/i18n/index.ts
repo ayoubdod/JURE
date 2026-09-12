@@ -166,7 +166,7 @@ const ar: MarketingDict = {
   faqTitle: "الأسئلة الشائعة",
   relatedPages: "صفحات ذات صلة",
   cta: {
-    seeInAction: "شاهد JURE عمليًا",
+    seeInAction: "شاهد JURE عمليا",
     explorePlatform: "استكشف المنصة",
     talkToTeam: "تحدث إلى الفريق",
     exploreSecurity: "استكشف الأمان",
@@ -175,7 +175,7 @@ const ar: MarketingDict = {
   },
   badges: {
     earlyAccess: "وصول مبكر",
-    comingSoon: "قريبًا",
+    comingSoon: "قريبا",
     availableToday: "متاح اليوم",
     planned: "على خارطة الطريق",
     humanInTheLoop: "مراجعة بشرية",

@@ -44,6 +44,8 @@ class ConversationSerializer(serializers.ModelSerializer):
         many=True, queryset=User.objects.none(), write_only=True
     )
     icon = serializers.ImageField(write_only=True, required=False)
+    memberships = serializers.SerializerMethodField()
+    is_admin = serializers.SerializerMethodField()
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -81,10 +83,12 @@ class ConversationSerializer(serializers.ModelSerializer):
             "linkedCase",
             "is_temporary",
             "active_or_upcoming_appointment",
+            "memberships",
+            "is_admin",
             "created_by",
             "created",
         )
-        read_only_fields = ("is_temporary",)
+        read_only_fields = ("is_temporary", "memberships", "is_admin")
     
 
     def validate(self, _attrs):
@@ -188,10 +192,18 @@ class ConversationSerializer(serializers.ModelSerializer):
                 instance.icon_image.delete(save=False)
                 instance.icon_image = None
         return super().update(instance, validated_data)
-    
-    def to_representation(self, instance: Conversation):
-        self.fields["memberships"] = ConversationMembershipSerializer(many=True, read_only=True)
-        return super().to_representation(instance)
+
+    def get_memberships(self, obj: Conversation):
+        cached = getattr(obj, "_prefetched_objects_cache", {}).get("memberships")
+        if cached is not None:
+            qs = cached
+        else:
+            qs = obj.memberships.filter(is_deleted=False).select_related("user")
+        return ConversationMembershipSerializer(qs, many=True).data
+
+    def get_is_admin(self, obj: Conversation) -> bool:
+        m = self._get_my_membership(obj)
+        return bool(m and m.is_admin)
     
     def get_latest_message(self, obj: Conversation):
         if not obj.messages.exists():

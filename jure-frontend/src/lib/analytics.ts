@@ -45,7 +45,6 @@ export function track(name: string, props?: AnalyticsProps): void {
 export const MarketingEvents = {
   HeroPrimaryCta: "marketing.hero.primary_cta",
   HeroSecondaryCta: "marketing.hero.secondary_cta",
-  DemoOpened: "marketing.demo.opened",
   ContactCta: "marketing.contact.cta",
   SecurityCta: "marketing.security.cta",
   SignupCta: "marketing.signup.cta",

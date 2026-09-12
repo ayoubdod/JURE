@@ -71,6 +71,7 @@ const ChatWindow = forwardRef<
   onStartNewChat?: () => void;
   onDeleteConversation?: (conversation: API.Conversation) => void;
   onChangeIcon?: (conversation: API.Conversation) => void;
+  onOpenGroupSettings?: (conversation: API.Conversation) => void;
   onConversationOpen?: () => void;
   onNavigateToConversation?: (conversationId: number) => void;
   isTyping?: boolean;
@@ -105,6 +106,7 @@ const ChatWindow = forwardRef<
   onStartNewChat,
   onDeleteConversation,
   onChangeIcon,
+  onOpenGroupSettings,
   onConversationOpen,
   onNavigateToConversation,
   isTyping = false,
@@ -514,6 +516,8 @@ const ChatWindow = forwardRef<
         onOpenContext={onOpenContext}
         onDeleteConversation={onDeleteConversation}
         onChangeIcon={onChangeIcon}
+        onOpenGroupSettings={onOpenGroupSettings}
+        onAddMembers={onOpenGroupSettings}
         onOpenLinkCaseModal={onOpenLinkCaseModal}
         onUnlinkConversationCase={onUnlinkConversationCase}
         onOpenLinkedCase={onOpenLinkedCase}

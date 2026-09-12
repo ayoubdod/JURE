@@ -1,4 +1,4 @@
-// src/pages/Landing.tsx — cinematic LegalTech homepage (public marketing only).
+// src/pages/Landing.tsx — premium LegalTech homepage (public marketing only).
 import React, { useRef } from "react";
 import { Link } from "react-router";
 import {
@@ -11,15 +11,11 @@ import {
 import { Button } from "@/components/ui/button";
 import {
   ArrowRight,
-  Bell,
-  Briefcase,
   Building2,
   Calendar,
   FileText,
   KeyRound,
-  Landmark,
   Lock,
-  Scale,
   ShieldCheck,
   Sparkles,
   UserCheck,
@@ -30,13 +26,8 @@ import Reveal from "@/components/landing/Reveal";
 import FaqSection from "@/components/landing/FaqSection";
 import SitelinkList from "@/components/landing/SitelinkList";
 import FloatingChip from "@/components/landing/FloatingChip";
-import MediaSlot from "@/components/landing/MediaSlot";
-import {
-  CaseWorkspaceFrame,
-  ChatFrame,
-  JuriaFrame,
-  LibraryFrame,
-} from "@/components/landing/ProductFrame";
+import WorkspaceShowcase from "@/components/landing/WorkspaceShowcase";
+import { JuriaFrame, MiniProductCard } from "@/components/landing/ProductFrame";
 import { useMarketingLang } from "@/marketing/MarketingLocale";
 import { RouteSeo } from "@/marketing/Seo";
 import { HOME_CONTENT } from "@/marketing/content/home";
@@ -51,112 +42,7 @@ import { track, MarketingEvents } from "@/lib/analytics";
 import "@/components/landing/landing.css";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
-
-const ProductStage: React.FC<{
-  children: React.ReactNode;
-  floats?: React.ReactNode;
-  className?: string;
-}> = ({ children, floats, className = "" }) => (
-  <div className={`landing-product-stage relative ${className}`}>
-    <div className="landing-product-stage__glow" aria-hidden />
-    <div className="landing-product-stage__frame relative z-[1]">{children}</div>
-    {floats}
-  </div>
-);
-
-const FeatureRow: React.FC<{
-  index: string;
-  icon: React.ReactNode;
-  title: string;
-  body: string;
-  linkLabel: string;
-  linkTo: string;
-  badge?: string;
-  reverse?: boolean;
-  rtl?: boolean;
-  product: React.ReactNode;
-  onLink?: () => void;
-}> = ({
-  index,
-  icon,
-  title,
-  body,
-  linkLabel,
-  linkTo,
-  badge,
-  reverse,
-  rtl,
-  product,
-  onLink,
-}) => {
-  const textFrom = reverse ? (rtl ? -30 : 30) : rtl ? 30 : -30;
-  const productFrom = reverse ? (rtl ? 50 : -50) : rtl ? -50 : 50;
-
-  return (
-    <div
-      className={`grid lg:grid-cols-2 gap-10 lg:gap-16 items-center ${
-        reverse ? "" : ""
-      }`}
-    >
-      <Reveal
-        x={textFrom}
-        className={reverse ? "lg:order-2" : ""}
-        duration={0.7}
-      >
-        <div className="text-start">
-          <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#A58CF4] mb-3">
-            {icon} {index}
-            {badge && (
-              <span className="ms-1 px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400 uppercase tracking-wide text-[9px]">
-                {badge}
-              </span>
-            )}
-          </span>
-          <h3 className="text-xl sm:text-3xl font-bold text-[#64499D] dark:text-white tracking-tight">
-            {title}
-          </h3>
-          <p className="mt-3 text-sm sm:text-base text-neutral-600 dark:text-neutral-300 leading-relaxed">
-            {body}
-          </p>
-          <Link
-            to={linkTo}
-            onClick={onLink}
-            className="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold text-[#A58CF4] hover:underline"
-          >
-            {linkLabel} <ArrowRight className="w-4 h-4 rtl:rotate-180" />
-          </Link>
-        </div>
-      </Reveal>
-      <Reveal
-        x={productFrom}
-        delay={0.08}
-        className={reverse ? "lg:order-1" : ""}
-        duration={0.75}
-      >
-        {product}
-      </Reveal>
-    </div>
-  );
-};
-
-const TrustItem: React.FC<{
-  children: React.ReactNode;
-  delay: number;
-  className?: string;
-}> = ({ children, delay, className }) => {
-  const reduce = useReducedMotion();
-  return (
-    <motion.div
-      className={className}
-      initial={reduce ? { opacity: 0 } : { opacity: 0, y: 12 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-40px" }}
-      transition={{ duration: 0.5, ease: EASE, delay: reduce ? 0 : delay }}
-    >
-      {children}
-    </motion.div>
-  );
-};
+const HERO_PRODUCT_IMG = "/images/landing-page/hero_img.png";
 
 const Landing: React.FC = () => {
   const { lang, dir, path } = useMarketingLang();
@@ -165,48 +51,19 @@ const Landing: React.FC = () => {
   const rtl = dir === "rtl";
 
   const heroRef = useRef<HTMLElement>(null);
-  const showcaseRef = useRef<HTMLElement>(null);
 
   const { scrollYProgress: heroProgress } = useScroll({
     target: heroRef,
     offset: ["start start", "end start"],
   });
-  const heroY = useTransform(heroProgress, [0, 1], reduce ? [0, 0] : [0, -48]);
+  const heroY = useTransform(heroProgress, [0, 1], reduce ? [0, 0] : [0, -36]);
   const heroVisualY = useTransform(
     heroProgress,
     [0, 1],
-    reduce ? [0, 0] : [0, -28]
+    reduce ? [0, 0] : [0, 28]
   );
-  const heroVisualScale = useTransform(
-    heroProgress,
-    [0, 1],
-    reduce ? [1, 1] : [1, 1.04]
-  );
-
-  const { scrollYProgress: showcaseProgress } = useScroll({
-    target: showcaseRef,
-    offset: ["start end", "end start"],
-  });
-  const showcaseScale = useTransform(
-    showcaseProgress,
-    [0.15, 0.55],
-    reduce ? [1, 1] : [1, 1.05]
-  );
-  const showcaseY = useTransform(
-    showcaseProgress,
-    [0.15, 0.55],
-    reduce ? [0, 0] : [0, -20]
-  );
-  const showcaseTextOpacity = useTransform(
-    showcaseProgress,
-    [0.2, 0.45],
-    reduce ? [1, 1] : [0, 1]
-  );
-  const showcaseTextX = useTransform(
-    showcaseProgress,
-    [0.2, 0.45],
-    reduce ? [0, 0] : [rtl ? -30 : 30, 0]
-  );
+  const floatSlow = useTransform(heroProgress, [0, 1], reduce ? [0, 0] : [0, -40]);
+  const floatFast = useTransform(heroProgress, [0, 1], reduce ? [0, 0] : [0, -70]);
 
   const jsonLd = [
     organizationJsonLd(lang),
@@ -220,382 +77,317 @@ const Landing: React.FC = () => {
     reduce
       ? { initial: { opacity: 0 }, animate: { opacity: 1 }, transition: { duration: 0.4, delay: 0 } }
       : {
-          initial: { opacity: 0, y: 20, scale: 0.97 },
+          initial: { opacity: 0, y: 22, scale: 0.98 },
           animate: { opacity: 1, y: 0, scale: 1 },
-          transition: { duration: 0.75, delay, ease: EASE },
+          transition: { duration: 0.8, delay, ease: EASE },
         };
 
-  const heroFloats = (
-    <>
-      <FloatingChip
-        className="hidden md:block absolute -start-3 top-[12%] z-[2]"
-        delay={0.2}
-        duration={4.4}
-      >
-        <div className="landing-float-chip__card flex items-center gap-2">
-          <Bell className="w-3.5 h-3.5 text-[#A58CF4]" />
-          <span>{t.floats.notification}</span>
-        </div>
-      </FloatingChip>
-      <FloatingChip
-        className="hidden md:block absolute -end-2 top-[28%] z-[2]"
-        delay={0.8}
-        duration={4.8}
-      >
-        <div className="landing-float-chip__card flex items-center gap-2">
-          <Calendar className="w-3.5 h-3.5 text-[#A58CF4]" />
-          <span>{t.floats.deadline}</span>
-        </div>
-      </FloatingChip>
-      <FloatingChip
-        className="hidden lg:block absolute start-[8%] -bottom-3 z-[2]"
-        delay={1.4}
-        duration={5}
-      >
-        <div className="landing-float-chip__card flex items-center gap-2">
-          <Sparkles className="w-3.5 h-3.5 text-[#A58CF4]" />
-          <span>{t.floats.aiSuggestion}</span>
-        </div>
-      </FloatingChip>
-      <FloatingChip
-        className="hidden lg:block absolute end-[10%] bottom-[8%] z-[2]"
-        delay={0.5}
-        duration={3.8}
-      >
-        <div className="landing-float-chip__card flex items-center gap-2">
-          <FileText className="w-3.5 h-3.5 text-[#A58CF4]" />
-          <span>{t.floats.document}</span>
-        </div>
-      </FloatingChip>
-    </>
-  );
+  const editorialTone = [
+    "landing-value-card--purple",
+    "landing-value-card--blue",
+    "landing-value-card--white",
+    "landing-value-card--violet",
+  ];
+  const editorialSpan = ["md:col-span-4", "md:col-span-2", "md:col-span-2", "md:col-span-4"];
 
   return (
-    <MarketingShell lang={lang} onLangChange={() => {}} dir={dir} activeNav="none">
+    <MarketingShell
+      lang={lang}
+      onLangChange={() => {}}
+      dir={dir}
+      activeNav="none"
+      darkHero
+      closingCta={<FinalCta t={t} lang={lang} path={path} />}
+    >
       <RouteSeo routeKey="home" lang={lang} jsonLd={jsonLd} />
 
       {/* ============ HERO ============ */}
-      <section
-        ref={heroRef}
-        className="relative max-w-5xl mx-auto px-4 sm:px-6 pt-10 sm:pt-16 pb-16 sm:pb-28"
-      >
-        <motion.div style={{ y: heroY }} className="text-center">
-          <motion.p
-            className="landing-kicker text-xs sm:text-sm mb-4"
-            {...enter(0)}
-          >
-            {t.hero.eyebrow}
-          </motion.p>
+      <section ref={heroRef} className="landing-hero relative">
+        <div className="landing-hero-stage px-5 sm:px-10 pt-24 sm:pt-28 pb-0">
+          <div className="landing-hero-aurora" aria-hidden />
+          <div className="landing-hero-grid" aria-hidden />
+          <div className="landing-hero-nodes" aria-hidden />
+          <div className="landing-hero-product-glow" aria-hidden />
 
-          <motion.h1
-            className="text-[1.85rem] sm:text-5xl xl:text-[3.35rem] font-bold leading-[1.12] sm:leading-[1.08] text-[#64499D] dark:text-white max-w-3xl mx-auto tracking-tight"
-            {...enter(0.1)}
-          >
-            {t.hero.h1a}{" "}
-            <span className="landing-hero-shimmer bg-gradient-to-r from-[#A58CF4] via-[#C4B0EF] to-[#A58CF4] bg-clip-text text-transparent">
-              {t.hero.h1b}
-            </span>
-          </motion.h1>
+          <motion.div style={{ y: heroY }} className="landing-hero-copy text-center max-w-7xl mx-auto">
+            <motion.p className="landing-hero-kicker mb-5" {...enter(0)}>
+              {t.hero.eyebrow}
+            </motion.p>
 
-          <motion.p
-            className="mt-4 sm:mt-5 text-sm sm:text-lg text-neutral-600 dark:text-neutral-300 max-w-2xl mx-auto leading-relaxed"
-            {...enter(0.18)}
-          >
-            {t.hero.subtitle}
-          </motion.p>
+            <motion.h1
+              className="text-[2.15rem] sm:text-5xl xl:text-[4.35rem] font-bold leading-[1.04] sm:leading-[1.0] text-white max-w-4xl mx-auto tracking-[-0.03em]"
+              {...enter(0.08)}
+            >
+              {t.hero.h1a}{" "}
+              <span className="landing-gradient-text">{t.hero.h1b}</span>
+            </motion.h1>
+
+            <motion.p
+              className="mt-5 sm:mt-6 text-sm sm:text-lg text-white/70 max-w-2xl mx-auto leading-relaxed"
+              {...enter(0.16)}
+            >
+              {t.hero.subtitle}
+            </motion.p>
+
+            <motion.div
+              className="mt-5 sm:mt-6 flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3"
+              {...enter(0.24)}
+            >
+              <Button asChild size="lg" className="landing-cta-btn landing-btn-primary w-full sm:w-auto px-8">
+                <Link
+                  to="/signup"
+                  onClick={() => track(MarketingEvents.HeroPrimaryCta, { source: "hero", lang })}
+                >
+                  {t.hero.ctaPrimary}
+                  <ArrowRight className="w-4 h-4 ms-2 rtl:rotate-180" />
+                </Link>
+              </Button>
+              <Button
+                asChild
+                size="lg"
+                variant="outline"
+                className="landing-cta-btn landing-btn-ghost-dark w-full sm:w-auto px-8"
+              >
+                <Link
+                  to={path("features")}
+                  onClick={() =>
+                    track(MarketingEvents.HeroSecondaryCta, { source: "hero", lang })
+                  }
+                >
+                  {t.hero.ctaSecondary}
+                </Link>
+              </Button>
+            </motion.div>
+
+            <motion.div className="mt-4" {...enter(0.3)}>
+              <h2 className="sr-only">{t.sitelinks.title}</h2>
+              <SitelinkList lang={lang} label={t.sitelinks.title} variant="inline" />
+            </motion.div>
+          </motion.div>
 
           <motion.div
-            className="mt-7 sm:mt-8 flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3"
-            {...enter(0.26)}
+            className="landing-hero-composition relative mx-auto mt-2 sm:mt-3"
+            style={{ y: heroVisualY }}
+            initial={reduce ? { opacity: 0 } : { opacity: 0, y: 48, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ duration: 1, delay: reduce ? 0 : 0.32, ease: EASE }}
           >
-            <Button
-              asChild
-              size="lg"
-              className="landing-cta-btn landing-btn-primary w-full sm:w-auto px-8"
-            >
-              <Link
-                to={path("demo")}
-                onClick={() => track(MarketingEvents.HeroPrimaryCta, { source: "hero", lang })}
+            <div className="landing-hero-photo-wrap mx-auto">
+              <img
+                src={HERO_PRODUCT_IMG}
+                alt={t.hero.imageAlt}
+                className="landing-hero-photo relative z-[1] w-full h-auto"
+                decoding="async"
+              />
+            </div>
+
+            <motion.div style={{ y: floatSlow }} className="landing-hero-float">
+              <FloatingChip
+                className="hidden md:block landing-hero-float-slot landing-hero-float-slot--cases"
+                delay={0.2}
+                duration={4.6}
+                rotate={-4}
               >
-                {t.hero.ctaPrimary}
-                <ArrowRight className="w-4 h-4 ms-2 rtl:rotate-180" />
-              </Link>
-            </Button>
-            <Button
-              asChild
-              size="lg"
-              variant="outline"
-              className="landing-btn-secondary w-full sm:w-auto px-8"
+                <MiniProductCard label={t.floats.activeCases}>
+                  <div className="landing-mini-card__muted text-[10px] font-semibold uppercase tracking-wide">
+                    {t.floats.activeCases}
+                  </div>
+                  <div className="mt-1 text-2xl font-bold tabular-nums leading-none">12</div>
+                </MiniProductCard>
+              </FloatingChip>
+            </motion.div>
+
+            <motion.div style={{ y: floatFast }} className="landing-hero-float">
+              <FloatingChip
+                className="hidden md:block landing-hero-float-slot landing-hero-float-slot--consult"
+                delay={0.7}
+                duration={5.1}
+                rotate={4}
+              >
+                <MiniProductCard label={t.floats.consultations}>
+                  <div className="flex items-center gap-2 text-[11px] font-semibold">
+                    <Calendar className="w-3.5 h-3.5 text-[var(--jure-violet-light)]" />
+                    {t.floats.consultations}
+                  </div>
+                  <div className="mt-1 text-xl font-bold tabular-nums">3</div>
+                </MiniProductCard>
+              </FloatingChip>
+            </motion.div>
+
+            <motion.div style={{ y: floatSlow }} className="landing-hero-float">
+              <FloatingChip
+                className="hidden lg:block landing-hero-float-slot landing-hero-float-slot--next"
+                delay={1.1}
+                duration={4.8}
+                rotate={3}
+              >
+                <MiniProductCard label={t.floats.nextConsult}>
+                  <div className="landing-mini-card__muted text-[10px] font-semibold uppercase tracking-wide">
+                    {t.floats.nextConsult}
+                  </div>
+                  <div className="mt-1 text-[13px] font-semibold leading-snug">{t.floats.clientName}</div>
+                  <div className="mt-0.5 landing-mini-card__muted text-[11px]">{t.floats.clientMeta}</div>
+                </MiniProductCard>
+              </FloatingChip>
+            </motion.div>
+
+            <motion.div style={{ y: floatFast }} className="landing-hero-float">
+              <FloatingChip
+                className="hidden lg:block landing-hero-float-slot landing-hero-float-slot--juria"
+                delay={0.4}
+                duration={5.4}
+                rotate={-4}
+              >
+                <MiniProductCard label={t.floats.juriaReady}>
+                  <div className="flex items-center gap-2">
+                    <span className="w-6 h-6 rounded-full bg-gradient-to-br from-[var(--jure-blue)] to-[var(--jure-violet)] flex items-center justify-center">
+                      <Sparkles className="w-3 h-3 text-white" />
+                    </span>
+                    <span className="text-[12px] font-semibold">JURIA</span>
+                  </div>
+                  <div className="mt-1.5 landing-mini-card__muted text-[12px]">{t.floats.juriaReady}</div>
+                </MiniProductCard>
+              </FloatingChip>
+            </motion.div>
+
+            <FloatingChip
+              className="landing-hero-float hidden xl:block landing-hero-float-slot landing-hero-float-slot--docs"
+              delay={1.5}
+              duration={4.2}
+              rotate={-2}
             >
+              <MiniProductCard label={t.floats.documents}>
+                <div className="flex items-center gap-2 text-[12px] font-semibold">
+                  <FileText className="w-3.5 h-3.5 text-[var(--jure-violet-light)]" />
+                  {t.floats.documents}
+                </div>
+                <div className="mt-1 text-lg font-bold tabular-nums">24</div>
+              </MiniProductCard>
+            </FloatingChip>
+
+            <FloatingChip
+              className="landing-hero-float hidden xl:block landing-hero-float-slot landing-hero-float-slot--team"
+              delay={0.9}
+              duration={4.9}
+              rotate={5}
+            >
+              <MiniProductCard label={t.floats.teamOnline}>
+                <div className="flex items-center gap-2 text-[12px] font-semibold">
+                  <Users className="w-3.5 h-3.5 text-[var(--jure-violet-light)]" />
+                  {t.floats.teamOnline}
+                </div>
+                <div className="mt-1 text-lg font-bold tabular-nums">8</div>
+              </MiniProductCard>
+            </FloatingChip>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* ============ EDITORIAL VALUE ============ */}
+      <section className="landing-section-white landing-section-after-hero">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-16 sm:py-24">
+        <Reveal>
+          <h2 className="text-3xl sm:text-5xl xl:text-[3.5rem] font-bold tracking-[-0.03em] leading-[1.08] landing-ink max-w-4xl">
+            {t.editorial.titleA}
+            <br />
+            <span className="bg-gradient-to-r from-[var(--jure-blue)] via-[var(--jure-violet)] to-[var(--jure-violet-light)] bg-clip-text text-transparent">
+              {t.editorial.titleB}
+            </span>
+          </h2>
+        </Reveal>
+
+        <div className="mt-10 sm:mt-14 grid md:grid-cols-6 gap-4 sm:gap-5">
+          {t.editorial.cards.map((card, i) => (
+            <Reveal key={card.index} delay={i * 0.07} className={editorialSpan[i]}>
+              <div className={`landing-value-card ${editorialTone[i]} h-full p-6 sm:p-8`}>
+                <div className="landing-value-card__index">
+                  {card.index}
+                </div>
+                <h3 className="mt-4 text-xl sm:text-2xl font-bold tracking-tight">
+                  {card.title}
+                </h3>
+                <p className="mt-3 text-sm sm:text-[15px] leading-relaxed">
+                  {card.body}
+                </p>
+              </div>
+            </Reveal>
+          ))}
+          <Reveal delay={0.32} className="md:col-span-6">
+            <div className="landing-value-card landing-value-card--black p-6 sm:p-8 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+              <div>
+                <div className="landing-value-card__index">05</div>
+                <h3 className="mt-4 text-xl sm:text-2xl font-bold tracking-tight">
+                  {t.features.team.category}
+                </h3>
+                <p className="mt-3 text-sm sm:text-[15px] leading-relaxed max-w-xl">
+                  {t.features.team.body}
+                </p>
+              </div>
               <Link
                 to={path("features")}
-                onClick={() =>
-                  track(MarketingEvents.HeroSecondaryCta, { source: "hero", lang })
-                }
+                className="landing-text-link inline-flex items-center gap-1.5 text-sm text-white hover:text-[var(--jure-violet-light)]"
               >
-                {t.hero.ctaSecondary}
+                {t.features.team.link} <ArrowRight className="w-4 h-4 rtl:rotate-180" />
               </Link>
-            </Button>
-          </motion.div>
-
-          <motion.div
-            className="mt-5 flex flex-wrap items-center justify-center gap-2"
-            {...enter(0.3)}
-          >
-            {t.hero.trustChips.map((chip) => (
-              <span
-                key={chip}
-                className="landing-chip text-[11px] sm:text-xs"
-              >
-                {chip}
-              </span>
-            ))}
-          </motion.div>
-        </motion.div>
-
-        <motion.div className="mt-8 sm:mt-10 max-w-3xl mx-auto" {...enter(0.34)}>
-          <h2 className="sr-only">{t.sitelinks.title}</h2>
-          <SitelinkList lang={lang} label={t.sitelinks.title} />
-        </motion.div>
-
-        <motion.div
-          className="mt-12 sm:mt-16"
-          style={{ y: heroVisualY, scale: heroVisualScale }}
-          initial={reduce ? { opacity: 0 } : { opacity: 0, y: 35, scale: 0.94 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          transition={{ duration: 0.9, delay: reduce ? 0 : 0.35, ease: EASE }}
-        >
-          <ProductStage floats={heroFloats}>
-            <MediaSlot
-              src="/images/hero-product.png"
-              fileName="hero-product.png"
-              alt={t.hero.imageAlt}
-              aspect="aspect-[16/10]"
-              fallback={<CaseWorkspaceFrame lang={lang} />}
-            />
-          </ProductStage>
-        </motion.div>
-      </section>
-
-      {/* ============ PROBLEM ============ */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 py-16 sm:py-24">
-        <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
-          <Reveal x={rtl ? 30 : -30}>
-            <div className="text-start">
-              <h2 className="text-2xl sm:text-4xl font-bold text-[#64499D] dark:text-white leading-tight tracking-tight">
-                {t.problem.title}
-              </h2>
-              <p className="mt-4 text-sm sm:text-base text-neutral-600 dark:text-neutral-300 leading-relaxed">
-                {t.problem.body1}
-              </p>
-              <p className="mt-4 text-base sm:text-lg font-semibold text-[#A58CF4]">
-                {t.problem.body2}
-              </p>
-            </div>
-          </Reveal>
-          <Reveal delay={0.1} x={rtl ? -40 : 40}>
-            <div className="space-y-4">
-              <div className="grid grid-cols-3 gap-2">
-                {t.problem.fragments.map((fragment) => (
-                  <div
-                    key={fragment}
-                    className="px-2 py-2.5 rounded-xl border border-dashed border-[#64499D]/15 dark:border-white/15 text-center text-[11px] sm:text-xs font-medium text-neutral-500 dark:text-neutral-400 bg-white dark:bg-[#111]"
-                  >
-                    {fragment}
-                  </div>
-                ))}
-              </div>
-              <div className="landing-band rounded-2xl px-6 py-8 text-center">
-                <div className="relative text-lg sm:text-xl font-bold text-white">
-                  {t.problem.convergenceTitle}
-                </div>
-                <div className="relative mt-1 text-xs sm:text-sm text-white/60">
-                  {t.problem.convergenceSub}
-                </div>
-              </div>
             </div>
           </Reveal>
         </div>
-      </section>
-
-      {/* ============ PRODUCT SHOWCASE ============ */}
-      <section
-        ref={showcaseRef}
-        className="relative max-w-7xl mx-auto px-4 sm:px-6 py-10 sm:py-20 landing-showcase"
-      >
-        <div className="grid lg:grid-cols-[1.15fr_0.85fr] gap-10 lg:gap-14 items-center">
-          <motion.div style={{ scale: showcaseScale, y: showcaseY }} className="origin-center">
-            <ProductStage>
-              <MediaSlot
-                src="/images/showcase-dashboard.png"
-                fileName="showcase-dashboard.png"
-                alt={t.showcase.title}
-                aspect="aspect-[16/10]"
-                fallback={<CaseWorkspaceFrame lang={lang} />}
-              />
-            </ProductStage>
-          </motion.div>
-          <motion.div
-            style={{ opacity: showcaseTextOpacity, x: showcaseTextX }}
-            className="text-start"
-          >
-            <span className="landing-kicker text-xs">
-              {t.showcase.eyebrow}
-            </span>
-            <h2 className="mt-3 text-2xl sm:text-4xl font-bold text-[#64499D] dark:text-white tracking-tight">
-              {t.showcase.title}
-            </h2>
-            <p className="mt-4 text-sm sm:text-base text-neutral-600 dark:text-neutral-300 leading-relaxed">
-              {t.showcase.body}
-            </p>
-          </motion.div>
         </div>
       </section>
 
-      {/* ============ FEATURE SECTIONS ============ */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 py-16 sm:py-28 space-y-24 sm:space-y-32">
-        <div className="text-center max-w-3xl mx-auto">
+      {/* ============ POSITIONING ============ */}
+      <section className="landing-position">
+        <div className="max-w-7xl mx-auto px-5 sm:px-8 py-20 sm:py-28">
           <Reveal>
-            <h2 className="text-2xl sm:text-4xl font-bold text-[#64499D] dark:text-white tracking-tight">
-              {t.pillars.title}
-            </h2>
-            <p className="mt-3 text-sm sm:text-base text-neutral-600 dark:text-neutral-300">
-              {t.pillars.subtitle}
-            </p>
+            <h2 className="landing-position__title">{t.metrics.title}</h2>
           </Reveal>
+          <div className="landing-position__grid">
+            {t.metrics.items.map((item, i) => (
+              <Reveal key={item.index} delay={i * 0.08} subtle>
+                <article className="landing-position__item">
+                  <span className="landing-position__index" aria-hidden>
+                    {item.index}
+                  </span>
+                  <h3 className="landing-position__kicker">{item.kicker}</h3>
+                  <p className="landing-position__headline">{item.headline}</p>
+                  <p className="landing-position__body">{item.body}</p>
+                </article>
+              </Reveal>
+            ))}
+          </div>
         </div>
-
-        <FeatureRow
-          index="01"
-          icon={<Briefcase className="w-4 h-4" />}
-          title={t.pillars.matter.title}
-          body={t.pillars.matter.body}
-          linkLabel={t.pillars.matter.link}
-          linkTo={path("legal-case-management")}
-          rtl={rtl}
-          product={
-            <ProductStage
-              floats={
-                <FloatingChip
-                  className="hidden sm:block absolute -end-2 top-6 z-[2]"
-                  delay={0.3}
-                  duration={4.5}
-                >
-                  <div className="landing-float-chip__card flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                    {t.floats.caseStatus}
-                  </div>
-                </FloatingChip>
-              }
-            >
-              <MediaSlot
-                src="/images/feature-cases.png"
-                fileName="feature-cases.png"
-                alt={t.pillars.matter.title}
-                fallback={<CaseWorkspaceFrame lang={lang} />}
-              />
-            </ProductStage>
-          }
-        />
-
-        <FeatureRow
-          index="02"
-          icon={<FileText className="w-4 h-4" />}
-          title={t.pillars.documents.title}
-          body={t.pillars.documents.body}
-          linkLabel={t.pillars.documents.link}
-          linkTo={path("legal-document-management")}
-          reverse
-          rtl={rtl}
-          product={
-            <ProductStage
-              floats={
-                <FloatingChip
-                  className="hidden sm:block absolute -start-2 bottom-8 z-[2]"
-                  delay={0.6}
-                  duration={4.2}
-                >
-                  <div className="landing-float-chip__card flex items-center gap-2">
-                    <FileText className="w-3.5 h-3.5 text-[#A58CF4]" />
-                    {t.floats.document}
-                  </div>
-                </FloatingChip>
-              }
-            >
-              <MediaSlot
-                src="/images/feature-documents.png"
-                fileName="feature-documents.png"
-                alt={t.pillars.documents.title}
-                fallback={<LibraryFrame lang={lang} />}
-              />
-            </ProductStage>
-          }
-        />
-
-        <FeatureRow
-          index="03"
-          icon={<Users className="w-4 h-4" />}
-          title={t.pillars.collaboration.title}
-          body={t.pillars.collaboration.body}
-          linkLabel={t.pillars.collaboration.link}
-          linkTo={path("features")}
-          rtl={rtl}
-          onLink={() =>
-            track(MarketingEvents.HeroSecondaryCta, { source: "pillar_collaboration", lang })
-          }
-          product={
-            <ProductStage
-              floats={
-                <FloatingChip
-                  className="hidden sm:block absolute -end-2 top-10 z-[2]"
-                  delay={0.4}
-                  duration={4.6}
-                >
-                  <div className="landing-float-chip__card flex items-center gap-2">
-                    <Users className="w-3.5 h-3.5 text-[#A58CF4]" />
-                    {t.floats.client}
-                  </div>
-                </FloatingChip>
-              }
-            >
-              <MediaSlot
-                src="/images/feature-collaboration.png"
-                fileName="feature-collaboration.png"
-                alt={t.pillars.collaboration.title}
-                fallback={<ChatFrame lang={lang} />}
-              />
-            </ProductStage>
-          }
-        />
       </section>
+
+      {/* ============ WORKSPACE WALKTHROUGH ============ */}
+      <WorkspaceShowcase />
 
       {/* ============ JURIA ============ */}
-      <section className="relative max-w-7xl mx-auto px-4 sm:px-6 py-16 sm:py-28">
-        <div className="landing-juria-panel relative overflow-hidden rounded-[1.75rem] sm:rounded-[2rem] px-5 sm:px-10 md:px-14 py-12 sm:py-16">
+      <section className="relative max-w-7xl mx-auto px-4 sm:px-6 py-10 sm:py-20">
+        <div className="landing-juria-panel relative overflow-hidden rounded-[1.75rem] sm:rounded-[2rem] px-5 sm:px-10 md:px-14 py-12 sm:py-20">
           <div className="landing-juria-panel__glow" aria-hidden />
           <div className="landing-juria-panel__particles" aria-hidden />
-          <div className="relative grid lg:grid-cols-2 gap-10 lg:gap-14 items-center">
+          <div className="landing-juria-panel__nodes" aria-hidden />
+          <div className="relative grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
             <Reveal x={rtl ? 30 : -30}>
               <div className="text-start">
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 border border-white/15 text-xs font-semibold text-[#E8DFFF] mb-4">
-                  <Sparkles className="w-3.5 h-3.5" />
-                  {t.pillars.ai.badge}
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/[0.08] border border-white/15 text-xs font-semibold text-white mb-5">
+                  <Sparkles className="w-3.5 h-3.5 text-[var(--jure-violet-light)]" />
+                  {t.juria.badge}
                 </span>
-                <h2 className="text-2xl sm:text-4xl font-bold text-white tracking-tight">
-                  {t.pillars.ai.title}
+                <h2 className="text-3xl sm:text-[2.75rem] font-bold text-white tracking-[-0.03em] leading-[1.1]">
+                  {t.juria.titleA}
+                  <br />
+                  <span className="landing-gradient-text">{t.juria.titleB}</span>
                 </h2>
-                <p className="mt-4 text-sm sm:text-base text-white/70 leading-relaxed">
-                  {t.pillars.ai.body}
+                <p className="mt-5 text-sm sm:text-base text-white/70 leading-relaxed max-w-md">
+                  {t.juria.body}
                 </p>
-                <p className="mt-4 text-sm font-semibold text-[#A58CF4]">
-                  {t.pillars.ai.disclaimer}
+                <p className="mt-4 text-sm font-semibold text-[var(--jure-violet-light)]">
+                  {t.juria.disclaimer}
                 </p>
-                <Button
-                  asChild
-                  className="mt-6 landing-cta-btn landing-btn-on-dark"
-                >
+                <Button asChild className="mt-7 landing-cta-btn landing-btn-primary">
                   <Link to={path("juria")}>
-                    {t.pillars.ai.link}
+                    {t.juria.link}
                     <ArrowRight className="w-4 h-4 ms-2 rtl:rotate-180" />
                   </Link>
                 </Button>
@@ -603,22 +395,22 @@ const Landing: React.FC = () => {
             </Reveal>
             <Reveal delay={0.1} x={rtl ? -40 : 40} scale={0.97}>
               <div className="relative">
-                <MediaSlot
-                  src="/images/juria-preview.png"
-                  fileName="juria-preview.png"
-                  alt={t.pillars.ai.title}
-                  className="landing-juria-preview"
-                  fallback={<JuriaFrame lang={lang} />}
-                />
+                <div className="landing-juria-preview rounded-[1.35rem] overflow-hidden">
+                  <JuriaFrame lang={lang} />
+                </div>
                 <FloatingChip
                   className="hidden sm:block absolute -start-3 bottom-6 z-[2]"
                   delay={1}
                   duration={5}
+                  rotate={-4}
                 >
-                  <div className="landing-float-chip__card landing-float-chip__card--on-dark flex items-center gap-2">
-                    <Sparkles className="w-3.5 h-3.5" />
-                    {t.floats.aiSuggestion}
-                  </div>
+                  <MiniProductCard label={t.floats.juriaReady} className="landing-mini-card--on-preview">
+                    <div className="flex items-center gap-2 text-[12px] font-semibold text-[#2949e8]">
+                      <Sparkles className="w-3.5 h-3.5" />
+                      JURIA
+                    </div>
+                    <div className="mt-1 landing-mini-card__muted text-[11px]">{t.floats.juriaReady}</div>
+                  </MiniProductCard>
                 </FloatingChip>
               </div>
             </Reveal>
@@ -626,56 +418,13 @@ const Landing: React.FC = () => {
         </div>
       </section>
 
-      {/* ============ SOCIAL PROOF / TRUST ============ */}
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 py-16 sm:py-24">
-        <Reveal>
-          <div className="text-center max-w-2xl mx-auto mb-12">
-            <h2 className="text-2xl sm:text-3xl font-bold text-[#64499D] dark:text-white tracking-tight">
-              {t.trust.title}
-            </h2>
-            <p className="mt-3 text-sm sm:text-base text-neutral-600 dark:text-neutral-300">
-              {t.trust.subtitle}
-            </p>
-          </div>
-        </Reveal>
-
-        <div className="grid sm:grid-cols-3 gap-6 mb-12">
-          {t.trust.stats.map((stat, i) => (
-            <TrustItem key={stat.label} delay={i * 0.08}>
-              <div className="text-center px-4 py-6">
-                <div className="text-3xl sm:text-4xl font-bold text-[#64499D] dark:text-white tabular-nums tracking-tight">
-                  {stat.value}
-                  <span className="text-[#A58CF4]">{stat.suffix}</span>
-                </div>
-                <div className="mt-2 text-sm text-neutral-600 dark:text-neutral-300">
-                  {stat.label}
-                </div>
-              </div>
-            </TrustItem>
-          ))}
-        </div>
-
-        <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4">
-          {t.trust.logoLabels.map((label, i) => (
-            <TrustItem key={label} delay={0.24 + i * 0.08}>
-              <div className="landing-logo-slot px-5 py-3 rounded-xl text-xs sm:text-sm font-medium text-neutral-500">
-                {label}
-                <span className="block text-[10px] font-mono text-neutral-400 mt-1 opacity-70">
-                  logo-{i + 1}.svg
-                </span>
-              </div>
-            </TrustItem>
-          ))}
-        </div>
-      </section>
-
       {/* ============ SECURITY ============ */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 py-10 sm:py-16">
         <Reveal scale={0.98}>
-          <div className="landing-band rounded-3xl text-white px-6 sm:px-12 py-10 sm:py-14">
+          <div className="landing-band rounded-[1.75rem] sm:rounded-[2rem] text-white px-6 sm:px-12 py-10 sm:py-14">
             <div className="relative grid lg:grid-cols-2 gap-8 items-center">
               <div className="text-start">
-                <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#A58CF4] mb-3">
+                <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--jure-violet-light)] mb-3">
                   <ShieldCheck className="w-4 h-4" />
                 </span>
                 <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">
@@ -702,9 +451,9 @@ const Landing: React.FC = () => {
                   return (
                     <div
                       key={item}
-                      className="flex items-center gap-3 px-4 py-3.5 rounded-xl bg-white/8 border border-white/12"
+                      className="flex items-center gap-3 px-4 py-3.5 rounded-2xl bg-white/6 border border-white/10"
                     >
-                      <Icon className="w-5 h-5 text-[#A58CF4] shrink-0" />
+                      <Icon className="w-5 h-5 text-[var(--jure-violet-light)] shrink-0" />
                       <span className="text-sm font-medium">{item}</span>
                     </div>
                   );
@@ -715,41 +464,17 @@ const Landing: React.FC = () => {
         </Reveal>
       </section>
 
-      {/* ============ AUDIENCES ============ */}
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 py-14 sm:py-20">
-        <Reveal>
-          <h2 className="text-center text-2xl sm:text-3xl font-bold text-[#64499D] dark:text-white tracking-tight mb-10">
-            {t.audiences.title}
-          </h2>
-        </Reveal>
-        <div className="grid md:grid-cols-3 gap-5">
-          {[
-            { icon: Landmark, href: "solutions/law-firms", ...t.audiences.firms },
-            { icon: Building2, href: "solutions/legal-departments", ...t.audiences.departments },
-            { icon: Scale, href: "features", ...t.audiences.lawyers },
-          ].map(({ icon: Icon, title, body, href }, i) => (
-            <Reveal key={title} delay={i * 0.08} subtle>
-              <Link
-                to={path(href)}
-                className="group landing-glass landing-glass-glow rounded-2xl p-6 h-full w-full text-start block"
-              >
-                <span className="landing-icon w-10 h-10 rounded-xl flex items-center justify-center mb-4">
-                  <Icon className="w-5 h-5" />
-                </span>
-                <h3 className="text-lg font-bold text-[#64499D] dark:text-white">{title}</h3>
-                <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-300 leading-relaxed">
-                  {body}
-                </p>
-              </Link>
-            </Reveal>
-          ))}
-        </div>
-      </section>
+      <FaqSection
+        variant="panel"
+        title={t.faq.title}
+        lead={t.faq.lead}
+        faqs={t.faq.entries}
+        ctaPrompt={t.faq.ctaPrompt}
+        cta={t.faq.cta}
+        ctaHref={path("contact")}
+        onCtaClick={() => track(MarketingEvents.ContactCta, { source: "home_faq", lang })}
+      />
 
-      <FaqSection title={t.faq.title} faqs={t.faq.entries} className="py-14 sm:py-20" />
-
-      {/* ============ FINAL CTA ============ */}
-      <FinalCta t={t} lang={lang} path={path} />
     </MarketingShell>
   );
 };
@@ -760,55 +485,47 @@ const FinalCta: React.FC<{
   path: (slug?: string) => string;
 }> = ({ t, lang, path }) => {
   const reduce = useReducedMotion();
-  const ref = useRef<HTMLElement>(null);
+  const ref = useRef<HTMLDivElement>(null);
   const inView = useInView(ref, { once: true, margin: "-80px" });
 
   return (
-    <section ref={ref} className="max-w-4xl mx-auto px-4 sm:px-6 py-16 sm:py-24 text-center">
-      <motion.div
-        className="landing-glass landing-panel-glow rounded-3xl px-6 sm:px-12 py-12 sm:py-16"
-        initial={reduce ? { opacity: 0 } : { opacity: 0, scale: 0.98 }}
-        animate={inView ? { opacity: 1, scale: 1 } : undefined}
-        transition={{ duration: 0.7, ease: EASE }}
-      >
-        <h2 className="text-2xl sm:text-4xl font-bold text-[#64499D] dark:text-white tracking-tight whitespace-pre-line">
-          {t.finalCta.title}
-        </h2>
-        <p className="mt-4 max-w-xl mx-auto text-sm sm:text-base text-neutral-600 dark:text-neutral-300 leading-relaxed">
-          {t.finalCta.body}
-        </p>
-        <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
-          <Button
-            asChild
-            size="lg"
-            className="landing-cta-btn landing-btn-primary w-full sm:w-auto px-8"
+    <motion.div
+      ref={ref}
+      className="landing-close__cta"
+      initial={reduce ? { opacity: 0 } : { opacity: 0, y: 18 }}
+      animate={inView ? { opacity: 1, y: 0 } : undefined}
+      transition={{ duration: 0.7, ease: EASE }}
+    >
+      <p className="landing-close__kicker">{t.finalCta.kicker}</p>
+      <h2 className="landing-close__title">{t.finalCta.title}</h2>
+      <p className="landing-close__lead">{t.finalCta.body}</p>
+      <div className="landing-close__actions">
+        <Button asChild size="lg" className="landing-cta-btn landing-btn-primary landing-close__btn">
+          <Link
+            to="/signup"
+            onClick={() => track(MarketingEvents.SignupCta, { source: "home_final", lang })}
           >
-            <Link
-              to="/signup"
-              onClick={() => track(MarketingEvents.SignupCta, { source: "home_final", lang })}
-            >
-              {t.finalCta.primary}
-            </Link>
-          </Button>
-          <Button
-            asChild
-            size="lg"
-            variant="outline"
-            className="landing-btn-secondary w-full sm:w-auto px-8"
+            {t.finalCta.primary}
+            <ArrowRight className="w-4 h-4 ms-2 rtl:rotate-180" />
+          </Link>
+        </Button>
+        <Button
+          asChild
+          size="lg"
+          variant="outline"
+          className="landing-cta-btn landing-btn-secondary landing-close__btn"
+        >
+          <Link
+            to={path("contact")}
+            onClick={() =>
+              track(MarketingEvents.ContactCta, { source: "home_final", lang })
+            }
           >
-            <Link
-              to={path("demo")}
-              onClick={() =>
-                track(MarketingEvents.HeroPrimaryCta, { source: "home_final", lang })
-              }
-            >
-              {t.finalCta.secondary}
-            </Link>
-          </Button>
-        </div>
-        <p className="mt-6 text-xs text-neutral-400">{t.finalCta.tagline}</p>
-      </motion.div>
-    </section>
+            {t.finalCta.secondary}
+          </Link>
+        </Button>
+      </div>
+    </motion.div>
   );
 };
 

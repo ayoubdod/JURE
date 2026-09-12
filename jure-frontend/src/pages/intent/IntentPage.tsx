@@ -1,4 +1,4 @@
-// src/pages/intent/IntentPage.tsx — shared layout for the 8 high-intent
+// src/pages/intent/IntentPage.tsx — shared layout for the high-intent
 // landing pages (legal-ai, legal-case-management, ...).
 import React from "react";
 import { useNavigate } from "react-router";
@@ -41,13 +41,13 @@ import {
 import { INTENT_CONTENT } from "@/marketing/content/intent";
 import { track, MarketingEvents } from "@/lib/analytics";
 import "@/components/landing/landing.css";
+import "@/components/landing/juria-stage.css";
 
 /** Which product frame proves the claims of each page. */
 const FRAME_BY_KEY: Record<string, "case" | "juria" | "library" | "chat"> = {
   legalAi: "juria",
   legalCaseManagement: "case",
   legalPracticeManagement: "case",
-  legalResearch: "juria",
   legalDocumentManagement: "library",
   legalOperations: "case",
   legalKnowledgeManagement: "library",
@@ -97,19 +97,29 @@ const IntentPage: React.FC<IntentPageProps> = ({ routeKey }) => {
     }
   })();
 
-  const goDemo = (source: string) => {
+  const goProduct = (source: string) => {
     track(MarketingEvents.IntentPageCta, { page: routeKey, source, lang });
-    navigate(path("demo"));
+    navigate(path("features"));
   };
 
-  return (
-    <MarketingShell lang={lang} onLangChange={() => {}} dir={dir} activeNav="none">
-      <RouteSeo routeKey={routeKey} lang={lang} jsonLd={jsonLd} />
+  const useHorizonStage =
+    routeKey === "legalAi" ||
+    routeKey === "legalCaseManagement" ||
+    routeKey === "legalPracticeManagement";
+  const ink = useHorizonStage ? "text-[var(--juria-ink)]" : "text-slate-900 dark:text-white";
+  const muted = useHorizonStage
+    ? "text-[var(--juria-muted)]"
+    : "text-slate-600 dark:text-slate-300";
+  const panel = useHorizonStage ? "juria-stage__panel" : "landing-glass";
 
+  const page = (
+    <>
       {/* Breadcrumb */}
       <nav
         aria-label={dict.a11y.breadcrumb}
-        className={`max-w-4xl mx-auto px-4 sm:px-6 pt-6 text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1 ${rtlText}`}
+        className={`max-w-4xl mx-auto px-4 sm:px-6 pt-6 text-xs ${
+          useHorizonStage ? "text-[var(--juria-muted)]" : "text-slate-500 dark:text-slate-400"
+        } flex items-center gap-1 ${rtlText}`}
       >
         <button
           type="button"
@@ -119,21 +129,23 @@ const IntentPage: React.FC<IntentPageProps> = ({ routeKey }) => {
           {homeRoute.label[lang]}
         </button>
         <ChevronRight className="w-3 h-3 rtl:rotate-180" />
-        <span className="text-slate-700 dark:text-slate-200 font-medium">{route.label[lang]}</span>
+        <span className={`${useHorizonStage ? "text-[var(--juria-ink)]" : "text-slate-700 dark:text-slate-200"} font-medium`}>
+          {route.label[lang]}
+        </span>
       </nav>
 
       {/* H1 + intro */}
       <header className="max-w-4xl mx-auto px-4 sm:px-6 pt-8 sm:pt-12 pb-10 text-center">
-        <h1 className="text-3xl sm:text-5xl font-bold leading-tight text-slate-900 dark:text-white">
+        <h1 className={`text-3xl sm:text-5xl font-bold leading-tight ${ink}`}>
           {content.h1}
         </h1>
-        <p className="mt-5 max-w-2xl mx-auto text-sm sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed">
+        <p className={`mt-5 max-w-2xl mx-auto text-sm sm:text-base ${muted} leading-relaxed`}>
           {content.intro}
         </p>
         <div className="mt-7 flex flex-col sm:flex-row items-center justify-center gap-3">
           <Button
             size="lg"
-            onClick={() => goDemo("header")}
+            onClick={() => goProduct("header")}
             className="w-full sm:w-auto landing-btn-primary px-8"
           >
             {dict.cta.seeInAction}
@@ -145,22 +157,22 @@ const IntentPage: React.FC<IntentPageProps> = ({ routeKey }) => {
       {/* Definition + problem */}
       <section className="max-w-4xl mx-auto px-4 sm:px-6 py-8 space-y-10">
         <Reveal>
-          <div className={rtlText}>
-            <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-              <BookOpen className="w-5 h-5 text-[#A58CF4] dark:text-[#A58CF4] shrink-0" />
+          <div className={`${useHorizonStage ? `${panel} rounded-[1.35rem] p-6 sm:p-8` : ""} ${rtlText}`}>
+            <h2 className={`text-xl sm:text-2xl font-bold ${ink} flex items-center gap-2`}>
+              <BookOpen className="w-5 h-5 text-[#2949e8] dark:text-[#A58CF4] shrink-0" />
               {content.definition.title}
             </h2>
-            <p className="mt-3 text-sm sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed">
+            <p className={`mt-3 text-sm sm:text-base ${muted} leading-relaxed`}>
               {content.definition.body}
             </p>
           </div>
         </Reveal>
         <Reveal>
-          <div className={rtlText}>
-            <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
+          <div className={`${useHorizonStage ? `${panel} rounded-[1.35rem] p-6 sm:p-8` : ""} ${rtlText}`}>
+            <h2 className={`text-xl sm:text-2xl font-bold ${ink}`}>
               {content.problem.title}
             </h2>
-            <p className="mt-3 text-sm sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed">
+            <p className={`mt-3 text-sm sm:text-base ${muted} leading-relaxed`}>
               {content.problem.body}
             </p>
           </div>
@@ -172,16 +184,21 @@ const IntentPage: React.FC<IntentPageProps> = ({ routeKey }) => {
         <div className="grid lg:grid-cols-2 gap-8 lg:gap-14 items-center">
           <Reveal>
             <div className={rtlText}>
-              <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
+              <h2 className={`text-xl sm:text-2xl font-bold ${ink}`}>
                 {content.approach.title}
               </h2>
-              <p className="mt-3 text-sm sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed">
+              <p className={`mt-3 text-sm sm:text-base ${muted} leading-relaxed`}>
                 {content.approach.body}
               </p>
               <ul className="mt-4 space-y-2.5">
                 {content.approach.points.map((point) => (
-                  <li key={point} className="flex items-start gap-2.5 text-sm text-slate-700 dark:text-slate-200">
-                    <CheckCircle2 className="w-4 h-4 text-[#A58CF4] dark:text-[#A58CF4] mt-0.5 shrink-0" />
+                  <li
+                    key={point}
+                    className={`flex items-start gap-2.5 text-sm ${
+                      useHorizonStage ? "text-[var(--juria-ink)]" : "text-slate-700 dark:text-slate-200"
+                    }`}
+                  >
+                    <CheckCircle2 className="w-4 h-4 text-[#2949e8] dark:text-[#A58CF4] mt-0.5 shrink-0" />
                     {point}
                   </li>
                 ))}
@@ -195,7 +212,7 @@ const IntentPage: React.FC<IntentPageProps> = ({ routeKey }) => {
       {/* Workflow */}
       <section className="max-w-6xl mx-auto px-4 sm:px-6 py-10">
         <Reveal>
-          <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white text-center mb-6">
+          <h2 className={`text-xl sm:text-2xl font-bold ${ink} text-center mb-6`}>
             {content.workflow.title}
           </h2>
           <WorkflowDiagram
@@ -212,18 +229,16 @@ const IntentPage: React.FC<IntentPageProps> = ({ routeKey }) => {
       {/* Use cases */}
       <section className="max-w-6xl mx-auto px-4 sm:px-6 py-10">
         <Reveal>
-          <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white text-center mb-8">
+          <h2 className={`text-xl sm:text-2xl font-bold ${ink} text-center mb-8`}>
             {content.useCases.title}
           </h2>
         </Reveal>
         <div className="grid md:grid-cols-3 gap-5">
           {content.useCases.items.map((item, i) => (
             <Reveal key={item.title} delay={i * 0.08} subtle>
-              <div className={`landing-glass rounded-2xl p-6 h-full ${rtlText}`}>
-                <h3 className="text-base font-bold text-slate-900 dark:text-white">{item.title}</h3>
-                <p className="mt-2 text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
-                  {item.body}
-                </p>
+              <div className={`${panel} rounded-2xl p-6 h-full ${rtlText}`}>
+                <h3 className={`text-base font-bold ${ink}`}>{item.title}</h3>
+                <p className={`mt-2 text-sm ${muted} leading-relaxed`}>{item.body}</p>
               </div>
             </Reveal>
           ))}
@@ -234,25 +249,21 @@ const IntentPage: React.FC<IntentPageProps> = ({ routeKey }) => {
       <section className="max-w-4xl mx-auto px-4 sm:px-6 py-10">
         <Reveal>
           <div
-            className={`landing-glass rounded-2xl p-6 sm:p-8 flex flex-col sm:flex-row items-start gap-4 ${rtlText}`}
+            className={`${panel} rounded-2xl p-6 sm:p-8 flex flex-col sm:flex-row items-start gap-4 ${rtlText}`}
           >
-            <span className="w-10 h-10 rounded-xl bg-[#A58CF4]/10 dark:bg-[#A58CF4]/25 text-[#A58CF4] dark:text-[#A58CF4] flex items-center justify-center shrink-0">
+            <span className="w-10 h-10 rounded-xl bg-[#2949e8]/10 dark:bg-[#A58CF4]/25 text-[#2949e8] dark:text-[#A58CF4] flex items-center justify-center shrink-0">
               <ShieldCheck className="w-5 h-5" />
             </span>
             <div className="flex-1">
-              <h2 className="text-lg font-bold text-slate-900 dark:text-white">
-                {content.security.title}
-              </h2>
-              <p className="mt-2 text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
-                {content.security.body}
-              </p>
+              <h2 className={`text-lg font-bold ${ink}`}>{content.security.title}</h2>
+              <p className={`mt-2 text-sm ${muted} leading-relaxed`}>{content.security.body}</p>
               <button
                 type="button"
                 onClick={() => {
                   track(MarketingEvents.SecurityCta, { source: `intent_${routeKey}`, lang });
                   navigate(path("security"));
                 }}
-                className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-[#A58CF4] dark:text-[#A58CF4] hover:underline"
+                className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-[#2949e8] dark:text-[#A58CF4] hover:underline"
               >
                 {dict.cta.exploreSecurity} <ArrowRight className="w-4 h-4 rtl:rotate-180" />
               </button>
@@ -274,7 +285,11 @@ const IntentPage: React.FC<IntentPageProps> = ({ routeKey }) => {
                 key={key}
                 type="button"
                 onClick={() => navigate(path(rel.slug))}
-                className="px-3.5 py-1.5 rounded-full landing-glass text-xs font-medium text-[#A58CF4] dark:text-[#A58CF4] hover:border-[#A58CF4]/40 transition-colors"
+                className={`px-3.5 py-1.5 rounded-full text-xs font-medium text-[#2949e8] dark:text-[#A58CF4] transition-colors ${
+                  useHorizonStage
+                    ? "juria-stage__panel hover:border-[#2949e8]/30"
+                    : "landing-glass hover:border-[#A58CF4]/40"
+                }`}
               >
                 {rel.label[lang]}
               </button>
@@ -286,17 +301,17 @@ const IntentPage: React.FC<IntentPageProps> = ({ routeKey }) => {
       {/* CTA */}
       <section className="max-w-4xl mx-auto px-4 sm:px-6 py-12 sm:py-16 text-center">
         <Reveal>
-          <div className="landing-glass landing-panel-glow rounded-3xl px-6 sm:px-12 py-10">
-            <h2 className="text-xl sm:text-3xl font-bold text-slate-900 dark:text-white">
-              {content.cta.title}
-            </h2>
-            <p className="mt-3 max-w-xl mx-auto text-sm sm:text-base text-slate-600 dark:text-slate-300">
+          <div
+            className={`${panel} ${useHorizonStage ? "" : "landing-panel-glow"} rounded-3xl px-6 sm:px-12 py-10`}
+          >
+            <h2 className={`text-xl sm:text-3xl font-bold ${ink}`}>{content.cta.title}</h2>
+            <p className={`mt-3 max-w-xl mx-auto text-sm sm:text-base ${muted}`}>
               {content.cta.body}
             </p>
             <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
               <Button
                 size="lg"
-                onClick={() => goDemo("footer")}
+                onClick={() => goProduct("footer")}
                 className="w-full sm:w-auto landing-btn-primary px-8"
               >
                 {dict.cta.seeInAction}
@@ -316,6 +331,26 @@ const IntentPage: React.FC<IntentPageProps> = ({ routeKey }) => {
           </div>
         </Reveal>
       </section>
+    </>
+  );
+
+  return (
+    <MarketingShell lang={lang} onLangChange={() => {}} dir={dir} activeNav="none">
+      <RouteSeo routeKey={routeKey} lang={lang} jsonLd={jsonLd} />
+
+      {useHorizonStage ? (
+        <div className="juria-stage">
+          <div className="juria-stage__bg" aria-hidden>
+            <div className="juria-stage__wash" />
+            <div className="juria-stage__ribbons" />
+            <div className="juria-stage__grid" />
+            <div className="juria-stage__stars" />
+          </div>
+          <div className="juria-stage__content">{page}</div>
+        </div>
+      ) : (
+        page
+      )}
     </MarketingShell>
   );
 };

@@ -205,6 +205,14 @@ class ChatConsumer(CallSignalingMixin, AsyncJsonWebsocketConsumer):
             }
         )
 
+    async def conversation_removed(self, event):
+        await self.send_json(
+            {
+                "type": "conversation.removed",
+                "payload": event["payload"],
+            }
+        )
+
     async def presence_update(self, event):
         await self.send_json(
             {

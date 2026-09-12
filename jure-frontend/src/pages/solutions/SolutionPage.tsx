@@ -1,4 +1,4 @@
-// Audience solution pages: law firms & legal departments.
+// Audience solution page: law firms.
 import React from "react";
 import { useNavigate } from "react-router";
 import { Button } from "@/components/ui/button";
@@ -47,9 +47,9 @@ const SolutionPage: React.FC<SolutionPageProps> = ({ routeKey }) => {
 
   const rtlText = "text-start";
 
-  const goDemo = () => {
+  const goProduct = () => {
     track(MarketingEvents.HeroPrimaryCta, { source: routeKey, lang });
-    navigate(path("demo"));
+    navigate(path("features"));
   };
 
   const workflowIcons = [Briefcase, FileText, CheckCircle2, Users, Sparkles, Search];
@@ -78,7 +78,7 @@ const SolutionPage: React.FC<SolutionPageProps> = ({ routeKey }) => {
             <div className="mt-8">
               <Button
                 size="lg"
-                onClick={goDemo}
+                onClick={goProduct}
                 className="landing-btn-primary"
               >
                 {dict.cta.seeInAction}
@@ -164,7 +164,7 @@ const SolutionPage: React.FC<SolutionPageProps> = ({ routeKey }) => {
       <section className="max-w-4xl mx-auto px-4 sm:px-6 py-16 text-center">
         <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white">{content.cta.title}</h2>
         <p className="mt-3 text-slate-600 dark:text-slate-300 max-w-2xl mx-auto">{content.cta.body}</p>
-        <Button size="lg" onClick={goDemo} className="mt-8 landing-btn-primary">
+        <Button size="lg" onClick={goProduct} className="mt-8 landing-btn-primary">
           {dict.cta.seeInAction}
         </Button>
       </section>
