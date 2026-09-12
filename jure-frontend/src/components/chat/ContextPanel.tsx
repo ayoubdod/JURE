@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useCallback, useEffect, useState } from 'react';
-import { ChevronRight, Mail, Users, Copy, Phone, Pin, FileText, ImageIcon, Play, Settings2, Shield, UserPlus } from 'lucide-react';
+import { ChevronRight, Mail, Users, Copy, Phone, Pin, FileText, ImageIcon, Play, Settings2, Shield, UserPlus, Mic, Briefcase, CalendarDays, ListTodo, Ban } from 'lucide-react';
 import GroupChatIcon from '@/components/chat/GroupChatIcon';
 import UserAvatar, { getPersonImage, PresenceDot } from '@/components/common/UserAvatar';
 import { Button } from '@/components/ui/button';
@@ -15,13 +15,16 @@ import {
   setCachedUserWorkspace,
 } from '@/utils/userWorkspaceCache';
 import { normalizeUserWorkspace } from '@/utils/normalizeUserWorkspace';
-import { TaskPriority, TaskStatus, BACKEND_BASE_URL } from '@/utils/constants';
+import { TaskPriority, TaskStatus, BACKEND_BASE_URL, MessageAttachmentKind } from '@/utils/constants';
 import { getCountdownDays, getCountdownStyle } from '@/utils/caseCardHelpers';
 import { isAxiosError } from 'axios';
-import { getMessageType } from '@/components/chat/SharedMessageCard';
+import {
+  getMessageType,
+  getSharedMessagePreviewText,
+} from '@/components/chat/SharedMessageCard';
 import LinkedMatterCard, { type LinkedMatterTab } from '@/components/chat/LinkedMatterCard';
 import { attachmentFileName, attachmentHref, getMemberPerson, isDocumentAttachment, isImageOrVideoAttachment, activeMemberships } from '@/components/chat/conversationUtils';
-import { useAppTranslation, intlLocale } from '@/i18n';
+import { useAppTranslation, intlLocale, formatTime } from '@/i18n';
 import { isOnlineUserId, personPresenceId, formatPresenceLastSeen, resolveLastSeenAt } from '@/lib/presence';
 import { useOnlineIds, useLastSeenById } from '@/hooks/useOnlinePresence';
 
@@ -215,11 +218,76 @@ const ContextPanel: React.FC<ContextPanelProps> = ({
     const isDeleted = (msg as { is_deleted?: boolean }).is_deleted;
     const mt = getMessageType(msg);
     if (isDeleted) return t.conversations.messageDeletedPreview;
-    if (mt === 'SHARED_CASE') return t.conversations.attachmentPreview;
-    if (mt === 'SHARED_TASK') return t.conversations.attachmentPreview;
-    if (mt === 'SHARED_APPOINTMENT') return t.conversations.attachmentPreview;
-    if (body?.trim()) return body.length > 72 ? `${body.slice(0, 72)}…` : body;
+
+    const sharedPreview = getSharedMessagePreviewText(msg, {
+      missedVideo: t.conversations.call.missedVideoCallTitle,
+      missedVoice: t.conversations.call.missedCallTitle,
+      videoCall: t.conversations.call.historyVideoCall,
+      voiceCall: t.conversations.call.historyVoiceCall,
+      sharedCase: t.conversations.sharedCase,
+      sharedTask: t.conversations.sharedTask,
+      sharedAppointment: t.conversations.sharedAppointment,
+    });
+    if (sharedPreview) return sharedPreview;
+
+    if (body?.trim()) return body.length > 90 ? `${body.slice(0, 90)}…` : body;
+
+    const atts = msg.attachments ?? [];
+    if (atts.some((a) => a.kind === MessageAttachmentKind.IMAGE)) return t.conversations.photoPreview;
+    if (atts.some((a) => a.kind === MessageAttachmentKind.VIDEO)) return t.conversations.videoPreview;
+    if (atts.some((a) => a.kind === MessageAttachmentKind.AUDIO)) return t.conversations.voicePreview;
+    if (atts.some((a) => a.kind === MessageAttachmentKind.FILE)) {
+      const file = atts.find((a) => a.kind === MessageAttachmentKind.FILE);
+      return file ? attachmentFileName(file.file) : t.conversations.documentPreview;
+    }
     return t.conversations.attachmentPreview;
+  };
+
+  const pinnedThumb = (msg: API.Message): { src: string; isVideo: boolean } | null => {
+    const atts = msg.attachments ?? [];
+    const media = atts.find(
+      (a) => a.kind === MessageAttachmentKind.IMAGE || a.kind === MessageAttachmentKind.VIDEO
+    );
+    if (!media) return null;
+    const src = media.thumbnail
+      ? attachmentHref(media.thumbnail, BACKEND_BASE_URL)
+      : attachmentHref(media.file, BACKEND_BASE_URL);
+    return { src, isVideo: media.kind === MessageAttachmentKind.VIDEO };
+  };
+
+  const pinnedKindMeta = (msg: API.Message) => {
+    const mt = getMessageType(msg);
+    if ((msg as { is_deleted?: boolean }).is_deleted) {
+      return { Icon: Ban, label: t.conversations.messageDeletedPreview };
+    }
+    if (mt === 'SHARED_CASE') return { Icon: Briefcase, label: t.conversations.sharedCase };
+    if (mt === 'SHARED_TASK') return { Icon: ListTodo, label: t.conversations.sharedTask };
+    if (mt === 'SHARED_APPOINTMENT') return { Icon: CalendarDays, label: t.conversations.sharedAppointment };
+    const atts = msg.attachments ?? [];
+    if (atts.some((a) => a.kind === MessageAttachmentKind.IMAGE)) {
+      return { Icon: ImageIcon, label: t.conversations.photoPreview };
+    }
+    if (atts.some((a) => a.kind === MessageAttachmentKind.VIDEO)) {
+      return { Icon: Play, label: t.conversations.videoPreview };
+    }
+    if (atts.some((a) => a.kind === MessageAttachmentKind.AUDIO)) {
+      return { Icon: Mic, label: t.conversations.voicePreview };
+    }
+    if (atts.some((a) => a.kind === MessageAttachmentKind.FILE)) {
+      return { Icon: FileText, label: t.conversations.documentPreview };
+    }
+    return null;
+  };
+
+  const pinnedSenderName = (msg: API.Message) => {
+    const s = msg.sender;
+    if (!s || typeof s === 'number') return '';
+    return (
+      s.full_name ||
+      `${s.first_name ?? ''} ${s.last_name ?? ''}`.trim() ||
+      s.email ||
+      ''
+    );
   };
 
   const loadWorkspace = useCallback(
@@ -301,24 +369,75 @@ const ContextPanel: React.FC<ContextPanelProps> = ({
     panelPinnedMessages.length > 0 ? (
       <div>
         <p className="mb-2 flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-          <Pin className="h-3 w-3" />
+          <Pin className="h-3 w-3 text-amber-600 dark:text-amber-400" />
           {t.conversations.pinned}
-          <span className="rounded-full bg-slate-100 px-1.5 py-0.5 tabular-nums text-[9px] text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+          <span className="rounded-full bg-amber-100 px-1.5 py-0.5 tabular-nums text-[9px] font-semibold text-amber-800 dark:bg-amber-950/50 dark:text-amber-300">
             {panelPinnedMessages.length}
           </span>
         </p>
-        <ul className="space-y-1.5">
-          {panelPinnedMessages.map((msg) => (
-            <li key={msg.id}>
-              <button
-                type="button"
-                className="w-full rounded-lg border border-amber-200/70 bg-amber-50/50 px-2.5 py-2 text-start text-[12px] text-slate-700 transition-colors line-clamp-3 hover:bg-amber-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#64499D]/30 dark:border-amber-900/40 dark:bg-amber-950/20 dark:text-slate-300 dark:hover:bg-amber-950/35"
-                onClick={() => onPanelPinnedMessageClick?.(msg.id)}
-              >
-                {pinnedSnippet(msg)}
-              </button>
-            </li>
-          ))}
+        <ul className="space-y-2">
+          {panelPinnedMessages.map((msg) => {
+            const thumb = pinnedThumb(msg);
+            const kind = pinnedKindMeta(msg);
+            const snippet = pinnedSnippet(msg);
+            const sender = pinnedSenderName(msg);
+            const when = msg.sent_at || msg.created;
+            const timeLabel = when ? formatTime(when, lang) : '';
+            const body = (msg.body ?? (msg as { content?: string }).content ?? '').trim();
+            const showKindChip = Boolean(kind && (!body || thumb));
+
+            return (
+              <li key={msg.id}>
+                <button
+                  type="button"
+                  className="group flex w-full gap-2.5 rounded-xl border border-amber-200/80 bg-gradient-to-br from-amber-50/90 to-white p-2 text-start shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition-colors hover:border-amber-300 hover:from-amber-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#64499D]/30 dark:border-amber-900/40 dark:from-amber-950/30 dark:to-slate-900/60 dark:hover:border-amber-800/60"
+                  onClick={() => onPanelPinnedMessageClick?.(msg.id)}
+                >
+                  {thumb ? (
+                    <span className="relative h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-slate-100 ring-1 ring-amber-200/60 dark:bg-slate-800 dark:ring-amber-900/40">
+                      <img src={thumb.src} alt="" className="h-full w-full object-cover" />
+                      {thumb.isVideo ? (
+                        <span className="absolute inset-0 flex items-center justify-center bg-black/30">
+                          <Play className="h-3.5 w-3.5 fill-white text-white" />
+                        </span>
+                      ) : null}
+                    </span>
+                  ) : kind ? (
+                    <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-amber-100/80 text-amber-800 ring-1 ring-amber-200/70 dark:bg-amber-950/40 dark:text-amber-300 dark:ring-amber-900/40">
+                      <kind.Icon className="h-4 w-4" />
+                    </span>
+                  ) : (
+                    <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-amber-100/80 text-amber-700 ring-1 ring-amber-200/70 dark:bg-amber-950/40 dark:text-amber-300 dark:ring-amber-900/40">
+                      <Pin className="h-4 w-4" />
+                    </span>
+                  )}
+                  <span className="min-w-0 flex-1 py-0.5">
+                    {(sender || timeLabel) && (
+                      <span className="mb-0.5 flex items-center gap-1.5 text-[10px] text-slate-500 dark:text-slate-400">
+                        {sender ? (
+                          <span className="truncate font-medium text-slate-600 dark:text-slate-300">
+                            {sender}
+                          </span>
+                        ) : null}
+                        {sender && timeLabel ? <span aria-hidden>·</span> : null}
+                        {timeLabel ? <span className="shrink-0 tabular-nums">{timeLabel}</span> : null}
+                      </span>
+                    )}
+                    {showKindChip && kind && body ? (
+                      <span className="mb-0.5 inline-flex items-center gap-1 rounded-md bg-white/70 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-amber-800 ring-1 ring-amber-200/80 dark:bg-amber-950/40 dark:text-amber-300 dark:ring-amber-900/50">
+                        <kind.Icon className="h-2.5 w-2.5" />
+                        {kind.label}
+                      </span>
+                    ) : null}
+                    <span className="line-clamp-2 text-[12.5px] font-medium leading-snug text-slate-800 dark:text-slate-100">
+                      {snippet}
+                    </span>
+                  </span>
+                  <ChevronRight className="mt-3 h-3.5 w-3.5 shrink-0 text-slate-300 opacity-0 transition-opacity group-hover:opacity-100 dark:text-slate-600 rtl:rotate-180" />
+                </button>
+              </li>
+            );
+          })}
         </ul>
       </div>
     ) : null;
