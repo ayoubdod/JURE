@@ -17,20 +17,34 @@ from django.utils import timezone
 _online_user_ids: set[int] = set()
 _last_seen: dict[int, str] = {}
 
+# Cache Redis probe so a dead Redis URL cannot hang every presence call.
+_redis_client = None
+_redis_checked = False
+
 
 def _get_redis():
-    """Return Redis client if available, else None."""
+    """Return Redis client if available, else None. Fail fast on bad Redis."""
+    global _redis_client, _redis_checked
+    if _redis_checked:
+        return _redis_client
+    _redis_checked = True
     try:
         import redis
 
         url = getattr(settings, "REDIS_URL", None) or os.environ.get(
             "REDIS_URL", "redis://127.0.0.1:6379/0"
         )
-        r = redis.from_url(url)
-        r.ping()  # verify connection
-        return r
+        r = redis.from_url(
+            url,
+            socket_connect_timeout=0.4,
+            socket_timeout=0.4,
+            retry_on_timeout=False,
+        )
+        r.ping()
+        _redis_client = r
     except Exception:
-        return None
+        _redis_client = None
+    return _redis_client
 
 
 def _iso_now() -> str:
@@ -97,6 +111,8 @@ def presence_last_seen_map(user_ids: list[int] | None = None) -> dict[str, str]:
     if r:
         try:
             if user_ids:
+                if not user_ids:
+                    return {}
                 values = r.hmget("chat:last_seen", *[str(uid) for uid in user_ids])
                 out: dict[str, str] = {}
                 for uid, raw in zip(user_ids, values):

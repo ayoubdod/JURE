@@ -81,13 +81,36 @@ class ChatConsumer(CallSignalingMixin, AsyncJsonWebsocketConsumer):
         await self.channel_layer.group_add(self.user_personal_group, self.channel_name)
         await self.channel_layer.group_add(PRESENCE_GROUP, self.channel_name)
 
-        online_ids = await asyncio.to_thread(presence_add, self.user.id)
-        last_seen = await self._cabinet_last_seen_map()
-
+        # Accept immediately — any Redis/DB work before accept causes the browser
+        # handshake to time out (~5s) and presence never comes online.
         await self.accept()
 
+        online_ids = await asyncio.to_thread(presence_add, self.user.id)
+        # Push presence first so green dots work even if inbox load is slow.
+        await self.send_json(
+            {
+                "type": "connection.established",
+                "payload": {
+                    "notifications": [],
+                    "online_user_ids": online_ids,
+                    "online_member_ids": online_ids,
+                    "online": online_ids,
+                    "last_seen": {},
+                },
+                "user_id": self.user.id,
+            }
+        )
+        await self._broadcast_presence(online_ids, {})
+
+        last_seen: dict[str, str] = {}
+        try:
+            last_seen = await asyncio.wait_for(self._cabinet_last_seen_map(), timeout=1.5)
+        except Exception:
+            last_seen = {}
+
         await self.send_notifications(online_ids, last_seen)
-        await self._broadcast_presence(online_ids, last_seen)
+        if last_seen:
+            await self._broadcast_presence(online_ids, last_seen)
 
     async def disconnect(self, close_code):
         await self._discard_all_call_groups()
@@ -180,11 +203,12 @@ class ChatConsumer(CallSignalingMixin, AsyncJsonWebsocketConsumer):
 
     @database_sync_to_async
     def get_last_messages(self):
+        # Cap inbox bootstrap so connection.established cannot stall presence.
         return list(
             Message.objects.filter(conversation__participants=self.user)
             .exclude(sender=self.user)
             .prefetch_related("attachments")
-            .order_by("sent_at")
+            .order_by("-sent_at")[:80]
         )
 
     async def send_error(self, error_message, error_code=None):
