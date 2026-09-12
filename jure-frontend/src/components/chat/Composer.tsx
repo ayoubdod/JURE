@@ -251,8 +251,21 @@ const Composer: React.FC<{
 
   const busy = disabled || sending || shareSending || voiceSending;
   const recording = !!rec;
+  const hasDraft = Boolean(text.trim());
+  const canSend = hasDraft && !busy;
+  const sendArmed = (hasDraft && !disabled) || sending;
   const iconBtn =
-    'h-11 w-11 sm:h-9 sm:w-9 shrink-0 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200';
+    'h-11 w-11 sm:h-9 sm:w-9 shrink-0 rounded-full text-slate-500 hover:bg-slate-100 hover:text-slate-800 dark:hover:bg-slate-800 dark:hover:text-slate-200';
+  const sendBtnClass = cn(
+    'inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full p-0 sm:h-9 sm:w-9',
+    'gap-0 shadow-sm transition-all duration-150',
+    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#64499D]/35 focus-visible:ring-offset-2',
+    'disabled:pointer-events-none disabled:opacity-100',
+    '[&_svg]:pointer-events-none [&_svg]:size-[18px] [&_svg]:shrink-0 sm:[&_svg]:size-4',
+    sendArmed
+      ? 'bg-[#64499D] text-white hover:bg-[#553d86] hover:shadow-md active:scale-[0.96]'
+      : 'bg-slate-100 text-slate-400 shadow-none hover:bg-slate-100 dark:bg-slate-800 dark:text-slate-500'
+  );
 
   return (
     <div className="shrink-0 bg-gradient-to-t from-slate-50 via-slate-50 to-transparent px-2 pt-1 dark:from-slate-950 dark:via-slate-950 sm:px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
@@ -307,11 +320,14 @@ const Composer: React.FC<{
                 <Button
                   type="button"
                   size="icon"
-                  className="h-11 w-11 shrink-0 sm:h-9 sm:w-9"
+                  className={cn(
+                    sendBtnClass,
+                    'bg-[#64499D] text-white hover:bg-[#553d86] hover:shadow-md active:scale-[0.96]'
+                  )}
                   onClick={sendRecording}
                   aria-label={c.sendVoiceAria}
                 >
-                  <Send className="h-4 w-4" />
+                  <Send />
                 </Button>
               </>
             )}
@@ -396,12 +412,16 @@ const Composer: React.FC<{
           <Button
             type="button"
             onClick={() => void submit()}
-            disabled={busy || !text.trim()}
+            disabled={!canSend}
             size="icon"
-            className="h-11 w-11 shrink-0 sm:h-9 sm:w-9"
+            className={sendBtnClass}
             aria-label={sending ? c.sendingAria : c.sendAria}
           >
-            {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+            {sending ? (
+              <Loader2 className="animate-spin" />
+            ) : (
+              <Send aria-hidden />
+            )}
           </Button>
           </div>
         )}

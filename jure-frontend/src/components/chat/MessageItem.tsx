@@ -62,14 +62,24 @@ function fileExtensionLabel(fileName: string): string {
 function ChatFileAttachment({
   file,
   size,
+  isOwn = false,
 }: {
   file: string;
   size?: number | null;
+  isOwn?: boolean;
 }) {
   const href = attachmentHref(file, BACKEND_BASE_URL);
   const name = attachmentFileName(file);
   const ext = fileExtensionLabel(name);
   const sizeLabel = formatAttachmentSize(size);
+  const accent =
+    ext === 'PDF'
+      ? 'bg-rose-500/15 text-rose-600 dark:text-rose-400'
+      : ext === 'DOC' || ext === 'DOCX'
+        ? 'bg-sky-500/15 text-sky-700 dark:text-sky-400'
+        : ext === 'XLS' || ext === 'XLSX' || ext === 'CSV'
+          ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400'
+          : 'bg-[#64499D]/12 text-[#64499D] dark:text-[#CFC2FF]';
 
   return (
     <a
@@ -78,24 +88,49 @@ function ChatFileAttachment({
       rel="noopener noreferrer"
       download={name}
       className={cn(
-        'flex w-full min-w-[220px] max-w-[280px] items-center gap-2.5 rounded-xl border border-slate-200/90 bg-white px-2.5 py-2 no-underline shadow-[0_1px_2px_rgba(15,23,42,0.04)]',
-        'transition-colors hover:border-slate-300 hover:bg-slate-50',
-        'dark:border-slate-700 dark:bg-slate-950 dark:hover:border-slate-600 dark:hover:bg-slate-900'
+        'group flex w-full min-w-[230px] max-w-[300px] items-center gap-3 rounded-2xl px-3 py-2.5 no-underline transition-all duration-150',
+        isOwn
+          ? 'bg-gradient-to-br from-[#6f54a8] to-[#553d86] text-white shadow-[0_8px_22px_rgba(100,73,157,0.28)] hover:brightness-[1.03]'
+          : 'border border-slate-200/90 bg-white shadow-[0_6px_18px_rgba(15,23,42,0.06)] hover:border-slate-300 hover:shadow-[0_8px_22px_rgba(15,23,42,0.1)] dark:border-slate-700 dark:bg-slate-950 dark:hover:border-slate-600'
       )}
     >
-      <span className="flex h-10 w-10 shrink-0 flex-col items-center justify-center rounded-lg bg-[#F1ECFF] text-[#64499D] dark:bg-[#64499D]/25 dark:text-[#CFC2FF]">
+      <span
+        className={cn(
+          'flex h-11 w-11 shrink-0 flex-col items-center justify-center rounded-xl',
+          isOwn ? 'bg-white text-[#64499D]' : accent
+        )}
+      >
         <FileText className="h-4 w-4" aria-hidden />
         <span className="mt-0.5 text-[8px] font-bold leading-none tracking-wide">{ext}</span>
       </span>
       <span className="min-w-0 flex-1">
-        <span className="block truncate text-[13px] font-semibold leading-tight text-slate-900 dark:text-slate-100">
+        <span
+          className={cn(
+            'block truncate text-[13px] font-semibold leading-tight',
+            isOwn ? 'text-white' : 'text-slate-900 dark:text-slate-100'
+          )}
+        >
           {name}
         </span>
-        <span className="mt-0.5 block text-[11px] text-slate-500 dark:text-slate-400">
-          {sizeLabel || ext}
+        <span
+          className={cn(
+            'mt-0.5 block text-[11px]',
+            isOwn ? 'text-white/75' : 'text-slate-500 dark:text-slate-400'
+          )}
+        >
+          {[sizeLabel, ext].filter(Boolean).join(' · ') || ext}
         </span>
       </span>
-      <Download className="h-4 w-4 shrink-0 text-slate-400" aria-hidden />
+      <span
+        className={cn(
+          'inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-colors',
+          isOwn
+            ? 'bg-white/15 text-white group-hover:bg-white/25'
+            : 'bg-slate-100 text-slate-500 group-hover:bg-[#64499D]/10 group-hover:text-[#64499D] dark:bg-slate-800 dark:text-slate-400'
+        )}
+      >
+        <Download className="h-3.5 w-3.5" aria-hidden />
+      </span>
     </a>
   );
 }
@@ -197,12 +232,12 @@ const MessageItem: React.FC<MessageItemProps> = ({
   const editedAt = msg.edited_at;
   const isPinned = msg.is_pinned === true || msg.isPinned === true;
   const forwardedDetail = msg.forwarded_from_detail ?? undefined;
+  const isForwarded = Boolean(forwardedDetail) && !isDeleted;
   const showMediaBlock = !isDeleted && !isShared && mediaAttachments.length > 0;
   const showAudioBlock = !isDeleted && !isShared && audioAttachments.length > 0;
   const showTextBubble =
     showPlaceholder ||
     isShared ||
-    Boolean(forwardedDetail) ||
     Boolean(String(body || '').trim());
 
   const canEdit = isOwn && !isDeleted && !isShared && !isCallHistory && (body || hasAttachments);
@@ -438,7 +473,7 @@ const MessageItem: React.FC<MessageItemProps> = ({
   ) : null;
 
   const audioBlock = showAudioBlock ? (
-    <div className={cn('flex w-full flex-col gap-1.5', (showMediaBlock || showTextBubble) && 'mt-1.5')}>
+    <div className={cn('flex w-full flex-col gap-2', (showMediaBlock || showTextBubble) && 'mt-1.5')}>
       {audioAttachments.map((attachment) => (
         <AudioControl
           key={attachment.id}
@@ -474,18 +509,6 @@ const MessageItem: React.FC<MessageItemProps> = ({
         isSending && !isDeleted && 'opacity-80'
       )}
     >
-      {forwardedDetail && !isDeleted && (
-        <div className="mb-1 flex items-center gap-1 text-[11px] opacity-90">
-          <Forward className="h-3 w-3 shrink-0" />
-          <span>{t.conversations.forwarded}</span>
-          {forwardedDetail.body && (
-            <span className="truncate opacity-80">
-              — {forwardedDetail.body.slice(0, 40)}
-              {forwardedDetail.body.length > 40 ? '…' : ''}
-            </span>
-          )}
-        </div>
-      )}
       {isDeleted ? (
         <p className="flex items-center gap-2 text-[12.5px] font-medium tracking-tight">
           <Ban className="h-3.5 w-3.5 shrink-0 opacity-80" aria-hidden />
@@ -506,7 +529,7 @@ const MessageItem: React.FC<MessageItemProps> = ({
             })}
           </p>
         ) : (
-          <div className="flex w-full max-w-[320px] flex-col items-stretch gap-1.5">
+          <div className="flex w-full max-w-[320px] flex-col items-stretch gap-2">
             <SharedMessageCard
               item={coercedShared}
               onOpenCase={onOpenSharedCase}
@@ -514,7 +537,9 @@ const MessageItem: React.FC<MessageItemProps> = ({
               onOpenAppointment={onOpenSharedAppointment}
             />
             {body?.trim() ? (
-              <p className="break-words px-0.5 text-[13px] text-slate-800 dark:text-slate-200">{body.trim()}</p>
+              <p className="break-words rounded-xl bg-slate-50 px-2.5 py-1.5 text-[13px] text-slate-800 dark:bg-slate-800/60 dark:text-slate-200">
+                {body.trim()}
+              </p>
             ) : null}
           </div>
         )
@@ -528,7 +553,12 @@ const MessageItem: React.FC<MessageItemProps> = ({
     !showPlaceholder && fileAttachments.length > 0 ? (
       <div className={cn('flex w-full flex-col gap-1.5', (showTextBubble || showMediaBlock || showAudioBlock) && 'mt-1.5')}>
         {fileAttachments.map((attachment) => (
-          <ChatFileAttachment key={attachment.id} file={attachment.file} size={attachment.size} />
+          <ChatFileAttachment
+            key={attachment.id}
+            file={attachment.file}
+            size={attachment.size}
+            isOwn={isOwn}
+          />
         ))}
       </div>
     ) : null;
@@ -616,6 +646,19 @@ const MessageItem: React.FC<MessageItemProps> = ({
                   <Pin className="mt-1.5 h-3 w-3 shrink-0 text-[#64499D]" />
                 )}
                 <div className="min-w-0">
+                  {isForwarded ? (
+                    <div
+                      className={cn(
+                        'mb-1 flex items-center gap-1 px-0.5 text-[11px] font-medium italic',
+                        isOwn
+                          ? 'text-[#64499D]/90 dark:text-[#CFC2FF]/90'
+                          : 'text-slate-500 dark:text-slate-400'
+                      )}
+                    >
+                      <Forward className="h-3 w-3 shrink-0" aria-hidden />
+                      <span>{t.conversations.forwarded}</span>
+                    </div>
+                  ) : null}
                   {mediaBlock}
                   {bubbleContent}
                   {audioBlock}

@@ -3,7 +3,6 @@
 import React, { useEffect, useState } from 'react';
 import { Check, ChevronDown, Minus, Circle } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useAppTranslation, interpolate } from '@/i18n';
@@ -26,18 +25,6 @@ type ModeMenuProps = {
 };
 
 const MODE_ORDER: PresenceMode[] = ['AVAILABLE', 'DND', 'AWAY', 'INVISIBLE'];
-
-function useIsMobile(breakpoint = 640) {
-  const [mobile, setMobile] = useState(false);
-  useEffect(() => {
-    const mq = window.matchMedia(`(max-width: ${breakpoint}px)`);
-    const apply = () => setMobile(mq.matches);
-    apply();
-    mq.addEventListener('change', apply);
-    return () => mq.removeEventListener('change', apply);
-  }, [breakpoint]);
-  return mobile;
-}
 
 function ModeDot({ mode, className }: { mode: PresenceMode; className?: string }) {
   if (mode === 'DND') {
@@ -86,7 +73,6 @@ export default function ModeMenu({ variant = 'profile', className, onChanged }: 
   const { toast } = useToast();
   const user = useUserStore((s) => s.user);
   const setUser = useUserStore((s) => s.setUser);
-  const isMobile = useIsMobile();
 
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -263,37 +249,6 @@ export default function ModeMenu({ variant = 'profile', className, onChanged }: 
     </div>
   );
 
-  if (isMobile) {
-    return (
-      <>
-        <button
-          type="button"
-          className={triggerClass}
-          aria-label={t.mode.title}
-          aria-expanded={open}
-          disabled={saving}
-          onClick={() => setOpen(true)}
-        >
-          {triggerInner}
-        </button>
-        <Sheet
-          open={open}
-          onOpenChange={(v) => {
-            setOpen(v);
-            if (!v) setPendingDnd(false);
-          }}
-        >
-          <SheetContent side="bottom" className="rounded-t-2xl px-3 pb-6 pt-3">
-            <SheetHeader className="sr-only">
-              <SheetTitle>{t.mode.title}</SheetTitle>
-            </SheetHeader>
-            {panel}
-          </SheetContent>
-        </Sheet>
-      </>
-    );
-  }
-
   return (
     <Popover
       open={open}
@@ -316,10 +271,17 @@ export default function ModeMenu({ variant = 'profile', className, onChanged }: 
       </PopoverTrigger>
       <PopoverContent
         align="start"
+        side="bottom"
         sideOffset={8}
+        collisionPadding={12}
         className={cn(
-          'w-[280px] rounded-2xl border border-slate-200 p-2 shadow-[0_12px_40px_rgba(15,23,42,0.12)]',
-          'dark:border-slate-700 dark:bg-slate-950'
+          // Floating card (same family as profile / notifications) — not a full-screen sheet.
+          'z-[310] max-h-[min(70dvh,520px)] overflow-y-auto rounded-2xl border border-slate-200 p-2',
+          'shadow-[0_4px_6px_rgba(0,0,0,0.04),0_12px_40px_rgba(15,23,42,0.12)]',
+          'dark:border-slate-700 dark:bg-slate-950',
+          variant === 'inline'
+            ? 'w-[min(100vw-1.5rem,400px)]'
+            : 'w-[min(100vw-1.5rem,14rem)]'
         )}
         onOpenAutoFocus={(e) => e.preventDefault()}
       >

@@ -507,16 +507,21 @@ const ContextPanel: React.FC<ContextPanelProps> = ({
         <ul className="space-y-1">
           {documentItems.slice(0, 12).map((file) => {
             const href = attachmentHref(file.file, BACKEND_BASE_URL);
+            const name = attachmentFileName(file.file);
+            const ext = (name.includes('.') ? name.split('.').pop() : 'FILE')?.toUpperCase().slice(0, 5) || 'FILE';
             return (
               <li key={file.id}>
                 <a
                   href={href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-2 rounded-md px-1.5 py-1.5 text-[12px] text-slate-600 transition-colors hover:bg-slate-50 hover:text-[#64499D] dark:text-slate-300 dark:hover:bg-slate-800/60"
+                  className="flex items-center gap-2.5 rounded-xl border border-slate-100 bg-white px-2 py-2 text-[12px] text-slate-700 transition-colors hover:border-[#64499D]/25 hover:bg-[#F7F4FF] dark:border-slate-800 dark:bg-slate-900/40 dark:text-slate-200 dark:hover:bg-[#64499D]/10"
                 >
-                  <FileText className="h-3.5 w-3.5 shrink-0" />
-                  <span className="truncate">{attachmentFileName(file.file)}</span>
+                  <span className="inline-flex h-8 w-8 shrink-0 flex-col items-center justify-center rounded-lg bg-[#64499D]/10 text-[#64499D] dark:bg-[#64499D]/20 dark:text-[#CFC2FF]">
+                    <FileText className="h-3.5 w-3.5" />
+                    <span className="text-[7px] font-bold leading-none">{ext}</span>
+                  </span>
+                  <span className="min-w-0 flex-1 truncate font-medium">{name}</span>
                 </a>
               </li>
             );
