@@ -3986,6 +3986,7 @@ export interface AppMessages {
     sharedTask: string;
     sharedAppointment: string;
     sharePickerTitle: string;
+    sharePickerHint: string;
     shareTabCases: string;
     shareTabTasks: string;
     shareTabAppointments: string;
@@ -3998,6 +3999,12 @@ export interface AppMessages {
     noDocuments: string;
     untitled: string;
     uploadFile: string;
+    uploadFromDevice: string;
+    attachDocsHint: string;
+    searchDocuments: string;
+    loadingDocuments: string;
+    noDocumentsMatch: string;
+    attachingDocument: string;
     openLibrary: string;
     loadDocumentsFailed: string;
     attachDocumentFailed: string;

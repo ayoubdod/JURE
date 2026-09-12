@@ -72,6 +72,7 @@ declare namespace API {
     title: string;
     display_name?: string;
     icon_url?: string | null;
+    icon_preset?: string | null;
     icon_preset_emoji?: string | null;
     archived?: boolean;
     is_pinned?: boolean;

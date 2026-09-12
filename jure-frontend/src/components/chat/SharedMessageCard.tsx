@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Calendar, CheckSquare, Folder } from 'lucide-react';
+import { Calendar, CheckSquare, ChevronRight, Folder } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { TaskPriority } from '@/utils/constants';
 import { detectInitialLanguage } from '@/i18n/locale';
@@ -14,13 +14,6 @@ function parseEntityId(id: string | number | undefined | null): number | null {
   if (id == null) return null;
   const n = typeof id === 'number' ? id : parseInt(String(id), 10);
   return Number.isFinite(n) ? n : null;
-}
-
-function caseBorderClass(caseType: string | null | undefined): string {
-  const t = String(caseType || '').toUpperCase();
-  if (t === 'LITIGATION') return 'border-s-rose-500';
-  if (t === 'CONSULTATION') return 'border-s-indigo-500';
-  return 'border-s-amber-400';
 }
 
 function formatDayMonth(iso: string | null | undefined, lang: Parameters<typeof formatDate>[1]): string {
@@ -50,10 +43,6 @@ function formatDurationMinutes(
     return m ? `${hours} ${interpolate(minutesTpl, { n: m })}` : hours;
   }
   return interpolate(minutesTpl, { n: minutes });
-}
-
-function statusPill(): string {
-  return 'text-[10px] font-medium rounded-full px-1.5 py-0.5 bg-slate-500/10 text-slate-700 dark:text-slate-300 ring-1 ring-slate-500/20';
 }
 
 function priorityPill(p?: string | null): boolean {
@@ -206,46 +195,103 @@ export interface SharedMessageCardProps {
   onOpenAppointment?: (appointmentId: number) => void;
 }
 
+function Chip({ children, className }: { children: React.ReactNode; className?: string }) {
+  return (
+    <span
+      className={cn(
+        'inline-flex max-w-full items-center truncate rounded-full px-1.5 py-0.5 text-[10px] font-medium',
+        'bg-slate-500/10 text-slate-600 ring-1 ring-slate-500/15 dark:text-slate-300',
+        className
+      )}
+    >
+      {children}
+    </span>
+  );
+}
+
+function caseAccent(caseType: string | null | undefined): {
+  icon: string;
+  bar: string;
+  soft: string;
+} {
+  const t = String(caseType || '').toUpperCase();
+  if (t === 'LITIGATION') {
+    return {
+      icon: 'bg-rose-500/15 text-rose-600 dark:text-rose-400',
+      bar: 'from-rose-500/20 via-transparent to-transparent',
+      soft: 'hover:border-rose-300/60 dark:hover:border-rose-700/50',
+    };
+  }
+  if (t === 'CONSULTATION') {
+    return {
+      icon: 'bg-indigo-500/15 text-indigo-600 dark:text-indigo-400',
+      bar: 'from-indigo-500/20 via-transparent to-transparent',
+      soft: 'hover:border-indigo-300/60 dark:hover:border-indigo-700/50',
+    };
+  }
+  return {
+    icon: 'bg-amber-500/15 text-amber-700 dark:text-amber-400',
+    bar: 'from-amber-400/25 via-transparent to-transparent',
+    soft: 'hover:border-amber-300/60 dark:hover:border-amber-700/50',
+  };
+}
+
 export function SharedMessageCard({ item, onOpenCase, onOpenTask, onOpenAppointment }: SharedMessageCardProps) {
   const { t, tf, lang, enumPretty, enumLabel } = useAppTranslation();
-  const baseCard =
-    'max-w-[320px] w-full text-start rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-sm px-3 py-2.5 transition-colors cursor-pointer hover:border-slate-300 dark:hover:border-slate-600 border-s-[3px]';
-
   const nid = parseEntityId(item.id);
+
+  const shell =
+    'group relative max-w-[320px] w-full overflow-hidden rounded-2xl border border-slate-200/90 bg-white text-start shadow-[0_8px_22px_rgba(15,23,42,0.07)] transition-all duration-150 dark:border-slate-700 dark:bg-slate-950';
+  const interactive =
+    'cursor-pointer hover:shadow-[0_10px_28px_rgba(15,23,42,0.12)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#64499D]/30 disabled:cursor-default disabled:opacity-70';
 
   if (item.type === 'CASE') {
     const ref = item.reference;
     const refDisplay = ref ? (ref.startsWith('#') ? ref : `#${ref}`) : nid != null ? `#${nid}` : '—';
     const typeLabel = enumLabel('caseType', item.caseType) || enumPretty(item.caseType) || t.sidebar.cases;
+    const accent = caseAccent(item.caseType);
     return (
       <button
         type="button"
-        className={cn(baseCard, caseBorderClass(item.caseType))}
+        className={cn(shell, interactive, accent.soft)}
         onClick={() => nid != null && onOpenCase?.(nid)}
         disabled={nid == null}
       >
-        <div className="flex items-center justify-between gap-2 mb-1">
-          <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1">
-            <Folder className="h-3 w-3" />
-            {t.conversations.sharedCase}
+        <div className={cn('pointer-events-none absolute inset-x-0 top-0 h-16 bg-gradient-to-b', accent.bar)} aria-hidden />
+        <div className="relative flex items-start gap-2.5 px-3 pb-3 pt-3">
+          <span className={cn('inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl', accent.icon)}>
+            <Folder className="h-[18px] w-[18px]" aria-hidden />
           </span>
-          {item.status ? <span className={statusPill()}>{enumPretty(String(item.status))}</span> : null}
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                {t.conversations.sharedCase}
+              </span>
+              {item.status ? <Chip>{enumPretty(String(item.status))}</Chip> : null}
+            </div>
+            <p className="mt-1 font-mono text-[11px] text-slate-500 dark:text-slate-400">
+              {refDisplay}
+              <span className="mx-1 text-slate-300 dark:text-slate-600">·</span>
+              <span className="font-sans font-medium text-slate-600 dark:text-slate-300">{typeLabel}</span>
+            </p>
+            <p className="mt-1 line-clamp-2 text-[13.5px] font-semibold leading-snug text-slate-900 dark:text-slate-50">
+              {item.title?.trim() ? item.title : '—'}
+            </p>
+            {(item.assignedTo?.name || item.priority) && (
+              <div className="mt-2 flex flex-wrap items-center gap-1">
+                {item.assignedTo?.name ? (
+                  <Chip>
+                    {t.calendar.assignedTo}: {item.assignedTo.name}
+                  </Chip>
+                ) : null}
+                {item.priority ? (
+                  <Chip>{`${t.cases.workspaces.priority}: ${enumPretty(String(item.priority))}`}</Chip>
+                ) : null}
+              </div>
+            )}
+          </div>
+          <ChevronRight className="mt-1 h-4 w-4 shrink-0 text-slate-300 transition-transform group-hover:translate-x-0.5 group-hover:text-[#64499D] dark:text-slate-600 dark:group-hover:text-[#CFC2FF]" aria-hidden />
         </div>
-        <p className="text-[11px] text-slate-600 dark:text-slate-400 font-mono">
-          {refDisplay} · <span className="font-sans text-[10px] font-medium">{typeLabel}</span>
-        </p>
-        <p className="text-[13px] font-semibold text-slate-900 dark:text-slate-100 line-clamp-2 mt-0.5">
-          {item.title?.trim() ? item.title : '—'}
-        </p>
-        <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
-          {item.assignedTo?.name && <span>{t.calendar.assignedTo}: {item.assignedTo.name}</span>}
-          {item.assignedTo?.name && item.priority && <span> · </span>}
-          {item.priority && (
-            <span>
-              {t.cases.workspaces.priority}: {enumPretty(String(item.priority))}
-            </span>
-          )}
-        </p>
       </button>
     );
   }
@@ -254,28 +300,40 @@ export function SharedMessageCard({ item, onOpenCase, onOpenTask, onOpenAppointm
     return (
       <button
         type="button"
-        className={cn(baseCard, 'border-s-indigo-500')}
+        className={cn(shell, interactive, 'hover:border-indigo-300/60 dark:hover:border-indigo-700/50')}
         onClick={() => nid != null && onOpenTask?.(nid)}
         disabled={nid == null}
       >
-        <div className="flex items-center justify-between gap-2 mb-1">
-          <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1">
-            <CheckSquare className="h-3 w-3" />
-            {t.conversations.sharedTask}
+        <div
+          className="pointer-events-none absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-indigo-500/15 via-transparent to-transparent"
+          aria-hidden
+        />
+        <div className="relative flex items-start gap-2.5 px-3 pb-3 pt-3">
+          <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-500/15 text-indigo-600 dark:text-indigo-400">
+            <CheckSquare className="h-[18px] w-[18px]" aria-hidden />
           </span>
-          {item.status ? <span className={statusPill()}>{enumPretty(String(item.status))}</span> : null}
-        </div>
-        <p className="text-[13px] font-semibold text-slate-900 dark:text-slate-100 line-clamp-2">
-          {item.title?.trim() ? item.title : '—'}
-        </p>
-        <div className="flex flex-wrap items-center gap-1.5 mt-1 text-[11px] text-slate-500 dark:text-slate-400">
-          {item.dueDate && <span>{tf(t.conversations.dueLabel, { date: formatDayMonth(item.dueDate, lang) })}</span>}
-          {item.dueDate && priorityPill(item.priority) && <span>·</span>}
-          {priorityPill(item.priority) && (
-            <span className="text-[10px] font-semibold text-rose-600 dark:text-rose-400">
-              {enumPretty(String(item.priority))}
-            </span>
-          )}
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                {t.conversations.sharedTask}
+              </span>
+              {item.status ? <Chip>{enumPretty(String(item.status))}</Chip> : null}
+            </div>
+            <p className="mt-1.5 line-clamp-2 text-[13.5px] font-semibold leading-snug text-slate-900 dark:text-slate-50">
+              {item.title?.trim() ? item.title : '—'}
+            </p>
+            <div className="mt-2 flex flex-wrap items-center gap-1">
+              {item.dueDate ? (
+                <Chip>{tf(t.conversations.dueLabel, { date: formatDayMonth(item.dueDate, lang) })}</Chip>
+              ) : null}
+              {priorityPill(item.priority) ? (
+                <Chip className="bg-rose-500/15 text-rose-700 ring-rose-500/25 dark:text-rose-400">
+                  {enumPretty(String(item.priority))}
+                </Chip>
+              ) : null}
+            </div>
+          </div>
+          <ChevronRight className="mt-1 h-4 w-4 shrink-0 text-slate-300 transition-transform group-hover:translate-x-0.5 group-hover:text-indigo-500 dark:text-slate-600" aria-hidden />
         </div>
       </button>
     );
@@ -290,28 +348,40 @@ export function SharedMessageCard({ item, onOpenCase, onOpenTask, onOpenAppointm
   return (
     <button
       type="button"
-      className={cn(baseCard, 'border-s-emerald-500')}
+      className={cn(shell, interactive, 'hover:border-emerald-300/60 dark:hover:border-emerald-700/50')}
       onClick={() => nid != null && onOpenAppointment?.(nid)}
       disabled={nid == null}
     >
-      <div className="flex items-center justify-between gap-2 mb-1">
-        <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1">
-          <Calendar className="h-3 w-3" />
-          {t.conversations.sharedAppointment}
+      <div
+        className="pointer-events-none absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-emerald-500/15 via-transparent to-transparent"
+        aria-hidden
+      />
+      <div className="relative flex items-start gap-2.5 px-3 pb-3 pt-3">
+        <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-700 dark:text-emerald-400">
+          <Calendar className="h-[18px] w-[18px]" aria-hidden />
         </span>
-        {item.status ? <span className={statusPill()}>{enumPretty(String(item.status))}</span> : null}
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+              {t.conversations.sharedAppointment}
+            </span>
+            {item.status ? <Chip>{enumPretty(String(item.status))}</Chip> : null}
+          </div>
+          <p className="mt-1.5 line-clamp-2 text-[13.5px] font-semibold leading-snug text-slate-900 dark:text-slate-50">
+            {item.title?.trim() ? item.title : '—'}
+          </p>
+          {apptDate ? (
+            <div className="mt-2 flex flex-wrap items-center gap-1">
+              <Chip>
+                {formatDayMonth(apptDate, lang)}
+                {formatClock(apptDate, lang) ? ` · ${formatClock(apptDate, lang)}` : ''}
+              </Chip>
+              {dur ? <Chip>{dur}</Chip> : null}
+            </div>
+          ) : null}
+        </div>
+        <ChevronRight className="mt-1 h-4 w-4 shrink-0 text-slate-300 transition-transform group-hover:translate-x-0.5 group-hover:text-emerald-600 dark:text-slate-600" aria-hidden />
       </div>
-      <p className="text-[13px] font-semibold text-slate-900 dark:text-slate-100 line-clamp-2">
-        {item.title?.trim() ? item.title : '—'}
-      </p>
-      <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
-        {apptDate && (
-          <>
-            {formatDayMonth(apptDate, lang)} · {formatClock(apptDate, lang)}
-            {dur ? ` · ${dur}` : ''}
-          </>
-        )}
-      </p>
     </button>
   );
 }

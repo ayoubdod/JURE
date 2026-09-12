@@ -88,10 +88,25 @@ class MessageViewSet(viewsets.ModelViewSet):
 
     @decorators.action(detail=True, methods=["POST"], url_path="forward")
     def forward(self, request, pk=None):
-        """Forward this message to another conversation. Creates new message with forwarded_from."""
-        source = get_object_or_404(Message, pk=pk)
+        """Forward this message as-is (body, type, shares, attachments) with forwarded_from."""
+        from django.db import transaction
+
+        from ..models import Attachment
+
+        source = get_object_or_404(
+            Message.objects.prefetch_related("attachments"),
+            pk=pk,
+        )
         if not self._ensure_participant(source):
             return response.Response({"detail": "Forbidden"}, status=403)
+        if source.is_deleted:
+            return response.Response(
+                {"detail": "Cannot forward a deleted message."}, status=400
+            )
+        if source.message_type in Message.call_message_types():
+            return response.Response(
+                {"detail": "Cannot forward call history messages."}, status=400
+            )
 
         target_conv_id = (request.data or {}).get("target_conversation_id") or (
             request.data or {}
@@ -107,12 +122,36 @@ class MessageViewSet(viewsets.ModelViewSet):
         ).exists():
             return response.Response({"detail": "Forbidden"}, status=403)
 
-        # Create forwarded message (body + forwarded_from; attachments not copied by default)
-        forwarded = Message.objects.create(
-            conversation=target_conv,
-            sender=request.user,
-            body=source.body if not source.is_deleted else "",
-            forwarded_from=source,
+        with transaction.atomic():
+            forwarded = Message.objects.create(
+                conversation=target_conv,
+                sender=request.user,
+                body=source.body or "",
+                message_type=source.message_type,
+                shared_case_id=source.shared_case_id,
+                shared_task_id=source.shared_task_id,
+                shared_appointment_id=source.shared_appointment_id,
+                forwarded_from=source,
+            )
+            for att in source.attachments.all():
+                create_kwargs = {
+                    "message": forwarded,
+                    "kind": att.kind,
+                    "mime": att.mime or "",
+                    "size": att.size or 0,
+                    "duration_ms": att.duration_ms,
+                }
+                if att.file:
+                    create_kwargs["file"] = att.file.name
+                if att.thumbnail:
+                    create_kwargs["thumbnail"] = att.thumbnail.name
+                Attachment.objects.create(**create_kwargs)
+
+        forwarded = (
+            _message_queryset_with_shares()
+            .filter(pk=forwarded.pk)
+            .prefetch_related("attachments", "pinned_by", "deliveries", "read_by")
+            .first()
         )
         return response.Response(
             MessageSerializer(forwarded, context={"request": request}).data,
