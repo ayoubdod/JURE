@@ -127,9 +127,11 @@ INSTALLED_APPS = [
     "finance",
     "notifications",
     "juria",
+    "privacy",
     "legal_deadlines",
     "conflict_checks",
     "research_notes",
+    "consultations",
 ]
 
 SITE_ID = 1
@@ -424,6 +426,17 @@ JURIA_ENABLED = env.bool("JURIA_ENABLED", default=False)
 DEEPSEEK_API_URL = env.str("DEEPSEEK_API_URL", default="https://api.deepseek.com").rstrip("/")
 DEEPSEEK_API_KEY = env.str("DEEPSEEK_API_KEY", default="")
 DEEPSEEK_MODEL = env.str("DEEPSEEK_MODEL", default="deepseek-chat")
+
+# --------------------------------------------------------------------------------------
+# Privacy Gateway (JURIA AI egress)
+# --------------------------------------------------------------------------------------
+# Base64-encoded 32-byte AES-256-GCM key for PseudonymMapping encryption.
+PRIVACY_MAPPING_KEY = env.str("PRIVACY_MAPPING_KEY", default="")
+PRIVACY_DEFAULT_MODE = env.str("PRIVACY_DEFAULT_MODE", default="PSEUDONYMIZED").strip().upper()
+# Phase 4 stub — set True only when private/on-prem AI is wired.
+PRIVACY_PRIVATE_AI_CONFIGURED = env.bool("PRIVACY_PRIVATE_AI_CONFIGURED", default=False)
+# When True, _deepseek_chat / _juria_post refuse calls without a Privacy Gateway egress ticket.
+PRIVACY_ENFORCE_EGRESS_TICKET = env.bool("PRIVACY_ENFORCE_EGRESS_TICKET", default=True)
 
 # --------------------------------------------------------------------------------------
 # Logging

@@ -91,6 +91,7 @@ class JuriaConversationDraftView(JuriaEnabledMixin, APIView):
             legal_domain = project.legal_domain
             instructions = project.instructions
             has_project_sources = project.sources.exists()
+            cabinet = project.cabinet
         else:
             cabinet = get_user_cabinet(request.user)
             jurisdiction = getattr(cabinet, "jurisdiction", None) if cabinet else None
@@ -100,17 +101,56 @@ class JuriaConversationDraftView(JuriaEnabledMixin, APIView):
             legal_domain = None
             instructions = None
 
+        from privacy.services.egress import reset_egress_ticket, set_egress_ticket
+        from privacy.services.gateway import PrivacyGatewayError, sanitize_for_ai
+        from privacy.services.quick_redact import redact_ephemeral
+
+        # Sanitize drafting parameters + case context before AI egress
+        param_blob = "\n".join(f"{k}: {v}" for k, v in (parameters or {}).items() if v)
+        try:
+            sanitized = sanitize_for_ai(
+                user=request.user,
+                cabinet=cabinet,
+                project=project,
+                case=case,
+                message_text=param_blob,
+                history=[],
+                case_context=case_context,
+                retrieved_block=None,
+                instructions=instructions,
+                document_text=None,
+                has_documents=False,
+            )
+        except PrivacyGatewayError as exc:
+            return Response({"error": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Rebuild parameters from sanitized blob lines when possible
+        sanitized_params = dict(parameters or {})
+        if sanitized.mode != "STANDARD" and sanitized.message_text:
+            # Apply ephemeral redaction per value for structured params
+            for key, value in list(sanitized_params.items()):
+                if value is None or str(value).strip() == "":
+                    continue
+                sanitized_params[key] = redact_ephemeral(
+                    str(value), jurisdiction=jurisdiction_code
+                )
+            # Prefer gateway-scrubbed values when keys appear in sanitized message
+            # (gateway already ran on joined blob; per-key ephemeral is belt-and-suspenders)
+
         t0 = time.perf_counter()
+        ticket = set_egress_ticket(sanitized.egress_ticket)
         try:
             api_out = draft_document(
                 document_type,
-                parameters,
-                case_context=case_context,
+                sanitized_params,
+                case_context=sanitized.case_context,
                 jurisdiction_code=jurisdiction_code,
                 legal_system=legal_system,
                 language=language,
                 legal_domain=legal_domain,
-                instructions=instructions,
+                instructions=sanitized.instructions,
+                privacy_mode=sanitized.mode,
+                privacy_meta=sanitized.privacy_meta,
             )
         except JuriaTimeoutError:
             return Response(
@@ -122,6 +162,8 @@ class JuriaConversationDraftView(JuriaEnabledMixin, APIView):
                 {"error": str(exc)},
                 status=juria_error_http_status(exc),
             )
+        finally:
+            reset_egress_ticket(ticket)
 
         content = clean_draft_content(api_out.get("content") or "")
         content, embedded_note = extract_advisory_note(content)

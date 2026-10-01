@@ -108,6 +108,10 @@ export async function openNotification(navigate: NavigateFunction, n: AppNotific
     return;
   }
   if (t.startsWith('APPOINTMENT_') && n.related_appointment?.id) {
+    if (actionUrl?.startsWith('/client')) {
+      navigate(actionUrl);
+      return;
+    }
     navigate(`/dashboard/appointments?appointment=${n.related_appointment.id}`);
     return;
   }
@@ -148,6 +152,10 @@ export async function openNotification(navigate: NavigateFunction, n: AppNotific
     return;
   }
   if (n.related_appointment?.id) {
+    if (actionUrl?.startsWith('/client')) {
+      navigate(actionUrl);
+      return;
+    }
     navigate(`/dashboard/appointments?appointment=${n.related_appointment.id}`);
     return;
   }

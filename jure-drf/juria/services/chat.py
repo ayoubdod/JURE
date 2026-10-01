@@ -129,46 +129,133 @@ def finalize_assistant_payload(
 
 
 def _call_model(*, project, thread, user, message_text, history, mode, language, upload_local=None, upload_type=None):
+    from privacy.audit import log_privacy_event
+    from privacy.constants import PrivacyAuditAction, PrivacyMode
+    from privacy.services.document_text_bridge import extract_for_privacy
+    from privacy.services.egress import reset_egress_ticket, set_egress_ticket
+    from privacy.services.gateway import PrivacyGatewayError, sanitize_for_ai
+
     ctx = resolve_prompt_context(project, message_text, language=language)
+    document_text = None
+    if upload_local:
+        document_text = extract_for_privacy(upload_local, upload_type)
+
+    cabinet = getattr(project, "cabinet", None)
+    try:
+        sanitized = sanitize_for_ai(
+            user=user,
+            cabinet=cabinet,
+            project=project,
+            case=getattr(project, "linked_case", None),
+            message_text=message_text or "",
+            history=history,
+            case_context=ctx.get("case_context"),
+            retrieved_block=ctx.get("retrieved_block"),
+            instructions=ctx.get("instructions"),
+            document_text=document_text,
+            has_documents=bool(upload_local or document_text),
+        )
+    except PrivacyGatewayError as exc:
+        raise JuriaAPIError(str(exc)) from exc
+
     kwargs = dict(
         language=ctx["language"],
         jurisdiction_code=ctx["jurisdiction"],
         legal_domain=ctx["legal_domain"],
-        instructions=ctx["instructions"],
-        retrieved_block=ctx["retrieved_block"],
-        case_context=ctx["case_context"],
+        instructions=sanitized.instructions,
+        retrieved_block=sanitized.retrieved_block,
+        case_context=sanitized.case_context,
+        privacy_mode=sanitized.mode,
+        privacy_meta=sanitized.privacy_meta,
     )
+    ticket_token = set_egress_ticket(sanitized.egress_ticket)
     t0 = time.perf_counter()
-    if upload_local:
-        api_out = analyze_document(
-            upload_local,
-            upload_type,
-            message_text,
+    try:
+        if upload_local:
+            if sanitized.mode != PrivacyMode.STANDARD and sanitized.document_text is None:
+                raise JuriaAPIError(
+                    "Privacy processing could not sanitize the document. "
+                    "Raw file content was not sent to the AI provider."
+                )
+            api_out = analyze_document(
+                upload_local,
+                upload_type,
+                sanitized.message_text,
+                document_text=sanitized.document_text,
+                require_text_only=(sanitized.mode != PrivacyMode.STANDARD),
+                **kwargs,
+            )
+            content = format_analysis_response(api_out)
+            tokens = int(api_out.get("tokens_used") or 0)
+            juria_mid = str(api_out.get("message_id") or "")
+            analysis = api_out.get("structured") or {}
+            if sanitized.privacy_meta:
+                analysis = {**analysis, "privacy": sanitized.privacy_meta}
+            content, analysis = finalize_assistant_payload(
+                content, analysis, ctx["retrieved"], language, mode="CONTRACT_ANALYSIS"
+            )
+            elapsed_ms = int((time.perf_counter() - t0) * 1000)
+            log_privacy_event(
+                cabinet=cabinet,
+                actor=user,
+                action=PrivacyAuditAction.AI_REQUEST_SENT,
+                message="AI request sent (sanitized)",
+                project=project,
+                session=sanitized.session,
+                extra={"mode": sanitized.mode},
+            )
+            log_privacy_event(
+                cabinet=cabinet,
+                actor=user,
+                action=PrivacyAuditAction.AI_RESPONSE_RECEIVED,
+                message="AI response received",
+                project=project,
+                session=sanitized.session,
+                extra={"mode": sanitized.mode, "tokens": tokens},
+            )
+            record_juria_usage(user, messages_delta=2, tokens_delta=tokens, contract_analyses_delta=1)
+            return content, tokens, juria_mid, [], analysis, ctx["retrieved"], elapsed_ms
+
+        api_out = send_chat_message(
+            sanitized.history,
+            sanitized.message_text,
+            mode=mode,
             **kwargs,
         )
-        content = format_analysis_response(api_out)
+        content = api_out.get("content") or ""
         tokens = int(api_out.get("tokens_used") or 0)
         juria_mid = str(api_out.get("message_id") or "")
-        analysis = api_out.get("structured") or {}
+        suggestions = list(api_out.get("suggestions") or [])
+        analysis = {}
+        if sanitized.privacy_meta:
+            analysis["privacy"] = sanitized.privacy_meta
         content, analysis = finalize_assistant_payload(
-            content, analysis, ctx["retrieved"], language, mode="CONTRACT_ANALYSIS"
+            content, analysis, ctx["retrieved"], language, mode=mode
         )
         elapsed_ms = int((time.perf_counter() - t0) * 1000)
-        record_juria_usage(user, messages_delta=2, tokens_delta=tokens, contract_analyses_delta=1)
-        return content, tokens, juria_mid, [], analysis, ctx["retrieved"], elapsed_ms
-
-    api_out = send_chat_message(history, message_text, mode=mode, **kwargs)
-    content = api_out.get("content") or ""
-    tokens = int(api_out.get("tokens_used") or 0)
-    juria_mid = str(api_out.get("message_id") or "")
-    suggestions = list(api_out.get("suggestions") or [])
-    content, analysis = finalize_assistant_payload(
-        content, {}, ctx["retrieved"], language, mode=mode
-    )
-    elapsed_ms = int((time.perf_counter() - t0) * 1000)
-    research_delta = 1 if mode == JuriaConversation.Mode.LEGAL_RESEARCH else 0
-    record_juria_usage(user, messages_delta=2, tokens_delta=tokens, research_queries_delta=research_delta)
-    return content, tokens, juria_mid, suggestions, analysis, ctx["retrieved"], elapsed_ms
+        log_privacy_event(
+            cabinet=cabinet,
+            actor=user,
+            action=PrivacyAuditAction.AI_REQUEST_SENT,
+            message="AI request sent (sanitized)",
+            project=project,
+            session=sanitized.session,
+            extra={"mode": sanitized.mode},
+        )
+        log_privacy_event(
+            cabinet=cabinet,
+            actor=user,
+            action=PrivacyAuditAction.AI_RESPONSE_RECEIVED,
+            message="AI response received",
+            project=project,
+            session=sanitized.session,
+            extra={"mode": sanitized.mode, "tokens": tokens},
+        )
+        research_delta = 1 if mode == JuriaConversation.Mode.LEGAL_RESEARCH else 0
+        record_juria_usage(user, messages_delta=2, tokens_delta=tokens, research_queries_delta=research_delta)
+        return content, tokens, juria_mid, suggestions, analysis, ctx["retrieved"], elapsed_ms
+    finally:
+        reset_egress_ticket(ticket_token)
 
 
 def send_thread_message(user, thread, project, *, message_text: str, upload=None, file_name="", language="", mode=""):
@@ -224,77 +311,76 @@ def send_thread_message(user, thread, project, *, message_text: str, upload=None
 
     local_path = None
     tmp_cleanup = False
-    title_pool = ThreadPoolExecutor(max_workers=1)
-    title_future = None
-    if need_title and (message_text or "").strip():
-        title_future = title_pool.submit(
-            generate_conversation_title,
-            message_text,
-            language=language,
-        )
     try:
-        try:
-            if has_attachment:
-                local_path = local_path_for_storage(attachment_rel)
-                tmp_cleanup = not hasattr(default_storage, "path")
-            history = build_history(thread, exclude_message_id=user_msg.id)
-            content, tokens, juria_mid, suggestions, analysis, retrieved, elapsed_ms = _call_model(
-                project=project,
-                thread=thread,
-                user=user,
-                message_text=message_text,
-                history=history,
-                mode=mode,
-                language=language,
-                upload_local=local_path,
-                upload_type=attachment_type if has_attachment else None,
-            )
-        except Exception:
-            if attachment_rel:
-                try:
-                    default_storage.delete(attachment_rel)
-                except Exception:
-                    pass
-            user_msg.delete()
-            raise
-        finally:
-            if tmp_cleanup and local_path and os.path.isfile(local_path):
-                try:
-                    os.unlink(local_path)
-                except OSError:
-                    pass
-
-        assistant_msg = JuriaMessage.objects.create(
-            conversation=user_msg.conversation,
+        if has_attachment:
+            local_path = local_path_for_storage(attachment_rel)
+            tmp_cleanup = not hasattr(default_storage, "path")
+        history = build_history(thread, exclude_message_id=user_msg.id)
+        content, tokens, juria_mid, suggestions, analysis, retrieved, elapsed_ms = _call_model(
+            project=project,
             thread=thread,
-            role=JuriaMessage.Role.ASSISTANT,
-            content=content,
+            user=user,
+            message_text=message_text,
+            history=history,
             mode=mode,
             language=language,
-            tokens_used=tokens or None,
-            response_time_ms=elapsed_ms,
-            juria_message_id=juria_mid,
-            sources=retrieved,
-            analysis=analysis or {},
-            parent_message=user_msg,
+            upload_local=local_path,
+            upload_type=attachment_type if has_attachment else None,
         )
-        if need_title:
+    except Exception:
+        if attachment_rel:
+            try:
+                default_storage.delete(attachment_rel)
+            except Exception:
+                pass
+        user_msg.delete()
+        raise
+    finally:
+        if tmp_cleanup and local_path and os.path.isfile(local_path):
+            try:
+                os.unlink(local_path)
+            except OSError:
+                pass
+
+    assistant_msg = JuriaMessage.objects.create(
+        conversation=user_msg.conversation,
+        thread=thread,
+        role=JuriaMessage.Role.ASSISTANT,
+        content=content,
+        mode=mode,
+        language=language,
+        tokens_used=tokens or None,
+        response_time_ms=elapsed_ms,
+        juria_message_id=juria_mid,
+        sources=retrieved,
+        analysis=analysis or {},
+        parent_message=user_msg,
+    )
+    if need_title and (message_text or "").strip():
+        # Title LLM only after successful AI egress (failure-closed: no side-call on gateway block)
+        title_pool = ThreadPoolExecutor(max_workers=1)
+        try:
+            title_future = title_pool.submit(
+                generate_conversation_title,
+                message_text,
+                language=language,
+                jurisdiction_code=getattr(project, "jurisdiction_code", None),
+            )
             generated = ""
-            if title_future is not None:
-                try:
-                    generated = title_future.result(timeout=8) or ""
-                except Exception as exc:
-                    logger.warning("Juria title generation did not finish: %s", exc)
+            try:
+                generated = title_future.result(timeout=8) or ""
+            except Exception as exc:
+                logger.warning("Juria title generation did not finish: %s", exc)
             apply_auto_title(
                 thread,
                 project,
                 generated or fallback_title_from_message(message_text, language),
             )
-        else:
-            thread.save(update_fields=["updated_at"])
-        return user_msg, assistant_msg, suggestions
-    finally:
-        title_pool.shutdown(wait=False)
+        finally:
+            title_pool.shutdown(wait=False)
+    else:
+        thread.save(update_fields=["updated_at"])
+    return user_msg, assistant_msg, suggestions
 
 
 def edit_user_message(user, user_msg: JuriaMessage, *, new_content: str, language: str = "", regenerate: bool = True):

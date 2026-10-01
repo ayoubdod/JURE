@@ -36,6 +36,10 @@ import {
 } from '@/services/library/api';
 import { apiGetJurisdictions, type Jurisdiction } from '@/services/jurisdictions/api';
 import { LIBRARY_RESOURCE_TYPE_IDS } from '@/lib/libraryTaxonomy';
+import {
+  downloadLibraryDocument,
+  openLibraryDocumentInNewTab,
+} from '@/lib/libraryMedia';
 import ResourceCard from '@/components/library/hub/ResourceCard';
 import ResourceFormDialog, {
   type ResourceFormDialogRef,
@@ -68,13 +72,18 @@ function parseList(data: API.LibraryListResponse | API.Document[] | unknown): {
   return { results: [], recent: [] };
 }
 
-const RESOURCE_GRID = 'grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4';
+const RESOURCE_GRID =
+  'grid grid-cols-2 gap-x-3 gap-y-5 sm:grid-cols-3 sm:gap-x-4 sm:gap-y-6 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6';
 
 function SkeletonGrid() {
   return (
     <div className={RESOURCE_GRID} aria-hidden>
-      {Array.from({ length: 6 }).map((_, i) => (
-        <div key={i} className="h-36 animate-pulse rounded-xl bg-slate-200/80 dark:bg-slate-800" />
+      {Array.from({ length: 12 }).map((_, i) => (
+        <div key={i} className="min-w-0">
+          <div className="aspect-[2/3] animate-pulse rounded-2xl bg-slate-200/80 dark:bg-slate-800" />
+          <div className="mt-2.5 h-3 w-4/5 animate-pulse rounded bg-slate-200/80 dark:bg-slate-800" />
+          <div className="mt-1.5 h-2.5 w-2/5 animate-pulse rounded bg-slate-200/60 dark:bg-slate-800/80" />
+        </div>
       ))}
     </div>
   );
@@ -216,24 +225,40 @@ const Library = () => {
   );
 
   const handleDownload = useCallback(
-    (doc: API.Document) => {
-      const href = doc.file || doc.external_url;
-      if (!href) return;
-      const a = window.document.createElement('a');
-      a.href = href;
-      a.download = doc.title || 'document';
-      a.target = '_blank';
-      a.rel = 'noopener';
-      a.click();
-      toast({
-        title: t.library.toasts.downloadStarted,
-        description: tf(t.library.toasts.downloading, { title: doc.title }),
-      });
+    async (doc: API.Document) => {
+      try {
+        await downloadLibraryDocument(doc);
+        toast({
+          title: t.library.toasts.downloadStarted,
+          description: tf(t.library.toasts.downloading, { title: doc.title }),
+        });
+      } catch {
+        toast({
+          title: t.library.toasts.loadErrorTitle,
+          description: hub.readerFailed,
+          variant: 'destructive',
+        });
+      }
     },
-    [t, tf, toast]
+    [hub.readerFailed, t.library.toasts.downloadStarted, t.library.toasts.downloading, t.library.toasts.loadErrorTitle, tf, toast]
   );
 
-  const handleOpen = useCallback((doc: API.Document) => {
+  const handleOpen = useCallback(
+    async (doc: API.Document) => {
+      try {
+        await openLibraryDocumentInNewTab(doc);
+      } catch {
+        toast({
+          title: hub.readerFailed,
+          description: doc.title,
+          variant: 'destructive',
+        });
+      }
+    },
+    [hub.readerFailed, toast]
+  );
+
+  const handlePreview = useCallback((doc: API.Document) => {
     readerRef.current?.show(doc);
   }, []);
 
@@ -274,7 +299,7 @@ const Library = () => {
   const cardProps = {
     view,
     onOpen: handleOpen,
-    onPreview: handleOpen,
+    onPreview: handlePreview,
     onDownload: handleDownload,
     onFavorite: handleFavorite,
   };

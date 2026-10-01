@@ -25,6 +25,8 @@ declare namespace API {
         /** Identifiant fiscal (IF) — backend field may be `if` */
         fiscal_if?: string | null;
         client_type?: 'INDIVIDUAL' | 'COMPANY';
+        /** True when a set-password invitation was sent and not yet completed */
+        invitation_pending?: boolean;
     };
 
     type ClientCreateForm = {

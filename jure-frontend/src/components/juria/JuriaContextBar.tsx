@@ -32,6 +32,14 @@ export function JuriaContextBar({
     { label: c.calendar, ok: Boolean(ctx?.calendar_connected) },
     { label: c.tasks, ok: Boolean(ctx?.tasks_connected) },
   ];
+  const privacyMode = (project.privacy_mode || '').toUpperCase();
+  const privacyOn = privacyMode !== 'STANDARD';
+  const privacyLabel =
+    privacyMode === 'PRIVATE'
+      ? c.privacyModePrivate
+      : privacyMode === 'STANDARD'
+        ? c.privacyModeStandard
+        : c.privacyProtected;
 
   return (
     <>
@@ -59,6 +67,17 @@ export function JuriaContextBar({
               {chip.ok ? ' ✓' : ''}
             </span>
           ))}
+          <span
+            className={cn(
+              'inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px]',
+              privacyOn
+                ? 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-300'
+                : 'border-slate-200 bg-white text-slate-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400'
+            )}
+          >
+            {privacyOn && <Check className="h-2.5 w-2.5" />}
+            {privacyLabel}
+          </span>
         </span>
       </button>
       <Dialog open={open} onOpenChange={setOpen}>

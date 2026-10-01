@@ -173,6 +173,7 @@ export type JuriaProjectCreateBody = {
   member_ids?: number[];
   is_simple?: boolean;
   is_favorite?: boolean;
+  privacy_mode?: string;
 };
 
 export async function apiJuriaListProjects(params?: {

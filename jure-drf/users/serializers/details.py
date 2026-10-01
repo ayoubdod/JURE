@@ -59,6 +59,7 @@ class CustomUserDetailsSerializer(UserDetailsSerializer):
             'jurisdiction',
             'role',
             'is_platform_admin',
+            'is_cabinet_member',
             'client_type',
             'accept_terms',
             'accept_data_processing',
@@ -72,6 +73,7 @@ class CustomUserDetailsSerializer(UserDetailsSerializer):
             'jurisdiction',
             'role',
             'is_platform_admin',
+            'is_cabinet_member',
             'client_type',
             'last_seen_at',
         )

@@ -11,6 +11,7 @@ import useUserStore from '@/stores/userStore';
 import { stampLastActivity } from '@/utils/idleSession';
 import { isAxiosError } from 'axios';
 import { useAppTranslation, isBackendEmailUnverified } from '@/i18n';
+import { homePathForUser } from '@/utils/portalAuth';
 import AuthSplitShell from '@/components/landing/AuthSplitShell';
 
 interface SignInFormData {
@@ -82,7 +83,7 @@ const SignIn = () => {
       });
       stampLastActivity();
       toast({ title: t.auth.loginSuccessTitle, description: t.auth.loginSuccessDescription });
-      navigate('/dashboard');
+      navigate(homePathForUser(res.data.user));
     } catch (error) {
       if (isAxiosError(error) && error.response?.status === 400) {
         const msg = error.response?.data?.non_field_errors?.[0];

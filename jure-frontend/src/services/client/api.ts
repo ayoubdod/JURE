@@ -30,3 +30,9 @@ export const apiDeleteClient = (id: number)=>{
     return axiosInstance.delete<API.Client>(`/clients/clients/${id}/`);
 }
 
+export const apiSendClientInvitation = (id: number) => {
+    return axiosInstance.post<{ detail: string; invitation_pending?: boolean }>(
+        `/clients/clients/${id}/send-invitation/`,
+    );
+};
+

@@ -4,7 +4,7 @@ from unfold.decorators import display
 
 from core.admin_display import STATUS_LABELS, status_pair
 from core.unfold_admin import JureModelAdmin
-from .models import Case, CaseAttachment, CaseReferenceSequence
+from .models import Case, CaseAttachment, CaseClientUpdate, CaseReferenceSequence
 
 
 @admin.register(Case)
@@ -35,8 +35,15 @@ class CaseAdmin(JureModelAdmin):
 
 @admin.register(CaseAttachment)
 class CaseAttachmentAdmin(JureModelAdmin):
-    list_display = ["id", "case", "original_name", "uploaded_by", "created"]
+    list_display = ["id", "case", "original_name", "uploaded_by", "client_visible", "created"]
+    list_filter = ["client_visible"]
     search_fields = ["original_name", "case__reference"]
+
+
+@admin.register(CaseClientUpdate)
+class CaseClientUpdateAdmin(JureModelAdmin):
+    list_display = ["id", "case", "author", "created"]
+    search_fields = ["content", "case__reference"]
 
 
 @admin.register(CaseReferenceSequence)

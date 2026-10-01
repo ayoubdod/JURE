@@ -320,6 +320,50 @@ class AppointmentMeetingTypeApiTest(TestCase):
         self.assertIn(self.owner.id, member_ids)
         self.assertIn(self.member.id, member_ids)
 
+    def test_patch_attendees_keeps_temporary_video_chat(self):
+        """Editing attendees on a temp-chat video meeting must not 400 on conversation."""
+        member_b = _add_member(
+            self.cabinet,
+            email=f"b-{uuid.uuid4().hex[:8]}@test.com",
+            phone=unique_test_phone(),
+            first_name="Sara",
+        )
+        url = reverse("appointment-list")
+        created = self.client.post(
+            url,
+            {
+                "title": "Temp Video Edit",
+                "start_at": self.start.isoformat(),
+                "end_at": self.end.isoformat(),
+                "meeting_type": "video",
+                "conversation_mode": "create_temporary",
+                "attendee_ids": [self.member.id, member_b.id],
+                "participant_scope": "team",
+            },
+            format="json",
+        )
+        self.assertEqual(created.status_code, status.HTTP_201_CREATED, created.data)
+        appt = Appointment.objects.get(pk=created.data["id"])
+        self.assertTrue(appt.conversation.is_temporary)
+        detail = reverse("appointment-detail", kwargs={"pk": appt.pk})
+        patched = self.client.patch(
+            detail,
+            {
+                "meeting_type": "video",
+                "conversation_mode": "existing",
+                "conversation": appt.conversation_id,
+                "attendee_ids": [self.member.id],
+                "participant_scope": "team",
+            },
+            format="json",
+        )
+        self.assertEqual(patched.status_code, status.HTTP_200_OK, patched.data)
+        appt.refresh_from_db()
+        self.assertEqual(set(appt.attendees.values_list("id", flat=True)), {self.member.id})
+        self.assertTrue(
+            Conversation.objects.filter(pk=appt.conversation_id, is_temporary=True).exists()
+        )
+
     def test_temp_chat_deleted_when_done(self):
         url = reverse("appointment-list")
         res = self.client.post(

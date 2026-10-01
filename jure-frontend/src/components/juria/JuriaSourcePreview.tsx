@@ -1,11 +1,8 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { useEffect, useRef } from 'react';
 import DocumentReaderModal, { type DocumentReaderModalRef } from '@/components/library/hub/DocumentReaderModal';
-import FilePreviewer from '@/components/library/FilePreviewer';
 import { apiGetDocument } from '@/services/library/api';
 import { apiGetCaseAttachments } from '@/services/case/api';
 import { apiJuriaDownloadFileBlob } from '@/services/juria/api';
-import { useAppTranslation } from '@/i18n';
 import type { JuriaSourceHit } from '@/types/juria';
 
 export function JuriaSourcePreview({
@@ -19,69 +16,87 @@ export function JuriaSourcePreview({
   linkedCaseId?: number | null;
   onClose: () => void;
 }) {
-  const { t, tf } = useAppTranslation();
   const readerRef = useRef<DocumentReaderModalRef>(null);
-  const [fileUrl, setFileUrl] = useState<string | null>(null);
-  const [fileName, setFileName] = useState('');
+  const revokeRef = useRef<string | null>(null);
 
   useEffect(() => {
-    if (!hit) {
-      setFileUrl(null);
-      return;
-    }
-    let revoke: string | null = null;
+    if (!hit) return;
+    let cancelled = false;
+
     const open = async () => {
+      if (revokeRef.current) {
+        URL.revokeObjectURL(revokeRef.current);
+        revokeRef.current = null;
+      }
+
       const kind = (hit.source_type || '').toUpperCase();
+      const caseCtx = linkedCaseId != null ? { caseId: linkedCaseId } : undefined;
+
       if (kind.includes('LIBRARY')) {
         try {
           const { data } = await apiGetDocument(Number(hit.document_id));
-          readerRef.current?.show(data);
+          if (!cancelled) readerRef.current?.show(data, caseCtx);
         } catch {
           /* keep closed */
         }
         return;
       }
+
       if (kind === 'CASE_DOCUMENT' && linkedCaseId) {
         try {
           const { data } = await apiGetCaseAttachments(linkedCaseId);
           const att = data.find((a) => String(a.id) === String(hit.document_id));
-          if (att?.file_url) {
-            setFileName(att.file_name || hit.document);
-            setFileUrl(att.file_url);
+          if (att?.file_url && !cancelled) {
+            readerRef.current?.show(
+              {
+                id: att.id,
+                title: att.file_name || hit.document,
+                file: att.file_url,
+              },
+              caseCtx
+            );
           }
         } catch {
           /* keep closed */
         }
         return;
       }
+
       if (kind === 'UPLOAD') {
         try {
           const blob = await apiJuriaDownloadFileBlob(projectId, hit.document_id);
-          revoke = URL.createObjectURL(blob);
-          setFileName(hit.document);
-          setFileUrl(revoke);
+          const objectUrl = URL.createObjectURL(blob);
+          revokeRef.current = objectUrl;
+          if (!cancelled) {
+            readerRef.current?.show(
+              {
+                id: hit.document_id,
+                title: hit.document,
+                file: objectUrl,
+              },
+              caseCtx
+            );
+          }
         } catch {
           /* keep closed */
         }
       }
     };
+
     void open();
     return () => {
-      if (revoke) URL.revokeObjectURL(revoke);
+      cancelled = true;
     };
   }, [hit, projectId, linkedCaseId]);
 
-  return (
-    <>
-      <DocumentReaderModal ref={readerRef} />
-      <Dialog open={Boolean(fileUrl)} onOpenChange={(v) => { if (!v) { setFileUrl(null); onClose(); } }}>
-        <DialogContent className="max-w-3xl">
-          <DialogHeader>
-            <DialogTitle className="truncate text-sm">{fileName}{hit?.page ? ` · ${tf(t.juria.workspace.sources.page, { n: hit.page })}` : ''}</DialogTitle>
-          </DialogHeader>
-          {fileUrl && <FilePreviewer fileUrl={fileUrl} fileName={fileName} className="max-h-[70vh]" />}
-        </DialogContent>
-      </Dialog>
-    </>
-  );
+  useEffect(() => {
+    return () => {
+      if (revokeRef.current) {
+        URL.revokeObjectURL(revokeRef.current);
+        revokeRef.current = null;
+      }
+    };
+  }, []);
+
+  return <DocumentReaderModal ref={readerRef} onHide={onClose} />;
 }

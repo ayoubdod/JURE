@@ -120,6 +120,7 @@ export const FilePreviewer: React.FC<FilePreviewerProps> = ({
   className,
   resolveUrl = (url) => {
     if (!url) return '';
+    if (url.startsWith('blob:') || url.startsWith('data:')) return url;
     if (url.startsWith('http://') || url.startsWith('https://')) return url;
     if (url.startsWith('/media/') || url.startsWith('/')) {
       return `${API_ORIGIN}${url}`;

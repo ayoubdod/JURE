@@ -5,7 +5,7 @@ from django.utils import timezone
 from django.utils.translation import gettext as _
 from rest_framework import decorators, permissions, response, serializers, status, viewsets
 
-from cabinets.permissions import HasConversationsPermission
+from cabinets.permissions import CanAccessConversations, HasConversationsPermission
 from cases.models import Case
 from core.utils import get_user_cabinet
 
@@ -28,7 +28,7 @@ class IsParticipant(permissions.BasePermission):
 
 
 class ConversationViewSet(viewsets.ModelViewSet):
-    permission_classes = [permissions.IsAuthenticated, HasConversationsPermission]
+    permission_classes = [permissions.IsAuthenticated, CanAccessConversations]
     serializer_class = ConversationSerializer
     queryset = Conversation.objects.all()
 
@@ -59,6 +59,15 @@ class ConversationViewSet(viewsets.ModelViewSet):
                 return [permissions.IsAuthenticated()]
         return super().get_permissions()
 
+    def create(self, request, *args, **kwargs):
+        # Portal clients cannot open arbitrary conversations; confirmation workflow creates them.
+        user = request.user
+        if getattr(user, "cabinet_id", None) and not getattr(user, "is_cabinet_member", False):
+            return response.Response(
+                {"detail": _("Clients cannot create conversations directly.")},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        return super().create(request, *args, **kwargs)
     def get_queryset(self):
         qs = super().get_queryset().filter(
             memberships__user=self.request.user, memberships__is_deleted=False

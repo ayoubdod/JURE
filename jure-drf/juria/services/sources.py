@@ -155,7 +155,7 @@ def connect_client(project: JuriaProject, client_id: int, user) -> JuriaProjectS
     allowed = Case.objects.filter(cabinet=project.cabinet, client_id=client_id).exists()
     if not allowed and getattr(client, "cabinet_id", None) != project.cabinet_id:
         raise PermissionDenied(_("Client is not in this cabinet."))
-    src, _ = JuriaProjectSource.objects.get_or_create(
+    src, _created = JuriaProjectSource.objects.get_or_create(
         project=project,
         kind=SourceKind.CLIENT,
         client=client,

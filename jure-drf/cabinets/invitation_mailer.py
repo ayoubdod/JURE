@@ -33,8 +33,9 @@ def _validate_email_address(email: str) -> None:
 
 class InvitationMailer:
     """
-    Sends team invitation email with a one-time Set Password link.
-    Call send_invitation(...) after creating the user and PasswordSetupToken.
+    Sends invitation email with a one-time Set Password link.
+    Call send_invitation(...) / send_client_invitation(...) after creating the user
+    and PasswordSetupToken.
     """
 
     @staticmethod
@@ -45,10 +46,51 @@ class InvitationMailer:
         firm_name: str = "",
         expiry_days: int | None = None,
     ) -> None:
-        """
-        Send the invitation email. Does not raise on SMTP failure (logs only).
-        Raises ValidationError if recipient_email is invalid, so the API can return a specific error.
-        """
+        """Send team invitation email. Raises ValidationError if email is invalid."""
+        InvitationMailer._send(
+            recipient_email=recipient_email,
+            token=token,
+            first_name=first_name,
+            firm_name=firm_name,
+            expiry_days=expiry_days,
+            preheader=_("Set up your Jure account to join your team."),
+            email_title=_("You're invited to join Jure"),
+            subject=_("You're invited to join Jure"),
+        )
+
+    @staticmethod
+    def send_client_invitation(
+        recipient_email: str,
+        token: str,
+        first_name: str = "",
+        firm_name: str = "",
+        expiry_days: int | None = None,
+    ) -> None:
+        """Send client portal invitation email. Raises ValidationError if email is invalid."""
+        firm = (firm_name or "").strip() or _("your law firm")
+        InvitationMailer._send(
+            recipient_email=recipient_email,
+            token=token,
+            first_name=first_name,
+            firm_name=firm_name,
+            expiry_days=expiry_days,
+            preheader=_("Set up your client portal account with %(firm)s.") % {"firm": firm},
+            email_title=_("Access your client portal"),
+            subject=_("You're invited to the %(firm)s client portal") % {"firm": firm},
+        )
+
+    @staticmethod
+    def _send(
+        *,
+        recipient_email: str,
+        token: str,
+        first_name: str,
+        firm_name: str,
+        expiry_days: int | None,
+        preheader: str,
+        email_title: str,
+        subject: str,
+    ) -> None:
         _validate_email_address(recipient_email)
         setup_url = absolute_frontend_url(f"{SETUP_PASSWORD_PATH}?token={token}")
 
@@ -58,12 +100,11 @@ class InvitationMailer:
             first_name=first_name or "",
             firm_name=firm_name or "",
             expiry_days=expiry_days,
-            preheader=_("Set up your Jure account to join your team."),
-            email_title=_("You're invited to join Jure"),
+            preheader=preheader,
+            email_title=email_title,
         )
         html_content = render_to_string("emails/invitations/invitation.html", ctx)
         text_content = render_to_string("emails/invitations/invitation.txt", ctx)
-        subject = _("You're invited to join Jure")
 
         from_email = getattr(settings, "DEFAULT_FROM_EMAIL", "webmaster@localhost")
         try:

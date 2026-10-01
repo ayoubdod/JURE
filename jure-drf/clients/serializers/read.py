@@ -3,6 +3,7 @@ from rest_framework import serializers
 from users.models import User
 
 from .fields import ClientCaseSerializer, _firm_client_profile
+from ..services import client_invitation_pending
 
 
 class ClientReadSerializer(serializers.ModelSerializer):
@@ -12,6 +13,7 @@ class ClientReadSerializer(serializers.ModelSerializer):
     ice = serializers.SerializerMethodField()
     fiscal_if = serializers.SerializerMethodField()
     client_type = serializers.SerializerMethodField()
+    invitation_pending = serializers.SerializerMethodField()
 
     class Meta:
         model = User
@@ -20,6 +22,7 @@ class ClientReadSerializer(serializers.ModelSerializer):
             'address', 'cases_count', 'cases',
             'is_active', 'date_joined',
             'ice', 'fiscal_if', 'client_type',
+            'invitation_pending',
         ]
 
     def get_ice(self, obj):
@@ -33,6 +36,9 @@ class ClientReadSerializer(serializers.ModelSerializer):
     def get_client_type(self, obj):
         profile = _firm_client_profile(obj)
         return profile.client_type if profile else 'INDIVIDUAL'
+
+    def get_invitation_pending(self, obj):
+        return client_invitation_pending(obj)
 
     def to_representation(self, instance):
         data = super().to_representation(instance)

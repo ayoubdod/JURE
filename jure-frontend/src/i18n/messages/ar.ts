@@ -1,4 +1,6 @@
 import type { AppMessages } from './types';
+import { clientPortalAr } from './clientPortal';
+import { documentReadingAr } from './documentReading';
 
 export const ar: AppMessages = {
   sidebar: {
@@ -2981,6 +2983,13 @@ export const ar: AppMessages = {
     rangeSummary: '{start}–{end} من {total} عميلًا',
     rowsPerPage: 'عدد الصفوف',
     viewClient: 'عرض',
+    sendInvitation: 'إرسال دعوة',
+    sendingInvitation: 'جارٍ الإرسال…',
+    invitationPending: 'دعوة قيد الانتظار',
+    invitationSentTitle: 'تم إرسال الدعوة',
+    invitationSentDescription: 'تم إرسال رابط إنشاء كلمة المرور إلى العميل.',
+    invitationFailedTitle: 'فشل إرسال الدعوة',
+    invitationFailedDescription: 'تعذر إرسال بريد الدعوة. حاول مرة أخرى.',
     viewList: 'قائمة',
     viewGrid: 'شبكة',
     loadingClients: 'جارٍ تحميل العملاء',
@@ -2998,6 +3007,7 @@ export const ar: AppMessages = {
       presentedBy: 'مقدم من {name}',
       call: 'اتصال',
       sendEmail: 'بريد',
+      sendInvitation: 'إرسال دعوة',
       moreActions: 'المزيد من الإجراءات',
       overview: 'نظرة عامة',
       cases: 'القضايا',
@@ -3390,6 +3400,13 @@ export const ar: AppMessages = {
       durationMin: '{min} د',
       conversationNumber: 'محادثة #{id}',
       dueOn: 'الاستحقاق {date}',
+    },
+    agendaOf: 'أجندة',
+    dayPanel: {
+      title: 'جدول اليوم',
+      count: '{count} أحداث',
+      emptyToday: 'لا يوجد شيء مجدول اليوم',
+      emptyDay: 'لا أحداث في هذا اليوم',
     },
     fc: {
       today: 'اليوم',
@@ -5165,6 +5182,10 @@ export const ar: AppMessages = {
         libraryCount: '{count} مستندات',
         teamCount: '{count} أعضاء',
         privacyNote: 'لا تصل جوريا إلا إلى الموارد المرتبطة والمصرّح بها صراحةً.',
+        privacyProtected: 'المعلومات الحساسة محمية',
+        privacyModeLabel: 'وضع الخصوصية',
+        privacyModeStandard: 'قياسي — تُرسل المعرّفات إلى الذكاء الاصطناعي',
+        privacyModePrivate: 'وضع خاص',
       },
       overview: {
         project: 'المشروع',
@@ -5223,6 +5244,16 @@ export const ar: AppMessages = {
         instructionsPlaceholder:
           'أعطِ الأولوية للقانون المغربي. أجب بعربية قانونية مهنية. لا تختلق أي مصدر.',
         save: 'حفظ',
+        privacyMode: 'وضع الخصوصية',
+        privacyInherit: 'وراثة (إعداد المكتب الافتراضي)',
+        privacyStandard: 'قياسي',
+        privacyPseudonymized: 'مجهّل الهوية',
+        privacyPrivate: 'خاص',
+        privacyHint:
+          'يستبدل وضع التجهيل الأسماء والمعرّفات قبل إرسال المحتوى إلى الذكاء الاصطناعي. تبقى القيم الأصلية داخل JURE.',
+        privacyPrivateHint: 'البنية التحتية الخاصة للذكاء الاصطناعي غير مهيأة بعد.',
+        revealIdentifiers: 'إظهار المعرّفات',
+        revealFailed: 'تعذر استعادة المعرّفات',
       },
       sources: {
         caseBtn: 'الملف',
@@ -5313,4 +5344,6 @@ export const ar: AppMessages = {
       custom: 'مخصص',
     },
   },
+  clientPortal: clientPortalAr,
+  documentReading: documentReadingAr,
 };

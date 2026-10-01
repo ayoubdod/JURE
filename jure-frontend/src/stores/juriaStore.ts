@@ -649,7 +649,18 @@ const useJuriaStore = create<JuriaStoreState>()((set, get) => ({
       updateProject: async (id, body) => {
         const detail = await apiJuriaUpdateProject(id, body);
         set((s) => ({
-          projects: s.projects.map((p) => (p.id === id ? { ...p, ...detail } : p)),
+          projects: s.projects.map((p) =>
+            p.id === id
+              ? {
+                  ...p,
+                  ...detail,
+                  privacy_mode:
+                    body.privacy_mode !== undefined
+                      ? body.privacy_mode
+                      : detail.privacy_mode ?? p.privacy_mode,
+                }
+              : p
+          ),
           projectLanguage: detail.preferred_language || s.projectLanguage,
         }));
       },

@@ -75,6 +75,19 @@ const FinancePage = lazyRoute(() => import("./pages/finance/FinancePage"));
 const NotificationsPage = lazyRoute(() => import("./pages/notifications/NotificationsPage"));
 const EditTask = lazyRoute(() => import("./components/task/EditTask"));
 const Support = lazyRoute(() => import("./pages/Support"));
+const ClientLayout = lazyRoute(() => import("./layouts/ClientLayout"));
+const ClientHomePage = lazyRoute(() => import("./pages/client/ClientHomePage"));
+const ClientCasesPage = lazyRoute(() => import("./pages/client/ClientCasesPage"));
+const ClientCaseDetailPage = lazyRoute(() => import("./pages/client/ClientCaseDetailPage"));
+const ClientConsultationsPage = lazyRoute(() => import("./pages/client/ClientConsultationsPage"));
+const ClientConsultationNewPage = lazyRoute(() => import("./pages/client/ClientConsultationNewPage"));
+const ClientConsultationDetailPage = lazyRoute(() => import("./pages/client/ClientConsultationDetailPage"));
+const ClientMessagesPage = lazyRoute(() => import("./pages/client/ClientMessagesPage"));
+const ClientDocumentsPage = lazyRoute(() => import("./pages/client/ClientDocumentsPage"));
+const ClientNotificationsPage = lazyRoute(() => import("./pages/client/ClientNotificationsPage"));
+const ClientProfilePage = lazyRoute(() => import("./pages/client/ClientProfilePage"));
+const AdminConsultationsPage = lazyRoute(() => import("./pages/consultations/AdminConsultationsPage"));
+const AdminConsultationDetailPage = lazyRoute(() => import("./pages/consultations/AdminConsultationDetailPage"));
 
 /** Public marketing page: no auth required, lazy-loaded. */
 const pub = (element: ReactNode) => (
@@ -84,8 +97,8 @@ const pub = (element: ReactNode) => (
 );
 
 /** Authenticated app page: auth required, lazy-loaded. */
-const app = (element: ReactNode) => (
-  <ProtectedRoute requireAuth={true}>
+const app = (element: ReactNode, audience: 'client' | 'staff' = 'staff') => (
+  <ProtectedRoute requireAuth={true} audience={audience}>
     <Suspense fallback={<div className="min-h-[50vh] bg-background" />}>{element}</Suspense>
   </ProtectedRoute>
 );
@@ -289,6 +302,32 @@ const router = createBrowserRouter([
       { path: "messages", element: app(<Conversations />) },
       { path: "notifications", element: app(<NotificationsPage />) },
       { path: "help", element: <Navigate to="/dashboard/support" replace /> },
+      { path: "consultations", element: app(<AdminConsultationsPage />) },
+      { path: "consultations/:id", element: app(<AdminConsultationDetailPage />) },
+    ],
+  },
+
+  {
+    path: "/client",
+    element: (
+      <Suspense fallback={<LogoLoading />}>
+        <ClientLayout />
+      </Suspense>
+    ),
+    children: [
+      { path: "", element: app(<ClientHomePage />, "client") },
+      { path: "cases", element: app(<ClientCasesPage />, "client") },
+      { path: "cases/:caseId", element: app(<ClientCaseDetailPage />, "client") },
+      { path: "consultations", element: app(<ClientConsultationsPage />, "client") },
+      { path: "consultations/new", element: app(<ClientConsultationNewPage />, "client") },
+      {
+        path: "consultations/:consultationId",
+        element: app(<ClientConsultationDetailPage />, "client"),
+      },
+      { path: "messages", element: app(<ClientMessagesPage />, "client") },
+      { path: "documents", element: app(<ClientDocumentsPage />, "client") },
+      { path: "notifications", element: app(<ClientNotificationsPage />, "client") },
+      { path: "profile", element: app(<ClientProfilePage />, "client") },
     ],
   },
 

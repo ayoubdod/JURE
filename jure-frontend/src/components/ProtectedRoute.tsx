@@ -13,10 +13,13 @@ import {
   setValidatedToken,
   setValidationPromise,
 } from '@/utils/sessionValidationCache';
+import { homePathForUser, isPortalClient } from '@/utils/portalAuth';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
   requireAuth?: boolean;
+  /** When set, restrict to portal clients or cabinet staff. */
+  audience?: 'client' | 'staff';
 }
 
 const validateSession = (
@@ -52,15 +55,17 @@ const validateSession = (
   return validationPromise;
 };
 
-const ProtectedRoute = ({ children, requireAuth = true }: ProtectedRouteProps) => {
-  const { isLoggedIn, accessToken, logout, setUser } = useUserStore();
+const ProtectedRoute = ({
+  children,
+  requireAuth = true,
+  audience,
+}: ProtectedRouteProps) => {
+  const { isLoggedIn, accessToken, logout, setUser, user } = useUserStore();
   const location = useLocation();
   const { toast } = useToast();
   const { t } = useAppTranslation();
 
-  // Persisted session → render immediately; never block in-app navigation.
   const hasCachedSession = Boolean(accessToken && isLoggedIn);
-  // Cold start with token but no hydrated user yet → show loader once.
   const needsBlockingValidation = Boolean(accessToken && !isLoggedIn);
   const [isResolving, setIsResolving] = useState(needsBlockingValidation);
 
@@ -92,8 +97,15 @@ const ProtectedRoute = ({ children, requireAuth = true }: ProtectedRouteProps) =
     return () => {
       cancelled = true;
     };
-    // Validate on token change only — not on every pathname (that caused the slow clicks).
-  }, [accessToken, hasCachedSession, logout, setUser, toast]);
+  }, [
+    accessToken,
+    hasCachedSession,
+    logout,
+    setUser,
+    toast,
+    t.sessionExpired.title,
+    t.sessionExpired.description,
+  ]);
 
   if (isResolving && needsBlockingValidation) {
     return <LogoLoading />;
@@ -104,7 +116,15 @@ const ProtectedRoute = ({ children, requireAuth = true }: ProtectedRouteProps) =
   }
 
   if (!requireAuth && isLoggedIn) {
+    return <Navigate to={homePathForUser(user)} replace />;
+  }
+
+  if (requireAuth && audience === 'client' && user && !isPortalClient(user)) {
     return <Navigate to="/dashboard" replace />;
+  }
+
+  if (requireAuth && audience === 'staff' && user && isPortalClient(user)) {
+    return <Navigate to="/client" replace />;
   }
 
   return <>{children}</>;

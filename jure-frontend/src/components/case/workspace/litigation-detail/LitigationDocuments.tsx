@@ -1,5 +1,9 @@
+import { useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { formatDate, useAppTranslation } from '@/i18n';
+import DocumentReaderModal, {
+  type DocumentReaderModalRef,
+} from '@/components/library/hub/DocumentReaderModal';
 import { EmptyAction, WorkspaceCard } from './ui';
 import { requiredDocumentsOf } from './helpers';
 
@@ -16,9 +20,11 @@ export default function LitigationDocuments({
   const copy = t.cases.workspaces.litigation.detail;
   const required = requiredDocumentsOf(caseItem);
   const attachments = caseItem.attachments ?? [];
+  const readerRef = useRef<DocumentReaderModalRef>(null);
 
   return (
     <div className="space-y-4">
+      <DocumentReaderModal ref={readerRef} />
       <div className="flex justify-end">
         {canEdit ? (
           <Button type="button" className="h-9 rounded-lg bg-[#64499D] text-white hover:bg-[#4D3680]" onClick={onUpload}>
@@ -57,20 +63,38 @@ export default function LitigationDocuments({
                   <p className="truncate font-medium">{att.file_name}</p>
                   {att.created ? (
                     <p className="text-[11px] text-slate-500">
-                      {copy.uploadedOn} {formatDate(att.created, lang, { day: 'numeric', month: 'short', year: 'numeric' })}
+                      {copy.uploadedOn}{' '}
+                      {formatDate(att.created, lang, { day: 'numeric', month: 'short', year: 'numeric' })}
                     </p>
                   ) : null}
                 </div>
                 {att.file_url ? (
-                  <a className="shrink-0 text-[12px] text-[#64499D]" href={att.file_url} target="_blank" rel="noreferrer">
+                  <button
+                    type="button"
+                    className="shrink-0 text-[12px] font-medium text-[#64499D] hover:underline"
+                    onClick={() =>
+                      readerRef.current?.show(
+                        { id: att.id, title: att.file_name || 'Document', file: att.file_url },
+                        {
+                          caseId: caseItem.id,
+                          caseRef: caseItem.reference,
+                          caseTitle: caseItem.title,
+                        }
+                      )
+                    }
+                  >
                     {copy.viewAll}
-                  </a>
+                  </button>
                 ) : null}
               </li>
             ))}
           </ul>
         ) : (
-          <EmptyAction message={copy.noDocuments} actionLabel={canEdit ? copy.addDocument : undefined} onAction={canEdit ? onUpload : undefined} />
+          <EmptyAction
+            message={copy.noDocuments}
+            actionLabel={canEdit ? copy.addDocument : undefined}
+            onAction={canEdit ? onUpload : undefined}
+          />
         )}
       </WorkspaceCard>
     </div>

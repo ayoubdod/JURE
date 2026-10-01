@@ -36,6 +36,7 @@ def create_project(
     instructions: str = "",
     linked_case=None,
     is_simple: bool = False,
+    privacy_mode: str = "",
     permission_overrides: dict[str, str] | None = None,
     default_thread_title: str = "Discussion générale",
     mode: str = "CHAT",
@@ -71,6 +72,7 @@ def create_project(
             instructions=instructions or "",
             linked_case=effective_case,
             is_simple=bool(is_simple),
+            privacy_mode=(privacy_mode or "").strip().upper(),
             name_is_custom=name_is_custom,
         )
         JuriaProjectMember.objects.create(

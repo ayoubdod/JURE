@@ -29,6 +29,9 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { formatDate, formatTime, useAppTranslation } from '@/i18n';
+import DocumentReaderModal, {
+  type DocumentReaderModalRef,
+} from '@/components/library/hub/DocumentReaderModal';
 import { usePermission } from '@/hooks/usePermissions';
 import { useFinanceAccess } from '@/hooks/useFinanceAccess';
 import { JURIA_ENABLED } from '@/config/features';
@@ -132,6 +135,7 @@ export default function ConsultationDetailWorkspace({
   const appointmentUpdateRef = useRef<AppointmentUpdateModalRef>(null);
   const clientPreviewRef = useRef<ClientProfilePreviewRef>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const readerRef = useRef<DocumentReaderModalRef>(null);
   const [detailTaskId, setDetailTaskId] = useState<number | null>(null);
   const [detailAppointmentId, setDetailAppointmentId] = useState<number | null>(null);
   const [conflictOpen, setConflictOpen] = useState(false);
@@ -285,6 +289,7 @@ export default function ConsultationDetailWorkspace({
 
   return (
     <div className="flex h-full min-h-0 flex-col overflow-hidden bg-transparent">
+      <DocumentReaderModal ref={readerRef} />
       <header className="max-h-[min(50vh,28rem)] min-h-0 shrink-0 overflow-y-auto overscroll-contain border-b border-[#64499D]/10 bg-white dark:border-zinc-800 dark:bg-zinc-950">
         <div className="px-3 py-3 sm:px-5">
           <button
@@ -576,9 +581,22 @@ export default function ConsultationDetailWorkspace({
                           </p>
                         </div>
                         {att.file_url ? (
-                          <a className="shrink-0 text-[12px] text-[#64499D] hover:underline" href={att.file_url} target="_blank" rel="noreferrer">
+                          <button
+                            type="button"
+                            className="shrink-0 text-[12px] font-medium text-[#64499D] hover:underline"
+                            onClick={() =>
+                              readerRef.current?.show(
+                                { id: att.id, title: att.file_name || 'Document', file: att.file_url },
+                                {
+                                  caseId: caseItem.id,
+                                  caseRef: caseItem.reference,
+                                  caseTitle: caseItem.title,
+                                }
+                              )
+                            }
+                          >
                             {copy.viewAll}
-                          </a>
+                          </button>
                         ) : null}
                       </li>
                     ))}

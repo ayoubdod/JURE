@@ -1,4 +1,6 @@
 import type { AppMessages } from './types';
+import { clientPortalEn } from './clientPortal';
+import { documentReadingEn } from './documentReading';
 
 export const en: AppMessages = {
   sidebar: {
@@ -2983,6 +2985,13 @@ export const en: AppMessages = {
     rangeSummary: '{start}–{end} of {total} clients',
     rowsPerPage: 'Rows per page',
     viewClient: 'View',
+    sendInvitation: 'Send invitation',
+    sendingInvitation: 'Sending…',
+    invitationPending: 'Invitation pending',
+    invitationSentTitle: 'Invitation sent',
+    invitationSentDescription: 'A set-password link was emailed to the client.',
+    invitationFailedTitle: 'Invitation failed',
+    invitationFailedDescription: 'The invitation email could not be sent. Please try again.',
     viewList: 'List',
     viewGrid: 'Grid',
     loadingClients: 'Loading clients',
@@ -3000,6 +3009,7 @@ export const en: AppMessages = {
       presentedBy: 'Presented by {name}',
       call: 'Call',
       sendEmail: 'Email',
+      sendInvitation: 'Send invitation',
       moreActions: 'More actions',
       overview: 'Overview',
       cases: 'Cases',
@@ -3392,6 +3402,13 @@ export const en: AppMessages = {
       durationMin: '{min} min',
       conversationNumber: 'Conversation #{id}',
       dueOn: 'Due {date}',
+    },
+    agendaOf: 'Agenda for',
+    dayPanel: {
+      title: 'Day schedule',
+      count: '{count} events',
+      emptyToday: 'Nothing scheduled for today',
+      emptyDay: 'No events on this day',
     },
     fc: {
       today: 'Today',
@@ -5166,6 +5183,10 @@ export const en: AppMessages = {
         libraryCount: '{count} documents',
         teamCount: '{count} members',
         privacyNote: 'Juria only accesses explicitly connected and authorized resources.',
+        privacyProtected: 'Sensitive information protected',
+        privacyModeLabel: 'Privacy mode',
+        privacyModeStandard: 'Standard — identifiers are sent to the AI',
+        privacyModePrivate: 'Private mode',
       },
       overview: {
         project: 'Project',
@@ -5224,6 +5245,16 @@ export const en: AppMessages = {
         instructionsPlaceholder:
           'Prioritize Moroccan law. Reply in professional legal English. Never invent a source.',
         save: 'Save',
+        privacyMode: 'Privacy mode',
+        privacyInherit: 'Inherit (cabinet default)',
+        privacyStandard: 'Standard',
+        privacyPseudonymized: 'Pseudonymized',
+        privacyPrivate: 'Private',
+        privacyHint:
+          'Pseudonymized mode replaces names and identifiers before sending content to the AI. Original values stay inside JURE.',
+        privacyPrivateHint: 'Private AI infrastructure is not configured yet.',
+        revealIdentifiers: 'Reveal identifiers',
+        revealFailed: 'Could not restore identifiers',
       },
       sources: {
         caseBtn: 'Matter',
@@ -5314,4 +5345,6 @@ export const en: AppMessages = {
       custom: 'Custom',
     },
   },
+  clientPortal: clientPortalEn,
+  documentReading: documentReadingEn,
 };

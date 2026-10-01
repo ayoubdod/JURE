@@ -105,14 +105,21 @@ class AppointmentSerializer(serializers.ModelSerializer):
                     User.objects.filter(cabinet=cabinet, is_cabinet_member=False),
                 )
                 _set_pk_queryset(self.fields.get('case'), Case.objects.filter(cabinet=cabinet))
+                conv_filter = Q(
+                    type=Conversation.Type.GROUP,
+                    memberships__user=user,
+                    memberships__is_deleted=False,
+                    is_temporary=False,
+                )
+                # Updates of video meetings often keep a temporary meeting chat —
+                # include the appointment's current conversation so PATCH validates.
+                instance = getattr(self, 'instance', None)
+                current_conv_id = getattr(instance, 'conversation_id', None) if instance else None
+                if current_conv_id:
+                    conv_filter = conv_filter | Q(pk=current_conv_id)
                 _set_pk_queryset(
                     self.fields.get('conversation'),
-                    Conversation.objects.filter(
-                        type=Conversation.Type.GROUP,
-                        memberships__user=user,
-                        memberships__is_deleted=False,
-                        is_temporary=False,
-                    ).distinct(),
+                    Conversation.objects.filter(conv_filter).distinct(),
                 )
             else:
                 self.fields['client'] = serializers.PrimaryKeyRelatedField(read_only=True)
@@ -148,7 +155,9 @@ class AppointmentSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 'Please select a JURE group conversation for the video conference.'
             )
-        if value.is_temporary:
+        current_conv_id = getattr(self.instance, 'conversation_id', None) if self.instance else None
+        # Allow keeping the appointment's existing temporary meeting chat on update.
+        if value.is_temporary and value.pk != current_conv_id:
             raise serializers.ValidationError(
                 _('Please select a permanent JURE group conversation.')
             )

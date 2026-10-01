@@ -22,7 +22,7 @@ class JuriaActivity(models.Model):
         blank=True,
         related_name="juria_activities",
     )
-    action = models.CharField(max_length=40, choices=ActivityAction.choices)
+    action = models.CharField(max_length=48, choices=ActivityAction.choices)
     metadata = models.JSONField(default=dict, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 

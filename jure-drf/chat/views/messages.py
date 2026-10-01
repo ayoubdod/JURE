@@ -6,7 +6,7 @@ from django.utils.translation import gettext as _
 from rest_framework import decorators, permissions, response, status, viewsets
 from rest_framework.exceptions import PermissionDenied
 
-from cabinets.permissions import HasConversationsPermission
+from cabinets.permissions import CanAccessConversations, HasConversationsPermission
 
 from ..models import Conversation, ConversationMembership, Message, MessagePin
 from ..serializers import MessageSerializer
@@ -18,7 +18,7 @@ from .helpers import (
 
 
 class MessageViewSet(viewsets.ModelViewSet):
-    permission_classes = [permissions.IsAuthenticated, HasConversationsPermission]
+    permission_classes = [permissions.IsAuthenticated, CanAccessConversations]
     serializer_class = MessageSerializer
 
     def get_permissions(self):

@@ -1,5 +1,5 @@
 'use client'
-import { forwardRef, useImperativeHandle, useState } from 'react';
+import { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -24,6 +24,9 @@ import { useToast } from '@/hooks/use-toast';
 import { devError, devWarn } from '@/utils/devLog';
 import { useAppTranslation } from '@/i18n';
 import { mergeAreaIntoTags, splitDocumentTags, type LegalAreaId } from '@/lib/libraryTaxonomy';
+import DocumentReaderModal, {
+  type DocumentReaderModalRef,
+} from '@/components/library/hub/DocumentReaderModal';
 
 export interface DocumentUpdateModalRef {
   show: (instance: API.Document) => void;
@@ -50,6 +53,7 @@ const DocumentUpdateModal = forwardRef<DocumentUpdateModalRef, DocumentUpdateMod
   const [isLoading, setIsLoading] = useState(false);
   const [legalArea, setLegalArea] = useState<LegalAreaId | ''>('');
   const { toast } = useToast();
+  const readerRef = useRef<DocumentReaderModalRef>(null);
 
   const mainForm = useForm<API.DocumentUpdateForm>({
     resolver: yupResolver(schema) as unknown as Resolver<API.DocumentUpdateForm>
@@ -407,6 +411,8 @@ const DocumentUpdateModal = forwardRef<DocumentUpdateModalRef, DocumentUpdateMod
   };
 
   return (
+    <>
+    <DocumentReaderModal ref={readerRef} />
     <Dialog open={isOpen} onOpenChange={isLoading ? undefined : setIsOpen}>
       <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto p-0 [&>button]:hidden">
         {/* Header Banner */}
@@ -579,7 +585,7 @@ const DocumentUpdateModal = forwardRef<DocumentUpdateModalRef, DocumentUpdateMod
                       variant="outline"
                       size="sm"
                       className="h-9"
-                      onClick={() => window.open(instance.file, '_blank')}
+                      onClick={() => instance && readerRef.current?.show(instance)}
                     >
                       <Eye size={14} className="me-1" />
                       {m.view}
@@ -678,6 +684,7 @@ const DocumentUpdateModal = forwardRef<DocumentUpdateModalRef, DocumentUpdateMod
         </form>
       </DialogContent>
     </Dialog>
+    </>
   );
 });
 

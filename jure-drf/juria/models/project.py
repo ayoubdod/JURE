@@ -62,6 +62,16 @@ class JuriaProject(models.Model):
         default=False,
         help_text="Standalone AI chat without JURE matter / library / team context.",
     )
+    privacy_mode = models.CharField(
+        max_length=20,
+        blank=True,
+        default="",
+        db_index=True,
+        help_text=(
+            "Optional project privacy override: STANDARD | PSEUDONYMIZED | PRIVATE. "
+            "Empty inherits case / cabinet policy."
+        ),
+    )
     name_is_custom = models.BooleanField(
         default=False,
         help_text="True after the user sets the name; AI auto-titles are skipped.",

@@ -91,6 +91,7 @@ class JuriaProjectListSerializer(serializers.ModelSerializer):
             "linked_case_reference",
             "is_favorite",
             "is_simple",
+            "privacy_mode",
             "member_count",
             "thread_count",
             "message_count",
@@ -164,6 +165,7 @@ class JuriaProjectCreateSerializer(serializers.Serializer):
     linked_case_id = serializers.IntegerField(required=False, allow_null=True)
     is_favorite = serializers.BooleanField(required=False, default=False)
     is_simple = serializers.BooleanField(required=False, default=False)
+    privacy_mode = serializers.CharField(required=False, allow_blank=True, default="")
     permissions = serializers.DictField(child=serializers.CharField(), required=False)
     case_document_ids = serializers.ListField(child=serializers.IntegerField(), required=False)
     library_document_ids = serializers.ListField(child=serializers.IntegerField(), required=False)
@@ -182,6 +184,7 @@ class JuriaProjectUpdateSerializer(serializers.Serializer):
     instructions = serializers.CharField(required=False, allow_blank=True)
     linked_case_id = serializers.IntegerField(required=False, allow_null=True)
     is_favorite = serializers.BooleanField(required=False)
+    privacy_mode = serializers.CharField(required=False, allow_blank=True)
     permissions = serializers.DictField(child=serializers.CharField(), required=False)
 
 

@@ -7,7 +7,7 @@ import Sidebar, {
 import useChatStore from '@/stores/chatStore'
 import useCallsWsStore from '@/stores/callsWsStore'
 import React, { useEffect, useState } from 'react'
-import { Outlet, useLocation } from 'react-router'
+import { Navigate, Outlet, useLocation } from 'react-router'
 import { TVAThresholdNotification } from '@/components/finance/tva/TVAThresholdNotification'
 import { NotificationProvider } from '@/context/NotificationContext'
 import { MobileNavProvider } from '@/context/MobileNavContext'
@@ -23,6 +23,9 @@ import AuroraBackground, { auroraForAppPath } from '@/components/common/AuroraBa
 import { restorePointerEvents } from '@/lib/unlockUi'
 import { Helmet } from 'react-helmet-async'
 import { useAppTranslation, type AppMessages } from '@/i18n'
+import useUserStore from '@/stores/userStore'
+import { isPortalClient } from '@/utils/portalAuth'
+import LogoLoading from '@/components/common/LogoLoading'
 
 const isDashboardIndex = (path: string) =>
   path === '/dashboard' || path === '/dashboard/'
@@ -102,6 +105,7 @@ function readSidebarExpanded(): boolean {
 const DashboardLayout = () => {
   useIdleLogout()
   const { t } = useAppTranslation()
+  const { user, isLoggedIn } = useUserStore()
   const [activeTab, setActiveTab] = useState('')
   const [sidebarExpanded, setSidebarExpanded] = useState(readSidebarExpanded)
   const location = useLocation()
@@ -143,6 +147,13 @@ const DashboardLayout = () => {
       // ignore quota / private mode
     }
   }, [sidebarExpanded])
+
+  if (isLoggedIn && user && isPortalClient(user)) {
+    return <Navigate to="/client" replace />
+  }
+  if (!isLoggedIn) {
+    return <LogoLoading />
+  }
 
   const fillViewport =
     isCockpit ||

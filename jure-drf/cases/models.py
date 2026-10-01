@@ -144,6 +144,17 @@ class Case(TimeStampedModel):
     total_billed = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     total_paid = models.DecimalField(max_digits=12, decimal_places=2, default=0)
 
+    privacy_mode = models.CharField(
+        max_length=20,
+        blank=True,
+        default="",
+        db_index=True,
+        help_text=(
+            "Optional matter-level privacy override: STANDARD | PSEUDONYMIZED | PRIVATE. "
+            "Empty inherits cabinet / project policy."
+        ),
+    )
+
     class Meta:
         indexes = [
             models.Index(fields=['cabinet', 'case_type']),
@@ -202,9 +213,30 @@ class CaseAttachment(TimeStampedModel):
         related_name='shared_attachments',
         help_text='Additional matters that may access this file without duplicating storage.',
     )
+    client_visible = models.BooleanField(
+        default=False,
+        help_text='When True, the attached file is visible in the client portal.',
+    )
 
     def display_name(self) -> str:
         return (self.original_name or "").strip() or (self.file.name.rsplit("/", 1)[-1] if self.file else "")
+
+
+class CaseClientUpdate(TimeStampedModel):
+    """Client-facing update published by the law firm on a matter."""
+
+    case = models.ForeignKey(Case, on_delete=models.CASCADE, related_name='client_updates')
+    author = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='case_client_updates',
+    )
+    content = models.TextField()
+
+    class Meta:
+        ordering = ['-created']
 
 
 class CaseReferenceSequence(models.Model):

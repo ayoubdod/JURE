@@ -53,11 +53,16 @@ _TITLE_LANG = {
 }
 
 
-def generate_conversation_title(user_message: str, *, language: str = "fr") -> str:
+def generate_conversation_title(user_message: str, *, language: str = "fr", jurisdiction_code: str | None = None) -> str:
     """Ask the LLM for a short sidebar title. Returns '' on failure."""
+    from privacy.services.egress import reset_egress_ticket, set_egress_ticket
+    from privacy.services.quick_redact import redact_ephemeral
+
     excerpt = " ".join((user_message or "").split())[:500]
     if not excerpt:
         return ""
+    # Never send raw PII in the parallel title-generation call.
+    excerpt = redact_ephemeral(excerpt, jurisdiction=jurisdiction_code)
     lang_hint = _TITLE_LANG.get((language or "fr").lower(), "French")
     messages = [
         {
@@ -71,6 +76,7 @@ def generate_conversation_title(user_message: str, *, language: str = "fr") -> s
         },
         {"role": "user", "content": excerpt},
     ]
+    ticket = set_egress_ticket("TITLE_REDACTED")
     try:
         if provider_name() == "deepseek":
             raw = _deepseek_chat(messages, max_tokens=32).get("content") or ""
@@ -86,6 +92,8 @@ def generate_conversation_title(user_message: str, *, language: str = "fr") -> s
     except Exception as exc:
         logger.warning("Juria title generation failed: %s", exc)
         return ""
+    finally:
+        reset_egress_ticket(ticket)
     return sanitize_generated_title(raw)
 
 
@@ -101,11 +109,14 @@ def send_chat_message(
     instructions: str | None = None,
     retrieved_block: str | None = None,
     json_mode: bool = False,
+    privacy_mode: str | None = None,
+    privacy_meta: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """
     Send a message with prior turns for context.
 
     conversation_history: list of {role, content} with roles user/assistant (lowercase).
+    Caller must run the Privacy Gateway first; only sanitized strings should be passed.
     """
     system_prompt = build_system_prompt(
         mode,
@@ -115,6 +126,8 @@ def send_chat_message(
         legal_domain=legal_domain,
         instructions=instructions,
         retrieved_block=retrieved_block,
+        privacy_mode=privacy_mode,
+        privacy_meta=privacy_meta,
     )
     messages = [
         {"role": "system", "content": system_prompt},
@@ -151,13 +164,29 @@ def analyze_document(
     legal_domain: str | None = None,
     instructions: str | None = None,
     retrieved_block: str | None = None,
+    document_text: str | None = None,
+    require_text_only: bool = False,
+    privacy_mode: str | None = None,
+    privacy_meta: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    """Analyze a PDF/DOCX. DeepSeek receives extracted text; legacy Juria gets the file."""
-    if provider_name() == "deepseek":
-        try:
-            extracted = extract_document_text(file_path, file_type)
-        except DocumentTextError as exc:
-            raise JuriaDocumentError(str(exc)) from exc
+    """Analyze a PDF/DOCX. DeepSeek receives extracted text; legacy Juria gets the file.
+
+    When require_text_only is True (Pseudonymized/Private), the raw file is never
+    base64-uploaded to the provider — only sanitized text (document_text) is sent.
+    """
+    use_deepseek = provider_name() == "deepseek"
+    if require_text_only or use_deepseek:
+        if document_text is not None:
+            extracted = document_text
+        else:
+            try:
+                extracted = extract_document_text(file_path, file_type)
+            except DocumentTextError as exc:
+                raise JuriaDocumentError(str(exc)) from exc
+        if require_text_only and document_text is None:
+            raise JuriaDocumentError(
+                "Pseudonymized mode requires Privacy Gateway sanitization before document analysis."
+            )
         user_content = (
             f"{analysis_prompt.strip()}\n\n"
             "--- Début du document ---\n"
@@ -189,22 +218,61 @@ def analyze_document(
                         legal_domain=legal_domain,
                         instructions=instructions,
                         retrieved_block=retrieved_block,
+                        privacy_mode=privacy_mode,
+                        privacy_meta=privacy_meta,
                     ),
                 },
                 {"role": "user", "content": user_content},
             ],
             json_mode=True,
+        ) if use_deepseek else _juria_post(
+            "/chat",
+            {
+                "messages": [
+                    {
+                        "role": "system",
+                        "content": build_system_prompt(
+                            "CONTRACT_ANALYSIS",
+                            case_context,
+                            language=language,
+                            jurisdiction_code=jurisdiction_code,
+                            legal_domain=legal_domain,
+                            instructions=instructions,
+                            retrieved_block=retrieved_block,
+                            privacy_mode=privacy_mode,
+                            privacy_meta=privacy_meta,
+                        ),
+                    },
+                    {"role": "user", "content": user_content},
+                ],
+                "mode": "CONTRACT_ANALYSIS",
+                "max_tokens": settings.JURIA_MAX_TOKENS,
+            },
+            "analyze",
         )
-        parsed = parse_contract_analysis(result["content"])
+        if use_deepseek:
+            parsed = parse_contract_analysis(result["content"])
+            return {
+                "analysis": parsed.get("analysis") or result["content"],
+                "structured": parsed,
+                "key_points": parsed.get("key_points") or [],
+                "risks": parsed.get("risks") or {},
+                "tokens_used": result["tokens_used"],
+                "message_id": result["message_id"],
+            }
+        # Legacy chat-shaped analyze (text-only path)
+        content = str(result.get("content") or "")
+        parsed = parse_contract_analysis(content)
         return {
-            "analysis": parsed.get("analysis") or result["content"],
+            "analysis": parsed.get("analysis") or content,
             "structured": parsed,
             "key_points": parsed.get("key_points") or [],
             "risks": parsed.get("risks") or {},
-            "tokens_used": result["tokens_used"],
-            "message_id": result["message_id"],
+            "tokens_used": int(result.get("tokens_used") or 0),
+            "message_id": str(result.get("message_id") or ""),
         }
 
+    # Legacy raw-file path — only when privacy allows STANDARD / no require_text_only
     with open(file_path, "rb") as f:
         file_b64 = base64.b64encode(f.read()).decode("utf-8")
     return _juria_post(
@@ -213,7 +281,12 @@ def analyze_document(
             "file": file_b64,
             "file_type": file_type,
             "prompt": analysis_prompt,
-            "context": build_system_prompt("CONTRACT_ANALYSIS", case_context),
+            "context": build_system_prompt(
+                "CONTRACT_ANALYSIS",
+                case_context,
+                privacy_mode=privacy_mode,
+                privacy_meta=privacy_meta,
+            ),
         },
         "analyze",
     )
@@ -229,6 +302,8 @@ def draft_document(
     language: str | None = None,
     legal_domain: str | None = None,
     instructions: str | None = None,
+    privacy_mode: str | None = None,
+    privacy_meta: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Generate a legal document via the configured provider."""
     code = (jurisdiction_code or "MA").upper()
@@ -268,6 +343,8 @@ def draft_document(
                         jurisdiction_code=jurisdiction_code or code,
                         legal_domain=legal_domain,
                         instructions=instructions,
+                        privacy_mode=privacy_mode,
+                        privacy_meta=privacy_meta,
                     ),
                 },
                 {"role": "user", "content": user_content},
@@ -292,7 +369,12 @@ def draft_document(
             "jurisdiction": code,
             "language": lang,
             "legal_system": system or "moroccan",
-            "context": build_system_prompt("DOCUMENT_DRAFTING", case_context),
+            "context": build_system_prompt(
+                "DOCUMENT_DRAFTING",
+                case_context,
+                privacy_mode=privacy_mode,
+                privacy_meta=privacy_meta,
+            ),
         },
         "draft",
     )
@@ -428,6 +510,8 @@ def build_system_prompt(
     legal_domain: str | None = None,
     instructions: str | None = None,
     retrieved_block: str | None = None,
+    privacy_mode: str | None = None,
+    privacy_meta: dict[str, Any] | None = None,
 ) -> str:
     """System prompt for Juria: jurisdiction, language, project instructions, authorized context."""
     from juria.constants import JURISDICTION_LABELS, LANGUAGE_LABELS
@@ -452,6 +536,20 @@ def build_system_prompt(
     if domain:
         base += f"Legal domain: {domain}.\n\n"
     parts = [base, _mode_instructions(mode, lang)]
+    mode_u = (privacy_mode or "").upper()
+    if mode_u in ("PSEUDONYMIZED", "PRIVATE") or (privacy_meta or {}).get("pseudonymized"):
+        parts.append(
+            "\n\nPrivacy / pseudonymization (mandatory):\n"
+            "The document and context have been pseudonymized.\n"
+            "Tokens such as [PERSON_001], [COMPANY_001] and [ID_001] "
+            "are opaque identifiers.\n"
+            "Do not attempt to infer, reconstruct or guess the real identity "
+            "behind these identifiers.\n"
+            "Preserve the tokens exactly when referencing the corresponding "
+            "entity in your response.\n"
+            "Do not generate personal information that is not present in the "
+            "sanitized context.\n"
+        )
     if instructions and instructions.strip():
         parts.append("\n\nProject instructions (priority):\n")
         parts.append(instructions.strip())
@@ -482,6 +580,21 @@ def build_system_prompt(
     return "".join(parts)
 
 
+def _assert_privacy_egress_allowed() -> None:
+    """Transport guard: AI provider calls must present a Privacy Gateway ticket."""
+    from privacy.services.egress import get_egress_ticket
+
+    ticket = get_egress_ticket()
+    if ticket:
+        return
+    # Enforce by default; tests may disable via override_settings.
+    if not getattr(settings, "PRIVACY_ENFORCE_EGRESS_TICKET", True):
+        return
+    raise JuriaAPIError(
+        "Privacy Gateway egress ticket missing. Raw content was not sent to the AI provider."
+    )
+
+
 def _deepseek_chat(
     messages: list[dict[str, str]],
     *,
@@ -489,6 +602,7 @@ def _deepseek_chat(
     stream: bool = False,
     max_tokens: int | None = None,
 ) -> dict[str, Any]:
+    _assert_privacy_egress_allowed()
     api_key = (getattr(settings, "DEEPSEEK_API_KEY", "") or "").strip()
     if not api_key:
         raise JuriaAPIError("DeepSeek API key is not configured.")
@@ -550,6 +664,7 @@ def _deepseek_chat(
 
 
 def _juria_post(path: str, payload: dict[str, Any], label: str) -> dict[str, Any]:
+    _assert_privacy_egress_allowed()
     url = f"{_juria_base_url()}{path}"
     try:
         response = requests.post(

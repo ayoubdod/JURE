@@ -23,6 +23,7 @@ from juria.models import JuriaProject, JuriaProjectMember, JuriaThread
     DEEPSEEK_MODEL="deepseek-chat",
     JURIA_MAX_TOKENS=400,
     JURIA_TIMEOUT_SECONDS=10,
+    PRIVACY_ENFORCE_EGRESS_TICKET=False,
 )
 class DeepSeekProviderTests(SimpleTestCase):
     @patch("juria.services.juria_api_service.requests.post")

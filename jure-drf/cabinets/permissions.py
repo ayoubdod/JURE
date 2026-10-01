@@ -203,6 +203,19 @@ class HasLibraryPermission(_HasLibraryCabinetPermission):
         return super().has_permission(request, view)
 
 
+class CanAccessConversations(BasePermission):
+    """Cabinet team RBAC, or portal clients (membership enforced in queryset/actions)."""
+
+    def has_permission(self, request, view):
+        user = request.user
+        if not getattr(user, 'is_authenticated', False):
+            return False
+        if getattr(user, 'is_cabinet_member', False) or getattr(user, 'owned_cabinet', None):
+            return HasConversationsPermission().has_permission(request, view)
+        # Portal client of a cabinet
+        return bool(getattr(user, 'cabinet_id', None) and not getattr(user, 'is_cabinet_member', False))
+
+
 CONTENT_MANAGER_ROLES = frozenset({'OWNER', 'ADMIN'})
 
 

@@ -80,6 +80,12 @@ export interface JuriaContractAnalysis {
   parse_error?: boolean;
   advisory_note?: string;
   document_title?: string;
+  privacy?: {
+    pseudonymized?: boolean;
+    session_id?: string;
+    mode?: string;
+    entity_counts?: Record<string, number>;
+  };
 }
 
 export interface JuriaMessage {
@@ -133,6 +139,8 @@ export interface JuriaProject {
   linked_case_reference?: string | null;
   is_favorite: boolean;
   is_simple?: boolean;
+  /** Empty = inherit cabinet/case policy. STANDARD | PSEUDONYMIZED | PRIVATE */
+  privacy_mode?: string;
   member_count?: number;
   thread_count?: number;
   message_count?: number;

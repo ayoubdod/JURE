@@ -25,6 +25,7 @@ import {
   MoreHorizontal,
   Pencil,
   Phone,
+  Send,
   Trash2,
   User,
   X,
@@ -35,6 +36,8 @@ import CaseViewModal, { CaseViewModalRef } from '@/components/case/CaseViewModal
 import CaseUpdateModal, { CaseUpdateModalRef } from '@/components/case/CaseUpdateModal';
 import CaseDeleteModal, { CaseDeleteModalRef } from '@/components/case/CaseDeleteModal';
 import { apiGetCases } from '@/services/case/api';
+import { apiSendClientInvitation } from '@/services/client/api';
+import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router';
 import { devError } from '@/utils/devLog';
 import { cn } from '@/lib/utils';
@@ -53,6 +56,7 @@ export interface ClientProfilePreviewRef {
 interface ClientProfilePreviewProps {
   onUpdateSuccess?: (client: API.Client) => void;
   onDeleteSuccess?: (client: API.Client) => void;
+  onInviteSuccess?: () => void;
 }
 
 const initialsOf = (first?: string, last?: string) => {
@@ -106,9 +110,10 @@ const STATUS_PILL: Record<string, string> = {
 type ProfileTab = 'overview' | 'cases';
 
 const ClientProfilePreview = React.forwardRef<ClientProfilePreviewRef, ClientProfilePreviewProps>(
-  ({ onUpdateSuccess, onDeleteSuccess }, ref) => {
+  ({ onUpdateSuccess, onDeleteSuccess, onInviteSuccess }, ref) => {
     const { t, tf, enumLabel, enumPretty, lang } = useAppTranslation();
     const navigate = useNavigate();
+    const { toast } = useToast();
     const p = t.clients.profile;
 
     const [isOpen, setIsOpen] = useState(false);
@@ -117,6 +122,7 @@ const ClientProfilePreview = React.forwardRef<ClientProfilePreviewRef, ClientPro
     const [casesLoading, setCasesLoading] = useState(false);
     const [tab, setTab] = useState<ProfileTab>('overview');
     const [categoryFilter, setCategoryFilter] = useState('all');
+    const [inviting, setInviting] = useState(false);
 
     const updateModalRef = useRef<ClientUpdateModalRef>(null);
     const deleteModalRef = useRef<ClientDeleteModalRef>(null);
@@ -186,6 +192,28 @@ const ClientProfilePreview = React.forwardRef<ClientProfilePreviewRef, ClientPro
 
     const handleEmail = () => {
       if (client?.email) window.location.href = `mailto:${client.email}`;
+    };
+
+    const handleInvite = async () => {
+      if (!client?.email) return;
+      setInviting(true);
+      try {
+        await apiSendClientInvitation(client.id);
+        setClient({ ...client, invitation_pending: true });
+        onInviteSuccess?.();
+        toast({
+          title: t.clients.invitationSentTitle,
+          description: t.clients.invitationSentDescription,
+        });
+      } catch {
+        toast({
+          title: t.clients.invitationFailedTitle,
+          description: t.clients.invitationFailedDescription,
+          variant: 'destructive',
+        });
+      } finally {
+        setInviting(false);
+      }
     };
 
     const isCompany = client?.client_type === 'COMPANY';
@@ -354,6 +382,16 @@ const ClientProfilePreview = React.forwardRef<ClientProfilePreviewRef, ClientPro
                         size="sm"
                         variant="outline"
                         className="h-8 border-slate-200 px-3 dark:border-zinc-700"
+                        onClick={handleInvite}
+                        disabled={!client.email || inviting}
+                      >
+                        <Send className="h-3.5 w-3.5" aria-hidden />
+                        {inviting ? t.clients.sendingInvitation : p.sendInvitation}
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-8 border-slate-200 px-3 dark:border-zinc-700"
                         onClick={handleEdit}
                       >
                         <Pencil className="h-3.5 w-3.5" aria-hidden />
@@ -371,6 +409,10 @@ const ClientProfilePreview = React.forwardRef<ClientProfilePreviewRef, ClientPro
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-44">
+                          <DropdownMenuItem onClick={handleInvite} disabled={!client.email || inviting}>
+                            <Send className="me-2 h-3.5 w-3.5" />
+                            {p.sendInvitation}
+                          </DropdownMenuItem>
                           <DropdownMenuItem onClick={handleEdit}>
                             <Pencil className="me-2 h-3.5 w-3.5" />
                             {t.common.edit}

@@ -2570,6 +2570,13 @@ export interface AppMessages {
     rangeSummary: string;
     rowsPerPage: string;
     viewClient: string;
+    sendInvitation: string;
+    sendingInvitation: string;
+    invitationPending: string;
+    invitationSentTitle: string;
+    invitationSentDescription: string;
+    invitationFailedTitle: string;
+    invitationFailedDescription: string;
     viewList: string;
     viewGrid: string;
     loadingClients: string;
@@ -2587,6 +2594,7 @@ export interface AppMessages {
       presentedBy: string;
       call: string;
       sendEmail: string;
+      sendInvitation: string;
       moreActions: string;
       overview: string;
       cases: string;
@@ -2975,6 +2983,13 @@ export interface AppMessages {
       durationMin: string;
       conversationNumber: string;
       dueOn: string;
+    };
+    agendaOf: string;
+    dayPanel: {
+      title: string;
+      count: string;
+      emptyToday: string;
+      emptyDay: string;
     };
     fc: {
       today: string;
@@ -4712,6 +4727,10 @@ export interface AppMessages {
         libraryCount: string;
         teamCount: string;
         privacyNote: string;
+        privacyProtected: string;
+        privacyModeLabel: string;
+        privacyModeStandard: string;
+        privacyModePrivate: string;
       };
       overview: {
         project: string;
@@ -4769,6 +4788,15 @@ export interface AppMessages {
         aiInstructions: string;
         instructionsPlaceholder: string;
         save: string;
+        privacyMode: string;
+        privacyInherit: string;
+        privacyStandard: string;
+        privacyPseudonymized: string;
+        privacyPrivate: string;
+        privacyHint: string;
+        privacyPrivateHint: string;
+        revealIdentifiers: string;
+        revealFailed: string;
       };
       sources: {
         caseBtn: string;
@@ -4847,4 +4875,6 @@ export interface AppMessages {
       custom: string;
     };
   };
+  clientPortal: import('./clientPortal').ClientPortalMessages;
+  documentReading: import('./documentReading').DocumentReadingMessages;
 }

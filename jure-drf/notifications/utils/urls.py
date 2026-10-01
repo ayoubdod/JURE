@@ -22,6 +22,11 @@ def appointment_action_url(appointment_id: int) -> str:
     return f"/dashboard/appointments?appointment={int(appointment_id)}"
 
 
+def appointment_client_action_url(appointment_id: int | None = None) -> str:
+    """Client portal has no appointment detail page yet — land on home."""
+    return "/client"
+
+
 def conversation_action_url(conversation_id: int | None = None) -> str:
     if conversation_id:
         return f"/dashboard/conversations?selected={int(conversation_id)}"
@@ -40,3 +45,11 @@ def profile_action_url(user_id: int | None = None) -> str:
 
 def finance_action_url() -> str:
     return "/dashboard/finance"
+
+
+def consultation_request_client_url(consultation_id: int) -> str:
+    return f"/client/consultations/{int(consultation_id)}"
+
+
+def consultation_request_staff_url(consultation_id: int) -> str:
+    return f"/dashboard/consultations/{int(consultation_id)}"

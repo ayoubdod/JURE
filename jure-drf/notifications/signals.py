@@ -16,6 +16,7 @@ from notifications.utils.cases import case_assigned_user_ids, co_counsel_id_set
 from notifications.utils.team import owner_admin_user_ids_for_cabinet
 from notifications.utils.urls import (
     appointment_action_url,
+    appointment_client_action_url,
     case_action_url,
     finance_action_url,
     profile_action_url,
@@ -269,26 +270,169 @@ def on_case_saved(sender, instance: Case, created, **kwargs):
 # ── Appointment ────────────────────────────────────────────────────────
 
 
+def _appointment_staff_recipient_ids(appt: Appointment) -> list[int]:
+    """Team attendees + creator (excludes the client portal user)."""
+    ids = list(appt.attendees.values_list("id", flat=True))
+    if appt.created_by_id and appt.created_by_id not in ids:
+        ids.append(appt.created_by_id)
+    client_id = appt.client_id
+    seen: set[int] = set()
+    unique: list[int] = []
+    for uid in ids:
+        if uid and uid not in seen and uid != client_id:
+            seen.add(uid)
+            unique.append(uid)
+    return unique
+
+
+def _notify_appointment_invite(appt: Appointment, recipient_ids) -> None:
+    unique = []
+    seen = set()
+    for uid in recipient_ids or []:
+        if uid and uid not in seen:
+            seen.add(uid)
+            unique.append(uid)
+    if not unique:
+        return
+    create_bulk_notifications(
+        unique,
+        notification_type=NotificationType.APPOINTMENT_CREATED,
+        title="Nouveau rendez-vous",
+        message=f'Vous avez été ajouté au rendez-vous "{appt.title}".',
+        related_appointment_id=appt.id,
+        related_case_id=appt.case_id,
+        action_url=appointment_action_url(appt.id),
+        priority=NotificationPriority.MEDIUM,
+    )
+
+
+def _notify_appointment_client(
+    appt: Appointment,
+    *,
+    created: bool,
+) -> None:
+    if not appt.client_id:
+        return
+    if created:
+        title = "Nouveau rendez-vous"
+        message = f'Un rendez-vous "{appt.title}" a été planifié pour vous.'
+        ntype = NotificationType.APPOINTMENT_CREATED
+    else:
+        title = "Rendez-vous modifié"
+        message = f'Votre rendez-vous "{appt.title}" a été mis à jour.'
+        ntype = NotificationType.APPOINTMENT_UPDATED
+    create_notification(
+        recipient_id=appt.client_id,
+        notification_type=ntype,
+        title=title,
+        message=message,
+        related_appointment_id=appt.id,
+        related_case_id=appt.case_id,
+        action_url=appointment_client_action_url(appt.id),
+        priority=NotificationPriority.MEDIUM,
+        send_email=True,
+    )
+
+
+@receiver(m2m_changed, sender=Appointment.attendees.through)
+def on_appointment_attendees_changed(sender, instance, action, pk_set, **kwargs):
+    """Attendees are set after save; notify newly added team members."""
+    try:
+        if action == "pre_clear":
+            instance._notify_attendee_ids_before = set(
+                instance.attendees.values_list("id", flat=True)
+            )
+            return
+        if action != "post_add" or not pk_set:
+            return
+
+        before = getattr(instance, "_notify_attendee_ids_before", None)
+        if before is None:
+            new_ids = set(pk_set)
+        else:
+            new_ids = set(pk_set) - before
+            instance._notify_attendee_ids_before = None
+
+        # Creator already receives APPOINTMENT_CREATED on post_save (create).
+        # Client is notified separately via post_save.
+        skip = {instance.created_by_id, instance.client_id}
+        recipients = [uid for uid in new_ids if uid and uid not in skip]
+        _notify_appointment_invite(instance, recipients)
+    except Exception:
+        logger.exception("on_appointment_attendees_changed notification failed")
+
+
+@receiver(pre_save, sender=Appointment)
+def _appointment_pre_save(sender, instance, **kwargs):
+    if not instance.pk:
+        instance._notify_prev = None
+        return
+    try:
+        old = Appointment.objects.get(pk=instance.pk)
+        instance._notify_prev = {
+            "title": old.title,
+            "description": old.description,
+            "start_at": old.start_at,
+            "end_at": old.end_at,
+            "status": old.status,
+            "meeting_type": old.meeting_type,
+            "location": old.location,
+            "case_id": old.case_id,
+            "client_id": old.client_id,
+        }
+    except Appointment.DoesNotExist:
+        instance._notify_prev = None
+
+
 @receiver(post_save, sender=Appointment)
 def on_appointment_saved(sender, instance: Appointment, created, **kwargs):
     try:
-        uid = instance.created_by_id
-        if not uid:
-            return
         if created:
-            create_notification(
-                recipient_id=uid,
-                notification_type=NotificationType.APPOINTMENT_CREATED,
-                title="Nouveau rendez-vous",
-                message=f'Le rendez-vous "{instance.title}" a été créé.',
-                related_appointment_id=instance.id,
-                related_case_id=instance.case_id,
-                action_url=appointment_action_url(instance.id),
-                priority=NotificationPriority.MEDIUM,
+            # Attendees are set after create via M2M; m2m_changed notifies them.
+            if instance.created_by_id:
+                create_notification(
+                    recipient_id=instance.created_by_id,
+                    notification_type=NotificationType.APPOINTMENT_CREATED,
+                    title="Nouveau rendez-vous",
+                    message=f'Le rendez-vous "{instance.title}" a été créé.',
+                    related_appointment_id=instance.id,
+                    related_case_id=instance.case_id,
+                    action_url=appointment_action_url(instance.id),
+                    priority=NotificationPriority.MEDIUM,
+                )
+            # Client FK is set on the row at create time (unlike M2M attendees).
+            if instance.client_id and instance.client_id != instance.created_by_id:
+                _notify_appointment_client(instance, created=True)
+            return
+
+        prev = getattr(instance, "_notify_prev", None)
+        if not prev:
+            return
+
+        client_changed = prev.get("client_id") != instance.client_id
+        if client_changed and instance.client_id:
+            _notify_appointment_client(instance, created=True)
+
+        meaningful = any(
+            (
+                prev.get("title") != instance.title,
+                prev.get("description") != instance.description,
+                prev.get("start_at") != instance.start_at,
+                prev.get("end_at") != instance.end_at,
+                prev.get("status") != instance.status,
+                prev.get("meeting_type") != instance.meeting_type,
+                prev.get("location") != instance.location,
+                prev.get("case_id") != instance.case_id,
+                client_changed,
             )
-        else:
-            create_notification(
-                recipient_id=uid,
+        )
+        if not meaningful:
+            return
+
+        staff_ids = _appointment_staff_recipient_ids(instance)
+        if staff_ids:
+            create_bulk_notifications(
+                staff_ids,
                 notification_type=NotificationType.APPOINTMENT_UPDATED,
                 title="Rendez-vous modifié",
                 message=f'Le rendez-vous "{instance.title}" a été mis à jour.',
@@ -297,6 +441,10 @@ def on_appointment_saved(sender, instance: Appointment, created, **kwargs):
                 action_url=appointment_action_url(instance.id),
                 priority=NotificationPriority.MEDIUM,
             )
+
+        # Existing client on update (newly assigned client already got invite above).
+        if instance.client_id and not client_changed:
+            _notify_appointment_client(instance, created=False)
     except Exception:
         logger.exception("on_appointment_saved notification failed")
 

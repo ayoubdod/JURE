@@ -27,8 +27,10 @@ import {
   Mail,
   Phone,
   AlertCircle,
+  Send,
 } from 'lucide-react';
-import { apiGetClients } from '@/services/client/api';
+import { apiGetClients, apiSendClientInvitation } from '@/services/client/api';
+import { useToast } from '@/hooks/use-toast';
 import ClientCreateModal, { ClientCreateModalRef } from '@/components/client/ClientCreateModal';
 import ClientDeleteModal, { ClientDeleteModalRef } from '@/components/client/ClientDeleteModal';
 import ClientUpdateModal, { ClientUpdateModalRef } from '@/components/client/ClientUpdateModal';
@@ -154,6 +156,8 @@ interface ClientRowProps {
   client: API.Client;
   onOpen: (c: API.Client) => void;
   onOpenCases: (c: API.Client) => void;
+  onInvite?: (c: API.Client) => void;
+  invitingId?: number | null;
 }
 
 const ClientTableRow = memo(function ClientTableRow({ client, onOpen, onOpenCases }: ClientRowProps) {
@@ -237,7 +241,13 @@ const ClientTableRow = memo(function ClientTableRow({ client, onOpen, onOpenCase
   );
 });
 
-const ClientCard = memo(function ClientCard({ client, onOpen, onOpenCases }: ClientRowProps) {
+const ClientCard = memo(function ClientCard({
+  client,
+  onOpen,
+  onOpenCases,
+  onInvite,
+  invitingId,
+}: ClientRowProps) {
   const { t, tf } = useAppTranslation();
   const fullName = clientDisplayName(client, t.clients.unnamed);
   const casesCount = casesOf(client);
@@ -247,6 +257,7 @@ const ClientCard = memo(function ClientCard({ client, onOpen, onOpenCases }: Cli
     casesCount === 1 ? t.clients.casesCountOne : t.clients.casesCountOther,
     { count: casesCount }
   );
+  const inviting = invitingId === client.id;
 
   return (
     <article
@@ -278,6 +289,11 @@ const ClientCard = memo(function ClientCard({ client, onOpen, onOpenCases }: Cli
               {t.clients.modal.contactPerson} · {contactPerson}
             </p>
           ) : null}
+          {client.invitation_pending ? (
+            <p className="mt-1 text-[11px] font-medium text-amber-700 dark:text-amber-400">
+              {t.clients.invitationPending}
+            </p>
+          ) : null}
         </div>
         <StatusPill active={!!client.is_active} />
       </div>
@@ -306,10 +322,29 @@ const ClientCard = memo(function ClientCard({ client, onOpen, onOpenCases }: Cli
         >
           {casesLabel}
         </button>
-        <span className="inline-flex items-center gap-0.5 text-[12px] font-medium text-slate-400 group-hover:text-[#64499D]">
-          {t.clients.viewClient}
-          <ChevronRight className="h-3.5 w-3.5 rtl:rotate-180" aria-hidden />
-        </span>
+        <div className="flex items-center gap-2">
+          {client.email && onInvite ? (
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              className="h-7 gap-1 px-2 text-[11px]"
+              disabled={inviting}
+              onClick={(e) => {
+                e.stopPropagation();
+                onInvite(client);
+              }}
+            >
+              <Send className="h-3 w-3" aria-hidden />
+              {inviting ? t.clients.sendingInvitation : t.clients.sendInvitation}
+            </Button>
+          ) : (
+            <span className="inline-flex items-center gap-0.5 text-[12px] font-medium text-slate-400 group-hover:text-[#64499D]">
+              {t.clients.viewClient}
+              <ChevronRight className="h-3.5 w-3.5 rtl:rotate-180" aria-hidden />
+            </span>
+          )}
+        </div>
       </div>
     </article>
   );
@@ -317,6 +352,7 @@ const ClientCard = memo(function ClientCard({ client, onOpen, onOpenCases }: Cli
 
 const Clients: React.FC = () => {
   const { t, tf } = useAppTranslation();
+  const { toast } = useToast();
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
@@ -328,6 +364,7 @@ const Clients: React.FC = () => {
   const [clients, setClients] = useState<API.Client[]>([]);
   const [clientsIsLoading, setClientsIsLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
+  const [invitingId, setInvitingId] = useState<number | null>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const debouncedSearch = useDebounce(searchTerm, 300);
 
@@ -437,6 +474,32 @@ const Clients: React.FC = () => {
       navigate(`/dashboard/cases?tab=all&clientId=${client.id}`);
     },
     [navigate]
+  );
+
+  const handleInvite = useCallback(
+    async (client: API.Client) => {
+      if (!client.email) return;
+      setInvitingId(client.id);
+      try {
+        await apiSendClientInvitation(client.id);
+        setClients((prev) =>
+          prev.map((c) => (c.id === client.id ? { ...c, invitation_pending: true } : c)),
+        );
+        toast({
+          title: t.clients.invitationSentTitle,
+          description: t.clients.invitationSentDescription,
+        });
+      } catch {
+        toast({
+          title: t.clients.invitationFailedTitle,
+          description: t.clients.invitationFailedDescription,
+          variant: 'destructive',
+        });
+      } finally {
+        setInvitingId(null);
+      }
+    },
+    [t.clients, toast],
   );
 
   const openCreate = useCallback(() => {
@@ -663,6 +726,8 @@ const Clients: React.FC = () => {
                   client={client}
                   onOpen={handleView}
                   onOpenCases={handleOpenCases}
+                  onInvite={handleInvite}
+                  invitingId={invitingId}
                 />
               ))}
     </div>
@@ -867,7 +932,14 @@ const Clients: React.FC = () => {
             ) : (
               <div className="flex flex-col gap-2.5 pb-16">
                 {pagedClients.map((c) => (
-                  <ClientCard key={c.id} client={c} onOpen={handleView} onOpenCases={handleOpenCases} />
+                  <ClientCard
+                    key={c.id}
+                    client={c}
+                    onOpen={handleView}
+                    onOpenCases={handleOpenCases}
+                    onInvite={handleInvite}
+                    invitingId={invitingId}
+                  />
                 ))}
               </div>
             )}
@@ -959,6 +1031,7 @@ const Clients: React.FC = () => {
         ref={clientProfilePreviewRef}
         onUpdateSuccess={fetchClients}
         onDeleteSuccess={fetchClients}
+        onInviteSuccess={fetchClients}
       />
     </div>
   );

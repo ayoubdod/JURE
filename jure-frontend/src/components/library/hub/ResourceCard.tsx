@@ -5,9 +5,7 @@ import {
   Edit,
   ExternalLink,
   Eye,
-  FileText,
-  Globe,
-  Landmark,
+  Heart,
   MoreHorizontal,
   Star,
   Trash2,
@@ -23,6 +21,7 @@ import {
 import { cn } from '@/lib/utils';
 import { useAppTranslation } from '@/i18n';
 import { formatRelativeTime } from '@/i18n';
+import DocumentCover from '@/components/library/hub/DocumentCover';
 
 type ViewMode = 'grid' | 'list';
 
@@ -83,39 +82,198 @@ const ResourceCard = memo(function ResourceCard({
     ? formatRelativeTime(doc.created_at || doc.created, lang)
     : '';
   const isList = view === 'list';
+  const authorLine =
+    doc.author ||
+    doc.issuing_authority ||
+    doc.source ||
+    doc.created_by_name ||
+    doc.source_library ||
+    typeLabel ||
+    '';
+
+  const actionsMenu = (overlay?: boolean) => (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className={cn(
+            'h-8 w-8',
+            overlay
+              ? 'bg-black/35 text-white hover:bg-black/50 hover:text-white'
+              : 'text-slate-400'
+          )}
+          aria-label={hub.moreActions}
+        >
+          <MoreHorizontal className="h-4 w-4" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-48">
+        <DropdownMenuItem onClick={() => onOpen(doc)}>
+          <Eye className="me-2 h-4 w-4" />
+          {hub.open}
+        </DropdownMenuItem>
+        {doc.file || doc.external_url ? (
+          <DropdownMenuItem onClick={() => onDownload(doc)}>
+            {doc.external_url && !doc.file ? (
+              <ExternalLink className="me-2 h-4 w-4" />
+            ) : (
+              <Download className="me-2 h-4 w-4" />
+            )}
+            {hub.download}
+          </DropdownMenuItem>
+        ) : null}
+        <DropdownMenuItem onClick={() => onFavorite(doc)}>
+          <Star className="me-2 h-4 w-4" />
+          {doc.is_favorited ? hub.unfavorite : hub.favorite}
+        </DropdownMenuItem>
+        {onAddToMyLibrary && !doc.is_owned ? (
+          <DropdownMenuItem onClick={() => onAddToMyLibrary(doc)}>
+            <BookmarkPlus className="me-2 h-4 w-4" />
+            {hub.addToMy}
+          </DropdownMenuItem>
+        ) : null}
+        {onEdit ? (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => onEdit(doc)}>
+              <Edit className="me-2 h-4 w-4" />
+              {hub.edit}
+            </DropdownMenuItem>
+          </>
+        ) : null}
+        {onDelete ? (
+          <DropdownMenuItem
+            className="text-red-600 focus:text-red-600"
+            onClick={() => onDelete(doc)}
+          >
+            <Trash2 className="me-2 h-4 w-4" />
+            {hub.delete}
+          </DropdownMenuItem>
+        ) : null}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+
+  if (!isList) {
+    return (
+      <article className="group relative flex min-w-0 flex-col">
+        <div
+          className={cn(
+            'relative overflow-hidden rounded-2xl shadow-[0_10px_28px_rgba(15,23,42,0.18)]',
+            'ring-1 ring-black/5 transition-transform duration-200',
+            'group-hover:-translate-y-1 group-hover:shadow-[0_16px_36px_rgba(15,23,42,0.22)]'
+          )}
+        >
+          <div className="aspect-[2/3] w-full">
+            <DocumentCover
+              document={doc}
+              typeLabel={typeLabel}
+              categoryLabel={categoryLabel}
+            />
+          </div>
+
+          {/* Hover scrub: preview in app reader */}
+          <div
+            className={cn(
+              'pointer-events-none absolute inset-x-0 bottom-0 z-[2] flex justify-center bg-gradient-to-t from-black/70 via-black/35 to-transparent px-3 pb-3 pt-12',
+              'opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100'
+            )}
+          >
+            <Button
+              type="button"
+              size="sm"
+              className="pointer-events-auto h-8 w-full max-w-[11rem] rounded-full bg-white text-slate-900 shadow-md hover:bg-white/95"
+              onClick={() => onPreview(doc)}
+            >
+              <Eye className="me-1.5 h-3.5 w-3.5" />
+              {hub.preview}
+            </Button>
+          </div>
+
+          {doc.is_recent ? (
+            <span className="absolute bottom-3 end-3 z-[1] rounded-full bg-white/95 px-1.5 py-px text-[9px] font-bold uppercase tracking-wide text-[#64499D] shadow-sm group-hover:opacity-0">
+              {hub.newBadge}
+            </span>
+          ) : null}
+
+          <div className="absolute end-2 top-2 z-10 flex items-center gap-0.5 opacity-100 sm:opacity-0 sm:transition-opacity sm:group-hover:opacity-100 sm:group-focus-within:opacity-100">
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 bg-black/35 text-white hover:bg-black/50 hover:text-white"
+              aria-label={doc.is_favorited ? hub.unfavorite : hub.favorite}
+              onClick={() => onFavorite(doc)}
+            >
+              <Heart
+                className={cn(
+                  'h-4 w-4',
+                  doc.is_favorited && 'fill-rose-400 text-rose-400'
+                )}
+              />
+            </Button>
+            {actionsMenu(true)}
+          </div>
+        </div>
+
+        <div className="mt-2.5 min-w-0 px-0.5">
+          <button
+            type="button"
+            onClick={() => onPreview(doc)}
+            className="w-full text-start focus-visible:outline-none"
+          >
+            <h3 className="line-clamp-2 text-[13px] font-semibold leading-snug text-slate-900 dark:text-slate-50">
+              {doc.title}
+            </h3>
+          </button>
+          <div className="mt-1 flex items-center justify-between gap-2">
+            <p className="min-w-0 truncate text-[11.5px] text-slate-500 dark:text-slate-400">
+              {authorLine}
+            </p>
+            <button
+              type="button"
+              onClick={() => onFavorite(doc)}
+              className={cn(
+                'inline-flex shrink-0 items-center gap-1 text-[11px] font-medium',
+                doc.is_favorited
+                  ? 'text-rose-500'
+                  : 'text-slate-400 hover:text-rose-500'
+              )}
+              aria-label={doc.is_favorited ? hub.unfavorite : hub.favorite}
+            >
+              <Heart className={cn('h-3 w-3', doc.is_favorited && 'fill-current')} />
+            </button>
+          </div>
+          {added ? (
+            <p className="mt-0.5 text-[10.5px] text-slate-400">{added}</p>
+          ) : null}
+        </div>
+      </article>
+    );
+  }
 
   return (
     <article
       className={cn(
-        'group relative rounded-xl border border-slate-200/90 bg-white shadow-sm transition-all',
+        'group relative flex min-w-0 items-stretch gap-3 overflow-hidden rounded-xl border border-slate-200/90 bg-white p-3 shadow-sm transition-all sm:p-3.5',
         'hover:border-[#64499D]/30 hover:shadow-md dark:border-slate-800 dark:bg-slate-950',
-        'focus-within:ring-2 focus-within:ring-[#64499D]/25',
-        'min-w-0 overflow-hidden',
-        isList ? 'flex items-stretch gap-3 p-3 sm:p-3.5' : 'flex flex-col p-4'
+        'focus-within:ring-2 focus-within:ring-[#64499D]/25'
       )}
     >
       <button
         type="button"
-        onClick={() => onOpen(doc)}
-        className={cn(
-          'flex min-w-0 flex-1 text-start',
-          isList ? 'items-start gap-3' : 'flex-col gap-3 pe-14'
-        )}
+        onClick={() => onPreview(doc)}
+        className="flex min-w-0 flex-1 items-start gap-3 text-start"
       >
-        <div
-          className={cn(
-            'flex shrink-0 items-center justify-center rounded-lg bg-[#64499D]/10 text-[#64499D] dark:bg-[#64499D]/20 dark:text-[#CFC2FF]',
-            isList ? 'h-10 w-10' : 'h-11 w-11'
-          )}
-          aria-hidden
-        >
-          {doc.scope === 'INTERNATIONAL' ? (
-            <Globe className="h-5 w-5" />
-          ) : doc.scope === 'LOCAL' ? (
-            <Landmark className="h-5 w-5" />
-          ) : (
-            <FileText className="h-5 w-5" />
-          )}
+        <div className="relative h-16 w-12 shrink-0 overflow-hidden rounded-lg shadow-sm ring-1 ring-black/5">
+          <DocumentCover
+            document={doc}
+            typeLabel={typeLabel}
+            categoryLabel={categoryLabel}
+            compact
+          />
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-1.5">
@@ -143,8 +301,7 @@ const ResourceCard = memo(function ResourceCard({
             {doc.jurisdiction_name ? <span>{doc.jurisdiction_name}</span> : null}
             {doc.country ? <span>{doc.country}</span> : null}
             {doc.language ? <span className="uppercase">{doc.language}</span> : null}
-            {doc.source ? <span>{doc.source}</span> : null}
-            {doc.created_by_name ? <span>{doc.created_by_name}</span> : null}
+            {authorLine ? <span>{authorLine}</span> : null}
             {dateLabel ? <span>{dateLabel}</span> : null}
           </div>
           {doc.source_library ? (
@@ -170,7 +327,7 @@ const ResourceCard = memo(function ResourceCard({
         </div>
       </button>
 
-      <div className={cn('flex shrink-0 items-start gap-0.5', isList ? '' : 'absolute end-3 top-3')}>
+      <div className="flex shrink-0 items-start gap-0.5">
         <Button
           type="button"
           variant="ghost"
@@ -181,67 +338,7 @@ const ResourceCard = memo(function ResourceCard({
         >
           <Star className={cn('h-4 w-4', doc.is_favorited && 'fill-[#64499D] text-[#64499D]')} />
         </Button>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 text-slate-400"
-              aria-label={hub.moreActions}
-            >
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48">
-            <DropdownMenuItem onClick={() => onOpen(doc)}>
-              <Eye className="me-2 h-4 w-4" />
-              {hub.open}
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onPreview(doc)}>
-              <FileText className="me-2 h-4 w-4" />
-              {hub.preview}
-            </DropdownMenuItem>
-            {doc.file || doc.external_url ? (
-              <DropdownMenuItem onClick={() => onDownload(doc)}>
-                {doc.external_url && !doc.file ? (
-                  <ExternalLink className="me-2 h-4 w-4" />
-                ) : (
-                  <Download className="me-2 h-4 w-4" />
-                )}
-                {hub.download}
-              </DropdownMenuItem>
-            ) : null}
-            <DropdownMenuItem onClick={() => onFavorite(doc)}>
-              <Star className="me-2 h-4 w-4" />
-              {doc.is_favorited ? hub.unfavorite : hub.favorite}
-            </DropdownMenuItem>
-            {onAddToMyLibrary && !doc.is_owned ? (
-              <DropdownMenuItem onClick={() => onAddToMyLibrary(doc)}>
-                <BookmarkPlus className="me-2 h-4 w-4" />
-                {hub.addToMy}
-              </DropdownMenuItem>
-            ) : null}
-            {onEdit ? (
-              <>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => onEdit(doc)}>
-                  <Edit className="me-2 h-4 w-4" />
-                  {hub.edit}
-                </DropdownMenuItem>
-              </>
-            ) : null}
-            {onDelete ? (
-              <DropdownMenuItem
-                className="text-red-600 focus:text-red-600"
-                onClick={() => onDelete(doc)}
-              >
-                <Trash2 className="me-2 h-4 w-4" />
-                {hub.delete}
-              </DropdownMenuItem>
-            ) : null}
-          </DropdownMenuContent>
-        </DropdownMenu>
+        {actionsMenu(false)}
       </div>
     </article>
   );

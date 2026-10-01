@@ -1,273 +1,276 @@
-import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import type { EventClickArg, EventInput, LocaleInput } from '@fullcalendar/core';
-import FullCalendar from '@fullcalendar/react';
-import dayGridPlugin from '@fullcalendar/daygrid';
-import timeGridPlugin from '@fullcalendar/timegrid';
-import interactionPlugin from '@fullcalendar/interaction';
-import listPlugin from '@fullcalendar/list';
-import frLocale from '@fullcalendar/core/locales/fr';
-import arMaLocale from '@fullcalendar/core/locales/ar-ma';
-import { CalendarDays, MapPin, Video } from 'lucide-react';
-import { formatTime, useAppTranslation } from '@/i18n';
-import { useIsMobile } from '@/hooks/use-mobile';
+import React, { useEffect, useMemo, useState } from 'react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { useAppTranslation } from '@/i18n';
 import {
   type CalendarEvent,
   isTaskAppointmentOverdue,
+  localDayKey,
   pillColorForCalendarEvent,
+  startOfLocalDay,
 } from '@/lib/calendarEvents';
 import CalendarLegend from '@/components/calendar/CalendarLegend';
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
 
-const MOBILE_TOOLBAR = {
-  start: 'prev,next title today dayGridMonth,timeGridWeek,timeGridDay,listWeek',
-  center: '',
-  end: '',
-};
-const DESKTOP_TOOLBAR = {
-  start: 'prev,next today',
-  center: 'title',
-  end: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek',
-};
+function localeTag(lang: string): string {
+  if (lang === 'fr') return 'fr-FR';
+  if (lang === 'ar') return 'ar-MA';
+  return 'en-US';
+}
 
-function fcLocaleFor(lang: string): LocaleInput | string {
-  if (lang === 'fr') return frLocale;
-  if (lang === 'ar') return arMaLocale;
-  return 'en';
+function startOfMonth(d: Date): Date {
+  return new Date(d.getFullYear(), d.getMonth(), 1);
+}
+
+function addMonths(d: Date, n: number): Date {
+  return new Date(d.getFullYear(), d.getMonth() + n, 1);
+}
+
+/** Monday-first month grid (6 weeks × 7 days). */
+function buildMonthCells(month: Date): Date[] {
+  const first = startOfMonth(month);
+  const mondayOffset = (first.getDay() + 6) % 7;
+  const gridStart = new Date(first);
+  gridStart.setDate(first.getDate() - mondayOffset);
+  const cells: Date[] = [];
+  for (let i = 0; i < 42; i += 1) {
+    const d = new Date(gridStart);
+    d.setDate(gridStart.getDate() + i);
+    cells.push(d);
+  }
+  return cells;
+}
+
+function weekdayLabels(lang: string): string[] {
+  const base = new Date(2024, 0, 1); // Monday
+  return Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(base);
+    d.setDate(base.getDate() + i);
+    return d.toLocaleDateString(localeTag(lang), { weekday: 'short' });
+  });
+}
+
+function accentForEvent(e: CalendarEvent): string {
+  if ((e.type === 'task' || e.type === 'appointment') && isTaskAppointmentOverdue(e)) {
+    return '#64748b';
+  }
+  return pillColorForCalendarEvent(e).bg;
 }
 
 export default function CalendarView({
-  calendarRef,
   events,
   loading,
   emptyPeriod,
   emptyFiltered,
   onEventClick,
   onDatesSet,
+  onDayClick,
 }: {
-  calendarRef: React.RefObject<FullCalendar | null>;
   events: CalendarEvent[];
   loading: boolean;
   emptyPeriod: boolean;
   emptyFiltered?: boolean;
-  onEventClick: (info: EventClickArg) => void;
+  onEventClick: (event: CalendarEvent) => void;
   onDatesSet: (arg: { start: Date; end: Date }) => void;
+  onDayClick?: (date: Date) => void;
 }) {
   const { t, lang } = useAppTranslation();
   const cal = t.calendar;
-  const fcButtonText = useMemo(
-    () => ({
-      today: cal.fc.today,
-      month: cal.fc.month,
-      week: cal.fc.week,
-      day: cal.fc.day,
-      list: cal.fc.agenda,
-    }),
-    [cal.fc.today, cal.fc.month, cal.fc.week, cal.fc.day, cal.fc.agenda]
-  );
+  const [cursor, setCursor] = useState(() => startOfMonth(new Date()));
+  const todayKey = localDayKey(startOfLocalDay(new Date()));
 
-  const fcEvents = useMemo(() => {
-    return events.map((e) => {
-      const overdue = (e.type === 'task' || e.type === 'appointment') && isTaskAppointmentOverdue(e);
-      const colors = pillColorForCalendarEvent(e);
-      const mapped: EventInput = {
-        id: e.id,
-        title: e.title,
-        start: e.start,
-        end: e.end || e.start,
-        allDay: e.allDay,
-        extendedProps: { ...e, overdue },
-        backgroundColor: overdue ? '#94a3b8' : colors.bg,
-        borderColor: 'transparent',
-        textColor: overdue ? '#1e293b' : colors.fg,
-      };
-      if (overdue) mapped.classNames = ['fc-event-overdue-strike'];
-      return mapped;
-    });
+  const cells = useMemo(() => buildMonthCells(cursor), [cursor]);
+  const weekdays = useMemo(() => weekdayLabels(lang), [lang]);
+
+  const monthLabel = cursor.toLocaleDateString(localeTag(lang), { month: 'long' });
+
+  const eventsByDay = useMemo(() => {
+    const map = new Map<string, CalendarEvent[]>();
+    for (const e of events) {
+      const s = new Date(e.start);
+      if (Number.isNaN(s.getTime())) continue;
+      const key = localDayKey(s);
+      const list = map.get(key) || [];
+      list.push(e);
+      map.set(key, list);
+    }
+    for (const list of map.values()) {
+      list.sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime());
+    }
+    return map;
   }, [events]);
 
   useEffect(() => {
-    const api = calendarRef.current?.getApi();
-    if (!api) return;
-    api.setOption('locale', fcLocaleFor(lang));
-    api.setOption('buttonText', fcButtonText);
-  }, [calendarRef, lang, fcButtonText]);
+    const start = cells[0];
+    const end = new Date(cells[41]);
+    end.setDate(end.getDate() + 1);
+    onDatesSet({ start, end });
+    // intentionally only when month cursor changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cursor]);
 
-  const isMobile = useIsMobile();
-  const cardRef = useRef<HTMLDivElement>(null);
-  const [toolbarH, setToolbarH] = useState(52);
+  const goToday = () => setCursor(startOfMonth(new Date()));
+  const goPrev = () => setCursor((m) => addMonths(m, -1));
+  const goNext = () => setCursor((m) => addMonths(m, 1));
 
-  useLayoutEffect(() => {
-    const card = cardRef.current;
-    if (!card) return;
-    const measure = () => {
-      const toolbar = card.querySelector('.fc-header-toolbar') as HTMLElement | null;
-      if (toolbar) setToolbarH(toolbar.offsetHeight);
-    };
-    measure();
-    const ro = new ResizeObserver(measure);
-    const toolbar = card.querySelector('.fc-header-toolbar');
-    if (toolbar) ro.observe(toolbar);
-    ro.observe(card);
-    return () => ro.disconnect();
-  }, [emptyPeriod, emptyFiltered, isMobile, lang, loading]);
+  const emptyHint = !loading && (emptyPeriod || emptyFiltered);
 
   return (
-    <div className="h-full flex flex-col min-h-0 rounded-xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900/50 shadow-[0_4px_14px_rgba(15,23,42,0.06)] overflow-hidden">
-      <div ref={cardRef} className="flex-1 min-h-0 relative fc-calendar-card">
-        <FullCalendar
-          ref={calendarRef}
-          plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin, listPlugin]}
-          initialView={isMobile ? 'listWeek' : 'dayGridMonth'}
-          headerToolbar={isMobile ? MOBILE_TOOLBAR : DESKTOP_TOOLBAR}
-          buttonText={fcButtonText}
-          locale={fcLocaleFor(lang)}
-          titleFormat={isMobile ? { year: 'numeric', month: 'short' } : { year: 'numeric', month: 'long' }}
-          height="100%"
-          expandRows
-          events={fcEvents}
-          eventClick={onEventClick}
-          datesSet={onDatesSet}
-          nowIndicator
-          selectable={false}
-          eventTimeFormat={{ hour: '2-digit', minute: '2-digit', meridiem: false }}
-          eventClassNames={(arg) => {
-            const ext = (arg.event.extendedProps || {}) as CalendarEvent & { overdue?: boolean };
-            const list: string[] = [];
-            if (ext?.type === 'task') list.push('task-event', `task-${ext.priority || 'low'}`);
-            if (ext?.type === 'appointment') list.push('appointment-event');
-            if (ext?.type === 'case_date') list.push('case-date-event', `case-date-${ext.sourceType || ''}`);
-            return list;
-          }}
-          dayMaxEvents={3}
-          moreLinkClick="popover"
-          eventDisplay="block"
-          windowResize={() => {
-            const api = calendarRef.current?.getApi();
-            if (!api) return;
-            const mobile = window.innerWidth < 768;
-            api.setOption('headerToolbar', mobile ? MOBILE_TOOLBAR : DESKTOP_TOOLBAR);
-            api.setOption(
-              'titleFormat',
-              mobile ? { year: 'numeric', month: 'short' } : { year: 'numeric', month: 'long' }
-            );
-            if (mobile) {
-              if (api.view.type !== 'listWeek' && api.view.type !== 'dayGridMonth') api.changeView('listWeek');
-            } else if (api.view.type === 'listWeek') {
-              api.changeView('dayGridMonth');
-            }
-          }}
-          viewDidMount={() => {
-            const api = calendarRef.current?.getApi();
-            if (api && window.innerWidth < 768 && api.view.type !== 'listWeek' && api.view.type !== 'dayGridMonth') {
-              api.changeView('listWeek');
-            }
-          }}
-          dayHeaderContent={(arg) => (
-            <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-              {arg.text}
-            </span>
-          )}
-          dayCellClassNames={(arg) => {
-            const cls: string[] = [];
-            if (arg.isToday) cls.push('fc-day-today-jure');
-            const d = arg.date.getDay();
-            if (d === 0 || d === 6) cls.push('fc-day-weekend-jure');
-            return cls;
-          }}
-          eventContent={(arg) => {
-            const event = arg.event;
-            const ext = event.extendedProps as CalendarEvent & { overdue?: boolean };
-            const time = event.start
-              ? formatTime(event.start, lang, { hour: '2-digit', minute: '2-digit', hour12: true })
-              : '';
-            const strike = ext?.overdue;
+    <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/80 shadow-[0_8px_24px_rgba(15,23,42,0.06)]">
+      <div className="flex shrink-0 items-center justify-between gap-2 px-3 pt-3 pb-1 sm:px-4">
+        <div className="min-w-0">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
+            {cal.agendaOf}
+          </p>
+          <h2 className="truncate text-xl font-extrabold tracking-tight text-slate-900 dark:text-white capitalize sm:text-2xl">
+            {monthLabel}
+          </h2>
+        </div>
+        <div className="flex shrink-0 items-center gap-1">
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            className="h-8 w-8 rounded-lg"
+            onClick={goPrev}
+            aria-label="Previous month"
+          >
+            <ChevronLeft className="h-4 w-4 rtl:rotate-180" />
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-8 rounded-lg px-2.5 text-xs font-semibold"
+            onClick={goToday}
+          >
+            {cal.fc.today}
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            className="h-8 w-8 rounded-lg"
+            onClick={goNext}
+            aria-label="Next month"
+          >
+            <ChevronRight className="h-4 w-4 rtl:rotate-180" />
+          </Button>
+        </div>
+      </div>
 
-            let meetingBadge: React.ReactNode = null;
-            if (ext?.type === 'appointment') {
-              const mt =
-                ext.meeting_type ||
-                (ext.conversation_id ? 'video' : ext.location ? 'in_person' : '');
-              if (mt === 'video') {
-                meetingBadge = (
-                  <span className="mt-0.5 inline-flex items-center gap-0.5 text-[9px] leading-none opacity-95">
-                    <Video className="h-2.5 w-2.5 shrink-0" aria-hidden />
-                    <span className="truncate">{cal.jureConference}</span>
-                  </span>
-                );
-              } else if (mt === 'in_person' || ext.location) {
-                meetingBadge = (
-                  <span className="mt-0.5 inline-flex items-center gap-0.5 text-[9px] leading-none opacity-95">
-                    <MapPin className="h-2.5 w-2.5 shrink-0" aria-hidden />
-                    <span className="truncate">{cal.inPerson}</span>
-                  </span>
-                );
-              }
-            }
+      <div className="grid shrink-0 grid-cols-7 gap-1 px-2 sm:gap-1.5 sm:px-3">
+        {weekdays.map((label) => (
+          <div
+            key={label}
+            className="py-1 text-center text-[9px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 sm:text-[10px]"
+          >
+            {label}
+          </div>
+        ))}
+      </div>
 
-            let assigneeBadge: React.ReactNode = null;
-            if (ext?.type === 'task') {
-              const people = Array.isArray(ext.assignees) && ext.assignees.length
-                ? ext.assignees
-                : ext.assigned_to
-                  ? [ext.assigned_to]
-                  : [];
-              if (people.length) {
-                const shown = people.slice(0, 3);
-                const extra = people.length - shown.length;
-                assigneeBadge = (
-                  <span className="mt-0.5 flex items-center">
-                    {shown.map((p) => {
-                      const initial = ((p.first_name || p.email || '?')[0] || '?').toUpperCase();
-                      return (
-                        <span
-                          key={p.id ?? initial}
-                          className="me-0.5 inline-flex h-3.5 w-3.5 items-center justify-center rounded-full bg-white/25 text-[8px] font-bold"
-                        >
-                          {initial}
-                        </span>
-                      );
-                    })}
-                    {extra > 0 ? <span className="text-[9px] opacity-90">+{extra}</span> : null}
-                  </span>
-                );
-              }
-            }
+      <div className="relative z-[1] flex-1 min-h-0 overflow-y-auto px-2 pb-2 sm:px-3 sm:pb-3">
+        <div className="grid h-full min-h-[22rem] grid-cols-7 grid-rows-6 gap-1 sm:min-h-[26rem] sm:gap-1.5">
+          {cells.map((date) => {
+            const key = localDayKey(date);
+            const inMonth = date.getMonth() === cursor.getMonth();
+            const isToday = key === todayKey;
+            const dayEvents = eventsByDay.get(key) || [];
+            const hasEvents = dayEvents.length > 0;
+            const accent = hasEvents ? accentForEvent(dayEvents[0]) : undefined;
+            const shown = dayEvents.slice(0, 2);
+            const extra = dayEvents.length - shown.length;
 
             return (
-              <div className="fc-event-main-frame min-w-0 overflow-hidden">
-                <div className="fc-event-title-container">
-                  <div
-                    className={cn(
-                      'fc-event-title fc-sticky truncate',
-                      strike && 'line-through opacity-80'
-                    )}
-                  >
-                    {event.title}
-                  </div>
+              <button
+                key={key}
+                type="button"
+                onClick={() => onDayClick?.(startOfLocalDay(date))}
+                className={cn(
+                  'group flex min-h-0 flex-col items-center rounded-2xl px-1 py-1.5 text-center transition-all sm:rounded-[1.15rem] sm:px-1.5 sm:py-2',
+                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40',
+                  hasEvents
+                    ? 'bg-white dark:bg-slate-100 shadow-sm border border-slate-200/90 dark:border-transparent hover:-translate-y-0.5 hover:shadow-md'
+                    : 'bg-slate-200/50 dark:bg-white/10 border border-transparent hover:bg-slate-200/80 dark:hover:bg-white/15',
+                  !inMonth && 'opacity-45',
+                  isToday && 'ring-2 ring-primary ring-offset-1 ring-offset-slate-50 dark:ring-offset-slate-950'
+                )}
+              >
+                <span
+                  className={cn(
+                    'text-sm font-extrabold leading-none sm:text-base md:text-lg',
+                    hasEvents ? 'text-slate-900' : 'text-slate-500 dark:text-slate-300'
+                  )}
+                  style={accent ? { color: accent } : undefined}
+                >
+                  {date.getDate()}
+                </span>
+                <div className="mt-1 flex w-full min-h-0 flex-1 flex-col items-center gap-0.5 overflow-hidden">
+                  {shown.map((ev) => {
+                    const overdue =
+                      (ev.type === 'task' || ev.type === 'appointment') && isTaskAppointmentOverdue(ev);
+                    const color = accentForEvent(ev);
+                    return (
+                      <span
+                        key={ev.id}
+                        role="link"
+                        tabIndex={0}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onEventClick(ev);
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            onEventClick(ev);
+                          }
+                        }}
+                        className={cn(
+                          'hidden w-full truncate px-0.5 text-[9px] font-semibold leading-tight sm:block',
+                          overdue && 'line-through opacity-70'
+                        )}
+                        style={{ color }}
+                        title={ev.title}
+                      >
+                        {ev.title}
+                      </span>
+                    );
+                  })}
+                  {extra > 0 ? (
+                    <span
+                      className="hidden text-[9px] font-bold sm:block"
+                      style={{ color: accent || '#64748b' }}
+                    >
+                      +{extra}
+                    </span>
+                  ) : null}
+                  {hasEvents ? (
+                    <span className="mt-auto flex gap-0.5 sm:hidden" aria-hidden>
+                      {dayEvents.slice(0, 3).map((ev) => (
+                        <span
+                          key={ev.id}
+                          className="h-1 w-1 rounded-full"
+                          style={{ backgroundColor: accentForEvent(ev) }}
+                        />
+                      ))}
+                    </span>
+                  ) : null}
                 </div>
-                {meetingBadge}
-                {assigneeBadge}
-                {time ? <div className="fc-event-time">{time}</div> : null}
-              </div>
+              </button>
             );
-          }}
-        />
-        {(emptyPeriod || emptyFiltered) && !loading && (
-          <div
-            className="pointer-events-none absolute inset-x-0 bottom-0 z-[5] flex flex-col items-center justify-center bg-white/90 dark:bg-slate-950/85"
-            style={{ top: toolbarH }}
-          >
-            <CalendarDays className="mb-3 h-10 w-10 text-slate-300" />
-            <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
-              {emptyFiltered ? cal.emptyFiltered : cal.emptyPeriod}
-            </p>
-            {!emptyFiltered && (
-              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{cal.emptyNoData}</p>
-            )}
-          </div>
-        )}
+          })}
+        </div>
       </div>
-      <CalendarLegend />
+
+      {emptyHint ? (
+        <p className="shrink-0 px-3 pb-1.5 text-center text-[11px] text-slate-500 dark:text-slate-400">
+          {emptyFiltered ? cal.emptyFiltered : cal.emptyPeriod}
+        </p>
+      ) : null}
+
+      <CalendarLegend variant="agenda" />
     </div>
   );
 }

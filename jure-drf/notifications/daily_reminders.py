@@ -145,10 +145,12 @@ def _remind_tasks_overdue(today) -> None:
 
 
 def _appointment_recipient_ids(appt: Appointment) -> list[int]:
-    ids: list[int] = []
+    ids: list[int] = list(appt.attendees.values_list("id", flat=True))
     if appt.created_by_id:
         ids.append(appt.created_by_id)
+    # Notify the client portal user directly (not only their case lawyer).
     if appt.client_id:
+        ids.append(appt.client_id)
         from cases.models import Case as CaseModel
 
         c = (

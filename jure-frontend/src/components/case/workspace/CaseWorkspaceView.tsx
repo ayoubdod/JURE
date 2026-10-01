@@ -78,6 +78,9 @@ import { canShowConvertToCase } from '@/components/case/conversion/ConvertedCase
 import { useToast } from '@/hooks/use-toast';
 import { apiGetCase, apiRetryConsultationEmail, apiUpdateCase, apiUploadCaseAttachment } from '@/services/case/api';
 import type { Appointment } from '@/services/appointment/api';
+import DocumentReaderModal, {
+  type DocumentReaderModalRef,
+} from '@/components/library/hub/DocumentReaderModal';
 
 type WorkspaceTab =
   | 'overview'
@@ -215,6 +218,7 @@ function CaseMatterWorkspaceView({
         : t.cases.workspaces.administrative.title;
 
   const caseModalRef = useRef<CaseModalRef>(null);
+  const readerRef = useRef<DocumentReaderModalRef>(null);
   const deleteRef = useRef<CaseDeleteModalRef>(null);
   const taskCreateRef = useRef<TaskCreateModalRef>(null);
   const taskUpdateRef = useRef<TaskUpdateModalRef>(null);
@@ -313,6 +317,7 @@ function CaseMatterWorkspaceView({
 
   return (
     <div className="flex h-full min-h-0 flex-col overflow-hidden bg-transparent">
+      <DocumentReaderModal ref={readerRef} />
       <header className="shrink-0 border-b border-[#64499D]/10 bg-white dark:bg-zinc-950 dark:border-zinc-800">
         <div className="px-4 py-3 sm:px-6 lg:px-8">
           <button
@@ -720,9 +725,23 @@ function CaseMatterWorkspaceView({
                     >
                       <span className="truncate">{att.file_name}</span>
                       {att.file_url ? (
-                        <a className="text-[12px] text-[#64499D]" href={att.file_url} target="_blank" rel="noreferrer">
+                        <button
+                          type="button"
+                          className="text-[12px] font-medium text-[#64499D] hover:underline"
+                          onClick={() =>
+                            readerRef.current?.show(
+                              { id: att.id, title: att.file_name || 'Document', file: att.file_url },
+                              {
+                                caseId: caseItem.id,
+                                caseRef: caseItem.reference,
+                                caseTitle: caseItem.title,
+                                clientName: clientDisplayName(caseItem.client) || undefined,
+                              }
+                            )
+                          }
+                        >
                           {t.cases.modal.consultationWorkflow.viewConsultation}
-                        </a>
+                        </button>
                       ) : null}
                     </li>
                   ))}

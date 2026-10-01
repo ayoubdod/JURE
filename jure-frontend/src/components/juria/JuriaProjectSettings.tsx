@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { JURIA_JURISDICTIONS, type JuriaLang, type JuriaProject } from '@/types/juria';
@@ -21,6 +21,11 @@ export function JuriaProjectSettings({ project }: { project: JuriaProject }) {
   const [instructions, setInstructions] = useState(project.instructions || '');
   const [name, setName] = useState(project.name);
   const [description, setDescription] = useState(project.description || '');
+  const [privacyMode, setPrivacyMode] = useState((project.privacy_mode || '').toUpperCase());
+
+  useEffect(() => {
+    setPrivacyMode((project.privacy_mode || '').toUpperCase());
+  }, [project.id, project.privacy_mode]);
 
   return (
     <div className="min-h-0 flex-1 overflow-y-auto p-6">
@@ -70,6 +75,40 @@ export function JuriaProjectSettings({ project }: { project: JuriaProject }) {
               </option>
             ))}
           </select>
+        </div>
+        <div>
+          <label className="mb-1 block text-[11px] font-medium uppercase text-slate-400">{s.privacyMode}</label>
+          <div className="flex flex-wrap gap-1">
+            {(
+              [
+                { id: '', label: s.privacyInherit },
+                { id: 'STANDARD', label: s.privacyStandard },
+                { id: 'PSEUDONYMIZED', label: s.privacyPseudonymized },
+                { id: 'PRIVATE', label: s.privacyPrivate },
+              ] as const
+            ).map((opt) => {
+              const active = privacyMode === opt.id;
+              return (
+                <button
+                  key={opt.id || 'inherit'}
+                  type="button"
+                  onClick={() => {
+                    setPrivacyMode(opt.id);
+                    void update(project.id, { privacy_mode: opt.id });
+                  }}
+                  className={`rounded-md px-2 py-1 text-[11px] ${
+                    active ? 'bg-[#64499D] text-white' : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300'
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              );
+            })}
+          </div>
+          <p className="mt-1.5 text-[11px] text-slate-400">{s.privacyHint}</p>
+          {privacyMode === 'PRIVATE' ? (
+            <p className="mt-1 text-[11px] text-amber-600 dark:text-amber-400">{s.privacyPrivateHint}</p>
+          ) : null}
         </div>
         <div>
           <label className="mb-1 block text-[11px] font-medium uppercase text-slate-400">{t.juria.workspace.overview.linkedCase}</label>

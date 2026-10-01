@@ -52,6 +52,8 @@ urlpatterns = [
     path('api/v1/commons/', include('commons.urls')),
     path('api/v1/cases/<int:case_id>/', include('finance.case_urls')),
     path('api/v1/cases/', include('cases.urls')),
+    path('api/v1/consultations/', include('consultations.urls')),
+    path('api/v1/portal/', include('consultations.portal_urls')),
     path('api/v1/finance/', include('finance.urls')),
     path('api/v1/notifications/', include('notifications.urls')),
     path('api/v1/clients/', include('clients.urls')),
@@ -71,6 +73,7 @@ urlpatterns = [
     path("api/users/", include("users.urls")),
     path("api/v1/search/", include("search.urls")),
     path("api/v1/juria/", include("juria.urls")),
+    path("api/v1/privacy/", include("privacy.urls")),
     path("api/search/", include("search.urls")),
     path("api/v1/calls/", include("calls.urls")),
     path("api/calls/", include("calls.urls")),  # legacy alias

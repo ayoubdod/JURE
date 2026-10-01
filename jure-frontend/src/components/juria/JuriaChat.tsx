@@ -28,6 +28,7 @@ import { safeDownloadFilename, splitJuriaAdvisory, stripActMarkdown } from '@/co
 import useJuriaStore from '@/stores/juriaStore';
 import useUserStore from '@/stores/userStore';
 import UserAvatar from '@/components/common/UserAvatar';
+import { apiPrivacyReidentify } from '@/services/privacy/api';
 import type { JuriaMessage, JuriaMode, JuriaProject, JuriaSourceHit } from '@/types/juria';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
@@ -569,13 +570,38 @@ function AssistantBody({
   const { t, tf, lang } = useAppTranslation();
   const actions = t.juria.workspace.actions;
   const chat = t.juria.workspace.chat;
+  const settings = t.juria.workspace.settings;
   const [copied, setCopied] = useState(false);
+  const [displayContent, setDisplayContent] = useState(m.content || '');
+  const [revealing, setRevealing] = useState(false);
+  const [revealed, setRevealed] = useState(false);
   const analysis = m.analysis && !m.analysis.parse_error && typeof m.analysis.risk_score === 'number' ? m.analysis : null;
   const sources = (m.sources ?? []).filter((s) => s.document);
-  const { body, advisory: embeddedAdvisory } = splitJuriaAdvisory(m.content || '');
+  const { body, advisory: embeddedAdvisory } = splitJuriaAdvisory(displayContent || '');
   const card = m.documentCard;
   const advisory =
     m.advisoryNote || m.analysis?.advisory_note || embeddedAdvisory || (card ? t.juria.ungroundedAdvisory : '');
+  const privacySessionId = m.analysis?.privacy?.session_id;
+  const canReveal = Boolean(privacySessionId && m.analysis?.privacy?.pseudonymized && !revealed);
+
+  useEffect(() => {
+    setDisplayContent(m.content || '');
+    setRevealed(false);
+  }, [m.id, m.content]);
+
+  const handleReveal = async () => {
+    if (!privacySessionId || revealing) return;
+    setRevealing(true);
+    try {
+      const out = await apiPrivacyReidentify(privacySessionId, displayContent || m.content || '');
+      setDisplayContent(out.text);
+      setRevealed(true);
+    } catch {
+      // keep tokens; surface via brief alert-style text in button state
+    } finally {
+      setRevealing(false);
+    }
+  };
 
   if (card) {
     return (
@@ -654,7 +680,7 @@ function AssistantBody({
           type="button"
           className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] text-slate-400 hover:bg-slate-100"
           onClick={() => {
-            void navigator.clipboard.writeText(m.content || '');
+            void navigator.clipboard.writeText(displayContent || '');
             setCopied(true);
             window.setTimeout(() => setCopied(false), 1200);
           }}
@@ -670,6 +696,17 @@ function AssistantBody({
           <RefreshCw className="h-3 w-3" />
           {actions.regenerate}
         </button>
+        {canReveal ? (
+          <button
+            type="button"
+            disabled={revealing}
+            className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] text-[#64499D] hover:bg-[#64499D]/10 disabled:opacity-50"
+            onClick={() => void handleReveal()}
+          >
+            <Eye className="h-3 w-3" />
+            {revealing ? '…' : settings.revealIdentifiers}
+          </button>
+        ) : null}
         {canOpenArtifacts ? (
           <button
             type="button"

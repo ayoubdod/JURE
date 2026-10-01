@@ -132,6 +132,7 @@ class JuriaProjectListCreateView(JuriaEnabledMixin, APIView):
             instructions=data.get("instructions") or "",
             linked_case=case,
             is_simple=is_simple,
+            privacy_mode=(data.get("privacy_mode") or "").strip().upper(),
             permission_overrides=overrides,
         )
         if data.get("is_favorite"):
@@ -221,9 +222,13 @@ class JuriaProjectDetailView(JuriaEnabledMixin, APIView):
             "legal_domain",
             "instructions",
             "is_favorite",
+            "privacy_mode",
         ):
             if key in data:
-                setattr(project, key, data[key])
+                val = data[key]
+                if key == "privacy_mode":
+                    val = (val or "").strip().upper()
+                setattr(project, key, val)
                 fields.append(key)
         if "linked_case_id" in data:
             linked_id = data["linked_case_id"]

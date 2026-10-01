@@ -28,6 +28,8 @@ declare namespace API {
         role?: Role
         permissions?: Permission[]
         is_platform_admin?: boolean
+        /** False for portal clients belonging to a cabinet */
+        is_cabinet_member?: boolean
         /** Present on some nested chat / membership payloads */
         full_name?: string
         pk?: number

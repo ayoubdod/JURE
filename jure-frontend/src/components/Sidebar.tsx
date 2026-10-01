@@ -18,6 +18,7 @@ import {
   BookOpen,
   StickyNote,
   ChevronLeft,
+  Scale,
 } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router';
 import LogoutModal, { LogoutModalRef } from './layout/LogoutModal';
@@ -129,6 +130,13 @@ const Sidebar = ({ activeTab, setActiveTab, expanded, onExpandedChange }: Sideba
       { id: 'dashboard', icon: Grid3X3, label: t.sidebar.dashboard, path: '/dashboard', badge: null },
       { id: 'team', icon: Users, label: t.sidebar.team, path: '/dashboard/team', badge: null },
       { id: 'clients', icon: UserCheck, label: t.sidebar.clients, path: '/dashboard/clients', badge: null },
+      {
+        id: 'consultation-requests',
+        icon: Scale,
+        label: t.clientPortal.admin.navLabel,
+        path: '/dashboard/consultations',
+        badge: null,
+      },
       {
         id: 'cases',
         icon: Briefcase,

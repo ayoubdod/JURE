@@ -1,4 +1,6 @@
 import type { AppMessages } from './types';
+import { clientPortalFr } from './clientPortal';
+import { documentReadingFr } from './documentReading';
 
 export const fr: AppMessages = {
   sidebar: {
@@ -3003,6 +3005,13 @@ export const fr: AppMessages = {
     rangeSummary: '{start}–{end} sur {total} clients',
     rowsPerPage: 'Lignes par page',
     viewClient: 'Voir',
+    sendInvitation: 'Envoyer une invitation',
+    sendingInvitation: 'Envoi…',
+    invitationPending: 'Invitation en attente',
+    invitationSentTitle: 'Invitation envoyée',
+    invitationSentDescription: 'Un lien de création de mot de passe a été envoyé au client.',
+    invitationFailedTitle: 'Échec de l’invitation',
+    invitationFailedDescription: 'L’e-mail d’invitation n’a pas pu être envoyé. Réessayez.',
     viewList: 'Liste',
     viewGrid: 'Grille',
     loadingClients: 'Chargement des clients',
@@ -3020,6 +3029,7 @@ export const fr: AppMessages = {
       presentedBy: 'Présenté par {name}',
       call: 'Appeler',
       sendEmail: 'E-mail',
+      sendInvitation: 'Envoyer une invitation',
       moreActions: 'Plus d’actions',
       overview: 'Aperçu',
       cases: 'Dossiers',
@@ -3415,6 +3425,13 @@ export const fr: AppMessages = {
       durationMin: '{min} min',
       conversationNumber: 'Conversation n°{id}',
       dueOn: 'Échéance {date}',
+    },
+    agendaOf: 'Agenda de',
+    dayPanel: {
+      title: 'Planning du jour',
+      count: '{count} événements',
+      emptyToday: 'Rien de prévu aujourd’hui',
+      emptyDay: 'Aucun événement ce jour',
     },
     fc: {
       today: "Aujourd'hui",
@@ -5195,6 +5212,10 @@ export const fr: AppMessages = {
         teamCount: '{count} membres',
         privacyNote:
           'Juria n’accède qu’aux ressources explicitement connectées et autorisées.',
+        privacyProtected: 'Informations sensibles protégées',
+        privacyModeLabel: 'Mode confidentialité',
+        privacyModeStandard: 'Standard — les identifiants sont envoyés à l’IA',
+        privacyModePrivate: 'Mode privé',
       },
       overview: {
         project: 'Projet',
@@ -5254,6 +5275,16 @@ export const fr: AppMessages = {
         instructionsPlaceholder:
           'Prioriser le droit marocain. Répondre en français juridique professionnel. Ne jamais inventer une source.',
         save: 'Enregistrer',
+        privacyMode: 'Mode confidentialité',
+        privacyInherit: 'Hériter (défaut cabinet)',
+        privacyStandard: 'Standard',
+        privacyPseudonymized: 'Pseudonymisé',
+        privacyPrivate: 'Privé',
+        privacyHint:
+          'Le mode Pseudonymisé remplace les noms et identifiants avant envoi à l’IA. Les valeurs originales restent dans JURE.',
+        privacyPrivateHint: 'L’infrastructure IA privée n’est pas encore configurée.',
+        revealIdentifiers: 'Révéler les identifiants',
+        revealFailed: 'Impossible de restaurer les identifiants',
       },
       sources: {
         caseBtn: 'Dossier',
@@ -5344,4 +5375,6 @@ export const fr: AppMessages = {
       custom: 'Personnalisé',
     },
   },
+  clientPortal: clientPortalFr,
+  documentReading: documentReadingFr,
 };

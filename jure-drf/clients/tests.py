@@ -1,11 +1,12 @@
 """Client list/create is cabinet-scoped."""
 
+from allauth.account.models import EmailAddress
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
 
 from core.testing import api_client_for, create_cabinet_owner, unique_test_phone
-from users.models import User
+from users.models import PasswordSetupToken, User
 
 
 class ClientCabinetIsolationTests(APITestCase):
@@ -49,6 +50,24 @@ class ClientCabinetIsolationTests(APITestCase):
         self.assertFalse(client.is_cabinet_member)
         self.assertNotEqual(client.cabinet_id, self.cab_b.id)
 
+    def test_create_verifies_email_and_issues_invitation_token(self):
+        data = self._create_via_api(self.api_a, email="invite-me@cab-a.test.com")
+        client = User.objects.get(pk=data["id"])
+        self.assertTrue(
+            EmailAddress.objects.filter(user=client, email=client.email, verified=True).exists()
+        )
+        self.assertTrue(PasswordSetupToken.objects.filter(user=client).exists())
+        self.assertTrue(data.get("invitation_pending"))
+
+    def test_send_invitation_endpoint(self):
+        data = self._create_via_api(self.api_a, email="resend@cab-a.test.com")
+        url = reverse("client-send-invitation", kwargs={"pk": data["id"]})
+        response = self.api_a.post(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertTrue(response.data.get("invitation_pending"))
+        client = User.objects.get(pk=data["id"])
+        self.assertTrue(PasswordSetupToken.objects.filter(user=client).exists())
+
     def test_cannot_retrieve_foreign_client(self):
         foreign = self._create_via_api(self.api_b, email="secret@cab-b.test.com")
         response = self.api_a.get(reverse("client-detail", kwargs={"pk": foreign["id"]}))
@@ -78,4 +97,3 @@ class ClientCabinetIsolationTests(APITestCase):
             response.status_code,
             (status.HTTP_403_FORBIDDEN, status.HTTP_404_NOT_FOUND),
         )
-        self.assertTrue(User.objects.filter(pk=foreign["id"]).exists())

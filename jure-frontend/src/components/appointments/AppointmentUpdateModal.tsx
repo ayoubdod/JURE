@@ -275,7 +275,12 @@ const AppointmentUpdateModal = forwardRef<AppointmentUpdateModalRef, Appointment
         const meetingType = data.meeting_type || 'in_person';
         const scope = data.participant_scope || 'team';
         const conversationMode = data.conversation_mode || 'create_temporary';
-        if (meetingType === 'video' && conversationMode === 'existing' && !data.conversation) {
+        const existingConversationId =
+          data.conversation ||
+          instance.conversation ||
+          instance.jure_conversation?.id ||
+          null;
+        if (meetingType === 'video' && conversationMode === 'existing' && !existingConversationId) {
           mainForm.setError('conversation', { message: v.conversationRequired });
           document.getElementById(`${formId}-conversation`)?.focus();
           setSubmitPhase('idle');
@@ -294,7 +299,7 @@ const AppointmentUpdateModal = forwardRef<AppointmentUpdateModalRef, Appointment
           location: meetingType === 'in_person' ? (data.location || '').trim() : '',
           conversation:
             meetingType === 'video' && conversationMode === 'existing'
-              ? data.conversation || null
+              ? existingConversationId
               : null,
           conversation_mode: meetingType === 'video' ? conversationMode : null,
           conversation_title:

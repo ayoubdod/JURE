@@ -226,6 +226,32 @@ export function startOfLocalDay(d = new Date()): Date {
   return x;
 }
 
+export function localDayKey(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+export function eventsOnLocalDay(events: CalendarEvent[], day: Date): CalendarEvent[] {
+  const key = localDayKey(startOfLocalDay(day));
+  return events
+    .filter((e) => {
+      const s = new Date(e.start);
+      if (Number.isNaN(s.getTime())) return false;
+      return localDayKey(s) === key;
+    })
+    .sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime());
+}
+
+export function calendarEventKindLabel(e: CalendarEvent, cal: AppMessages['calendar']): string {
+  if (e.type === 'task') return cal.legend.task;
+  if (e.type === 'appointment') return cal.legend.appointment;
+  if (e.type === 'case_date') {
+    if (e.sourceType === 'CASE_DEADLINE') return cal.legend.caseDeadline;
+    if (e.sourceType === 'CASE_DUE_DATE') return cal.legend.adminDue;
+    if (e.sourceType === 'CONSULTATION_DATE') return cal.legend.consultation;
+  }
+  return cal.sourceTypes.caseDate;
+}
+
 export function startOfLocalWeek(d = new Date()): Date {
   const x = startOfLocalDay(d);
   const day = x.getDay();

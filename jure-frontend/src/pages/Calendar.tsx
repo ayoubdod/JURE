@@ -1,7 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
-import type { EventClickArg } from '@fullcalendar/core';
-import FullCalendar from '@fullcalendar/react';
 import { CalendarClock, Calendar, AlertTriangle, CalendarDays } from 'lucide-react';
 import TaskCreateModal, { TaskCreateModalRef } from '@/components/task/TaskCreateModal';
 import TaskUpdateModal, { TaskUpdateModalRef } from '@/components/task/TaskUpdateModal';
@@ -11,6 +9,8 @@ import { TaskDetailPanel, AppointmentDetailPanel } from '@/components/calendar/E
 import CaseDateDetailPanel from '@/components/calendar/CaseDateDetailPanel';
 import CalendarFilters, { type CalendarFiltersValue } from '@/components/calendar/CalendarFilters';
 import CalendarView from '@/components/calendar/CalendarView';
+import TodayAgendaPanel from '@/components/calendar/TodayAgendaPanel';
+import DayEventsPanel from '@/components/calendar/DayEventsPanel';
 import {
   WorkspaceKpiStrip,
   WorkspacePageHeader,
@@ -32,6 +32,7 @@ import {
   type CalendarEvent,
   calendarTypesParam,
   endOfLocalWeek,
+  eventsOnLocalDay,
   isTaskAppointmentOverdue,
   matchesEventTypeFilter,
   normalizeCaseDateRaw,
@@ -68,9 +69,10 @@ const CalendarPage: React.FC = () => {
   const [detailId, setDetailId] = useState<number | null>(null);
   const [caseDateDetail, setCaseDateDetail] = useState<CalendarEvent | null>(null);
   const [calendarHolderEl, setCalendarHolderEl] = useState<HTMLDivElement | null>(null);
+  const [dayPanelDate, setDayPanelDate] = useState<Date | null>(null);
+  const [dayPanelOpen, setDayPanelOpen] = useState(false);
 
   const debouncedSearch = useDebounce(filters.search, 300);
-  const calendarRef = useRef<FullCalendar | null>(null);
   const taskCreateRef = useRef<TaskCreateModalRef>(null);
   const taskUpdateRef = useRef<TaskUpdateModalRef>(null);
   const appointmentCreateRef = useRef<ScheduleAppointmentDialogRef>(null);
@@ -120,10 +122,16 @@ const CalendarPage: React.FC = () => {
       setLoading(true);
       setLoadError(false);
       try {
+        const todayStart = startOfLocalDay();
+        const todayEnd = new Date(todayStart);
+        todayEnd.setDate(todayEnd.getDate() + 1);
+        const rangeStart = start.getTime() <= todayStart.getTime() ? start : todayStart;
+        const rangeEnd = end.getTime() >= todayEnd.getTime() ? end : todayEnd;
+
         const typesParam = calendarTypesParam(filters.eventType);
         const params: CalendarEventsQuery = {
-          start: start.toISOString(),
-          end: end.toISOString(),
+          start: rangeStart.toISOString(),
+          end: rangeEnd.toISOString(),
         };
         if (typesParam) params.types = typesParam;
         if (filters.status !== 'all') params.status = filters.status;
@@ -144,7 +152,7 @@ const CalendarPage: React.FC = () => {
             ? apiGetCalendarEvents(params)
             : Promise.resolve({ data: [] as CalendarEvent[] }),
           wantsCaseDates
-            ? apiGetCalendarCaseDateEvents(start.toISOString(), end.toISOString())
+            ? apiGetCalendarCaseDateEvents(rangeStart.toISOString(), rangeEnd.toISOString())
             : Promise.resolve({ data: [] as Record<string, unknown>[] }),
         ]);
         setEvents(res.data);
@@ -174,9 +182,7 @@ const CalendarPage: React.FC = () => {
   );
 
   const refreshEvents = useCallback(() => {
-    const api = calendarRef.current?.getApi();
-    if (api) loadEvents(api.view.currentStart, api.view.currentEnd);
-    else if (viewRange) loadEvents(viewRange.start, viewRange.end);
+    if (viewRange) loadEvents(viewRange.start, viewRange.end);
     else {
       const now = new Date();
       loadEvents(new Date(now.getFullYear(), now.getMonth(), 1), new Date(now.getFullYear(), now.getMonth() + 2, 0));
@@ -195,16 +201,19 @@ const CalendarPage: React.FC = () => {
   }, [viewRange, loadEvents]);
 
   const openTaskDetail = (taskId: number) => {
+    setDayPanelOpen(false);
     setDetailKind('task');
     setDetailId(taskId);
     setCaseDateDetail(null);
   };
   const openAppointmentDetail = (appointmentId: number) => {
+    setDayPanelOpen(false);
     setDetailKind('appointment');
     setDetailId(appointmentId);
     setCaseDateDetail(null);
   };
   const openCaseDateDetail = (ce: CalendarEvent) => {
+    setDayPanelOpen(false);
     setDetailKind('case_date');
     setDetailId(null);
     setCaseDateDetail(ce);
@@ -218,21 +227,26 @@ const CalendarPage: React.FC = () => {
     void navigateToCaseById(navigate, id);
   };
 
-  const onEventClick = (info: EventClickArg) => {
-    const evt = info.event;
-    const ext = evt.extendedProps as CalendarEvent;
-    if (ext?.type === 'case_date') {
-      openCaseDateDetail(ext);
+  const openCalendarEvent = useCallback((event: CalendarEvent) => {
+    if (event.type === 'case_date') {
+      openCaseDateDetail(event);
       return;
     }
-    if (ext?.type === 'task') {
-      const id = parseEntityId(String(evt.id), 'task-');
+    if (event.type === 'task') {
+      const id = parseEntityId(event.id, 'task-');
       if (id != null) openTaskDetail(id);
-    } else if (ext?.type === 'appointment') {
-      const id = parseEntityId(String(evt.id), 'appt-');
+      return;
+    }
+    if (event.type === 'appointment') {
+      const id = parseEntityId(event.id, 'appt-');
       if (id != null) openAppointmentDetail(id);
     }
-  };
+  }, []);
+
+  const onDayClick = useCallback((date: Date) => {
+    setDayPanelDate(startOfLocalDay(date));
+    setDayPanelOpen(true);
+  }, []);
 
   const mergedEvents = useMemo(() => {
     const map = new Map<string, CalendarEvent>();
@@ -250,6 +264,11 @@ const CalendarPage: React.FC = () => {
       return true;
     });
   }, [mergedEvents, filters.eventType, filters.caseId, debouncedSearch]);
+
+  const dayPanelEvents = useMemo(
+    () => (dayPanelDate ? eventsOnLocalDay(visibleEvents, dayPanelDate) : []),
+    [visibleEvents, dayPanelDate]
+  );
 
   const stats = useMemo(() => {
     const now = new Date();
@@ -304,7 +323,7 @@ const CalendarPage: React.FC = () => {
   ];
 
   return (
-    <div ref={setCalendarHolderEl} className="relative h-full flex flex-col min-h-0 overflow-hidden bg-transparent px-4 pt-2 pb-2 sm:px-5 lg:px-6">
+    <div ref={setCalendarHolderEl} className="relative h-full flex flex-col min-h-0 bg-transparent px-3 pt-2 pb-2 sm:px-5 lg:px-6 overflow-hidden">
       <WorkspacePageHeader
         title={cal.title}
         subtitle={cal.subtitle}
@@ -323,7 +342,7 @@ const CalendarPage: React.FC = () => {
         />
       </div>
 
-      <div className={cn('flex-1 min-h-0 overflow-hidden', loadError && 'flex items-center justify-center')}>
+      <div className={cn('flex-1 min-h-0', loadError ? 'flex items-center justify-center overflow-hidden' : 'overflow-y-auto lg:overflow-hidden')}>
         {loadError ? (
           <WorkspaceErrorState
             title={cal.loadError}
@@ -332,17 +351,36 @@ const CalendarPage: React.FC = () => {
             onRetry={refreshEvents}
           />
         ) : (
-          <CalendarView
-            calendarRef={calendarRef}
-            events={visibleEvents}
-            loading={loading}
-            emptyPeriod={!loading && eventsInView.length === 0 && !hasActiveFilters}
-            emptyFiltered={!loading && eventsInView.length === 0 && hasActiveFilters}
-            onEventClick={onEventClick}
-            onDatesSet={handleDatesSet}
-          />
+          <div className="flex flex-col gap-3 lg:grid lg:h-full lg:min-h-0 lg:grid-cols-[minmax(16rem,20rem)_minmax(0,1fr)] lg:gap-3">
+            <div className="order-2 min-h-[14rem] max-h-[22rem] shrink-0 lg:order-1 lg:max-h-none lg:h-full lg:min-h-0">
+              <TodayAgendaPanel
+                events={visibleEvents}
+                loading={loading}
+                onEventClick={openCalendarEvent}
+              />
+            </div>
+            <div className="order-1 min-h-0 lg:order-2 lg:h-full">
+              <CalendarView
+                events={visibleEvents}
+                loading={loading}
+                emptyPeriod={!loading && eventsInView.length === 0 && !hasActiveFilters}
+                emptyFiltered={!loading && eventsInView.length === 0 && hasActiveFilters}
+                onEventClick={openCalendarEvent}
+                onDatesSet={handleDatesSet}
+                onDayClick={onDayClick}
+              />
+            </div>
+          </div>
         )}
       </div>
+
+      <DayEventsPanel
+        date={dayPanelDate}
+        events={dayPanelEvents}
+        open={dayPanelOpen}
+        onOpenChange={setDayPanelOpen}
+        onEventClick={openCalendarEvent}
+      />
 
       <TaskDetailPanel
         taskId={detailKind === 'task' ? detailId : null}

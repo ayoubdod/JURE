@@ -39,6 +39,7 @@ export function getJuriaErrorMessage(err: unknown): string {
   }
   if (status === 400) {
     if (typeof data?.detail === 'string') return localizeApiMessage(data.detail, data.detail);
+    if (typeof data?.error === 'string') return localizeApiMessage(data.error, data.error);
     return copy.invalidRequest;
   }
   if (ax.message === 'canceled' || ax.code === 'ERR_CANCELED') {
