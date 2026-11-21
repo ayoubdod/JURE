@@ -1,13 +1,14 @@
 import { API_ORIGIN } from '@/config/api';
-import useUserStore from '@/stores/userStore';
+import { resolveBackendUrl } from '@/lib/authenticatedMedia';
 
 export function resolveLibraryMediaUrl(url: string | null | undefined): string {
   if (!url) return '';
   if (url.startsWith('blob:') || url.startsWith('data:')) return url;
   if (url.startsWith('http://') || url.startsWith('https://')) return url;
+  if (url.startsWith('/api/') || url.startsWith('/api/v1/')) return resolveBackendUrl(url);
   if (url.startsWith('/media/') || url.startsWith('/')) return `${API_ORIGIN}${url}`;
   if (url.startsWith('media/')) return `${API_ORIGIN}/${url}`;
-  return `${API_ORIGIN}/media/${url}`;
+  return resolveBackendUrl(url);
 }
 
 export function libraryFileExtension(fileName: string): string {
@@ -25,10 +26,7 @@ export function libraryFileExtension(fileName: string): string {
 }
 
 export async function fetchLibraryBlob(url: string): Promise<Blob> {
-  const token = useUserStore.getState().accessToken;
-  const headers: HeadersInit = {};
-  if (token) headers.Authorization = `Bearer ${token}`;
-  const res = await fetch(url, { credentials: 'include', headers });
+  const res = await fetch(url, { credentials: 'include' });
   if (!res.ok) throw new Error(`Failed to fetch document (${res.status})`);
   return res.blob();
 }

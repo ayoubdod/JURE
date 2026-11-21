@@ -83,8 +83,9 @@ class ClientViewSet(ModelViewSet):
                 professional_card_number="9999",
                 bar_association="N/A",
                 bar_inscription_year="2024",
-                accept_terms=True,
-                accept_data_processing=True,
+                # Consent is recorded when the client accepts the invitation.
+                accept_terms=False,
+                accept_data_processing=False,
             )
 
             _sync_client_profile(client_user, self.request.data, create=True)
@@ -102,10 +103,13 @@ class ClientViewSet(ModelViewSet):
                     "Client invitation email failed for %s: %s", client_user.email, e
                 )
 
-        except Exception as e:
-            if isinstance(e, serializers.ValidationError):
-                raise
-            raise serializers.ValidationError(f"Error creating client: {str(e)}")
+        except serializers.ValidationError:
+            raise
+        except Exception:
+            logger.exception("Error creating client")
+            raise serializers.ValidationError(
+                _("Unable to create client. Please check the details and try again.")
+            )
 
     def perform_update(self, serializer):
         serializer.save()

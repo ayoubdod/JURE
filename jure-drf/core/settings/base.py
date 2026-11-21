@@ -29,13 +29,15 @@ env = environ.Env(
     DEBUG=(bool, False),
     USE_INMEMORY_CHANNEL_LAYER=(bool, True),
     JURIA_ENABLED=(bool, False),
-    ENABLE_DEPLOYMENT_DEBUG=(bool, False),
+    JURE_BILLING_WEBHOOK_SECRET=(str, ""),
 )
 
-SECRET_KEY = env.str(
-    "SECRET_KEY",
-    default="django-insecure-w@te8c71m(f*r_yluy9t$)x9bt#@cx9w(0tx=rd(hm1=33ct(w",
-)
+DEBUG = env.bool("DEBUG", default=False)
+
+# Local/dev may use a disposable default. Staging/production MUST set SECRET_KEY
+# (see staging.py and docker-entrypoint.sh). Never reuse a committed key in prod.
+_SECRET_KEY_DEFAULT = "django-insecure-local-dev-only-change-me"
+SECRET_KEY = env.str("SECRET_KEY", default=_SECRET_KEY_DEFAULT)
 
 COMPANY_NAME = env.str("COMPANY_NAME", default="Jure")
 FRONTEND_BASE_URL = env.str("FRONTEND_BASE_URL", default="http://localhost:3000")
@@ -148,6 +150,7 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "subscriptions.middleware.SubscriptionWriteGuardMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "allauth.account.middleware.AccountMiddleware",
@@ -218,7 +221,11 @@ REST_AUTH = {
     "PASSWORD_RESET_SERIALIZER": "users.serializers.PasswordResetSerializer",
     "PASSWORD_RESET_CONFIRM_SERIALIZER": "users.serializers.PasswordResetConfirmSerializer",
     "JWT_TOKEN_CLAIMS_SERIALIZER": "users.tokens.SessionTokenObtainPairSerializer",
-    "JWT_AUTH_HTTPONLY": False,
+    "JWT_AUTH_COOKIE": "jure-access",
+    "JWT_AUTH_REFRESH_COOKIE": "jure-refresh",
+    "JWT_AUTH_HTTPONLY": True,
+    "JWT_AUTH_SAMESITE": "Lax",
+    "JWT_AUTH_SECURE": not DEBUG,
     "OLD_PASSWORD_FIELD_ENABLED": True,
     "LOGOUT_ON_PASSWORD_CHANGE": True,
 }
@@ -233,11 +240,17 @@ REST_USE_JWT = True
 
 REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": [
-        "rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly",
+        "rest_framework.permissions.IsAuthenticated",
     ],
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "users.authentication.SessionJWTCookieAuthentication",
     ),
+    "DEFAULT_THROTTLE_RATES": {
+        "anon": "60/minute",
+        "user": "600/minute",
+        "auth_burst": "5/minute",
+        "landing_inquiry": "8/hour",
+    },
     "DEFAULT_PARSER_CLASSES": [
         "rest_framework.parsers.MultiPartParser",
         "rest_framework.parsers.FormParser",
@@ -257,6 +270,8 @@ SPECTACULAR_SETTINGS = {
 # Internationalization
 # --------------------------------------------------------------------------------------
 LANGUAGE_CODE = "en-us"
+# Store and compare datetimes in UTC. API clients must send timezone-aware
+# datetimes (ISO-8601 with offset/Z); naive local times are ambiguous.
 TIME_ZONE = "UTC"
 USE_I18N = True
 USE_L10N = True
@@ -423,6 +438,7 @@ JURIA_API_KEY = env.str("JURIA_API_KEY", default="")
 JURIA_MAX_TOKENS = env.int("JURIA_MAX_TOKENS", default=4000)
 JURIA_TIMEOUT_SECONDS = env.int("JURIA_TIMEOUT_SECONDS", default=90)
 JURIA_ENABLED = env.bool("JURIA_ENABLED", default=False)
+JURE_BILLING_WEBHOOK_SECRET = env.str("JURE_BILLING_WEBHOOK_SECRET", default="")
 DEEPSEEK_API_URL = env.str("DEEPSEEK_API_URL", default="https://api.deepseek.com").rstrip("/")
 DEEPSEEK_API_KEY = env.str("DEEPSEEK_API_KEY", default="")
 DEEPSEEK_MODEL = env.str("DEEPSEEK_MODEL", default="deepseek-chat")

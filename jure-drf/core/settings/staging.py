@@ -11,6 +11,23 @@ from .base import *  # noqa: F403
 
 DEBUG = False
 
+# Fail closed if SECRET_KEY is missing, too short, or still a known insecure default.
+_secret = os.environ.get("SECRET_KEY", "").strip()
+_insecure_markers = (
+    "django-insecure-",
+    "change-me-to-a-long-random-string",
+    "local-dev-only",
+)
+if (
+    len(_secret) < 50
+    or any(marker in _secret for marker in _insecure_markers)
+):
+    raise ImproperlyConfigured(
+        "SECRET_KEY must be set to a unique random value (>=50 chars) in staging/"
+        "production. Rotate any previously committed or default key immediately."
+    )
+SECRET_KEY = _secret  # noqa: F405 — override base default
+
 # Railway Postgres lives on its own service. DATABASE_URL is NOT injected into
 # this web service unless you add a Variable Reference, e.g.:
 #   DATABASE_URL=${{Postgres.DATABASE_URL}}
@@ -78,10 +95,9 @@ for _railway_host in (
     if _railway_host:
         _allowed_hosts.append(_railway_host)
 
-# Leading-dot entries match the domain and all subdomains (Django ALLOWED_HOSTS).
+# Prefer explicit RAILWAY_PUBLIC_DOMAIN injection above over a broad *.up.railway.app wildcard.
 _allowed_hosts.extend(
     [
-        ".up.railway.app",
         ".railway.internal",
         "healthcheck.railway.app",
     ]
@@ -91,16 +107,54 @@ ALLOWED_HOSTS = list(dict.fromkeys(h for h in _allowed_hosts if h))
 
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 # Allow Railway HTTP healthchecks without a redirect loop.
-SECURE_REDIRECT_EXEMPT = [r"^health/", r"^debug/settings/?$"]
+SECURE_REDIRECT_EXEMPT = [r"^health/"]
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
 X_FRAME_OPTIONS = "DENY"
 
-# Channel layer: inherit base.py / env (REDIS_URL + USE_INMEMORY_CHANNEL_LAYER).
-# Do NOT force InMemory here — multi-replica call signaling needs Redis.
-# Single Daphne process + InMemory is OK for a first staging smoke test.
+# JWT cookies must only travel over HTTPS in staging/production.
+JWT_AUTH_SECURE = True
+REST_AUTH = {  # noqa: F405
+    **REST_AUTH,  # noqa: F405
+    "JWT_AUTH_SECURE": True,
+}
+
+# Channel layer: require Redis in staging (multi-replica safe).
+USE_INMEMORY_CHANNEL_LAYER = env.bool(  # noqa: F405
+    "USE_INMEMORY_CHANNEL_LAYER",
+    default=False,
+)
+REDIS_URL = env.str("REDIS_URL", default="").strip()  # noqa: F405
+if USE_INMEMORY_CHANNEL_LAYER:
+    CHANNEL_LAYERS = {
+        "default": {"BACKEND": "channels.layers.InMemoryChannelLayer"},
+    }
+elif not REDIS_URL:
+    raise ImproperlyConfigured(
+        "REDIS_URL is required when USE_INMEMORY_CHANNEL_LAYER is False "
+        "(staging/production default)."
+    )
+else:
+    CHANNEL_LAYERS = {
+        "default": {
+            "BACKEND": "channels_redis.core.RedisChannelLayer",
+            "CONFIG": {"hosts": [REDIS_URL]},
+        },
+    }
+
+# Persistent uploads: refuse the ephemeral container path.
+_media_root = str(MEDIA_ROOT)  # noqa: F405
+if not _media_root or _media_root.rstrip("/").endswith("/app/media") or _media_root == "/app/media":
+    _explicit_media = os.environ.get("MEDIA_ROOT", "").strip()
+    if not _explicit_media or _explicit_media.rstrip("/") in ("/app/media", "media"):
+        raise ImproperlyConfigured(
+            "MEDIA_ROOT must be set to a persistent absolute path outside /app "
+            "(e.g. a Railway Volume mount). Uploaded identity documents must not "
+            "live in the ephemeral container filesystem."
+        )
+    MEDIA_ROOT = _explicit_media  # noqa: F405
 
 # WhiteNoise is already registered in base.MIDDLEWARE (immediately after SecurityMiddleware).
 # Do not insert it again — duplicate middleware breaks static serving and wastes cycles.
@@ -125,6 +179,3 @@ SECURE_SSL_REDIRECT = True
 SESSION_COOKIE_SAMESITE = "Lax"
 
 CSRF_COOKIE_SAMESITE = "Lax"
-
-# Temporary deployment diagnostics — see core.views.deployment_settings_debug
-ENABLE_DEPLOYMENT_DEBUG = env.bool("ENABLE_DEPLOYMENT_DEBUG", default=False)  # noqa: F405

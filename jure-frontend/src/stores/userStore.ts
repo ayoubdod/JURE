@@ -2,30 +2,26 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { clearDismissedAnnouncements } from '@/utils/announcementDismiss';
 import { clearIdleSessionMarkers } from '@/utils/idleSession';
+import { clearSessionValidationCache } from '@/utils/sessionValidationCache';
 
 interface UserStore {
     user: API.User | null;
-    accessToken: string | null
-    refreshToken: string | null
     isLoggedIn: boolean;
     logout: () => void;
     setUser: (user: API.User) => void;
 }
 
 const useUserStore = create<UserStore>()(persist(
-    (set,get) => ({
+    (set) => ({
         user: null,
-        accessToken: null,
-        refreshToken: null,
         isLoggedIn: false,
         logout: () => {
             clearDismissedAnnouncements();
             clearIdleSessionMarkers();
+            clearSessionValidationCache();
             set({
                 user: null,
                 isLoggedIn: false,
-                accessToken: null,
-                refreshToken: null,
             })
         },
         setUser: (user: API.User) => {
@@ -37,6 +33,18 @@ const useUserStore = create<UserStore>()(persist(
     }),
     {
         name: 'user-storage',
+        version: 1,
+        partialize: (state) => ({
+            user: state.user,
+            isLoggedIn: state.isLoggedIn,
+        }),
+        migrate: (persisted) => {
+            const p = (persisted ?? {}) as { user?: API.User | null; isLoggedIn?: boolean };
+            return {
+                user: p.user ?? null,
+                isLoggedIn: Boolean(p.isLoggedIn),
+            };
+        },
     }
 ))
 

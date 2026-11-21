@@ -16,6 +16,21 @@ fi
 
 echo "DJANGO_SETTINGS_MODULE=${DJANGO_SETTINGS_MODULE}"
 
+# Refuse known-insecure or missing SECRET_KEY before Django imports settings.
+_secret="${SECRET_KEY:-}"
+case "$_secret" in
+  ""|django-insecure-*|*local-dev-only*|*change-me-to-a-long-random-string*)
+    echo "ERROR: SECRET_KEY must be a unique random value (>=50 chars) in this environment."
+    echo "Rotate any previously committed default immediately after setting it."
+    exit 1
+    ;;
+esac
+if [ "${#_secret}" -lt 50 ]; then
+  echo "ERROR: SECRET_KEY must be at least 50 characters."
+  exit 1
+fi
+echo "SECRET_KEY is set"
+
 # Presence-only diagnostics (never print connection strings).
 if [ -n "${DATABASE_URL:-}" ]; then
   echo "DATABASE_URL is set"
@@ -31,7 +46,11 @@ fi
 
 # Uploaded files (profile photos, cabinet logos, library docs) live here.
 # On Railway this must be a persistent Volume mount, not the image's /app/media.
-mkdir -p "${MEDIA_ROOT:-/app/media}"
+if [ -z "${MEDIA_ROOT:-}" ] || [ "${MEDIA_ROOT}" = "/app/media" ] || [ "${MEDIA_ROOT}" = "media" ]; then
+  echo "ERROR: MEDIA_ROOT must be a persistent absolute path outside /app (volume mount)."
+  exit 1
+fi
+mkdir -p "${MEDIA_ROOT}"
 
 python manage.py migrate --noinput
 

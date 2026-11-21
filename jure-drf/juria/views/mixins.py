@@ -6,8 +6,17 @@ from juria.services.juria_api_service import JuriaAPIError, provider_configured
 
 
 def juria_error_http_status(exc: JuriaAPIError) -> int:
+    """Map upstream provider errors so axios never treats them as app auth 401.
+
+    Provider 401/402 → 502 (misconfigured/unpaid upstream, not the end user).
+    Provider 429 → 503 (busy), never a session-killing 401.
+    """
     code = int(getattr(exc, "status_code", 502) or 502)
-    if code in (401, 402, 429, 502, 503):
+    if code in (401, 402):
+        return status.HTTP_502_BAD_GATEWAY
+    if code == 429:
+        return status.HTTP_503_SERVICE_UNAVAILABLE
+    if code in (502, 503):
         return code
     return status.HTTP_502_BAD_GATEWAY
 

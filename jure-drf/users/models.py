@@ -14,6 +14,7 @@ from django.apps import apps
 import uuid
 from commons.models import Activity, Function
 from cases.models import Case
+from core.uploads import uuid_upload_to, validate_safe_upload_extension
 
 
 from typing import TYPE_CHECKING
@@ -128,10 +129,10 @@ class User(AbstractUser):
     ], null=True, blank=True)
 
     # Documents - Step 4
-    image = models.ImageField(_('image'), upload_to='images/', null=True, blank=True)
-    national_id = models.FileField(_('national ID'), upload_to='national_ids/', null=True, blank=True)
-    bar_attestation = models.FileField(_('bar attestation'), upload_to='bar_attestations/', null=True, blank=True)
-    professional_card = models.FileField(_('professional card'), upload_to='professional_cards/', null=True, blank=True)
+    image = models.ImageField(_('image'), upload_to=uuid_upload_to('images'), null=True, blank=True, validators=[validate_safe_upload_extension])
+    national_id = models.FileField(_('national ID'), upload_to=uuid_upload_to('national_ids'), null=True, blank=True, validators=[validate_safe_upload_extension])
+    bar_attestation = models.FileField(_('bar attestation'), upload_to=uuid_upload_to('bar_attestations'), null=True, blank=True, validators=[validate_safe_upload_extension])
+    professional_card = models.FileField(_('professional card'), upload_to=uuid_upload_to('professional_cards'), null=True, blank=True, validators=[validate_safe_upload_extension])
 
     # Consent - Step 5
     accept_terms = models.BooleanField(_('accept terms'), default=False)
@@ -287,7 +288,7 @@ class User(AbstractUser):
 
 class UserAttachment(TimeStampedModel):
     user : models.ForeignKey[User] = models.ForeignKey(User, on_delete=models.CASCADE)
-    attachment = models.FileField(upload_to='attachments/')
+    attachment = models.FileField(upload_to=uuid_upload_to('attachments'), validators=[validate_safe_upload_extension])
 
 
 class UserAddress(TimeStampedModel):

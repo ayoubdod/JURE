@@ -6,6 +6,8 @@ from django.conf import settings
 from django.utils import timezone
 from django_extensions.db.models import TimeStampedModel
 
+from core.uploads import uuid_upload_to, validate_safe_upload_extension
+
 User = settings.AUTH_USER_MODEL
 
 
@@ -201,11 +203,11 @@ class Attachment(TimeStampedModel):
 
     message = models.ForeignKey(Message, on_delete=models.CASCADE, related_name="attachments")
     kind = models.CharField(max_length=10, choices=Kind.choices)
-    file = models.FileField(upload_to="chat/")
+    file = models.FileField(upload_to=uuid_upload_to("chat"), validators=[validate_safe_upload_extension])
     mime = models.CharField(max_length=100, blank=True)
     size = models.PositiveIntegerField(default=0)
     duration_ms = models.PositiveIntegerField(null=True, blank=True)  # audio/video/voice
-    thumbnail = models.ImageField(upload_to="chat/thumbs/", null=True, blank=True)
+    thumbnail = models.ImageField(upload_to=uuid_upload_to("chat/thumbs"), null=True, blank=True, validators=[validate_safe_upload_extension])
 
 
 class Reaction(TimeStampedModel):

@@ -14,12 +14,54 @@ import {
 } from '@/components/ui/carousel';
 import { BACKEND_BASE_URL, MessageAttachmentKind } from '@/utils/constants';
 import { useAppTranslation } from '@/i18n';
+import { useAuthenticatedObjectUrl } from '@/lib/authenticatedMedia';
+import { attachmentHref } from './conversationUtils';
 
 interface MediaGalleryDialogProps {
   isOpen: boolean;
   onClose: () => void;
   attachments: API.MessageAttachment[];
   initialIndex?: number;
+}
+
+function GalleryMediaItem({
+  attachment,
+  alt,
+}: {
+  attachment: API.MessageAttachment;
+  alt: string;
+}) {
+  const src = attachmentHref(attachment.file, BACKEND_BASE_URL);
+  const objectUrl = useAuthenticatedObjectUrl(src);
+  const mediaSrc = objectUrl || src;
+
+  if (attachment.kind === MessageAttachmentKind.IMAGE) {
+    return (
+      <img
+        src={mediaSrc}
+        alt={alt}
+        className="max-w-full max-h-full object-contain"
+        onError={(e) => {
+          const target = e.target as HTMLImageElement;
+          target.style.display = 'none';
+        }}
+      />
+    );
+  }
+  if (attachment.kind === MessageAttachmentKind.VIDEO) {
+    return (
+      <video
+        src={mediaSrc}
+        controls
+        className="max-w-full max-h-full object-contain"
+        onError={(e) => {
+          const target = e.target as HTMLVideoElement;
+          target.style.display = 'none';
+        }}
+      />
+    );
+  }
+  return null;
 }
 
 const MediaGalleryDialog: React.FC<MediaGalleryDialogProps> = ({
@@ -33,10 +75,6 @@ const MediaGalleryDialog: React.FC<MediaGalleryDialogProps> = ({
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
 
   const mediaAttachments = attachments
-    .map(attachment => ({
-      ...attachment,
-      file: BACKEND_BASE_URL + attachment.file,
-    }))
     .filter(attachment =>
       [MessageAttachmentKind.IMAGE, MessageAttachmentKind.VIDEO].includes(attachment.kind)
     );
@@ -77,27 +115,10 @@ const MediaGalleryDialog: React.FC<MediaGalleryDialogProps> = ({
               {mediaAttachments.map((attachment, index) => (
                 <CarouselItem key={attachment.id} className="h-full">
                   <div className="flex items-center justify-center h-full bg-black rounded-lg overflow-hidden">
-                    {attachment.kind === MessageAttachmentKind.IMAGE ? (
-                      <img
-                        src={attachment.file}
-                        alt={tf(m.mediaAlt, { index: index + 1 })}
-                        className="max-w-full max-h-full object-contain"
-                        onError={(e) => {
-                          const target = e.target as HTMLImageElement;
-                          target.style.display = 'none';
-                        }}
-                      />
-                    ) : attachment.kind === MessageAttachmentKind.VIDEO ? (
-                      <video
-                        src={attachment.file}
-                        controls
-                        className="max-w-full max-h-full object-contain"
-                        onError={(e) => {
-                          const target = e.target as HTMLVideoElement;
-                          target.style.display = 'none';
-                        }}
-                      />
-                    ) : null}
+                    <GalleryMediaItem
+                      attachment={attachment}
+                      alt={tf(m.mediaAlt, { index: index + 1 })}
+                    />
                   </div>
                 </CarouselItem>
               ))}

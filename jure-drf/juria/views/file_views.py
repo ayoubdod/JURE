@@ -2,8 +2,11 @@ from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from django.http import FileResponse, Http404
+from django.core.exceptions import ValidationError as DjangoValidationError
+from django.http import Http404
 
+from core.downloads import serve_file_field
+from core.uploads import validate_safe_upload_extension
 from juria.constants import ActivityAction, PermissionLevel, ResourceType
 from juria.models import JuriaFile
 from juria.serializers.artifact_serializer import JuriaFileSerializer
@@ -32,6 +35,10 @@ class JuriaProjectFileListCreateView(JuriaEnabledMixin, APIView):
         upload = request.FILES.get("file")
         if not upload:
             return Response({"detail": "file is required."}, status=400)
+        try:
+            validate_safe_upload_extension(upload)
+        except DjangoValidationError as exc:
+            return Response({"file": exc.messages}, status=400)
         name = upload.name or "upload"
         kind = detect_file_type(name)
         if kind not in ("pdf", "docx"):
@@ -84,5 +91,10 @@ class JuriaProjectFileDownloadView(JuriaEnabledMixin, APIView):
         jfile = access.project.files.filter(pk=file_id, is_removed=False).first()
         if jfile is None or not jfile.file:
             raise Http404()
-        fh = jfile.file.open("rb")
-        return FileResponse(fh, as_attachment=True, filename=jfile.original_name)
+        return serve_file_field(
+            request,
+            jfile.file,
+            filename=jfile.original_name,
+            content_type=jfile.content_type or None,
+            force_attachment=True,
+        )

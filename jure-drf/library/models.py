@@ -7,6 +7,7 @@ from django_extensions.db.models import TimeStampedModel
 from django.utils.translation import gettext_lazy as _
 from cabinets.models import Cabinet
 from commons.models import Tag
+from core.uploads import uuid_upload_to, validate_safe_upload_extension
 from users.models import User
 from jurisdictions.constants import VisibilityScope
 from jurisdictions.scoping import validate_visibility_scope
@@ -91,7 +92,7 @@ class Document(TimeStampedModel):
     legal_area = models.CharField(max_length=64, blank=True, default='')
     tags = models.ManyToManyField(Tag, related_name='documents', blank=True)
     description = models.TextField(blank=True, null=True)
-    file = models.FileField(upload_to='documents/', blank=True, null=True)
+    file = models.FileField(upload_to=uuid_upload_to('documents'), blank=True, null=True, validators=[validate_safe_upload_extension])
     external_url = models.URLField(max_length=2000, blank=True, default='')
 
     cabinet = models.ForeignKey(Cabinet, on_delete=models.CASCADE, related_name='documents', null=True, blank=True)

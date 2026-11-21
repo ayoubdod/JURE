@@ -1,3 +1,11 @@
+"""
+Shareable search endpoints.
+
+Note: icontains queries are fine at current scale. For large cabinets on Postgres,
+consider enabling the pg_trgm extension and GIN trigram indexes on Case.title /
+Case.reference (and task titles) to keep autocomplete responsive.
+"""
+
 from django.db.models import Q
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response

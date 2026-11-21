@@ -4,6 +4,9 @@ from dj_rest_auth.app_settings import api_settings
 from dj_rest_auth.models import get_token_model
 from dj_rest_auth.utils import jwt_encode
 from dj_rest_auth.views import LoginView as DjRestAuthLoginView
+from dj_rest_auth.views import PasswordResetView as DjRestAuthPasswordResetView
+
+from users.throttles import AuthBurstThrottle
 
 from .session import rotate_user_session
 
@@ -14,6 +17,8 @@ class SingleSessionLoginView(DjRestAuthLoginView):
     refresh tokens *before* issuing the new JWT pair. Previous browsers and
     WebSockets are forced offline immediately.
     """
+
+    throttle_classes = [AuthBurstThrottle]
 
     def login(self):
         self.user = self.serializer.validated_data["user"]
@@ -31,3 +36,7 @@ class SingleSessionLoginView(DjRestAuthLoginView):
 
         if api_settings.SESSION_LOGIN:
             self.process_login()
+
+
+class ThrottledPasswordResetView(DjRestAuthPasswordResetView):
+    throttle_classes = [AuthBurstThrottle]

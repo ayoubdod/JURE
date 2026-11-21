@@ -75,7 +75,6 @@ function parseWsPayload(data: Record<string, unknown>): AppNotification | null {
 
 export function NotificationProvider({ children }: { children: React.ReactNode }) {
   const isLoggedIn = useUserStore((s) => s.isLoggedIn);
-  const accessToken = useUserStore((s) => s.accessToken);
   const userMode = useUserStore((s) => s.user?.mode);
   const userModeUntil = useUserStore((s) => s.user?.mode_until);
 
@@ -242,12 +241,12 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
   }, []);
 
   const connectWs = useCallback(() => {
-    if (!accessToken || !isLoggedIn) return;
+    if (!isLoggedIn) return;
     manualCloseRef.current = false;
     if (wsRef.current?.readyState === WebSocket.OPEN) return;
 
     try {
-      const ws = new WebSocket(getNotificationsWsUrl(accessToken));
+      const ws = new WebSocket(getNotificationsWsUrl());
       wsRef.current = ws;
 
       ws.onopen = () => {
@@ -322,7 +321,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
           });
           return;
         }
-        if (manualCloseRef.current || !isLoggedIn || !accessToken) return;
+        if (manualCloseRef.current || !isLoggedIn) return;
         const attempt = reconnectAttemptRef.current;
         const delay = Math.min(30000, 1000 * Math.pow(2, attempt));
         reconnectAttemptRef.current = attempt + 1;
@@ -337,7 +336,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     } catch (e) {
       devError('notifications ws connect', e);
     }
-  }, [accessToken, isLoggedIn, prependNotification]);
+  }, [isLoggedIn, prependNotification]);
 
   const disconnectWs = useCallback(() => {
     manualCloseRef.current = true;
@@ -351,7 +350,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
   }, []);
 
   useEffect(() => {
-    if (!isLoggedIn || !accessToken) {
+    if (!isLoggedIn) {
       disconnectWs();
       setNotifications([]);
       setUnreadCount(0);
@@ -373,7 +372,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
       cancelled = true;
       disconnectWs();
     };
-  }, [isLoggedIn, accessToken, connectWs, disconnectWs]);
+  }, [isLoggedIn, connectWs, disconnectWs]);
 
   useEffect(() => {
     if (isDropdownOpen) {

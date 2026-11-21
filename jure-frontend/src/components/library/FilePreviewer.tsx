@@ -5,8 +5,8 @@ import { renderAsync } from 'docx-preview';
 import { API_ORIGIN } from '@/config/api';
 import { getFileType } from '@/utils/functions';
 import { useAppTranslation } from '@/i18n';
+import { resolveBackendUrl, useAuthenticatedObjectUrl } from '@/lib/authenticatedMedia';
 import { cn } from '@/lib/utils';
-import useUserStore from '@/stores/userStore';
 
 const IMAGE_TYPES = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp'];
 const VIDEO_TYPES = ['mp4', 'webm', 'ogg', 'mov'];
@@ -47,10 +47,7 @@ const fileBasename = (fileName: string, fallback = 'document'): string => {
 };
 
 function fetchMedia(url: string) {
-  const token = useUserStore.getState().accessToken;
-  const headers: HeadersInit = {};
-  if (token) headers.Authorization = `Bearer ${token}`;
-  return fetch(url, { credentials: 'include', headers });
+  return fetch(url, { credentials: 'include' });
 }
 
 const UnsupportedFallback: React.FC<{
@@ -122,16 +119,19 @@ export const FilePreviewer: React.FC<FilePreviewerProps> = ({
     if (!url) return '';
     if (url.startsWith('blob:') || url.startsWith('data:')) return url;
     if (url.startsWith('http://') || url.startsWith('https://')) return url;
+    if (url.startsWith('/api/') || url.startsWith('/api/v1/')) return resolveBackendUrl(url);
     if (url.startsWith('/media/') || url.startsWith('/')) {
       return `${API_ORIGIN}${url}`;
     }
     if (url.startsWith('media/')) return `${API_ORIGIN}/${url}`;
-    return `${API_ORIGIN}/media/${url}`;
+    return resolveBackendUrl(url);
   },
 }) => {
   const { t } = useAppTranslation();
   const hub = t.library.hub;
   const resolvedUrl = resolveUrl(fileUrl);
+  const objectMediaUrl = useAuthenticatedObjectUrl(resolvedUrl);
+  const mediaSrc = objectMediaUrl || resolvedUrl;
   const ext = getFileExtension(fileName || fileUrl);
   const [imageError, setImageError] = useState(false);
   const [pdfError, setPdfError] = useState(false);
@@ -235,7 +235,7 @@ export const FilePreviewer: React.FC<FilePreviewerProps> = ({
       >
         <div className="flex items-center justify-center min-h-[180px] p-4 overflow-auto bg-slate-100/50 dark:bg-slate-800/30 touch-pan-x touch-pan-y overscroll-contain">
           <img
-            src={resolvedUrl}
+            src={mediaSrc}
             alt={title || fileName}
             className="max-w-full object-contain transition-transform duration-200 touch-manipulation"
             style={{
@@ -384,7 +384,7 @@ export const FilePreviewer: React.FC<FilePreviewerProps> = ({
         )}
       >
         <video controls className="w-full max-h-[400px]">
-          <source src={resolvedUrl} />
+          <source src={mediaSrc} />
         </video>
       </div>
     );
@@ -400,7 +400,7 @@ export const FilePreviewer: React.FC<FilePreviewerProps> = ({
         )}
       >
         <audio controls className="w-full">
-          <source src={resolvedUrl} />
+          <source src={mediaSrc} />
         </audio>
       </div>
     );

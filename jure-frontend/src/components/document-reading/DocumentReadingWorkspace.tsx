@@ -304,10 +304,7 @@ const DocumentReadingWorkspace = forwardRef<DocumentReadingWorkspaceRef, { onHid
         if (payload.includeDocument && doc?.file && !doc.file.startsWith('blob:')) {
           try {
             const href = resolveLibraryMediaUrl(doc.file);
-            const token = (await import('@/stores/userStore')).default.getState().accessToken;
-            const headers: HeadersInit = {};
-            if (token) headers.Authorization = `Bearer ${token}`;
-            const res = await fetch(href, { credentials: 'include', headers });
+            const res = await fetch(href, { credentials: 'include' });
             if (res.ok) {
               const blob = await res.blob();
               const name = (doc.file.split('/').pop() || `${doc.title}.pdf`).split('?')[0];

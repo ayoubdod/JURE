@@ -45,14 +45,13 @@ const useCallsWsStore = create<CallsWsStore>((set, get) => ({
     if (get().ws?.readyState === WebSocket.OPEN) return;
     if (connectPromise) return connectPromise;
 
-    const token = useUserStore.getState().accessToken;
-    if (!token) {
-      throw new Error('No access token');
+    if (!useUserStore.getState().isLoggedIn) {
+      throw new Error('Not authenticated');
     }
 
     connectPromise = new Promise<void>((resolve, reject) => {
       set({ isConnecting: true });
-      const ws = new WebSocket(getCallsWsUrl(token));
+      const ws = new WebSocket(getCallsWsUrl());
       let settled = false;
 
       const failConnect = (reason: string) => {

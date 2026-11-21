@@ -2,6 +2,7 @@
 Chat WebSocket presence tracking.
 Tracks which users are connected to ws/chat/ for green-dot indicators,
 and records last_seen timestamps when they go offline.
+Online sets are cabinet-scoped so presence never leaks across firms.
 Uses Redis when available, in-memory structures for dev without Redis.
 """
 
@@ -13,13 +14,21 @@ from datetime import datetime, timezone as dt_timezone
 from django.conf import settings
 from django.utils import timezone
 
-# In-memory fallback for dev (single process)
-_online_user_ids: set[int] = set()
+# In-memory fallback for dev (single process): cabinet_id -> set of user ids
+_online_user_ids: dict[int, set[int]] = {}
 _last_seen: dict[int, str] = {}
 
 # Cache Redis probe so a dead Redis URL cannot hang every presence call.
 _redis_client = None
 _redis_checked = False
+
+
+def _cabinet_key(cabinet_id: int | None) -> int:
+    return int(cabinet_id or 0)
+
+
+def _online_redis_key(cabinet_id: int | None) -> str:
+    return f"chat:online_users:{_cabinet_key(cabinet_id)}"
 
 
 def _get_redis():
@@ -51,47 +60,51 @@ def _iso_now() -> str:
     return timezone.now().astimezone(dt_timezone.utc).isoformat().replace("+00:00", "Z")
 
 
-def presence_add(user_id: int) -> list[int]:
-    """Add user to online set. Returns current list of online user IDs."""
+def presence_add(user_id: int, cabinet_id: int | None) -> list[int]:
+    """Add user to the cabinet online set. Returns current online user IDs."""
+    cid = _cabinet_key(cabinet_id)
     r = _get_redis()
     if r:
         try:
-            key = "chat:online_users"
+            key = _online_redis_key(cid)
             r.sadd(key, str(user_id))
             members = r.smembers(key)
             return [int(m) for m in members]
         except Exception:
             pass
-    _online_user_ids.add(user_id)
-    return list(_online_user_ids)
+    bucket = _online_user_ids.setdefault(cid, set())
+    bucket.add(user_id)
+    return list(bucket)
 
 
-def presence_remove(user_id: int) -> list[int]:
-    """Remove user from online set. Returns current list of online user IDs."""
+def presence_remove(user_id: int, cabinet_id: int | None) -> list[int]:
+    """Remove user from the cabinet online set. Returns current online user IDs."""
+    cid = _cabinet_key(cabinet_id)
     r = _get_redis()
     if r:
         try:
-            key = "chat:online_users"
+            key = _online_redis_key(cid)
             r.srem(key, str(user_id))
             members = r.smembers(key)
             return [int(m) for m in members]
         except Exception:
             pass
-    _online_user_ids.discard(user_id)
-    return list(_online_user_ids)
+    bucket = _online_user_ids.setdefault(cid, set())
+    bucket.discard(user_id)
+    return list(bucket)
 
 
-def presence_list() -> list[int]:
-    """Return list of currently online user IDs."""
+def presence_list(cabinet_id: int | None) -> list[int]:
+    """Return list of currently online user IDs for this cabinet."""
+    cid = _cabinet_key(cabinet_id)
     r = _get_redis()
     if r:
         try:
-            key = "chat:online_users"
-            members = r.smembers(key)
+            members = r.smembers(_online_redis_key(cid))
             return [int(m) for m in members]
         except Exception:
             pass
-    return list(_online_user_ids)
+    return list(_online_user_ids.get(cid, set()))
 
 
 def _store_last_seen(user_id: int, iso: str) -> None:
@@ -110,7 +123,7 @@ def presence_last_seen_map(user_ids: list[int] | None = None) -> dict[str, str]:
     r = _get_redis()
     if r:
         try:
-            if user_ids:
+            if user_ids is not None:
                 if not user_ids:
                     return {}
                 values = r.hmget("chat:last_seen", *[str(uid) for uid in user_ids])
@@ -128,16 +141,18 @@ def presence_last_seen_map(user_ids: list[int] | None = None) -> dict[str, str]:
             return out
         except Exception:
             pass
-    if user_ids:
+    if user_ids is not None:
         return {str(uid): _last_seen[uid] for uid in user_ids if uid in _last_seen}
     return {str(uid): iso for uid, iso in _last_seen.items()}
 
 
-def presence_mark_offline(user_id: int) -> tuple[list[int], dict[str, str]]:
+def presence_mark_offline(
+    user_id: int, cabinet_id: int | None
+) -> tuple[list[int], dict[str, str]]:
     """
     Mark user offline, persist last_seen_at, return (online_ids, last_seen_patch).
     """
-    online_ids = presence_remove(user_id)
+    online_ids = presence_remove(user_id, cabinet_id)
     iso = _iso_now()
     _store_last_seen(user_id, iso)
 

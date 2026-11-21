@@ -3,6 +3,7 @@ import uuid
 from django.conf import settings
 from django.db import models
 
+from core.uploads import uuid_upload_to, validate_safe_upload_extension
 from juria.constants import OcrStatus
 
 
@@ -15,7 +16,7 @@ class JuriaFile(models.Model):
         on_delete=models.CASCADE,
         related_name="files",
     )
-    file = models.FileField(upload_to="juria/project_files/%Y/%m/")
+    file = models.FileField(upload_to=uuid_upload_to("juria/project_files"), validators=[validate_safe_upload_extension])
     original_name = models.CharField(max_length=255)
     content_type = models.CharField(max_length=120, blank=True, default="")
     file_kind = models.CharField(max_length=16, blank=True, default="")  # pdf | docx

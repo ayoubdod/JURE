@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 
 class LandingInquiryThrottle(AnonRateThrottle):
-    rate = "8/hour"
+    scope = "landing_inquiry"
 
 
 class ContactViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):

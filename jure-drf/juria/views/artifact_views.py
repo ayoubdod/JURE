@@ -8,6 +8,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from core.html_sanitize import sanitize_html
 from juria.constants import ActivityAction, ArtifactType
 from juria.models import JuriaArtifact, JuriaArtifactVersion
 from juria.serializers.artifact_serializer import (
@@ -23,7 +24,7 @@ from juria.views.mixins import JuriaEnabledMixin
 def _html_from_markdown(text: str) -> str:
     import markdown as md
 
-    return md.markdown(text or "", extensions=["extra"])
+    return sanitize_html(md.markdown(text or "", extensions=["extra"]))
 
 
 def _plain_lines(value: str) -> list[str]:
@@ -216,7 +217,7 @@ class JuriaProjectArtifactListCreateView(JuriaEnabledMixin, APIView):
         ser.is_valid(raise_exception=True)
         data = ser.validated_data
         md = data.get("content_markdown") or ""
-        html = data.get("content_html") or (_html_from_markdown(md) if md else "")
+        html = sanitize_html(data.get("content_html") or (_html_from_markdown(md) if md else ""))
         art = JuriaArtifact.objects.create(
             project=access.project,
             thread_id=data.get("thread_id"),
@@ -270,7 +271,7 @@ class JuriaArtifactDetailView(JuriaEnabledMixin, APIView):
                 if "content_html" not in data:
                     art.content_html = _html_from_markdown(art.content_markdown)
             if "content_html" in data:
-                art.content_html = data["content_html"]
+                art.content_html = sanitize_html(data["content_html"])
                 # Keep markdown in sync with the canvas — otherwise compare preferred
                 # stale markdown and reported "no differences" after HTML-only saves.
                 if "content_markdown" not in data:
@@ -314,7 +315,7 @@ class JuriaArtifactDuplicateView(JuriaEnabledMixin, APIView):
             thread=art.thread,
             title=_("%(title)s (copy)") % {"title": art.title},
             artifact_type=art.artifact_type,
-            content_html=art.content_html,
+            content_html=sanitize_html(art.content_html),
             content_markdown=art.content_markdown,
             created_by=request.user,
             current_version=1,
@@ -380,7 +381,7 @@ class JuriaArtifactRestoreView(JuriaEnabledMixin, APIView):
         if source is None:
             return Response({"detail": _("Version not found.")}, status=404)
 
-        art.content_html = source.content_html or ""
+        art.content_html = sanitize_html(source.content_html or "")
         art.content_markdown = source.content_markdown or _plain_text_from_html(art.content_html)
         art.current_version += 1
         art.save()

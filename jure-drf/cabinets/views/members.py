@@ -144,6 +144,9 @@ class CabinetMemberViewSet(FlexFieldsModelViewSet):
         if not cabinet:
             from rest_framework import serializers as drf_serializers
             raise drf_serializers.ValidationError(_("You must belong to a cabinet to create team members."))
+
+        from subscriptions.services.entitlements import assert_can_add_member
+        assert_can_add_member(cabinet)
         
         # Get validated data
         validated_data = serializer.validated_data.copy()

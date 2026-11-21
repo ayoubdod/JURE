@@ -18,10 +18,11 @@ export type SignupShellStep = {
 type SignupShellProps = {
   currentStep: number;
   steps: SignupShellStep[];
+  wide?: boolean;
   children: React.ReactNode;
 };
 
-const SignupShell = ({ currentStep, steps, children }: SignupShellProps) => {
+const SignupShell = ({ currentStep, steps, wide = false, children }: SignupShellProps) => {
   const { t } = useAppTranslation();
   const shell = t.auth.signup.shell;
   const inFlow = currentStep >= 1 && currentStep <= steps.length;
@@ -53,7 +54,7 @@ const SignupShell = ({ currentStep, steps, children }: SignupShellProps) => {
             <p className="mt-3 text-sm leading-relaxed text-white/80">{shell.subtitle}</p>
           </div>
 
-          <div className="relative z-10 mt-auto grid grid-cols-3 gap-2.5">
+          <div className="relative z-10 mt-8 space-y-1.5 overflow-y-auto">
             {steps.map((step) => {
               const isActive = currentStep === step.number;
               const isDone = currentStep > step.number;
@@ -61,15 +62,13 @@ const SignupShell = ({ currentStep, steps, children }: SignupShellProps) => {
                 <div
                   key={step.number}
                   className={cn(
-                    'min-h-[108px] rounded-2xl p-3.5 transition-all',
-                    isActive
-                      ? 'bg-white text-slate-900 shadow-lg'
-                      : 'bg-white/12 text-white ring-1 ring-white/15'
+                    'flex items-center gap-3 rounded-xl px-3 py-2',
+                    isActive ? 'bg-white text-slate-900 shadow-lg' : 'bg-white/10 text-white ring-1 ring-white/10'
                   )}
                 >
                   <div
                     className={cn(
-                      'flex h-7 w-7 items-center justify-center rounded-full text-xs font-semibold',
+                      'flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold',
                       isActive
                         ? 'bg-[#64499D] text-white'
                         : isDone
@@ -79,12 +78,7 @@ const SignupShell = ({ currentStep, steps, children }: SignupShellProps) => {
                   >
                     {isDone ? <Check className="h-3.5 w-3.5" /> : step.number}
                   </div>
-                  <p
-                    className={cn(
-                      'mt-3 text-[12px] font-medium leading-snug',
-                      isActive ? 'text-slate-800' : 'text-white/90'
-                    )}
-                  >
+                  <p className={cn('text-sm font-medium', isActive ? 'text-slate-800' : 'text-white/90')}>
                     {step.title}
                   </p>
                 </div>
@@ -143,7 +137,7 @@ const SignupShell = ({ currentStep, steps, children }: SignupShellProps) => {
           )}
 
           <div className="flex flex-1 flex-col overflow-y-auto px-5 pb-8 pt-4 sm:px-10 sm:pt-6">
-            <div className="mx-auto flex w-full max-w-[520px] flex-1 flex-col">
+            <div className={cn('mx-auto flex w-full flex-1 flex-col', wide ? 'max-w-[860px]' : 'max-w-[520px]')}>
               {inFlow && active && (
                 <div className="mb-6 text-center">
                   <h1 className="font-display text-[1.75rem] font-bold tracking-tight text-slate-900 dark:text-white">

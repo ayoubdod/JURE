@@ -1,5 +1,4 @@
 # chat/ws_auth.py
-from urllib.parse import parse_qs
 from channels.auth import AuthMiddlewareStack
 from channels.middleware import BaseMiddleware
 from channels.db import database_sync_to_async
@@ -37,29 +36,13 @@ def _jwt_from_cookies_scope(scope):
 
 class WebSocketAuthMiddleware(BaseMiddleware):
     """
-    Accepts JWT in either:
-      - query string: ?token=...
-      - header: Authorization: Bearer <token>
-      - Cookie header (dj-rest-auth access cookie or "access" / "access_token")
+    Accepts JWT from the Cookie header only (dj-rest-auth access cookie or legacy
+    "access" / "access_token" cookies).
     Sets scope['user']. Rejects superseded single-session tokens.
     """
     async def __call__(self, scope, receive, send):
         user = AnonymousUser()
-
-        # 1) Query string
-        query = parse_qs(scope.get("query_string", b"").decode())
-        token = (query.get("token", [None]) or [None])[0]
-
-        # 2) Authorization header
-        if not token:
-            headers = dict(scope.get("headers", []))
-            auth = headers.get(b"authorization", b"").decode()
-            if auth.lower().startswith("bearer "):
-                token = auth[7:]
-
-        # 3) Cookies (browser WebSockets cannot set Authorization; query may be omitted)
-        if not token:
-            token = _jwt_from_cookies_scope(scope)
+        token = _jwt_from_cookies_scope(scope)
 
         if token:
             try:

@@ -35,6 +35,8 @@ from consultations.services.workflow import (
     create_consultation_request,
     decline_consultation,
 )
+from core.downloads import serve_file_field
+from core.uploads import validate_safe_upload_extension
 from core.utils import get_user_cabinet
 from consultations.activity import log_consultation_request_activity
 from consultations.models import ConsultationEvent
@@ -58,7 +60,7 @@ class ConsultationRequestViewSet(viewsets.ModelViewSet):
             return [permissions.IsAuthenticated(), IsPortalClient()]
         if self.action in ("list", "retrieve"):
             return [permissions.IsAuthenticated()]
-        if self.action in ("comments", "attachments"):
+        if self.action in ("comments", "attachments", "download_attachment"):
             return [permissions.IsAuthenticated()]
         # Staff mutations
         return [permissions.IsAuthenticated(), CanManageConsultationRequests()]
@@ -259,6 +261,10 @@ class ConsultationRequestViewSet(viewsets.ModelViewSet):
         upload = request.FILES.get("file")
         if not upload:
             raise ValidationError({"file": "This field is required."})
+        try:
+            validate_safe_upload_extension(upload)
+        except DjangoValidationError as exc:
+            _validation_error(exc)
         att = ConsultationAttachment.objects.create(
             consultation=consultation,
             file=upload,
@@ -283,6 +289,14 @@ class ConsultationRequestViewSet(viewsets.ModelViewSet):
             ConsultationAttachmentSerializer(att, context={"request": request}).data,
             status=status.HTTP_201_CREATED,
         )
+
+    @action(detail=True, methods=["get"], url_path=r"attachments/(?P<attachment_id>[0-9]+)/download")
+    def download_attachment(self, request, pk=None, attachment_id=None):
+        consultation = self.get_object()
+        att = consultation.attachments.filter(pk=attachment_id).first()
+        if not att:
+            return response.Response({"detail": "Attachment not found."}, status=404)
+        return serve_file_field(request, att.file, filename=att.display_name())
 
 
 class PortalDashboardView(APIView):
@@ -415,7 +429,6 @@ class PortalCaseViewSet(viewsets.ReadOnlyModelViewSet):
         request = self.request
         docs = []
         for att in attachments:
-            url = att.file.url if att.file else None
             docs.append(
                 {
                     "id": att.id,
@@ -427,7 +440,9 @@ class PortalCaseViewSet(viewsets.ReadOnlyModelViewSet):
                         if att.uploaded_by
                         else ""
                     ),
-                    "url": request.build_absolute_uri(url) if request and url else url,
+                    "url": request.build_absolute_uri(
+                        f"/api/v1/cases/{case.id}/attachments/{att.id}/download/"
+                    ) if request and att.file else None,
                 }
             )
 

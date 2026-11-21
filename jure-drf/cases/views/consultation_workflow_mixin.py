@@ -1,5 +1,6 @@
 """Follow-up, attachments, confirmation email, and schedule-conflict actions."""
 from django.db.models import Q
+from django.core.exceptions import ValidationError as DjangoValidationError
 from django.utils.translation import gettext as _
 from rest_framework import status
 from rest_framework.decorators import action
@@ -7,6 +8,8 @@ from rest_framework.exceptions import PermissionDenied
 from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.response import Response
 
+from core.downloads import serve_file_field
+from core.uploads import validate_safe_upload_extension
 from core.utils import get_user_cabinet
 
 from ..activity import log_consultation_activity
@@ -81,6 +84,14 @@ class ConsultationWorkflowMixin:
         upload = request.FILES.get("file")
         if not upload:
             return Response({"detail": "file is required.", "code": "file_required"}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            validate_safe_upload_extension(upload)
+        except DjangoValidationError as exc:
+            return Response({"file": exc.messages}, status=status.HTTP_400_BAD_REQUEST)
+        cabinet = getattr(source, "cabinet", None)
+        if cabinet is not None:
+            from subscriptions.services.entitlements import assert_storage
+            assert_storage(cabinet, int(getattr(upload, "size", 0) or 0))
         att = CaseAttachment.objects.create(
             case=source,
             file=upload,
@@ -96,6 +107,21 @@ class ConsultationWorkflowMixin:
             new_value={"attachmentId": att.id, "fileName": att.display_name()},
         )
         return Response(CaseAttachmentSerializer(att, context={"request": request}).data, status=status.HTTP_201_CREATED)
+
+    @action(detail=True, methods=["GET"], url_path="attachments/(?P<attachment_id>[0-9]+)/download")
+    def download_attachment(self, request, pk=None, attachment_id=None):
+        source = self.get_object()
+        att = CaseAttachment.objects.filter(
+            Q(pk=attachment_id) & (Q(case=source) | Q(linked_cases=source))
+        ).first()
+        if not att:
+            return Response({"detail": "Attachment not found."}, status=status.HTTP_404_NOT_FOUND)
+        return serve_file_field(
+            request,
+            att.file,
+            filename=att.display_name(),
+            content_type=getattr(att.file, "content_type", None),
+        )
 
     @action(detail=True, methods=["DELETE"], url_path="attachments/(?P<attachment_id>[0-9]+)")
     def delete_attachment(self, request, pk=None, attachment_id=None):

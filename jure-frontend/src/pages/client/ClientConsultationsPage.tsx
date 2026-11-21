@@ -7,6 +7,7 @@ import {
   type ConsultationStatus,
 } from '@/services/consultations/api';
 import { Button } from '@/components/ui/button';
+import { ClientPageHeader } from '@/components/client/ClientPageHeader';
 import { ConsultationStatusBadge } from '@/components/client/ConsultationStatusBadge';
 
 const ClientConsultationsPage = () => {
@@ -32,30 +33,30 @@ const ClientConsultationsPage = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="font-serif text-3xl text-[#2F2450]">{cp.consultations.title}</h1>
-          <p className="mt-1 text-sm text-slate-500">{cp.consultations.subtitle}</p>
-        </div>
-        <Button asChild className="bg-[#64499D] hover:bg-[#553d86]" size="sm">
-          <Link to="/client/consultations/new">{cp.cta.requestConsultation}</Link>
-        </Button>
-      </div>
+      <ClientPageHeader
+        title={cp.consultations.title}
+        subtitle={cp.consultations.subtitle}
+        actions={
+          <Button asChild className="bg-[#64499D] text-white hover:bg-[#4D3680]" size="sm">
+            <Link to="/client/consultations/new">{cp.cta.requestConsultation}</Link>
+          </Button>
+        }
+      />
 
       {items.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-slate-200 bg-white p-10 text-center">
-          <p className="font-medium">{cp.empty.noConsultationsTitle}</p>
-          <p className="mt-1 text-sm text-slate-500">{cp.empty.noConsultationsBody}</p>
-          <Button asChild className="mt-4 bg-[#64499D] hover:bg-[#553d86]" size="sm">
+        <div className="border-t border-[#E2E8F0] pt-6 dark:border-zinc-800">
+          <p className="text-[14px] font-medium text-[#0F172A] dark:text-slate-100">{cp.empty.noConsultationsTitle}</p>
+          <p className="mt-1 text-[13px] text-[#64748B]">{cp.empty.noConsultationsBody}</p>
+          <Button asChild className="mt-4 bg-[#64499D] text-white hover:bg-[#4D3680]" size="sm">
             <Link to="/client/consultations/new">{cp.cta.requestConsultation}</Link>
           </Button>
         </div>
       ) : (
-        <ul className="space-y-3">
+        <ul className="border-t border-[#E2E8F0] dark:border-zinc-800">
           {items.map((item) => (
             <li
               key={item.id}
-              className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-4 py-4 dark:border-zinc-800 dark:bg-zinc-900"
+              className="flex flex-wrap items-center justify-between gap-3 border-b border-[#E2E8F0] px-1 py-3.5 transition-colors duration-200 ease-out last:border-b-0 hover:bg-[#F7F4FF] dark:border-zinc-800 dark:hover:bg-white/[0.04]"
             >
               <div>
                 <p className="font-medium">{item.subject}</p>
@@ -65,6 +66,7 @@ const ClientConsultationsPage = () => {
               </div>
               <div className="flex items-center gap-3">
                 <ConsultationStatusBadge
+                  quiet
                   status={item.status as ConsultationStatus}
                   label={cp.status[item.status] || item.status}
                 />

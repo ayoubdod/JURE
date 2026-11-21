@@ -5,6 +5,8 @@ from django.utils.translation import gettext_lazy as _
 from django.conf import settings  # ✅ make sure this line exists and is at top
 from typing import TYPE_CHECKING
 
+from core.uploads import uuid_upload_to, validate_safe_upload_extension
+
 if TYPE_CHECKING:
     from users.models import User
     from cabinets.models import Cabinet
@@ -198,7 +200,7 @@ class CaseAttachment(TimeStampedModel):
     case       = models.ForeignKey(Case, on_delete=models.CASCADE, related_name='attachments')
     type       = models.ForeignKey(CaseAttachementType, on_delete=models.SET_NULL, null=True, blank=True)
     other_type = models.CharField(max_length=255, blank=True, null=True)
-    file       = models.FileField(upload_to='case_attachments/')
+    file       = models.FileField(upload_to=uuid_upload_to('case_attachments'), validators=[validate_safe_upload_extension])
     original_name = models.CharField(max_length=255, blank=True, default='')
     uploaded_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,

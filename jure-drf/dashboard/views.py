@@ -7,6 +7,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from core.downloads import serve_file_field
 from core.permissions import IsCabinetMember
 from core.utils import get_user_cabinet
 
@@ -300,6 +301,26 @@ class AnnouncementDetailView(APIView):
         if not announcement:
             return Response({"detail": "Announcement not found."}, status=404)
         return Response(serialize_announcement(announcement, request=request))
+
+
+class AnnouncementMediaDownloadView(APIView):
+    """Authenticated media download for announcements visible to the user's cabinet."""
+
+    permission_classes = [IsAuthenticated, IsCabinetMember]
+
+    def get(self, request, announcement_id: int):
+        cab = get_user_cabinet(request.user)
+        if not cab:
+            return Response({"detail": "User is not attached to any cabinet."}, status=403)
+        announcement = Announcement.active_for_cabinet(cab).filter(pk=announcement_id).first()
+        if announcement is None or not announcement.media:
+            return Response({"detail": "Announcement not found."}, status=404)
+        return serve_file_field(
+            request,
+            announcement.media,
+            filename=announcement.media.name,
+            content_type=getattr(announcement.media, "content_type", None),
+        )
 
 
 class AnnouncementDismissView(APIView):

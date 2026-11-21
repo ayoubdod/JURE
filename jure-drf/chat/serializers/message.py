@@ -1,10 +1,13 @@
 from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.db import transaction
+from django.urls import reverse
 from django.utils.translation import gettext as _
 from rest_framework import serializers
 
 from cases.models import Case
+from core.downloads import absolute_api_url
+from core.uploads import validate_safe_upload_extension
 from tasks.models import Appointment, Task
 
 from ..models import Attachment, Message
@@ -23,6 +26,37 @@ class AttachmentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Attachment
         fields = ("id", "kind", "file", "mime", "size", "duration_ms", "thumbnail")
+
+    def validate_file(self, value):
+        validate_safe_upload_extension(value)
+        return value
+
+    def validate_thumbnail(self, value):
+        if value:
+            validate_safe_upload_extension(value)
+        return value
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        request = self.context.get("request") if hasattr(self, "context") else None
+        if instance.file:
+            data["file"] = absolute_api_url(
+                request,
+                reverse(
+                    "chat-messages-download-attachment",
+                    kwargs={"attachment_id": instance.pk},
+                ),
+            )
+        if instance.thumbnail:
+            data["thumbnail"] = absolute_api_url(
+                request,
+                reverse(
+                    "chat-messages-download-attachment",
+                    kwargs={"attachment_id": instance.pk},
+                )
+                + "?thumbnail=1",
+            )
+        return data
 
 
 class MessageNotificationSerializer(serializers.ModelSerializer):
@@ -244,7 +278,7 @@ class MessageSerializer(serializers.ModelSerializer):
         data["messageType"] = effective_type
         data["sharedItem"] = shared_item
         data["attachments"] = AttachmentSerializer(
-            instance.attachments.all(), many=True
+            instance.attachments.all(), many=True, context=self.context
         ).data
         # Mask deleted message body for all users
         if instance.is_deleted:
@@ -265,11 +299,12 @@ class MessageSerializer(serializers.ModelSerializer):
 
     
     def _get_kind(self, file:InMemoryUploadedFile):
-        if file.content_type.startswith("image/"):
+        content_type = getattr(file, "content_type", "") or ""
+        if content_type.startswith("image/"):
             return Attachment.Kind.IMAGE
-        elif file.content_type.startswith("video/"):
+        elif content_type.startswith("video/"):
             return Attachment.Kind.VIDEO
-        elif file.content_type.startswith("audio/"):
+        elif content_type.startswith("audio/"):
             return Attachment.Kind.AUDIO
         else:
             return Attachment.Kind.FILE
@@ -286,13 +321,14 @@ class MessageSerializer(serializers.ModelSerializer):
             # Create all attachments for this message
             attachment_instances = []
             for attachment in attachments:
+                validate_safe_upload_extension(attachment)
                 kind = self._get_kind(attachment)
                 
                 attachment_data = {
                     "file": attachment,
                     "kind": kind,
-                    "mime": attachment.content_type,
-                    "size": attachment.size,
+                    "mime": getattr(attachment, "content_type", "") or "",
+                    "size": getattr(attachment, "size", 0) or 0,
                     "duration_ms": None,
                     "thumbnail": None,
                 }

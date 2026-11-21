@@ -42,6 +42,7 @@ import {
   dismissAnnouncementLocally,
   isAnnouncementDismissed,
 } from '@/utils/announcementDismiss';
+import { useAuthenticatedObjectUrl } from '@/lib/authenticatedMedia';
 import { BACKEND_BASE_URL } from '@/utils/constants';
 import { formatRelativeTime, useAppTranslation, type Lang } from '@/i18n';
 import { AnnouncementLearnMoreLink } from '@/components/dashboard/AnnouncementLearnMoreLink';
@@ -450,6 +451,9 @@ const Dashboard = () => {
   };
 
   const taskPriorityKey = (priority: string) => priority.trim().toLowerCase();
+  const announcementMediaUrl = useAuthenticatedObjectUrl(
+    resolveAnnouncementMediaUrl(displayAnnouncement?.media_url)
+  );
 
   return (
     <>
@@ -464,7 +468,7 @@ const Dashboard = () => {
         {/* Announcement — only when backend returns an active, targeted one */}
         {displayAnnouncement && (() => {
           const style = ANNOUNCEMENT_STYLES[displayAnnouncement.type] ?? ANNOUNCEMENT_STYLES.INFO;
-          const mediaUrl = resolveAnnouncementMediaUrl(displayAnnouncement.media_url);
+          const mediaUrl = announcementMediaUrl;
           const hasMedia = Boolean(mediaUrl && displayAnnouncement.media_kind);
           const isImage = hasMedia && displayAnnouncement.media_kind === 'IMAGE';
           const isVideo = hasMedia && displayAnnouncement.media_kind === 'VIDEO';

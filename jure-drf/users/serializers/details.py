@@ -3,6 +3,7 @@ from dj_rest_auth.serializers import UserDetailsSerializer
 from rest_framework import serializers
 
 from cabinets.models import Cabinet
+from core.downloads import absolute_api_url
 from jurisdictions.scoping import serialize_jurisdiction
 
 from ..models import User
@@ -137,6 +138,7 @@ class CustomUserDetailsSerializer(UserDetailsSerializer):
             from asgiref.sync import async_to_sync
             from channels.layers import get_channel_layer
             from chat.presence import presence_list
+            from core.utils import get_user_cabinet
 
             effective = instance.get_effective_mode()
             public = instance.public_presence_mode()
@@ -157,10 +159,17 @@ class CustomUserDetailsSerializer(UserDetailsSerializer):
                 },
             )
             # Also broadcast status for peers even if chat socket is briefly reconnecting.
-            # Peers see DND as Away.
-            online_ids = presence_list()
+            # Peers see DND as Away. Presence groups are cabinet-scoped.
+            cabinet = get_user_cabinet(instance)
+            cabinet_id = getattr(cabinet, "id", None) if cabinet else None
+            online_ids = presence_list(cabinet_id)
+            presence_group = (
+                f"chat-presence-{cabinet_id}"
+                if cabinet_id
+                else f"chat-presence-user-{instance.id}"
+            )
             async_to_sync(channel_layer.group_send)(
-                "chat-presence",
+                presence_group,
                 {
                     "type": "presence.update",
                     "payload": {
@@ -172,6 +181,7 @@ class CustomUserDetailsSerializer(UserDetailsSerializer):
                     },
                 },
             )
+
         except Exception:
             pass
 
@@ -180,6 +190,12 @@ class CustomUserDetailsSerializer(UserDetailsSerializer):
         if hasattr(instance, "get_effective_mode"):
             instance.get_effective_mode()
         data = super().to_representation(instance)
+        if getattr(instance, "image", None):
+            request = self.context.get('request') if hasattr(self, 'context') else None
+            data['image'] = absolute_api_url(
+                request,
+                f"/api/v1/users/{instance.pk}/image/download/",
+            )
         logo = data.get('logo')
         if logo and not str(logo).startswith('http'):
             request = self.context.get('request') if hasattr(self, 'context') else None

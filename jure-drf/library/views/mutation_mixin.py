@@ -40,6 +40,10 @@ class LibraryMutationMixin:
         cabinet = get_user_cabinet(user)
         if not cabinet:
             raise PermissionDenied(_("User must belong to a cabinet to create documents."))
+        upload = serializer.validated_data.get("file")
+        extra_bytes = int(getattr(upload, "size", 0) or 0)
+        from subscriptions.services.entitlements import assert_storage
+        assert_storage(cabinet, extra_bytes)
         extra = {
             'created_by': user,
             'updated_by': user,

@@ -3,6 +3,7 @@ import { Link } from 'react-router';
 import { useAppTranslation } from '@/i18n';
 import { apiListPortalCases, apiGetPortalCase } from '@/services/portal/api';
 import { Button } from '@/components/ui/button';
+import { ClientPageHeader } from '@/components/client/ClientPageHeader';
 
 type DocRow = {
   id: number;
@@ -54,16 +55,11 @@ const ClientDocumentsPage = () => {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="font-serif text-3xl text-[#2F2450]">{cp.documents.title}</h1>
-        <p className="mt-1 text-sm text-slate-500">{cp.documents.subtitle}</p>
-      </div>
+      <ClientPageHeader title={cp.documents.title} subtitle={cp.documents.subtitle} />
       {docs.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-slate-200 bg-white p-10 text-center">
-          <p className="font-medium">{cp.empty.noDocuments}</p>
-        </div>
+        <p className="border-t border-[#E2E8F0] pt-4 text-[14px] text-[#64748B] dark:border-zinc-800">{cp.empty.noDocuments}</p>
       ) : (
-        <ul className="divide-y rounded-xl border border-slate-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
+        <ul className="divide-y divide-[#E2E8F0] border-y border-[#E2E8F0] dark:divide-zinc-800 dark:border-zinc-800">
           {docs.map((d) => (
             <li key={`${d.id}-${d.caseTitle}`} className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
               <div>

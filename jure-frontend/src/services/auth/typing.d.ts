@@ -118,9 +118,14 @@ declare namespace API {
         team_size: string
         website?: string
 
-        // Consent - Step 5
+        // Consent - Step 6
         accept_terms: boolean
         accept_data_processing: boolean
+
+        subscription?: {
+            plan_code: string
+            billing_cycle: 'monthly' | 'annual'
+        }
     }
 
     type ResetPasswordForm = {

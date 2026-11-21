@@ -1,5 +1,6 @@
 import useUserStore from '@/stores/userStore';
 import { useAppTranslation } from '@/i18n';
+import { ClientPageHeader } from '@/components/client/ClientPageHeader';
 
 const ClientProfilePage = () => {
   const { user } = useUserStore();
@@ -8,10 +9,7 @@ const ClientProfilePage = () => {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="font-serif text-3xl text-[#2F2450]">{cp.profile.title}</h1>
-        <p className="mt-1 text-sm text-slate-500">{cp.profile.subtitle}</p>
-      </div>
+      <ClientPageHeader title={cp.profile.title} subtitle={cp.profile.subtitle} />
       <div className="max-w-lg space-y-4 rounded-xl border border-slate-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
         <div>
           <p className="text-xs uppercase text-slate-400">{cp.profile.name}</p>

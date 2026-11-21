@@ -41,6 +41,7 @@ import { apiJuriaCreateArtifact } from '@/services/juria/api';
 import { JuriaTextPromptDialog } from '@/components/juria/JuriaTextPromptDialog';
 import { RailIconButton } from '@/components/juria/JuriaProjectSidebar';
 import { useAppTranslation, formatDate, formatTime } from '@/i18n';
+import { sanitizeHtml } from '@/lib/sanitizeHtml';
 
 export function JuriaChat({ project }: { project: JuriaProject }) {
   const { t, dir } = useAppTranslation();
@@ -285,10 +286,13 @@ export function JuriaChat({ project }: { project: JuriaProject }) {
                       .toString()
                       .slice(0, 120);
                   const plain = stripActMarkdown(m.content || '');
+                  const contentHtml = sanitizeHtml(
+                    `<p>${plain.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '</p><p>')}</p>`
+                  );
                   void apiJuriaCreateArtifact(project.id, {
                     title,
                     content_markdown: plain,
-                    content_html: `<p>${plain.replace(/\n/g, '</p><p>')}</p>`,
+                    content_html: contentHtml,
                     thread_id: activeThreadId ?? undefined,
                   })
                     .then(() => {

@@ -66,18 +66,13 @@ function getWsOriginFromEnv(): string {
 
 export const WS_HOST = getWsOriginFromEnv();
 
-export const getChatWsUrl = (token: string) =>
-  `${WS_HOST}/ws/chat/?token=${encodeURIComponent(token)}`;
+/** Cookie-auth chat WebSocket (httpOnly JWT; no token in URL). */
+export const getChatWsUrl = () => `${WS_HOST}/ws/chat/`;
 
-export const getCallsWsUrl = (token: string) =>
-  `${WS_HOST}/ws/calls/?token=${encodeURIComponent(token)}`;
+export const getCallsWsUrl = () => `${WS_HOST}/ws/calls/`;
 
 /** User notifications channel (JSON messages: notification.new, etc.). */
-export const getNotificationsWsUrl = (token: string) =>
-  `${WS_HOST}/ws/notifications/?token=${encodeURIComponent(token)}`;
+export const getNotificationsWsUrl = () => `${WS_HOST}/ws/notifications/`;
 
-export const getConversationWsUrl = (conversationId: number, token?: string | null) => {
-  const base = `${WS_HOST}/ws/conversation/${conversationId}/`;
-  if (token) return `${base}?token=${encodeURIComponent(token)}`;
-  return base;
-};
+export const getConversationWsUrl = (conversationId: number) =>
+  `${WS_HOST}/ws/conversation/${conversationId}/`;

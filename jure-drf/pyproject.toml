@@ -45,6 +45,7 @@ dependencies = [
     "reportlab (>=4.0,<5.0.0)",
     "django-unfold (>=0.103.0,<0.104.0)",
     "pypdf (==5.9.0)",
+    "nh3 (>=0.2.21,<0.3.0)",
 ]
 
 

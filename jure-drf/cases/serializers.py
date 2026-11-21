@@ -4,8 +4,10 @@ type-specific sub-fields (case_specific_data) based on discriminator.
 """
 from rest_framework.serializers import ModelSerializer
 from rest_framework import serializers
+from django.urls import reverse
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.utils.translation import gettext as _
+from core.downloads import absolute_api_url
 from core.utils import get_user_cabinet
 
 from .models import Case, CaseAttachment
@@ -42,14 +44,14 @@ class CaseAttachmentSerializer(serializers.ModelSerializer):
         read_only_fields = fields
 
     def get_file_url(self, obj):
-        try:
-            url = obj.file.url
-        except Exception:
+        if not obj.file:
             return None
+        url = reverse(
+            "case-download-attachment",
+            kwargs={"pk": obj.case_id, "attachment_id": obj.pk},
+        )
         request = self.context.get("request")
-        if request and url:
-            return request.build_absolute_uri(url)
-        return url
+        return absolute_api_url(request, url)
 
     def get_file_name(self, obj):
         return obj.display_name()

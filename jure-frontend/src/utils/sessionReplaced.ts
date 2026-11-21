@@ -35,7 +35,7 @@ export function isSessionReplacedError(error: unknown): boolean {
 export function handleSessionReplaced(): void {
   if (typeof window === 'undefined') return;
   if (handlingSessionReplaced) return;
-  if (!useUserStore.getState().isLoggedIn && !useUserStore.getState().accessToken) {
+  if (!useUserStore.getState().isLoggedIn) {
     return;
   }
 

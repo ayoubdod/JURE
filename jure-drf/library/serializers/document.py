@@ -4,8 +4,11 @@ import os
 from django.utils.translation import gettext as _
 from rest_framework import serializers
 from django.http import QueryDict
+from django.urls import reverse
 
 from commons.models import Tag
+from core.downloads import absolute_api_url
+from core.uploads import validate_safe_upload_extension
 from core.utils import is_valid_slug
 from jurisdictions.constants import VisibilityScope
 from jurisdictions.models import Jurisdiction
@@ -202,6 +205,7 @@ class DocumentSerializer(serializers.ModelSerializer):
     def validate_file(self, value):
         if not value:
             return value
+        validate_safe_upload_extension(value)
         name = getattr(value, "name", "") or ""
         ext = os.path.splitext(name)[1].lower()
         if ext and ext not in ALLOWED_DOCUMENT_EXTENSIONS:
@@ -471,14 +475,12 @@ class DocumentSerializer(serializers.ModelSerializer):
                 "days_remaining_as_new": days_remaining_as_new(created),
             }
 
-        file_url = data.get("file")
-        if file_url and isinstance(file_url, str):
+        if getattr(instance, "file", None):
             request = self.context.get("request") if hasattr(self, "context") and self.context else None
-            if request:
-                if file_url.startswith("/"):
-                    data["file"] = request.build_absolute_uri(file_url)
-                elif not file_url.startswith("http://") and not file_url.startswith("https://"):
-                    data["file"] = request.build_absolute_uri("/" + file_url.lstrip("/"))
+            data["file"] = absolute_api_url(
+                request,
+                reverse("library:document-download", kwargs={"pk": instance.pk}),
+            )
 
         data["recent_window_days"] = LAST_ADDED_DAYS
         return data

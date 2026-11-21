@@ -1,8 +1,10 @@
+from django.db import transaction
 from rest_framework import response, status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 
 from core.utils import get_user_cabinet
+from dashboard.models import ActivityLog
 from users.models import User
 
 from ..permissions import DEFAULT_ROLE_PERMISSIONS, can_manage_roles
@@ -65,8 +67,20 @@ def update_cabinet_member_role(request, member_id):
         
         # Update role if provided
         if role:
-            member_user.role = role
-            member_user.save(update_fields=['role'])
+            old_role = member_user.role
+            with transaction.atomic():
+                member_user.role = role
+                member_user.save(update_fields=['role'])
+                ActivityLog.objects.create(
+                    cabinet=actor_cabinet,
+                    kind='role_changed',
+                    message=f'Role changed for user#{member_user.pk}',
+                    actor=request.user,
+                    entity_type='user',
+                    entity_id=str(member_user.pk),
+                    previous_value={'role': old_role},
+                    new_value={'role': role},
+                )
         
         # Return updated member data
         serializer = CabinetMemberSerializer(member_user)

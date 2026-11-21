@@ -1,4 +1,6 @@
 // src/lib/currency.ts
+// Marketing / display FX helpers only — not the ledger currency of record.
+// Invoice and fee amounts use the server-side currency snapshotted on create.
 import { useState } from "react";
 export type Currency =
   | "USD" | "EUR" | "GBP" | "MAD" | "CAD" | "AUD"

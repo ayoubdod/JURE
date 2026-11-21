@@ -355,18 +355,20 @@ const CallModal: React.FC<{
         ) : null}
 
         {!videoLive && !(isConference && (showActive || showConnecting)) ? (
-          <div className="relative">
+          <div
+            className={cn(
+              'relative shrink-0',
+              layout === 'fullscreen' && !videoLive
+                ? showProgress
+                  ? 'h-[168px] w-[168px]'
+                  : 'h-32 w-32 sm:h-36 sm:w-36'
+                : showProgress
+                  ? 'h-[120px] w-[120px] sm:h-[136px] sm:w-[136px]'
+                  : 'h-24 w-24 sm:h-28 sm:w-28'
+            )}
+          >
             {showProgress ? (
-              <svg
-                className={cn(
-                  'absolute -rotate-90',
-                  layout === 'fullscreen' && !videoLive
-                    ? '-inset-6 h-[168px] w-[168px]'
-                    : '-inset-4 h-[120px] w-[120px] sm:-inset-5 sm:h-[136px] sm:w-[136px]'
-                )}
-                viewBox="0 0 100 100"
-                aria-hidden
-              >
+              <svg className="absolute inset-0 h-full w-full -rotate-90" viewBox="0 0 100 100" aria-hidden>
                 <circle
                   cx="50"
                   cy="50"
@@ -392,10 +394,12 @@ const CallModal: React.FC<{
             ) : null}
             <div
               className={cn(
-                'relative flex items-center justify-center overflow-hidden rounded-full',
-                layout === 'fullscreen' && !videoLive
-                  ? 'h-32 w-32 sm:h-36 sm:w-36'
-                  : 'h-24 w-24 sm:h-28 sm:w-28',
+                'absolute overflow-hidden rounded-full',
+                showProgress
+                  ? layout === 'fullscreen' && !videoLive
+                    ? 'inset-[18px]'
+                    : 'inset-[12px] sm:inset-[14px]'
+                  : 'inset-0',
                 showActive &&
                   'ring-[3px] ring-emerald-400/80 ring-offset-[3px] ring-offset-white dark:ring-offset-slate-950',
                 showActive && 'shadow-[0_0_28px_-4px_rgba(52,211,153,0.55)]',

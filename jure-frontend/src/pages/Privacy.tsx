@@ -57,6 +57,7 @@ const privacyFr = {
         title: "Vos droits",
         bullets: [
           "Accès, rectification, effacement.",
+          "Demande d’effacement / anonymisation via les paramètres du compte (ou auprès du titulaire du cabinet pour un client).",
           "Limitation et opposition au traitement.",
           "Portabilité des données.",
           "Réclamation auprès de l’autorité compétente.",
@@ -137,6 +138,7 @@ const STRINGS: Record<Lang, PrivacyCopy> = {
         title: "Your rights",
         bullets: [
           "Access, rectification, erasure.",
+          "Request erasure / anonymization via account settings (or ask the cabinet owner for a client account).",
           "Restriction and objection to processing.",
           "Data portability.",
           "Complaint to the competent authority.",

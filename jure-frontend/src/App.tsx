@@ -298,6 +298,7 @@ const router = createBrowserRouter([
         path: "support",
         element: app(<Support />),
       },
+      { path: "settings/subscription", element: app(<Settings />) },
       { path: "settings", element: app(<Settings />) },
       { path: "messages", element: app(<Conversations />) },
       { path: "notifications", element: app(<NotificationsPage />) },

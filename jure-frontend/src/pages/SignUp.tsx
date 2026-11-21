@@ -5,9 +5,9 @@ import PersonalInfoStep from '@/components/signup/PersonalInfoStep';
 import ProfessionalInfoStep from '@/components/signup/ProfessionalInfoStep';
 import OrganizationDetailsStep from '@/components/signup/DocumentUploadStep';
 import ConsentStep from '@/components/signup/ConsentStep';
+import SubscriptionStep from '@/components/signup/SubscriptionStep';
 import JurisdictionStep from '@/components/signup/JurisdictionStep';
 import PracticeTypeStep from '@/components/signup/PracticeTypeStep';
-import VerificationPending from '@/components/signup/VerificationPending';
 import SignupShell from '@/components/signup/SignupShell';
 import { createSignupStepSchemas, type SignUpData } from '@/schemas/signupValidation';
 import { cn } from '@/lib/utils';
@@ -43,6 +43,8 @@ const SignUp = () => {
       practice_type: '',
       accept_terms: false,
       accept_data_processing: false,
+      plan_code: '',
+      billing_cycle: 'monthly',
     },
     mode: 'onChange',
   });
@@ -57,10 +59,11 @@ const SignUp = () => {
     { number: 4, ...t.auth.signup.steps.profile },
     { number: 5, ...t.auth.signup.steps.organization },
     { number: 6, ...t.auth.signup.steps.consent },
+    { number: 7, ...t.auth.signup.steps.subscription },
   ];
 
   return (
-    <SignupShell currentStep={currentStep} steps={steps}>
+    <SignupShell currentStep={currentStep} steps={steps} wide={currentStep === 7}>
       <div className={cn(currentStep === 1 ? '' : 'hidden')}>
         <JurisdictionStep onNext={nextStep} form={mainForm} />
       </div>
@@ -78,14 +81,14 @@ const SignUp = () => {
       </div>
       <div className={cn(currentStep === 6 ? '' : 'hidden')}>
         <ConsentStep
-          onNext={() => setCurrentStep(7)}
+          onNext={nextStep}
           onPrev={prevStep}
           setStep={setCurrentStep}
           form={mainForm}
         />
       </div>
       <div className={cn(currentStep === 7 ? '' : 'hidden')}>
-        <VerificationPending />
+        <SubscriptionStep onPrev={prevStep} setStep={setCurrentStep} form={mainForm} />
       </div>
     </SignupShell>
   );

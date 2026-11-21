@@ -7,8 +7,9 @@ from rest_framework import decorators, permissions, response, status, viewsets
 from rest_framework.exceptions import PermissionDenied
 
 from cabinets.permissions import CanAccessConversations, HasConversationsPermission
+from core.downloads import serve_file_field
 
-from ..models import Conversation, ConversationMembership, Message, MessagePin
+from ..models import Attachment, Conversation, ConversationMembership, Message, MessagePin
 from ..serializers import MessageSerializer
 from .helpers import (
     _broadcast_messages_updated,
@@ -31,6 +32,7 @@ class MessageViewSet(viewsets.ModelViewSet):
             "forward",
             "pin",
             "mark_read",
+            "download_attachment",
         ):
             return [permissions.IsAuthenticated()]
         return super().get_permissions()
@@ -221,6 +223,26 @@ class MessageViewSet(viewsets.ModelViewSet):
 
         _broadcast_messages_updated(to_mark)
         return response.Response({"status": "marked as read"})
+
+    @decorators.action(
+        detail=False,
+        methods=["GET"],
+        url_path=r"attachments/(?P<attachment_id>[^/.]+)/download",
+    )
+    def download_attachment(self, request, attachment_id=None):
+        attachment = get_object_or_404(
+            Attachment.objects.select_related("message", "message__conversation"),
+            pk=attachment_id,
+            message__conversation__memberships__user=request.user,
+            message__conversation__memberships__is_deleted=False,
+        )
+        field = attachment.thumbnail if request.query_params.get("thumbnail") else attachment.file
+        return serve_file_field(
+            request,
+            field,
+            filename=field.name if field else None,
+            content_type=attachment.mime or None,
+        )
     
     # def create(self, request, *args, **kwargs):
     #     conversation_id = request.data.get('conversation_id')

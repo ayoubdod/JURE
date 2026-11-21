@@ -1,13 +1,23 @@
-/** Deduplicate /api/me across remounted route guards for the same token. */
-let validatedToken: string | null = null;
+/** Deduplicate /dj-rest-auth/user/ across remounted route guards for the same session. */
+let sessionValidated = false;
 let validationPromise: Promise<boolean> | null = null;
 
-export function getValidatedToken(): string | null {
-  return validatedToken;
+export function isSessionValidated(): boolean {
+  return sessionValidated;
 }
 
+export function setSessionValidated(value: boolean): void {
+  sessionValidated = value;
+}
+
+/** @deprecated Prefer isSessionValidated — kept for gradual call-site updates. */
+export function getValidatedToken(): string | null {
+  return sessionValidated ? 'cookie' : null;
+}
+
+/** @deprecated Prefer setSessionValidated */
 export function setValidatedToken(token: string | null): void {
-  validatedToken = token;
+  sessionValidated = Boolean(token);
 }
 
 export function getValidationPromise(): Promise<boolean> | null {
@@ -19,6 +29,6 @@ export function setValidationPromise(promise: Promise<boolean> | null): void {
 }
 
 export function clearSessionValidationCache(): void {
-  validatedToken = null;
+  sessionValidated = false;
   validationPromise = null;
 }

@@ -30,6 +30,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
+import { useAuthenticatedObjectUrl } from '@/lib/authenticatedMedia';
 import {
   coerceMessageSharedItem,
   getMessageType,
@@ -133,6 +134,26 @@ function ChatFileAttachment({
       </span>
     </a>
   );
+}
+
+function AuthenticatedChatMedia({
+  attachment,
+  className,
+  onClick,
+  controls = false,
+}: {
+  attachment: API.MessageAttachment;
+  className?: string;
+  onClick?: () => void;
+  controls?: boolean;
+}) {
+  const src = attachmentHref(attachment.file, BACKEND_BASE_URL);
+  const objectUrl = useAuthenticatedObjectUrl(src);
+  const mediaSrc = objectUrl || src;
+  if (attachment.kind === MessageAttachmentKind.IMAGE) {
+    return <img src={mediaSrc} alt="" className={className} onClick={onClick} />;
+  }
+  return <video src={mediaSrc} controls={controls} className={className} onClick={onClick} />;
 }
 interface MessageItemProps {
   conversation: API.Conversation;
@@ -423,7 +444,6 @@ const MessageItem: React.FC<MessageItemProps> = ({
       {mediaAttachments.length > 1 ? (
         <div className="grid grid-cols-2 gap-0.5 overflow-hidden bg-slate-100 dark:bg-slate-800">
           {mediaAttachments.slice(0, 4).map((attachment, index) => {
-            const src = attachmentHref(attachment.file, BACKEND_BASE_URL);
             return (
               <div
                 key={attachment.id}
@@ -431,9 +451,15 @@ const MessageItem: React.FC<MessageItemProps> = ({
                 onClick={() => handleGalleryOpen(index)}
               >
                 {attachment.kind === MessageAttachmentKind.IMAGE ? (
-                  <img src={src} alt="" className="h-full w-full object-cover" />
+                  <AuthenticatedChatMedia
+                    attachment={attachment}
+                    className="h-full w-full object-cover"
+                  />
                 ) : (
-                  <video src={src} className="h-full w-full object-cover" />
+                  <AuthenticatedChatMedia
+                    attachment={attachment}
+                    className="h-full w-full object-cover"
+                  />
                 )}
                 {index === 3 && mediaAttachments.length > 4 ? (
                   <div
@@ -449,20 +475,18 @@ const MessageItem: React.FC<MessageItemProps> = ({
         </div>
       ) : (
         mediaAttachments.map((attachment, index) => {
-          const src = attachmentHref(attachment.file, BACKEND_BASE_URL);
           return attachment.kind === MessageAttachmentKind.IMAGE ? (
-            <img
+            <AuthenticatedChatMedia
               key={attachment.id}
-              src={src}
-              alt=""
+              attachment={attachment}
               className="block max-h-[360px] max-w-full cursor-pointer object-cover hover:opacity-95"
               onClick={() => handleGalleryOpen(index)}
             />
           ) : (
-            <video
+            <AuthenticatedChatMedia
               key={attachment.id}
+              attachment={attachment}
               controls
-              src={src}
               className="block max-h-[360px] max-w-full cursor-pointer object-cover"
               onClick={() => handleGalleryOpen(index)}
             />

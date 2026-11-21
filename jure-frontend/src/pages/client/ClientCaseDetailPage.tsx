@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router';
-import { useAppTranslation } from '@/i18n';
+import { useAppTranslation, formatDate } from '@/i18n';
 import { apiGetPortalCase, type PortalCaseDetail } from '@/services/portal/api';
 import { Button } from '@/components/ui/button';
+import { ClientPageHeader } from '@/components/client/ClientPageHeader';
 
 const ClientCaseDetailPage = () => {
   const { caseId } = useParams();
-  const { t } = useAppTranslation();
+  const { t, tf, lang, enumPretty } = useAppTranslation();
   const cp = t.clientPortal;
   const [data, setData] = useState<PortalCaseDetail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -34,37 +35,42 @@ const ClientCaseDetailPage = () => {
 
   return (
     <div className="space-y-8">
-      <div>
-        <Button asChild variant="ghost" size="sm" className="-ms-2 mb-2">
+      <div className="space-y-4">
+        <Button asChild variant="ghost" size="sm" className="-ms-2">
           <Link to="/client/cases">{cp.common.back}</Link>
         </Button>
-        <h1 className="font-serif text-3xl text-[#2F2450]">{data.title}</h1>
-        <p className="mt-1 text-sm text-slate-500">
-          {data.reference} · {data.status}
+        <ClientPageHeader
+          title={data.title}
+          subtitle={`${tf(cp.cases.referenceLabel, { ref: data.reference })} · ${enumPretty(data.status) || data.status}`}
+        />
+        <p className="text-[14px] text-[#0F172A] dark:text-slate-100">
+          {cp.cases.matterLine[data.status] || cp.cases.matterLine.DEFAULT}
         </p>
       </div>
 
-      <section className="grid gap-4 rounded-xl border border-slate-200 bg-white p-5 sm:grid-cols-2 dark:border-zinc-800 dark:bg-zinc-900">
+      <dl className="grid gap-4 border-y border-[#E2E8F0] py-4 text-[13px] sm:grid-cols-2 lg:grid-cols-4 dark:border-zinc-800">
         <div>
-          <p className="text-xs uppercase text-slate-400">{cp.cases.type}</p>
-          <p className="mt-1">{data.caseType}</p>
+          <dt className="text-[12px] text-[#64748B]">{cp.cases.type}</dt>
+          <dd className="mt-1 text-[#0F172A] dark:text-slate-100">{enumPretty(data.caseType) || data.caseType}</dd>
         </div>
         <div>
-          <p className="text-xs uppercase text-slate-400">{cp.cases.lawyer}</p>
-          <p className="mt-1">{data.assignedLawyer?.fullName || '—'}</p>
+          <dt className="text-[12px] text-[#64748B]">{cp.cases.lawyer}</dt>
+          <dd className="mt-1 text-[#0F172A] dark:text-slate-100">{data.assignedLawyer?.fullName || '—'}</dd>
         </div>
         <div>
-          <p className="text-xs uppercase text-slate-400">{cp.cases.lawFirm}</p>
-          <p className="mt-1">{data.lawFirm || '—'}</p>
+          <dt className="text-[12px] text-[#64748B]">{cp.cases.lawFirm}</dt>
+          <dd className="mt-1 text-[#0F172A] dark:text-slate-100">{data.lawFirm || '—'}</dd>
         </div>
         <div>
-          <p className="text-xs uppercase text-slate-400">{cp.cases.opened}</p>
-          <p className="mt-1">{new Date(data.openedAt).toLocaleDateString()}</p>
+          <dt className="text-[12px] text-[#64748B]">{cp.cases.opened}</dt>
+          <dd className="mt-1 text-[#0F172A] dark:text-slate-100">
+            {formatDate(data.openedAt, lang, { day: 'numeric', month: 'long', year: 'numeric' })}
+          </dd>
         </div>
-      </section>
+      </dl>
 
       <section className="space-y-3">
-        <h2 className="text-lg font-medium">{cp.cases.timeline}</h2>
+        <h2 className="text-[18px] font-semibold tracking-tight text-[#2F2450] dark:text-slate-100">{cp.cases.timeline}</h2>
         {data.timeline.length === 0 ? (
           <p className="text-sm text-slate-500">{cp.empty.noTimeline}</p>
         ) : (
@@ -83,11 +89,11 @@ const ClientCaseDetailPage = () => {
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-lg font-medium">{cp.cases.documents}</h2>
+        <h2 className="text-[18px] font-semibold tracking-tight text-[#2F2450] dark:text-slate-100">{cp.cases.documents}</h2>
         {data.documents.length === 0 ? (
           <p className="text-sm text-slate-500">{cp.empty.noDocuments}</p>
         ) : (
-          <ul className="divide-y divide-slate-100 rounded-xl border border-slate-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
+          <ul className="divide-y divide-[#E2E8F0] border-y border-[#E2E8F0] dark:divide-zinc-800 dark:border-zinc-800">
             {data.documents.map((doc) => (
               <li key={doc.id} className="flex items-center justify-between gap-3 px-4 py-3">
                 <div>
@@ -113,15 +119,15 @@ const ClientCaseDetailPage = () => {
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-lg font-medium">{cp.cases.updates}</h2>
+        <h2 className="text-[18px] font-semibold tracking-tight text-[#2F2450] dark:text-slate-100">{cp.cases.updates}</h2>
         {data.updates.length === 0 ? (
           <p className="text-sm text-slate-500">{cp.empty.noUpdates}</p>
         ) : (
-          <ul className="space-y-3">
+          <ul className="divide-y divide-[#E2E8F0] border-y border-[#E2E8F0] dark:divide-zinc-800 dark:border-zinc-800">
             {data.updates.map((u) => (
               <li
                 key={u.id}
-                className="rounded-xl border border-slate-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900"
+                className="py-4"
               >
                 <blockquote className="text-sm leading-relaxed text-slate-700 dark:text-slate-300">
                   “{u.content}”
@@ -136,7 +142,7 @@ const ClientCaseDetailPage = () => {
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-lg font-medium">{cp.cases.requiredActions}</h2>
+        <h2 className="text-[18px] font-semibold tracking-tight text-[#2F2450] dark:text-slate-100">{cp.cases.requiredActions}</h2>
         <p className="text-sm text-slate-500">{cp.empty.noActions}</p>
       </section>
     </div>

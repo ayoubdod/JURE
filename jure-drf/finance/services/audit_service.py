@@ -3,7 +3,10 @@
 from __future__ import annotations
 
 import json
+import logging
 from typing import Any
+
+logger = logging.getLogger(__name__)
 
 
 def _user_label(user) -> str:
@@ -42,15 +45,14 @@ def log_finance_action(
     """
     Persist an auditable finance event.
 
+    Fail closed: money-status mutations must not succeed without an audit trail.
     Uses dashboard.ActivityLog (existing stream). Optional metadata fields are
     written when the model supports them (after migration).
     """
     if cabinet is None:
-        return
-    try:
-        from dashboard.models import ActivityLog
-    except Exception:
-        return
+        raise ValueError('Finance audit requires a cabinet.')
+
+    from dashboard.models import ActivityLog
 
     payload = {
         'cabinet': cabinet,
@@ -72,5 +74,10 @@ def log_finance_action(
     try:
         ActivityLog.objects.create(**payload)
     except Exception:
-        # Never break financial mutations because of audit write failures.
-        return
+        logger.exception(
+            'Failed to write finance ActivityLog kind=%s entity=%s:%s',
+            kind,
+            entity_type,
+            entity_id,
+        )
+        raise

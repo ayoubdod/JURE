@@ -311,3 +311,24 @@ class AnnouncementAdmin(JureModelAdmin):
 class ActivityLogAdmin(JureModelAdmin):
     list_display = ("kind", "cabinet", "message", "created")
     list_filter = ("kind", "cabinet")
+    readonly_fields = (
+        "cabinet",
+        "kind",
+        "message",
+        "actor",
+        "entity_type",
+        "entity_id",
+        "previous_value",
+        "new_value",
+        "created",
+        "modified",
+    )
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False

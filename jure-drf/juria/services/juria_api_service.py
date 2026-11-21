@@ -605,7 +605,7 @@ def _deepseek_chat(
     _assert_privacy_egress_allowed()
     api_key = (getattr(settings, "DEEPSEEK_API_KEY", "") or "").strip()
     if not api_key:
-        raise JuriaAPIError("DeepSeek API key is not configured.")
+        raise JuriaAPIError("Juria is not configured on the server.")
 
     base = (getattr(settings, "DEEPSEEK_API_URL", "") or "https://api.deepseek.com").rstrip("/")
     url = f"{base}/chat/completions"
@@ -623,7 +623,7 @@ def _deepseek_chat(
         payload["temperature"] = 0.3
 
     try:
-        response = requests.post(
+        response = _post_with_one_retry(
             url,
             json=payload,
             headers={
@@ -636,12 +636,12 @@ def _deepseek_chat(
     except requests.exceptions.Timeout as exc:
         raise JuriaTimeoutError("Juria chat request timed out") from exc
     except requests.exceptions.RequestException as exc:
-        logger.warning("DeepSeek connection failed: %s", exc)
-        raise JuriaAPIError("DeepSeek is unreachable. Please retry.") from exc
+        logger.warning("LLM provider connection failed: %s", exc)
+        raise JuriaAPIError("Juria is temporarily unavailable. Please retry.") from exc
 
     if response.status_code != 200:
         body = _parse_error_body(response)
-        logger.warning("DeepSeek HTTP %s: %s", response.status_code, body)
+        logger.warning("LLM provider HTTP %s: %s", response.status_code, body)
         raise JuriaAPIError(
             _user_message_for_http_error(response.status_code, body),
             body,
@@ -667,7 +667,7 @@ def _juria_post(path: str, payload: dict[str, Any], label: str) -> dict[str, Any
     _assert_privacy_egress_allowed()
     url = f"{_juria_base_url()}{path}"
     try:
-        response = requests.post(
+        response = _post_with_one_retry(
             url,
             json=payload,
             headers=_juria_headers(),
@@ -677,7 +677,7 @@ def _juria_post(path: str, payload: dict[str, Any], label: str) -> dict[str, Any
         raise JuriaTimeoutError(f"Juria {label} request timed out") from exc
     except requests.exceptions.RequestException as exc:
         logger.warning("Juria connection failed: %s", exc)
-        raise JuriaAPIError("Juria API is unreachable. Please retry.") from exc
+        raise JuriaAPIError("Juria is temporarily unavailable. Please retry.") from exc
 
     if response.status_code != 200:
         body = _parse_error_body(response)
@@ -687,6 +687,15 @@ def _juria_post(path: str, payload: dict[str, Any], label: str) -> dict[str, Any
             status_code=response.status_code,
         )
     return response.json()
+
+
+def _post_with_one_retry(url: str, **kwargs) -> requests.Response:
+    """POST once; retry once only on HTTP 429/503 from the provider."""
+    response = requests.post(url, **kwargs)
+    if response.status_code in (429, 503):
+        logger.info("Provider returned %s; retrying once", response.status_code)
+        response = requests.post(url, **kwargs)
+    return response
 
 
 def _juria_base_url() -> str:
@@ -723,20 +732,15 @@ def _provider_error_text(body: Any) -> str:
 
 
 def _user_message_for_http_error(status_code: int, body: Any) -> str:
+    """Generic user-facing copy — never leak provider key names or account details."""
     provider_msg = _provider_error_text(body).lower()
     if status_code == 402 or "insufficient balance" in provider_msg:
-        return (
-            "Le compte DeepSeek n'a plus de crédit. "
-            "Ajoutez du solde sur platform.deepseek.com puis réessayez."
-        )
+        return "Juria is temporarily unavailable. Please try again later."
     if status_code == 401:
-        return "Clé API DeepSeek invalide. Vérifiez DEEPSEEK_API_KEY dans le fichier .env."
+        return "Juria is temporarily unavailable. Please try again later."
     if status_code == 429:
-        return "DeepSeek est saturé pour le moment. Réessayez dans un instant."
-    text = _provider_error_text(body)
-    if text:
-        return f"DeepSeek: {text}"
-    return "Juria API unavailable. Please try again."
+        return "Juria is busy right now. Please try again in a moment."
+    return "Juria is temporarily unavailable. Please try again."
 
 
 class JuriaAPIError(Exception):

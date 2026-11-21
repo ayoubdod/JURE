@@ -8,9 +8,9 @@ import { devError } from '@/utils/devLog';
 import { useAppTranslation } from '@/i18n';
 import {
   clearSessionValidationCache,
-  getValidatedToken,
   getValidationPromise,
-  setValidatedToken,
+  isSessionValidated,
+  setSessionValidated,
   setValidationPromise,
 } from '@/utils/sessionValidationCache';
 import { homePathForUser, isPortalClient } from '@/utils/portalAuth';
@@ -23,11 +23,10 @@ interface ProtectedRouteProps {
 }
 
 const validateSession = (
-  accessToken: string,
   setUser: (user: API.User) => void,
   onInvalid: () => void,
 ): Promise<boolean> => {
-  if (getValidatedToken() === accessToken) {
+  if (isSessionValidated()) {
     return Promise.resolve(true);
   }
   const existing = getValidationPromise();
@@ -38,7 +37,7 @@ const validateSession = (
   const validationPromise = apiGetMe()
     .then((response) => {
       setUser(response.data);
-      setValidatedToken(accessToken);
+      setSessionValidated(true);
       return true;
     })
     .catch((error) => {
@@ -60,29 +59,26 @@ const ProtectedRoute = ({
   requireAuth = true,
   audience,
 }: ProtectedRouteProps) => {
-  const { isLoggedIn, accessToken, logout, setUser, user } = useUserStore();
+  const { isLoggedIn, logout, setUser, user } = useUserStore();
   const location = useLocation();
   const { toast } = useToast();
   const { t } = useAppTranslation();
 
-  const hasCachedSession = Boolean(accessToken && isLoggedIn);
-  const needsBlockingValidation = Boolean(accessToken && !isLoggedIn);
-  const [isResolving, setIsResolving] = useState(needsBlockingValidation);
+  const [isResolving, setIsResolving] = useState(
+    Boolean(requireAuth && isLoggedIn && !isSessionValidated())
+  );
 
   useEffect(() => {
-    if (!accessToken) {
-      clearSessionValidationCache();
+    if (!requireAuth || !isLoggedIn) {
+      if (!isLoggedIn) clearSessionValidationCache();
       setIsResolving(false);
       return;
     }
 
     let cancelled = false;
+    setIsResolving(true);
 
-    if (!hasCachedSession) {
-      setIsResolving(true);
-    }
-
-    validateSession(accessToken, setUser, logout).then((ok) => {
+    validateSession(setUser, logout).then((ok) => {
       if (cancelled) return;
       if (!ok) {
         toast({
@@ -98,8 +94,8 @@ const ProtectedRoute = ({
       cancelled = true;
     };
   }, [
-    accessToken,
-    hasCachedSession,
+    requireAuth,
+    isLoggedIn,
     logout,
     setUser,
     toast,
@@ -107,7 +103,8 @@ const ProtectedRoute = ({
     t.sessionExpired.description,
   ]);
 
-  if (isResolving && needsBlockingValidation) {
+  // Block only when we believe we are logged in but have not confirmed the cookie session yet.
+  if (requireAuth && isLoggedIn && isResolving && !isSessionValidated()) {
     return <LogoLoading />;
   }
 

@@ -19,10 +19,9 @@ from django.contrib import admin
 from django.urls import path, include, re_path
 from django.conf import settings
 from django.conf.urls.static import static
-from django.views.static import serve as static_serve
-from django.views.decorators.cache import never_cache
+from rest_framework.permissions import IsAdminUser
 from users.views import setup_password_by_token
-from users.auth_views import SingleSessionLoginView
+from users.auth_views import SingleSessionLoginView, ThrottledPasswordResetView
 
 from drf_spectacular.views import (
     SpectacularAPIView,
@@ -30,7 +29,7 @@ from drf_spectacular.views import (
     SpectacularSwaggerView,
 )
 
-from .views import root, health, deployment_settings_debug
+from .views import root, health
 
 urlpatterns = [
     path('', root, name='root'),
@@ -43,6 +42,11 @@ urlpatterns = [
         r"^api/v1/dj-rest-auth/login/?$",
         SingleSessionLoginView.as_view(),
         name="rest_login",
+    ),
+    re_path(
+        r"^api/v1/dj-rest-auth/password/reset/?$",
+        ThrottledPasswordResetView.as_view(),
+        name="rest_password_reset",
     ),
     path('api/v1/dj-rest-auth/', include('dj_rest_auth.urls')),
     path('api/v1/dj-rest-auth/registration/', include('dj_rest_auth.registration.urls')),
@@ -73,24 +77,29 @@ urlpatterns = [
     path("api/users/", include("users.urls")),
     path("api/v1/search/", include("search.urls")),
     path("api/v1/juria/", include("juria.urls")),
+    path("api/v1/subscriptions/", include("subscriptions.urls")),
     path("api/v1/privacy/", include("privacy.urls")),
     path("api/search/", include("search.urls")),
     path("api/v1/calls/", include("calls.urls")),
     path("api/calls/", include("calls.urls")),  # legacy alias
     path("health/", health, name="health"),
-    path("debug/settings", deployment_settings_debug),
-    path("debug/settings/", deployment_settings_debug),
 
-    
-    # Schema JSON
-    path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
-
-    # Swagger UI
-    path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
-
-    # Redoc (optional)
-    path('api/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
-    # path('api/v1/dj-rest-auth/password-reset-confirm/<uidb64>/<token>/', PasswordResetConfirmView.as_view(), name='password_reset_confirm'),
+    # Schema / docs — staff only (not a public attack map)
+    path(
+        "api/schema/",
+        SpectacularAPIView.as_view(permission_classes=[IsAdminUser]),
+        name="schema",
+    ),
+    path(
+        "api/docs/",
+        SpectacularSwaggerView.as_view(url_name="schema", permission_classes=[IsAdminUser]),
+        name="swagger-ui",
+    ),
+    path(
+        "api/redoc/",
+        SpectacularRedocView.as_view(url_name="schema", permission_classes=[IsAdminUser]),
+        name="redoc",
+    ),
 ]
 
 if settings.DEBUG:
@@ -103,11 +112,5 @@ if settings.DEBUG:
         urlpatterns += [
             path("__debug__/", include(debug_toolbar.urls)),
         ]
-
-urlpatterns += [
-    re_path(
-        r'^%s(?P<path>.*)$' % re.escape(settings.MEDIA_URL.lstrip('/')),
-        never_cache(static_serve),
-        {'document_root': settings.MEDIA_ROOT},
-    ),
-]
+    # Local-only media for DEBUG; staging/production use authenticated download APIs.
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

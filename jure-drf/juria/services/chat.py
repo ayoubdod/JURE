@@ -268,6 +268,12 @@ def send_thread_message(user, thread, project, *, message_text: str, upload=None
     jfile = None
 
     if upload:
+        from core.utils import get_user_cabinet
+        from subscriptions.services.entitlements import assert_storage
+
+        cabinet_for_storage = get_user_cabinet(user)
+        if cabinet_for_storage is not None:
+            assert_storage(cabinet_for_storage, int(getattr(upload, "size", 0) or 0))
         raw_name = upload.name or file_name or "upload"
         attachment_name = os.path.basename(raw_name)
         attachment_type = detect_file_type(attachment_name) or ""
@@ -304,6 +310,16 @@ def send_thread_message(user, thread, project, *, message_text: str, upload=None
         attachment_type=attachment_type,
         attachment_path=attachment_rel,
     )
+    from core.utils import get_user_cabinet
+    from subscriptions.services.credits import (
+        commit_reservation,
+        operation_for_mode,
+        release_reservation,
+        reserve_for_operation,
+    )
+
+    cabinet = get_user_cabinet(user)
+    reservation = None
     need_title = should_auto_title_thread(thread)
     thread.mode = mode
     thread.save(update_fields=["mode", "updated_at"])
@@ -316,6 +332,13 @@ def send_thread_message(user, thread, project, *, message_text: str, upload=None
             local_path = local_path_for_storage(attachment_rel)
             tmp_cleanup = not hasattr(default_storage, "path")
         history = build_history(thread, exclude_message_id=user_msg.id)
+        if cabinet is not None:
+            reservation = reserve_for_operation(
+                user=user,
+                cabinet=cabinet,
+                operation=operation_for_mode(mode),
+                idempotency_key=f"juria-message:{user_msg.pk}",
+            )
         content, tokens, juria_mid, suggestions, analysis, retrieved, elapsed_ms = _call_model(
             project=project,
             thread=thread,
@@ -328,6 +351,7 @@ def send_thread_message(user, thread, project, *, message_text: str, upload=None
             upload_type=attachment_type if has_attachment else None,
         )
     except Exception:
+        release_reservation(reservation)
         if attachment_rel:
             try:
                 default_storage.delete(attachment_rel)
@@ -342,6 +366,7 @@ def send_thread_message(user, thread, project, *, message_text: str, upload=None
             except OSError:
                 pass
 
+    commit_reservation(reservation, input_tokens=tokens, output_tokens=0)
     assistant_msg = JuriaMessage.objects.create(
         conversation=user_msg.conversation,
         thread=thread,
@@ -422,21 +447,44 @@ def edit_user_message(user, user_msg: JuriaMessage, *, new_content: str, languag
     thread = user_msg.thread
     project = thread.project
     history = build_history(thread, exclude_message_id=user_msg.id)
-    content, tokens, juria_mid, suggestions, analysis, retrieved, elapsed_ms = _call_model(
-        project=project,
-        thread=thread,
-        user=user,
-        message_text=new_content,
-        history=history,
-        mode=user_msg.mode or thread.mode,
-        language=language or user_msg.language or project.preferred_language,
+    from core.utils import get_user_cabinet
+    from subscriptions.services.credits import (
+        commit_reservation,
+        operation_for_mode,
+        release_reservation,
+        reserve_for_operation,
     )
+
+    cabinet = get_user_cabinet(user)
+    reservation = None
+    mode = user_msg.mode or thread.mode
+    try:
+        if cabinet is not None:
+            reservation = reserve_for_operation(
+                user=user,
+                cabinet=cabinet,
+                operation=operation_for_mode(mode),
+                idempotency_key=f"juria-edit:{user_msg.pk}:{next_no}",
+            )
+        content, tokens, juria_mid, suggestions, analysis, retrieved, elapsed_ms = _call_model(
+            project=project,
+            thread=thread,
+            user=user,
+            message_text=new_content,
+            history=history,
+            mode=mode,
+            language=language or user_msg.language or project.preferred_language,
+        )
+    except Exception:
+        release_reservation(reservation)
+        raise
+    commit_reservation(reservation, input_tokens=tokens, output_tokens=0)
     assistant_msg = JuriaMessage.objects.create(
         conversation=user_msg.conversation,
         thread=thread,
         role=JuriaMessage.Role.ASSISTANT,
         content=content,
-        mode=user_msg.mode or thread.mode,
+        mode=mode,
         language=user_msg.language,
         tokens_used=tokens or None,
         response_time_ms=elapsed_ms,

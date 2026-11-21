@@ -1,9 +1,5 @@
 from datetime import timedelta
-from pathlib import Path
-
-from django.http import FileResponse, Http404
-
-PREVIEWABLE_SUFFIXES = {'.pdf', '.png', '.jpg', '.jpeg', '.gif', '.webp', '.txt'}
+from core.downloads import serve_file_field
 
 
 def _user_cabinet(user):
@@ -45,20 +41,12 @@ def _save_uploaded_files(files, *, model, fk_field, parent, user):
 
 
 def _download_attachment(request, attachment):
-    if not attachment.file:
-        raise Http404()
-    try:
-        fh = attachment.file.open('rb')
-    except Exception as exc:
-        raise Http404() from exc
-    filename = attachment.original_name or Path(attachment.file.name).name
-    inline = str(request.query_params.get('inline', '')).lower() in ('1', 'true', 'yes')
-    suffix = Path(filename).suffix.lower()
-    as_attachment = not (inline and suffix in PREVIEWABLE_SUFFIXES)
-    response = FileResponse(fh, as_attachment=as_attachment, filename=filename)
-    if attachment.mime:
-        response['Content-Type'] = attachment.mime
-    return response
+    return serve_file_field(
+        request,
+        attachment.file,
+        filename=attachment.original_name or None,
+        content_type=attachment.mime or None,
+    )
 
 
 def _safe_delete_file(file_field):

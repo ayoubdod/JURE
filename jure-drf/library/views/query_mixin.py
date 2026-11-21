@@ -72,7 +72,9 @@ class LibraryQueryMixin:
         recent_data = self.get_serializer(recent_qs, many=True).data
 
         if request.query_params.get('all', '').lower() == 'true':
-            serializer = self.get_serializer(queryset, many=True)
+            # Cap unbounded ?all=true reads to protect memory and response size.
+            capped = queryset[:500]
+            serializer = self.get_serializer(capped, many=True)
             return Response({
                 'results': serializer.data,
                 'recent': recent_data,
@@ -104,7 +106,7 @@ class LibraryQueryMixin:
 
         if request.query_params.get('all', '').lower() == 'true':
             queryset = self._apply_status_filter(self.filter_queryset(self.get_queryset()))
-            serializer = self.get_serializer(queryset, many=True)
+            serializer = self.get_serializer(queryset[:500], many=True)
             return Response(serializer.data)
 
         queryset = self._apply_status_filter(self.filter_queryset(self.get_queryset()))

@@ -208,15 +208,12 @@ const useChatStore = create<ChatStore>()(
       });
 
       try {
-        const userStore = useUserStore.getState();
-        const accessToken = userStore.accessToken;
-
-        if (!accessToken) {
-          throw new Error('No access token available');
+        if (!useUserStore.getState().isLoggedIn) {
+          throw new Error('Not authenticated');
         }
 
         const { getChatWsUrl } = await import('@/config/api');
-        const ws = new WebSocket(getChatWsUrl(accessToken));
+        const ws = new WebSocket(getChatWsUrl());
 
         ws.onopen = () => {
           set({

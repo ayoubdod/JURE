@@ -303,4 +303,6 @@ class JuriaGeneratedDocumentDownloadView(JuriaEnabledMixin, APIView):
             display = f"{title_hint}.docx"
         resp = FileResponse(fh, as_attachment=True, filename=_safe_filename(display))
         resp["Content-Disposition"] = _content_disposition(display)
+        resp["X-Content-Type-Options"] = "nosniff"
+        resp["Cache-Control"] = "private, no-store"
         return resp

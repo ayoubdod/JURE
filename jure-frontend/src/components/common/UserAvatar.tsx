@@ -1,6 +1,6 @@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { resolveBackendUrl, useAuthenticatedObjectUrl } from '@/lib/authenticatedMedia';
 import { cn } from '@/lib/utils';
-import { BACKEND_BASE_URL } from '@/utils/constants';
 
 const IMAGE_FIELDS = [
   'image',
@@ -43,8 +43,7 @@ const resolveImageUrl = (url: string | null | undefined): string | undefined => 
   if (!url?.trim()) return undefined;
   const u = url.trim();
   if (u.startsWith('http://') || u.startsWith('https://')) return u;
-  const base = BACKEND_BASE_URL.replace(/\/$/, '');
-  return `${base}${u.startsWith('/') ? '' : '/'}${u}`;
+  return resolveBackendUrl(u);
 };
 
 export interface UserAvatarProps {
@@ -99,10 +98,11 @@ export default function UserAvatar({
     .slice(0, 2) || (email || '?').charAt(0).toUpperCase();
 
   const resolvedImage = resolveImageUrl(image);
+  const objectImage = useAuthenticatedObjectUrl(resolvedImage);
 
   return (
     <Avatar className={cn(sizeClasses[size], className)}>
-      <AvatarImage src={resolvedImage} className="object-cover" />
+      <AvatarImage src={objectImage || resolvedImage} className="object-cover" />
       <AvatarFallback className="bg-gradient-to-br from-primary to-primary/80 text-white font-medium text-sm">
         {initials}
       </AvatarFallback>

@@ -22,6 +22,8 @@ export type SignUpData = {
   practice_type: string;
   accept_terms: boolean;
   accept_data_processing: boolean;
+  plan_code: string;
+  billing_cycle: 'monthly' | 'annual' | '';
 };
 
 type SignupMessages = AppMessages['auth']['signup'];
@@ -130,6 +132,9 @@ export function createSignupValidationSchema(signup: SignupMessages) {
       .boolean()
       .required(v.acceptDataProcessing)
       .oneOf([true], v.acceptDataProcessing),
+
+    plan_code: yup.string().optional(),
+    billing_cycle: yup.string().oneOf(['monthly', 'annual', '']).optional(),
   });
 }
 

@@ -1,7 +1,9 @@
 from rest_framework import filters, permissions, viewsets
+from rest_framework.decorators import action
 from django_filters.rest_framework import DjangoFilterBackend
 
 from cabinets.permissions import HasLibraryPermission
+from core.downloads import serve_file_field
 from core.utils import NumericPagination
 
 from ..filters import DocumentFilter
@@ -57,3 +59,8 @@ class DocumentViewSet(
     ]
     ordering_fields = ['title', 'created', 'modified']
     ordering = ['-created']
+
+    @action(detail=True, methods=['get'], url_path='download')
+    def download(self, request, pk=None):
+        document = self.get_object()
+        return serve_file_field(request, document.file, filename=document.file.name)

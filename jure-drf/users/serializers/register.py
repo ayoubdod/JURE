@@ -48,6 +48,23 @@ class CustomRegisterSerializer(RegisterSerializer):
     accept_terms = serializers.BooleanField(required=True)
     accept_data_processing = serializers.BooleanField(required=True)
 
+    class SubscriptionSelectionSerializer(serializers.Serializer):
+        plan_code = serializers.CharField()
+        billing_cycle = serializers.ChoiceField(choices=["monthly", "annual"])
+
+        def to_internal_value(self, data):
+            if not isinstance(data, dict):
+                raise serializers.ValidationError("Choose a plan and a billing cycle.")
+            allowed = {"plan_code", "billing_cycle"}
+            extra = set(data.keys()) - allowed
+            if extra:
+                raise serializers.ValidationError(
+                    "Custom prices and entitlements cannot be submitted."
+                )
+            return super().to_internal_value(data)
+
+    subscription = SubscriptionSelectionSerializer(required=True)
+
     
 
     # Optional affiliation
@@ -113,7 +130,34 @@ class CustomRegisterSerializer(RegisterSerializer):
             'logo': self.validated_data.get('logo', None),
             'accept_terms': self.validated_data.get('accept_terms', False),
             'accept_data_processing': self.validated_data.get('accept_data_processing', False),
+            'subscription': self.validated_data.get('subscription', None),
         }
+
+    def to_internal_value(self, data):
+        plain = self._plain_data(data)
+        subscription = plain.get("subscription")
+        if not isinstance(subscription, dict):
+            plan_code = plain.get("subscription.plan_code")
+            billing_cycle = plain.get("subscription.billing_cycle")
+            if plan_code or billing_cycle:
+                plain["subscription"] = {
+                    "plan_code": plan_code or "",
+                    "billing_cycle": billing_cycle or "",
+                }
+        return super().to_internal_value(plain)
+
+    @staticmethod
+    def _plain_data(data):
+        # QueryDict is a dict subclass. dict(querydict) turns every value into a
+        # list, which then fails CharField and ChoiceField validation.
+        from django.http import QueryDict
+        from django.utils.datastructures import MultiValueDict
+
+        if isinstance(data, (QueryDict, MultiValueDict)):
+            return {key: data.get(key) for key in data.keys()}
+        if isinstance(data, dict):
+            return dict(data)
+        return data
     
     def save(self, request):
         adapter = get_adapter()
@@ -143,6 +187,7 @@ class CustomRegisterSerializer(RegisterSerializer):
         team_size = self.cleaned_data.pop('team_size', None)
         website = self.cleaned_data.pop('website', None)
         logo = self.cleaned_data.pop('logo', None)
+        selection = self.cleaned_data.pop('subscription', None) or {}
         
         # Ensure required fields are provided and not empty
         if not trade_name or (isinstance(trade_name, str) and not trade_name.strip()):
@@ -174,40 +219,40 @@ class CustomRegisterSerializer(RegisterSerializer):
             elif value not in ('', None):
                 setattr(user, key, value)
 
-        # Save user first
         try:
-            user.save()
+            from django.db import transaction
+
+            with transaction.atomic():
+                user.save()
+                self.custom_signup(request, user)
+                cabinet = Cabinet.objects.create(
+                    owner=user,
+                    trade_name=trade_name or '',
+                    business_address=business_address or '',
+                    structure_type=structure_type or '',
+                    practice_type=practice_type,
+                    jurisdiction=jurisdiction,
+                    team_size=team_size or 1,
+                    website=website,
+                    logo=logo,
+                )
+                user.cabinet = cabinet
+                user.is_cabinet_member = True
+                user.role = User.Role.OWNER
+                user.save(update_fields=['cabinet', 'is_cabinet_member', 'role'])
+                from subscriptions.services.lifecycle import provision_trial
+
+                provision_trial(
+                    cabinet=cabinet,
+                    plan_code=selection.get('plan_code', ''),
+                    billing_cycle=selection.get('billing_cycle', ''),
+                )
+        except serializers.ValidationError:
+            raise
         except Exception as e:
-            raise serializers.ValidationError(
-                {'detail': f'Error saving user: {str(e)}'}
-            )
-
-        self.custom_signup(request, user)
-        setup_user_email(request, user, [])
-
-        try:
-            cabinet = Cabinet.objects.create(
-                owner=user,
-                trade_name=trade_name or '',
-                business_address=business_address or '',
-                structure_type=structure_type or '',
-                practice_type=practice_type,
-                jurisdiction=jurisdiction,
-                team_size=team_size or 1,
-                website=website,
-                logo=logo,
-            )
-
-            # Set user as cabinet member and owner with OWNER role
-            user.cabinet = cabinet
-            user.is_cabinet_member = True  # Mark owner as cabinet member
-            user.role = User.Role.OWNER
-            user.save(update_fields=['cabinet', 'is_cabinet_member', 'role'])
-        except Exception as e:
-            # If cabinet creation fails, delete the user to maintain data integrity
-            user.delete()
             raise serializers.ValidationError(
                 {'detail': f'Error creating cabinet: {str(e)}'}
             )
 
+        setup_user_email(request, user, [])
         return user

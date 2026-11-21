@@ -42,6 +42,7 @@ class InvoiceAdmin(JureModelAdmin):
         "invoice_number",
         "cabinet",
         "case",
+        "currency",
         "amount_ttc",
         "status_badge",
         "issued_date",

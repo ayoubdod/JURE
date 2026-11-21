@@ -9,6 +9,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from cabinets.models import Cabinet
 from core.testing import api_client_for
 from jurisdictions.models import Jurisdiction
+from subscriptions.services.catalog import seed_catalog
 from .models import User
 from .serializers import CustomRegisterSerializer
 
@@ -43,6 +44,7 @@ def _register_payload(**overrides):
         "team_size": 3,
         "accept_terms": True,
         "accept_data_processing": True,
+        "subscription": {"plan_code": "cabinet", "billing_cycle": "annual"},
     }
     data.update(overrides)
     return data
@@ -103,6 +105,7 @@ class CustomRegisterSerializerTest(TestCase):
 class RegistrationAPITest(APITestCase):
     def setUp(self):
         _seed_jurisdiction()
+        seed_catalog()
         self.register_url = reverse("rest_register")
         self.valid_data = _register_payload()
 

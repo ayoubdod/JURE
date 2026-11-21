@@ -162,11 +162,14 @@ export interface AppMessages {
         profile: { title: string; description: string };
         organization: { title: string; description: string };
         consent: { title: string; description: string };
+        subscription: { title: string; description: string };
       };
       shell: {
         badge: string;
         heading: string;
         subtitle: string;
+        alreadyHaveAccount: string;
+        signIn: string;
       };
       jurisdiction: {
         headerTitle: string;
@@ -269,6 +272,32 @@ export interface AppMessages {
         submit: string;
         submitting: string;
         stepIndicator: string;
+      };
+      subscription: {
+        headerTitle: string;
+        headerSubtitle: string;
+        monthly: string;
+        annual: string;
+        annualHint: string;
+        perMonth: string;
+        perYear: string;
+        exclVat: string;
+        users: string;
+        storage: string;
+        credits: string;
+        recommended: string;
+        selected: string;
+        enterpriseCta: string;
+        enterprisePrice: string;
+        summaryTitle: string;
+        summaryEmpty: string;
+        trialNote: string;
+        loadError: string;
+        back: string;
+        submit: string;
+        submitting: string;
+        stepIndicator: string;
+        features: Record<string, string>;
       };
       verification: {
         title: string;
@@ -461,6 +490,39 @@ export interface AppMessages {
       rolesDesc: string;
       shortcuts: string;
       shortcutsDesc: string;
+      subscription: string;
+      subscriptionDesc: string;
+    };
+    billing: {
+      title: string;
+      subtitle: string;
+      status: string;
+      cycle: string;
+      renewal: string;
+      users: string;
+      storage: string;
+      allowance: string;
+      remaining: string;
+      trial: string;
+      trialDays: string;
+      history: string;
+      historyEmpty: string;
+      change: string;
+      cancel: string;
+      cancelScheduled: string;
+      paymentPending: string;
+      paymentPendingBody: string;
+      manageHint: string;
+      readOnly: string;
+      loadError: string;
+      statuses: Record<string, string>;
+      monthly: string;
+      annual: string;
+      exclVat: string;
+      contact: string;
+      bannerTitle: string;
+      bannerBody: string;
+      bannerManage: string;
     };
     saveChanges: string;
     savePreferences: string;

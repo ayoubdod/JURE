@@ -1,18 +1,15 @@
 from __future__ import annotations
 
-import os
-
 from django.conf import settings
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django_extensions.db.models import TimeStampedModel
 
+from core.uploads import uuid_upload_to, validate_safe_upload_extension
+
 
 def consultation_attachment_upload_to(instance, filename):
-    base, ext = os.path.splitext(filename)
-    safe = "".join(c for c in base if c.isalnum() or c in ("-", "_"))[:80] or "file"
-    req_id = getattr(instance, "consultation_id", None) or "new"
-    return f"consultation_requests/{req_id}/{safe}{ext.lower()}"
+    return uuid_upload_to("consultation_requests")(instance, filename)
 
 
 class ConsultationRequest(TimeStampedModel):
@@ -199,7 +196,7 @@ class ConsultationAttachment(TimeStampedModel):
         on_delete=models.CASCADE,
         related_name="attachments",
     )
-    file = models.FileField(upload_to=consultation_attachment_upload_to)
+    file = models.FileField(upload_to=consultation_attachment_upload_to, validators=[validate_safe_upload_extension])
     original_name = models.CharField(max_length=255, blank=True, default="")
     uploaded_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,

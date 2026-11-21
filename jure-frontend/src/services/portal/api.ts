@@ -1,3 +1,4 @@
+import type { ConsultationListItem } from '@/services/consultations/api';
 import axiosInstance from '@/utils/axiosInstance';
 
 const BASE = '/portal/';
@@ -7,7 +8,7 @@ export type PortalDashboard = {
   activeCasesCount: number;
   pendingConsultationsCount: number;
   unreadMessagesCount: number;
-  upcomingConsultations: Array<Record<string, unknown>>;
+  upcomingConsultations: ConsultationListItem[];
   recentCases: Array<{
     id: number;
     title: string;
@@ -17,7 +18,7 @@ export type PortalDashboard = {
     updatedAt: string;
     assignedLawyer: string | null;
   }>;
-  pendingConsultations: Array<Record<string, unknown>>;
+  pendingConsultations: ConsultationListItem[];
 };
 
 export type PortalCaseListItem = {

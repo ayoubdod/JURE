@@ -3,7 +3,7 @@ import * as pdfjsLib from 'pdfjs-dist';
 import pdfWorker from 'pdfjs-dist/build/pdf.worker.min.js?url';
 import { FileText, Globe, Landmark } from 'lucide-react';
 import { API_ORIGIN } from '@/config/api';
-import useUserStore from '@/stores/userStore';
+import { resolveBackendUrl } from '@/lib/authenticatedMedia';
 import { cn } from '@/lib/utils';
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
@@ -13,9 +13,10 @@ const IMAGE_EXTS = new Set(['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp']);
 function resolveMediaUrl(url: string | null | undefined): string {
   if (!url) return '';
   if (url.startsWith('http://') || url.startsWith('https://')) return url;
+  if (url.startsWith('/api/') || url.startsWith('/api/v1/')) return resolveBackendUrl(url);
   if (url.startsWith('/media/') || url.startsWith('/')) return `${API_ORIGIN}${url}`;
   if (url.startsWith('media/')) return `${API_ORIGIN}/${url}`;
-  return `${API_ORIGIN}/media/${url}`;
+  return resolveBackendUrl(url);
 }
 
 function fileExtension(fileName: string): string {
@@ -33,10 +34,7 @@ function fileExtension(fileName: string): string {
 }
 
 async function fetchAuthenticatedBlob(url: string): Promise<Blob> {
-  const token = useUserStore.getState().accessToken;
-  const headers: HeadersInit = {};
-  if (token) headers.Authorization = `Bearer ${token}`;
-  const res = await fetch(url, { credentials: 'include', headers });
+  const res = await fetch(url, { credentials: 'include' });
   if (!res.ok) throw new Error(`Failed to fetch document (${res.status})`);
   return res.blob();
 }

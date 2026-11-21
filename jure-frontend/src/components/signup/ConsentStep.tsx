@@ -2,12 +2,7 @@ import React, { useMemo } from 'react';
 import { UseFormReturn } from 'react-hook-form';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
-import { useToast } from '@/hooks/use-toast';
 import { createSignupStepSchemas, type SignUpData } from '@/schemas/signupValidation';
-import { apiRegisterUser } from '@/services/auth/api';
-import { useNavigate } from 'react-router';
-import { getRemoteFieldsValidation } from '@/utils/functions';
-import { isAxiosError } from 'axios';
 import { useAppTranslation } from '@/i18n';
 import SignupActions from './SignupActions';
 
@@ -18,104 +13,23 @@ interface ConsentStepProps {
   form: UseFormReturn<SignUpData>;
 }
 
-const ConsentStep = ({ onNext, onPrev, setStep, form }: ConsentStepProps) => {
-  const { toast } = useToast();
-  const navigate = useNavigate();
+const ConsentStep = ({ onNext, onPrev, form }: ConsentStepProps) => {
   const { t } = useAppTranslation();
   const s = t.auth.signup.consent;
   const schemas = useMemo(() => createSignupStepSchemas(t.auth.signup), [t]);
 
-  const { watch, setValue, formState: { errors }, trigger, setError, setFocus } = form;
+  const { watch, setValue, formState: { errors }, trigger } = form;
   const watchedAcceptTerms = watch('accept_terms');
   const watchedAcceptDataProcessing = watch('accept_data_processing');
 
-  const onSubmit = async () => {
+  const onContinue = () => {
     try {
-      try {
-        schemas.step5ValidationSchema.validateSync(form.getValues());
-      } catch {
-        trigger(Object.keys(schemas.step5ValidationSchema.fields) as (keyof SignUpData)[]);
-        return;
-      }
-
-      const rawValues = form.getValues();
-
-      toast({
-        title: t.auth.signup.toasts.accountCreatedTitle,
-        description: t.auth.signup.toasts.accountCreatedDescription,
-      });
-
-      await apiRegisterUser({
-        accept_data_processing: rawValues.accept_data_processing || false,
-        accept_terms: rawValues.accept_terms || false,
-        first_name: rawValues.first_name || '',
-        last_name: rawValues.last_name || '',
-        country: rawValues.country || '',
-        phone: rawValues.phone || '',
-        email: rawValues.email || '',
-        password1: rawValues.password1 || '',
-        password2: rawValues.password2 || '',
-        trade_name: rawValues.trade_name || '',
-        logo: rawValues.logo || undefined,
-        practice_type: rawValues.practice_type || '',
-        jurisdiction: rawValues.jurisdiction || '',
-        business_address: rawValues.business_address || '',
-        team_size: rawValues.team_size || '',
-        website: rawValues.website || undefined,
-      })
-        .then(() => {
-          localStorage.setItem('pendingVerificationEmail', rawValues.email);
-          navigate('/verify-email-waiting', {
-            state: { email: rawValues.email },
-          });
-        })
-        .catch((error) => {
-          if (isAxiosError(error)) {
-            const remoteValidation = getRemoteFieldsValidation(error);
-            Object.keys(remoteValidation).forEach((key) => {
-              setError(key as keyof SignUpData, { message: remoteValidation[key] });
-            });
-            if (Object.keys(remoteValidation).length > 0) {
-              const firstErrorKey = Object.keys(remoteValidation)[0];
-              if (firstErrorKey === 'jurisdiction') {
-                setStep(1);
-              } else if (firstErrorKey === 'practice_type') {
-                setStep(2);
-              } else if (Object.keys(schemas.step1ValidationSchema.fields).includes(firstErrorKey)) {
-                setStep(3);
-              } else if (Object.keys(schemas.step2ValidationSchema.fields).includes(firstErrorKey)) {
-                setStep(4);
-              } else if (Object.keys(schemas.step4ValidationSchema.fields).includes(firstErrorKey)) {
-                setStep(5);
-              } else if (Object.keys(schemas.step5ValidationSchema.fields).includes(firstErrorKey)) {
-                setStep(6);
-              }
-              setFocus(firstErrorKey as keyof SignUpData);
-            }
-          }
-          toast({
-            title: t.auth.signup.toasts.errorTitle,
-            description: (error as { message: string }).message || t.auth.signup.toasts.registrationError,
-            variant: 'destructive',
-          });
-        });
-    } catch (error) {
-      if (error && typeof error === 'object' && 'inner' in error) {
-        const validationError = error as { inner: Array<{ message: string }> };
-        const errorMessage = validationError.inner.map((err) => err.message).join(', ');
-        toast({
-          title: t.auth.signup.toasts.errorTitle,
-          description: errorMessage,
-          variant: 'destructive',
-        });
-      } else if (error && typeof error === 'object' && 'message' in error) {
-        toast({
-          title: t.auth.signup.toasts.errorTitle,
-          description: (error as { message: string }).message,
-          variant: 'destructive',
-        });
-      }
+      schemas.step5ValidationSchema.validateSync(form.getValues());
+    } catch {
+      void trigger(Object.keys(schemas.step5ValidationSchema.fields) as (keyof SignUpData)[]);
+      return;
     }
+    onNext();
   };
 
   return (
@@ -169,8 +83,8 @@ const ConsentStep = ({ onNext, onPrev, setStep, form }: ConsentStepProps) => {
       </p>
 
       <SignupActions
-        onNext={onSubmit}
-        nextLabel={s.submit}
+        onNext={onContinue}
+        nextLabel={t.auth.signup.organization.continue}
         onPrev={onPrev}
         backLabel={s.back}
         nextDisabled={!watchedAcceptTerms || !watchedAcceptDataProcessing}

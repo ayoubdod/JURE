@@ -15,6 +15,11 @@ class ConversationConsumer(AsyncJsonWebsocketConsumer):
     """One conversation room; JWT user must be a non-deleted participant."""
 
     async def connect(self):
+        user = self.scope.get("user")
+        if not user or not getattr(user, "is_authenticated", False):
+            await self.close(code=4001)
+            return
+
         kwargs: dict = self.scope["url_route"]["kwargs"]
         conversation_id: int = kwargs.get("conversation_id")
 
@@ -28,26 +33,22 @@ class ConversationConsumer(AsyncJsonWebsocketConsumer):
             await self.close(code=4004)
             return
 
-        user = self.scope.get("user")
-        if user and getattr(user, "is_authenticated", False):
-            is_participant = await database_sync_to_async(
-                ConversationMembership.objects.filter(
-                    conversation=self.conversation, user=user, is_deleted=False
-                ).exists
-            )()
-            if not is_participant:
-                await self.close(code=4003)
-                return
+        is_participant = await database_sync_to_async(
+            ConversationMembership.objects.filter(
+                conversation=self.conversation, user=user, is_deleted=False
+            ).exists
+        )()
+        if not is_participant:
+            await self.close(code=4003)
+            return
 
         self.room_name = f"conv-{conversation_id}"
         await self.channel_layer.group_add(
             self.room_name,
             self.channel_name,
         )
-        user = self.scope.get("user")
-        if user and getattr(user, "is_authenticated", False):
-            self.user_personal_group = f"user_{user.id}"
-            await self.channel_layer.group_add(self.user_personal_group, self.channel_name)
+        self.user_personal_group = f"user_{user.id}"
+        await self.channel_layer.group_add(self.user_personal_group, self.channel_name)
 
         await self.accept()
 

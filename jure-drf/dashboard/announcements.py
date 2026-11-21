@@ -25,7 +25,7 @@ def dismiss_announcement_in_session(request, announcement_id: int) -> None:
 def _absolute_media_url(announcement, request=None) -> str | None:
     if not announcement.media:
         return None
-    url = announcement.media.url
+    url = f"/api/v1/announcements/{announcement.id}/media/download/"
     if request is not None:
         return request.build_absolute_uri(url)
     return url

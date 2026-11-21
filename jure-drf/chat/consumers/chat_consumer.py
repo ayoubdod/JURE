@@ -1,13 +1,10 @@
 # chat/consumers/chat_consumer.py
 """Personal chat WebSocket: JWT auth, presence, notifications, and call signaling."""
 import asyncio
-from urllib.parse import parse_qs
 
 from channels.db import database_sync_to_async
 from channels.generic.websocket import AsyncJsonWebsocketConsumer
 from django.contrib.auth import get_user_model
-from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
-from rest_framework_simplejwt.tokens import UntypedToken
 
 from chat.presence import (
     presence_add,
@@ -24,24 +21,6 @@ from .signaling import CallSignalingMixin
 
 User = get_user_model()
 
-PRESENCE_GROUP = "chat-presence"
-
-
-@database_sync_to_async
-def get_user_from_token(token):
-    """Resolve the Django user for a JWT access token, or None if invalid."""
-    try:
-        from users.session import session_version_matches
-
-        validated_token = UntypedToken(token)
-        user_id = validated_token["user_id"]
-        user = User.objects.get(id=user_id)
-        if not session_version_matches(user, validated_token):
-            return None
-        return user
-    except (InvalidToken, TokenError, User.DoesNotExist, KeyError):
-        return None
-
 
 @database_sync_to_async
 def create_ws_chat_message(user_id, content):
@@ -56,31 +35,23 @@ class ChatConsumer(CallSignalingMixin, AsyncJsonWebsocketConsumer):
     """Authenticated user channel: notifications, presence, and WebRTC via mixin."""
 
     async def connect(self):
-        kwargs: dict = self.scope["url_route"]["kwargs"]
-        access_token = kwargs.get("access_token")
-
-        if not access_token:
-            query_string = self.scope.get("query_string", b"").decode()
-            if query_string:
-                query_params = parse_qs(query_string)
-                access_token = query_params.get("token", [None])[0]
-
-        if not access_token:
+        self.user = self.scope.get("user")
+        if not self.user or not getattr(self.user, "is_authenticated", False):
             await self.close(code=4001)
             return
 
-        self.user = await get_user_from_token(access_token)
-
-        if not self.user:
-            await self.close(code=4001)
-            return
-
+        self.cabinet_id = await self._resolve_cabinet_id()
+        self.presence_group = (
+            f"chat-presence-{self.cabinet_id}"
+            if self.cabinet_id
+            else f"chat-presence-user-{self.user.id}"
+        )
         self.room_name = f"user-{self.user.id}"
         self.user_personal_group = f"user_{self.user.id}"
         self.call_groups_joined = set()
         await self.channel_layer.group_add(self.room_name, self.channel_name)
         await self.channel_layer.group_add(self.user_personal_group, self.channel_name)
-        await self.channel_layer.group_add(PRESENCE_GROUP, self.channel_name)
+        await self.channel_layer.group_add(self.presence_group, self.channel_name)
 
         # Accept immediately — any Redis/DB work before accept causes the browser
         # handshake to time out (~5s) and presence never comes online.
@@ -88,9 +59,12 @@ class ChatConsumer(CallSignalingMixin, AsyncJsonWebsocketConsumer):
 
         mode = await self._effective_mode()
         if mode == User.PresenceMode.INVISIBLE:
-            online_ids = await asyncio.to_thread(presence_list)
+            online_ids = await asyncio.to_thread(presence_list, self.cabinet_id)
         else:
-            online_ids = await asyncio.to_thread(presence_add, self.user.id)
+            online_ids = await asyncio.to_thread(
+                presence_add, self.user.id, self.cabinet_id
+            )
+        online_ids = await self._cabinet_scoped_online(online_ids)
 
         # Peers see DND as Away.
         public = (
@@ -130,11 +104,16 @@ class ChatConsumer(CallSignalingMixin, AsyncJsonWebsocketConsumer):
         await self._discard_all_call_groups()
         if hasattr(self, "user"):
             online_ids, last_seen_patch = await asyncio.to_thread(
-                presence_mark_offline, self.user.id
+                presence_mark_offline,
+                self.user.id,
+                getattr(self, "cabinet_id", None),
             )
+            online_ids = await self._cabinet_scoped_online(online_ids)
             await self._broadcast_presence(online_ids, last_seen_patch)
         if hasattr(self, "channel_layer") and hasattr(self, "channel_name"):
-            await self.channel_layer.group_discard(PRESENCE_GROUP, self.channel_name)
+            group = getattr(self, "presence_group", None)
+            if group:
+                await self.channel_layer.group_discard(group, self.channel_name)
         if hasattr(self, "room_name"):
             await self.channel_layer.group_discard(
                 self.room_name,
@@ -146,9 +125,26 @@ class ChatConsumer(CallSignalingMixin, AsyncJsonWebsocketConsumer):
                 self.channel_name,
             )
 
+    @database_sync_to_async
+    def _resolve_cabinet_id(self) -> int | None:
+        user = self.user
+        cabinet_id = getattr(user, "cabinet_id", None)
+        if cabinet_id:
+            return int(cabinet_id)
+        owned = getattr(user, "owned_cabinet", None)
+        owned_id = getattr(owned, "id", None) if owned else None
+        return int(owned_id) if owned_id else None
+
+    async def _cabinet_scoped_online(self, online_ids: list[int]) -> list[int]:
+        """Keep only self + same-cabinet peers in presence payloads."""
+        peer_ids = set(await self._cabinet_peer_ids())
+        peer_ids.add(self.user.id)
+        return [uid for uid in online_ids if uid in peer_ids]
+
     async def _cabinet_last_seen_map(self) -> dict[str, str]:
         """Seed + return last-seen for cabinet peers so clients can show offline times."""
         peer_ids = await self._cabinet_peer_ids()
+        peer_ids = list(peer_ids) + [self.user.id]
         seeded = await asyncio.to_thread(presence_seed_from_db, peer_ids)
         cached = await asyncio.to_thread(presence_last_seen_map, peer_ids)
         return {**seeded, **cached}
@@ -158,10 +154,12 @@ class ChatConsumer(CallSignalingMixin, AsyncJsonWebsocketConsumer):
         from django.db.models import Q
 
         user = self.user
-        cabinet_id = getattr(user, "cabinet_id", None)
+        cabinet_id = getattr(self, "cabinet_id", None)
         if not cabinet_id:
-            owned = getattr(user, "owned_cabinet", None)
-            cabinet_id = getattr(owned, "id", None) if owned else None
+            cabinet_id = getattr(user, "cabinet_id", None)
+            if not cabinet_id:
+                owned = getattr(user, "owned_cabinet", None)
+                cabinet_id = getattr(owned, "id", None) if owned else None
         if not cabinet_id:
             return []
         return list(
@@ -182,9 +180,14 @@ class ChatConsumer(CallSignalingMixin, AsyncJsonWebsocketConsumer):
         """Apply presence visibility when the user updates Mode via REST."""
         mode = await self._effective_mode()
         if mode == User.PresenceMode.INVISIBLE:
-            online_ids = await asyncio.to_thread(presence_remove, self.user.id)
+            online_ids = await asyncio.to_thread(
+                presence_remove, self.user.id, self.cabinet_id
+            )
         else:
-            online_ids = await asyncio.to_thread(presence_add, self.user.id)
+            online_ids = await asyncio.to_thread(
+                presence_add, self.user.id, self.cabinet_id
+            )
+        online_ids = await self._cabinet_scoped_online(online_ids)
         public = (
             User.PresenceMode.AWAY
             if mode == User.PresenceMode.DND
@@ -206,17 +209,18 @@ class ChatConsumer(CallSignalingMixin, AsyncJsonWebsocketConsumer):
         last_seen: dict[str, str] | None = None,
         statuses: dict[str, str] | None = None,
     ):
-        """Broadcast presence.update to all connected chat users."""
-        if self.channel_layer:
+        """Broadcast presence.update to cabinet peers only."""
+        if self.channel_layer and getattr(self, "presence_group", None):
+            scoped = await self._cabinet_scoped_online(online_ids)
             payload = {
-                "online_user_ids": online_ids,
-                "online_member_ids": online_ids,
-                "online": online_ids,
+                "online_user_ids": scoped,
+                "online_member_ids": scoped,
+                "online": scoped,
                 "last_seen": last_seen or {},
                 "statuses": statuses or {},
             }
             await self.channel_layer.group_send(
-                PRESENCE_GROUP,
+                self.presence_group,
                 {"type": "presence.update", "payload": payload},
             )
 
@@ -230,7 +234,10 @@ class ChatConsumer(CallSignalingMixin, AsyncJsonWebsocketConsumer):
         messages = await self.get_last_messages()
         serialized_data = await self.serialize_notifications(messages)
         if online_ids is None:
-            online_ids = await asyncio.to_thread(presence_list)
+            online_ids = await asyncio.to_thread(
+                presence_list, getattr(self, "cabinet_id", None)
+            )
+            online_ids = await self._cabinet_scoped_online(online_ids)
         payload = {
             "notifications": serialized_data,
             "online_user_ids": online_ids,

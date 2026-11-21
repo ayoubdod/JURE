@@ -9,6 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { apiLoginUser } from '@/services/auth/api';
 import useUserStore from '@/stores/userStore';
 import { stampLastActivity } from '@/utils/idleSession';
+import { setSessionValidated } from '@/utils/sessionValidationCache';
 import { isAxiosError } from 'axios';
 import { useAppTranslation, isBackendEmailUnverified } from '@/i18n';
 import { homePathForUser } from '@/utils/portalAuth';
@@ -75,12 +76,8 @@ const SignIn = () => {
   const onSubmit = async (data: SignInFormData) => {
     try {
       const res = await apiLoginUser(data);
-      useUserStore.setState({
-        accessToken: res.data.access,
-        refreshToken: res.data.refresh,
-        user: res.data.user,
-        isLoggedIn: true,
-      });
+      useUserStore.getState().setUser(res.data.user);
+      setSessionValidated(true);
       stampLastActivity();
       toast({ title: t.auth.loginSuccessTitle, description: t.auth.loginSuccessDescription });
       navigate(homePathForUser(res.data.user));

@@ -35,6 +35,3 @@ INSTALLED_APPS += [  # noqa: F405
 MIDDLEWARE += [  # noqa: F405
     "debug_toolbar.middleware.DebugToolbarMiddleware",
 ]
-
-# Diagnostics endpoint is staging/production only.
-ENABLE_DEPLOYMENT_DEBUG = False

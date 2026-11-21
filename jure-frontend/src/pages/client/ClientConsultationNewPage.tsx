@@ -12,6 +12,7 @@ import {
 } from '@/services/consultations/api';
 import { apiListPortalCases, type PortalCaseListItem } from '@/services/portal/api';
 import { Button } from '@/components/ui/button';
+import { ClientPageHeader } from '@/components/client/ClientPageHeader';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -127,8 +128,7 @@ const ClientConsultationNewPage = () => {
         <Button asChild variant="ghost" size="sm" className="-ms-2 mb-2">
           <Link to="/client/consultations">{cp.common.back}</Link>
         </Button>
-        <h1 className="font-serif text-3xl text-[#2F2450]">{cp.form.title}</h1>
-        <p className="mt-1 text-sm text-slate-500">{cp.form.subtitle}</p>
+        <ClientPageHeader title={cp.form.title} subtitle={cp.form.subtitle} />
       </div>
 
       <form

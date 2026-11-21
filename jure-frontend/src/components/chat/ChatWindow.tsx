@@ -308,8 +308,7 @@ const ChatWindow = forwardRef<
       connectedConversationIdRef.current = null;
     }
 
-    const token = useUserStore.getState().accessToken;
-    const ws = new WebSocket(getConversationWsUrl(conversation.id, token));
+    const ws = new WebSocket(getConversationWsUrl(conversation.id));
     wsRef.current = ws;
     connectedConversationIdRef.current = conversation.id;
 

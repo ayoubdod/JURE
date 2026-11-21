@@ -29,6 +29,25 @@ export type ClientPortalMessages = {
     unreadMessages: string;
     myCases: string;
     myConsultations: string;
+    attentionTitle: string;
+    attentionClear: string;
+    unreadOne: string;
+    unreadMany: string;
+    needsInformation: string;
+    confirmedWithLawyer: string;
+    confirmed: string;
+    lawyerAssigned: string;
+    readMessages: string;
+    provideInformation: string;
+    openRequest: string;
+    counselTitle: string;
+    counselBody: string;
+    counselEmptyTitle: string;
+    counselEmptyBody: string;
+    messageLawyer: string;
+    onMatter: string;
+    updatedOn: string;
+    loadingLabel: string;
   };
   cases: {
     title: string;
@@ -43,6 +62,8 @@ export type ClientPortalMessages = {
     documents: string;
     updates: string;
     requiredActions: string;
+    referenceLabel: string;
+    matterLine: Record<string, string>;
   };
   consultations: {
     title: string;
@@ -104,7 +125,7 @@ export type ClientPortalMessages = {
     noActions: string;
     noComments: string;
   };
-  errors: { loadFailed: string; submitFailed: string };
+  errors: { loadFailed: string; submitFailed: string; retry: string };
   status: Record<string, string>;
   legalAreas: Record<string, string>;
   formats: Record<string, string>;
@@ -165,12 +186,31 @@ export const clientPortalEn: ClientPortalMessages = {
   common: { view: 'View', viewAll: 'View all', back: 'Back', download: 'Download' },
   home: {
     greeting: 'Hello, {name}',
-    subtitle: 'Here is an overview of your matters and requests with your law firm.',
+    subtitle: 'Here is an overview of your matters and your exchanges with your firm.',
     activeCases: 'Active cases',
     pendingRequests: 'Pending requests',
     unreadMessages: 'Unread messages',
     myCases: 'My cases',
     myConsultations: 'My consultations',
+    attentionTitle: 'Action required',
+    attentionClear: 'Nothing is required from you right now.',
+    unreadOne: 'You have a new message.',
+    unreadMany: 'You have {count} new messages.',
+    needsInformation: 'Your firm needs additional information on “{subject}”.',
+    confirmedWithLawyer: 'Your consultation “{subject}” is confirmed with {lawyer}.',
+    confirmed: 'Consultation confirmed: “{subject}”.',
+    lawyerAssigned: '{lawyer} has been assigned to “{subject}”.',
+    readMessages: 'Read messages',
+    provideInformation: 'Provide information',
+    openRequest: 'Open request',
+    counselTitle: 'Your counsel',
+    counselBody: 'Write to your lawyer in a secure conversation. The exchange stays with your firm.',
+    counselEmptyTitle: 'No lawyer assigned yet',
+    counselEmptyBody: 'When your firm opens a matter or confirms a consultation, your lawyer will appear here.',
+    messageLawyer: 'Message',
+    onMatter: 'On {matter}',
+    updatedOn: 'Updated {date}',
+    loadingLabel: 'Loading your matters',
   },
   cases: {
     title: 'My cases',
@@ -185,6 +225,17 @@ export const clientPortalEn: ClientPortalMessages = {
     documents: 'Documents',
     updates: 'Updates',
     requiredActions: 'Actions required',
+    referenceLabel: 'Matter {ref}',
+    matterLine: {
+      OPEN: 'Your matter is open.',
+      IN_PROGRESS: 'Your matter is in progress.',
+      PENDING: 'Your matter is pending.',
+      CLOSED: 'This matter is closed.',
+      CANCELLED: 'This matter was cancelled.',
+      ARCHIVED: 'This matter is archived.',
+      CONVERTED_TO_CASE: 'This matter has been converted.',
+      DEFAULT: 'Your matter is with your firm.',
+    },
   },
   consultations: {
     title: 'My consultations',
@@ -258,6 +309,7 @@ export const clientPortalEn: ClientPortalMessages = {
   errors: {
     loadFailed: 'Unable to load this page. Please try again.',
     submitFailed: 'Something went wrong. Please try again.',
+    retry: 'Try again',
   },
   status: {
     SUBMITTED: 'Submitted',
@@ -355,12 +407,31 @@ export const clientPortalFr: ClientPortalMessages = {
   common: { view: 'Voir', viewAll: 'Tout voir', back: 'Retour', download: 'Télécharger' },
   home: {
     greeting: 'Bonjour, {name}',
-    subtitle: 'Voici un aperçu de vos dossiers et de vos demandes auprès de votre cabinet.',
+    subtitle: 'Voici un aperçu de vos dossiers et de vos échanges avec votre cabinet.',
     activeCases: 'Dossiers actifs',
     pendingRequests: 'Demandes en attente',
     unreadMessages: 'Messages non lus',
     myCases: 'Mes dossiers',
     myConsultations: 'Mes consultations',
+    attentionTitle: 'Action requise',
+    attentionClear: 'Aucune action n’est requise de votre part.',
+    unreadOne: 'Vous avez un nouveau message.',
+    unreadMany: 'Vous avez {count} nouveaux messages.',
+    needsInformation: 'Votre cabinet demande des informations complémentaires concernant « {subject} ».',
+    confirmedWithLawyer: 'Votre consultation « {subject} » est confirmée avec {lawyer}.',
+    confirmed: 'Consultation confirmée : « {subject} ».',
+    lawyerAssigned: '{lawyer} a été désigné pour « {subject} ».',
+    readMessages: 'Lire les messages',
+    provideInformation: 'Compléter',
+    openRequest: 'Ouvrir la demande',
+    counselTitle: 'Votre conseil',
+    counselBody: 'Écrivez à votre avocat dans une conversation sécurisée. L’échange reste au sein de votre cabinet.',
+    counselEmptyTitle: 'Aucun avocat désigné',
+    counselEmptyBody: 'Lorsqu’un dossier sera ouvert ou qu’une consultation sera confirmée, votre avocat apparaîtra ici.',
+    messageLawyer: 'Écrire',
+    onMatter: 'Sur {matter}',
+    updatedOn: 'Mis à jour le {date}',
+    loadingLabel: 'Chargement de vos dossiers',
   },
   cases: {
     title: 'Mes dossiers',
@@ -375,6 +446,17 @@ export const clientPortalFr: ClientPortalMessages = {
     documents: 'Documents',
     updates: 'Mises à jour',
     requiredActions: 'Actions requises',
+    referenceLabel: 'Dossier {ref}',
+    matterLine: {
+      OPEN: 'Votre dossier est ouvert.',
+      IN_PROGRESS: 'Votre dossier est en cours.',
+      PENDING: 'Votre dossier est en attente.',
+      CLOSED: 'Ce dossier est clos.',
+      CANCELLED: 'Ce dossier a été annulé.',
+      ARCHIVED: 'Ce dossier est archivé.',
+      CONVERTED_TO_CASE: 'Ce dossier a été converti.',
+      DEFAULT: 'Votre dossier est suivi par votre cabinet.',
+    },
   },
   consultations: {
     title: 'Mes consultations',
@@ -448,6 +530,7 @@ export const clientPortalFr: ClientPortalMessages = {
   errors: {
     loadFailed: 'Impossible de charger cette page. Veuillez réessayer.',
     submitFailed: 'Une erreur est survenue. Veuillez réessayer.',
+    retry: 'Réessayer',
   },
   status: {
     SUBMITTED: 'Demande envoyée',
@@ -545,12 +628,31 @@ export const clientPortalAr: ClientPortalMessages = {
   common: { view: 'عرض', viewAll: 'عرض الكل', back: 'رجوع', download: 'تحميل' },
   home: {
     greeting: 'مرحباً، {name}',
-    subtitle: 'هذه نظرة عامة على ملفاتك وطلباتك لدى مكتبك القانوني.',
+    subtitle: 'هذه نظرة على ملفاتك وتبادلاتك مع مكتبك.',
     activeCases: 'قضايا نشطة',
     pendingRequests: 'طلبات قيد الانتظار',
     unreadMessages: 'رسائل غير مقروءة',
     myCases: 'قضاياي',
     myConsultations: 'استشاراتي',
+    attentionTitle: 'إجراء مطلوب',
+    attentionClear: 'لا إجراء مطلوب منك حالياً.',
+    unreadOne: 'لديك رسالة جديدة.',
+    unreadMany: 'لديك {count} رسائل جديدة.',
+    needsInformation: 'يطلب مكتبك معلومات إضافية بخصوص «{subject}».',
+    confirmedWithLawyer: 'استشارتك «{subject}» مؤكدة مع {lawyer}.',
+    confirmed: 'استشارة مؤكدة: «{subject}».',
+    lawyerAssigned: 'تم تعيين {lawyer} لـ «{subject}».',
+    readMessages: 'قراءة الرسائل',
+    provideInformation: 'تقديم المعلومات',
+    openRequest: 'فتح الطلب',
+    counselTitle: 'محاميك',
+    counselBody: 'راسل محاميك في محادثة آمنة. يبقى التبادل لدى مكتبك.',
+    counselEmptyTitle: 'لم يُعيَّن محامٍ بعد',
+    counselEmptyBody: 'عند فتح ملف أو تأكيد استشارة، سيظهر محاميك هنا.',
+    messageLawyer: 'مراسلة',
+    onMatter: 'في {matter}',
+    updatedOn: 'آخر تحديث {date}',
+    loadingLabel: 'جارٍ تحميل ملفاتك',
   },
   cases: {
     title: 'قضاياي',
@@ -565,6 +667,17 @@ export const clientPortalAr: ClientPortalMessages = {
     documents: 'المستندات',
     updates: 'التحديثات',
     requiredActions: 'إجراءات مطلوبة',
+    referenceLabel: 'ملف {ref}',
+    matterLine: {
+      OPEN: 'ملفك مفتوح.',
+      IN_PROGRESS: 'ملفك قيد المتابعة.',
+      PENDING: 'ملفك قيد الانتظار.',
+      CLOSED: 'هذا الملف مغلق.',
+      CANCELLED: 'تم إلغاء هذا الملف.',
+      ARCHIVED: 'هذا الملف مؤرشف.',
+      CONVERTED_TO_CASE: 'تم تحويل هذا الملف.',
+      DEFAULT: 'ملفك لدى مكتبك.',
+    },
   },
   consultations: {
     title: 'استشاراتي',
@@ -638,6 +751,7 @@ export const clientPortalAr: ClientPortalMessages = {
   errors: {
     loadFailed: 'تعذر تحميل هذه الصفحة. حاول مرة أخرى.',
     submitFailed: 'حدث خطأ. حاول مرة أخرى.',
+    retry: 'إعادة المحاولة',
   },
   status: {
     SUBMITTED: 'تم الإرسال',

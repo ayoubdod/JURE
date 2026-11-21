@@ -109,6 +109,7 @@ class InvoiceSerializer(serializers.ModelSerializer):
             'client_name',
             'fee',
             'amount_ht',
+            'currency',
             'subtotal',
             'tva_rate',
             'tva_amount',
@@ -134,6 +135,7 @@ class InvoiceSerializer(serializers.ModelSerializer):
         read_only_fields = [
             'id',
             'invoice_number',
+            'currency',
             'tva_amount',
             'amount_ttc',
             'issued_date',

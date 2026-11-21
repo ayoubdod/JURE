@@ -152,10 +152,7 @@ async function fetchDocFile(doc: ReadingDocument): Promise<File | null> {
       return new File([blob], name, { type: blob.type || 'application/pdf' });
     }
     const href = resolveLibraryMediaUrl(doc.file);
-    const token = (await import('@/stores/userStore')).default.getState().accessToken;
-    const headers: HeadersInit = {};
-    if (token) headers.Authorization = `Bearer ${token}`;
-    const res = await fetch(href, { credentials: 'include', headers });
+    const res = await fetch(href, { credentials: 'include' });
     if (!res.ok) return null;
     const blob = await res.blob();
     const rawName = ensurePdfName(doc.file.split('/').pop() || `${doc.title || 'document'}.pdf`);

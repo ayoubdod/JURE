@@ -99,6 +99,21 @@ const VerifyEmailWaiting: React.FC = () => {
     navigate('/signin');
   };
 
+  const storedPlan = (() => {
+    const fromState = location.state as { planName?: string; billingCycle?: string } | null;
+    if (fromState?.planName) return fromState;
+    try {
+      const raw = localStorage.getItem('pendingVerificationPlan');
+      return raw ? (JSON.parse(raw) as { name?: string; cycle?: string }) : null;
+    } catch {
+      return null;
+    }
+  })();
+  const planLabel = storedPlan && ('planName' in storedPlan ? storedPlan.planName : storedPlan.name);
+  const planCycle = storedPlan
+    ? ('billingCycle' in storedPlan ? storedPlan.billingCycle : storedPlan.cycle)
+    : '';
+
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -122,6 +137,12 @@ const VerifyEmailWaiting: React.FC = () => {
             <p className="text-lg font-semibold break-all text-primary">
               {email}
             </p>
+            {planLabel && (
+              <p className="text-sm text-muted-foreground">
+                {planLabel}
+                {planCycle ? ` · ${planCycle}` : ''}
+              </p>
+            )}
           </CardHeader>
 
           <CardContent className="space-y-6">

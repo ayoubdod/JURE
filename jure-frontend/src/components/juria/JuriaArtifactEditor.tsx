@@ -15,6 +15,7 @@ import {
 import { useAppTranslation } from '@/i18n';
 import { useToast } from '@/hooks/use-toast';
 import { getJuriaErrorMessage } from '@/utils/juriaErrors';
+import { sanitizeHtml } from '@/lib/sanitizeHtml';
 import { cn } from '@/lib/utils';
 
 const EXPORT_FORMATS = ['docx', 'pdf', 'txt', 'md'] as const;
@@ -251,7 +252,7 @@ export function JuriaArtifactEditor({ projectId }: { projectId: string }) {
     try {
       await apiJuriaUpdateArtifact(projectId, active.id, {
         title,
-        content_html: html,
+        content_html: sanitizeHtml(html),
         note: ed.editNote,
       });
       await load(projectId);
@@ -744,7 +745,9 @@ function ArtifactCanvas({
   const [, setTick] = useState(0);
 
   React.useEffect(() => {
-    if (ref.current && ref.current.innerHTML !== html) ref.current.innerHTML = html || '<p></p>';
+    if (!ref.current) return;
+    const next = sanitizeHtml(html || '<p></p>') || '<p></p>';
+    if (ref.current.innerHTML !== next) ref.current.innerHTML = next;
   }, [html]);
 
   const run = (command: string, value?: string) => {

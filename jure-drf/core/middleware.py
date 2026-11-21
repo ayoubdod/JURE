@@ -1,17 +1,16 @@
 """
-Middleware so Library media (PDFs, DOCX) can be previewed by the SPA.
+Middleware so authenticated download responses can be previewed by the SPA.
 
 The frontend is a different origin (Vite / production app). Django's
 XFrameOptionsMiddleware defaults to DENY, which blanks PDF iframes.
 This middleware must run process_response *after* XFrameOptionsMiddleware,
 i.e. it must appear *before* it in settings.MIDDLEWARE.
 """
-from django.http import HttpResponse
 from django.utils.deprecation import MiddlewareMixin
 from django.conf import settings
 
 
-PREVIEWABLE_SUFFIXES = (".pdf", ".docx", ".doc", ".png", ".jpg", ".jpeg", ".gif", ".webp", ".svg")
+PREVIEWABLE_SUFFIXES = (".pdf", ".docx", ".doc", ".png", ".jpg", ".jpeg", ".gif", ".webp", ".txt")
 
 
 def _allowed_origin(origin: str) -> bool:
@@ -44,26 +43,20 @@ def _apply_cors(request, response):
     response["Access-Control-Allow-Headers"] = "Content-Type, Authorization, X-Requested-With"
 
 
-class PDFHeadersMiddleware(MiddlewareMixin):
-    """Allow the JURE frontend to fetch and embed library media files."""
+def _is_download_path(path: str) -> bool:
+    lowered = path.lower()
+    return "/download" in lowered or lowered.endswith("/download/")
 
-    def process_request(self, request):
-        if request.method != "OPTIONS":
-            return None
-        if not request.path.startswith(settings.MEDIA_URL):
-            return None
-        response = HttpResponse()
-        _apply_cors(request, response)
-        response["Access-Control-Max-Age"] = "86400"
-        return response
+
+class PDFHeadersMiddleware(MiddlewareMixin):
+    """Allow the JURE frontend to embed authenticated download responses."""
 
     def process_response(self, request, response):
-        if not request.path.startswith(settings.MEDIA_URL):
+        if not _is_download_path(request.path):
             return response
 
         _apply_cors(request, response)
 
-        # Cross-origin SPA preview: DENY/SAMEORIGIN both block localhost:5173 → :8000.
         if "X-Frame-Options" in response:
             del response["X-Frame-Options"]
 
@@ -86,7 +79,8 @@ class PDFHeadersMiddleware(MiddlewareMixin):
         if path.endswith(".pdf") and not (response.get("Content-Type") or "").startswith("application/pdf"):
             response["Content-Type"] = "application/pdf"
 
-        if path.endswith(PREVIEWABLE_SUFFIXES):
+        content_disp = response.get("Content-Disposition", "")
+        if any(path.endswith(suf) for suf in PREVIEWABLE_SUFFIXES) or "inline" in content_disp:
             response["X-Content-Type-Options"] = "nosniff"
 
         return response

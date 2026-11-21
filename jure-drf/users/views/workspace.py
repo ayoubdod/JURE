@@ -9,11 +9,43 @@ from rest_framework.response import Response
 
 from cases.models import Case, CaseSession
 from cases.validators import _parse_datetime
+from core.downloads import serve_file_field
 from core.utils import get_user_cabinet
 from tasks.models import Appointment, Task
 
 from ..models import User
 from .helpers import _user_shares_cabinet
+
+
+USER_MEDIA_FIELDS = {
+    "image": "image",
+    "national-id": "national_id",
+    "bar-attestation": "bar_attestation",
+    "professional-card": "professional_card",
+}
+
+
+def _can_download_user_media(request_user: User, target: User) -> bool:
+    if request_user.id == target.id:
+        return True
+    if not _user_shares_cabinet(request_user, target):
+        return False
+    return (
+        getattr(request_user, "role", None) in (User.Role.OWNER, User.Role.ADMIN)
+        or request_user.is_cabinet_owner()
+        or request_user.is_staff
+    )
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def user_media_download(request, pk, field):
+    target = get_object_or_404(User, pk=pk)
+    model_field = USER_MEDIA_FIELDS.get(field)
+    if model_field is None or not _can_download_user_media(request.user, target):
+        return Response({"detail": "Not found."}, status=404)
+    file_field = getattr(target, model_field, None)
+    return serve_file_field(request, file_field)
 
 
 @api_view(["GET"])
@@ -57,9 +89,11 @@ def user_workspace(request, pk):
             }
         )
 
-    assigned_cases = Case.objects.filter(assigned_to=target, cabinet=cab)
-    total_assigned = assigned_cases.count()
-    in_progress = assigned_cases.filter(status=Case.CaseStatus.IN_PROGRESS).count()
+    assigned_cases_qs = Case.objects.filter(assigned_to=target, cabinet=cab)
+    total_assigned = assigned_cases_qs.count()
+    in_progress = assigned_cases_qs.filter(status=Case.CaseStatus.IN_PROGRESS).count()
+    # Cap loops that walk case_specific_data / upcoming events.
+    assigned_cases = list(assigned_cases_qs[:50])
 
     urgent = 0
     for c in assigned_cases:
@@ -82,7 +116,7 @@ def user_workspace(request, pk):
 
     for t in Task.objects.filter(assigned_to=target, cabinet=cab).exclude(
         status=Task.TaskStatus.DONE
-    ):
+    )[:50]:
         if not t.due_date:
             continue
         dt = timezone.make_aware(
@@ -95,7 +129,7 @@ def user_workspace(request, pk):
 
     for a in Appointment.objects.filter(cabinet=cab).filter(
         Q(attendees=target) | Q(created_by=target)
-    ):
+    )[:50]:
         if not a.start_at or a.start_at < now:
             continue
         ref = a.case.reference if a.case_id else None
@@ -150,7 +184,9 @@ def user_workspace(request, pk):
                         continue
                     events.append((dt, "DEADLINE", c.title, str(kl).strip(), ref))
 
-    for sess in CaseSession.objects.filter(case__assigned_to=target, case__cabinet=cab):
+    for sess in CaseSession.objects.filter(
+        case__assigned_to=target, case__cabinet=cab
+    )[:50]:
         if sess.type != CaseSession.CaseSessionType.HEARING:
             continue
         dt = sess.date

@@ -8,6 +8,14 @@ type RetryConfig = InternalAxiosRequestConfig & { _retry?: boolean };
 
 const baseURL = API_BASE;
 
+const MUTATING_METHODS = new Set(['post', 'put', 'patch', 'delete']);
+
+function getCookie(name: string): string | null {
+  if (typeof document === 'undefined') return null;
+  const match = document.cookie.match(new RegExp(`(?:^|; )${name.replace(/([.$?*|{}()[\]\\/+^])/g, '\\$1')}=([^;]*)`));
+  return match ? decodeURIComponent(match[1]) : null;
+}
+
 /** After failed refresh or 401 without refresh: clear session and send user to login. */
 function redirectToSignIn() {
   if (typeof window === 'undefined') return;
@@ -18,6 +26,30 @@ function redirectToSignIn() {
   window.location.assign('/signin');
 }
 
+let refreshPromise: Promise<void> | null = null;
+
+function refreshViaCookie(): Promise<void> {
+  if (!refreshPromise) {
+    refreshPromise = axios
+      .post(
+        `${baseURL}/dj-rest-auth/token/refresh/`,
+        {},
+        {
+          withCredentials: true,
+          headers: {
+            'Content-Type': 'application/json',
+            ...(getCookie('csrftoken') ? { 'X-CSRFToken': getCookie('csrftoken')! } : {}),
+          },
+        }
+      )
+      .then(() => undefined)
+      .finally(() => {
+        refreshPromise = null;
+      });
+  }
+  return refreshPromise;
+}
+
 const axiosInstance = axios.create({
   baseURL,
   withCredentials: true,
@@ -25,9 +57,12 @@ const axiosInstance = axios.create({
 
 axiosInstance.interceptors.request.use(
   async (config) => {
-    const accessToken = useUserStore.getState().accessToken;
-    if (accessToken) {
-      config.headers.Authorization = `Bearer ${accessToken}`;
+    const method = (config.method || 'get').toLowerCase();
+    if (MUTATING_METHODS.has(method)) {
+      const csrf = getCookie('csrftoken');
+      if (csrf) {
+        config.headers['X-CSRFToken'] = csrf;
+      }
     }
     config.headers['Accept-Language'] = document.documentElement.lang;
     return config;
@@ -47,7 +82,6 @@ axiosInstance.interceptors.response.use(
 
     const originalRequest = error.config as RetryConfig | undefined;
     const status = error.response?.status;
-    const refreshToken = useUserStore.getState().refreshToken;
     const url = originalRequest?.url ?? '';
     const isRefreshCall = url.includes('/dj-rest-auth/token/refresh/');
 
@@ -57,15 +91,10 @@ axiosInstance.interceptors.response.use(
       return Promise.reject(error);
     }
 
-    if (status === 401 && refreshToken && !originalRequest?._retry) {
+    if (status === 401 && originalRequest && !originalRequest._retry) {
       originalRequest._retry = true;
       try {
-        const refreshResponse = await axiosInstance.post<{ access: string }>('/dj-rest-auth/token/refresh/', {
-          refresh: refreshToken,
-        });
-        useUserStore.setState({
-          accessToken: refreshResponse.data.access,
-        });
+        await refreshViaCookie();
         return axiosInstance(originalRequest);
       } catch (refreshError) {
         devError('Refresh failed:', refreshError);

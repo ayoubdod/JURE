@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 from rest_framework import serializers
+from django.urls import reverse
 
+from core.downloads import absolute_api_url
 from consultations.models import (
     ConsultationAttachment,
     ConsultationComment,
@@ -42,8 +44,11 @@ class ConsultationAttachmentSerializer(serializers.ModelSerializer):
         request = self.context.get("request")
         if not obj.file:
             return None
-        url = obj.file.url
-        return request.build_absolute_uri(url) if request else url
+        url = reverse(
+            "consultation-request-download-attachment",
+            kwargs={"pk": obj.consultation_id, "attachment_id": obj.pk},
+        )
+        return absolute_api_url(request, url)
 
 
 class ConsultationCommentSerializer(serializers.ModelSerializer):

@@ -8,23 +8,23 @@ from django.db.models.functions import Coalesce
 from django.utils import timezone
 from django_extensions.db.models import TimeStampedModel
 
+from core.uploads import validate_safe_upload_extension, uuid_upload_to
 from jurisdictions.constants import VisibilityScope
 from jurisdictions.scoping import (
     announcements_visible_to_cabinet_q,
     validate_visibility_scope,
 )
 
-IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp", ".svg"}
+IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp"}
 VIDEO_EXTENSIONS = {".mp4", ".webm", ".ogg", ".mov", ".m4v"}
 
 
 def announcement_media_upload_to(instance, filename):
-    base, ext = os.path.splitext(filename)
-    safe = "".join(c for c in base if c.isalnum() or c in ("-", "_"))[:80] or "media"
-    return f"announcements/{safe}{ext.lower()}"
+    return uuid_upload_to("announcements")(instance, filename)
 
 
 def validate_announcement_media(file_obj):
+    validate_safe_upload_extension(file_obj)
     name = getattr(file_obj, "name", "") or ""
     ext = os.path.splitext(name)[1].lower()
     if ext not in IMAGE_EXTENSIONS | VIDEO_EXTENSIONS:

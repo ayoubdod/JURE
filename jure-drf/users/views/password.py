@@ -1,15 +1,21 @@
 from django.contrib.auth.hashers import make_password
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError as DjangoValidationError
 from django.utils import timezone
 from rest_framework import status
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, throttle_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
+
+from users.session import rotate_user_session
+from users.throttles import AuthBurstThrottle
 
 from ..models import PasswordSetupToken, User
 
 
 @api_view(["POST"])
 @permission_classes([AllowAny])
+@throttle_classes([AuthBurstThrottle])
 def setup_password_by_token(request):
     """
     Set password for a team member using their one-time invitation token.
@@ -34,11 +40,26 @@ def setup_password_by_token(request):
 
     user = record.user
 
-    # Save password directly via QuerySet.update to avoid custom save() side effects
-    User.objects.filter(pk=user.pk).update(password=make_password(password))
+    try:
+        validate_password(password, user=user)
+    except DjangoValidationError as exc:
+        return Response(
+            {"password": list(exc.messages)},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    # Invitation accept: set password and record consent for invited clients/members.
+    User.objects.filter(pk=user.pk).update(
+        password=make_password(password),
+        accept_terms=True,
+        accept_data_processing=True,
+    )
+    user.refresh_from_db(fields=["password", "accept_terms", "accept_data_processing"])
+    rotate_user_session(user)
 
     # Ensure email is verified so login works (ACCOUNT_EMAIL_VERIFICATION = mandatory)
     from allauth.account.models import EmailAddress
+
     email_address, _ = EmailAddress.objects.get_or_create(
         user=user,
         email=user.email,
@@ -52,5 +73,7 @@ def setup_password_by_token(request):
     record.used_at = timezone.now()
     record.save(update_fields=["used_at"])
 
-    return Response({"detail": "Password set successfully. You can now sign in."}, status=status.HTTP_200_OK)
-
+    return Response(
+        {"detail": "Password set successfully. You can now sign in."},
+        status=status.HTTP_200_OK,
+    )

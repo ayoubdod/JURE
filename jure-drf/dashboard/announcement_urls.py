@@ -1,6 +1,11 @@
 from django.urls import path
 
-from .views import AnnouncementDetailView, AnnouncementDismissView, AnnouncementListView
+from .views import (
+    AnnouncementDetailView,
+    AnnouncementDismissView,
+    AnnouncementListView,
+    AnnouncementMediaDownloadView,
+)
 
 urlpatterns = [
     path("", AnnouncementListView.as_view(), name="announcement-list"),
@@ -13,5 +18,10 @@ urlpatterns = [
         "<int:announcement_id>/dismiss/",
         AnnouncementDismissView.as_view(),
         name="announcement-dismiss",
+    ),
+    path(
+        "<int:announcement_id>/media/download/",
+        AnnouncementMediaDownloadView.as_view(),
+        name="announcement-media-download",
     ),
 ]

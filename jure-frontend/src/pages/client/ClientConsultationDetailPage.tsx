@@ -10,7 +10,9 @@ import {
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { ConsultationStatusBadge } from '@/components/client/ConsultationStatusBadge';
+import { ClientPageHeader } from '@/components/client/ClientPageHeader';
 import { useToast } from '@/hooks/use-toast';
+import { fetchAuthenticatedMediaBlob } from '@/lib/authenticatedMedia';
 
 const ClientConsultationDetailPage = () => {
   const { consultationId } = useParams();
@@ -50,6 +52,22 @@ const ClientConsultationDetailPage = () => {
     }
   };
 
+  const downloadAttachment = async (url: string, name: string) => {
+    try {
+      const blob = await fetchAuthenticatedMediaBlob(url);
+      const objectUrl = URL.createObjectURL(blob);
+      const a = window.document.createElement('a');
+      a.href = objectUrl;
+      a.download = name || 'attachment';
+      window.document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.setTimeout(() => URL.revokeObjectURL(objectUrl), 2_000);
+    } catch {
+      window.open(url, '_blank', 'noopener,noreferrer');
+    }
+  };
+
   if (loading) return <div className="h-48 animate-pulse rounded-xl bg-slate-200" />;
   if (error || !data) {
     return <p className="text-sm text-rose-600">{cp.errors.loadFailed}</p>;
@@ -65,12 +83,13 @@ const ClientConsultationDetailPage = () => {
         </Button>
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h1 className="font-serif text-3xl text-[#2F2450]">{data.subject}</h1>
-            <p className="mt-1 text-sm text-slate-500">
-              {data.reference} · {new Date(data.createdAt).toLocaleString()}
-            </p>
+            <ClientPageHeader
+              title={data.subject}
+              subtitle={`${data.reference} · ${new Date(data.createdAt).toLocaleString()}`}
+            />
           </div>
           <ConsultationStatusBadge
+            quiet
             status={data.status as ConsultationStatus}
             label={cp.status[data.status] || data.status}
           />
@@ -191,9 +210,13 @@ const ClientConsultationDetailPage = () => {
               <li key={att.id} className="flex justify-between gap-3 px-4 py-3 text-sm">
                 <span>{att.name}</span>
                 {att.url && (
-                  <a href={att.url} className="text-[#64499D] hover:underline" target="_blank" rel="noreferrer">
+                  <button
+                    type="button"
+                    onClick={() => downloadAttachment(att.url, att.name)}
+                    className="text-[#64499D] hover:underline"
+                  >
                     {cp.common.download}
-                  </a>
+                  </button>
                 )}
               </li>
             ))}
