@@ -2,7 +2,7 @@ import React, { useMemo, useState, type ReactNode } from 'react';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
-import { useNavigate, useLocation } from 'react-router';
+import { useNavigate } from 'react-router';
 import { isAxiosError } from 'axios';
 import {
   Bell,
@@ -21,7 +21,6 @@ import {
   Keyboard,
   Loader2,
   Settings2,
-  CreditCard,
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -41,7 +40,6 @@ import { LANG_NATIVE_LABELS } from '@/i18n/types';
 import { Languages } from '@/utils/constants';
 import { useShortcuts } from '@/context/ShortcutsContext';
 import ShortcutLibrary from '@/components/shortcuts/ShortcutLibrary';
-import SubscriptionSettings from '@/components/settings/SubscriptionSettings';
 import type { Lang } from '@/i18n/types';
 
 type NotificationKey = 'email' | 'push' | 'sms' | 'desktop';
@@ -68,13 +66,12 @@ const PRIMARY_BTN =
 
 const Settings: React.FC = () => {
   const navigate = useNavigate();
-  const location = useLocation();
   const { toast } = useToast();
   const { logout } = useUserStore();
 
   const [activeSection, setActiveSection] = useState<
-    'notifications' | 'security' | 'appearance' | 'language' | 'data' | 'roles' | 'shortcuts' | 'subscription'
-  >(location.pathname.endsWith('/subscription') ? 'subscription' : 'notifications');
+    'notifications' | 'security' | 'appearance' | 'language' | 'data' | 'roles' | 'shortcuts'
+  >('notifications');
   const [showPassword, setShowPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -116,7 +113,6 @@ const Settings: React.FC = () => {
 
   const settingSections = useMemo(
     () => [
-      { id: 'subscription' as const, label: t.settings.nav.subscription, icon: CreditCard, description: t.settings.nav.subscriptionDesc },
       { id: 'notifications' as const, label: t.settings.nav.notifications, icon: Bell, description: t.settings.nav.notificationsDesc },
       { id: 'security' as const, label: t.settings.nav.security, icon: Shield, description: t.settings.nav.securityDesc },
       { id: 'appearance' as const, label: t.settings.nav.appearance, icon: Palette, description: t.settings.nav.appearanceDesc },
@@ -474,7 +470,6 @@ const Settings: React.FC = () => {
         </TabsList>
 
         <div className="min-w-0 flex-1 rounded-2xl border border-slate-200/90 bg-white p-5 sm:p-6 dark:border-zinc-800 dark:bg-zinc-950">
-          <TabsContent value="subscription" className="mt-0"><SubscriptionSettings /></TabsContent>
           <TabsContent value="notifications" className="mt-0">{renderNotificationSettings()}</TabsContent>
           <TabsContent value="security" className="mt-0">{renderSecuritySettings()}</TabsContent>
           <TabsContent value="appearance" className="mt-0">{renderAppearance()}</TabsContent>

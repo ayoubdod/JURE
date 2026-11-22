@@ -43,15 +43,24 @@ class JuriaProjectFileListCreateView(JuriaEnabledMixin, APIView):
         kind = detect_file_type(name)
         if kind not in ("pdf", "docx"):
             return Response({"detail": "Unsupported file type. Use PDF or DOCX."}, status=400)
-        jfile = JuriaFile.objects.create(
-            project=access.project,
-            file=upload,
-            original_name=name,
-            content_type=getattr(upload, "content_type", "") or "",
-            file_kind=kind,
-            size_bytes=getattr(upload, "size", None),
-            uploaded_by=request.user,
-        )
+        from django.db import transaction
+
+        from core.utils import get_user_cabinet
+        from subscriptions.services.entitlements import assert_storage
+
+        cabinet = get_user_cabinet(request.user)
+        with transaction.atomic():
+            if cabinet is not None:
+                assert_storage(cabinet, int(getattr(upload, "size", 0) or 0))
+            jfile = JuriaFile.objects.create(
+                project=access.project,
+                file=upload,
+                original_name=name,
+                content_type=getattr(upload, "content_type", "") or "",
+                file_kind=kind,
+                size_bytes=getattr(upload, "size", None),
+                uploaded_by=request.user,
+            )
         connect_upload(access.project, jfile, request.user)
         ensure_file_extracted(jfile)
         log_activity(

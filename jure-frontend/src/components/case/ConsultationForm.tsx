@@ -24,7 +24,12 @@ import { useToast } from '@/hooks/use-toast';
 import { useAppTranslation, formatTime } from '@/i18n';
 import { cn } from '@/lib/utils';
 import { apiGetClient } from '@/services/client/api';
-import { apiCreateFollowUpConsultation, apiUploadCaseAttachment } from '@/services/case/api';
+import {
+  apiCreateFollowUpConsultation,
+  apiPreviewScheduleConflicts,
+  apiUploadCaseAttachment,
+  type ScheduleConflictPreviewItem,
+} from '@/services/case/api';
 import { toBackendCaseCreatePayload } from '@/services/case/payloadBuilder';
 import { clientDisplayName } from '@/services/case/caseType';
 import {
@@ -97,6 +102,7 @@ const ConsultationForm: React.FC<ConsultationFormProps> = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [files, setFiles] = useState<File[]>([]);
   const [clientPhone, setClientPhone] = useState('');
+  const [previewConflicts, setPreviewConflicts] = useState<ScheduleConflictPreviewItem[]>([]);
   const { toast } = useToast();
 
   const schema = useMemo(
@@ -183,6 +189,52 @@ const ConsultationForm: React.FC<ConsultationFormProps> = ({
   const duration = form.watch('duration');
   const clientId = form.watch('client');
   const attorneyIds = form.watch('assigned_attorney_ids') ?? [];
+  const consultationDate = form.watch('consultation_date');
+  const customHours = form.watch('custom_hours');
+  const customMinutes = form.watch('custom_minutes');
+
+  useEffect(() => {
+    if (!attorneyIds.length || !consultationDate) {
+      setPreviewConflicts([]);
+      return;
+    }
+    const minutes = durationMinutesOf({
+      duration,
+      custom_hours: customHours,
+      custom_minutes: customMinutes,
+    } as ConsultationFormValues);
+    const dateIso =
+      consultationDate.includes('T') && !consultationDate.endsWith('Z')
+        ? new Date(consultationDate).toISOString()
+        : consultationDate;
+    let cancelled = false;
+    const timer = window.setTimeout(() => {
+      apiPreviewScheduleConflicts({
+        assignedTo: attorneyIds,
+        date: dateIso,
+        durationMinutes: minutes,
+        excludeCaseId: mode === 'edit' ? caseId : undefined,
+      })
+        .then((res) => {
+          if (!cancelled) setPreviewConflicts(res.data?.conflicts ?? []);
+        })
+        .catch(() => {
+          if (!cancelled) setPreviewConflicts([]);
+        });
+    }, 400);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, [
+    attorneyIds,
+    consultationDate,
+    duration,
+    customHours,
+    customMinutes,
+    mode,
+    caseId,
+  ]);
 
   useEffect(() => {
     if (!clientId) {
@@ -458,6 +510,30 @@ const ConsultationForm: React.FC<ConsultationFormProps> = ({
                     <Input type="number" min={0} max={59} {...form.register('custom_minutes')} className={CREATE_INPUT_CLASS} />
                   </CreateFormField>
                 </>
+              ) : null}
+              {previewConflicts.length > 0 ? (
+                <div
+                  className="sm:col-span-2 rounded-lg border border-amber-200/80 bg-amber-50/70 px-3 py-2 text-sm text-amber-950 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-100"
+                  role="status"
+                >
+                  <p className="font-medium">{cw.scheduleConflictTitle}</p>
+                  <p className="mt-0.5 text-xs text-amber-900/80 dark:text-amber-200/80">
+                    {cw.scheduleConflictPreviewHint}
+                  </p>
+                  <ul className="mt-2 list-disc space-y-1 ps-4 text-xs">
+                    {previewConflicts.slice(0, 5).map((item, idx) => (
+                      <li key={`${item.reference || item.title || 'c'}-${idx}`}>
+                        {item.attorneyName && item.start && item.end
+                          ? tf(cw.conflictDetail, {
+                              name: item.attorneyName,
+                              start: formatTime(item.start, lang),
+                              end: formatTime(item.end, lang),
+                            })
+                          : item.title || item.attorneyName || item.reference}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               ) : null}
               <div className="sm:col-span-2">
                 <CreateFormField id="consultation-format" label={modal.fields.format} required>

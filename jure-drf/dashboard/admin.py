@@ -9,7 +9,7 @@ from unfold.decorators import display
 from unfold.widgets import UnfoldAdminFileFieldWidget
 
 from core.admin_display import STATUS_LABELS, status_pair
-from core.unfold_admin import JureModelAdmin
+from core.unfold_admin import JureModelAdmin, cabinet_cascade_delete_allowed
 from jurisdictions.constants import VisibilityScope
 from jurisdictions.models import Jurisdiction
 
@@ -331,4 +331,4 @@ class ActivityLogAdmin(JureModelAdmin):
         return False
 
     def has_delete_permission(self, request, obj=None):
-        return False
+        return cabinet_cascade_delete_allowed(request)

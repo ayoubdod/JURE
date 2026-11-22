@@ -58,6 +58,9 @@ def anonymize_user(*, target: User, actor: User, cabinet) -> User:
 
     PasswordSetupToken.objects.filter(user=target).delete()
     UserAddress.objects.filter(user=target).delete()
+    from allauth.account.models import EmailAddress
+
+    EmailAddress.objects.filter(user=target).delete()
 
     profile = getattr(target, "firm_client_profile", None)
     if profile is not None:
@@ -93,6 +96,25 @@ def anonymize_user(*, target: User, actor: User, cabinet) -> User:
 
     rotate_user_session(target)
     return target
+
+
+def delete_user_or_release_email(user: User) -> str:
+    """Delete the account, or scrub the email if invoices still protect the row.
+
+    Returns ``deleted`` or ``released``.
+    """
+    from django.db.models.deletion import ProtectedError
+
+    try:
+        with transaction.atomic():
+            user.delete()
+        return "deleted"
+    except ProtectedError:
+        user = User.objects.get(pk=user.pk)
+        cabinet = user.get_owned_cabinet_or_none() or user.cabinet
+        with transaction.atomic():
+            anonymize_user(target=user, actor=user, cabinet=cabinet)
+        return "released"
 
 
 @api_view(["POST"])

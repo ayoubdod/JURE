@@ -15,6 +15,7 @@ import DocumentCreateModal, {
 import ConflictCheckDialog from '@/components/dashboard/ConflictCheckDialog';
 import ClauseLibraryModal from '@/components/dashboard/ClauseLibraryModal';
 import MatterCloseModal from '@/components/dashboard/MatterCloseModal';
+import DeadlineCalculatorDialog from '@/components/dashboard/DeadlineCalculatorDialog';
 import { eventBus } from '@/utils/eventBus';
 import { useShortcutAction } from '@/context/ShortcutsContext';
 
@@ -27,6 +28,7 @@ export default function QuickCreateHost() {
   const [openConflict, setOpenConflict] = useState(false);
   const [openClauseLib, setOpenClauseLib] = useState(false);
   const [openMatterClose, setOpenMatterClose] = useState(false);
+  const [openDeadlineCalc, setOpenDeadlineCalc] = useState(false);
 
   const clientRef = useRef<ClientCreateModalRef>(null);
   const caseRef = useRef<CaseModalRef>(null);
@@ -46,6 +48,7 @@ export default function QuickCreateHost() {
   });
   useShortcutAction('conflict-check', () => setOpenConflict(true));
   useShortcutAction('clause-library', () => setOpenClauseLib(true));
+  useShortcutAction('deadline-calculator', () => setOpenDeadlineCalc(true));
   useShortcutAction('close-matter', () => setOpenMatterClose(true));
 
   const refreshDashboard = () => eventBus.emit('case-updated');
@@ -60,6 +63,7 @@ export default function QuickCreateHost() {
       <DocumentCreateModal ref={docRef} />
       <ConflictCheckDialog open={openConflict} onOpenChange={setOpenConflict} />
       <ClauseLibraryModal open={openClauseLib} onOpenChange={setOpenClauseLib} />
+      <DeadlineCalculatorDialog open={openDeadlineCalc} onOpenChange={setOpenDeadlineCalc} />
       <MatterCloseModal
         open={openMatterClose}
         onOpenChange={setOpenMatterClose}

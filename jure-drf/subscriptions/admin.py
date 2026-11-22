@@ -8,21 +8,27 @@ from unfold.decorators import action
 from unfold.enums import ActionVariant
 from unfold.forms import BaseDialogForm
 
-from core.unfold_admin import JureModelAdmin, JureTabularInline
+from core.unfold_admin import JureModelAdmin, JureTabularInline, cabinet_cascade_delete_allowed
 
 from .models import (
     AIUsageEvent,
+    AddonPurchase,
     BankTransfer,
     CreditLedger,
+    CreditLot,
+    CreditPackage,
     CreditTariff,
     CreditWallet,
     PaymentEvent,
     Plan,
+    StorageEntitlement,
+    StoragePackage,
     Subscription,
     SubscriptionInvoice,
 )
 from .services.bank_transfer import expected_total, record_bank_transfer
 from .services.catalog import plan_price
+from .services.resources import reject_addon_purchase, verify_addon_purchase
 
 
 class BankTransferDialogForm(BaseDialogForm):
@@ -229,7 +235,7 @@ class CreditWalletAdmin(JureModelAdmin):
         return False
 
     def has_delete_permission(self, request, obj=None):
-        return False
+        return cabinet_cascade_delete_allowed(request)
 
 
 @admin.register(CreditLedger)
@@ -255,7 +261,7 @@ class CreditLedgerAdmin(JureModelAdmin):
         return False
 
     def has_delete_permission(self, request, obj=None):
-        return False
+        return cabinet_cascade_delete_allowed(request)
 
 
 @admin.register(AIUsageEvent)
@@ -326,4 +332,162 @@ class PaymentEventAdmin(JureModelAdmin):
         return False
 
     def has_change_permission(self, request, obj=None):
+        return False
+
+
+class AddonVerifyForm(BaseDialogForm):
+    bank_reference = forms.CharField(label=_("Bank transfer reference"), max_length=128)
+    note = forms.CharField(label=_("Note"), required=False, widget=forms.Textarea(attrs={"rows": 2}))
+
+
+class AddonRejectForm(BaseDialogForm):
+    note = forms.CharField(label=_("Reason"), required=False, widget=forms.Textarea(attrs={"rows": 2}))
+
+
+@admin.register(StoragePackage)
+class StoragePackageAdmin(JureModelAdmin):
+    list_display = ("code", "name", "capacity_bytes", "price", "billing_type", "is_active")
+    list_filter = ("is_active", "billing_type")
+    search_fields = ("code", "name")
+    ordering = ("display_order",)
+
+
+@admin.register(CreditPackage)
+class CreditPackageAdmin(JureModelAdmin):
+    list_display = ("code", "name", "credits", "price", "validity_days", "is_active")
+    list_filter = ("is_active",)
+    search_fields = ("code", "name")
+    ordering = ("display_order",)
+
+
+@admin.register(AddonPurchase)
+class AddonPurchaseAdmin(JureModelAdmin):
+    list_display = ("payment_reference", "cabinet", "kind", "package_name", "subtotal", "status", "created_at")
+    list_filter = ("kind", "status")
+    search_fields = ("payment_reference", "bank_reference", "cabinet__trade_name", "package_name")
+    raw_id_fields = ("cabinet", "subscription", "storage_package", "credit_package", "verified_by")
+    readonly_fields = (
+        "cabinet",
+        "subscription",
+        "kind",
+        "storage_package",
+        "credit_package",
+        "package_code",
+        "package_name",
+        "capacity_bytes",
+        "credits",
+        "validity_days",
+        "subtotal",
+        "currency",
+        "payment_reference",
+        "bank_reference",
+        "status",
+        "note",
+        "verified_by",
+        "verified_at",
+        "activated_at",
+        "created_at",
+    )
+    actions_detail = ["verify_addon_action", "reject_addon_action"]
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    @action(
+        description=_("Verify bank transfer"),
+        url_path="verify-addon",
+        icon="payments",
+        variant=ActionVariant.SUCCESS,
+        permissions=["change"],
+        dialog={
+            "title": _("Bank transfer received"),
+            "description": _(
+                "Confirm the virement for this storage or credit purchase. "
+                "The entitlement is granted once, and only after the reference is saved."
+            ),
+            "form_class": AddonVerifyForm,
+            "form_submit_text": _("Verify and grant"),
+        },
+    )
+    def verify_addon_action(self, request, form, object_id):
+        purchase = self.get_object(request, object_id)
+        if purchase is None:
+            self.message_user(request, _("Purchase not found."), level=messages.ERROR)
+            return redirect("admin:subscriptions_addonpurchase_changelist")
+        try:
+            verify_addon_purchase(
+                purchase=purchase,
+                bank_reference=form.cleaned_data["bank_reference"],
+                note=form.cleaned_data.get("note") or "",
+                verified_by=request.user,
+            )
+        except ValidationError as exc:
+            self.message_user(request, " ".join(exc.messages), level=messages.ERROR)
+            return redirect("admin:subscriptions_addonpurchase_change", purchase.pk)
+        self.message_user(request, _("Purchase verified."), level=messages.SUCCESS)
+        return redirect("admin:subscriptions_addonpurchase_change", purchase.pk)
+
+    @action(
+        description=_("Reject purchase"),
+        url_path="reject-addon",
+        icon="close",
+        variant=ActionVariant.DANGER,
+        permissions=["change"],
+        dialog={
+            "title": _("Reject this purchase"),
+            "description": _("The customer does not receive storage or credits."),
+            "form_class": AddonRejectForm,
+            "form_submit_text": _("Reject"),
+        },
+    )
+    def reject_addon_action(self, request, form, object_id):
+        purchase = self.get_object(request, object_id)
+        if purchase is None:
+            self.message_user(request, _("Purchase not found."), level=messages.ERROR)
+            return redirect("admin:subscriptions_addonpurchase_changelist")
+        try:
+            reject_addon_purchase(
+                purchase=purchase,
+                note=form.cleaned_data.get("note") or "",
+                verified_by=request.user,
+            )
+        except ValidationError as exc:
+            self.message_user(request, " ".join(exc.messages), level=messages.ERROR)
+            return redirect("admin:subscriptions_addonpurchase_change", purchase.pk)
+        self.message_user(request, _("Purchase rejected."), level=messages.WARNING)
+        return redirect("admin:subscriptions_addonpurchase_change", purchase.pk)
+
+
+@admin.register(StorageEntitlement)
+class StorageEntitlementAdmin(JureModelAdmin):
+    list_display = ("cabinet", "capacity_bytes", "activated_at")
+    raw_id_fields = ("cabinet", "purchase")
+    readonly_fields = ("cabinet", "purchase", "capacity_bytes", "activated_at")
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+
+@admin.register(CreditLot)
+class CreditLotAdmin(JureModelAdmin):
+    list_display = ("cabinet", "issued", "remaining", "expires_at")
+    raw_id_fields = ("cabinet", "purchase")
+    readonly_fields = ("cabinet", "purchase", "issued", "remaining", "expires_at", "created_at")
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
         return False

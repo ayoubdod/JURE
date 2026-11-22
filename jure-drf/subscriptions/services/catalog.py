@@ -7,8 +7,17 @@ from decimal import Decimal
 from django.utils.translation import gettext_lazy as _
 from rest_framework.exceptions import ValidationError
 
-from subscriptions.catalog import PLANS, TARIFFS, TRIAL_CREDITS, TRIAL_DAYS, TRIAL_MAX_USERS, VAT_RATE
-from subscriptions.models import CreditTariff, Plan
+from subscriptions.catalog import (
+    CREDIT_PACKAGES,
+    PLANS,
+    STORAGE_PACKAGES,
+    TARIFFS,
+    TRIAL_CREDITS,
+    TRIAL_DAYS,
+    TRIAL_MAX_USERS,
+    VAT_RATE,
+)
+from subscriptions.models import CreditPackage, CreditTariff, Plan, StoragePackage
 
 
 def seed_catalog() -> None:
@@ -21,6 +30,53 @@ def seed_catalog() -> None:
             operation=row["operation"],
             defaults={"credits": row["credits"], "is_active": True},
         )
+    _seed_storage_packages()
+    _seed_credit_packages()
+
+
+def _seed_storage_packages() -> None:
+    for row in STORAGE_PACKAGES:
+        package, created = StoragePackage.objects.get_or_create(
+            code=row["code"],
+            defaults={
+                "name": row["name"],
+                "description": row["description"],
+                "capacity_bytes": row["capacity_bytes"],
+                "price": row["price"],
+                "billing_type": StoragePackage.BillingType.ONE_TIME,
+                "display_order": row["display_order"],
+                "is_active": True,
+            },
+        )
+        if not created:
+            package.name = row["name"]
+            package.description = row["description"]
+            package.capacity_bytes = row["capacity_bytes"]
+            package.display_order = row["display_order"]
+            package.save(update_fields=["name", "description", "capacity_bytes", "display_order", "updated_at"])
+
+
+def _seed_credit_packages() -> None:
+    for row in CREDIT_PACKAGES:
+        package, created = CreditPackage.objects.get_or_create(
+            code=row["code"],
+            defaults={
+                "name": row["name"],
+                "description": row["description"],
+                "credits": row["credits"],
+                "price": row["price"],
+                "validity_days": row["validity_days"],
+                "display_order": row["display_order"],
+                "is_active": True,
+            },
+        )
+        if not created:
+            package.name = row["name"]
+            package.description = row["description"]
+            package.credits = row["credits"]
+            package.validity_days = row["validity_days"]
+            package.display_order = row["display_order"]
+            package.save(update_fields=["name", "description", "credits", "validity_days", "display_order", "updated_at"])
 
 
 def trial_policy() -> dict:
@@ -61,6 +117,7 @@ def public_plan_payload(plan: Plan) -> dict:
         "monthly_juria_credits": plan.monthly_juria_credits,
         "is_self_serve": plan.is_self_serve,
         "is_recommended": plan.is_recommended,
+        "display_order": plan.display_order,
         "features": list(plan.feature_entitlements or []),
     }
 

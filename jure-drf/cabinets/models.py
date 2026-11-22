@@ -30,7 +30,11 @@ class Cabinet(TimeStampedModel):
         LAW_FIRM = "LAW_FIRM", _("Law Firm")
 
     owner: models.OneToOneField['User'] = models.OneToOneField(
-        'users.User', on_delete=models.CASCADE, related_name='owned_cabinet'
+        'users.User',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='owned_cabinet',
     )
     specialization: models.ForeignKey['Specialization'] = models.ForeignKey(
         Specialization, on_delete=models.SET_NULL, null=True, blank=True

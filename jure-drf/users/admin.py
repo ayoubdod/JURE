@@ -111,6 +111,17 @@ class UserAdmin(JureModelAdmin):
             return "staff", _("Staff")
         return "member", _("Member")
 
+    def delete_model(self, request, obj):
+        from users.views.anonymize import delete_user_or_release_email
+
+        delete_user_or_release_email(obj)
+
+    def delete_queryset(self, request, queryset):
+        from users.views.anonymize import delete_user_or_release_email
+
+        for user in queryset:
+            delete_user_or_release_email(user)
+
 
 @admin.register(UserAddress)
 class UserAddressAdmin(JureModelAdmin):

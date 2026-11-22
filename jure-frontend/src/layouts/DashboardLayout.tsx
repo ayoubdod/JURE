@@ -9,7 +9,6 @@ import useCallsWsStore from '@/stores/callsWsStore'
 import React, { useEffect, useState } from 'react'
 import { Navigate, Outlet, useLocation } from 'react-router'
 import { TVAThresholdNotification } from '@/components/finance/tva/TVAThresholdNotification'
-import TrialStatusBanner from '@/components/settings/TrialStatusBanner'
 import { NotificationProvider } from '@/context/NotificationContext'
 import { MobileNavProvider } from '@/context/MobileNavContext'
 import { NotificationToastStack } from '@/components/notifications/NotificationToastStack'
@@ -202,8 +201,6 @@ const DashboardLayout = () => {
             )}
           >
             <Header />
-
-            <TrialStatusBanner />
 
             <TVAThresholdNotification />
 

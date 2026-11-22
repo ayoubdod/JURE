@@ -415,4 +415,8 @@ html[dir="rtl"] button[role="combobox"] > span:first-of-type {
   .animate-float-delayed {
     animation: none !important;
   }
+
+  [data-pill-target] {
+    transition-delay: 0s !important;
+  }
 }

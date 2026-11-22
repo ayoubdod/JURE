@@ -71,6 +71,7 @@ const CalendarPage = lazyRoute(() => import("./pages/Calendar"));
 const TasksPage = lazyRoute(() => import("./pages/Tasks"));
 const AppointmentsPage = lazyRoute(() => import("./pages/Appointments"));
 const Settings = lazyRoute(() => import("./pages/Settings"));
+const SubscriptionPage = lazyRoute(() => import("./pages/Subscription"));
 const FinancePage = lazyRoute(() => import("./pages/finance/FinancePage"));
 const NotificationsPage = lazyRoute(() => import("./pages/notifications/NotificationsPage"));
 const EditTask = lazyRoute(() => import("./components/task/EditTask"));
@@ -298,7 +299,8 @@ const router = createBrowserRouter([
         path: "support",
         element: app(<Support />),
       },
-      { path: "settings/subscription", element: app(<Settings />) },
+      { path: "subscription", element: app(<SubscriptionPage />) },
+      { path: "settings/subscription", element: <Navigate to="/dashboard/subscription" replace /> },
       { path: "settings", element: app(<Settings />) },
       { path: "messages", element: app(<Conversations />) },
       { path: "notifications", element: app(<NotificationsPage />) },

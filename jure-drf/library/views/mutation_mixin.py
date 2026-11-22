@@ -42,21 +42,40 @@ class LibraryMutationMixin:
             raise PermissionDenied(_("User must belong to a cabinet to create documents."))
         upload = serializer.validated_data.get("file")
         extra_bytes = int(getattr(upload, "size", 0) or 0)
+        from django.db import transaction
         from subscriptions.services.entitlements import assert_storage
-        assert_storage(cabinet, extra_bytes)
-        extra = {
-            'created_by': user,
-            'updated_by': user,
-            'cabinet': cabinet,
-            'is_shared': False,
-            'visibility_scope': VisibilityScope.CABINET,
-            'jurisdiction': None,
-        }
-        if not serializer.validated_data.get('language') and getattr(cabinet, 'jurisdiction', None):
-            extra['language'] = getattr(cabinet.jurisdiction, 'default_language', '') or ''
-        serializer.save(**extra)
+        with transaction.atomic():
+            assert_storage(cabinet, extra_bytes)
+            extra = {
+                'created_by': user,
+                'updated_by': user,
+                'cabinet': cabinet,
+                'is_shared': False,
+                'visibility_scope': VisibilityScope.CABINET,
+                'jurisdiction': None,
+            }
+            if not serializer.validated_data.get('language') and getattr(cabinet, 'jurisdiction', None):
+                extra['language'] = getattr(cabinet.jurisdiction, 'default_language', '') or ''
+            serializer.save(**extra)
 
     def perform_update(self, serializer: DocumentSerializer) -> None:
+        instance = serializer.instance
+        upload = serializer.validated_data.get("file")
+        cabinet = getattr(instance, "cabinet", None) or get_user_cabinet(self.request.user)
+        if cabinet and upload is not None and hasattr(upload, "size"):
+            old_size = 0
+            try:
+                old_size = int(getattr(instance.file, "size", 0) or 0)
+            except Exception:
+                old_size = 0
+            delta = int(getattr(upload, "size", 0) or 0) - old_size
+            if delta > 0:
+                from django.db import transaction
+                from subscriptions.services.entitlements import assert_storage
+                with transaction.atomic():
+                    assert_storage(cabinet, delta)
+                    serializer.save(updated_by=self.request.user)
+                    return
         serializer.save(updated_by=self.request.user)
 
     def update(self, request, *args, **kwargs):

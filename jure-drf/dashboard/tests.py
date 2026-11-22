@@ -226,12 +226,24 @@ class DashboardStatsMoMTest(TestCase):
         c1 = _create_case(self.cabinet, self.user, created=self.prev_mid)
         c2 = _create_case(self.cabinet, self.user, created=self.prev_mid)
         _create_case(self.cabinet, self.user, created=self.curr_mid)
-        # closed case must not count as active
+        # Terminal statuses must not count as active (Decision 1).
         _create_case(
             self.cabinet,
             self.user,
             status_value=Case.CaseStatus.CLOSED,
             created=self.curr_mid,
+        )
+        _create_case(
+            self.cabinet,
+            self.user,
+            status_value=Case.CaseStatus.ARCHIVED,
+            created=self.curr_mid,
+        )
+        _create_case(
+            self.cabinet,
+            self.user,
+            status_value=Case.CaseStatus.CANCELLED,
+            created=self.prev_mid,
         )
         stats = {s["title"]: s for s in build_dashboard_stats(self.cabinet)}
         cases = stats["Active Cases"]
@@ -414,3 +426,52 @@ class DashboardOverviewAPITest(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         clients = next(s for s in response.json()["stats"] if s["title"] == "Total Clients")
         self.assertEqual(clients["current"], 0)
+
+    def test_today_tasks_align_with_kpi_open_statuses(self):
+        today = timezone.localdate()
+        open_todo = _create_task(
+            self.cabinet, title="Open todo", due_date=today, status_value=Task.TaskStatus.TODO
+        )
+        open_wip = _create_task(
+            self.cabinet,
+            title="Open wip",
+            due_date=today,
+            status_value=Task.TaskStatus.IN_PROGRESS,
+        )
+        _create_task(
+            self.cabinet, title="Done today", due_date=today, status_value=Task.TaskStatus.DONE
+        )
+        _create_task(
+            self.cabinet,
+            title="Cancelled today",
+            due_date=today,
+            status_value=Task.TaskStatus.CANCELLED,
+        )
+        response = self.api.get(self.url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.json()
+        tasks_stat = next(s for s in data["stats"] if s["title"] == "Tasks Due")
+        self.assertEqual(tasks_stat["current"], 2)
+        self.assertEqual(tasks_stat["value"], "2")
+        titles = {t["title"] for t in data["today_tasks"]}
+        self.assertEqual(titles, {"Open todo", "Open wip"})
+        self.assertTrue(all("status" in t for t in data["today_tasks"]))
+        self.assertTrue(all("priority" not in c for c in data["recent_cases"]))
+        # inventory ids exist for open tasks
+        ids = {t["id"] for t in data["today_tasks"]}
+        self.assertEqual(ids, {open_todo.id, open_wip.id})
+
+    def test_active_cases_kpi_excludes_archived_and_cancelled(self):
+        _create_case(self.cabinet, self.user, status_value=Case.CaseStatus.OPEN)
+        _create_case(self.cabinet, self.user, status_value=Case.CaseStatus.ARCHIVED)
+        _create_case(self.cabinet, self.user, status_value=Case.CaseStatus.CANCELLED)
+        _create_case(self.cabinet, self.user, status_value=Case.CaseStatus.CLOSED)
+        response = self.api.get(self.url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        cases = next(s for s in response.json()["stats"] if s["title"] == "Active Cases")
+        self.assertEqual(cases["current"], 1)
+
+    def test_overview_does_not_emit_session_derived_high_risk(self):
+        response = self.api.get(self.url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIsNone(response.json()["kpis"]["open_high_risk_matters"])

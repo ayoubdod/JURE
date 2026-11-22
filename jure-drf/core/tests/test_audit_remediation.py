@@ -22,7 +22,7 @@ from cases.models import Case
 from chat.presence import presence_add, presence_list, presence_remove
 from clients.models import Client
 from core.html_sanitize import sanitize_html
-from core.testing import api_client_for, create_cabinet_owner
+from core.testing import api_client_for, create_cabinet_owner, unique_test_phone
 from finance.models import Invoice
 from finance.models.firm_settings import FirmFinanceSettings
 from juria.services.juria_api_service import JuriaAPIError
@@ -245,6 +245,58 @@ class ActivityLogAdminImmutableTests(SimpleTestCase):
         self.assertFalse(admin.has_add_permission(request))
         self.assertFalse(admin.has_change_permission(request))
         self.assertFalse(admin.has_delete_permission(request))
+
+
+class ReleaseEmailOnProtectedDeleteTests(TestCase):
+    def test_protected_client_keeps_row_but_frees_email(self):
+        from users.views.anonymize import delete_user_or_release_email
+
+        User = get_user_model()
+        owner, cabinet = create_cabinet_owner(email="release-owner@test.com")
+        client_user = User.objects.create_user(
+            email="release-client@test.com",
+            password="testpass123",
+            first_name="Cli",
+            last_name="Ent",
+            phone=unique_test_phone(),
+            country="FR",
+            cabinet=cabinet,
+            is_cabinet_member=False,
+        )
+        profile = Client.objects.create(user=client_user)
+        matter = Case.objects.create(
+            cabinet=cabinet,
+            title="Release matter",
+            description="desc",
+            reference="REF-REL-1",
+            court="Tribunal",
+            case_type=Case.CaseType.LITIGATION,
+            status=Case.CaseStatus.OPEN,
+            assigned_to=owner,
+            client=client_user,
+        )
+        Invoice.objects.create(
+            cabinet=cabinet,
+            case=matter,
+            client=profile,
+            invoice_number="TST-REL-1",
+            amount_ht=Decimal("100.00"),
+            created_by=owner,
+        )
+
+        self.assertEqual(delete_user_or_release_email(client_user), "released")
+        client_user.refresh_from_db()
+        self.assertTrue(client_user.email.endswith("@deleted.local"))
+        self.assertFalse(User.objects.filter(email__iexact="release-client@test.com").exists())
+        reused = User.objects.create_user(
+            email="release-client@test.com",
+            password="testpass123",
+            first_name="New",
+            last_name="Client",
+            phone=unique_test_phone(),
+            country="FR",
+        )
+        self.assertEqual(reused.email, "release-client@test.com")
 
 
 class BlockedUploadExtensionTests(SimpleTestCase):

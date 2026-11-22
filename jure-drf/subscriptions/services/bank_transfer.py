@@ -16,6 +16,20 @@ from subscriptions.services.credits import grant
 from subscriptions.services.lifecycle import _invoice, activate_from_verified_payment, refresh_status
 
 
+def transfer_reference_taken(reference: str) -> bool:
+    from subscriptions.models import AddonPurchase
+
+    cleaned = (reference or "").strip()
+    if not cleaned:
+        return False
+    return (
+        BankTransfer.objects.filter(reference=cleaned).exists()
+        or PaymentEvent.objects.filter(event_id=f"bank-transfer:{cleaned}").exists()
+        or AddonPurchase.objects.filter(bank_reference=cleaned).exists()
+        or AddonPurchase.objects.filter(payment_reference=cleaned).exists()
+    )
+
+
 def expected_total(plan: Plan, billing_cycle: str) -> Decimal | None:
     price = plan_price(plan, billing_cycle)
     if price is None:
@@ -49,9 +63,7 @@ def record_bank_transfer(
         raise ValidationError(_("Enter the date the transfer was received."))
     if received_on > timezone.localdate():
         raise ValidationError(_("The received date cannot be in the future."))
-    if BankTransfer.objects.filter(reference=reference).exists() or PaymentEvent.objects.filter(
-        event_id=f"bank-transfer:{reference}"
-    ).exists():
+    if transfer_reference_taken(reference):
         raise ValidationError(_("This transfer reference was already recorded."))
 
     locked = (

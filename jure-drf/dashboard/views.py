@@ -1,8 +1,4 @@
-from datetime import date
-
-from django.db.models import Count, Q
-from django.utils import timezone
-from django.utils.timezone import now
+from django.conf import settings
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -10,159 +6,38 @@ from rest_framework.views import APIView
 from core.downloads import serve_file_field
 from core.permissions import IsCabinetMember
 from core.utils import get_user_cabinet
+from juria.views.mixins import JuriaEnabledMixin
 
-# Import your existing models
-from cases.models import Case
-from users.models import User  # Client is actually User model
-from tasks.models import Task
-from library.models import Document  # EvidenceItem doesn't exist, using Document
-# Optional:
 from .announcements import (
-    get_dismissed_announcement_ids,
     dismiss_announcement_in_session,
+    get_dismissed_announcement_ids,
     serialize_announcement,
 )
-from .models import Announcement, ActivityLog
-from .kpi import build_stat, calculate_growth, month_bounds, month_date_bounds
+from .models import Announcement
+from .services.assist import AssistUnavailable, answer_dashboard_query, generate_daily_briefing
+from .services.overview import build_dashboard_stats, build_overview_payload
 
-# ---- helpers ----
-def format_ago(dt):
-    """English relative time kept for older clients; UI prefers `at` + locale format."""
-    if not dt:
-        return ""
-    delta = now() - dt
-    s = int(delta.total_seconds())
-    if s < 60:
-        return f"{s}s ago"
-    m = s // 60
-    if m < 60:
-        return f"{m}m ago"
-    h = m // 60
-    if h < 24:
-        return f"{h}h ago"
-    d = h // 24
-    return f"{d}d ago"
+# Re-export for existing tests that import from dashboard.views
+__all__ = [
+    "DashboardOverview",
+    "DashboardBriefingView",
+    "DashboardAskView",
+    "AnnouncementListView",
+    "AnnouncementDetailView",
+    "AnnouncementMediaDownloadView",
+    "AnnouncementDismissView",
+    "build_dashboard_stats",
+]
 
 
-def _iso_dt(dt):
-    if not dt:
-        return None
-    if timezone.is_naive(dt):
-        dt = timezone.make_aware(dt, timezone.get_current_timezone())
-    return dt.isoformat()
-
-
-def _activity_item(*, icon, kind, message, title="", at=None, ago=None):
-    return {
-        "icon": icon,
-        "kind": kind,
-        "title": title or "",
-        "message": message,
-        "ago": format_ago(at) if ago is None else ago,
-        "at": _iso_dt(at),
-    }
-
-
-def derive_priority_for_case(case):
-    # Take most urgent session priority if exists
-    latest = case.casesession_set.order_by("-date").first()
-    return getattr(latest, "type", "HEARING") if latest else "HEARING"
-
-
-def _cabinet_clients_qs(cab):
-    """Clients for a cabinet: User rows with is_cabinet_member=False (existing definition)."""
-    return User.objects.filter(cabinet=cab, is_cabinet_member=False)
-
-
-def _active_cases_qs(cab):
-    """Active cases: existing dashboard definition — exclude CLOSED only."""
-    return Case.objects.filter(cabinet=cab).exclude(status=Case.CaseStatus.CLOSED)
-
-
-def _tasks_due_today_qs(cab, today: date):
-    """Tasks due: existing dashboard definition — due today and status=todo."""
-    return Task.objects.filter(cabinet=cab, due_date=today, status=Task.TaskStatus.TODO)
-
-
-def build_dashboard_stats(cab):
-    """
-    Real month-over-month KPI stats for one cabinet (COUNT queries only).
-
-    Clients / active cases: stock MoM using creation timestamps
-      current  = total matching definition now
-      previous = subset that existed before the current calendar month
-
-    Tasks due: keep displayed value as due-today (todo); MoM % compares
-      todo tasks with due_date in the current calendar month vs previous month.
-    """
-    _, current_month_start, _ = month_bounds()
-    prev_month_start_d, current_month_start_d, next_month_start_d = month_date_bounds()
-    today = timezone.localdate()
-
-    clients_qs = _cabinet_clients_qs(cab)
-    total_clients = clients_qs.count()
-    clients_previous = clients_qs.filter(date_joined__lt=current_month_start).count()
-
-    active_qs = _active_cases_qs(cab)
-    active_cases = active_qs.count()
-    active_cases_previous = active_qs.filter(created__lt=current_month_start).count()
-
-    # Card value keeps existing "due today + todo" definition.
-    tasks_due_today = _tasks_due_today_qs(cab, today).count()
-    # MoM % uses todo tasks scheduled in each calendar month (due_date).
-    tasks_due_current_month = Task.objects.filter(
-        cabinet=cab,
-        status=Task.TaskStatus.TODO,
-        due_date__gte=current_month_start_d,
-        due_date__lt=next_month_start_d,
-    ).count()
-    tasks_due_previous_month = Task.objects.filter(
-        cabinet=cab,
-        status=Task.TaskStatus.TODO,
-        due_date__gte=prev_month_start_d,
-        due_date__lt=current_month_start_d,
-    ).count()
-    tasks_mom = calculate_growth(tasks_due_current_month, tasks_due_previous_month)
-    tasks_stat = {
-        "title": "Tasks Due",
-        "value": str(tasks_due_today),
-        "change": tasks_mom["change"],
-        "change_state": tasks_mom["change_state"],
-        "icon": "CheckSquare",
-        "color": "bg-orange-500",
-        "current": tasks_due_today,
-        "previous": tasks_due_previous_month,
-        "growth": tasks_mom["growth"],
-        "period_current": tasks_due_current_month,
-        "period_previous": tasks_due_previous_month,
-    }
-
-    return [
-        build_stat(
-            title="Total Clients",
-            icon="Users",
-            color="bg-blue-500",
-            current=total_clients,
-            previous=clients_previous,
-        ),
-        build_stat(
-            title="Active Cases",
-            icon="Briefcase",
-            color="bg-green-500",
-            current=active_cases,
-            previous=active_cases_previous,
-        ),
-        tasks_stat,
-    ]
-
-# ---- API ----
 class DashboardOverview(APIView):
     """
-    Single call for the main dashboard boxes.
-    It reads other apps, respects the user's cabinet (simple multitenancy),
-    and returns JSON matching your frontend needs.
+    Role-aware cabinet dashboard overview.
+
+    Cabinet is resolved solely from the authenticated user. Finance is included
+    only when the user passes the same OWNER/ADMIN rule as IsFinanceAuthorized.
     """
-    # Match clients/cases/tasks: cabinet membership is enough (no LawyerProfile required).
+
     permission_classes = [IsAuthenticated, IsCabinetMember]
 
     def get(self, request):
@@ -170,108 +45,64 @@ class DashboardOverview(APIView):
         if not cab:
             return Response({"detail": "User is not attached to any cabinet."}, status=403)
 
-        # --- Stats (real MoM growth; cabinet-scoped COUNT queries) ---
-        stats = build_dashboard_stats(cab)
-
-        # --- Recent Cases (last 3 added / created) ---
-        cases_qs = (
-            Case.objects.filter(cabinet=cab)
-            .order_by("-created", "-id")[:3]
+        # Ignore any client-supplied cabinet identifiers.
+        payload = build_overview_payload(
+            user=request.user,
+            cabinet=cab,
+            request=request,
+            juria_enabled=bool(getattr(settings, "JURIA_ENABLED", False)),
         )
-        recent_cases = []
-        for c in cases_qs:
-            recent_cases.append({
-                "id": c.id,
-                "title": c.title,
-                "client": getattr(c.client, "first_name", str(c.client_id)) if c.client else "No Client",
-                "status": c.status,
-                "priority": derive_priority_for_case(c),
-                "date": (c.created.date() if getattr(c, "created", None) else date.today()),
-            })
+        return Response(payload)
 
-        # --- Today's Tasks (top 6) ---
-        today_tasks_qs = Task.objects.filter(cabinet=cab, due_date=date.today()).order_by("id")[:6]
-        today_tasks = []
-        for t in today_tasks_qs:
-            today_tasks.append({
-                "id": t.id,
-                "title": t.title,
-                "time": "",  # Task model doesn't have due_time field
-                "priority": getattr(t, "priority", "medium"),
-            })
 
-        # --- Announcement (best active, cabinet-targeted; no fake fallback) ---
-        dismissed_ids = get_dismissed_announcement_ids(request)
-        scoped = Announcement.pick_for_cabinet(cab, exclude_ids=dismissed_ids)
-        announcement = serialize_announcement(scoped, request=request) if scoped else None
+class DashboardBriefingView(JuriaEnabledMixin, APIView):
+    """P3.1 — read-only JURIA daily briefing over authorized dashboard queues."""
 
-        # --- Recent Activity stream (mix manual & inferred) ---
-        stream = []
-        # manual ActivityLog first — stored copy is English; kind=log so the UI can keep it as-is.
-        for a in ActivityLog.objects.filter(cabinet=cab).order_by("-created")[:10]:
-            stream.append(_activity_item(
-                icon="CheckSquare",
-                kind="log",
-                message=a.message,
-                at=a.created,
-            ))
+    permission_classes = [IsAuthenticated, IsCabinetMember]
 
-        # if stream not enough, infer from other tables
-        if len(stream) < 10:
-            done_tasks = Task.objects.filter(
-                cabinet=cab, status=Task.TaskStatus.DONE
-            ).order_by("-modified")[:5]
-            for t in done_tasks:
-                stream.append(_activity_item(
-                    icon="CheckSquare",
-                    kind="task_completed",
-                    title=t.title,
-                    message=f"Task completed: {t.title}",
-                    at=getattr(t, "modified", None),
-                ))
-            new_clients = User.objects.filter(
-                cabinet=cab, is_cabinet_member=False
-            ).order_by("-id")[:5]
-            for cl in new_clients:
-                name = (getattr(cl, "first_name", None) or "").strip() or "Client"
-                stream.append(_activity_item(
-                    icon="Users",
-                    kind="client_added",
-                    title=name,
-                    message=f"New client added: {name} ",
-                    at=getattr(cl, "date_joined", None),
-                ))
-            docs = Document.objects.filter(cabinet=cab).order_by("-created")[:5]
-            for d in docs:
-                stream.append(_activity_item(
-                    icon="ClipboardList",
-                    kind="document_uploaded",
-                    title=d.title,
-                    message=f"Document uploaded: {d.title}",
-                    at=d.created,
-                ))
+    def get(self, request):
+        cab = get_user_cabinet(request.user)
+        if not cab:
+            return Response({"detail": "User is not attached to any cabinet."}, status=403)
+        language = (request.query_params.get("language") or getattr(request.user, "language", None) or "fr")
+        try:
+            payload = generate_daily_briefing(
+                user=request.user,
+                cabinet=cab,
+                language=str(language)[:16],
+                request=request,
+            )
+        except AssistUnavailable as exc:
+            return Response({"detail": exc.detail, "code": exc.code}, status=exc.status)
+        return Response(payload)
 
-        # --- KPIs snapshot (omit invented metrics until billing/WIP exists) ---
-        open_high_risk = (
-            Case.objects.filter(cabinet=cab, status__in=["OPEN","IN_PROGRESS"])
-            .annotate(n_crit=Count("casesession", filter=Q(casesession__type="HEARING")))
-            .filter(n_crit__gt=0).count()
+
+class DashboardAskView(JuriaEnabledMixin, APIView):
+    """P3.2 — NL ask over authorized dashboard facts (keyword-ranked, not vector RAG)."""
+
+    permission_classes = [IsAuthenticated, IsCabinetMember]
+
+    def post(self, request):
+        cab = get_user_cabinet(request.user)
+        if not cab:
+            return Response({"detail": "User is not attached to any cabinet."}, status=403)
+        question = request.data.get("question") if hasattr(request, "data") else None
+        language = (
+            (request.data.get("language") if hasattr(request, "data") else None)
+            or getattr(request.user, "language", None)
+            or "fr"
         )
-        kpis = {
-            "wip_aging_gt_60": None,
-            "open_high_risk_matters": open_high_risk,
-            "realization_rate": None,
-        }
-
-        # --- Build response ---
-        return Response({
-            "stats": stats,
-            "announcement": announcement,
-            "recent_cases": recent_cases,
-            "today_tasks": today_tasks,
-            "recent_activity": stream[:10],
-            "kpis": kpis,
-        })
+        try:
+            payload = answer_dashboard_query(
+                user=request.user,
+                cabinet=cab,
+                question=str(question or ""),
+                language=str(language)[:16],
+                request=request,
+            )
+        except AssistUnavailable as exc:
+            return Response({"detail": exc.detail, "code": exc.code}, status=exc.status)
+        return Response(payload)
 
 
 class AnnouncementListView(APIView):

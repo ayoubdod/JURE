@@ -99,6 +99,8 @@ export const SHORTCUT_CATALOG: CatalogItem[] = [
   { id: 'newChat', group: 'create', keys: ['C', 'H'], chord: { prefix: 'c', key: 'h' }, kind: 'action', action: 'create-chat' },
   { id: 'conflictCheck', group: 'create', keys: ['C', 'F'], chord: { prefix: 'c', key: 'f' }, kind: 'action', action: 'conflict-check' },
   { id: 'clauseLibrary', group: 'create', keys: ['C', 'L'], chord: { prefix: 'c', key: 'l' }, kind: 'action', action: 'clause-library' },
+  // C+D is create-document; C+Y = deadline calculator (tool, not primary create).
+  { id: 'deadlineCalculator', group: 'create', keys: ['C', 'Y'], chord: { prefix: 'c', key: 'y' }, kind: 'action', action: 'deadline-calculator' },
   { id: 'closeMatter', group: 'create', keys: ['C', 'X'], chord: { prefix: 'c', key: 'x' }, kind: 'action', action: 'close-matter' },
 
   // Page-level (already implemented on list views)

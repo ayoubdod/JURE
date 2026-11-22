@@ -36,39 +36,62 @@ def seat_limit(subscription: Subscription | None) -> int | None:
     return 0
 
 
+def purchased_storage_bytes(cabinet) -> int:
+    from django.db.models import Sum
+
+    from subscriptions.models import StorageEntitlement
+
+    total = StorageEntitlement.objects.filter(cabinet=cabinet).aggregate(total=Sum("capacity_bytes"))["total"]
+    return int(total or 0)
+
+
 def storage_limit_bytes(subscription: Subscription | None) -> int | None:
     if subscription is None:
         return None
     if subscription.status not in Subscription.WRITE_ALLOWED:
         return 0
-    return subscription.plan.storage_bytes
+    included = subscription.plan.storage_bytes
+    extra = purchased_storage_bytes(subscription.cabinet)
+    if included is None:
+        return None
+    return int(included) + extra
 
 
-def storage_used_bytes(cabinet) -> int:
-    total = 0
+def storage_breakdown(cabinet) -> dict:
+    library_bytes = 0
     from library.models import Document
 
     for doc in Document.objects.filter(cabinet=cabinet).exclude(file="").only("file"):
         try:
-            total += int(doc.file.size or 0)
+            library_bytes += int(doc.file.size or 0)
         except Exception:
             continue
+    attachment_bytes = 0
     from cases.models import CaseAttachment
 
-    for attachment in (
-        CaseAttachment.objects.filter(case__cabinet=cabinet).exclude(file="").only("file")
-    ):
+    for attachment in CaseAttachment.objects.filter(case__cabinet=cabinet).exclude(file="").only("file"):
         try:
-            total += int(attachment.file.size or 0)
+            attachment_bytes += int(attachment.file.size or 0)
         except Exception:
             continue
+    from django.db.models import Sum
+
     from juria.models import JuriaFile
 
-    sizes = JuriaFile.objects.filter(project__cabinet=cabinet).values_list("size_bytes", flat=True)
-    for size in sizes:
-        if size:
-            total += int(size)
-    return total
+    juria_bytes = int(
+        JuriaFile.objects.filter(project__cabinet=cabinet, is_removed=False).aggregate(total=Sum("size_bytes"))["total"]
+        or 0
+    )
+    return {
+        "library_bytes": library_bytes,
+        "case_bytes": attachment_bytes,
+        "juria_bytes": juria_bytes,
+        "total_bytes": library_bytes + attachment_bytes + juria_bytes,
+    }
+
+
+def storage_used_bytes(cabinet) -> int:
+    return storage_breakdown(cabinet)["total_bytes"]
 
 
 def assert_can_add_member(cabinet) -> None:
@@ -87,18 +110,23 @@ def assert_can_add_member(cabinet) -> None:
 
 
 def assert_storage(cabinet, additional_bytes: int) -> None:
-    from subscriptions.services.lifecycle import load_subscription
+    from django.db import transaction
 
-    subscription = load_subscription(cabinet)
-    limit = storage_limit_bytes(subscription)
-    if limit is None:
-        return
+    from subscriptions.models import Subscription as SubscriptionModel
+
     additional = max(int(additional_bytes or 0), 0)
-    if storage_used_bytes(cabinet) + additional > limit:
-        raise EntitlementDenied(
-            detail=_("This organisation has reached its storage limit."),
-            code="storage_limit",
+    with transaction.atomic():
+        subscription = (
+            SubscriptionModel.objects.select_for_update().select_related("plan").filter(cabinet=cabinet).first()
         )
+        limit = storage_limit_bytes(subscription)
+        if limit is None:
+            return
+        if storage_used_bytes(cabinet) + additional > limit:
+            raise EntitlementDenied(
+                detail=_("This organisation has reached its storage limit."),
+                code="storage_limit",
+            )
 
 
 def has_feature(subscription: Subscription | None, key: str) -> bool:

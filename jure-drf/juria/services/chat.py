@@ -272,8 +272,6 @@ def send_thread_message(user, thread, project, *, message_text: str, upload=None
         from subscriptions.services.entitlements import assert_storage
 
         cabinet_for_storage = get_user_cabinet(user)
-        if cabinet_for_storage is not None:
-            assert_storage(cabinet_for_storage, int(getattr(upload, "size", 0) or 0))
         raw_name = upload.name or file_name or "upload"
         attachment_name = os.path.basename(raw_name)
         attachment_type = detect_file_type(attachment_name) or ""
@@ -281,18 +279,22 @@ def send_thread_message(user, thread, project, *, message_text: str, upload=None
             raise JuriaDocumentError("Unsupported file type. Use PDF or DOCX.")
         rel_dir = f"juria/uploads/{thread.id}"
         rel_path = f"{rel_dir}/{attachment_name}"
-        default_storage.save(rel_path, ContentFile(upload.read()))
-        attachment_rel = rel_path
-        jfile = JuriaFile.objects.create(
-            project=project,
-            file=rel_path,
-            original_name=attachment_name,
-            content_type=getattr(upload, "content_type", "") or "",
-            file_kind=attachment_type,
-            size_bytes=getattr(upload, "size", None),
-            uploaded_by=user,
-            ocr_status=OcrStatus.PENDING,
-        )
+        from django.db import transaction
+        with transaction.atomic():
+            if cabinet_for_storage is not None:
+                assert_storage(cabinet_for_storage, int(getattr(upload, "size", 0) or 0))
+            default_storage.save(rel_path, ContentFile(upload.read()))
+            attachment_rel = rel_path
+            jfile = JuriaFile.objects.create(
+                project=project,
+                file=rel_path,
+                original_name=attachment_name,
+                content_type=getattr(upload, "content_type", "") or "",
+                file_kind=attachment_type,
+                size_bytes=getattr(upload, "size", None),
+                uploaded_by=user,
+                ocr_status=OcrStatus.PENDING,
+            )
         connect_upload(project, jfile, user)
         ensure_file_extracted(jfile)
 

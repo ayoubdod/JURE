@@ -19,6 +19,7 @@ import {
   StickyNote,
   ChevronLeft,
   Scale,
+  Sparkles,
 } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router';
 import LogoutModal, { LogoutModalRef } from './layout/LogoutModal';
@@ -46,7 +47,9 @@ import { NAV_SHORTCUT_BY_PATH } from '@/shortcuts/catalog';
 import { HintKbd } from '@/components/shortcuts/Kbd';
 import { useShortcutAction } from '@/context/ShortcutsContext';
 import { JURIA_ENABLED } from '@/config/features';
+import { useSlidePill } from '@/components/sidebar/slidePill';
 import JureLogo from '@/components/common/JureLogo';
+import { useSubscriptionNavCopy } from '@/components/settings/TrialStatusBanner';
 
 /** Collapsed desktop rail width. Keep in sync with DashboardLayout `--sidebar-rail-width`. */
 export const SIDEBAR_RAIL_WIDTH = '3rem'; // 48px
@@ -83,13 +86,15 @@ type NavItem = {
 const mobileSecondaryActionClass =
   'flex min-h-10 w-full items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-sm font-medium text-muted-foreground dark:text-white transition-colors hover:bg-muted/70 hover:text-foreground dark:hover:text-white';
 
-const railIconButtonClass = (active: boolean, expanded: boolean) =>
+const railIconButtonClass = (active: boolean, expanded: boolean, pill = false) =>
   cn(
-    'flex h-8 w-full items-center rounded-lg transition-colors duration-200',
+    'relative z-[1] flex h-8 w-full items-center rounded-lg',
     expanded ? 'justify-start gap-2 px-2.5' : 'justify-center px-0',
     active
-      ? 'bg-jure-600 dark:bg-jure-500 text-white'
-      : 'text-muted-foreground dark:text-white hover:text-jure-600 dark:hover:text-white hover:bg-jure-50 dark:hover:bg-jure-600/10',
+      ? pill
+        ? 'text-white transition-[color] duration-150 delay-200'
+        : 'bg-jure-600 text-white transition-colors duration-200 dark:bg-jure-500'
+      : 'text-muted-foreground transition-[color,background-color] duration-150 delay-[220ms,_0ms] hover:bg-jure-50 hover:text-jure-600 dark:text-white dark:hover:bg-jure-600/10 dark:hover:text-white',
   );
 
 function NavGlyph({ item, size = 16 }: { item: Pick<NavItem, 'icon' | 'imgSrc' | 'label'>; size?: number }) {
@@ -116,6 +121,7 @@ const Sidebar = ({ activeTab, setActiveTab, expanded, onExpandedChange }: Sideba
   const [officePopoverOpen, setOfficePopoverOpen] = useState(false);
   const chatStore = useChatStore();
   const { t, tf, dir } = useAppTranslation();
+  const subscriptionNav = useSubscriptionNavCopy();
   const isRTL = dir === 'rtl';
   const { authorized: financeAuthorized } = useFinanceAccess();
   const { open: mobileNavOpen, setOpen: setMobileNavOpen, close: closeMobileNav } = useMobileNav();
@@ -124,6 +130,7 @@ const Sidebar = ({ activeTab, setActiveTab, expanded, onExpandedChange }: Sideba
   const recentMessages = chatStore.notifications.filter((m) => m.is_message);
   const unreadMessagesCount = recentMessages.filter((m) => m.unread).length;
   const railExpanded = expanded;
+  const subscriptionActive = location.pathname.startsWith('/dashboard/subscription');
 
   const menuItems = useMemo<NavItem[]>(() => {
     return [
@@ -319,6 +326,10 @@ const Sidebar = ({ activeTab, setActiveTab, expanded, onExpandedChange }: Sideba
   const logoutModalRef = useRef<LogoutModalRef>(null);
   useShortcutAction('logout', () => logoutModalRef.current?.show());
 
+  const activePillId = menuItems.find((item) => isItemActive(item))?.id ?? null;
+  const desktopPill = useSlidePill(activePillId, railExpanded);
+  const mobilePill = useSlidePill(activePillId, mobileNavOpen);
+
   const navShortcut = (path?: string) => (path ? NAV_SHORTCUT_BY_PATH[path] : undefined);
 
   const renderBadge = (badge: number | string, className?: string) => (
@@ -353,11 +364,12 @@ const Sidebar = ({ activeTab, setActiveTab, expanded, onExpandedChange }: Sideba
                 toggleExpanded(item.id);
               }
             }}
+            data-pill-target={item.id}
             className={cn(
-              'flex min-h-10 flex-1 items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm font-medium transition-colors',
+              'relative z-[1] flex min-h-10 flex-1 items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm font-medium',
               active
-                ? 'bg-jure-600 text-white dark:bg-jure-500'
-                : 'text-muted-foreground dark:text-white hover:bg-jure-50 hover:text-jure-600 dark:hover:bg-jure-600/10 dark:hover:text-white',
+                ? 'text-white transition-[color] duration-150 delay-200'
+                : 'text-muted-foreground transition-[color,background-color] duration-150 delay-[220ms,_0ms] hover:bg-jure-50 hover:text-jure-600 dark:text-white dark:hover:bg-jure-600/10 dark:hover:text-white',
             )}
             aria-current={active && !hasChildren ? 'page' : undefined}
           >
@@ -522,7 +534,8 @@ const Sidebar = ({ activeTab, setActiveTab, expanded, onExpandedChange }: Sideba
               <PopoverTrigger asChild>
                 <button
                   type="button"
-                  className={railIconButtonClass(active, false)}
+                  data-pill-target={item.id}
+                  className={railIconButtonClass(active, false, true)}
                   aria-current={active ? 'page' : undefined}
                   aria-label={item.label}
                 >
@@ -582,7 +595,8 @@ const Sidebar = ({ activeTab, setActiveTab, expanded, onExpandedChange }: Sideba
                   handleNavigate(item.id, item.path, { closeMobile: false });
                 }
               }}
-              className={cn(railIconButtonClass(active, true), 'flex-1')}
+              data-pill-target={item.id}
+              className={cn(railIconButtonClass(active, true, true), 'flex-1')}
               aria-current={active ? 'page' : undefined}
             >
               <Icon size={16} strokeWidth={1.75} className="shrink-0" />
@@ -642,7 +656,8 @@ const Sidebar = ({ activeTab, setActiveTab, expanded, onExpandedChange }: Sideba
             handleNavigate(item.id, item.path, { closeMobile: false });
           }
         }}
-        className={railIconButtonClass(active, railExpanded)}
+        data-pill-target={item.id}
+        className={railIconButtonClass(active, railExpanded, true)}
         aria-current={active ? 'page' : undefined}
         aria-label={item.label}
       >
@@ -805,12 +820,32 @@ const Sidebar = ({ activeTab, setActiveTab, expanded, onExpandedChange }: Sideba
           </SheetHeader>
 
           <nav className="min-h-0 flex-1 overflow-y-auto px-2 py-2" aria-label={t.sidebar.navAria}>
-            <div className="flex flex-col gap-0.5">
+            <div ref={mobilePill.setRoot} className="relative isolate flex flex-col gap-0.5">
+              <div
+                ref={mobilePill.pillRef}
+                aria-hidden
+                className="pointer-events-none absolute inset-0 z-0 bg-jure-600 opacity-0 dark:bg-jure-500"
+              />
               {menuItems.map((item) => renderMobileNavButton(item))}
             </div>
           </nav>
 
           <div className="shrink-0 border-t border-border px-2 py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
+            <button
+              type="button"
+              onClick={() => {
+                navigate('/dashboard/subscription');
+                closeMobileNav();
+              }}
+              aria-current={subscriptionActive ? 'page' : undefined}
+              className={cn(
+                'mb-2 w-full rounded-lg bg-gradient-to-r from-jure-50 to-jure-100 p-2 text-start dark:from-jure-900/20 dark:to-jure-800/20',
+                subscriptionActive && 'ring-1 ring-jure-600',
+              )}
+            >
+              <div className="mb-0.5 text-xs font-medium leading-snug text-foreground">{subscriptionNav.summary}</div>
+              <span className="text-xs font-medium text-jure-600 dark:text-jure-400">{subscriptionNav.action}</span>
+            </button>
             <div className="mb-1.5 flex h-9 items-center justify-center px-2">
               <LangSwitcher />
             </div>
@@ -851,10 +886,17 @@ const Sidebar = ({ activeTab, setActiveTab, expanded, onExpandedChange }: Sideba
               </div>
 
               <nav
-                className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto overflow-x-hidden px-1.5"
+                className="flex min-h-0 flex-1 flex-col overflow-y-auto overflow-x-hidden px-1.5"
                 aria-label={t.sidebar.navAria}
               >
-                {menuItems.map((item) => renderDesktopNavItem(item))}
+                <div ref={desktopPill.setRoot} className="relative isolate flex flex-col gap-0.5">
+                  <div
+                    ref={desktopPill.pillRef}
+                    aria-hidden
+                    className="pointer-events-none absolute inset-0 z-0 bg-jure-600 opacity-0 dark:bg-jure-500"
+                  />
+                  {menuItems.map((item) => renderDesktopNavItem(item))}
+                </div>
               </nav>
 
               <div className="mt-1.5 shrink-0 space-y-1.5 border-t border-border px-1.5 pt-2">
@@ -868,21 +910,41 @@ const Sidebar = ({ activeTab, setActiveTab, expanded, onExpandedChange }: Sideba
 
                 {renderDesktopOffice()}
 
-                {railExpanded && (
-                  <div className="rounded-lg bg-gradient-to-r from-jure-50 to-jure-100 p-2 dark:from-jure-900/20 dark:to-jure-800/20">
-                    <div className="mb-0.5 text-xs font-medium text-foreground">
-                      {t.sidebar.upgradeTitle}
+                {railExpanded ? (
+                  <button
+                    type="button"
+                    onClick={() => navigate('/dashboard/subscription')}
+                    aria-current={subscriptionActive ? 'page' : undefined}
+                    className={cn(
+                      'w-full rounded-lg bg-gradient-to-r from-jure-50 to-jure-100 p-2 text-start dark:from-jure-900/20 dark:to-jure-800/20',
+                      subscriptionActive && 'ring-1 ring-jure-600',
+                    )}
+                  >
+                    <div className="mb-1 text-xs font-medium leading-snug text-foreground">
+                      {subscriptionNav.summary}
                     </div>
-                    <div className="mb-1 text-xs leading-tight text-muted-foreground">
-                      {t.sidebar.upgradeSubtitle}
-                    </div>
-                    <button
-                      type="button"
-                      className="text-xs font-medium text-jure-600 hover:text-jure-700 dark:text-jure-400 dark:hover:text-jure-300"
-                    >
-                      {t.sidebar.upgradeCta}
-                    </button>
-                  </div>
+                    <span className="text-xs font-medium text-jure-600 hover:text-jure-700 dark:text-jure-400 dark:hover:text-jure-300">
+                      {subscriptionNav.action}
+                    </span>
+                  </button>
+                ) : (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        type="button"
+                        onClick={() => navigate('/dashboard/subscription')}
+                        aria-label={subscriptionNav.summary}
+                        aria-current={subscriptionActive ? 'page' : undefined}
+                        className={cn(
+                          'mx-auto flex h-8 w-8 items-center justify-center rounded-lg text-jure-600 hover:bg-jure-50 dark:text-jure-300 dark:hover:bg-jure-900/30',
+                          subscriptionActive && 'bg-jure-50 ring-1 ring-jure-600 dark:bg-jure-900/40',
+                        )}
+                      >
+                        <Sparkles size={16} />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent side={flyoutSide}>{subscriptionNav.summary}</TooltipContent>
+                  </Tooltip>
                 )}
               </div>
             </aside>

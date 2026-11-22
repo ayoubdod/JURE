@@ -126,3 +126,20 @@ MODE_TO_OPERATION = {
     "DOCUMENT_DRAFTING": "legal_drafting",
     "CONTRACT_ANALYSIS": "contract_analysis",
 }
+
+# Sizes are the initial catalogue. Prices are unset until the business approves them.
+# A package with no price cannot be purchased.
+STORAGE_PACKAGES = [
+    {"code": "storage_s", "name": "Storage S", "description": "5 GB of additional cabinet storage.", "capacity_bytes": 5 * GB, "price": None, "display_order": 10},
+    {"code": "storage_m", "name": "Storage M", "description": "10 GB of additional cabinet storage.", "capacity_bytes": 10 * GB, "price": None, "display_order": 20},
+    {"code": "storage_l", "name": "Storage L", "description": "25 GB of additional cabinet storage.", "capacity_bytes": 25 * GB, "price": None, "display_order": 30},
+    {"code": "storage_xl", "name": "Storage XL", "description": "50 GB of additional cabinet storage.", "capacity_bytes": 50 * GB, "price": None, "display_order": 40},
+    {"code": "storage_xxl", "name": "Storage XXL", "description": "100 GB of additional cabinet storage.", "capacity_bytes": 100 * GB, "price": None, "display_order": 50},
+]
+
+# Proposed credit prices. Staff can change them in admin without a deploy.
+CREDIT_PACKAGES = [
+    {"code": "ai_starter", "name": "AI Starter", "description": "250 JURIA credits, valid for 90 days.", "credits": 250, "price": "99.00", "validity_days": 90, "display_order": 10},
+    {"code": "ai_growth", "name": "AI Growth", "description": "750 JURIA credits, valid for 90 days.", "credits": 750, "price": "249.00", "validity_days": 90, "display_order": 20},
+    {"code": "ai_pro", "name": "AI Pro", "description": "2,000 JURIA credits, valid for 90 days.", "credits": 2000, "price": "599.00", "validity_days": 90, "display_order": 30},
+]

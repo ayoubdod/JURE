@@ -27,6 +27,7 @@ import {
   Bell,
   FileText,
   UserCheck,
+  Scale,
 } from 'lucide-react';
 import {
   CommandDialog,
@@ -80,6 +81,7 @@ const ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   newChat: MessageSquare,
   conflictCheck: ShieldAlert,
   clauseLibrary: BookOpenCheck,
+  deadlineCalculator: Scale,
   closeMatter: Flag,
 };
 

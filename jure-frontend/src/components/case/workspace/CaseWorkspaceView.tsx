@@ -59,6 +59,7 @@ import ConsultationDetailWorkspace from '@/components/case/workspace/consultatio
 import LitigationDetailWorkspace from '@/components/case/workspace/litigation-detail/LitigationDetailWorkspace';
 import AdministrativeDetailWorkspace from '@/components/case/workspace/administrative-detail/AdministrativeDetailWorkspace';
 import ResearchNotebookCard from '@/components/dashboard/ResearchNotebookCard';
+import EvidenceManagerCard from '@/components/dashboard/EvidenceManagerCard';
 import { FinanceTab } from '@/components/case/panel/tabs/FinanceTab';
 import { JuriaCasePanel } from '@/components/juria/JuriaCasePanel';
 import CaseModal, { CaseModalRef } from '@/components/case/CaseModal';
@@ -701,6 +702,7 @@ function CaseMatterWorkspaceView({
 
           <TabsContent value="documents" className="mt-0 px-4 py-6 sm:px-6 lg:px-8">
             <div className="mx-auto max-w-5xl space-y-4">
+              <EvidenceManagerCard caseId={caseItem.id} matterTitle={caseItem.title} />
               {requiredDocs.length > 0 ? (
                 <ul className="space-y-2">
                   {requiredDocs.map((doc, i) => (

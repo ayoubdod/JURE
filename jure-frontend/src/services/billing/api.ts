@@ -13,6 +13,7 @@ export type PublicPlan = {
   monthly_juria_credits: number | null;
   is_self_serve: boolean;
   is_recommended: boolean;
+  display_order: number;
   features: string[];
 };
 
@@ -49,7 +50,9 @@ export type CurrentSubscription = {
   list_price: string | null;
   currency: string;
   trial_end: string | null;
+  trial_start?: string | null;
   trial_days_left: number | null;
+  current_period_start?: string | null;
   renews_or_expires_at: string | null;
   cancel_at_period_end: boolean;
   cancellation_date: string | null;
@@ -80,3 +83,101 @@ export const changeSubscriptionPlan = (planCode: string, billingCycle: 'monthly'
   });
 
 export const cancelSubscription = () => axiosInstance.post('/subscriptions/cancel/');
+
+export type StoragePackage = {
+  code: string;
+  name: string;
+  description: string;
+  capacity_bytes: number;
+  price: string | null;
+  currency: string;
+  billing_type: string;
+  is_purchasable: boolean;
+  price_approved: boolean;
+};
+
+export type CreditPackageOffer = {
+  code: string;
+  name: string;
+  description: string;
+  credits: number;
+  price: string | null;
+  currency: string;
+  validity_days: number;
+  is_purchasable: boolean;
+};
+
+export type AddonPurchaseRow = {
+  id: number;
+  kind: string;
+  package_code: string;
+  package_name: string;
+  capacity_bytes: number | null;
+  credits: number | null;
+  validity_days: number | null;
+  subtotal: string;
+  currency: string;
+  tax_confirmed: boolean;
+  payment_reference: string;
+  bank_reference: string | null;
+  status: string;
+  created_at: string;
+  activated_at: string | null;
+};
+
+export type StorageSummary = {
+  included_bytes: number | null;
+  purchased_bytes: number;
+  total_bytes: number | null;
+  used_bytes: number;
+  remaining_bytes: number | null;
+  usage_percent: number | null;
+  level: 'normal' | 'warning' | 'critical' | 'full';
+  breakdown: { library_bytes: number; case_bytes: number; juria_bytes: number; total_bytes: number };
+  packages: StoragePackage[];
+  pending_purchases?: AddonPurchaseRow[];
+  can_manage: boolean;
+  tax_confirmed: boolean;
+};
+
+export type CreditLotRow = { remaining: number; issued: number; expires_at: string; expiring_soon: boolean };
+
+export type CreditHistoryRow = {
+  movement_type: string;
+  amount: number;
+  balance_after: number;
+  created_at: string;
+};
+
+export type CreditSummary = {
+  total_available: number;
+  monthly_allowance: number | null;
+  monthly_remaining: number;
+  monthly_used: number;
+  purchased_remaining: number;
+  trial_remaining: number;
+  lots: CreditLotRow[];
+  alerts: string[];
+  history?: CreditHistoryRow[];
+  packages: CreditPackageOffer[];
+  pending_purchases?: AddonPurchaseRow[];
+  can_manage: boolean;
+  tax_confirmed: boolean;
+};
+
+export type BillingHistory = {
+  invoices: SubscriptionInvoice[];
+  purchases: AddonPurchaseRow[];
+  tax_confirmed: boolean;
+};
+
+export const fetchStorageSummary = () => axiosInstance.get<StorageSummary>('/subscriptions/storage/');
+export const fetchCreditSummary = () => axiosInstance.get<CreditSummary>('/subscriptions/credits/');
+export const fetchBillingHistory = () => axiosInstance.get<BillingHistory>('/subscriptions/billing/');
+export const requestStoragePurchase = (packageCode: string) =>
+  axiosInstance.post<AddonPurchaseRow>('/subscriptions/storage/purchase/', { package_code: packageCode });
+export const requestCreditPurchase = (packageCode: string) =>
+  axiosInstance.post<AddonPurchaseRow>('/subscriptions/credits/purchase/', { package_code: packageCode });
+export const cancelAddonPurchase = (purchaseId: number) =>
+  axiosInstance.post<AddonPurchaseRow>(`/subscriptions/purchases/${purchaseId}/cancel/`);
+

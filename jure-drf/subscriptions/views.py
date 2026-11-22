@@ -121,8 +121,18 @@ class ChangePlanView(APIView):
                 else {
                     "number": invoice.number,
                     "status": invoice.status,
+                    "subtotal": str(invoice.subtotal),
                     "total": str(invoice.total),
                     "currency": invoice.currency,
+                },
+                "payment_instructions": None
+                if invoice is None
+                else {
+                    "method": "bank_transfer",
+                    "reference": invoice.number,
+                    "amount_excl_vat": str(invoice.subtotal),
+                    "currency": invoice.currency,
+                    "tax_confirmed": False,
                 },
                 "subscription": _subscription_payload(request.user),
             }

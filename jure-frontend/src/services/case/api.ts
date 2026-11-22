@@ -114,16 +114,53 @@ export const apiRetryConsultationEmail = (id: number) =>
       {}
     );
 
+/** G1 — real schedule conflict preview (not a stub). */
+export type ScheduleConflictPreviewItem = NonNullable<API.Case['scheduleConflicts']>[number];
+
+export const apiPreviewScheduleConflicts = (params: {
+  assignedTo: number | number[];
+  date: string;
+  durationMinutes: number;
+  excludeCaseId?: number;
+}) => {
+  const assigned = Array.isArray(params.assignedTo) ? params.assignedTo : [params.assignedTo];
+  return axiosInstance.get<{ conflicts: ScheduleConflictPreviewItem[] }>(
+    `${CASES_BASE}schedule-conflicts/`,
+    {
+      params: {
+        assignedTo: assigned,
+        date: params.date,
+        durationMinutes: params.durationMinutes,
+        ...(params.excludeCaseId != null ? { excludeCaseId: params.excludeCaseId } : {}),
+      },
+      paramsSerializer: {
+        indexes: null,
+      },
+    }
+  );
+};
+
 export const apiGetCaseAttachments = (id: number) =>
     axiosInstance.get<API.CaseAttachment[]>(`${CASES_BASE}${id}/attachments/`);
 
-export const apiUploadCaseAttachment = (id: number, file: File) => {
+export const apiUploadCaseAttachment = (id: number, file: File, otherType?: string) => {
     const form = new FormData();
     form.append('file', file);
+    if (otherType) form.append('other_type', otherType);
     return axiosInstance.post<API.CaseAttachment>(`${CASES_BASE}${id}/attachments/`, form, {
         headers: { 'Content-Type': 'multipart/form-data' },
     });
 };
+
+export const apiPatchCaseAttachment = (
+  caseId: number,
+  attachmentId: number,
+  data: { other_type: string }
+) =>
+  axiosInstance.patch<API.CaseAttachment>(
+    `${CASES_BASE}${caseId}/attachments/${attachmentId}/`,
+    data
+  );
 
 export const apiDeleteCaseAttachment = (caseId: number, attachmentId: number) =>
     axiosInstance.delete(`${CASES_BASE}${caseId}/attachments/${attachmentId}/`);

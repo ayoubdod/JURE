@@ -17,9 +17,21 @@ from cabinets.models import Cabinet
 from core.testing import api_client_for, create_cabinet_member, create_cabinet_owner
 from jurisdictions.models import Jurisdiction
 from subscriptions.exceptions import EntitlementDenied
-from subscriptions.models import BankTransfer, CreditLedger, CreditWallet, Plan, Subscription, SubscriptionInvoice
+from subscriptions.models import (
+    AddonPurchase,
+    BankTransfer,
+    CreditLedger,
+    CreditLot,
+    CreditPackage,
+    CreditWallet,
+    Plan,
+    StoragePackage,
+    Subscription,
+    SubscriptionInvoice,
+)
 from subscriptions.services.bank_transfer import record_bank_transfer
 from subscriptions.services.catalog import seed_catalog
+from subscriptions.services.lifecycle import activate_from_verified_payment
 from subscriptions.services.credits import grant, reserve_for_operation
 from subscriptions.services.entitlements import assert_can_add_member, assert_storage
 from subscriptions.services.lifecycle import load_subscription, mark_verified, provision_trial
@@ -406,3 +418,123 @@ class BankTransferAdminTests(TestCase):
         self.assertEqual(transfer.subscription.plan, enterprise)
         self.assertEqual(transfer.subscription.status, Subscription.Status.ACTIVE)
         self.assertEqual(self.cabinet.credit_wallet.balance, 250)
+
+
+class AddonPurchaseTests(APITestCase):
+    def setUp(self):
+        seed_catalog()
+        self.owner, self.cabinet = create_cabinet_owner(email="addon@example.com", trade_name="Cabinet Addons")
+        provision_trial(cabinet=self.cabinet, plan_code="cabinet", billing_cycle="monthly")
+        mark_verified(self.owner)
+        self.client = api_client_for(self.owner)
+        self.staff = User.objects.create_superuser(
+            email="addon-staff@example.com",
+            password="testpass123",
+            phone="+212600000081",
+            first_name="Addon",
+            last_name="Staff",
+        )
+
+    def test_unpriced_storage_cannot_be_purchased_and_priced_storage_waits_for_staff(self):
+        from subscriptions.services.resources import verify_addon_purchase
+
+        blocked = self.client.post("/api/v1/subscriptions/storage/purchase/", {"package_code": "storage_m"}, format="json")
+        self.assertEqual(blocked.status_code, status.HTTP_400_BAD_REQUEST)
+        StoragePackage.objects.filter(code="storage_m").update(price=Decimal("150.00"))
+        created = self.client.post("/api/v1/subscriptions/storage/purchase/", {"package_code": "storage_m"}, format="json")
+        self.assertEqual(created.status_code, status.HTTP_201_CREATED, created.data)
+        self.assertEqual(created.data["status"], AddonPurchase.Status.PENDING_VERIFICATION)
+        self.assertFalse(created.data["tax_confirmed"])
+        plan_bytes = self.cabinet.subscription.plan.storage_bytes
+        from subscriptions.services.entitlements import storage_limit_bytes
+
+        self.assertEqual(storage_limit_bytes(self.cabinet.subscription), plan_bytes)
+        purchase = AddonPurchase.objects.get(pk=created.data["id"])
+        verify_addon_purchase(purchase=purchase, bank_reference="VIR-STO-1", note="", verified_by=self.staff)
+        self.cabinet.subscription.refresh_from_db()
+        self.assertEqual(storage_limit_bytes(self.cabinet.subscription), plan_bytes + purchase.capacity_bytes)
+        with self.assertRaises(Exception):
+            verify_addon_purchase(purchase=purchase, bank_reference="VIR-STO-2", note="", verified_by=self.staff)
+
+    def test_member_cannot_purchase_and_other_cabinet_cannot_cancel(self):
+        CreditPackage.objects.filter(code="ai_starter").update(price=Decimal("99.00"))
+        member = create_cabinet_member(self.cabinet, email="addon-member@example.com", role="LAWYER")
+        denied = api_client_for(member).post(
+            "/api/v1/subscriptions/credits/purchase/",
+            {"package_code": "ai_starter"},
+            format="json",
+        )
+        self.assertEqual(denied.status_code, status.HTTP_403_FORBIDDEN)
+        created = self.client.post("/api/v1/subscriptions/credits/purchase/", {"package_code": "ai_starter"}, format="json")
+        other, _other_cabinet = create_cabinet_owner(email="addon-other@example.com")
+        stolen = api_client_for(other).post(f"/api/v1/subscriptions/purchases/{created.data['id']}/cancel/")
+        self.assertEqual(stolen.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(AddonPurchase.objects.get(pk=created.data["id"]).status, AddonPurchase.Status.PENDING_VERIFICATION)
+
+    def test_credits_are_granted_once_and_survive_subscription_payment(self):
+        from subscriptions.services.resources import reject_addon_purchase, verify_addon_purchase
+
+        created = self.client.post("/api/v1/subscriptions/credits/purchase/", {"package_code": "ai_starter"}, format="json")
+        purchase = AddonPurchase.objects.get(pk=created.data["id"])
+        self.cabinet.credit_wallet.refresh_from_db()
+        self.assertEqual(self.cabinet.credit_wallet.balance, 100)
+        reject = AddonPurchase.objects.get(pk=purchase.pk)
+        # A rejected purchase grants nothing. Use a second request for the successful path.
+        reject_addon_purchase(purchase=reject, note="not received", verified_by=self.staff)
+        self.cabinet.credit_wallet.refresh_from_db()
+        self.assertEqual(self.cabinet.credit_wallet.balance, 100)
+
+        created = self.client.post("/api/v1/subscriptions/credits/purchase/", {"package_code": "ai_starter"}, format="json")
+        purchase = AddonPurchase.objects.get(pk=created.data["id"])
+        verify_addon_purchase(purchase=purchase, bank_reference="VIR-AIC-1", note="", verified_by=self.staff)
+        self.cabinet.credit_wallet.refresh_from_db()
+        self.assertEqual(self.cabinet.credit_wallet.balance, 350)
+        lot = CreditLot.objects.get(purchase=purchase)
+        self.assertEqual(lot.remaining, 250)
+        reserve_for_operation(
+            user=self.owner,
+            cabinet=self.cabinet,
+            operation="legal_drafting",
+            idempotency_key="addon-draft",
+        )
+        lot.refresh_from_db()
+        self.cabinet.credit_wallet.refresh_from_db()
+        self.assertEqual(lot.remaining, 245)
+        self.assertEqual(self.cabinet.credit_wallet.balance, 345)
+        activate_from_verified_payment(self.cabinet.subscription, event_id="evt-keep-purchased")
+        self.cabinet.credit_wallet.refresh_from_db()
+        lot.refresh_from_db()
+        self.assertEqual(lot.remaining, 245)
+        self.assertEqual(self.cabinet.credit_wallet.balance, 500 + 245)
+
+    def test_expired_purchased_credits_are_not_spent(self):
+        from subscriptions.services.resources import verify_addon_purchase
+
+        created = self.client.post("/api/v1/subscriptions/credits/purchase/", {"package_code": "ai_starter"}, format="json")
+        purchase = AddonPurchase.objects.get(pk=created.data["id"])
+        verify_addon_purchase(purchase=purchase, bank_reference="VIR-AIC-EXP", note="", verified_by=self.staff)
+        lot = CreditLot.objects.get(purchase=purchase)
+        lot.expires_at = timezone.now() - timedelta(days=1)
+        lot.save(update_fields=["expires_at"])
+        reserve_for_operation(
+            user=self.owner,
+            cabinet=self.cabinet,
+            operation="legal_question",
+            idempotency_key="after-expiry",
+        )
+        lot.refresh_from_db()
+        self.cabinet.credit_wallet.refresh_from_db()
+        self.assertEqual(lot.remaining, 0)
+        self.assertEqual(self.cabinet.credit_wallet.balance, 99)
+
+    def test_legacy_cabinet_without_subscription_is_not_metered(self):
+        legacy, legacy_cabinet = create_cabinet_owner(email="legacy-addon@example.com")
+        self.assertFalse(hasattr(legacy_cabinet, "subscription") and Subscription.objects.filter(cabinet=legacy_cabinet).exists())
+        assert_storage(legacy_cabinet, 10 ** 12)
+        denied = api_client_for(legacy).post(
+            "/api/v1/subscriptions/credits/purchase/",
+            {"package_code": "ai_starter"},
+            format="json",
+        )
+        self.assertEqual(denied.status_code, status.HTTP_400_BAD_REQUEST)
+

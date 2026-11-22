@@ -397,6 +397,8 @@ CONTACT_INBOX = env.str("CONTACT_INBOX", default="contact@jure.ma")
 # --------------------------------------------------------------------------------------
 REDIS_URL = env.str("REDIS_URL", default="redis://127.0.0.1:6379/0")
 USE_INMEMORY_CHANNEL_LAYER = env.bool("USE_INMEMORY_CHANNEL_LAYER", default=True)
+# P3.5: short-lived overview payload cache (seconds). 0 disables.
+DASHBOARD_OVERVIEW_CACHE_TTL = env.int("DASHBOARD_OVERVIEW_CACHE_TTL", default=30)
 
 if USE_INMEMORY_CHANNEL_LAYER:
     CHANNEL_LAYERS = {

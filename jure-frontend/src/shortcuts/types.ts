@@ -9,6 +9,7 @@ export type ShortcutActionId =
   | 'conflict-check'
   | 'clause-library'
   | 'close-matter'
+  | 'deadline-calculator'
   | 'search-records'
   | 'logout';
 

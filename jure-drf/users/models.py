@@ -143,7 +143,7 @@ class User(AbstractUser):
 
     bio = models.TextField(_('bio'), blank=True, null=True)
     is_cabinet_member = models.BooleanField(_('Is Cabinet Member'), default=False, blank=True)
-    cabinet : models.ForeignKey['Cabinet'] = models.ForeignKey('cabinets.Cabinet', on_delete=models.SET_NULL, null=True, blank=True)
+    cabinet : models.ForeignKey['Cabinet'] = models.ForeignKey('cabinets.Cabinet', on_delete=models.CASCADE, null=True, blank=True)
     cabinet_creator : models.ForeignKey['Cabinet'] = models.ForeignKey('cabinets.Cabinet', on_delete=models.SET_NULL, null=True, blank=True, related_name='created_users')
     address = models.CharField(max_length=256,null=True,blank=True)
 
