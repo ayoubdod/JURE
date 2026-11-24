@@ -1,6 +1,6 @@
-'use client';
+﻿'use client';
 
-import type { ReactNode, Ref } from 'react';
+import { useEffect, type ReactNode, type Ref } from 'react';
 import { cn } from '@/lib/utils';
 import CaseWorkspaceNav from './CaseWorkspaceNav';
 import CaseWorkspaceModalHost, {
@@ -37,10 +37,18 @@ export default function CaseWorkspaceShell({
   enableHearingDialog?: boolean;
   enableDeadlineDialog?: boolean;
 }) {
+  useEffect(() => {
+    const prev = document.title;
+    const next = [caseItem.reference, caseItem.title].filter(Boolean).join(' · ');
+    if (next) document.title = next;
+    return () => {
+      document.title = prev;
+    };
+  }, [caseItem.reference, caseItem.title]);
+
   return (
     <div className="flex h-full min-h-0 flex-col overflow-hidden bg-transparent">
       {header}
-
       <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
         <CaseWorkspaceNav
           items={navItems}
@@ -48,14 +56,15 @@ export default function CaseWorkspaceShell({
           navLabel={navLabel}
           onSelect={onSelectNav}
         />
-
-        <div
+        <main
           className={cn(
             'min-h-0 min-w-0 flex-1',
             activeLeaf === 'juria' ? 'flex flex-col overflow-hidden' : 'overflow-y-auto'
           )}
         >
           <div
+            id={`case-workspace-panel-${activeLeaf}`}
+            role="tabpanel"
             className={cn(
               'px-3 py-4 sm:px-5 lg:px-6',
               activeLeaf === 'juria' && 'flex h-full min-h-0 flex-1 flex-col overflow-hidden p-0'
@@ -63,7 +72,7 @@ export default function CaseWorkspaceShell({
           >
             {children}
           </div>
-        </div>
+        </main>
       </div>
 
       <CaseWorkspaceModalHost

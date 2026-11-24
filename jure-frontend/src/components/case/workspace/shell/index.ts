@@ -13,11 +13,7 @@ export { useCaseSummary } from './useCaseSummary';
 export { useCaseWorkspaceController } from './useCaseWorkspaceController';
 export { primaryCtaLabel } from './primaryCtaLabel';
 export { resolveWorkspaceKind } from './resolveWorkspaceKind';
-export {
-  applyLeafToSearchParams,
-  stripConvertSearchParam,
-  shouldRedirectFollowUpToParent,
-} from './navigationGuards';
+export { default as CaseWorkspaceSkeleton } from './CaseWorkspaceSkeleton';
 export {
   resolveConsultationHash,
   shouldOpenConvertFromQuery,

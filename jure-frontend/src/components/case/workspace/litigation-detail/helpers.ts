@@ -12,13 +12,6 @@ export function personName(u?: API.User | null) {
   return `${u.first_name ?? ''} ${u.last_name ?? ''}`.trim() || u.email || '';
 }
 
-export function initials(u?: API.User | null) {
-  if (!u) return '?';
-  const a = (u.first_name ?? '').trim().charAt(0);
-  const b = (u.last_name ?? '').trim().charAt(0);
-  return (`${a}${b}`.toUpperCase() || u.email?.charAt(0).toUpperCase() || '?');
-}
-
 export function attorneysOf(c: API.Case): API.User[] {
   if (c.assigned_attorneys?.length) return c.assigned_attorneys;
   return c.assigned_to ? [c.assigned_to] : [];

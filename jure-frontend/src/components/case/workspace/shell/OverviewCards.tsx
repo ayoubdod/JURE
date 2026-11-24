@@ -1,6 +1,7 @@
 'use client';
 
 import type { ReactNode } from 'react';
+import { Inbox } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export function OverviewCard({
@@ -34,19 +35,24 @@ export function OverviewEmpty({
   message,
   actionLabel,
   onAction,
+  icon,
 }: {
   message: string;
   actionLabel?: string;
   onAction?: () => void;
+  icon?: ReactNode;
 }) {
   return (
     <div className="flex flex-col items-start gap-2 py-1">
+      <div className="text-slate-400" aria-hidden>
+        {icon ?? <Inbox className="h-5 w-5" />}
+      </div>
       <p className="text-[13px] text-slate-500">{message}</p>
       {actionLabel && onAction ? (
         <button
           type="button"
           onClick={onAction}
-          className="min-h-11 text-[13px] font-medium text-[#64499D] hover:underline"
+          className="min-h-11 text-[13px] font-medium text-[#64499D] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#64499D]/40"
         >
           {actionLabel}
         </button>

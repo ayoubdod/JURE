@@ -1,6 +1,7 @@
 import { Skeleton } from '@/components/ui/skeleton';
 
-export default function LitigationWorkspaceSkeleton() {
+/** Shared loading chrome: header + nav + command-center cards (no layout shift). */
+export default function CaseWorkspaceSkeleton() {
   return (
     <div className="flex h-full min-h-0 flex-col overflow-hidden bg-transparent">
       <header className="shrink-0 border-b border-slate-200 bg-white dark:border-zinc-800 dark:bg-zinc-950">
@@ -12,15 +13,20 @@ export default function LitigationWorkspaceSkeleton() {
             <Skeleton className="h-5 w-48 sm:w-72" />
             <Skeleton className="h-3 w-24" />
           </div>
-          <Skeleton className="h-9 w-36 rounded-lg" />
-          <Skeleton className="h-9 w-9 rounded-lg" />
-          <Skeleton className="h-9 w-9 rounded-lg" />
+          <Skeleton className="min-h-11 w-36 rounded-lg" />
+          <Skeleton className="min-h-11 w-11 rounded-lg" />
+          <Skeleton className="min-h-11 w-11 rounded-lg" />
         </div>
       </header>
       <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
+        <div className="flex gap-1 overflow-x-auto p-2 lg:hidden" aria-hidden>
+          {Array.from({ length: 5 }).map((_, i) => (
+            <Skeleton key={i} className="min-h-11 w-24 shrink-0 rounded-lg" />
+          ))}
+        </div>
         <div className="hidden min-h-0 w-[232px] overflow-y-auto border-e border-slate-200 p-3 dark:border-zinc-800 lg:block">
           {Array.from({ length: 7 }).map((_, i) => (
-            <Skeleton key={i} className="mb-2 h-11 w-full rounded-lg" />
+            <Skeleton key={i} className="mb-2 min-h-11 w-full rounded-lg" />
           ))}
         </div>
         <div className="min-w-0 flex-1 space-y-3 p-4 sm:p-5">

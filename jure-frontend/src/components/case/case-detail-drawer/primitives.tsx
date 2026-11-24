@@ -4,14 +4,6 @@ import { getCountdownDays, getCountdownStyle } from '@/utils/caseCardHelpers';
 import { formatDrawerDate } from './format';
 import { useAppTranslation } from '@/i18n';
 
-export function SectionTitle({ children }: { children: React.ReactNode }) {
-  return (
-    <h3 className="text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400 mb-3">
-      {children}
-    </h3>
-  );
-}
-
 export function Field({
   label,
   children,
@@ -50,21 +42,6 @@ export function TagList({ items }: { items: string[] }) {
         </span>
       ))}
     </div>
-  );
-}
-
-export function BoolTag({ value }: { value: boolean | null | undefined }) {
-  const { t } = useAppTranslation();
-  if (value == null) return <span className="text-[13px]">—</span>;
-  return (
-    <span
-      className={cn(
-        'inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide',
-        value ? 'bg-blue-500/15 text-blue-700 dark:text-blue-400 ring-1 ring-blue-500/25' : 'bg-slate-500/12 text-slate-600 dark:text-slate-400 ring-1 ring-slate-500/20'
-      )}
-    >
-      {value ? t.common.yes : t.common.no}
-    </span>
   );
 }
 

@@ -3,21 +3,7 @@ import { consultationOutcome } from '@/services/case/caseType';
 import { getCaseData } from '@/utils/caseCardHelpers';
 import { consultationStatusOf, type ConsultationStatusKey } from '../consultationStatus';
 
-export function attorneysOf(c: API.Case): API.User[] {
-  if (c.assigned_attorneys?.length) return c.assigned_attorneys;
-  return c.assigned_to ? [c.assigned_to] : [];
-}
-
-export function personName(u?: API.User | null) {
-  if (!u) return '';
-  return `${u.first_name ?? ''} ${u.last_name ?? ''}`.trim() || u.email || '';
-}
-
-export function consultationTypeBadge(c: API.Case): 'PREVENTIVE' | 'REACTIVE' | null {
-  const raw = String(getCaseData(c, 'consultation_type') || '').toUpperCase();
-  if (raw === 'PREVENTIVE' || raw === 'REACTIVE') return raw;
-  return null;
-}
+export { attorneysOf, personName } from '../litigation-detail/helpers';
 
 export function outcomeOf(c: API.Case): ConsultationStatusKey {
   return consultationStatusOf(c);

@@ -1,3 +1,5 @@
+import type { ReactNode } from 'react';
+import { Inbox } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
@@ -9,8 +11,8 @@ export function WorkspaceCard({
   as: Heading = 'h2',
 }: {
   title: string;
-  action?: React.ReactNode;
-  children: React.ReactNode;
+  action?: ReactNode;
+  children: ReactNode;
   className?: string;
   /** Section-level cards use h2; nested cards inside a section use h3. */
   as?: 'h2' | 'h3';
@@ -33,38 +35,30 @@ export function WorkspaceCard({
   );
 }
 
-export function TextLink({
-  children,
-  onClick,
-}: {
-  children: React.ReactNode;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="text-[12px] font-medium text-[#64499D] hover:underline"
-    >
-      {children}
-    </button>
-  );
-}
-
 export function EmptyAction({
   message,
   actionLabel,
   onAction,
+  icon,
 }: {
   message: string;
   actionLabel?: string;
   onAction?: () => void;
+  icon?: ReactNode;
 }) {
   return (
     <div className="rounded-xl border border-dashed border-slate-200 px-4 py-8 text-center dark:border-zinc-800">
+      <div className="mb-2 flex justify-center text-slate-400" aria-hidden>
+        {icon ?? <Inbox className="h-5 w-5" />}
+      </div>
       <p className="text-[13px] text-slate-500">{message}</p>
       {actionLabel && onAction ? (
-        <Button type="button" variant="outline" className="mt-3 h-9 rounded-lg" onClick={onAction}>
+        <Button
+          type="button"
+          variant="outline"
+          className="mt-3 min-h-11 rounded-lg focus-visible:ring-2 focus-visible:ring-[#64499D]/40"
+          onClick={onAction}
+        >
           {actionLabel}
         </Button>
       ) : null}
@@ -91,32 +85,3 @@ export function SectionError({
   );
 }
 
-export function PersonAvatar({
-  name,
-  src,
-}: {
-  name: string;
-  src?: string | null;
-}) {
-  const initials = name
-    .split(' ')
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((p) => p[0])
-    .join('')
-    .toUpperCase() || '?';
-  if (src) {
-    return (
-      <img
-        src={src}
-        alt=""
-        className="h-8 w-8 rounded-full object-cover ring-1 ring-slate-200 dark:ring-zinc-700"
-      />
-    );
-  }
-  return (
-    <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-[#F7F4FF] text-[11px] font-semibold text-[#64499D] ring-1 ring-[#64499D]/15">
-      {initials}
-    </span>
-  );
-}
