@@ -11,55 +11,44 @@ const base: PrimaryCtaSummary = {
 };
 
 describe('resolvePrimaryCta · litigation', () => {
-  it('add hearing when none scheduled', () => {
+  it('defaults to add hearing when none scheduled', () => {
     expect(resolvePrimaryCta('LITIGATION', base, { canEdit: true })).toEqual({
       id: 'add_hearing',
       reason: 'none_scheduled',
     });
   });
 
-  it('prepare hearing when ≤7 days and prefer upload if docs missing', () => {
+  it('prepare hearing within 7 days, prefer upload when docs missing', () => {
     expect(
       resolvePrimaryCta(
         'LITIGATION',
-        { ...base, hasUpcomingHearing: true, nextHearingDays: 3, missingRequiredDocCount: 2 },
-        { canEdit: true }
-      )
-    ).toEqual({
-      id: 'prepare_hearing',
-      reason: 'missing_docs_for_hearing',
-      preferUpload: true,
-    });
-
-    expect(
-      resolvePrimaryCta(
-        'LITIGATION',
-        { ...base, hasUpcomingHearing: true, nextHearingDays: 7, missingRequiredDocCount: 0 },
+        { ...base, hasUpcomingHearing: true, nextHearingDays: 3 },
         { canEdit: true }
       )
     ).toEqual({ id: 'prepare_hearing', reason: 'hearing_soon' });
-  });
 
-  it('review deadlines when overdue and hearing not soon', () => {
     expect(
       resolvePrimaryCta(
         'LITIGATION',
-        {
-          ...base,
-          hasUpcomingHearing: true,
-          nextHearingDays: 30,
-          overdueDeadlineCount: 1,
-        },
+        { ...base, hasUpcomingHearing: true, nextHearingDays: 2, missingRequiredDocCount: 1 },
+        { canEdit: true }
+      )
+    ).toEqual({ id: 'prepare_hearing', reason: 'missing_docs_for_hearing', preferUpload: true });
+  });
+
+  it('reviews overdue deadlines then falls back to add task', () => {
+    expect(
+      resolvePrimaryCta(
+        'LITIGATION',
+        { ...base, hasUpcomingHearing: true, nextHearingDays: 14, overdueDeadlineCount: 1 },
         { canEdit: true }
       )
     ).toEqual({ id: 'review_deadlines', reason: 'overdue_deadline' });
-  });
 
-  it('falls back to add task', () => {
     expect(
       resolvePrimaryCta(
         'LITIGATION',
-        { ...base, hasUpcomingHearing: true, nextHearingDays: 30 },
+        { ...base, hasUpcomingHearing: true, nextHearingDays: 14 },
         { canEdit: true }
       )
     ).toEqual({ id: 'add_task', reason: 'default_add_task' });
@@ -67,28 +56,24 @@ describe('resolvePrimaryCta · litigation', () => {
 });
 
 describe('resolvePrimaryCta · administrative', () => {
-  it('prefers checklist, then deadline, then task, then mark completed', () => {
+  it('checklist → deadline → tasks → mark completed / add task', () => {
     expect(
       resolvePrimaryCta('ADMINISTRATIVE', { ...base, missingRequiredDocCount: 1 }, { canEdit: true })
     ).toMatchObject({ id: 'open_checklist' });
-
     expect(
       resolvePrimaryCta(
         'ADMINISTRATIVE',
-        { ...base, overdueDeadlineCount: 1 },
+        { ...base, nextDeadlineDays: 3 },
         { canEdit: true }
       )
     ).toMatchObject({ id: 'add_deadline' });
-
     expect(
       resolvePrimaryCta('ADMINISTRATIVE', { ...base, openTaskCount: 2 }, { canEdit: true })
     ).toMatchObject({ id: 'add_task' });
-
     expect(resolvePrimaryCta('ADMINISTRATIVE', base, { canEdit: true, caseClosed: false })).toEqual({
       id: 'mark_completed',
       reason: 'mark_completed',
     });
-
     expect(resolvePrimaryCta('ADMINISTRATIVE', base, { canEdit: true, caseClosed: true })).toEqual({
       id: 'add_task',
       reason: 'default_add_task',
@@ -101,27 +86,50 @@ describe('resolvePrimaryCta · administrative', () => {
 });
 
 describe('resolvePrimaryCta · consultation', () => {
-  it('join video → convert → follow-up → edit', () => {
+  it('join video wins first', () => {
     expect(
-      resolvePrimaryCta('CONSULTATION', { ...base, canJoinVideo: true }, { canEdit: true })
+      resolvePrimaryCta(
+        'CONSULTATION',
+        { ...base, canJoinVideo: true, canConvert: true },
+        { canEdit: true }
+      )
     ).toMatchObject({ id: 'join_video' });
+  });
 
+  it('convert wins when join is not available', () => {
     expect(
       resolvePrimaryCta('CONSULTATION', { ...base, canConvert: true }, { canEdit: true })
     ).toMatchObject({ id: 'convert' });
+  });
 
-    expect(resolvePrimaryCta('CONSULTATION', base, { canEdit: true })).toMatchObject({
-      id: 'add_follow_up',
-    });
-
+  it('completed or cancelled → add follow-up when allowed', () => {
+    expect(
+      resolvePrimaryCta(
+        'CONSULTATION',
+        { ...base, consultationCompleted: true },
+        { canEdit: true }
+      )
+    ).toMatchObject({ id: 'add_follow_up' });
     expect(
       resolvePrimaryCta(
         'CONSULTATION',
         { ...base, consultationCancelled: true },
         { canEdit: true }
       )
-    ).toBeNull();
+    ).toMatchObject({ id: 'add_follow_up' });
+    expect(
+      resolvePrimaryCta(
+        'CONSULTATION',
+        { ...base, consultationCompleted: true },
+        { canEdit: false }
+      )
+    ).toMatchObject({ id: 'edit_session' });
+  });
 
+  it('otherwise edit session', () => {
+    expect(resolvePrimaryCta('CONSULTATION', base, { canEdit: true })).toMatchObject({
+      id: 'edit_session',
+    });
     expect(resolvePrimaryCta('CONSULTATION', base, { canEdit: false })).toMatchObject({
       id: 'edit_session',
     });

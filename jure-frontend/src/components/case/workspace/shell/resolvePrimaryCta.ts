@@ -66,11 +66,12 @@ export function resolvePrimaryCta(
     if (summary.canConvert ?? permissions.canConvert) {
       return { id: 'convert', reason: 'can_convert' };
     }
-    if (summary.consultationCancelled) {
-      return null;
-    }
-    if (permissions.canEdit) {
-      return { id: 'add_follow_up', reason: 'add_follow_up' };
+    const terminal = Boolean(summary.consultationCompleted || summary.consultationCancelled);
+    if (terminal) {
+      if (permissions.canEdit) {
+        return { id: 'add_follow_up', reason: 'add_follow_up' };
+      }
+      return { id: 'edit_session', reason: 'edit_session' };
     }
     return { id: 'edit_session', reason: 'edit_session' };
   }

@@ -156,6 +156,7 @@ export function useCaseWorkspaceController({
     openHearing: () => modalRef.current?.openHearing(),
     triggerUpload: () => modalRef.current?.triggerUpload(),
     editCase: (opts?: { focusField?: 'notes' }) => modalRef.current?.editCase(caseItem, opts),
+    addFollowUp: () => modalRef.current?.editCase(undefined, { followUpOf: caseItem }),
     openClient: () => void modalRef.current?.openClient(),
     openClose: () => modalRef.current?.openClose(),
     openConflict: () => modalRef.current?.openConflict(),

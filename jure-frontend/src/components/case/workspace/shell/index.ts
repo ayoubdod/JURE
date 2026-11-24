@@ -13,6 +13,11 @@ export { useCaseSummary } from './useCaseSummary';
 export { useCaseWorkspaceController } from './useCaseWorkspaceController';
 export { primaryCtaLabel } from './primaryCtaLabel';
 export {
+  resolveConsultationHash,
+  shouldOpenConvertFromQuery,
+} from './consultationDeepLinks';
+
+export {
   selectNextCritical,
   selectNeedsAttention,
   openTasksTop,

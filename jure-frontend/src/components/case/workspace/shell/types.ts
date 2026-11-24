@@ -89,6 +89,8 @@ export type CaseSummary = {
   followUpCount: number;
   /** Missing required docs — used for Admin Duty file / Documents attention. */
   dutyFileBadge: number;
+  /** Consultation Session attention: pending follow-ups (else total). */
+  sessionBadge: number;
   /** Phase 1 Lit parity badges (totals / upcoming, not attention). */
   leafCounts: Partial<Record<CaseWorkspaceLeaf, number>>;
 };

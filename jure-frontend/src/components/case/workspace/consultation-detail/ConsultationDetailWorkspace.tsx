@@ -1,102 +1,54 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router';
-import {
-  ArrowLeft,
-  CalendarClock,
-  CheckSquare,
-  ClipboardList,
-  FileText,
-  Flag,
-  History,
-  LayoutDashboard,
-  MoreHorizontal,
-  Pencil,
-  Sparkles,
-  StickyNote,
-  Trash2,
-  Wallet,
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { cn } from '@/lib/utils';
-import { formatDate, formatTime, useAppTranslation } from '@/i18n';
-import DocumentReaderModal, {
-  type DocumentReaderModalRef,
-} from '@/components/library/hub/DocumentReaderModal';
-import { readingDocsFromAttachments } from '@/components/document-reading/types';
-import { usePermission } from '@/hooks/usePermissions';
-import { useFinanceAccess } from '@/hooks/useFinanceAccess';
+import { useEffect, useMemo, useState } from 'react';
+import { Mail, Pencil } from 'lucide-react';
+import { useAppTranslation } from '@/i18n';
 import { JURIA_ENABLED } from '@/config/features';
-import { getCaseData, getStatusColor } from '@/utils/caseCardHelpers';
-import { formatDuration } from '@/services/case/caseType';
+import { getCaseData } from '@/utils/caseCardHelpers';
 import { CaseClientLabel } from '@/components/client/CaseClientLabel';
-import { caseTypeListPath, caseWorkspacePath, navigateToCaseById } from '@/lib/caseRoutes';
-import { ConsultationSection } from '@/components/case/case-detail-drawer/consultation-section';
-import { RelatedTasksAppointmentsSection } from '@/components/case/case-detail-drawer/RelatedTasksAppointmentsSection';
-import { Field, LongText, SectionTitle } from '@/components/case/case-detail-drawer/primitives';
-import {
-  formatDrawerDateTime,
-  formatUserDisplayName,
-  getCaseUpdatedAtIso,
-  getCaseUpdatedByUser,
-} from '@/components/case/case-detail-drawer/format';
 import { canShowConvertToCase } from '@/components/case/conversion/ConvertedCaseLink';
-import DeadlinesCard from '@/components/dashboard/DeadlinesCard';
-import { FinanceTab } from '@/components/case/panel/tabs/FinanceTab';
-import { JuriaCasePanel } from '@/components/juria/JuriaCasePanel';
-import CaseModal, { CaseModalRef } from '@/components/case/CaseModal';
-import CaseDeleteModal, { CaseDeleteModalRef } from '@/components/case/CaseDeleteModal';
-import TaskCreateModal, { TaskCreateModalRef } from '@/components/task/TaskCreateModal';
-import TaskUpdateModal, { TaskUpdateModalRef } from '@/components/task/TaskUpdateModal';
-import ScheduleAppointmentDialog, {
-  ScheduleAppointmentDialogRef,
-} from '@/components/appointments/ScheduleAppointmentDialog';
-import AppointmentUpdateModal, { AppointmentUpdateModalRef } from '@/components/appointments/AppointmentUpdateModal';
-import { TaskDetailPanel, AppointmentDetailPanel } from '@/components/calendar/EmbeddedDetailPanels';
-import ConflictCheckDialog from '@/components/dashboard/ConflictCheckDialog';
 import { ConversionTypeSelector, type ConversionTargetType } from '@/components/case/conversion/ConversionTypeSelector';
 import { ConversionForm } from '@/components/case/conversion/ConversionForm';
-import ClientProfilePreview, { ClientProfilePreviewRef } from '@/components/client/ClientProfilePreview';
-import { useToast } from '@/hooks/use-toast';
-import { apiGetCase, apiRetryConsultationEmail, apiUpdateCase, apiUploadCaseAttachment } from '@/services/case/api';
-import { apiGetClient } from '@/services/client/api';
-import type { Appointment } from '@/services/appointment/api';
+import { FinanceTab } from '@/components/case/panel/tabs/FinanceTab';
+import { JuriaCasePanel } from '@/components/juria/JuriaCasePanel';
+import { apiRetryConsultationEmail, apiUpdateCase } from '@/services/case/api';
+import { WorkspaceCard } from '@/components/case/workspace/litigation-detail/ui';
+import {
+  WorkspaceActivity,
+  WorkspaceAppointments,
+  WorkspaceDeadlines,
+  WorkspaceDocuments,
+  WorkspaceNotes,
+  WorkspaceTasks,
+} from '@/components/case/workspace/sections';
+import {
+  CaseWorkspaceHeader,
+  CaseWorkspaceSegments,
+  CaseWorkspaceShell,
+  primaryCtaLabel,
+  resolvePrimaryCta,
+  useCaseWorkspaceController,
+  type CaseWorkspaceNavItem,
+  type HeaderMenuItem,
+} from '@/components/case/workspace/shell';
+import {
+  resolveConsultationHash,
+  shouldOpenConvertFromQuery,
+} from '@/components/case/workspace/shell/consultationDeepLinks';
 import ConsultationOverview from './ConsultationOverview';
+import ConsultationSession from './ConsultationSession';
+import { getConsultationConfig } from './getConsultationConfig';
 import {
   attorneysOf,
-  consultationTypeBadge,
+  consultationCanJoinVideo,
   consultationWhen,
   isCancelled,
+  isConsultationTerminal,
   outcomeOf,
-  parseConsultationSection,
   personName,
-  type ConsultationDetailSection,
 } from './helpers';
 
-const NAV: Array<{
-  id: ConsultationDetailSection;
-  icon: typeof LayoutDashboard;
-}> = [
-  { id: 'overview', icon: LayoutDashboard },
-  { id: 'administrative', icon: ClipboardList },
-  { id: 'tasks', icon: CheckSquare },
-  { id: 'appointments', icon: CalendarClock },
-  { id: 'deadlines', icon: Flag },
-  { id: 'documents', icon: FileText },
-  { id: 'notes', icon: StickyNote },
-  { id: 'finance', icon: Wallet },
-  { id: 'juria', icon: Sparkles },
-  { id: 'activity', icon: History },
-];
+const { groupSegments: GROUP_SEGMENTS, navGroups: NAV_GROUPS } = getConsultationConfig();
 
 export default function ConsultationDetailWorkspace({
   caseItem,
@@ -107,69 +59,68 @@ export default function ConsultationDetailWorkspace({
 }) {
   const { t, tf, enumPretty, lang } = useAppTranslation();
   const copy = t.cases.workspaces.consultation.detail;
-  const pw = t.cases.pageWorkspace;
-  const navigate = useNavigate();
-  const { toast } = useToast();
-  const [searchParams, setSearchParams] = useSearchParams();
-  const canEdit = usePermission('cases.edit');
-  const canDelete = usePermission('cases.delete');
-  const { authorized: showFinance } = useFinanceAccess();
+  const litCopy = t.cases.workspaces.litigation.detail;
+  const actions = t.cases.workspaces.consultation.actions;
+  const {
+    shellCopy,
+    pw,
+    canEdit,
+    showFinance,
+    modalRef,
+    lastSegmentRef,
+    activeGroup,
+    activeLeaf,
+    setLeaf,
+    onSelectNav,
+    summary,
+    legalDeadlines,
+    legalError,
+    loadLegal,
+    finance,
+    listPath,
+    openRelated,
+    modals,
+    lifecycleMoreItems,
+    segmentLeaves,
+    searchParams,
+    setSearchParams,
+    toast,
+  } = useCaseWorkspaceController({
+    caseItem,
+    onCaseChange,
+    type: 'CONSULTATION',
+    groupSegments: GROUP_SEGMENTS,
+  });
 
-  const navItems = useMemo(
-    () =>
-      NAV.filter((item) => {
-        if (item.id === 'finance') return showFinance;
-        if (item.id === 'juria') return JURIA_ENABLED;
-        return true;
-      }),
-    [showFinance]
-  );
-
-  const requested = parseConsultationSection(searchParams.get('tab'));
-  const active: ConsultationDetailSection = navItems.some((n) => n.id === requested) ? requested : 'overview';
-
-  const caseModalRef = useRef<CaseModalRef>(null);
-  const deleteRef = useRef<CaseDeleteModalRef>(null);
-  const taskCreateRef = useRef<TaskCreateModalRef>(null);
-  const taskUpdateRef = useRef<TaskUpdateModalRef>(null);
-  const appointmentCreateRef = useRef<ScheduleAppointmentDialogRef>(null);
-  const appointmentUpdateRef = useRef<AppointmentUpdateModalRef>(null);
-  const clientPreviewRef = useRef<ClientProfilePreviewRef>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const readerRef = useRef<DocumentReaderModalRef>(null);
-  const [detailTaskId, setDetailTaskId] = useState<number | null>(null);
-  const [detailAppointmentId, setDetailAppointmentId] = useState<number | null>(null);
-  const [conflictOpen, setConflictOpen] = useState(false);
   const [typeSelectorOpen, setTypeSelectorOpen] = useState(false);
   const [conversionFormOpen, setConversionFormOpen] = useState(false);
   const [conversionTarget, setConversionTarget] = useState<ConversionTargetType | null>(null);
 
-  const setSection = (next: ConsultationDetailSection) => {
-    const params = new URLSearchParams(searchParams);
-    if (next === 'overview') params.delete('tab');
-    else params.set('tab', next);
-    setSearchParams(params, { replace: true });
-  };
-
   const canConvert = canShowConvertToCase(caseItem);
   const status = outcomeOf(caseItem);
-  const ctype = consultationTypeBadge(caseItem);
+  const canJoinVideo = consultationCanJoinVideo(caseItem);
+  const videoLink = getCaseData(caseItem, 'video_link') as string | undefined;
   const dt = getCaseData(caseItem, 'consultation_date') as string | undefined;
   const when = consultationWhen(dt, lang);
-  const format = getCaseData(caseItem, 'format') as string | undefined;
-  const duration =
-    (getCaseData(caseItem, 'duration_minutes') as number | undefined) ??
-    (getCaseData(caseItem, 'duration') as string | undefined);
-  const videoLink = getCaseData(caseItem, 'video_link') as string | undefined;
   const attorneys = attorneysOf(caseItem);
-  const followCount = caseItem.followUpCount ?? caseItem.followUps?.length ?? 0;
-  const notesAdvice = (getCaseData(caseItem, 'advice_summary') as string) || '';
-  const notesInternal = caseItem.summary || caseItem.description || '';
-  const listPath = caseTypeListPath('CONSULTATION');
-  const relatedLabel = [caseItem.reference, caseItem.title].filter(Boolean).join(' — ') || `Case #${caseItem.id}`;
+  const ctype = String(getCaseData(caseItem, 'consultation_type') || '');
+
+  const ctaSummary = {
+    ...summary,
+    canJoinVideo,
+    canConvert,
+    consultationCancelled: status === 'CANCELLED',
+    consultationCompleted: status === 'COMPLETED',
+  };
+  const primary = resolvePrimaryCta('CONSULTATION', ctaSummary, { canEdit, canConvert });
+  const primaryLabel = primary ? primaryCtaLabel(primary, shellCopy) : '';
+
+  const showJoinInMore = canJoinVideo && primary?.id !== 'join_video';
+  const showConvertInMore = canConvert && primary?.id !== 'convert';
+  const showConvertOnSession = canConvert && primary?.id !== 'convert';
 
   useEffect(() => {
-    if (searchParams.get('convert') !== '1' || !canConvert) return;
+    if (!shouldOpenConvertFromQuery(searchParams.get('convert'), canConvert)) return;
     setTypeSelectorOpen(true);
     const params = new URLSearchParams(searchParams);
     params.delete('convert');
@@ -177,33 +128,32 @@ export default function ConsultationDetailWorkspace({
   }, [canConvert, searchParams, setSearchParams]);
 
   useEffect(() => {
-    if (window.location.hash !== '#follow-ups') return;
-    setSection('administrative');
-    requestAnimationFrame(() => document.getElementById('follow-ups')?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- run on hash / case change
+    const resolved = resolveConsultationHash(window.location.hash);
+    if (!resolved.leaf) return;
+    setLeaf(resolved.leaf);
+    if (resolved.scrollToFollowUps) {
+      requestAnimationFrame(() =>
+        document.getElementById('follow-ups')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      );
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- hash / case open
   }, [caseItem.id]);
 
-  const refreshDetail = async () => {
-    const res = await apiGetCase(caseItem.id);
-    onCaseChange(res.data);
-  };
-
-  const addTask = () => taskCreateRef.current?.show({ relatedCaseId: caseItem.id, relatedCaseLabel: relatedLabel });
-  const addAppointment = () =>
-    appointmentCreateRef.current?.show({ relatedCaseId: caseItem.id, relatedCaseLabel: relatedLabel });
-  const openRelated = (id: number) => {
-    void navigateToCaseById(navigate, id);
-  };
-
-  const openClient = async () => {
-    const id = caseItem.client?.id;
-    if (!id) return;
-    try {
-      const res = await apiGetClient(id);
-      clientPreviewRef.current?.show(res.data);
-    } catch {
-      toast({ title: t.common.error, variant: 'destructive' });
+  const runPrimary = () => {
+    if (!primary) return;
+    if (primary.id === 'join_video' && videoLink) {
+      window.open(videoLink, '_blank', 'noopener,noreferrer');
+      return;
     }
+    if (primary.id === 'convert') {
+      setTypeSelectorOpen(true);
+      return;
+    }
+    if (primary.id === 'add_follow_up') {
+      modals.addFollowUp();
+      return;
+    }
+    modals.editCase();
   };
 
   const patchOutcome = async (next: 'COMPLETED' | 'CANCELLED') => {
@@ -211,7 +161,7 @@ export default function ConsultationDetailWorkspace({
     try {
       await apiUpdateCase({ id: caseItem.id, case_specific_data: { ...existing, outcome: next } });
       toast({ title: t.common.success });
-      await refreshDetail();
+      await modalRef.current?.refreshDetail();
     } catch {
       toast({ title: t.common.error, variant: 'destructive' });
     }
@@ -221,548 +171,259 @@ export default function ConsultationDetailWorkspace({
     void apiRetryConsultationEmail(caseItem.id)
       .then(async () => {
         toast({ title: t.cases.modal.consultationWorkflow.emailSent });
-        await refreshDetail();
+        await modalRef.current?.refreshDetail();
       })
       .catch(() => {
         toast({ title: t.cases.modal.consultationWorkflow.emailFailed, variant: 'destructive' });
       });
   };
 
-  const uploadFile = (file: File) => {
-    void apiUploadCaseAttachment(caseItem.id, file)
-      .then(async () => {
-        toast({ title: t.cases.modal.consultationWorkflow.attachments });
-        await refreshDetail();
-      })
-      .catch(() =>
-        toast({ title: t.cases.modal.consultationWorkflow.attachmentFailed, variant: 'destructive' })
-      );
-  };
+  const navItems = useMemo(() => {
+    const attention = (label: string, count?: number) =>
+      count ? tf(shellCopy.navAttention, { label, count }) : label;
+    const badgeOf = (key?: 'session' | 'schedule' | 'work' | 'documents') => {
+      if (key === 'session') return summary.sessionBadge;
+      if (key === 'schedule') return summary.scheduleBadge;
+      if (key === 'work') return summary.workBadge;
+      if (key === 'documents') return summary.documentsBadge;
+      return 0;
+    };
+    const items: CaseWorkspaceNavItem[] = [];
+    for (const g of NAV_GROUPS) {
+      if (g.financeGated && !showFinance) continue;
+      if (g.juriaFlagged && !JURIA_ENABLED) continue;
+      const count = badgeOf(g.badge) || undefined;
+      const leaf =
+        GROUP_SEGMENTS[g.id] != null ? (lastSegmentRef.current[g.id] ?? g.leaf) : g.leaf;
+      items.push({
+        id: g.id,
+        leaf,
+        label: shellCopy.groups[g.labelKey],
+        icon: g.icon,
+        count,
+        urgent: g.badge === 'schedule' || g.badge === 'session' ? (count ?? 0) > 0 : undefined,
+        countAriaLabel: attention(shellCopy.groups[g.labelKey], count),
+        footer: g.footer,
+      });
+    }
+    return items;
+  }, [shellCopy, showFinance, summary, tf, lastSegmentRef]);
 
-  const moreMenu = (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button type="button" variant="outline" className="h-9 rounded-lg px-3">
-          <MoreHorizontal className="h-4 w-4" />
-          <span className="ms-2">{pw.more}</span>
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-52">
-        {canEdit ? (
-          <DropdownMenuItem onClick={() => caseModalRef.current?.show(caseItem)}>
-            <Pencil className="h-4 w-4" />
-            {copy.edit}
-          </DropdownMenuItem>
-        ) : null}
-        {canEdit && !isCancelled(caseItem) ? (
-          <DropdownMenuItem onClick={() => caseModalRef.current?.show(undefined, { followUpOf: caseItem })}>
-            <CalendarClock className="h-4 w-4" />
-            {t.cases.workspaces.consultation.actions.addFollowUp}
-          </DropdownMenuItem>
-        ) : null}
-        {canConvert ? (
-          <DropdownMenuItem onClick={() => setTypeSelectorOpen(true)}>
-            <ClipboardList className="h-4 w-4" />
-            {t.cases.workspaces.consultation.actions.convert}
-          </DropdownMenuItem>
-        ) : null}
-        {canEdit || canConvert ? <DropdownMenuSeparator /> : null}
-        <DropdownMenuItem onClick={sendEmail}>{copy.sendEmail}</DropdownMenuItem>
-        {canEdit && status !== 'COMPLETED' && status !== 'CANCELLED' ? (
-          <DropdownMenuItem onClick={() => void patchOutcome('COMPLETED')}>{copy.markCompleted}</DropdownMenuItem>
-        ) : null}
-        {canEdit && status !== 'CANCELLED' && status !== 'COMPLETED' ? (
-          <DropdownMenuItem onClick={() => void patchOutcome('CANCELLED')}>{copy.cancelConsultation}</DropdownMenuItem>
-        ) : null}
-        <DropdownMenuItem onClick={() => setConflictOpen(true)}>{pw.conflictCheck}</DropdownMenuItem>
-        {canDelete ? (
-          <>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-red-600" onClick={() => deleteRef.current?.show(caseItem)}>
-              <Trash2 className="h-4 w-4" />
-              {t.cases.workspaces.consultation.actions.delete}
-            </DropdownMenuItem>
-          </>
-        ) : null}
-      </DropdownMenuContent>
-    </DropdownMenu>
+  const segmentOptions = (segmentLeaves ?? []).map((leaf) => ({
+    id: leaf,
+    label: copy.sections[leaf as keyof typeof copy.sections] ?? leaf,
+  }));
+
+  const newItems: HeaderMenuItem[] = [
+    { key: 'task', label: copy.addTask, onClick: () => modals.addTask() },
+    ...(canEdit
+      ? [{ key: 'deadline', label: copy.addDeadline, onClick: () => modals.openDeadline() }]
+      : []),
+    { key: 'appt', label: copy.addAppointment, onClick: () => modals.addAppointment() },
+    ...(canEdit && !isCancelled(caseItem)
+      ? [{ key: 'followup', label: actions.addFollowUp, onClick: () => modals.addFollowUp() }]
+      : []),
+    ...(canEdit
+      ? [
+          { key: 'doc', label: copy.upload, onClick: () => modals.triggerUpload() },
+          {
+            key: 'note',
+            label: litCopy.editNotes,
+            onClick: () => modals.editCase({ focusField: 'notes' }),
+          },
+        ]
+      : []),
+  ];
+
+  const moreItems: HeaderMenuItem[] = [
+    ...(canEdit
+      ? [
+          {
+            key: 'edit',
+            label: copy.edit,
+            icon: <Pencil className="h-4 w-4" />,
+            onClick: () => modals.editCase(),
+          },
+        ]
+      : []),
+    {
+      key: 'email',
+      label: copy.sendEmail,
+      icon: <Mail className="h-4 w-4" />,
+      onClick: sendEmail,
+    },
+    ...(showJoinInMore && videoLink
+      ? [
+          {
+            key: 'join',
+            label: copy.joinVideo,
+            onClick: () => window.open(videoLink, '_blank', 'noopener,noreferrer'),
+          },
+        ]
+      : []),
+    ...(showConvertInMore
+      ? [{ key: 'convert', label: actions.convert, onClick: () => setTypeSelectorOpen(true) }]
+      : []),
+    ...(canEdit && !isConsultationTerminal(caseItem)
+      ? [
+          {
+            key: 'complete',
+            label: copy.markCompleted,
+            onClick: () => void patchOutcome('COMPLETED'),
+          },
+          {
+            key: 'cancel',
+            label: copy.cancelConsultation,
+            onClick: () => void patchOutcome('CANCELLED'),
+          },
+        ]
+      : []),
+    ...lifecycleMoreItems({ edit: copy.edit, includeEdit: false }),
+  ];
+
+  const meta = (
+    <>
+      {caseItem.client ? (
+        <CaseClientLabel client={caseItem.client} nameClassName="truncate" />
+      ) : null}
+      {caseItem.client && attorneys[0] ? ' · ' : null}
+      {attorneys[0] ? (
+        <span>
+          {copy.assignedTo} {personName(attorneys[0])}
+        </span>
+      ) : null}
+    </>
   );
 
   return (
-    <div className="flex h-full min-h-0 flex-col overflow-hidden bg-transparent">
-      <DocumentReaderModal ref={readerRef} />
-      <header className="max-h-[min(50vh,28rem)] min-h-0 shrink-0 overflow-y-auto overscroll-contain border-b border-[#64499D]/10 bg-white dark:border-zinc-800 dark:bg-zinc-950">
-        <div className="px-3 py-3 sm:px-5">
-          <button
-            type="button"
-            onClick={() => navigate(listPath)}
-            className="inline-flex items-center gap-1.5 text-[13px] font-medium text-slate-500 hover:text-[#64499D]"
-          >
-            <ArrowLeft className="h-4 w-4 rtl:rotate-180" />
-            {copy.back}
-          </button>
+    <>
+      <CaseWorkspaceShell
+        header={
+          <CaseWorkspaceHeader
+            listPath={listPath}
+            backLabel={copy.back}
+            typeLabel={t.cases.typeLabels.consultation}
+            status={String(status || caseItem.status || '')}
+            priorityLabel={ctype ? enumPretty(ctype) : undefined}
+            title={caseItem.title || t.cases.untitledCase}
+            reference={caseItem.reference}
+            meta={meta}
+            primaryCta={primary ? { label: primaryLabel, onClick: runPrimary } : null}
+            newItems={newItems}
+            moreItems={moreItems}
+            newMenuLabel={shellCopy.newMenu}
+          />
+        }
+        navLabel={copy.navLabel}
+        navItems={navItems}
+        activeNavId={activeGroup}
+        activeLeaf={activeLeaf}
+        onSelectNav={onSelectNav}
+        caseItem={caseItem}
+        listPath={listPath}
+        onCaseChange={onCaseChange}
+        modalRef={modalRef}
+        enableHearingDialog={false}
+      >
+        {segmentOptions.length > 1 ? (
+          <CaseWorkspaceSegments
+            options={segmentOptions}
+            value={activeLeaf}
+            onChange={setLeaf}
+            ariaLabel={shellCopy.segmentsLabel}
+          />
+        ) : null}
 
-          <div className="mt-3 flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-            <div className="min-w-0">
-              <p className="font-mono text-[12px] text-slate-500">{caseItem.reference || '—'}</p>
-              <h1 className="mt-0.5 text-xl font-semibold tracking-tight text-slate-900 dark:text-white">
-                {caseItem.title || t.cases.untitledCase}
-              </h1>
-              <div className="mt-2 flex flex-wrap items-center gap-1.5">
-                {ctype ? (
-                  <span className="inline-flex rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-700 ring-1 ring-slate-200 dark:bg-zinc-800 dark:text-zinc-200">
-                    {enumPretty(ctype)}
-                  </span>
-                ) : null}
-                <span
-                  className={cn(
-                    'inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ring-1 ring-inset',
-                    getStatusColor(status)
-                  )}
-                >
-                  {enumPretty(status)}
-                </span>
-                {followCount > 0 ? (
-                  <span className="inline-flex rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-800 ring-1 ring-amber-200 dark:bg-amber-950/40 dark:text-amber-200">
-                    {copy.followUps} · {followCount}
-                  </span>
-                ) : null}
-              </div>
-              <div className="mt-2 space-y-1">
-                {caseItem.client ? (
-                  <CaseClientLabel
-                    client={caseItem.client}
-                    nameClassName="text-[13px] font-medium text-slate-800 dark:text-zinc-200"
-                  />
-                ) : null}
-                <p className="text-[13px] text-slate-600 dark:text-zinc-300">
-                  {[
-                    attorneys[0]
-                      ? `${copy.assignedTo} ${personName(attorneys[0])}${
-                          attorneys.length > 1 ? ` ${tf(copy.plusAttorneys, { count: attorneys.length - 1 })}` : ''
-                        }`
-                      : null,
-                    when.date ? `${when.date}${when.time ? ` · ${when.time}` : ''}` : null,
-                    format ? enumPretty(format) : null,
-                    formatDuration(duration) || null,
-                  ]
-                    .filter(Boolean)
-                    .join(' · ')}
-                </p>
-              </div>
-            </div>
+        {activeLeaf === 'overview' ? (
+          <ConsultationOverview
+            caseItem={caseItem}
+            showFinance={showFinance}
+            finance={finance}
+            onOpenSection={setLeaf}
+            onOpenClient={() => modals.openClient()}
+            onOpenCase={openRelated}
+            onAddTask={() => modals.addTask()}
+          />
+        ) : null}
 
-            <div className="flex shrink-0 items-center gap-2">
-              {format === 'VIDEO' && videoLink ? (
-                <Button type="button" variant="outline" className="h-9 rounded-lg" asChild>
-                  <a href={videoLink} target="_blank" rel="noreferrer">
-                    {copy.joinVideo}
-                  </a>
-                </Button>
-              ) : null}
-              {moreMenu}
-            </div>
+        {activeLeaf === 'consultation' ? (
+          <ConsultationSession
+            caseItem={caseItem}
+            canEdit={canEdit}
+            canConvert={canConvert}
+            showConvertAction={showConvertOnSession}
+            onOpenCase={openRelated}
+            onAddFollowUp={() => modals.addFollowUp()}
+            onConvert={() => setTypeSelectorOpen(true)}
+          />
+        ) : null}
+
+        {activeLeaf === 'appointments' ? (
+          <div className="space-y-4">
+            <WorkspaceCard title={t.cases.typeLabels.consultation}>
+              <p className="text-[15px] font-semibold text-slate-900 dark:text-white">
+                {when.date || '—'}
+                {when.time ? ` · ${when.time}` : ''}
+              </p>
+              <p className="mt-1 text-[13px] text-slate-600">
+                {[
+                  getCaseData(caseItem, 'format')
+                    ? enumPretty(String(getCaseData(caseItem, 'format')))
+                    : null,
+                  personName(attorneys[0]) || null,
+                ]
+                  .filter(Boolean)
+                  .join(' · ')}
+              </p>
+            </WorkspaceCard>
+            <WorkspaceAppointments
+              caseItem={caseItem}
+              onAdd={() => modals.addAppointment()}
+              onOpen={(id) => modals.openAppointment(id)}
+            />
           </div>
-        </div>
-      </header>
+        ) : null}
 
-      <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
-        <nav
-          className="min-w-0 shrink-0 border-b border-slate-200 bg-white dark:border-zinc-800 dark:bg-zinc-950 lg:flex lg:min-h-0 lg:w-[232px] lg:flex-col lg:overflow-hidden lg:border-b-0 lg:border-e"
-          aria-label={copy.navLabel}
-        >
-          <div className="p-2 lg:hidden">
-            <Select value={active} onValueChange={(v) => setSection(v as ConsultationDetailSection)}>
-              <SelectTrigger className="h-9 w-full text-[13px]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {navItems.map((item) => (
-                  <SelectItem key={item.id} value={item.id}>
-                    {copy.sections[item.id]}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="hidden min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain p-2 [scrollbar-width:thin] lg:flex">
-            <p className="px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-400">
-              {copy.navLabel}
-            </p>
-            <div className="flex flex-col gap-0.5">
-              {navItems.map((item) => {
-                const Icon = item.icon;
-                const on = active === item.id;
-                return (
-                  <button
-                    key={item.id}
-                    type="button"
-                    onClick={() => setSection(item.id)}
-                    className={cn(
-                      'flex w-full items-center gap-2 rounded-lg px-3 py-2 text-start text-[13px] font-medium',
-                      on
-                        ? 'bg-[#F7F4FF] text-[#64499D] ring-1 ring-[#64499D]/15 dark:bg-[#64499D]/20 dark:text-[#CFC2FF]'
-                        : 'text-slate-600 hover:bg-slate-50 dark:text-zinc-400 dark:hover:bg-zinc-900'
-                    )}
-                  >
-                    <Icon className="h-4 w-4 shrink-0" />
-                    <span className="truncate">{copy.sections[item.id]}</span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        </nav>
+        {activeLeaf === 'deadlines' ? (
+          <WorkspaceDeadlines
+            caseItem={caseItem}
+            canEdit={canEdit}
+            legalDeadlines={legalDeadlines}
+            legalError={legalError}
+            onRetryLegal={loadLegal}
+            onAdd={() => modals.openDeadline()}
+          />
+        ) : null}
 
-        <div className={cn('min-h-0 min-w-0 flex-1', active === 'juria' ? 'flex flex-col overflow-hidden' : 'overflow-y-auto')}>
-          <div className={cn('px-3 py-4 sm:px-5 lg:px-6', active === 'juria' && 'flex h-full min-h-0 flex-1 flex-col overflow-hidden p-0')}>
-            {active === 'overview' ? (
-              <ConsultationOverview
-                caseItem={caseItem}
-                canEdit={canEdit}
-                canConvert={canConvert}
-                onOpenSection={setSection}
-                onEdit={() => caseModalRef.current?.show(caseItem)}
-                onFollowUp={() => caseModalRef.current?.show(undefined, { followUpOf: caseItem })}
-                onConvert={() => setTypeSelectorOpen(true)}
-                onOpenClient={() => void openClient()}
-                onOpenCase={openRelated}
-                onAddTask={addTask}
-                onAddAppointment={addAppointment}
-                onUpload={() => fileInputRef.current?.click()}
-              />
-            ) : null}
+        {activeLeaf === 'tasks' ? (
+          <WorkspaceTasks
+            caseItem={caseItem}
+            onAdd={() => modals.addTask()}
+            onOpen={(id) => modals.openTask(id)}
+          />
+        ) : null}
 
-            {active === 'administrative' ? (
-              <div className="space-y-6">
-                <section className="rounded-xl border border-slate-200/90 bg-white p-4 dark:border-slate-800 dark:bg-slate-950">
-                  <h3 className="mb-3 text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-500">
-                    {copy.consultationInfo}
-                  </h3>
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <Field label={t.cases.modal.fields.reference}>{caseItem.reference || '—'}</Field>
-                    <Field label={t.cases.modal.fields.title}>{caseItem.title || '—'}</Field>
-                    <Field label={t.cases.modal.fields.consultationType}>
-                      {ctype ? enumPretty(ctype) : '—'}
-                    </Field>
-                    <Field label={t.cases.modal.fields.status}>{enumPretty(status)}</Field>
-                    <Field label={copy.created}>
-                      <div>
-                        {formatDrawerDateTime(caseItem.created)}
-                        <p className="mt-1 text-xs text-slate-500">{formatUserDisplayName(caseItem.created_by)}</p>
-                      </div>
-                    </Field>
-                    <Field label={pw.activityTitle}>
-                      <div>
-                        {formatDrawerDateTime(getCaseUpdatedAtIso(caseItem))}
-                        <p className="mt-1 text-xs text-slate-500">{formatUserDisplayName(getCaseUpdatedByUser(caseItem))}</p>
-                      </div>
-                    </Field>
-                  </div>
-                </section>
-                <ConsultationSection
-                  c={caseItem}
-                  hideConversion
-                  anchorFollowUps
-                  onAddFollowUp={
-                    canEdit && !isCancelled(caseItem)
-                      ? () => caseModalRef.current?.show(undefined, { followUpOf: caseItem })
-                      : undefined
-                  }
-                />
-              </div>
-            ) : null}
+        {activeLeaf === 'documents' ? (
+          <WorkspaceDocuments
+            caseItem={caseItem}
+            canEdit={canEdit}
+            onUpload={() => modals.triggerUpload()}
+          />
+        ) : null}
 
-            {active === 'tasks' ? (
-              <RelatedTasksAppointmentsSection
-                caseItem={caseItem}
-                onAddTask={addTask}
-                onScheduleAppointment={addAppointment}
-                onOpenTask={setDetailTaskId}
-                onOpenAppointment={setDetailAppointmentId}
-                showAppointments={false}
-                bare
-              />
-            ) : null}
+        {activeLeaf === 'notes' ? (
+          <WorkspaceNotes
+            caseItem={caseItem}
+            canEdit={canEdit}
+            onEdit={() => modals.editCase({ focusField: 'notes' })}
+          />
+        ) : null}
 
-            {active === 'appointments' ? (
-              <div className="space-y-6">
-                <section className="rounded-xl border border-slate-200/90 bg-white p-4 dark:border-slate-800 dark:bg-slate-950">
-                  <h3 className="text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-500">
-                    {t.cases.typeLabels.consultation}
-                  </h3>
-                  <p className="mt-2 text-[15px] font-semibold text-slate-900 dark:text-white">
-                    {when.date || '—'}
-                    {when.time ? ` · ${when.time}` : ''}
-                  </p>
-                  <p className="mt-1 text-[13px] text-slate-600">
-                    {[format ? enumPretty(format) : null, formatDuration(duration) || null, personName(attorneys[0]) || null]
-                      .filter(Boolean)
-                      .join(' · ')}
-                  </p>
-                  {format === 'VIDEO' && videoLink ? (
-                    <Button size="sm" className="mt-3 h-8 text-[12px]" asChild>
-                      <a href={videoLink} target="_blank" rel="noreferrer">
-                        {copy.joinVideo}
-                      </a>
-                    </Button>
-                  ) : null}
-                </section>
-                {(caseItem.followUps ?? []).length > 0 ? (
-                  <section>
-                    <h3 className="mb-2 text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-500">
-                      {copy.followUps}
-                    </h3>
-                    <ul className="space-y-2">
-                      {(caseItem.followUps ?? []).map((item, idx) => (
-                        <li
-                          key={item.id}
-                          className="rounded-xl border border-slate-200/90 bg-white px-4 py-3 dark:border-slate-800 dark:bg-slate-950"
-                        >
-                          <p className="text-[12px] font-medium text-slate-500">
-                            {copy.followUps} #{idx + 1}
-                          </p>
-                          <p className="mt-0.5 font-mono text-[12px] text-slate-500">{item.reference}</p>
-                          <p className="mt-1 text-[13px] font-medium text-slate-800 dark:text-zinc-100">
-                            {item.consultationDate
-                              ? `${formatDate(item.consultationDate, lang, { day: 'numeric', month: 'short', year: 'numeric' })} · ${formatTime(item.consultationDate, lang, { hour: '2-digit', minute: '2-digit' })}`
-                              : '—'}
-                          </p>
-                          <p className="text-[12px] text-slate-500">
-                            {[item.format ? enumPretty(item.format) : null, item.durationMinutes != null ? formatDuration(item.durationMinutes) : null]
-                              .filter(Boolean)
-                              .join(' · ')}
-                          </p>
-                        </li>
-                      ))}
-                    </ul>
-                  </section>
-                ) : null}
-                <RelatedTasksAppointmentsSection
-                  caseItem={caseItem}
-                  onAddTask={addTask}
-                  onScheduleAppointment={addAppointment}
-                  onOpenTask={setDetailTaskId}
-                  onOpenAppointment={setDetailAppointmentId}
-                  showTasks={false}
-                  bare
-                />
-              </div>
-            ) : null}
+        {showFinance && activeLeaf === 'finance' ? <FinanceTab caseId={caseItem.id} /> : null}
+        {JURIA_ENABLED && activeLeaf === 'juria' ? <JuriaCasePanel caseItem={caseItem} /> : null}
+        {activeLeaf === 'activity' ? <WorkspaceActivity caseItem={caseItem} /> : null}
+      </CaseWorkspaceShell>
 
-            {active === 'deadlines' ? <DeadlinesCard caseId={caseItem.id} /> : null}
-
-            {active === 'documents' ? (
-              <div className="space-y-3">
-                <div className="flex items-center justify-between gap-2">
-                  <h2 className="text-[15px] font-semibold text-slate-900 dark:text-white">{copy.documents}</h2>
-                  {canEdit ? (
-                    <Button size="sm" className="h-8 text-[12px]" onClick={() => fileInputRef.current?.click()}>
-                      {copy.upload}
-                    </Button>
-                  ) : null}
-                </div>
-                {(caseItem.attachments ?? []).length === 0 ? (
-                  <p className="rounded-xl border border-dashed border-slate-200 px-4 py-10 text-center text-[13px] text-slate-500 dark:border-zinc-800">
-                    {copy.noDocuments}
-                  </p>
-                ) : (
-                  <ul className="space-y-2">
-                    {caseItem.attachments?.map((att) => (
-                      <li
-                        key={att.id}
-                        className="flex items-center justify-between gap-3 rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-[13px] dark:border-zinc-800 dark:bg-zinc-950"
-                      >
-                        <div className="min-w-0">
-                          <p className="truncate font-medium text-slate-800 dark:text-zinc-100">{att.file_name}</p>
-                          <p className="text-[11px] text-slate-500">
-                            {[att.uploaded_by ? personName(att.uploaded_by) : null, att.created ? formatDrawerDateTime(att.created) : null]
-                              .filter(Boolean)
-                              .join(' · ')}
-                          </p>
-                        </div>
-                        {att.file_url ? (
-                          <button
-                            type="button"
-                            className="shrink-0 text-[12px] font-medium text-[#64499D] hover:underline"
-                            onClick={() =>
-                              readerRef.current?.show(
-                                { id: att.id, title: att.file_name || 'Document', file: att.file_url },
-                                {
-                                  caseId: caseItem.id,
-                                  caseRef: caseItem.reference,
-                                  caseTitle: caseItem.title,
-                                },
-                                readingDocsFromAttachments(caseItem.attachments)
-                              )
-                            }
-                          >
-                            {copy.viewAll}
-                          </button>
-                        ) : null}
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-            ) : null}
-
-            {active === 'notes' ? (
-              <div className="space-y-4">
-                <section className="rounded-xl border border-slate-200/90 bg-white p-4 dark:border-slate-800 dark:bg-slate-950">
-                  <h3 className="mb-2 text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-500">
-                    {copy.consultationNotes}
-                  </h3>
-                  {notesInternal.trim() ? <LongText>{notesInternal}</LongText> : <p className="text-[13px] text-slate-500">{copy.noNotes}</p>}
-                </section>
-                <section className="rounded-xl border border-slate-200/90 bg-white p-4 dark:border-slate-800 dark:bg-slate-950">
-                  <h3 className="mb-2 text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-500">
-                    {copy.adviceSummary}
-                  </h3>
-                  {notesAdvice.trim() ? <LongText>{notesAdvice}</LongText> : <p className="text-[13px] text-slate-500">{copy.noNotes}</p>}
-                  {canEdit ? (
-                    <Button size="sm" variant="outline" className="mt-3 h-8 text-[12px]" onClick={() => caseModalRef.current?.show(caseItem)}>
-                      {copy.edit}
-                    </Button>
-                  ) : null}
-                </section>
-                <section id="follow-ups" className="rounded-xl border border-slate-200/90 bg-white p-4 dark:border-slate-800 dark:bg-slate-950">
-                  <div className="mb-2 flex items-center justify-between gap-2">
-                    <h3 className="text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-500">
-                      {copy.followUpNextSteps}
-                    </h3>
-                    {canEdit && !isCancelled(caseItem) ? (
-                      <button
-                        type="button"
-                        className="text-[12px] font-medium text-[#64499D] hover:underline"
-                        onClick={() => caseModalRef.current?.show(undefined, { followUpOf: caseItem })}
-                      >
-                        {t.cases.workspaces.consultation.actions.addFollowUp}
-                      </button>
-                    ) : null}
-                  </div>
-                  {(caseItem.followUps ?? []).length === 0 ? (
-                    <p className="text-[13px] text-slate-500">{t.cases.modal.consultationWorkflow.noFollowUp}</p>
-                  ) : (
-                    <ul className="space-y-2">
-                      {(caseItem.followUps ?? []).map((item) => (
-                        <li key={item.id} className="rounded-lg border border-slate-200 px-3 py-2 dark:border-zinc-800">
-                          <p className="font-mono text-[12px] text-slate-500">{item.reference}</p>
-                          <p className="text-[13px] font-medium text-slate-800 dark:text-zinc-100">
-                            {item.consultationDate
-                              ? `${formatDate(item.consultationDate, lang, { day: 'numeric', month: 'short', year: 'numeric' })} · ${formatTime(item.consultationDate, lang, { hour: '2-digit', minute: '2-digit' })}`
-                              : '—'}
-                          </p>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </section>
-              </div>
-            ) : null}
-
-            {active === 'finance' && showFinance ? <FinanceTab caseId={caseItem.id} /> : null}
-
-            {active === 'juria' && JURIA_ENABLED ? <JuriaCasePanel caseItem={caseItem} /> : null}
-
-            {active === 'activity' ? (
-              <div className="space-y-3">
-                <SectionTitle>{copy.sections.activity}</SectionTitle>
-                {(caseItem.activity ?? []).length > 0 ? (
-                  <ol className="space-y-2">
-                    {caseItem.activity?.map((item) => (
-                      <li key={item.id} className="rounded-lg border border-slate-200 bg-white px-3 py-2.5 dark:border-zinc-800 dark:bg-zinc-950">
-                        <p className="text-[13px] font-medium text-slate-800 dark:text-zinc-100">{item.message}</p>
-                        <p className="mt-1 text-[11px] text-slate-500">
-                          {item.created ? formatDrawerDateTime(item.created) : ''}
-                          {item.actor ? ` · ${[item.actor.first_name, item.actor.last_name].filter(Boolean).join(' ')}` : ''}
-                        </p>
-                      </li>
-                    ))}
-                  </ol>
-                ) : (
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <Field label={copy.created}>
-                      <div>
-                        {formatDrawerDateTime(caseItem.created)}
-                        <p className="mt-1 text-xs text-slate-500">{formatUserDisplayName(caseItem.created_by)}</p>
-                      </div>
-                    </Field>
-                    <Field label={copy.created}>
-                      <div>
-                        {formatDrawerDateTime(getCaseUpdatedAtIso(caseItem))}
-                        <p className="mt-1 text-xs text-slate-500">{formatUserDisplayName(getCaseUpdatedByUser(caseItem))}</p>
-                      </div>
-                    </Field>
-                  </div>
-                )}
-              </div>
-            ) : null}
-          </div>
-        </div>
-      </div>
-
-      <input
-        ref={fileInputRef}
-        type="file"
-        className="sr-only"
-        onChange={(e) => {
-          const file = e.target.files?.[0];
-          e.target.value = '';
-          if (file) uploadFile(file);
-        }}
-      />
-
-      <CaseModal
-        ref={caseModalRef}
-        onSuccess={(updated) => {
-          const originId = updated.parentConsultation?.id;
-          if (originId) {
-            if (originId === caseItem.id) {
-              void refreshDetail();
-              return;
-            }
-            void navigateToCaseById(navigate, originId);
-            return;
-          }
-          onCaseChange(updated);
-          const nextPath = caseWorkspacePath(updated);
-          if (nextPath !== window.location.pathname) navigate(nextPath, { replace: true });
-        }}
-      />
-      <CaseDeleteModal ref={deleteRef} onSuccess={() => navigate(listPath, { replace: true })} />
-      <TaskCreateModal ref={taskCreateRef} onSuccess={() => void refreshDetail()} />
-      <TaskUpdateModal ref={taskUpdateRef} onSuccess={() => void refreshDetail()} />
-      <ScheduleAppointmentDialog ref={appointmentCreateRef} onSuccess={() => void refreshDetail()} />
-      <AppointmentUpdateModal ref={appointmentUpdateRef} onSuccess={() => void refreshDetail()} />
-      <TaskDetailPanel
-        taskId={detailTaskId}
-        open={detailTaskId != null}
-        onOpenChange={(v) => {
-          if (!v) setDetailTaskId(null);
-        }}
-        onEdit={(task) => taskUpdateRef.current?.show(task)}
-        portalContainer={null}
-        onOpenCase={openRelated}
-        contextCaseId={caseItem.id}
-      />
-      <AppointmentDetailPanel
-        appointmentId={detailAppointmentId}
-        open={detailAppointmentId != null}
-        onOpenChange={(v) => {
-          if (!v) setDetailAppointmentId(null);
-        }}
-        onEdit={(a: Appointment) => appointmentUpdateRef.current?.show(a)}
-        portalContainer={null}
-        onOpenCase={openRelated}
-        contextCaseId={caseItem.id}
-      />
-      <ConflictCheckDialog
-        open={conflictOpen}
-        onOpenChange={setConflictOpen}
-        matterId={caseItem.id}
-        excludeMatterId={caseItem.id}
-      />
       <ConversionTypeSelector
         open={typeSelectorOpen}
         onOpenChange={setTypeSelectorOpen}
@@ -794,11 +455,10 @@ export default function ConsultationDetailWorkspace({
                 reference: newCase.reference || '',
               }),
             });
-            void refreshDetail();
+            void modalRef.current?.refreshDetail();
           }}
         />
       ) : null}
-      <ClientProfilePreview ref={clientPreviewRef} />
-    </div>
+    </>
   );
 }

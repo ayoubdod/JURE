@@ -5,8 +5,20 @@ import {
   requiredDocumentsOf,
   upcomingAppointments,
 } from '@/components/case/workspace/litigation-detail/helpers';
+import { pendingFollowUpCount } from '@/components/case/workspace/consultation-detail/helpers';
 import type { CalculatedDeadline } from '@/services/legal-deadlines/api';
 import type { CaseSummary, CaseSummaryInput, CaseWorkspaceLeaf } from './types';
+
+function isSameLocalDay(iso: string): boolean {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return false;
+  const now = new Date();
+  return (
+    d.getFullYear() === now.getFullYear() &&
+    d.getMonth() === now.getMonth() &&
+    d.getDate() === now.getDate()
+  );
+}
 
 function deadlineIsoList(
   caseItem: API.Case,
@@ -49,7 +61,16 @@ export function buildCaseSummary(input: CaseSummaryInput): CaseSummary {
     .filter((d) => d.days != null) as { iso: string; days: number }[];
 
   const overdueDeadlineCount = deadlineRows.filter((d) => d.days < 0).length;
-  const scheduleBadge = deadlineRows.filter((d) => d.days < 0 || d.days <= 7).length;
+  let scheduleBadge = deadlineRows.filter((d) => d.days < 0 || d.days <= 7).length;
+  if (type === 'CONSULTATION') {
+    const apptToday = (caseItem._related?.appointments ?? []).some((a) => {
+      const start = a.start_at;
+      return start && a.status !== 'cancelled' ? isSameLocalDay(String(start)) : false;
+    });
+    const sessionIso = String(getCaseData(caseItem, 'consultation_date') ?? '') || '';
+    const sessionToday = sessionIso ? isSameLocalDay(sessionIso) : false;
+    if (apptToday || sessionToday) scheduleBadge += 1;
+  }
 
   const upcomingDeadlines = deadlineRows
     .filter((d) => d.days >= 0)
@@ -67,6 +88,7 @@ export function buildCaseSummary(input: CaseSummaryInput): CaseSummary {
 
   const researchCount = researchNotes?.length ?? 0;
   const followUpCount = caseItem.followUpCount ?? caseItem.followUps?.length ?? 0;
+  const sessionBadge = type === 'CONSULTATION' ? pendingFollowUpCount(caseItem) : 0;
 
   const leafCounts: Partial<Record<CaseWorkspaceLeaf, number>> = {
     tasks: openTaskCount,
@@ -95,6 +117,7 @@ export function buildCaseSummary(input: CaseSummaryInput): CaseSummary {
     researchCount,
     followUpCount,
     dutyFileBadge: missingRequiredDocCount,
+    sessionBadge,
     leafCounts,
   };
 }

@@ -57,9 +57,30 @@ describe('parseTab', () => {
     expect(defaultLeafForGroup('LITIGATION', 'caseFile')).toBe('caseDetails');
     expect(defaultLeafForGroup('LITIGATION', 'schedule')).toBe('hearings');
     expect(defaultLeafForGroup('ADMINISTRATIVE', 'schedule')).toBe('deadlines');
+    expect(defaultLeafForGroup('CONSULTATION', 'schedule')).toBe('appointments');
     expect(defaultLeafForGroup('CONSULTATION', 'session')).toBe('consultation');
     expect(defaultLeafForGroup('LITIGATION', 'work')).toBe('tasks');
   });
+
+  it('maps every consultation legacy leaf to its group/segment', () => {
+    const expected: Record<string, { group: string; leaf: string }> = {
+      overview: { group: 'overview', leaf: 'overview' },
+      administrative: { group: 'session', leaf: 'consultation' },
+      consultation: { group: 'session', leaf: 'consultation' },
+      appointments: { group: 'schedule', leaf: 'appointments' },
+      deadlines: { group: 'schedule', leaf: 'deadlines' },
+      tasks: { group: 'work', leaf: 'tasks' },
+      notes: { group: 'work', leaf: 'notes' },
+      documents: { group: 'documents', leaf: 'documents' },
+      finance: { group: 'finance', leaf: 'finance' },
+      activity: { group: 'activity', leaf: 'activity' },
+      juria: { group: 'juria', leaf: 'juria' },
+    };
+    for (const [raw, want] of Object.entries(expected)) {
+      expect(parseTab('CONSULTATION', raw)).toEqual(want);
+    }
+  });
+
 
   it('maps every administrative legacy leaf to its group/segment', () => {
     const expected: Record<string, { group: string; leaf: string }> = {

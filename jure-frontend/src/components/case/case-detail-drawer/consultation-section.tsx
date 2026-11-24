@@ -20,12 +20,15 @@ export function ConsultationSection({
   onAddFollowUp,
   anchorFollowUps,
   hideConversion,
+  hideJoinVideo,
 }: {
   c: API.Case;
   onOpenCaseById?: (id: number) => void;
   onAddFollowUp?: () => void;
   anchorFollowUps?: boolean;
   hideConversion?: boolean;
+  /** Workspace Session: Join lives in the header CTA only. */
+  hideJoinVideo?: boolean;
 }) {
   const { enumPretty, t } = useAppTranslation();
   const cw = t.cases.modal.consultationWorkflow;
@@ -102,14 +105,18 @@ export function ConsultationSection({
           ) : null}
           {format === 'VIDEO' && videoLink ? (
             <Field label={cw.videoLink}>
-              <a
-                className="inline-flex h-9 items-center rounded-lg bg-[#64499D] px-3 text-[12px] font-medium text-white"
-                href={videoLink}
-                target="_blank"
-                rel="noreferrer"
-              >
-                {cw.joinConsultation}
-              </a>
+              {hideJoinVideo ? (
+                <span className="break-all font-mono text-[12px] text-slate-600">{videoLink}</span>
+              ) : (
+                <a
+                  className="inline-flex h-9 items-center rounded-lg bg-[#64499D] px-3 text-[12px] font-medium text-white"
+                  href={videoLink}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  {cw.joinConsultation}
+                </a>
+              )}
             </Field>
           ) : null}
         </div>

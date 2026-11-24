@@ -124,6 +124,20 @@ describe('buildCaseSummary', () => {
     expect(summary.documentsBadge).toBe(2);
   });
 
+  it('consultation sessionBadge prefers pending follow-ups', () => {
+    const summary = buildCaseSummary({
+      type: 'CONSULTATION',
+      caseItem: caseStub({
+        followUpCount: 5,
+        followUps: [
+          { id: 1, outcome: 'SCHEDULED' } as API.Case,
+          { id: 2, outcome: 'COMPLETED' } as API.Case,
+        ],
+      }),
+    });
+    expect(summary.sessionBadge).toBe(1);
+  });
+
   it('administrative dutyFileBadge + scheduleBadge include due date', () => {
     const summary = buildCaseSummary({
       type: 'ADMINISTRATIVE',

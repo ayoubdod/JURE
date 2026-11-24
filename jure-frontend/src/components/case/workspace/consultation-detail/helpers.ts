@@ -77,3 +77,34 @@ export function hoursUntil(iso?: string) {
   if (Number.isNaN(d.getTime())) return null;
   return (d.getTime() - Date.now()) / 36e5;
 }
+
+/** Video format + link + session upcoming or in progress. */
+export function consultationCanJoinVideo(c: API.Case): boolean {
+  const format = String(getCaseData(c, 'format') || '').toUpperCase();
+  const videoLink = String(getCaseData(c, 'video_link') || '');
+  if (format !== 'VIDEO' || !videoLink) return false;
+  const status = outcomeOf(c);
+  if (status === 'CANCELLED' || status === 'COMPLETED') return false;
+  const dt = getCaseData(c, 'consultation_date') as string | undefined;
+  const hours = hoursUntil(dt);
+  // Upcoming (future) or in progress (started within last duration / same day window).
+  if (hours == null) return Boolean(videoLink);
+  if (hours >= 0) return true;
+  // Started recently: treat as in progress for up to 4 hours past start.
+  return hours > -4;
+}
+
+export function pendingFollowUpCount(c: API.Case): number {
+  const followUps = c.followUps ?? [];
+  const pending = followUps.filter((item) => {
+    const outcome = String(item.outcome || item.status || '').toUpperCase();
+    return outcome !== 'COMPLETED' && outcome !== 'CANCELLED' && outcome !== 'DONE';
+  });
+  if (pending.length) return pending.length;
+  return c.followUpCount ?? followUps.length;
+}
+
+export function isConsultationTerminal(c: API.Case): boolean {
+  const status = outcomeOf(c);
+  return status === 'COMPLETED' || status === 'CANCELLED';
+}

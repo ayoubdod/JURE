@@ -110,6 +110,7 @@ export function defaultLeafForGroup(type: CaseWorkspaceType, group: CaseWorkspac
   if (group === 'dutyFile') return 'administrative';
   if (group === 'schedule') {
     if (type === 'LITIGATION') return 'hearings';
+    if (type === 'CONSULTATION') return 'appointments';
     return 'deadlines';
   }
   if (group === 'work') return 'tasks';
