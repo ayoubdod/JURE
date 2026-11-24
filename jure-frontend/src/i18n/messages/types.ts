@@ -1753,6 +1753,8 @@ export interface AppMessages {
         unsupportedType: string;
         segmentsLabel: string;
         navAttention: string;
+        /** Untitled required-doc fallback; interpolate {count}. */
+        documentUntitled: string;
         overview: {
           nextCritical: string;
           needsAttention: string;

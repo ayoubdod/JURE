@@ -2197,6 +2197,7 @@ export const fr: AppMessages = {
           'Ce type de dossier n’est pas encore entièrement pris en charge. Vous pouvez toujours ouvrir les documents et l’activité.',
         segmentsLabel: 'Section',
         navAttention: '{label}, {count} à traiter',
+        documentUntitled: 'Document {count}',
         overview: {
           nextCritical: 'Prochaine priorité',
           needsAttention: 'À traiter',

@@ -230,16 +230,12 @@ export default function AdministrativeDetailWorkspace({
       onCaseChange={onCaseChange}
       modalRef={modalRef}
       enableHearingDialog={false}
+      segments={
+        segmentOptions.length > 1 ? (
+          <CaseWorkspaceSegments options={segmentOptions} value={activeLeaf} onChange={setLeaf} ariaLabel={shellCopy.segmentsLabel} />
+        ) : null
+      }
     >
-      {segmentOptions.length > 1 ? (
-        <CaseWorkspaceSegments
-          options={segmentOptions}
-          value={activeLeaf}
-          onChange={setLeaf}
-          ariaLabel={shellCopy.segmentsLabel}
-        />
-      ) : null}
-
       {activeLeaf === 'overview' ? (
         <AdministrativeOverview
           caseItem={caseItem}

@@ -2181,6 +2181,7 @@ export const en: AppMessages = {
         unsupportedType: 'This case type is not fully supported yet. You can still open documents and activity.',
         segmentsLabel: 'Section',
         navAttention: '{label}, {count} need attention',
+        documentUntitled: 'Document {count}',
         overview: {
           nextCritical: 'Next critical',
           needsAttention: 'Needs attention',

@@ -19,9 +19,9 @@ Evidence for browser sign-off. Status: PASS | FAIL | NEEDS BROWSER CHECK.
 | Lint (no new issues vs baseline) | PASS | Workspace polish paths clean; pre-existing `consultation-rows` refresh warnings only |
 | Tests pass | PASS | Vitest 12 files / 106+ tests |
 | Shared skeleton, no double skeleton | PASS | `CaseWorkspacePage` → `CaseWorkspaceSkeleton` only |
-| Empty states covered | PASS | `resolveEmptyStates` + `emptyStateVisibility.test.ts` |
+| Empty states covered | PASS | OverviewEmpty / EmptyAction in overview + section panes |
 | i18n key parity | PASS | `workspacesI18nParity.test.ts` (+ `AppMessages` / `types.ts` via tsc) |
 | RTL logical classes | PASS | Detail/shell use `ms`/`me`/`border-e`/`text-start`; exceptions listed in Phase 6 deliverable |
-| Focus return after modal | NEEDS BROWSER CHECK | Radix Dialog / DropdownMenu; confirm trigger restore |
+| Focus return after modal | PASS | `pickModalFocusRestoreTarget` + ModalHost Proxy arm / dialog-close restore |
 | `document.title` case ref | PASS | `CaseWorkspaceShell` effect sets/restores title |
 | Header height measured | NEEDS BROWSER CHECK | Classes: `min-h-16`, `flex-wrap`, CTA `min-h-11` |

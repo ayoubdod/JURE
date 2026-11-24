@@ -71,7 +71,7 @@ export default function CaseWorkspaceSegments<T extends string>({
             type="button"
             role="tab"
             aria-selected={selected}
-            aria-controls={`case-workspace-panel-${opt.id}`}
+            aria-controls="case-workspace-tabpanel"
             tabIndex={selected ? 0 : -1}
             onClick={() => onChange(opt.id)}
             onKeyDown={(e) => onKeyDown(e, index)}

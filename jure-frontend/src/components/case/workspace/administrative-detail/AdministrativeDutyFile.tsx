@@ -39,7 +39,9 @@ export default function AdministrativeDutyFile({
   const due = dueDateOf(caseItem);
   const completion = completionDateOf(caseItem);
   const lead = leadAttorney(caseItem);
-  const required = requiredDocumentsOf(caseItem);
+  const required = requiredDocumentsOf(caseItem, (count) =>
+    tf(t.cases.workspaces.shell.documentUntitled, { count })
+  );
   const missing = required.filter((d) => !d.completed).length;
   const dueDays = getCountdownDays(due);
   const dueStyle = dueDays == null ? 'normal' : getCountdownStyle(dueDays);

@@ -15,6 +15,7 @@ export default function CaseWorkspaceShell({
   activeNavId,
   activeLeaf,
   onSelectNav,
+  segments,
   children,
   caseItem,
   listPath,
@@ -29,6 +30,7 @@ export default function CaseWorkspaceShell({
   activeNavId: CaseWorkspaceGroupId;
   activeLeaf: CaseWorkspaceLeaf;
   onSelectNav: (item: CaseWorkspaceNavItem) => void;
+  segments?: ReactNode;
   children: ReactNode;
   caseItem: API.Case;
   listPath: string;
@@ -47,7 +49,7 @@ export default function CaseWorkspaceShell({
   }, [caseItem.reference, caseItem.title]);
 
   return (
-    <div className="flex h-full min-h-0 flex-col overflow-hidden bg-transparent">
+    <div data-case-ws-root className="flex h-full min-h-0 flex-col overflow-hidden bg-transparent">
       {header}
       <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
         <CaseWorkspaceNav
@@ -62,9 +64,11 @@ export default function CaseWorkspaceShell({
             activeLeaf === 'juria' ? 'flex flex-col overflow-hidden' : 'overflow-y-auto'
           )}
         >
+          {segments}
           <div
-            id={`case-workspace-panel-${activeLeaf}`}
-            role="tabpanel"
+            id={segments ? 'case-workspace-tabpanel' : undefined}
+            role={segments ? 'tabpanel' : undefined}
+            aria-labelledby={segments ? `case-workspace-tab-${activeLeaf}` : undefined}
             className={cn(
               'px-3 py-4 sm:px-5 lg:px-6',
               activeLeaf === 'juria' && 'flex h-full min-h-0 flex-1 flex-col overflow-hidden p-0'

@@ -2181,6 +2181,7 @@ export const ar: AppMessages = {
           'نوع القضية هذا غير مدعوم بالكامل بعد. يمكنك مع ذلك فتح المستندات والنشاط.',
         segmentsLabel: 'القسم',
         navAttention: '{label}، {count} تحتاج إلى اهتمام',
+        documentUntitled: 'مستند {count}',
         overview: {
           nextCritical: 'الأولوية التالية',
           needsAttention: 'تحتاج إلى اهتمام',

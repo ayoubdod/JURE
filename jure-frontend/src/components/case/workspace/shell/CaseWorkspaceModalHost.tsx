@@ -1,6 +1,6 @@
 'use client';
 
-import { forwardRef, useImperativeHandle, useRef, useState } from 'react';
+import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { useNavigate } from 'react-router';
 import CaseModal, { type CaseModalRef } from '@/components/case/CaseModal';
 import CaseDeleteModal, { type CaseDeleteModalRef } from '@/components/case/CaseDeleteModal';
@@ -28,6 +28,7 @@ import { apiGetClient } from '@/services/client/api';
 import type { Appointment } from '@/services/appointment/api';
 import { useToast } from '@/hooks/use-toast';
 import { useAppTranslation } from '@/i18n';
+import { pickModalFocusRestoreTarget } from './modalFocusRestore';
 
 export type CaseWorkspaceModalHostHandle = {
   editCase: (
@@ -79,6 +80,8 @@ const CaseWorkspaceModalHost = forwardRef<CaseWorkspaceModalHostHandle, Props>(
     const appointmentUpdateRef = useRef<AppointmentUpdateModalRef>(null);
     const clientPreviewRef = useRef<ClientProfilePreviewRef>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const focusEl = useRef<HTMLElement | null>(null);
+    const focusPending = useRef(false);
 
     const [detailTaskId, setDetailTaskId] = useState<number | null>(null);
     const [detailAppointmentId, setDetailAppointmentId] = useState<number | null>(null);
@@ -89,6 +92,22 @@ const CaseWorkspaceModalHost = forwardRef<CaseWorkspaceModalHostHandle, Props>(
 
     const relatedLabel =
       [caseItem.reference, caseItem.title].filter(Boolean).join(' — ') || `Case #${caseItem.id}`;
+
+    useEffect(() => {
+      let open = document.querySelectorAll('[role="dialog"][data-state="open"]').length;
+      const mo = new MutationObserver(() => {
+        const n = document.querySelectorAll('[role="dialog"][data-state="open"]').length;
+        if (open > 0 && n === 0 && focusPending.current) {
+          focusPending.current = false;
+          const t = pickModalFocusRestoreTarget({ preferred: focusEl.current, header: document.querySelector('[data-case-ws-root] header') });
+          focusEl.current = null;
+          queueMicrotask(() => t?.focus({ preventScroll: true }));
+        }
+        open = n;
+      });
+      mo.observe(document.body, { subtree: true, childList: true, attributes: true, attributeFilter: ['data-state'] });
+      return () => mo.disconnect();
+    }, []);
 
     const refreshDetail = async () => {
       const res = await apiGetCase(caseItem.id);
@@ -110,7 +129,7 @@ const CaseWorkspaceModalHost = forwardRef<CaseWorkspaceModalHostHandle, Props>(
         );
     };
 
-    useImperativeHandle(ref, () => ({
+    useImperativeHandle(ref, () => new Proxy({
       editCase: (item, opts) => {
         if (opts?.followUpOf) {
           caseModalRef.current?.show(undefined, {
@@ -147,6 +166,20 @@ const CaseWorkspaceModalHost = forwardRef<CaseWorkspaceModalHostHandle, Props>(
       },
       triggerUpload: () => fileInputRef.current?.click(),
       refreshDetail,
+    } satisfies CaseWorkspaceModalHostHandle, {
+      get(target, prop, receiver) {
+        const value = Reflect.get(target, prop, receiver);
+        if (typeof value !== 'function' || prop === 'refreshDetail' || prop === 'triggerUpload') return value;
+        return (...args: unknown[]) => {
+          focusEl.current = pickModalFocusRestoreTarget({
+            preferred: document.querySelector('[data-case-ws-root] header [data-state="open"]'),
+            active: document.activeElement,
+            header: document.querySelector('[data-case-ws-root] header'),
+          });
+          focusPending.current = true;
+          return (value as (...a: unknown[]) => unknown).apply(target, args);
+        };
+      },
     }));
 
     return (

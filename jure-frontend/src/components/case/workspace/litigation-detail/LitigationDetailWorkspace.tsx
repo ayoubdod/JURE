@@ -256,16 +256,12 @@ export default function LitigationDetailWorkspace({
       listPath={listPath}
       onCaseChange={onCaseChange}
       modalRef={modalRef}
+      segments={
+        segmentOptions.length > 1 ? (
+          <CaseWorkspaceSegments options={segmentOptions} value={activeLeaf} onChange={setLeaf} ariaLabel={shellCopy.segmentsLabel} />
+        ) : null
+      }
     >
-      {segmentOptions.length > 1 ? (
-        <CaseWorkspaceSegments
-          options={segmentOptions}
-          value={activeLeaf}
-          onChange={setLeaf}
-          ariaLabel={shellCopy.segmentsLabel}
-        />
-      ) : null}
-
       {activeLeaf === 'overview' ? (
         <LitigationOverview
           caseItem={caseItem}

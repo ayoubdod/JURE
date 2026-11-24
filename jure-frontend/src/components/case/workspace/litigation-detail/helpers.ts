@@ -53,18 +53,22 @@ export function keyDeadlinesOf(c: API.Case): KeyDeadline[] {
     .filter((x): x is KeyDeadline => Boolean(x));
 }
 
-export function requiredDocumentsOf(c: API.Case): { label: string; completed: boolean }[] {
+export function requiredDocumentsOf(
+  c: API.Case,
+  untitledDocument: (count: number) => string = (n) => String(n)
+): { label: string; completed: boolean }[] {
   const raw = getCaseData(c, 'required_documents');
   if (!Array.isArray(raw)) return [];
   return raw.map((item, i) => {
+    const fallback = untitledDocument(i + 1);
     if (item && typeof item === 'object') {
       const row = item as { label?: unknown; completed?: unknown };
       return {
-        label: String(row.label ?? `Document ${i + 1}`),
+        label: String(row.label ?? fallback),
         completed: Boolean(row.completed),
       };
     }
-    return { label: String(item ?? `Document ${i + 1}`), completed: false };
+    return { label: String(item ?? fallback), completed: false };
   });
 }
 

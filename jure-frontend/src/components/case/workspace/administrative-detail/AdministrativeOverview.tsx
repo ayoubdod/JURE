@@ -17,11 +17,8 @@ import {
   openTasksTop,
   selectNeedsAttention,
 } from '@/components/case/workspace/shell/overviewLogic';
-import {
-  selectAdminChecklist,
-  selectAdminNextCritical,
-  selectMissingChecklist,
-} from '@/components/case/workspace/shell/adminOverviewLogic';
+import { selectAdminNextCritical } from '@/components/case/workspace/shell/adminOverviewLogic';
+import { requiredDocumentsOf } from '@/components/case/workspace/litigation-detail/helpers';
 import type { CaseSummary, CaseWorkspaceLeaf } from '@/components/case/workspace/shell/types';
 import { relativeDayLabel } from '@/components/case/workspace/litigation-detail/helpers';
 import { dueDateOf, dutyTypeOf, institutionOf } from './helpers';
@@ -61,8 +58,10 @@ export default function AdministrativeOverview({
   const next = selectAdminNextCritical(summary, due);
   const duty = dutyTypeOf(caseItem);
   const institution = institutionOf(caseItem);
-  const checklist = selectAdminChecklist(caseItem);
-  const missingDocs = selectMissingChecklist(caseItem, 5);
+  const checklist = requiredDocumentsOf(caseItem, (count) =>
+    tf(shell.documentUntitled, { count })
+  );
+  const missingDocs = checklist.filter((d) => !d.completed).slice(0, 5);
   const needs = selectNeedsAttention(caseItem, legalDeadlines, {
     missingDocuments: copy.missingDocuments,
   }).filter((i) => i.kind !== 'document');

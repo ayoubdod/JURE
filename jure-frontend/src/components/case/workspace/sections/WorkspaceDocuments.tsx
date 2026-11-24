@@ -17,9 +17,11 @@ export default function WorkspaceDocuments({
   canEdit: boolean;
   onUpload: () => void;
 }) {
-  const { t, lang } = useAppTranslation();
+  const { t, tf, lang } = useAppTranslation();
   const copy = t.cases.workspaces.litigation.detail;
-  const required = requiredDocumentsOf(caseItem);
+  const required = requiredDocumentsOf(caseItem, (count) =>
+    tf(t.cases.workspaces.shell.documentUntitled, { count })
+  );
   const attachments = caseItem.attachments ?? [];
   const readerRef = useRef<DocumentReaderModalRef>(null);
 
