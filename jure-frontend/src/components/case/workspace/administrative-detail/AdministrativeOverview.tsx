@@ -1,287 +1,194 @@
-import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
+'use client';
+
 import { formatDate, useAppTranslation } from '@/i18n';
-import { getCaseData, getCountdownDays, getStatusColor } from '@/utils/caseCardHelpers';
 import { CaseClientLabel } from '@/components/client/CaseClientLabel';
 import { getConvertedFromCase } from '@/components/case/conversion/ConvertedCaseLink';
 import { formatMAD } from '@/utils/formatMAD';
 import { TaskStatus } from '@/utils/constants';
 import type { CalculatedDeadline } from '@/services/legal-deadlines/api';
-import { EmptyAction, PersonAvatar, TextLink, WorkspaceCard } from '@/components/case/workspace/litigation-detail/ui';
+import { assignedDisplayName } from '@/services/case/caseType';
+import { cn } from '@/lib/utils';
 import {
-  formatShortDate,
-  incompleteTasks,
-  leadAttorney,
-  overdueTasks,
-  personName,
-  relativeDayLabel,
-  requiredDocumentsOf,
-} from '@/components/case/workspace/litigation-detail/helpers';
+  OverviewCard,
+  OverviewEmpty,
+  OverviewTextLink,
+} from '@/components/case/workspace/shell/OverviewCards';
 import {
-  adminStatusOf,
-  dueDateOf,
-  dutyTypeOf,
-  institutionOf,
-  institutionRefOf,
-  type AdministrativeDetailSection,
-} from './helpers';
+  openTasksTop,
+  selectNeedsAttention,
+} from '@/components/case/workspace/shell/overviewLogic';
+import {
+  selectAdminChecklist,
+  selectAdminNextCritical,
+  selectMissingChecklist,
+} from '@/components/case/workspace/shell/adminOverviewLogic';
+import type { CaseSummary, CaseWorkspaceLeaf } from '@/components/case/workspace/shell/types';
+import { relativeDayLabel } from '@/components/case/workspace/litigation-detail/helpers';
+import { dueDateOf, dutyTypeOf, institutionOf } from './helpers';
 
 export default function AdministrativeOverview({
   caseItem,
   canEdit,
   showFinance,
+  summary,
   legalDeadlines,
   finance,
+  primaryActionLabel,
+  onPrimaryAction,
   onOpenSection,
   onOpenClient,
   onOpenCase,
   onAddTask,
-  onAddDeadline,
-  onAddAppointment,
-  onUpload,
-  onEdit,
 }: {
   caseItem: API.Case;
   canEdit: boolean;
   showFinance: boolean;
+  summary: CaseSummary;
   legalDeadlines: CalculatedDeadline[] | null;
   finance: API.FinanceCaseSummary | null;
-  onOpenSection: (id: AdministrativeDetailSection) => void;
+  primaryActionLabel: string;
+  onPrimaryAction: () => void;
+  onOpenSection: (id: CaseWorkspaceLeaf) => void;
   onOpenClient: () => void;
   onOpenCase: (id: number) => void;
   onAddTask: () => void;
-  onAddDeadline: () => void;
-  onAddAppointment: () => void;
-  onUpload: () => void;
-  onEdit: () => void;
 }) {
   const { t, tf, enumPretty, lang } = useAppTranslation();
   const copy = t.cases.workspaces.administrative.detail;
-  const modal = t.cases.modal;
-  const origin = getConvertedFromCase(caseItem);
-  const status = adminStatusOf(caseItem);
+  const shell = t.cases.workspaces.shell;
+  const litCopy = t.cases.workspaces.litigation.detail;
+  const due = dueDateOf(caseItem) || null;
+  const next = selectAdminNextCritical(summary, due);
   const duty = dutyTypeOf(caseItem);
-  const priority = getCaseData(caseItem, 'priority') as string | undefined;
   const institution = institutionOf(caseItem);
-  const instRef = institutionRefOf(caseItem);
-  const due = dueDateOf(caseItem);
-  const dueDays = getCountdownDays(due);
-  const lead = leadAttorney(caseItem);
-  const tasksOpen = incompleteTasks(caseItem).slice(0, 5);
-  const overdue = overdueTasks(caseItem);
-  const required = requiredDocumentsOf(caseItem);
-  const missingDocs = required.filter((d) => !d.completed);
-  const attachments = caseItem.attachments ?? [];
-  const activity = (caseItem.activity ?? []).slice(0, 6);
-  const nextLegal = (legalDeadlines ?? [])
-    .filter((d) => d.status !== 'completed' && d.status !== 'cancelled')
-    .sort((a, b) => new Date(a.final_deadline || a.calculated_deadline).getTime() - new Date(b.final_deadline || b.calculated_deadline).getTime())[0];
+  const checklist = selectAdminChecklist(caseItem);
+  const missingDocs = selectMissingChecklist(caseItem, 5);
+  const needs = selectNeedsAttention(caseItem, legalDeadlines, {
+    missingDocuments: copy.missingDocuments,
+  }).filter((i) => i.kind !== 'document');
+  const tasks = openTasksTop(caseItem, 5);
+  const activity = (caseItem.activity ?? []).slice(0, 3);
+  const origin = getConvertedFromCase(caseItem);
+  const lead = assignedDisplayName(caseItem);
 
-  const urgency = (iso: string) => {
-    const days = getCountdownDays(iso);
-    if (days == null) return 'text-slate-500';
-    if (days < 0 || days <= 3) return 'text-red-600';
-    if (days <= 14) return 'text-amber-600';
-    return 'text-emerald-600';
-  };
+  const rel = (iso?: string | null) =>
+    iso ? relativeDayLabel(iso, lang, litCopy, tf) : '';
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap gap-2">
-        <Button type="button" variant="outline" className="h-8 rounded-lg text-[12px]" onClick={onAddTask}>
-          {copy.addTask}
-        </Button>
-        {canEdit ? (
-          <Button type="button" variant="outline" className="h-8 rounded-lg text-[12px]" onClick={onAddDeadline}>
-            {copy.addDeadline}
-          </Button>
-        ) : null}
-        {canEdit ? (
-          <Button type="button" variant="outline" className="h-8 rounded-lg text-[12px]" onClick={onUpload}>
-            {copy.addDocument}
-          </Button>
-        ) : null}
-        {canEdit ? (
-          <Button type="button" variant="outline" className="h-8 rounded-lg text-[12px]" onClick={onEdit}>
-            {copy.addNote}
-          </Button>
-        ) : null}
-        <Button type="button" variant="outline" className="h-8 rounded-lg text-[12px]" onClick={onAddAppointment}>
-          {copy.addAppointment}
-        </Button>
-      </div>
-
-      <WorkspaceCard title={copy.dossier}>
-        <p className="font-mono text-[12px] text-slate-500">{caseItem.reference || '—'}</p>
-        <p className="mt-1 text-[16px] font-semibold text-slate-900 dark:text-white">
-          {caseItem.title || t.cases.untitledCase}
-        </p>
-        <dl className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          <div>
-            <dt className="text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-400">{modal.fields.status}</dt>
-            <dd className="mt-1">
-              <span className={cn('inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase ring-1 ring-inset', getStatusColor(status))}>
-                {enumPretty(status) || status}
-              </span>
-            </dd>
-          </div>
-          {duty ? (
-            <div>
-              <dt className="text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-400">{copy.snapshotDuty}</dt>
-              <dd className="mt-1 text-[13px] font-medium">{enumPretty(duty)}</dd>
-            </div>
-          ) : null}
-          {priority ? (
-            <div>
-              <dt className="text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-400">{copy.snapshotPriority}</dt>
-              <dd className="mt-1 text-[13px] font-medium">{enumPretty(priority)}</dd>
-            </div>
-          ) : null}
-          {institution ? (
-            <div className="sm:col-span-2">
-              <dt className="text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-400">{copy.institution}</dt>
-              <dd className="mt-1 text-[13px] font-medium">{institution}</dd>
-            </div>
-          ) : null}
-        </dl>
-        {origin ? (
-          <div className="mt-4 rounded-lg bg-slate-50 px-3 py-2 dark:bg-zinc-900">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-400">{copy.origin}</p>
-            <p className="mt-1 text-[13px]">
-              {copy.convertedFrom}
-              {origin.reference ? ` · ${origin.reference}` : ''}
+      <OverviewCard
+        title={shell.overview.nextCritical}
+        action={
+          <OverviewTextLink onClick={() => onOpenSection(next.kind === 'due' ? 'administrative' : 'deadlines')}>
+            {copy.viewAll}
+          </OverviewTextLink>
+        }
+      >
+        {next.kind === 'due' && next.iso ? (
+          <button
+            type="button"
+            onClick={() => onOpenSection('administrative')}
+            className="w-full min-h-11 rounded-md text-start focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#64499D]/40"
+          >
+            <p className={cn('text-[15px] font-semibold', (next.days ?? 0) < 0 ? 'text-red-600' : 'text-slate-900 dark:text-white')}>
+              {formatDate(next.iso, lang, { day: 'numeric', month: 'long', year: 'numeric' })}
             </p>
-            <TextLink onClick={() => onOpenCase(origin.id)}>{copy.viewConsultation}</TextLink>
-          </div>
-        ) : null}
-      </WorkspaceCard>
+            <p className="mt-0.5 text-[13px] text-slate-600">
+              {rel(next.iso)}
+              {institution ? ` · ${institution}` : ''}
+              {duty ? ` · ${enumPretty(duty)}` : ''}
+            </p>
+          </button>
+        ) : (
+          <OverviewEmpty
+            message={shell.overview.noCritical}
+            actionLabel={canEdit ? primaryActionLabel : undefined}
+            onAction={canEdit ? onPrimaryAction : undefined}
+          />
+        )}
+      </OverviewCard>
 
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <button type="button" onClick={() => onOpenSection('deadlines')} className="rounded-xl border border-slate-200 bg-white p-3 text-start dark:border-zinc-800 dark:bg-zinc-950">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-400">{copy.dueDate}</p>
-          <p className={cn('mt-1 text-[15px] font-semibold', due && urgency(due))}>
-            {due ? formatShortDate(due, lang) : copy.noneScheduled}
-          </p>
-          {due ? <p className={cn('mt-0.5 text-[12px]', urgency(due))}>{relativeDayLabel(due, lang, copy, tf)}</p> : null}
-        </button>
-        <button type="button" onClick={() => onOpenSection('deadlines')} className="rounded-xl border border-slate-200 bg-white p-3 text-start dark:border-zinc-800 dark:bg-zinc-950">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-400">{t.cases.pageWorkspace.tabs.deadlines}</p>
-          <p className="mt-1 text-[15px] font-semibold text-slate-900 dark:text-white">
-            {nextLegal ? formatShortDate(nextLegal.final_deadline || nextLegal.calculated_deadline, lang) : copy.noneScheduled}
-          </p>
-        </button>
-        <button type="button" onClick={() => onOpenSection('tasks')} className="rounded-xl border border-slate-200 bg-white p-3 text-start dark:border-zinc-800 dark:bg-zinc-950">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-400">{copy.overdueTasks}</p>
-          <p className={cn('mt-1 text-[15px] font-semibold', overdue.length ? 'text-red-600' : 'text-slate-900 dark:text-white')}>
-            {overdue.length}
-          </p>
-        </button>
-        <button type="button" onClick={() => onOpenSection('documents')} className="rounded-xl border border-slate-200 bg-white p-3 text-start dark:border-zinc-800 dark:bg-zinc-950">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-400">{copy.missingDocuments}</p>
-          <p className="mt-1 text-[15px] font-semibold text-slate-900 dark:text-white">{missingDocs.length}</p>
-        </button>
-      </div>
-
-      <div className="grid gap-4 lg:grid-cols-2">
-        <WorkspaceCard
-          title={copy.todoTasks}
-          action={<TextLink onClick={() => onOpenSection('tasks')}>{copy.viewAll}</TextLink>}
+      {checklist.length ? (
+        <OverviewCard
+          title={copy.requiredDocuments}
+          action={
+            <OverviewTextLink onClick={() => onOpenSection('administrative')}>{copy.viewAll}</OverviewTextLink>
+          }
         >
-          {tasksOpen.length ? (
+          <p className="mb-2 text-[12px] text-slate-500">
+            {tf(copy.docsProgress, {
+              done: checklist.filter((d) => d.completed).length,
+              total: checklist.length,
+            })}
+          </p>
+          {missingDocs.length ? (
             <ul className="space-y-2">
-              {tasksOpen.map((task) => (
+              {missingDocs.map((doc) => (
+                <li key={doc.label}>
+                  <button
+                    type="button"
+                    onClick={() => onOpenSection('documents')}
+                    className="min-h-11 text-start text-[13px] font-medium text-amber-700 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#64499D]/40"
+                  >
+                    {doc.label}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <OverviewEmpty message={shell.overview.nothingUrgent} />
+          )}
+        </OverviewCard>
+      ) : null}
+
+      <div className="grid gap-3 lg:grid-cols-3">
+        <OverviewCard title={shell.overview.needsAttention}>
+          {needs.length ? (
+            <ul className="space-y-2">
+              {needs.map((item) => (
+                <li key={item.id}>
+                  <button
+                    type="button"
+                    onClick={() => onOpenSection(item.leaf)}
+                    className="flex w-full items-start justify-between gap-2 text-start text-[13px] hover:underline"
+                  >
+                    <span className="font-medium">{item.title}</span>
+                    {item.days != null ? (
+                      <span className={cn('shrink-0 text-[11px]', item.days <= 0 ? 'text-red-600' : 'text-amber-600')}>
+                        {rel(item.iso)}
+                      </span>
+                    ) : null}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <OverviewEmpty message={shell.overview.nothingUrgent} />
+          )}
+        </OverviewCard>
+
+        <OverviewCard
+          title={litCopy.todoTasks}
+          action={<OverviewTextLink onClick={() => onOpenSection('tasks')}>{copy.viewAll}</OverviewTextLink>}
+        >
+          {tasks.length ? (
+            <ul className="space-y-2">
+              {tasks.map((task) => (
                 <li key={task.id} className="text-[13px]">
-                  <p className="font-medium">
-                    {task.status === TaskStatus.DONE ? '☑' : '☐'} {task.title}
-                  </p>
-                  <p className="text-[12px] text-slate-500">
-                    {[
-                      personName(task.assigned_to_details) || personName(task.assignees?.[0]),
-                      task.due_date ? formatDate(task.due_date, lang, { day: 'numeric', month: 'short' }) : '',
-                    ]
-                      .filter(Boolean)
-                      .join(' · ')}
+                  <p className={cn('font-medium', task.status === TaskStatus.DONE && 'line-through text-slate-400')}>
+                    {task.title}
                   </p>
                 </li>
               ))}
             </ul>
           ) : (
-            <EmptyAction message={copy.noTasks} actionLabel={copy.addTask} onAction={onAddTask} />
+            <OverviewEmpty message={copy.noTasks} actionLabel={copy.addTask} onAction={onAddTask} />
           )}
-        </WorkspaceCard>
+        </OverviewCard>
 
-        <WorkspaceCard
-          title={copy.requiredDocuments}
-          action={<TextLink onClick={() => onOpenSection('documents')}>{copy.viewAll}</TextLink>}
-        >
-          {required.length ? (
-            <>
-              <p className="mb-2 text-[12px] text-slate-500">
-                {tf(copy.docsProgress, { done: required.length - missingDocs.length, total: required.length })}
-              </p>
-              <ul className="space-y-1 text-[13px]">
-                {required.slice(0, 6).map((doc) => (
-                  <li key={doc.label} className="flex items-center justify-between gap-2">
-                    <span>{doc.label}</span>
-                    <span className={doc.completed ? 'text-emerald-600' : 'text-amber-600'}>
-                      {doc.completed ? copy.complete : copy.missing}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </>
-          ) : attachments.length ? (
-            <p className="text-[13px]">{attachments.length} {copy.documents.toLowerCase()}</p>
-          ) : (
-            <EmptyAction message={copy.noDocuments} actionLabel={canEdit ? copy.addDocument : undefined} onAction={canEdit ? onUpload : undefined} />
-          )}
-        </WorkspaceCard>
-      </div>
-
-      <div className="grid gap-4 lg:grid-cols-2">
-        <WorkspaceCard title={copy.institution} action={<TextLink onClick={() => onOpenSection('administrative')}>{copy.viewAll}</TextLink>}>
-          {institution || instRef ? (
-            <dl className="space-y-2 text-[13px]">
-              {institution ? <dd className="font-medium">{institution}</dd> : null}
-              {instRef ? (
-                <div>
-                  <dt className="text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-400">{copy.institutionRef}</dt>
-                  <dd className="font-mono text-[12px]">{instRef}</dd>
-                </div>
-              ) : null}
-            </dl>
-          ) : (
-            <p className="text-[13px] text-slate-500">{copy.noneAssigned}</p>
-          )}
-        </WorkspaceCard>
-
-        <WorkspaceCard title={copy.team} action={caseItem.client?.id ? <TextLink onClick={onOpenClient}>{copy.viewClient}</TextLink> : undefined}>
-          <div className="space-y-3">
-            <div>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-400">{copy.snapshotClient}</p>
-              <p className="text-[13px] font-medium">
-                <CaseClientLabel client={caseItem.client} fallback={copy.noneAssigned} />
-              </p>
-            </div>
-            {lead ? (
-              <div className="flex items-center gap-2">
-                <PersonAvatar name={personName(lead)} src={lead.image} />
-                <div>
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-400">{copy.leadAttorney}</p>
-                  <p className="text-[13px] font-medium">{personName(lead)}</p>
-                </div>
-              </div>
-            ) : (
-              <p className="text-[13px] text-slate-500">{copy.noneAssigned}</p>
-            )}
-          </div>
-        </WorkspaceCard>
-      </div>
-
-      <div className={cn('grid gap-4', showFinance ? 'lg:grid-cols-2' : '')}>
-        <WorkspaceCard
-          title={copy.recentActivity}
-          action={<TextLink onClick={() => onOpenSection('activity')}>{copy.viewAll}</TextLink>}
+        <OverviewCard
+          title={litCopy.recentActivity}
+          action={<OverviewTextLink onClick={() => onOpenSection('activity')}>{copy.viewAll}</OverviewTextLink>}
         >
           {activity.length ? (
             <ol className="space-y-2">
@@ -290,39 +197,67 @@ export default function AdministrativeOverview({
                   <p className="font-medium">{item.message}</p>
                   <p className="text-[11px] text-slate-500">
                     {item.created ? formatDate(item.created, lang, { day: 'numeric', month: 'short' }) : ''}
-                    {item.actor ? ` · ${[item.actor.first_name, item.actor.last_name].filter(Boolean).join(' ')}` : ''}
                   </p>
                 </li>
               ))}
             </ol>
           ) : (
-            <p className="text-[13px] text-slate-500">{copy.noActivity}</p>
+            <OverviewEmpty message={litCopy.noActivity} />
           )}
-        </WorkspaceCard>
-
-        {showFinance ? (
-          <WorkspaceCard title={copy.finance} action={<TextLink onClick={() => onOpenSection('finance')}>{copy.viewFinance}</TextLink>}>
-            {finance ? (
-              <dl className="grid gap-2 text-[13px]">
-                <div className="flex justify-between">
-                  <dt className="text-slate-500">{copy.billed}</dt>
-                  <dd className="font-medium">{formatMAD(finance.invoiced ?? finance.total_billed, lang)}</dd>
-                </div>
-                <div className="flex justify-between">
-                  <dt className="text-slate-500">{copy.collected}</dt>
-                  <dd className="font-medium">{formatMAD(finance.paid ?? finance.total_paid, lang)}</dd>
-                </div>
-                <div className="flex justify-between">
-                  <dt className="text-slate-500">{copy.remaining}</dt>
-                  <dd className="font-medium">{formatMAD(finance.remaining, lang)}</dd>
-                </div>
-              </dl>
-            ) : (
-              <p className="text-[13px] text-slate-500">{copy.noFinance}</p>
-            )}
-          </WorkspaceCard>
-        ) : null}
+        </OverviewCard>
       </div>
+
+      <OverviewCard title={shell.overview.keyFacts}>
+        <dl className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 text-[13px]">
+          <div>
+            <dt className="text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-400">
+              {copy.snapshotClient}
+            </dt>
+            <dd className="mt-0.5">
+              {caseItem.client ? (
+                <button type="button" onClick={onOpenClient} className="font-medium text-[#64499D] hover:underline">
+                  <CaseClientLabel client={caseItem.client} fallback="—" />
+                </button>
+              ) : (
+                '—'
+              )}
+            </dd>
+          </div>
+          {lead ? (
+            <div>
+              <dt className="text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-400">
+                {copy.snapshotLead}
+              </dt>
+              <dd className="mt-0.5 font-medium">{lead}</dd>
+            </div>
+          ) : null}
+          {origin ? (
+            <div>
+              <dt className="text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-400">{copy.origin}</dt>
+              <dd className="mt-0.5">
+                <button
+                  type="button"
+                  onClick={() => onOpenCase(origin.id)}
+                  className="font-medium text-[#64499D] hover:underline"
+                >
+                  {copy.convertedFrom}
+                  {origin.reference ? ` · ${origin.reference}` : ''}
+                </button>
+              </dd>
+            </div>
+          ) : null}
+        </dl>
+      </OverviewCard>
+
+      {showFinance && finance ? (
+        <OverviewCard
+          title={litCopy.finance}
+          action={<OverviewTextLink onClick={() => onOpenSection('finance')}>{litCopy.viewFinance}</OverviewTextLink>}
+        >
+          <p className="text-[15px] font-semibold">{formatMAD(finance.remaining, lang)}</p>
+          <p className="text-[12px] text-slate-500">{litCopy.remaining}</p>
+        </OverviewCard>
+      ) : null}
     </div>
   );
 }

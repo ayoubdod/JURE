@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
@@ -65,6 +65,7 @@ export interface AdministrativeDutyFormProps {
   caseId?: number;
   onSubmitSuccess?: (caseItem: API.Case) => void;
   onBack?: () => void;
+  focusField?: 'notes';
 }
 
 const AdministrativeDutyForm: React.FC<AdministrativeDutyFormProps> = ({
@@ -73,6 +74,7 @@ const AdministrativeDutyForm: React.FC<AdministrativeDutyFormProps> = ({
   caseId,
   onSubmitSuccess,
   onBack,
+  focusField,
 }) => {
   const { t } = useAppTranslation();
   const modal = t.cases.modal;
@@ -85,6 +87,17 @@ const AdministrativeDutyForm: React.FC<AdministrativeDutyFormProps> = ({
       ? [...initialValues.required_documents]
       : [{ label: '', completed: false }]
   );
+
+  useEffect(() => {
+    if (focusField !== 'notes') return;
+    const timer = window.setTimeout(() => {
+      const el = document.getElementById('administrative-notes-section');
+      el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      const input = el?.querySelector('textarea') as HTMLTextAreaElement | null;
+      input?.focus();
+    }, 120);
+    return () => window.clearTimeout(timer);
+  }, [focusField]);
 
   const dutyTypeOptions = useMemo(
     () =>
@@ -371,7 +384,7 @@ const AdministrativeDutyForm: React.FC<AdministrativeDutyFormProps> = ({
       </CreateFormSection>
 
       <CreateFormSection index="03" title={modal.sections.taskDetails}>
-        <div className="space-y-4">
+        <div id="administrative-notes-section" className="space-y-4 scroll-mt-4">
           <div className="space-y-2">
             <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
               {modal.fields.descriptionPurpose} <span className="text-red-500">*</span>

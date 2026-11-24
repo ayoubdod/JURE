@@ -1,15 +1,12 @@
 import { Field, LongText } from '@/components/case/case-detail-drawer/primitives';
-import { ConvertedCaseLink, getConvertedFromCase } from '@/components/case/conversion/ConvertedCaseLink';
 import { formatDrawerDate } from '@/components/case/case-detail-drawer/format';
-import { getCaseData, getCountdownDays, getCountdownStyle } from '@/utils/caseCardHelpers';
-import { CaseClientLabel } from '@/components/client/CaseClientLabel';
+import { getCountdownDays, getCountdownStyle } from '@/utils/caseCardHelpers';
 import { cn } from '@/lib/utils';
 import { Check, Circle } from 'lucide-react';
 import { useAppTranslation } from '@/i18n';
 import { WorkspaceCard } from '@/components/case/workspace/litigation-detail/ui';
-import { leadAttorney, personName, requiredDocumentsOf } from '@/components/case/workspace/litigation-detail/helpers';
+import { requiredDocumentsOf } from '@/components/case/workspace/litigation-detail/helpers';
 import {
-  adminStatusOf,
   completionDateOf,
   dueDateOf,
   dutyTypeOf,
@@ -18,25 +15,22 @@ import {
   startDateOf,
 } from './helpers';
 
-export default function AdministrativeDetails({
+/** Canonical home for institution, duty type, purpose, chronology, required docs. */
+export default function AdministrativeDutyFile({
   caseItem,
-  onOpenCase,
+  onOpenDocuments,
 }: {
   caseItem: API.Case;
-  onOpenCase: (id: number) => void;
+  onOpenDocuments?: () => void;
 }) {
   const { t, tf, enumPretty } = useAppTranslation();
   const copy = t.cases.workspaces.administrative.detail;
-  const origin = getConvertedFromCase(caseItem);
   const duty = dutyTypeOf(caseItem);
-  const priority = getCaseData(caseItem, 'priority') as string | undefined;
-  const status = adminStatusOf(caseItem);
   const institution = institutionOf(caseItem);
   const instRef = institutionRefOf(caseItem);
   const start = startDateOf(caseItem);
   const due = dueDateOf(caseItem);
   const completion = completionDateOf(caseItem);
-  const lead = leadAttorney(caseItem);
   const required = requiredDocumentsOf(caseItem);
   const missing = required.filter((d) => !d.completed).length;
   const dueDays = getCountdownDays(due);
@@ -44,32 +38,14 @@ export default function AdministrativeDetails({
 
   return (
     <div className="space-y-4">
-      {origin ? (
-        <WorkspaceCard title={copy.origin}>
-          <ConvertedCaseLink variant="origin" link={origin} onViewConsultation={onOpenCase} />
-        </WorkspaceCard>
-      ) : null}
-
       <WorkspaceCard title={copy.generalInfo}>
         <div className="grid gap-4 sm:grid-cols-2">
-          <Field label={t.cases.modal.fields.reference}>{caseItem.reference || '—'}</Field>
-          <Field label={t.cases.modal.fields.title}>{caseItem.title || '—'}</Field>
           <Field label={copy.snapshotDuty}>{duty ? enumPretty(duty) : '—'}</Field>
-          <Field label={t.cases.modal.fields.status}>{enumPretty(status) || status}</Field>
-          <Field label={copy.snapshotPriority}>{priority ? enumPretty(priority) : '—'}</Field>
           <Field label={copy.institution}>{institution || '—'}</Field>
           <Field label={copy.institutionRef}>
             {instRef ? <span className="font-mono text-[12px]">{instRef}</span> : '—'}
           </Field>
-        </div>
-      </WorkspaceCard>
-
-      <WorkspaceCard title={copy.people}>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Field label={copy.snapshotClient}>
-            <CaseClientLabel client={caseItem.client} fallback={copy.noneAssigned} />
-          </Field>
-          <Field label={copy.leadAttorney}>{lead ? personName(lead) : copy.noneAssigned}</Field>
+          <Field label={t.cases.modal.fields.reference}>{caseItem.reference || '—'}</Field>
         </div>
       </WorkspaceCard>
 
@@ -111,7 +87,20 @@ export default function AdministrativeDetails({
         </div>
       </WorkspaceCard>
 
-      <WorkspaceCard title={copy.requiredDocuments}>
+      <WorkspaceCard
+        title={copy.requiredDocuments}
+        action={
+          onOpenDocuments ? (
+            <button
+              type="button"
+              onClick={onOpenDocuments}
+              className="min-h-11 text-[12px] font-medium text-[#64499D] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#64499D]/40"
+            >
+              {t.cases.workspaces.shell.groups.documents}
+            </button>
+          ) : null
+        }
+      >
         {required.length ? (
           <>
             <p className="mb-2 text-[12px] text-slate-500">
@@ -121,11 +110,20 @@ export default function AdministrativeDetails({
               {required.map((doc) => (
                 <li key={doc.label} className="flex items-start gap-2 text-[13px]">
                   {doc.completed ? (
-                    <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
+                    <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" aria-hidden />
                   ) : (
-                    <Circle className="mt-0.5 h-4 w-4 shrink-0 text-slate-400" />
+                    <Circle className="mt-0.5 h-4 w-4 shrink-0 text-slate-400" aria-hidden />
                   )}
-                  <span className={doc.completed ? '' : 'text-slate-500'}>{doc.label}</span>
+                  <button
+                    type="button"
+                    className={cn(
+                      'min-h-11 text-start focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#64499D]/40',
+                      doc.completed ? '' : 'text-slate-500 hover:underline'
+                    )}
+                    onClick={doc.completed ? undefined : onOpenDocuments}
+                  >
+                    {doc.label}
+                  </button>
                 </li>
               ))}
             </ul>
