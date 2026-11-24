@@ -11,6 +11,9 @@ import {
   type CaseWorkspaceNavItem,
 } from '@/components/case/workspace/shell';
 import { OverviewCard } from '@/components/case/workspace/shell/OverviewCards';
+import type { GroupSegments } from '@/components/case/workspace/shell/useCaseWorkspaceController';
+
+const EMPTY_GROUP_SEGMENTS: GroupSegments = {};
 
 /** Minimal shared-shell workspace for unrecognized case types. */
 export default function UnknownCaseWorkspace({
@@ -36,7 +39,7 @@ export default function UnknownCaseWorkspace({
     caseItem,
     onCaseChange,
     type: 'UNKNOWN',
-    groupSegments: {},
+    groupSegments: EMPTY_GROUP_SEGMENTS,
   });
 
   const navItems = useMemo((): CaseWorkspaceNavItem[] => {

@@ -16,6 +16,7 @@ export default function CaseWorkspaceShell({
   activeLeaf,
   onSelectNav,
   segments,
+  paneHeading,
   children,
   caseItem,
   listPath,
@@ -31,6 +32,8 @@ export default function CaseWorkspaceShell({
   activeLeaf: CaseWorkspaceLeaf;
   onSelectNav: (item: CaseWorkspaceNavItem) => void;
   segments?: ReactNode;
+  /** Visually hidden h2 for external panes (finance / juria / research). */
+  paneHeading?: string;
   children: ReactNode;
   caseItem: API.Case;
   listPath: string;
@@ -74,6 +77,7 @@ export default function CaseWorkspaceShell({
               activeLeaf === 'juria' && 'flex h-full min-h-0 flex-1 flex-col overflow-hidden p-0'
             )}
           >
+            {paneHeading ? <h2 className="sr-only">{paneHeading}</h2> : null}
             {children}
           </div>
         </main>

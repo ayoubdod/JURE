@@ -329,6 +329,13 @@ export default function ConsultationDetailWorkspace({
             <CaseWorkspaceSegments options={segmentOptions} value={activeLeaf} onChange={setLeaf} ariaLabel={shellCopy.segmentsLabel} />
           ) : null
         }
+        paneHeading={
+          activeLeaf === 'finance'
+            ? shellCopy.groups.finance
+            : activeLeaf === 'juria'
+              ? shellCopy.groups.juria
+              : undefined
+        }
       >
         {activeLeaf === 'overview' ? (
           <ConsultationOverview

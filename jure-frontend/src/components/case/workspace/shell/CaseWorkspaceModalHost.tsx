@@ -82,6 +82,8 @@ const CaseWorkspaceModalHost = forwardRef<CaseWorkspaceModalHostHandle, Props>(
     const fileInputRef = useRef<HTMLInputElement>(null);
     const focusEl = useRef<HTMLElement | null>(null);
     const focusPending = useRef(false);
+    const focusMo = useRef<MutationObserver | null>(null);
+    const dialogOpenCount = useRef(0);
 
     const [detailTaskId, setDetailTaskId] = useState<number | null>(null);
     const [detailAppointmentId, setDetailAppointmentId] = useState<number | null>(null);
@@ -93,21 +95,54 @@ const CaseWorkspaceModalHost = forwardRef<CaseWorkspaceModalHostHandle, Props>(
     const relatedLabel =
       [caseItem.reference, caseItem.title].filter(Boolean).join(' — ') || `Case #${caseItem.id}`;
 
-    useEffect(() => {
-      let open = document.querySelectorAll('[role="dialog"][data-state="open"]').length;
-      const mo = new MutationObserver(() => {
-        const n = document.querySelectorAll('[role="dialog"][data-state="open"]').length;
-        if (open > 0 && n === 0 && focusPending.current) {
-          focusPending.current = false;
-          const t = pickModalFocusRestoreTarget({ preferred: focusEl.current, header: document.querySelector('[data-case-ws-root] header') });
-          focusEl.current = null;
-          queueMicrotask(() => t?.focus({ preventScroll: true }));
-        }
-        open = n;
+    const stopFocusObserver = () => {
+      focusMo.current?.disconnect();
+      focusMo.current = null;
+    };
+
+    const restoreFocusIfNeeded = () => {
+      if (!focusPending.current) return;
+      focusPending.current = false;
+      const t = pickModalFocusRestoreTarget({
+        preferred: focusEl.current,
+        header: document.querySelector('[data-case-ws-root] header'),
       });
-      mo.observe(document.body, { subtree: true, childList: true, attributes: true, attributeFilter: ['data-state'] });
-      return () => mo.disconnect();
-    }, []);
+      focusEl.current = null;
+      stopFocusObserver();
+      queueMicrotask(() => t?.focus({ preventScroll: true }));
+    };
+
+    const armFocusRestore = () => {
+      focusEl.current = pickModalFocusRestoreTarget({
+        preferred: document.querySelector('[data-case-ws-root] header [data-state="open"]'),
+        active: document.activeElement,
+        header: document.querySelector('[data-case-ws-root] header'),
+      });
+      focusPending.current = true;
+      dialogOpenCount.current = document.querySelectorAll('[role="dialog"][data-state="open"]').length;
+      // Portals mount dialogs under body; shell root cannot see them without subtree on body.
+      if (!focusMo.current) {
+        focusMo.current = new MutationObserver(() => {
+          const n = document.querySelectorAll('[role="dialog"][data-state="open"]').length;
+          if (dialogOpenCount.current > 0 && n === 0) restoreFocusIfNeeded();
+          dialogOpenCount.current = n;
+        });
+        focusMo.current.observe(document.body, {
+          subtree: true,
+          childList: true,
+          attributes: true,
+          attributeFilter: ['data-state'],
+        });
+      }
+    };
+
+    useEffect(() => {
+      focusEl.current = null;
+      focusPending.current = false;
+      stopFocusObserver();
+    }, [caseItem.id]);
+
+    useEffect(() => () => stopFocusObserver(), []);
 
     const refreshDetail = async () => {
       const res = await apiGetCase(caseItem.id);
@@ -171,12 +206,7 @@ const CaseWorkspaceModalHost = forwardRef<CaseWorkspaceModalHostHandle, Props>(
         const value = Reflect.get(target, prop, receiver);
         if (typeof value !== 'function' || prop === 'refreshDetail' || prop === 'triggerUpload') return value;
         return (...args: unknown[]) => {
-          focusEl.current = pickModalFocusRestoreTarget({
-            preferred: document.querySelector('[data-case-ws-root] header [data-state="open"]'),
-            active: document.activeElement,
-            header: document.querySelector('[data-case-ws-root] header'),
-          });
-          focusPending.current = true;
+          armFocusRestore();
           return (value as (...a: unknown[]) => unknown).apply(target, args);
         };
       },
