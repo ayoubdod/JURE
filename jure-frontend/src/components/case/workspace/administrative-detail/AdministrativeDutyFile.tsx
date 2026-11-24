@@ -1,11 +1,13 @@
 import { Field, LongText } from '@/components/case/case-detail-drawer/primitives';
+import { ConvertedCaseLink, getConvertedFromCase } from '@/components/case/conversion/ConvertedCaseLink';
 import { formatDrawerDate } from '@/components/case/case-detail-drawer/format';
 import { getCountdownDays, getCountdownStyle } from '@/utils/caseCardHelpers';
+import { CaseClientLabel } from '@/components/client/CaseClientLabel';
 import { cn } from '@/lib/utils';
 import { Check, Circle } from 'lucide-react';
 import { useAppTranslation } from '@/i18n';
 import { WorkspaceCard } from '@/components/case/workspace/litigation-detail/ui';
-import { requiredDocumentsOf } from '@/components/case/workspace/litigation-detail/helpers';
+import { leadAttorney, personName, requiredDocumentsOf } from '@/components/case/workspace/litigation-detail/helpers';
 import {
   completionDateOf,
   dueDateOf,
@@ -15,22 +17,28 @@ import {
   startDateOf,
 } from './helpers';
 
-/** Canonical home for institution, duty type, purpose, chronology, required docs. */
+/** Canonical home for institution, duty type, purpose, chronology, people, origin, required docs. */
 export default function AdministrativeDutyFile({
   caseItem,
+  onOpenCase,
+  onOpenClient,
   onOpenDocuments,
 }: {
   caseItem: API.Case;
+  onOpenCase?: (id: number) => void;
+  onOpenClient?: () => void;
   onOpenDocuments?: () => void;
 }) {
   const { t, tf, enumPretty } = useAppTranslation();
   const copy = t.cases.workspaces.administrative.detail;
+  const origin = getConvertedFromCase(caseItem);
   const duty = dutyTypeOf(caseItem);
   const institution = institutionOf(caseItem);
   const instRef = institutionRefOf(caseItem);
   const start = startDateOf(caseItem);
   const due = dueDateOf(caseItem);
   const completion = completionDateOf(caseItem);
+  const lead = leadAttorney(caseItem);
   const required = requiredDocumentsOf(caseItem);
   const missing = required.filter((d) => !d.completed).length;
   const dueDays = getCountdownDays(due);
@@ -38,6 +46,16 @@ export default function AdministrativeDutyFile({
 
   return (
     <div className="space-y-4">
+      {origin ? (
+        <WorkspaceCard title={copy.origin}>
+          <ConvertedCaseLink
+            variant="origin"
+            link={origin}
+            onViewConsultation={onOpenCase ?? (() => undefined)}
+          />
+        </WorkspaceCard>
+      ) : null}
+
       <WorkspaceCard title={copy.generalInfo}>
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label={copy.snapshotDuty}>{duty ? enumPretty(duty) : '—'}</Field>
@@ -46,6 +64,25 @@ export default function AdministrativeDutyFile({
             {instRef ? <span className="font-mono text-[12px]">{instRef}</span> : '—'}
           </Field>
           <Field label={t.cases.modal.fields.reference}>{caseItem.reference || '—'}</Field>
+        </div>
+      </WorkspaceCard>
+
+      <WorkspaceCard title={copy.people}>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label={copy.snapshotClient}>
+            {caseItem.client && onOpenClient ? (
+              <button
+                type="button"
+                onClick={onOpenClient}
+                className="min-h-11 text-start font-medium text-[#64499D] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#64499D]/40"
+              >
+                <CaseClientLabel client={caseItem.client} fallback={copy.noneAssigned} />
+              </button>
+            ) : (
+              <CaseClientLabel client={caseItem.client} fallback={copy.noneAssigned} />
+            )}
+          </Field>
+          <Field label={copy.leadAttorney}>{lead ? personName(lead) : copy.noneAssigned}</Field>
         </div>
       </WorkspaceCard>
 

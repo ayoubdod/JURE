@@ -8,16 +8,21 @@ export function OverviewCard({
   action,
   children,
   className,
+  as: Heading = 'h2',
 }: {
   title: string;
   action?: ReactNode;
   children: ReactNode;
   className?: string;
+  /** Overview section cards default to h2; nested cards inside a section use h3. */
+  as?: 'h2' | 'h3';
 }) {
   return (
     <section className={cn('rounded-xl border border-slate-200/90 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-950', className)}>
       <div className="mb-3 flex items-center justify-between gap-2">
-        <h2 className="text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-500">{title}</h2>
+        <Heading className="text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-500">
+          {title}
+        </Heading>
         {action}
       </div>
       {children}

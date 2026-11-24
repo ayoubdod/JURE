@@ -6,11 +6,14 @@ export function WorkspaceCard({
   action,
   children,
   className,
+  as: Heading = 'h2',
 }: {
   title: string;
   action?: React.ReactNode;
   children: React.ReactNode;
   className?: string;
+  /** Section-level cards use h2; nested cards inside a section use h3. */
+  as?: 'h2' | 'h3';
 }) {
   return (
     <section
@@ -20,7 +23,9 @@ export function WorkspaceCard({
       )}
     >
       <div className="mb-3 flex items-center justify-between gap-2">
-        <h3 className="text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-500">{title}</h3>
+        <Heading className="text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-500">
+          {title}
+        </Heading>
         {action}
       </div>
       {children}
