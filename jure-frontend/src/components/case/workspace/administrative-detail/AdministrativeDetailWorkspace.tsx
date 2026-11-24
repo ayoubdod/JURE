@@ -1,25 +1,15 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router';
-import { Archive, Flag, Pencil, ShieldAlert, Trash2 } from 'lucide-react';
+import { useMemo } from 'react';
 import { useAppTranslation } from '@/i18n';
-import { usePermission } from '@/hooks/usePermissions';
-import { useFinanceAccess } from '@/hooks/useFinanceAccess';
 import { JURIA_ENABLED } from '@/config/features';
 import { CaseStatus } from '@/utils/constants';
 import { getCaseData } from '@/utils/caseCardHelpers';
 import { assignedDisplayName } from '@/services/case/caseType';
 import { CaseClientLabel } from '@/components/client/CaseClientLabel';
-import { caseTypeListPath, navigateToCaseById } from '@/lib/caseRoutes';
 import { FinanceTab } from '@/components/case/panel/tabs/FinanceTab';
 import { JuriaCasePanel } from '@/components/juria/JuriaCasePanel';
 import { apiUpdateCase } from '@/services/case/api';
-import { apiGetLegalDeadlines, type CalculatedDeadline } from '@/services/legal-deadlines/api';
-import { unwrapDeadlineList } from '@/components/case/CaseLegalDeadlinesList';
-import { getCaseFinance } from '@/services/finance/api';
-import { normalizeCaseFinancePayload } from '@/utils/normalizeCaseFinance';
-import { useToast } from '@/hooks/use-toast';
 import {
   WorkspaceActivity,
   WorkspaceAppointments,
@@ -33,14 +23,9 @@ import {
   CaseWorkspaceHeader,
   CaseWorkspaceSegments,
   CaseWorkspaceShell,
-  defaultLeafForGroup,
-  parseTab,
   primaryCtaLabel,
   resolvePrimaryCta,
-  useCaseSummary,
-  type CaseWorkspaceGroupId,
-  type CaseWorkspaceLeaf,
-  type CaseWorkspaceModalHostHandle,
+  useCaseWorkspaceController,
   type CaseWorkspaceNavItem,
   type HeaderMenuItem,
 } from '@/components/case/workspace/shell';
@@ -62,56 +47,40 @@ export default function AdministrativeDetailWorkspace({
 }) {
   const { t, tf, enumPretty } = useAppTranslation();
   const copy = t.cases.workspaces.administrative.detail;
-  const shellCopy = t.cases.workspaces.shell;
   const litCopy = t.cases.workspaces.litigation.detail;
-  const pw = t.cases.pageWorkspace;
-  const navigate = useNavigate();
-  const { toast } = useToast();
-  const [searchParams, setSearchParams] = useSearchParams();
-  const canEdit = usePermission('cases.edit');
-  const canDelete = usePermission('cases.delete');
-  const { authorized: showFinance } = useFinanceAccess();
-  const modalRef = useRef<CaseWorkspaceModalHostHandle>(null);
-  const lastSegmentRef = useRef<Partial<Record<CaseWorkspaceGroupId, CaseWorkspaceLeaf>>>({});
-
-  const [legalDeadlines, setLegalDeadlines] = useState<CalculatedDeadline[] | null>(null);
-  const [legalError, setLegalError] = useState(false);
-  const [finance, setFinance] = useState<API.FinanceCaseSummary | null>(null);
-
-  const parsed = parseTab('ADMINISTRATIVE', searchParams.get('tab'));
-  const summary = useCaseSummary({
-    caseItem,
-    type: 'ADMINISTRATIVE',
+  const {
+    shellCopy,
+    canEdit,
+    showFinance,
+    modalRef,
+    lastSegmentRef,
+    activeGroup,
+    activeLeaf,
+    setLeaf,
+    onSelectNav,
+    summary,
     legalDeadlines,
+    legalError,
+    loadLegal,
+    finance,
+    listPath,
+    openRelated,
+    modals,
+    lifecycleMoreItems,
+    segmentLeaves,
+    toast,
+  } = useCaseWorkspaceController({
+    caseItem,
+    onCaseChange,
+    type: 'ADMINISTRATIVE',
+    groupSegments: GROUP_SEGMENTS,
   });
 
-  const activeGroup = parsed.group;
-  const activeLeaf = parsed.leaf;
   const status = adminStatusOf(caseItem);
   const priority = getCaseData(caseItem, 'priority') as string | undefined;
   const completed =
     status === CaseStatus.CLOSED || Boolean(getCaseData(caseItem, 'completion_date'));
   const caseClosed = caseItem.status === CaseStatus.CLOSED || completed;
-
-  const setLeaf = (next: CaseWorkspaceLeaf) => {
-    const nextParsed = parseTab('ADMINISTRATIVE', next);
-    if (GROUP_SEGMENTS[nextParsed.group]) {
-      lastSegmentRef.current[nextParsed.group] = next;
-    }
-    const params = new URLSearchParams(searchParams);
-    if (next === 'overview') params.delete('tab');
-    else params.set('tab', next);
-    setSearchParams(params, { replace: true });
-  };
-
-  const openGroup = (group: CaseWorkspaceGroupId) => {
-    const remembered = lastSegmentRef.current[group];
-    const leaf =
-      remembered && GROUP_SEGMENTS[group]?.includes(remembered)
-        ? remembered
-        : defaultLeafForGroup('ADMINISTRATIVE', group);
-    setLeaf(leaf);
-  };
 
   const primary = resolvePrimaryCta('ADMINISTRATIVE', summary, { canEdit, caseClosed });
   const primaryLabel = primary ? primaryCtaLabel(primary, shellCopy) : '';
@@ -140,14 +109,14 @@ export default function AdministrativeDetailWorkspace({
       return;
     }
     if (primary.id === 'add_deadline') {
-      modalRef.current?.openDeadline();
+      modals.openDeadline();
       return;
     }
     if (primary.id === 'mark_completed') {
       void markCompleted();
       return;
     }
-    modalRef.current?.addTask();
+    modals.addTask();
   };
 
   const navItems = useMemo(() => {
@@ -167,9 +136,7 @@ export default function AdministrativeDetailWorkspace({
       if (g.juriaFlagged && !JURIA_ENABLED) continue;
       const count = badgeOf(g.badge) || undefined;
       const leaf =
-        GROUP_SEGMENTS[g.id] != null
-          ? (lastSegmentRef.current[g.id] ?? g.leaf)
-          : g.leaf;
+        GROUP_SEGMENTS[g.id] != null ? (lastSegmentRef.current[g.id] ?? g.leaf) : g.leaf;
       items.push({
         id: g.id,
         leaf,
@@ -187,132 +154,38 @@ export default function AdministrativeDetailWorkspace({
       });
     }
     return items;
-  }, [shellCopy, showFinance, summary, tf]);
+  }, [shellCopy, showFinance, summary, tf, lastSegmentRef]);
 
-  const segmentLeaves = GROUP_SEGMENTS[activeGroup];
   const segmentOptions = (segmentLeaves ?? []).map((leaf) => ({
     id: leaf,
     label: copy.sections[leaf as keyof typeof copy.sections],
   }));
 
-  const listPath = caseTypeListPath('ADMINISTRATIVE');
-
-  const loadLegal = () => {
-    setLegalError(false);
-    apiGetLegalDeadlines({ case: caseItem.id })
-      .then((res) => setLegalDeadlines(unwrapDeadlineList(res.data)))
-      .catch(() => {
-        setLegalDeadlines([]);
-        setLegalError(true);
-      });
-  };
-
-  useEffect(() => {
-    loadLegal();
-    if (!showFinance) return;
-    getCaseFinance(caseItem.id)
-      .then((res) => setFinance(normalizeCaseFinancePayload(res.data).summary))
-      .catch(() => setFinance(null));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [caseItem.id, showFinance]);
-
-  const archiveCase = async () => {
-    try {
-      const res = await apiUpdateCase({
-        id: caseItem.id,
-        status: CaseStatus.ARCHIVED,
-      } as API.CaseUpdateForm);
-      onCaseChange(res.data);
-      toast({ title: pw.archiveCase });
-    } catch {
-      toast({ title: t.common.error, variant: 'destructive' });
-    }
-  };
-
   const newItems: HeaderMenuItem[] = [
-    { key: 'task', label: copy.addTask, onClick: () => modalRef.current?.addTask() },
+    { key: 'task', label: copy.addTask, onClick: () => modals.addTask() },
     ...(canEdit
-      ? [
-          {
-            key: 'deadline',
-            label: copy.addDeadline,
-            onClick: () => modalRef.current?.openDeadline(),
-          },
-        ]
+      ? [{ key: 'deadline', label: copy.addDeadline, onClick: () => modals.openDeadline() }]
       : []),
-    {
-      key: 'appt',
-      label: copy.addAppointment,
-      onClick: () => modalRef.current?.addAppointment(),
-    },
+    { key: 'appt', label: copy.addAppointment, onClick: () => modals.addAppointment() },
     ...(canEdit
       ? [
-          {
-            key: 'doc',
-            label: copy.addDocument,
-            onClick: () => modalRef.current?.triggerUpload(),
-          },
+          { key: 'doc', label: copy.addDocument, onClick: () => modals.triggerUpload() },
           {
             key: 'note',
             label: litCopy.editNotes,
-            onClick: () => modalRef.current?.editCase(caseItem, { focusField: 'notes' }),
+            onClick: () => modals.editCase({ focusField: 'notes' }),
           },
         ]
       : []),
   ];
 
+  const lifecycle = lifecycleMoreItems({ edit: copy.edit });
   const moreItems: HeaderMenuItem[] = [
-    ...(canEdit
-      ? [
-          {
-            key: 'edit',
-            label: copy.edit,
-            icon: <Pencil className="h-4 w-4" />,
-            onClick: () => modalRef.current?.editCase(caseItem),
-          },
-        ]
-      : []),
+    ...lifecycle.filter((item) => item.key === 'edit'),
     ...(canEdit && !completed && primary?.id !== 'mark_completed'
       ? [{ key: 'mark', label: copy.markCompleted, onClick: () => void markCompleted() }]
       : []),
-    ...(canEdit && caseItem.status !== CaseStatus.CLOSED
-      ? [
-          {
-            key: 'close',
-            label: pw.closeCase,
-            icon: <Flag className="h-4 w-4" />,
-            onClick: () => modalRef.current?.openClose(),
-          },
-        ]
-      : []),
-    ...(canEdit && caseItem.status !== CaseStatus.ARCHIVED
-      ? [
-          {
-            key: 'archive',
-            label: pw.archiveCase,
-            icon: <Archive className="h-4 w-4" />,
-            onClick: () => void archiveCase(),
-          },
-        ]
-      : []),
-    {
-      key: 'conflict',
-      label: pw.conflictCheck,
-      icon: <ShieldAlert className="h-4 w-4" />,
-      onClick: () => modalRef.current?.openConflict(),
-    },
-    ...(canDelete
-      ? [
-          {
-            key: 'delete',
-            label: pw.deleteCase,
-            icon: <Trash2 className="h-4 w-4" />,
-            destructive: true,
-            separatorBefore: true,
-            onClick: () => modalRef.current?.deleteCase(),
-          },
-        ]
-      : []),
+    ...lifecycle.filter((item) => item.key !== 'edit'),
   ];
 
   const meta = (
@@ -351,10 +224,7 @@ export default function AdministrativeDetailWorkspace({
       navItems={navItems}
       activeNavId={activeGroup}
       activeLeaf={activeLeaf}
-      onSelectNav={(item) => {
-        if (GROUP_SEGMENTS[item.id]) openGroup(item.id);
-        else setLeaf(item.leaf);
-      }}
+      onSelectNav={onSelectNav}
       caseItem={caseItem}
       listPath={listPath}
       onCaseChange={onCaseChange}
@@ -381,29 +251,31 @@ export default function AdministrativeDetailWorkspace({
           primaryActionLabel={primaryLabel}
           onPrimaryAction={runPrimary}
           onOpenSection={setLeaf}
-          onOpenClient={() => void modalRef.current?.openClient()}
-          onOpenCase={(id) => void navigateToCaseById(navigate, id)}
-          onAddTask={() => modalRef.current?.addTask()}
+          onOpenClient={() => modals.openClient()}
+          onOpenCase={openRelated}
+          onAddTask={() => modals.addTask()}
         />
       ) : null}
       {activeLeaf === 'administrative' ? (
         <AdministrativeDutyFile
           caseItem={caseItem}
+          onOpenCase={openRelated}
+          onOpenClient={() => modals.openClient()}
           onOpenDocuments={() => setLeaf('documents')}
         />
       ) : null}
       {activeLeaf === 'tasks' ? (
         <WorkspaceTasks
           caseItem={caseItem}
-          onAdd={() => modalRef.current?.addTask()}
-          onOpen={(id) => modalRef.current?.openTask(id)}
+          onAdd={() => modals.addTask()}
+          onOpen={(id) => modals.openTask(id)}
         />
       ) : null}
       {activeLeaf === 'appointments' ? (
         <WorkspaceAppointments
           caseItem={caseItem}
-          onAdd={() => modalRef.current?.addAppointment()}
-          onOpen={(id) => modalRef.current?.openAppointment(id)}
+          onAdd={() => modals.addAppointment()}
+          onOpen={(id) => modals.openAppointment(id)}
         />
       ) : null}
       {activeLeaf === 'deadlines' ? (
@@ -413,21 +285,21 @@ export default function AdministrativeDetailWorkspace({
           legalDeadlines={legalDeadlines}
           legalError={legalError}
           onRetryLegal={loadLegal}
-          onAdd={() => modalRef.current?.openDeadline()}
+          onAdd={() => modals.openDeadline()}
         />
       ) : null}
       {activeLeaf === 'documents' ? (
         <WorkspaceDocuments
           caseItem={caseItem}
           canEdit={canEdit}
-          onUpload={() => modalRef.current?.triggerUpload()}
+          onUpload={() => modals.triggerUpload()}
         />
       ) : null}
       {activeLeaf === 'notes' ? (
         <WorkspaceNotes
           caseItem={caseItem}
           canEdit={canEdit}
-          onEdit={() => modalRef.current?.editCase(caseItem, { focusField: 'notes' })}
+          onEdit={() => modals.editCase({ focusField: 'notes' })}
         />
       ) : null}
       {showFinance && activeLeaf === 'finance' ? <FinanceTab caseId={caseItem.id} /> : null}

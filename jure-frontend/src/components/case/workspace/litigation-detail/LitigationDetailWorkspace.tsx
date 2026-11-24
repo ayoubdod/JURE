@@ -1,42 +1,25 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router';
+import { useMemo } from 'react';
 import {
   Activity,
-  Archive,
   CheckSquare,
   FileText,
-  Flag,
   Folder,
   Gavel,
   LayoutDashboard,
-  Pencil,
-  ShieldAlert,
   Sparkles,
-  Trash2,
   Wallet,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAppTranslation } from '@/i18n';
-import { usePermission } from '@/hooks/usePermissions';
-import { useFinanceAccess } from '@/hooks/useFinanceAccess';
 import { JURIA_ENABLED } from '@/config/features';
-import { CaseStatus } from '@/utils/constants';
 import { getCaseData } from '@/utils/caseCardHelpers';
 import { assignedDisplayName } from '@/services/case/caseType';
 import { CaseClientLabel } from '@/components/client/CaseClientLabel';
-import { caseTypeListPath, navigateToCaseById } from '@/lib/caseRoutes';
 import ResearchNotebookCard from '@/components/dashboard/ResearchNotebookCard';
 import { FinanceTab } from '@/components/case/panel/tabs/FinanceTab';
 import { JuriaCasePanel } from '@/components/juria/JuriaCasePanel';
-import { apiUpdateCase } from '@/services/case/api';
-import { apiGetLegalDeadlines, type CalculatedDeadline } from '@/services/legal-deadlines/api';
-import { unwrapDeadlineList } from '@/components/case/CaseLegalDeadlinesList';
-import { apiGetResearchNotes, unwrapResearchNoteList, type ResearchNote } from '@/services/research-notes/api';
-import { getCaseFinance } from '@/services/finance/api';
-import { normalizeCaseFinancePayload } from '@/utils/normalizeCaseFinance';
-import { useToast } from '@/hooks/use-toast';
 import LitigationOverview from './LitigationOverview';
 import LitigationDetails from './LitigationDetails';
 import LitigationParties from './LitigationParties';
@@ -53,14 +36,11 @@ import {
   CaseWorkspaceHeader,
   CaseWorkspaceSegments,
   CaseWorkspaceShell,
-  defaultLeafForGroup,
-  parseTab,
   primaryCtaLabel,
   resolvePrimaryCta,
-  useCaseSummary,
+  useCaseWorkspaceController,
   type CaseWorkspaceGroupId,
   type CaseWorkspaceLeaf,
-  type CaseWorkspaceModalHostHandle,
   type CaseWorkspaceNavItem,
   type HeaderMenuItem,
 } from '@/components/case/workspace/shell';
@@ -80,58 +60,37 @@ export default function LitigationDetailWorkspace({
 }) {
   const { t, tf, enumPretty } = useAppTranslation();
   const copy = t.cases.workspaces.litigation.detail;
-  const shellCopy = t.cases.workspaces.shell;
-  const pw = t.cases.pageWorkspace;
-  const navigate = useNavigate();
-  const { toast } = useToast();
-  const [searchParams, setSearchParams] = useSearchParams();
-  const canEdit = usePermission('cases.edit');
-  const canDelete = usePermission('cases.delete');
-  const { authorized: showFinance } = useFinanceAccess();
-  const modalRef = useRef<CaseWorkspaceModalHostHandle>(null);
-  const lastSegmentRef = useRef<Partial<Record<CaseWorkspaceGroupId, CaseWorkspaceLeaf>>>({});
-
-  const [legalDeadlines, setLegalDeadlines] = useState<CalculatedDeadline[] | null>(null);
-  const [legalError, setLegalError] = useState(false);
-  const [researchNotes, setResearchNotes] = useState<ResearchNote[] | null>(null);
-  const [finance, setFinance] = useState<API.FinanceCaseSummary | null>(null);
-
-  const parsed = parseTab('LITIGATION', searchParams.get('tab'));
-  const summary = useCaseSummary({
-    caseItem,
-    type: 'LITIGATION',
+  const {
+    shellCopy,
+    canEdit,
+    showFinance,
+    modalRef,
+    lastSegmentRef,
+    activeGroup,
+    activeLeaf,
+    setLeaf,
+    onSelectNav,
+    summary,
     legalDeadlines,
-    researchNotes,
+    legalError,
+    loadLegal,
+    finance,
+    listPath,
+    openRelated,
+    modals,
+    lifecycleMoreItems,
+    segmentLeaves,
+  } = useCaseWorkspaceController({
+    caseItem,
+    onCaseChange,
+    type: 'LITIGATION',
+    groupSegments: GROUP_SEGMENTS,
+    loadResearch: true,
   });
-
-  const activeGroup = parsed.group;
-  const activeLeaf = parsed.leaf;
-
-  const setLeaf = (next: CaseWorkspaceLeaf) => {
-    const nextParsed = parseTab('LITIGATION', next);
-    if (GROUP_SEGMENTS[nextParsed.group]) {
-      lastSegmentRef.current[nextParsed.group] = next;
-    }
-    const params = new URLSearchParams(searchParams);
-    if (next === 'overview') params.delete('tab');
-    else params.set('tab', next);
-    setSearchParams(params, { replace: true });
-  };
-
-  const openGroup = (group: CaseWorkspaceGroupId) => {
-    const remembered = lastSegmentRef.current[group];
-    const leaf =
-      remembered && GROUP_SEGMENTS[group]?.includes(remembered)
-        ? remembered
-        : defaultLeafForGroup('LITIGATION', group);
-    setLeaf(leaf);
-  };
 
   const navItems = useMemo(() => {
     const attention = (label: string, count?: number) =>
-      count
-        ? tf(shellCopy.navAttention, { label, count })
-        : label;
+      count ? tf(shellCopy.navAttention, { label, count }) : label;
 
     const items: CaseWorkspaceNavItem[] = [
       {
@@ -197,31 +156,26 @@ export default function LitigationDetailWorkspace({
       });
     }
     return items;
-  }, [shellCopy, showFinance, summary, tf]);
+  }, [shellCopy, showFinance, summary, tf, lastSegmentRef]);
 
-  const segmentLeaves = GROUP_SEGMENTS[activeGroup];
   const segmentOptions = (segmentLeaves ?? []).map((leaf) => ({
     id: leaf,
     label: copy.sections[leaf as keyof typeof copy.sections],
   }));
 
-  const primary = resolvePrimaryCta(
-    'LITIGATION',
-    summary,
-    { canEdit }
-  );
+  const primary = resolvePrimaryCta('LITIGATION', summary, { canEdit });
   const primaryLabel = primary ? primaryCtaLabel(primary, shellCopy) : '';
 
   const runPrimary = () => {
     if (!primary) return;
     if (primary.id === 'add_hearing') {
-      modalRef.current?.openHearing();
+      modals.openHearing();
       return;
     }
     if (primary.id === 'prepare_hearing') {
       if (primary.preferUpload) {
         setLeaf('documents');
-        modalRef.current?.triggerUpload();
+        modals.triggerUpload();
       } else {
         setLeaf('hearings');
       }
@@ -231,164 +185,73 @@ export default function LitigationDetailWorkspace({
       setLeaf('deadlines');
       return;
     }
-    modalRef.current?.addTask();
+    modals.addTask();
   };
 
-  const listPath = caseTypeListPath('LITIGATION');
   const priority = getCaseData(caseItem, 'priority') as string | undefined;
   const clientMeta = caseItem.client ? (
     <CaseClientLabel client={caseItem.client} nameClassName="truncate" />
   ) : null;
   const leadMeta = assignedDisplayName(caseItem);
 
-  const loadLegal = () => {
-    setLegalError(false);
-    apiGetLegalDeadlines({ case: caseItem.id })
-      .then((res) => setLegalDeadlines(unwrapDeadlineList(res.data)))
-      .catch(() => {
-        setLegalDeadlines([]);
-        setLegalError(true);
-      });
-  };
-
-  useEffect(() => {
-    loadLegal();
-    apiGetResearchNotes({ matter: caseItem.id, page_size: 20 })
-      .then((res) => setResearchNotes(unwrapResearchNoteList(res.data)))
-      .catch(() => setResearchNotes([]));
-    if (!showFinance) return;
-    getCaseFinance(caseItem.id)
-      .then((res) => setFinance(normalizeCaseFinancePayload(res.data).summary))
-      .catch(() => setFinance(null));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [caseItem.id, showFinance]);
-
-  const openRelated = (id: number) => {
-    void navigateToCaseById(navigate, id);
-  };
-
-  const archiveCase = async () => {
-    try {
-      const res = await apiUpdateCase({ id: caseItem.id, status: CaseStatus.ARCHIVED } as API.CaseUpdateForm);
-      onCaseChange(res.data);
-      toast({ title: pw.archiveCase });
-    } catch {
-      toast({ title: t.common.error, variant: 'destructive' });
-    }
-  };
-
   const newItems: HeaderMenuItem[] = [
-    { key: 'task', label: copy.addTask, onClick: () => modalRef.current?.addTask() },
+    { key: 'task', label: copy.addTask, onClick: () => modals.addTask() },
     ...(canEdit
       ? [
-          { key: 'hearing', label: copy.addHearing, onClick: () => modalRef.current?.openHearing() },
-          { key: 'deadline', label: copy.addDeadline, onClick: () => modalRef.current?.openDeadline() },
+          { key: 'hearing', label: copy.addHearing, onClick: () => modals.openHearing() },
+          { key: 'deadline', label: copy.addDeadline, onClick: () => modals.openDeadline() },
         ]
       : []),
-    { key: 'appt', label: copy.addAppointment, onClick: () => modalRef.current?.addAppointment() },
+    { key: 'appt', label: copy.addAppointment, onClick: () => modals.addAppointment() },
     ...(canEdit
       ? [
-          { key: 'doc', label: copy.addDocument, onClick: () => modalRef.current?.triggerUpload() },
+          { key: 'doc', label: copy.addDocument, onClick: () => modals.triggerUpload() },
           {
             key: 'note',
             label: copy.editNotes,
-            onClick: () => modalRef.current?.editCase(caseItem, { focusField: 'notes' }),
+            onClick: () => modals.editCase({ focusField: 'notes' }),
           },
         ]
       : []),
   ];
 
-  const moreItems: HeaderMenuItem[] = [
-    ...(canEdit
-      ? [
-          {
-            key: 'edit',
-            label: copy.edit,
-            icon: <Pencil className="h-4 w-4" />,
-            onClick: () => modalRef.current?.editCase(caseItem),
-          },
-        ]
-      : []),
-    ...(canEdit && caseItem.status !== CaseStatus.CLOSED
-      ? [
-          {
-            key: 'close',
-            label: pw.closeCase,
-            icon: <Flag className="h-4 w-4" />,
-            onClick: () => modalRef.current?.openClose(),
-          },
-        ]
-      : []),
-    ...(canEdit && caseItem.status !== CaseStatus.ARCHIVED
-      ? [
-          {
-            key: 'archive',
-            label: pw.archiveCase,
-            icon: <Archive className="h-4 w-4" />,
-            onClick: () => void archiveCase(),
-          },
-        ]
-      : []),
-    {
-      key: 'conflict',
-      label: pw.conflictCheck,
-      icon: <ShieldAlert className="h-4 w-4" />,
-      onClick: () => modalRef.current?.openConflict(),
-    },
-    ...(canDelete
-      ? [
-          {
-            key: 'delete',
-            label: pw.deleteCase,
-            icon: <Trash2 className="h-4 w-4" />,
-            destructive: true,
-            separatorBefore: true,
-            onClick: () => modalRef.current?.deleteCase(),
-          },
-        ]
-      : []),
-  ];
-
-  const header = (
-    <CaseWorkspaceHeader
-      listPath={listPath}
-      backLabel={copy.back}
-      typeLabel={t.cases.typeLabels.litigation}
-      status={String(caseItem.status ?? '')}
-      priorityLabel={priority ? enumPretty(priority) : undefined}
-      title={caseItem.title || t.cases.untitledCase}
-      reference={caseItem.reference}
-      meta={
-        clientMeta || leadMeta ? (
-          <>
-            {clientMeta}
-            {clientMeta && leadMeta ? ' · ' : null}
-            {leadMeta ? (
-              <span>
-                {copy.snapshotLead}: {leadMeta}
-              </span>
-            ) : null}
-          </>
-        ) : undefined
-      }
-      primaryCta={primary ? { label: primaryLabel, onClick: runPrimary } : null}
-      newItems={newItems}
-      moreItems={moreItems}
-      newMenuLabel={shellCopy.newMenu}
-    />
-  );
+  const moreItems: HeaderMenuItem[] = lifecycleMoreItems({ edit: copy.edit });
 
   return (
     <CaseWorkspaceShell
-      header={header}
+      header={
+        <CaseWorkspaceHeader
+          listPath={listPath}
+          backLabel={copy.back}
+          typeLabel={t.cases.typeLabels.litigation}
+          status={String(caseItem.status ?? '')}
+          priorityLabel={priority ? enumPretty(priority) : undefined}
+          title={caseItem.title || t.cases.untitledCase}
+          reference={caseItem.reference}
+          meta={
+            clientMeta || leadMeta ? (
+              <>
+                {clientMeta}
+                {clientMeta && leadMeta ? ' · ' : null}
+                {leadMeta ? (
+                  <span>
+                    {copy.snapshotLead}: {leadMeta}
+                  </span>
+                ) : null}
+              </>
+            ) : undefined
+          }
+          primaryCta={primary ? { label: primaryLabel, onClick: runPrimary } : null}
+          newItems={newItems}
+          moreItems={moreItems}
+          newMenuLabel={shellCopy.newMenu}
+        />
+      }
       navLabel={copy.navLabel}
       navItems={navItems}
       activeNavId={activeGroup}
       activeLeaf={activeLeaf}
-      onSelectNav={(item) => {
-        if (GROUP_SEGMENTS[item.id]) openGroup(item.id);
-        else setLeaf(item.leaf);
-      }}
+      onSelectNav={onSelectNav}
       caseItem={caseItem}
       listPath={listPath}
       onCaseChange={onCaseChange}
@@ -414,9 +277,9 @@ export default function LitigationDetailWorkspace({
           primaryActionLabel={primaryLabel}
           onPrimaryAction={runPrimary}
           onOpenSection={setLeaf}
-          onOpenClient={() => void modalRef.current?.openClient()}
+          onOpenClient={() => modals.openClient()}
           onOpenCase={openRelated}
-          onAddTask={() => modalRef.current?.addTask()}
+          onAddTask={() => modals.addTask()}
         />
       ) : null}
       {activeLeaf === 'caseDetails' ? (
@@ -425,29 +288,29 @@ export default function LitigationDetailWorkspace({
       {activeLeaf === 'parties' ? (
         <LitigationParties
           caseItem={caseItem}
-          onOpenClient={() => void modalRef.current?.openClient()}
-          onConflict={() => modalRef.current?.openConflict()}
+          onOpenClient={() => modals.openClient()}
+          onConflict={() => modals.openConflict()}
         />
       ) : null}
       {activeLeaf === 'tasks' ? (
         <WorkspaceTasks
           caseItem={caseItem}
-          onAdd={() => modalRef.current?.addTask()}
-          onOpen={(id) => modalRef.current?.openTask(id)}
+          onAdd={() => modals.addTask()}
+          onOpen={(id) => modals.openTask(id)}
         />
       ) : null}
       {activeLeaf === 'appointments' ? (
         <WorkspaceAppointments
           caseItem={caseItem}
-          onAdd={() => modalRef.current?.addAppointment()}
-          onOpen={(id) => modalRef.current?.openAppointment(id)}
+          onAdd={() => modals.addAppointment()}
+          onOpen={(id) => modals.openAppointment(id)}
         />
       ) : null}
       {activeLeaf === 'hearings' ? (
         <LitigationHearings
           caseItem={caseItem}
           canEdit={canEdit}
-          onAdd={() => modalRef.current?.openHearing()}
+          onAdd={() => modals.openHearing()}
         />
       ) : null}
       {activeLeaf === 'deadlines' ? (
@@ -457,14 +320,14 @@ export default function LitigationDetailWorkspace({
           legalDeadlines={legalDeadlines}
           legalError={legalError}
           onRetryLegal={loadLegal}
-          onAdd={() => modalRef.current?.openDeadline()}
+          onAdd={() => modals.openDeadline()}
         />
       ) : null}
       {activeLeaf === 'documents' ? (
         <WorkspaceDocuments
           caseItem={caseItem}
           canEdit={canEdit}
-          onUpload={() => modalRef.current?.triggerUpload()}
+          onUpload={() => modals.triggerUpload()}
         />
       ) : null}
       {activeLeaf === 'research' ? (
@@ -485,7 +348,7 @@ export default function LitigationDetailWorkspace({
         <WorkspaceNotes
           caseItem={caseItem}
           canEdit={canEdit}
-          onEdit={() => modalRef.current?.editCase(caseItem, { focusField: 'notes' })}
+          onEdit={() => modals.editCase({ focusField: 'notes' })}
         />
       ) : null}
       {showFinance && activeLeaf === 'finance' ? <FinanceTab caseId={caseItem.id} /> : null}

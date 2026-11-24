@@ -10,6 +10,7 @@ export { resolvePrimaryCta } from './resolvePrimaryCta';
 export type { PrimaryCtaSummary } from './resolvePrimaryCta';
 export { buildCaseSummary } from './buildCaseSummary';
 export { useCaseSummary } from './useCaseSummary';
+export { useCaseWorkspaceController } from './useCaseWorkspaceController';
 export { primaryCtaLabel } from './primaryCtaLabel';
 export {
   selectNextCritical,
