@@ -12,6 +12,7 @@ export { buildCaseSummary } from './buildCaseSummary';
 export { useCaseSummary } from './useCaseSummary';
 export { useCaseWorkspaceController } from './useCaseWorkspaceController';
 export { primaryCtaLabel } from './primaryCtaLabel';
+export { resolveWorkspaceKind } from './resolveWorkspaceKind';
 export {
   resolveConsultationHash,
   shouldOpenConvertFromQuery,

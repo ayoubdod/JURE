@@ -53,7 +53,8 @@ export function caseIdFromSlug(slug: string): number | null {
   return null;
 }
 
-export function caseTypeListPath(type: BackendCaseType): string {
+export function caseTypeListPath(type: BackendCaseType | 'UNKNOWN'): string {
+  if (type === 'UNKNOWN') return '/dashboard/cases';
   return `/dashboard/cases/${CASE_TYPE_SEGMENT[type]}`;
 }
 
