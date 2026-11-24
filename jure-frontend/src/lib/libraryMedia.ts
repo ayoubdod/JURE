@@ -11,6 +11,58 @@ export function resolveLibraryMediaUrl(url: string | null | undefined): string {
   return resolveBackendUrl(url);
 }
 
+const CONTENT_TYPE_EXT: Record<string, string> = {
+  'application/pdf': 'pdf',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'docx',
+  'image/jpeg': 'jpg',
+  'image/png': 'png',
+  'image/gif': 'gif',
+  'image/webp': 'webp',
+  'image/bmp': 'bmp',
+  'image/svg+xml': 'svg',
+  'video/mp4': 'mp4',
+  'video/webm': 'webm',
+  'video/ogg': 'ogg',
+  'audio/mpeg': 'mp3',
+  'audio/wav': 'wav',
+  'audio/ogg': 'ogg',
+  'audio/mp4': 'm4a',
+  'audio/aac': 'aac',
+};
+
+/** Extension from a Content-Type header. Empty when the type is generic. */
+export function extensionFromContentType(contentType: string | null | undefined): string {
+  const type = (contentType || '').split(';')[0].trim().toLowerCase();
+  return CONTENT_TYPE_EXT[type] || '';
+}
+
+/** Extension from the first bytes when the server sends application/octet-stream. */
+export function extensionFromBytes(buffer: ArrayBuffer): string {
+  const bytes = new Uint8Array(buffer.slice(0, 12));
+  if (bytes.length >= 4 && bytes[0] === 0x25 && bytes[1] === 0x50 && bytes[2] === 0x44 && bytes[3] === 0x46) {
+    return 'pdf';
+  }
+  if (bytes.length >= 8 && bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4e && bytes[3] === 0x47) {
+    return 'png';
+  }
+  if (bytes.length >= 3 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) return 'jpg';
+  if (bytes.length >= 4 && bytes[0] === 0x47 && bytes[1] === 0x49 && bytes[2] === 0x46 && bytes[3] === 0x38) {
+    return 'gif';
+  }
+  if (
+    bytes.length >= 12 &&
+    bytes[0] === 0x52 && bytes[1] === 0x49 && bytes[2] === 0x46 && bytes[3] === 0x46 &&
+    bytes[8] === 0x57 && bytes[9] === 0x45 && bytes[10] === 0x42 && bytes[11] === 0x50
+  ) {
+    return 'webp';
+  }
+  // Office Open XML (.docx) is a zip. Legacy .doc is not previewable here.
+  if (bytes.length >= 4 && bytes[0] === 0x50 && bytes[1] === 0x4b && bytes[2] === 0x03 && bytes[3] === 0x04) {
+    return 'docx';
+  }
+  return '';
+}
+
 export function libraryFileExtension(fileName: string): string {
   if (!fileName) return '';
   let path = fileName;
@@ -32,9 +84,11 @@ export async function fetchLibraryBlob(url: string): Promise<Blob> {
 }
 
 function downloadFilename(doc: API.Document): string {
+  const stored = (doc.file_name || '').trim();
+  if (stored) return stored.split('/').pop() || stored;
   const fromFile = (doc.file || '').split('?')[0].split('#')[0].split('/').pop();
   if (fromFile && fromFile.includes('.')) return fromFile;
-  const ext = libraryFileExtension(doc.file || doc.title || '');
+  const ext = libraryFileExtension(doc.file_name || doc.title || '');
   const base = (doc.title || 'document').replace(/[\\/:*?"<>|]+/g, '_').trim() || 'document';
   return ext && !base.toLowerCase().endsWith(`.${ext}`) ? `${base}.${ext}` : base;
 }

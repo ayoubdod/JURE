@@ -280,12 +280,14 @@ export function JuriaChat({ project }: { project: JuriaProject }) {
                   const parent = messages.find((x) => x.id === parentId);
                   if (parent) void editMessage(parent.id, parent.content, language);
                 }}
-                onCreateArtifact={() => {
+                onCreateArtifact={(bodyText) => {
+                  // Prefer revealed (reidentified) text when the user already clicked Reveal.
+                  const sourceText = (bodyText ?? m.content) || '';
                   const title =
-                    (m.documentCard?.typeName || m.analysis?.document_title || m.content || chat.createArtifact)
+                    (m.documentCard?.typeName || m.analysis?.document_title || sourceText || chat.createArtifact)
                       .toString()
                       .slice(0, 120);
-                  const plain = stripActMarkdown(m.content || '');
+                  const plain = stripActMarkdown(sourceText);
                   const contentHtml = sanitizeHtml(
                     `<p>${plain.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '</p><p>')}</p>`
                   );
@@ -455,7 +457,7 @@ function MessageBubble({
   onSaveEdit: () => void;
   onDelete: () => void;
   onRegenerate: () => void;
-  onCreateArtifact: () => void;
+  onCreateArtifact: (bodyText?: string) => void;
   onOpenSource: (s: JuriaSourceHit) => void;
   onClausePrompt: (prompt: string) => void;
   canOpenArtifacts?: boolean;
@@ -565,7 +567,7 @@ function AssistantBody({
 }: {
   m: JuriaMessage;
   onRegenerate: () => void;
-  onCreateArtifact: () => void;
+  onCreateArtifact: (bodyText?: string) => void;
   onOpenSource: (s: JuriaSourceHit) => void;
   onClausePrompt: (prompt: string) => void;
   canOpenArtifacts?: boolean;
@@ -600,11 +602,22 @@ function AssistantBody({
       const out = await apiPrivacyReidentify(privacySessionId, displayContent || m.content || '');
       setDisplayContent(out.text);
       setRevealed(true);
+      return out.text;
     } catch {
       // keep tokens; surface via brief alert-style text in button state
+      return displayContent || m.content || '';
     } finally {
       setRevealing(false);
     }
+  };
+
+  const handleCreateArtifact = async () => {
+    let bodyText = displayContent || m.content || '';
+    // Artifact must use reidentified text when a privacy session exists.
+    if (privacySessionId && m.analysis?.privacy?.pseudonymized && !revealed) {
+      bodyText = (await handleReveal()) || bodyText;
+    }
+    onCreateArtifact(bodyText);
   };
 
   if (card) {
@@ -659,7 +672,14 @@ function AssistantBody({
             </Button>
           ) : null}
           {canOpenArtifacts ? (
-            <Button size="sm" variant="ghost" className="gap-1" type="button" onClick={onCreateArtifact}>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="gap-1"
+              type="button"
+              disabled={revealing}
+              onClick={() => void handleCreateArtifact()}
+            >
               {chat.createArtifact}
             </Button>
           ) : null}
@@ -714,8 +734,9 @@ function AssistantBody({
         {canOpenArtifacts ? (
           <button
             type="button"
-            className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] text-slate-400 hover:bg-slate-100"
-            onClick={onCreateArtifact}
+            disabled={revealing}
+            className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] text-slate-400 hover:bg-slate-100 disabled:opacity-50"
+            onClick={() => void handleCreateArtifact()}
           >
             {chat.createArtifact}
           </button>

@@ -74,6 +74,7 @@ export function JuriaComposer({
   const ta = useRef<HTMLTextAreaElement>(null);
   const [localFile, setLocalFile] = useState<File | null>(null);
   const [localLang, setLocalLang] = useState<AskLang>(readAskLang);
+  const [expanded, setExpanded] = useState(false);
   const file = attachment !== undefined ? attachment : localFile;
   const setFile = onAttachmentChange ?? setLocalFile;
   const askLang = askLangProp ?? localLang;
@@ -91,7 +92,10 @@ export function JuriaComposer({
     const el = ta.current;
     if (!el) return;
     el.style.height = 'auto';
-    el.style.height = `${Math.min(Math.max(el.scrollHeight, 32), 120)}px`;
+    // Allow longer legal prompts without turning the shell into a stadium pill.
+    const next = Math.min(Math.max(el.scrollHeight, 32), 200);
+    el.style.height = `${next}px`;
+    setExpanded(next > 40 || value.includes('\n'));
   }, [value]);
 
   const pickFile = () => {
@@ -139,7 +143,11 @@ export function JuriaComposer({
 
       <div
         dir={rtlPrompt ? 'rtl' : 'ltr'}
-        className="flex items-end gap-1 rounded-full border border-slate-200 bg-white px-1.5 py-1 shadow-[0_1px_2px_rgba(15,23,42,0.04)] dark:border-slate-700 dark:bg-slate-900 sm:gap-1.5 sm:px-2"
+        className={cn(
+          'flex items-end gap-1 border border-slate-200 bg-white px-1.5 py-1 shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition-[border-radius] dark:border-slate-700 dark:bg-slate-900 sm:gap-1.5 sm:px-2',
+          // Single-line keeps a soft pill; multi-line drops the stadium corners.
+          expanded ? 'rounded-2xl px-2 py-1.5 sm:px-2.5' : 'rounded-full'
+        )}
       >
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -187,7 +195,7 @@ export function JuriaComposer({
           disabled={disabled}
           enterKeyHint="send"
           placeholder={hero ? t.juria.askPlaceholder : t.juria.modes[mode].placeholder}
-          className="max-h-[120px] min-h-[32px] flex-1 resize-none bg-transparent py-1.5 font-sans text-[15px] leading-5 text-slate-900 focus:outline-none sm:text-[13px] dark:text-slate-100"
+          className="max-h-[200px] min-h-[32px] flex-1 resize-none bg-transparent py-1.5 font-sans text-[15px] leading-5 text-slate-900 focus:outline-none sm:text-[13px] dark:text-slate-100"
         />
         <Button
           type="button"

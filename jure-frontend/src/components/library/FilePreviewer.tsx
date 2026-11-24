@@ -6,6 +6,7 @@ import { API_ORIGIN } from '@/config/api';
 import { getFileType } from '@/utils/functions';
 import { useAppTranslation } from '@/i18n';
 import { resolveBackendUrl, useAuthenticatedObjectUrl } from '@/lib/authenticatedMedia';
+import { extensionFromBytes, extensionFromContentType } from '@/lib/libraryMedia';
 import { cn } from '@/lib/utils';
 
 const IMAGE_TYPES = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp'];
@@ -132,7 +133,11 @@ export const FilePreviewer: React.FC<FilePreviewerProps> = ({
   const resolvedUrl = resolveUrl(fileUrl);
   const objectMediaUrl = useAuthenticatedObjectUrl(resolvedUrl);
   const mediaSrc = objectMediaUrl || resolvedUrl;
-  const ext = getFileExtension(fileName || fileUrl);
+  const explicitExt = getFileExtension(fileName || '') || getFileExtension(fileUrl || '');
+  const [sniffedExt, setSniffedExt] = useState('');
+  const [sniffedBlob, setSniffedBlob] = useState<Blob | null>(null);
+  const [sniffing, setSniffing] = useState(false);
+  const ext = explicitExt || sniffedExt;
   const [imageError, setImageError] = useState(false);
   const [pdfError, setPdfError] = useState(false);
   const [pdfSrc, setPdfSrc] = useState<string | null>(null);
@@ -153,6 +158,37 @@ export const FilePreviewer: React.FC<FilePreviewerProps> = ({
     a.click();
   };
 
+  // Download routes have no extension (/documents/34/download/). Read the bytes once.
+  useEffect(() => {
+    setSniffedExt('');
+    setSniffedBlob(null);
+    if (explicitExt || !resolvedUrl) {
+      setSniffing(false);
+      return;
+    }
+    let cancelled = false;
+    setSniffing(true);
+    fetchMedia(resolvedUrl)
+      .then(async (res) => {
+        if (!res.ok) throw new Error(`Failed to fetch (${res.status})`);
+        const buffer = await res.arrayBuffer();
+        const detected =
+          extensionFromContentType(res.headers.get('content-type')) || extensionFromBytes(buffer);
+        if (cancelled) return;
+        setSniffedExt(detected || 'bin');
+        setSniffedBlob(new Blob([buffer], { type: res.headers.get('content-type') || '' }));
+      })
+      .catch(() => {
+        if (!cancelled) setSniffedExt('bin');
+      })
+      .finally(() => {
+        if (!cancelled) setSniffing(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [explicitExt, resolvedUrl]);
+
   // PDF: fetch as blob so the iframe is same-origin (X-Frame-Options cannot blank it).
   useEffect(() => {
     if (!PDF_TYPES.includes(ext) || !resolvedUrl) return;
@@ -161,6 +197,14 @@ export const FilePreviewer: React.FC<FilePreviewerProps> = ({
     setPdfLoading(true);
     setPdfError(false);
     setPdfSrc(null);
+    if (sniffedBlob) {
+      objectUrl = URL.createObjectURL(new Blob([sniffedBlob], { type: 'application/pdf' }));
+      setPdfSrc(objectUrl);
+      setPdfLoading(false);
+      return () => {
+        if (objectUrl) URL.revokeObjectURL(objectUrl);
+      };
+    }
     fetchMedia(resolvedUrl)
       .then((res) => {
         if (!res.ok) throw new Error(`Failed to fetch PDF (${res.status})`);
@@ -185,7 +229,7 @@ export const FilePreviewer: React.FC<FilePreviewerProps> = ({
       cancelled = true;
       if (objectUrl) URL.revokeObjectURL(objectUrl);
     };
-  }, [resolvedUrl, ext]);
+  }, [resolvedUrl, ext, sniffedBlob]);
 
   // DOCX: fetch and render
   useEffect(() => {
@@ -195,11 +239,13 @@ export const FilePreviewer: React.FC<FilePreviewerProps> = ({
     let cancelled = false;
     setDocxLoading(true);
     container.innerHTML = '';
-    fetchMedia(resolvedUrl)
-      .then((res) => {
-        if (!res.ok) throw new Error('Failed to fetch');
-        return res.arrayBuffer();
-      })
+    const source = sniffedBlob
+      ? Promise.resolve(sniffedBlob.arrayBuffer())
+      : fetchMedia(resolvedUrl).then((res) => {
+          if (!res.ok) throw new Error('Failed to fetch');
+          return res.arrayBuffer();
+        });
+    source
       .then((buffer) => {
         if (cancelled || !docxContainerRef.current) return;
         return renderAsync(buffer, docxContainerRef.current, undefined, { inWrapper: true });
@@ -213,7 +259,7 @@ export const FilePreviewer: React.FC<FilePreviewerProps> = ({
     return () => {
       cancelled = true;
     };
-  }, [resolvedUrl, ext, docxError]);
+  }, [resolvedUrl, ext, docxError, sniffedBlob]);
 
   // Reset zoom when file changes
   useEffect(() => {
@@ -222,7 +268,20 @@ export const FilePreviewer: React.FC<FilePreviewerProps> = ({
     setDocxError(false);
   }, [resolvedUrl, fileName]);
 
-  const fileIcon = getFileIconByType(fileName);
+  const fileIcon = getFileIconByType(fileName || ext);
+
+  if (sniffing) {
+    return (
+      <div
+        className={cn(
+          'flex min-h-[200px] items-center justify-center rounded-md border border-slate-200 bg-slate-50 text-[13px] text-slate-500 dark:border-slate-800 dark:bg-slate-900/50',
+          className
+        )}
+      >
+        {hub.readerOpening}
+      </div>
+    );
+  }
 
   // Images: aspect-ratio-aware with zoom
   if (IMAGE_TYPES.includes(ext) && !imageError) {

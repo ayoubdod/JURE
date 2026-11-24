@@ -82,6 +82,7 @@ import type { Appointment } from '@/services/appointment/api';
 import DocumentReaderModal, {
   type DocumentReaderModalRef,
 } from '@/components/library/hub/DocumentReaderModal';
+import { readingDocsFromAttachments } from '@/components/document-reading/types';
 
 type WorkspaceTab =
   | 'overview'
@@ -738,7 +739,8 @@ function CaseMatterWorkspaceView({
                                 caseRef: caseItem.reference,
                                 caseTitle: caseItem.title,
                                 clientName: clientDisplayName(caseItem.client) || undefined,
-                              }
+                              },
+                              readingDocsFromAttachments(caseItem.attachments)
                             )
                           }
                         >

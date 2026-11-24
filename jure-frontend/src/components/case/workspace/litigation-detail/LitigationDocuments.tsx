@@ -4,6 +4,7 @@ import { formatDate, useAppTranslation } from '@/i18n';
 import DocumentReaderModal, {
   type DocumentReaderModalRef,
 } from '@/components/library/hub/DocumentReaderModal';
+import { readingDocsFromAttachments } from '@/components/document-reading/types';
 import { EmptyAction, WorkspaceCard } from './ui';
 import { requiredDocumentsOf } from './helpers';
 
@@ -79,7 +80,8 @@ export default function LitigationDocuments({
                           caseId: caseItem.id,
                           caseRef: caseItem.reference,
                           caseTitle: caseItem.title,
-                        }
+                        },
+                        readingDocsFromAttachments(attachments)
                       )
                     }
                   >

@@ -59,6 +59,8 @@ declare namespace API {
         tags: string[];
         description: string | null;
         file: string | null;
+        /** Original stored filename, including the extension. The file URL itself is an extension-less download route. */
+        file_name?: string | null;
         external_url?: string | null;
         size: number;
         is_shared?: boolean;

@@ -259,8 +259,15 @@ const Library = () => {
   );
 
   const handlePreview = useCallback((doc: API.Document) => {
-    readerRef.current?.show(doc);
-  }, []);
+    const seen = new Set<number>();
+    const list: API.Document[] = [];
+    for (const item of [...recent, ...results]) {
+      if (seen.has(item.id)) continue;
+      seen.add(item.id);
+      list.push(item);
+    }
+    readerRef.current?.show(doc, undefined, list.length ? list : [doc]);
+  }, [recent, results]);
 
   const canEdit = useCallback(
     (doc: API.Document) => {

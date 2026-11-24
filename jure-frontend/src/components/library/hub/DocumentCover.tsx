@@ -4,6 +4,7 @@ import pdfWorker from 'pdfjs-dist/build/pdf.worker.min.js?url';
 import { FileText, Globe, Landmark } from 'lucide-react';
 import { API_ORIGIN } from '@/config/api';
 import { resolveBackendUrl } from '@/lib/authenticatedMedia';
+import { extensionFromBytes, extensionFromContentType } from '@/lib/libraryMedia';
 import { cn } from '@/lib/utils';
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
@@ -178,7 +179,13 @@ export default function DocumentCover({
   const [imageUrl, setImageUrl] = useState<string | null>(null);
 
   const fileUrl = resolveMediaUrl(doc.file);
-  const ext = fileExtension(doc.file || doc.title || '');
+  const namedExt = fileExtension(doc.file_name || '') || fileExtension(doc.file || '') || fileExtension(doc.title || '');
+  const [probedExt, setProbedExt] = useState('');
+  const ext = namedExt || probedExt;
+
+  useEffect(() => {
+    setProbedExt('');
+  }, [fileUrl, doc.file_name]);
   const isPdf = ext === 'pdf' && Boolean(fileUrl);
   const isImage = IMAGE_EXTS.has(ext) && Boolean(fileUrl);
 
@@ -200,6 +207,25 @@ export default function DocumentCover({
     if (!fileUrl) {
       setMode('fallback');
       return;
+    }
+    if (!namedExt && !probedExt) {
+      let cancelled = false;
+      setMode('loading');
+      fetchAuthenticatedBlob(fileUrl)
+        .then(async (blob) => {
+          const buffer = await blob.arrayBuffer();
+          const detected = extensionFromContentType(blob.type) || extensionFromBytes(buffer);
+          if (!cancelled) setProbedExt(detected || 'bin');
+        })
+        .catch(() => {
+          if (!cancelled) {
+            setProbedExt('bin');
+            setMode('fallback');
+          }
+        });
+      return () => {
+        cancelled = true;
+      };
     }
     if (isImage) {
       let objectUrl: string | null = null;
@@ -285,7 +311,7 @@ export default function DocumentCover({
         proxy.destroy().catch(() => undefined);
       }
     };
-  }, [visible, fileUrl, isPdf, isImage, compact]);
+  }, [visible, fileUrl, isPdf, isImage, compact, namedExt, probedExt]);
 
   return (
     <div ref={wrapRef} className={cn('relative h-full w-full overflow-hidden bg-slate-100 dark:bg-slate-900', className)}>

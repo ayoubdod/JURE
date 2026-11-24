@@ -457,6 +457,41 @@ PRIVACY_PRIVATE_AI_CONFIGURED = env.bool("PRIVACY_PRIVATE_AI_CONFIGURED", defaul
 PRIVACY_ENFORCE_EGRESS_TICKET = env.bool("PRIVACY_ENFORCE_EGRESS_TICKET", default=True)
 
 # --------------------------------------------------------------------------------------
+# Case attachment OCR (Phase 2 — OCRmyPDF + Tesseract, local only)
+# --------------------------------------------------------------------------------------
+# Runner: "thread" (default), "sync" (tests), "poll_only" (web + separate worker process).
+ATTACHMENT_OCR_RUNNER = env.str("ATTACHMENT_OCR_RUNNER", default="thread").strip().lower()
+ATTACHMENT_OCR_LANGUAGES = env.str("ATTACHMENT_OCR_LANGUAGES", default="fra+ara+eng")
+ATTACHMENT_OCR_MAX_BYTES = env.int("ATTACHMENT_OCR_MAX_BYTES", default=50 * 1024 * 1024)
+ATTACHMENT_OCR_MAX_PAGES = env.int("ATTACHMENT_OCR_MAX_PAGES", default=200)
+ATTACHMENT_OCR_TIMEOUT_SECONDS = env.int("ATTACHMENT_OCR_TIMEOUT_SECONDS", default=300)
+ATTACHMENT_OCR_MIN_CHARS_PER_PAGE = env.int("ATTACHMENT_OCR_MIN_CHARS_PER_PAGE", default=40)
+ATTACHMENT_OCR_KEEP_DERIVED = env.bool("ATTACHMENT_OCR_KEEP_DERIVED", default=True)
+# Phase 3 — page text persistence limits (PostgreSQL TextField storage).
+ATTACHMENT_EXTRACTION_MAX_CHARS_PER_PAGE = env.int(
+    "ATTACHMENT_EXTRACTION_MAX_CHARS_PER_PAGE", default=200_000
+)
+ATTACHMENT_EXTRACTION_MAX_TOTAL_CHARS = env.int(
+    "ATTACHMENT_EXTRACTION_MAX_TOTAL_CHARS", default=2_000_000
+)
+
+# --------------------------------------------------------------------------------------
+# Juria retrieval / context (Phase 4 — keyword retrieval, no embeddings)
+# --------------------------------------------------------------------------------------
+JURIA_RETRIEVAL_MAX_CHUNK_CHARS = env.int("JURIA_RETRIEVAL_MAX_CHUNK_CHARS", default=1200)
+JURIA_RETRIEVAL_PAGE_SUBCHUNK_CHARS = env.int("JURIA_RETRIEVAL_PAGE_SUBCHUNK_CHARS", default=2500)
+JURIA_CONTEXT_MAX_RETRIEVED_CHARS = env.int("JURIA_CONTEXT_MAX_RETRIEVED_CHARS", default=24_000)
+# Phase 5B — lexical default BM25; hybrid embeddings optional (local only).
+JURIA_RETRIEVAL_SCORER = env.str("JURIA_RETRIEVAL_SCORER", default="bm25").strip().lower()
+JURIA_EMBEDDINGS_ENABLED = env.bool("JURIA_EMBEDDINGS_ENABLED", default=False)
+JURIA_HYBRID_RETRIEVAL = env.bool("JURIA_HYBRID_RETRIEVAL", default=False)
+# auto | sentence_transformers | hash (hash = deterministic stub for tests/CI)
+JURIA_EMBEDDING_BACKEND = env.str("JURIA_EMBEDDING_BACKEND", default="auto").strip().lower()
+JURIA_EMBEDDING_MODEL = env.str(
+    "JURIA_EMBEDDING_MODEL", default="intfloat/multilingual-e5-base"
+).strip()
+
+# --------------------------------------------------------------------------------------
 # Logging
 # --------------------------------------------------------------------------------------
 LOGGING = {

@@ -224,6 +224,136 @@ class CaseAttachment(TimeStampedModel):
         return (self.original_name or "").strip() or (self.file.name.rsplit("/", 1)[-1] if self.file else "")
 
 
+class CaseAttachmentIntelligence(TimeStampedModel):
+    """
+    Server-side OCR + extraction metadata for a case attachment (Phases 2–3).
+
+    One-to-one with CaseAttachment. Page text lives on CaseAttachmentPage.
+    No embeddings / RAG chunks. Original uploads are never overwritten.
+    """
+
+    class ExtractionStatus(models.TextChoices):
+        PENDING = "PENDING", "PENDING"
+        RUNNING = "RUNNING", "RUNNING"
+        READY = "READY", "READY"
+        FAILED = "FAILED", "FAILED"
+        SKIPPED = "SKIPPED", "SKIPPED"
+
+    attachment = models.OneToOneField(
+        CaseAttachment,
+        on_delete=models.CASCADE,
+        related_name="intelligence",
+    )
+    extraction_status = models.CharField(
+        max_length=16,
+        choices=ExtractionStatus.choices,
+        default=ExtractionStatus.PENDING,
+        db_index=True,
+    )
+    ocr_status = models.CharField(
+        max_length=16,
+        choices=[
+            ("PENDING", "PENDING"),
+            ("RUNNING", "RUNNING"),
+            ("NOT_NEEDED", "NOT_NEEDED"),
+            ("REQUIRED", "REQUIRED"),
+            ("COMPLETED", "COMPLETED"),
+            ("FAILED", "FAILED"),
+        ],
+        default="PENDING",
+        db_index=True,
+    )
+    is_scanned = models.BooleanField(null=True, blank=True)
+    page_count = models.PositiveIntegerField(null=True, blank=True)
+    scanned_page_count = models.PositiveIntegerField(null=True, blank=True)
+    detected_languages = models.JSONField(default=list, blank=True)
+    processing_error_code = models.CharField(max_length=64, blank=True, default="")
+    ocr_engine = models.CharField(max_length=64, blank=True, default="")
+    content_hash = models.CharField(max_length=64, blank=True, default="", db_index=True)
+    processed_at = models.DateTimeField(null=True, blank=True)
+    derived_ocr_file = models.FileField(
+        upload_to=uuid_upload_to("case_attachments_ocr"),
+        blank=True,
+        null=True,
+        help_text="Searchable OCR PDF derived from the original; never replaces the original upload.",
+    )
+    # Soft lock token for concurrent claim prevention (UUID string).
+    processing_lock = models.CharField(max_length=64, blank=True, default="")
+
+    # Phase 3 — extraction metadata (page text on CaseAttachmentPage)
+    total_extracted_chars = models.PositiveIntegerField(null=True, blank=True)
+    extraction_version = models.CharField(max_length=16, blank=True, default="")
+    extracted_at = models.DateTimeField(null=True, blank=True)
+    extraction_completed_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        verbose_name = "Case attachment intelligence"
+        verbose_name_plural = "Case attachment intelligence"
+
+    def __str__(self) -> str:
+        return f"Intelligence({self.attachment_id}, ocr={self.ocr_status}, ext={self.extraction_status})"
+
+
+class CaseAttachmentPage(models.Model):
+    """
+    Page-level extracted text for a case attachment (Phase 3).
+
+    Stored in PostgreSQL (not embeddings). Trade-off vs private file storage:
+    typical legal PDFs fit comfortably in PG TextFields and stay queryable /
+    transactional with intelligence metadata; file-backed blobs would only help
+    rare multi-thousand-page corpora at the cost of atomicity and Phase 4 retrieval.
+    """
+
+    class ExtractionMethod(models.TextChoices):
+        NATIVE = "NATIVE", "NATIVE"
+        OCR = "OCR", "OCR"
+
+    intelligence = models.ForeignKey(
+        CaseAttachmentIntelligence,
+        on_delete=models.CASCADE,
+        related_name="pages",
+    )
+    page_number = models.PositiveIntegerField()
+    extracted_text = models.TextField(blank=True, default="")
+    extraction_method = models.CharField(
+        max_length=16,
+        choices=ExtractionMethod.choices,
+    )
+    character_count = models.PositiveIntegerField(default=0)
+    confidence_score = models.FloatField(
+        null=True,
+        blank=True,
+        help_text="OCR confidence when available; NULL when the engine does not expose it.",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    # Phase 5B — optional local embedding (JSON float list; no pgvector required for pilot).
+    embedding = models.JSONField(
+        null=True,
+        blank=True,
+        help_text="Local embedding vector for hybrid retrieval. Never sent to external APIs.",
+    )
+    embedding_model = models.CharField(max_length=128, blank=True, default="")
+    embedded_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ["page_number"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["intelligence", "page_number"],
+                name="uniq_case_attachment_page_number",
+            ),
+        ]
+        indexes = [
+            models.Index(
+                fields=["intelligence", "page_number"],
+                name="cases_attpage_intel_page_idx",
+            ),
+        ]
+
+    def __str__(self) -> str:
+        return f"Page({self.intelligence_id}, p={self.page_number})"
+
+
 class CaseClientUpdate(TimeStampedModel):
     """Client-facing update published by the law firm on a matter."""
 

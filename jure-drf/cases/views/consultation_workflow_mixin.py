@@ -14,9 +14,13 @@ from core.utils import get_user_cabinet
 
 from ..activity import log_consultation_activity
 from ..email import send_consultation_confirmation
-from ..models import Case, CaseAttachment
+from ..models import Case, CaseAttachment, CaseAttachmentIntelligence, CaseAttachmentPage
 from ..schedule_conflicts import find_schedule_conflicts
-from ..serializers import CaseAttachmentSerializer
+from ..serializers import (
+    CaseAttachmentIntelligenceSerializer,
+    CaseAttachmentPageSerializer,
+    CaseAttachmentSerializer,
+)
 from ..services import execute_follow_up_creation
 
 
@@ -101,6 +105,18 @@ class ConsultationWorkflowMixin:
                 uploaded_by=request.user,
                 other_type=request.data.get("other_type") or "",
             )
+        # Phase 2: enqueue server-side OCR without blocking the upload response.
+        try:
+            from cases.attachment_intelligence import enqueue_attachment_intelligence
+
+            enqueue_attachment_intelligence(att)
+        except Exception:
+            import logging
+
+            logging.getLogger(__name__).exception(
+                "Failed to enqueue attachment intelligence attachment_id=%s",
+                att.pk,
+            )
         log_consultation_activity(
             source,
             "consultation_attachment_uploaded",
@@ -165,6 +181,160 @@ class ConsultationWorkflowMixin:
         att.other_type = (str(raw).strip() if raw is not None else "") or ""
         att.save(update_fields=["other_type", "modified"])
         return Response(CaseAttachmentSerializer(att, context={"request": request}).data)
+
+    def _cabinet_scoped_attachment(self, source, attachment_id):
+        """Resolve attachment only if it belongs to this case (cabinet isolation via get_object)."""
+        return CaseAttachment.objects.filter(
+            Q(pk=attachment_id) & (Q(case=source) | Q(linked_cases=source))
+        ).select_related("intelligence").first()
+
+    @action(
+        detail=True,
+        methods=["GET"],
+        url_path="attachments/(?P<attachment_id>[0-9]+)/intelligence",
+    )
+    def attachment_intelligence(self, request, pk=None, attachment_id=None):
+        """OCR / extraction status for a case attachment (Phase 2)."""
+        source = self.get_object()
+        att = self._cabinet_scoped_attachment(source, attachment_id)
+        if not att:
+            return Response({"detail": "Attachment not found."}, status=status.HTTP_404_NOT_FOUND)
+        try:
+            intel = att.intelligence
+        except CaseAttachmentIntelligence.DoesNotExist:
+            from cases.attachment_intelligence import enqueue_attachment_intelligence
+
+            intel = enqueue_attachment_intelligence(att)
+        return Response(
+            CaseAttachmentIntelligenceSerializer(intel, context={"request": request}).data
+        )
+
+    @action(
+        detail=True,
+        methods=["POST"],
+        url_path="attachments/(?P<attachment_id>[0-9]+)/intelligence/retry",
+    )
+    def retry_attachment_intelligence(self, request, pk=None, attachment_id=None):
+        """Safely retry a failed / required OCR/extraction job for this attachment."""
+        source = self.get_object()
+        att = self._cabinet_scoped_attachment(source, attachment_id)
+        if not att:
+            return Response({"detail": "Attachment not found."}, status=status.HTTP_404_NOT_FOUND)
+        from cases.attachment_intelligence import retry_attachment_intelligence
+        from cases.attachment_intelligence.errors import AttachmentIntelligenceError
+
+        try:
+            intel = retry_attachment_intelligence(att)
+        except AttachmentIntelligenceError as exc:
+            return Response(
+                {"detail": str(exc), "code": exc.code},
+                status=status.HTTP_409_CONFLICT,
+            )
+        return Response(
+            CaseAttachmentIntelligenceSerializer(intel, context={"request": request}).data
+        )
+
+    @action(
+        detail=True,
+        methods=["POST"],
+        url_path="attachments/(?P<attachment_id>[0-9]+)/intelligence/reprocess",
+    )
+    def reprocess_attachment_intelligence(self, request, pk=None, attachment_id=None):
+        """Force re-OCR/re-extraction; clears obsolete page rows. Blocks concurrent runs."""
+        source = self.get_object()
+        att = self._cabinet_scoped_attachment(source, attachment_id)
+        if not att:
+            return Response({"detail": "Attachment not found."}, status=status.HTTP_404_NOT_FOUND)
+        from cases.attachment_intelligence import reprocess_attachment_intelligence
+        from cases.attachment_intelligence.errors import AttachmentIntelligenceError
+
+        try:
+            intel = reprocess_attachment_intelligence(att, force=True)
+        except AttachmentIntelligenceError as exc:
+            return Response(
+                {"detail": str(exc), "code": exc.code},
+                status=status.HTTP_409_CONFLICT,
+            )
+        return Response(
+            CaseAttachmentIntelligenceSerializer(intel, context={"request": request}).data
+        )
+
+    @action(
+        detail=True,
+        methods=["GET"],
+        url_path="attachments/(?P<attachment_id>[0-9]+)/intelligence/pages",
+    )
+    def attachment_intelligence_pages(self, request, pk=None, attachment_id=None):
+        """
+        Authorized page-level extracted text (Phase 3).
+
+        Query params:
+          - page: filter single page_number
+          - page_size / offset: pagination (default page_size=20, max 100)
+        """
+        source = self.get_object()
+        att = self._cabinet_scoped_attachment(source, attachment_id)
+        if not att:
+            return Response({"detail": "Attachment not found."}, status=status.HTTP_404_NOT_FOUND)
+        try:
+            intel = att.intelligence
+        except CaseAttachmentIntelligence.DoesNotExist:
+            return Response({"detail": "Intelligence not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        qs = CaseAttachmentPage.objects.filter(intelligence=intel).order_by("page_number")
+        page_filter = request.query_params.get("page")
+        if page_filter is not None and str(page_filter).strip() != "":
+            try:
+                qs = qs.filter(page_number=int(page_filter))
+            except (TypeError, ValueError):
+                return Response(
+                    {"detail": "Invalid page number.", "code": "invalid_page"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+        try:
+            page_size = min(100, max(1, int(request.query_params.get("page_size", 20))))
+        except (TypeError, ValueError):
+            page_size = 20
+        try:
+            offset = max(0, int(request.query_params.get("offset", 0)))
+        except (TypeError, ValueError):
+            offset = 0
+
+        total = qs.count()
+        items = qs[offset : offset + page_size]
+        return Response(
+            {
+                "count": total,
+                "offset": offset,
+                "page_size": page_size,
+                "results": CaseAttachmentPageSerializer(items, many=True).data,
+            }
+        )
+
+    @action(
+        detail=True,
+        methods=["GET"],
+        url_path="attachments/(?P<attachment_id>[0-9]+)/intelligence/derived",
+    )
+    def download_derived_ocr(self, request, pk=None, attachment_id=None):
+        """Download derived OCR PDF (never the original path). Cabinet-scoped."""
+        source = self.get_object()
+        att = self._cabinet_scoped_attachment(source, attachment_id)
+        if not att:
+            return Response({"detail": "Attachment not found."}, status=status.HTTP_404_NOT_FOUND)
+        try:
+            intel = att.intelligence
+        except CaseAttachmentIntelligence.DoesNotExist:
+            return Response({"detail": "No derived OCR file."}, status=status.HTTP_404_NOT_FOUND)
+        if not intel.derived_ocr_file:
+            return Response({"detail": "No derived OCR file."}, status=status.HTTP_404_NOT_FOUND)
+        return serve_file_field(
+            request,
+            intel.derived_ocr_file,
+            filename=f"{att.display_name()}.ocr.pdf",
+            content_type="application/pdf",
+        )
 
     @action(detail=False, methods=["GET"], url_path="schedule-conflicts")
     def schedule_conflicts_preview(self, request):

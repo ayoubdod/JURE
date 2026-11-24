@@ -43,11 +43,14 @@ import type {
 function toReadingDoc(doc: ReadingDocument | API.Document | null | undefined): ReadingDocument | null {
   if (!doc || typeof doc !== 'object') return null;
   const anyDoc = doc as ReadingDocument & API.Document;
-  const title = String(anyDoc.title || anyDoc.file || 'Document').trim() || 'Document';
+  const title = String(anyDoc.title || anyDoc.file_name || anyDoc.file || 'Document').trim() || 'Document';
+  const named = (anyDoc.file_name || '').trim();
+  const fileName = named || (libraryFileExtension(title) ? title : null);
   return {
     id: anyDoc.id,
     title,
     file: anyDoc.file ?? null,
+    file_name: fileName,
     external_url: anyDoc.external_url ?? null,
     resource_type: anyDoc.resource_type ?? null,
     category: 'category' in anyDoc ? anyDoc.category : null,
@@ -76,6 +79,7 @@ const DocumentReadingWorkspace = forwardRef<DocumentReadingWorkspaceRef, { onHid
 
     const [open, setOpen] = useState(false);
     const [doc, setDoc] = useState<ReadingDocument | null>(null);
+    const [documents, setDocuments] = useState<ReadingDocument[]>([]);
     const [context, setContext] = useState<ReadingContext | undefined>();
     const [tab, setTab] = useState<WorkspaceTab>('notes');
     const [page, setPage] = useState(1);
@@ -96,6 +100,7 @@ const DocumentReadingWorkspace = forwardRef<DocumentReadingWorkspaceRef, { onHid
     const hide = useCallback(() => {
       setOpen(false);
       setDoc(null);
+      setDocuments([]);
       setContext(undefined);
       setPage(1);
       setZoom(100);
@@ -110,10 +115,14 @@ const DocumentReadingWorkspace = forwardRef<DocumentReadingWorkspaceRef, { onHid
     }, [onHide]);
 
     useImperativeHandle(ref, () => ({
-      show: (next, ctx) => {
+      show: (next, ctx, list) => {
         const parsed = toReadingDoc(next);
         if (!parsed) return;
+        const siblings = (list ?? [next])
+          .map((item) => toReadingDoc(item))
+          .filter((item): item is ReadingDocument => Boolean(item));
         setDoc(parsed);
+        setDocuments(siblings.length ? siblings : [parsed]);
         setContext(ctx);
         setOpen(true);
         setTab('notes');
@@ -325,6 +334,18 @@ const DocumentReadingWorkspace = forwardRef<DocumentReadingWorkspaceRef, { onHid
       setMobilePanel(true);
     }, []);
 
+    const openListedDocument = useCallback((next: ReadingDocument) => {
+      if (next.id != null && next.id === doc?.id) return;
+      setDoc(next);
+      setPage(1);
+      setZoom(100);
+      setSelectionText('');
+      setShareSeed('');
+      setHighlights([]);
+      setBookmarks([]);
+      setNotes([]);
+    }, [doc?.id]);
+
     const copyText = useCallback(async (text: string) => {
       try {
         await navigator.clipboard.writeText(text);
@@ -368,11 +389,13 @@ const DocumentReadingWorkspace = forwardRef<DocumentReadingWorkspaceRef, { onHid
                       onGoPage={setPage}
                       highlights={highlights}
                       bookmarks={bookmarks}
-                      onToggleBookmark={(p) =>
+                      documents={documents}
+                      onOpenDocument={openListedDocument}
+                      onToggleBookmark={(p) => {
                         setBookmarks((prev) =>
                           prev.includes(p) ? prev.filter((x) => x !== p) : [...prev, p]
-                        )
-                      }
+                        );
+                      }}
                       search={navSearch}
                       onSearchChange={setNavSearch}
                       fileLabel={fileLabel}
@@ -382,6 +405,7 @@ const DocumentReadingWorkspace = forwardRef<DocumentReadingWorkspaceRef, { onHid
                         search: labels.searchInDoc,
                         pages: labels.pages,
                         bookmarks: labels.bookmarks,
+                        documents: labels.documents,
                         highlights: labels.highlights,
                         info: labels.documentInfo,
                         pageOf: labels.pageOf,
@@ -462,7 +486,7 @@ const DocumentReadingWorkspace = forwardRef<DocumentReadingWorkspaceRef, { onHid
                         {previewSrc ? (
                           <FilePreviewer
                             fileUrl={previewSrc}
-                            fileName={doc.file || doc.title}
+                            fileName={doc.file_name || doc.title}
                             title={doc.title}
                             className="h-full min-h-0 flex-1 border-0 [&_iframe]:!h-full [&_iframe]:min-h-[min(70dvh,560px)]"
                           />

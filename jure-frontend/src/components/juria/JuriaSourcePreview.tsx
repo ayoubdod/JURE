@@ -4,6 +4,7 @@ import { apiGetDocument } from '@/services/library/api';
 import { apiGetCaseAttachments } from '@/services/case/api';
 import { apiJuriaDownloadFileBlob } from '@/services/juria/api';
 import type { JuriaSourceHit } from '@/types/juria';
+import { readingDocsFromAttachments } from '@/components/document-reading/types';
 
 export function JuriaSourcePreview({
   hit,
@@ -53,7 +54,8 @@ export function JuriaSourcePreview({
                 title: att.file_name || hit.document,
                 file: att.file_url,
               },
-              caseCtx
+              caseCtx,
+              readingDocsFromAttachments(data)
             );
           }
         } catch {

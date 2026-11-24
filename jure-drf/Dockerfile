@@ -10,10 +10,20 @@ ENV DJANGO_SETTINGS_MODULE=core.settings.staging
 
 WORKDIR /app
 
+# System OCR stack for Phase 2 case-attachment intelligence (local only — no external OCR APIs).
+# ghostscript + pngquant/unpaper are OCRmyPDF dependencies; tesseract-* language packs for fra/ara/eng.
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     build-essential \
     libpq-dev \
+    tesseract-ocr \
+    tesseract-ocr-fra \
+    tesseract-ocr-ara \
+    tesseract-ocr-eng \
+    ghostscript \
+    qpdf \
+    pngquant \
+    unpaper \
     && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .

@@ -10,7 +10,7 @@ from django.utils.translation import gettext as _
 from core.downloads import absolute_api_url
 from core.utils import get_user_cabinet
 
-from .models import Case, CaseAttachment
+from .models import Case, CaseAttachment, CaseAttachmentIntelligence, CaseAttachmentPage
 from .validators import validate_case_specific_data, CASE_TYPES
 from .utils import fetch_case_related_payload
 from .consultation_fields import duration_minutes
@@ -22,6 +22,55 @@ def _file_size(att: CaseAttachment) -> int | None:
         return att.file.size if att.file else None
     except Exception:
         return None
+
+
+class CaseAttachmentIntelligenceSerializer(serializers.ModelSerializer):
+    """OCR + extraction metadata — never includes full extracted document text."""
+
+    class Meta:
+        model = CaseAttachmentIntelligence
+        fields = [
+            "id",
+            "attachment_id",
+            "extraction_status",
+            "ocr_status",
+            "is_scanned",
+            "page_count",
+            "scanned_page_count",
+            "detected_languages",
+            "processing_error_code",
+            "ocr_engine",
+            "content_hash",
+            "processed_at",
+            "has_derived_ocr",
+            "total_extracted_chars",
+            "extraction_version",
+            "extracted_at",
+            "extraction_completed_at",
+        ]
+        read_only_fields = fields
+
+    has_derived_ocr = serializers.SerializerMethodField()
+
+    def get_has_derived_ocr(self, obj) -> bool:
+        return bool(obj.derived_ocr_file)
+
+
+class CaseAttachmentPageSerializer(serializers.ModelSerializer):
+    """Authorized page text retrieval (not used in attachment list responses)."""
+
+    class Meta:
+        model = CaseAttachmentPage
+        fields = [
+            "id",
+            "page_number",
+            "extracted_text",
+            "extraction_method",
+            "character_count",
+            "confidence_score",
+            "created_at",
+        ]
+        read_only_fields = fields
 
 
 class CaseAttachmentSerializer(serializers.ModelSerializer):

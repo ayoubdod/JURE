@@ -71,6 +71,7 @@ class JurisdictionCode(models.TextChoices):
 
 class OcrStatus(models.TextChoices):
     PENDING = "PENDING", "PENDING"
+    RUNNING = "RUNNING", "RUNNING"
     NOT_NEEDED = "NOT_NEEDED", "NOT_NEEDED"
     REQUIRED = "REQUIRED", "REQUIRED"
     COMPLETED = "COMPLETED", "COMPLETED"

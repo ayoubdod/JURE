@@ -5,6 +5,7 @@ export type DocumentReadingMessages = {
   searchInDoc: string;
   pages: string;
   bookmarks: string;
+  documents: string;
   highlights: string;
   documentInfo: string;
   noBookmarks: string;
@@ -97,6 +98,7 @@ export const documentReadingEn: DocumentReadingMessages = {
   searchInDoc: 'Search in document…',
   pages: 'Pages',
   bookmarks: 'Bookmarks',
+  documents: 'Documents',
   highlights: 'Highlights',
   documentInfo: 'Document info',
   noBookmarks: 'No bookmarks yet',
@@ -193,6 +195,7 @@ export const documentReadingFr: DocumentReadingMessages = {
   searchInDoc: 'Rechercher dans le document…',
   pages: 'Pages',
   bookmarks: 'Signets',
+  documents: 'Documents',
   highlights: 'Surlignages',
   documentInfo: 'Infos document',
   noBookmarks: 'Aucun signet',
@@ -289,6 +292,7 @@ export const documentReadingAr: DocumentReadingMessages = {
   searchInDoc: 'البحث داخل المستند…',
   pages: 'الصفحات',
   bookmarks: 'الإشارات المرجعية',
+  documents: 'المستندات',
   highlights: 'التمييزات',
   documentInfo: 'معلومات المستند',
   noBookmarks: 'لا توجد إشارات مرجعية',

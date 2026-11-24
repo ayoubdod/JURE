@@ -32,6 +32,7 @@ import { formatDate, formatTime, useAppTranslation } from '@/i18n';
 import DocumentReaderModal, {
   type DocumentReaderModalRef,
 } from '@/components/library/hub/DocumentReaderModal';
+import { readingDocsFromAttachments } from '@/components/document-reading/types';
 import { usePermission } from '@/hooks/usePermissions';
 import { useFinanceAccess } from '@/hooks/useFinanceAccess';
 import { JURIA_ENABLED } from '@/config/features';
@@ -591,7 +592,8 @@ export default function ConsultationDetailWorkspace({
                                   caseId: caseItem.id,
                                   caseRef: caseItem.reference,
                                   caseTitle: caseItem.title,
-                                }
+                                },
+                                readingDocsFromAttachments(caseItem.attachments)
                               )
                             }
                           >

@@ -1,0 +1,460 @@
+{
+  "dataset_name": "jure_legal_retrieval_v1",
+  "n_passages": 24,
+  "n_queries": 28,
+  "rankers": {
+    "token_overlap_phase4": {
+      "name": "token_overlap_phase4",
+      "metrics": {
+        "recall@5": 0.8214,
+        "recall@8": 0.8214,
+        "precision@5": 0.5655,
+        "mrr": 0.8214,
+        "ndcg@5": 0.8108,
+        "correct_doc_rate": 0.9286,
+        "correct_page_rate": 0.8571,
+        "avg_irrelevant_in_top5": 0.9286,
+        "by_query_type": {
+          "exact": {
+            "recall@5": 1.0,
+            "recall@8": 1.0,
+            "precision@5": 0.5333,
+            "mrr": 1.0,
+            "ndcg@5": 1.0,
+            "correct_doc": 1.0,
+            "correct_page": 1.0,
+            "n": 5.0
+          },
+          "incomplete": {
+            "recall@5": 1.0,
+            "recall@8": 1.0,
+            "precision@5": 0.8333,
+            "mrr": 1.0,
+            "ndcg@5": 1.0,
+            "correct_doc": 1.0,
+            "correct_page": 1.0,
+            "n": 3.0
+          },
+          "multi_doc": {
+            "recall@5": 1.0,
+            "recall@8": 1.0,
+            "precision@5": 1.0,
+            "mrr": 1.0,
+            "ndcg@5": 1.0,
+            "correct_doc": 1.0,
+            "correct_page": 1.0,
+            "n": 2.0
+          },
+          "multi_page": {
+            "recall@5": 1.0,
+            "recall@8": 1.0,
+            "precision@5": 1.0,
+            "mrr": 1.0,
+            "ndcg@5": 1.0,
+            "correct_doc": 1.0,
+            "correct_page": 1.0,
+            "n": 3.0
+          },
+          "natural": {
+            "recall@5": 1.0,
+            "recall@8": 1.0,
+            "precision@5": 0.6667,
+            "mrr": 1.0,
+            "ndcg@5": 1.0,
+            "correct_doc": 1.0,
+            "correct_page": 1.0,
+            "n": 4.0
+          },
+          "noisy_ocr": {
+            "recall@5": 0.5,
+            "recall@8": 0.5,
+            "precision@5": 0.3333,
+            "mrr": 1.0,
+            "ndcg@5": 0.7197,
+            "correct_doc": 1.0,
+            "correct_page": 1.0,
+            "n": 2.0
+          },
+          "paraphrase": {
+            "recall@5": 0.6,
+            "recall@8": 0.6,
+            "precision@5": 0.2,
+            "mrr": 0.5,
+            "ndcg@5": 0.5262,
+            "correct_doc": 1.0,
+            "correct_page": 0.6,
+            "n": 5.0
+          },
+          "synonym": {
+            "recall@5": 0.5,
+            "recall@8": 0.5,
+            "precision@5": 0.3333,
+            "mrr": 0.375,
+            "ndcg@5": 0.4077,
+            "correct_doc": 0.5,
+            "correct_page": 0.5,
+            "n": 4.0
+          }
+        },
+        "by_lang": {
+          "ar": {
+            "recall@5": 0.8333,
+            "recall@8": 0.8333,
+            "precision@5": 0.4444,
+            "mrr": 0.8333,
+            "ndcg@5": 0.8333,
+            "correct_doc": 0.8333,
+            "correct_page": 0.8333,
+            "n": 6.0
+          },
+          "en": {
+            "recall@5": 0.8333,
+            "recall@8": 0.8333,
+            "precision@5": 0.6389,
+            "mrr": 0.8333,
+            "ndcg@5": 0.8333,
+            "correct_doc": 1.0,
+            "correct_page": 0.8333,
+            "n": 6.0
+          },
+          "fr": {
+            "recall@5": 0.8125,
+            "recall@8": 0.8125,
+            "precision@5": 0.5833,
+            "mrr": 0.8125,
+            "ndcg@5": 0.7938,
+            "correct_doc": 0.9375,
+            "correct_page": 0.875,
+            "n": 16.0
+          }
+        },
+        "n_queries": 28
+      },
+      "weak_query_types": [
+        "noisy_ocr",
+        "synonym"
+      ],
+      "failing_qids_sample": [
+        "B3",
+        "B4",
+        "C2",
+        "C4"
+      ]
+    },
+    "bm25_improved_lexical": {
+      "name": "bm25_improved_lexical",
+      "metrics": {
+        "recall@5": 0.8571,
+        "recall@8": 0.8571,
+        "precision@5": 0.5268,
+        "mrr": 0.7917,
+        "ndcg@5": 0.8041,
+        "correct_doc_rate": 0.9286,
+        "correct_page_rate": 0.8571,
+        "avg_irrelevant_in_top5": 1.1071,
+        "by_query_type": {
+          "exact": {
+            "recall@5": 1.0,
+            "recall@8": 1.0,
+            "precision@5": 0.5167,
+            "mrr": 0.9,
+            "ndcg@5": 0.9262,
+            "correct_doc": 1.0,
+            "correct_page": 1.0,
+            "n": 5.0
+          },
+          "incomplete": {
+            "recall@5": 1.0,
+            "recall@8": 1.0,
+            "precision@5": 0.7222,
+            "mrr": 1.0,
+            "ndcg@5": 0.988,
+            "correct_doc": 1.0,
+            "correct_page": 1.0,
+            "n": 3.0
+          },
+          "multi_doc": {
+            "recall@5": 1.0,
+            "recall@8": 1.0,
+            "precision@5": 0.6667,
+            "mrr": 1.0,
+            "ndcg@5": 0.9599,
+            "correct_doc": 1.0,
+            "correct_page": 1.0,
+            "n": 2.0
+          },
+          "multi_page": {
+            "recall@5": 1.0,
+            "recall@8": 1.0,
+            "precision@5": 0.8889,
+            "mrr": 1.0,
+            "ndcg@5": 1.0,
+            "correct_doc": 1.0,
+            "correct_page": 1.0,
+            "n": 3.0
+          },
+          "natural": {
+            "recall@5": 1.0,
+            "recall@8": 1.0,
+            "precision@5": 0.6667,
+            "mrr": 1.0,
+            "ndcg@5": 1.0,
+            "correct_doc": 1.0,
+            "correct_page": 1.0,
+            "n": 4.0
+          },
+          "noisy_ocr": {
+            "recall@5": 1.0,
+            "recall@8": 1.0,
+            "precision@5": 0.5,
+            "mrr": 1.0,
+            "ndcg@5": 1.0,
+            "correct_doc": 1.0,
+            "correct_page": 1.0,
+            "n": 2.0
+          },
+          "paraphrase": {
+            "recall@5": 0.6,
+            "recall@8": 0.6,
+            "precision@5": 0.2,
+            "mrr": 0.4667,
+            "ndcg@5": 0.5,
+            "correct_doc": 1.0,
+            "correct_page": 0.6,
+            "n": 5.0
+          },
+          "synonym": {
+            "recall@5": 0.5,
+            "recall@8": 0.5,
+            "precision@5": 0.3333,
+            "mrr": 0.3333,
+            "ndcg@5": 0.375,
+            "correct_doc": 0.5,
+            "correct_page": 0.5,
+            "n": 4.0
+          }
+        },
+        "by_lang": {
+          "ar": {
+            "recall@5": 0.8333,
+            "recall@8": 0.8333,
+            "precision@5": 0.4444,
+            "mrr": 0.8333,
+            "ndcg@5": 0.8333,
+            "correct_doc": 0.8333,
+            "correct_page": 0.8333,
+            "n": 6.0
+          },
+          "en": {
+            "recall@5": 0.8333,
+            "recall@8": 0.8333,
+            "precision@5": 0.6389,
+            "mrr": 0.8333,
+            "ndcg@5": 0.8333,
+            "correct_doc": 1.0,
+            "correct_page": 0.8333,
+            "n": 6.0
+          },
+          "fr": {
+            "recall@5": 0.875,
+            "recall@8": 0.875,
+            "precision@5": 0.5156,
+            "mrr": 0.7604,
+            "ndcg@5": 0.7822,
+            "correct_doc": 0.9375,
+            "correct_page": 0.875,
+            "n": 16.0
+          }
+        },
+        "n_queries": 28
+      },
+      "weak_query_types": [
+        "synonym"
+      ],
+      "failing_qids_sample": [
+        "B3",
+        "B4",
+        "C2",
+        "C4"
+      ]
+    },
+    "hybrid_lexical_synonym_proxy": {
+      "name": "hybrid_lexical_synonym_proxy",
+      "metrics": {
+        "recall@5": 0.8571,
+        "recall@8": 0.8571,
+        "precision@5": 0.4637,
+        "mrr": 0.7976,
+        "ndcg@5": 0.8088,
+        "correct_doc_rate": 0.9286,
+        "correct_page_rate": 0.8571,
+        "avg_irrelevant_in_top5": 1.4643,
+        "by_query_type": {
+          "exact": {
+            "recall@5": 1.0,
+            "recall@8": 1.0,
+            "precision@5": 0.3733,
+            "mrr": 0.9,
+            "ndcg@5": 0.9262,
+            "correct_doc": 1.0,
+            "correct_page": 1.0,
+            "n": 5.0
+          },
+          "incomplete": {
+            "recall@5": 1.0,
+            "recall@8": 1.0,
+            "precision@5": 0.7222,
+            "mrr": 1.0,
+            "ndcg@5": 0.988,
+            "correct_doc": 1.0,
+            "correct_page": 1.0,
+            "n": 3.0
+          },
+          "multi_doc": {
+            "recall@5": 1.0,
+            "recall@8": 1.0,
+            "precision@5": 0.5333,
+            "mrr": 1.0,
+            "ndcg@5": 0.9599,
+            "correct_doc": 1.0,
+            "correct_page": 1.0,
+            "n": 2.0
+          },
+          "multi_page": {
+            "recall@5": 1.0,
+            "recall@8": 1.0,
+            "precision@5": 0.7222,
+            "mrr": 1.0,
+            "ndcg@5": 1.0,
+            "correct_doc": 1.0,
+            "correct_page": 1.0,
+            "n": 3.0
+          },
+          "natural": {
+            "recall@5": 1.0,
+            "recall@8": 1.0,
+            "precision@5": 0.6667,
+            "mrr": 1.0,
+            "ndcg@5": 1.0,
+            "correct_doc": 1.0,
+            "correct_page": 1.0,
+            "n": 4.0
+          },
+          "noisy_ocr": {
+            "recall@5": 1.0,
+            "recall@8": 1.0,
+            "precision@5": 0.4,
+            "mrr": 1.0,
+            "ndcg@5": 1.0,
+            "correct_doc": 1.0,
+            "correct_page": 1.0,
+            "n": 2.0
+          },
+          "paraphrase": {
+            "recall@5": 0.6,
+            "recall@8": 0.6,
+            "precision@5": 0.1833,
+            "mrr": 0.5,
+            "ndcg@5": 0.5262,
+            "correct_doc": 1.0,
+            "correct_page": 0.6,
+            "n": 5.0
+          },
+          "synonym": {
+            "recall@5": 0.5,
+            "recall@8": 0.5,
+            "precision@5": 0.3333,
+            "mrr": 0.3333,
+            "ndcg@5": 0.375,
+            "correct_doc": 0.5,
+            "correct_page": 0.5,
+            "n": 4.0
+          }
+        },
+        "by_lang": {
+          "ar": {
+            "recall@5": 0.8333,
+            "recall@8": 0.8333,
+            "precision@5": 0.4167,
+            "mrr": 0.8333,
+            "ndcg@5": 0.8333,
+            "correct_doc": 0.8333,
+            "correct_page": 0.8333,
+            "n": 6.0
+          },
+          "en": {
+            "recall@5": 0.8333,
+            "recall@8": 0.8333,
+            "precision@5": 0.5,
+            "mrr": 0.8333,
+            "ndcg@5": 0.8333,
+            "correct_doc": 1.0,
+            "correct_page": 0.8333,
+            "n": 6.0
+          },
+          "fr": {
+            "recall@5": 0.875,
+            "recall@8": 0.875,
+            "precision@5": 0.4677,
+            "mrr": 0.7708,
+            "ndcg@5": 0.7903,
+            "correct_doc": 0.9375,
+            "correct_page": 0.875,
+            "n": 16.0
+          }
+        },
+        "n_queries": 28
+      },
+      "weak_query_types": [
+        "synonym"
+      ],
+      "failing_qids_sample": [
+        "B3",
+        "B4",
+        "C2",
+        "C4"
+      ]
+    }
+  },
+  "recommendation": "CONDITIONAL_GO",
+  "recommendation_detail": "Material gaps remain on paraphrased and cross-lingual synonym queries. Recommend Phase 5B hybrid pilot with local multilingual embeddings, keeping keyword/BM25 as the primary filter for citations and exact terms.",
+  "embedding_cost_notes": {
+    "models_considered": [
+      {
+        "name": "intfloat/multilingual-e5-base (local)",
+        "langs": "fr/ar/en",
+        "dims": 768,
+        "privacy": "on-prem / VPC — documents never leave infrastructure",
+        "approx_index_bytes_per_1k_pages": "768*4*2k chunks ≈ 6 MB raw + index overhead"
+      },
+      {
+        "name": "BAAI/bge-m3 (local)",
+        "langs": "fr/ar/en multilingual",
+        "dims": 1024,
+        "privacy": "local",
+        "notes": "Strong multilingual; heavier GPU/CPU"
+      },
+      {
+        "name": "External API embeddings (OpenAI/Voyage/etc.)",
+        "privacy": "NOT recommended for client case files without DPA + residency controls",
+        "notes": "Conflicts with Privacy Gateway posture unless Private mode + approved vendor"
+      }
+    ],
+    "storage": "pgvector or separate ANN optional later; ~1–4 KB/chunk + HNSW overhead",
+    "indexing": "One-time embed of READY CaseAttachmentPage (+ library) on connect/reprocess",
+    "query_cost_local": "CPU/GPU inference per query (~10–50 ms local e5-base) + BM25 merge",
+    "query_cost_external": "Avoid for confidential docs; per-1k-token fees + egress risk",
+    "reindex": "Required on extraction_version change, synonym model upgrade, or embedding model bump",
+    "data_residency": "Prefer local models colocated with MEDIA/Postgres; no raw text to third parties"
+  },
+  "comparison_vs_phase4_fixture": {
+    "note": "Phase 4 Django fixture used 5 exact-ish queries and reported Recall@5≥0.8. Phase 5A expands to synonym/paraphrase/OCR/multi-doc — expect lower overall recall for token_overlap; that drop is the signal for architecture choice.",
+    "phase4_fixture_floor": {
+      "recall@5": 0.8,
+      "precision@5": 0.4
+    },
+    "phase5a_token_overlap_recall@5": 0.8214,
+    "phase5a_bm25_recall@5": 0.8571,
+    "phase5a_hybrid_proxy_recall@5": 0.8571
+  }
+}

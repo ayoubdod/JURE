@@ -2,6 +2,7 @@ export type ReadingDocument = {
   id?: number | string;
   title: string;
   file?: string | null;
+  file_name?: string | null;
   external_url?: string | null;
   resource_type?: string | null;
   category?: string | null;
@@ -48,6 +49,31 @@ export type ReadingNoteDraft = {
 export type WorkspaceTab = 'notes' | 'juria' | 'share';
 
 export type DocumentReadingWorkspaceRef = {
-  show: (doc: ReadingDocument | API.Document, context?: ReadingContext) => void;
+  show: (
+    doc: ReadingDocument | API.Document,
+    context?: ReadingContext,
+    documents?: Array<ReadingDocument | API.Document>,
+  ) => void;
   hide: () => void;
 };
+
+export function readingDocsFromAttachments(
+  attachments:
+    | Array<{
+        id?: number | string;
+        file_name?: string | null;
+        file_url?: string | null;
+        title?: string | null;
+      }>
+    | null
+    | undefined,
+): ReadingDocument[] {
+  return (attachments ?? [])
+    .filter((att) => Boolean(att.file_url))
+    .map((att) => ({
+      id: att.id,
+      title: att.file_name || att.title || 'Document',
+      file: att.file_url,
+      file_name: att.file_name || att.title || null,
+    }));
+}

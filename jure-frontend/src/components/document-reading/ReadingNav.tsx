@@ -21,6 +21,8 @@ type Props = {
   highlights: ReadingHighlight[];
   bookmarks: number[];
   onToggleBookmark: (page: number) => void;
+  documents: ReadingDocument[];
+  onOpenDocument: (doc: ReadingDocument) => void;
   search: string;
   onSearchChange: (v: string) => void;
   fileLabel: string;
@@ -30,6 +32,7 @@ type Props = {
     search: string;
     pages: string;
     bookmarks: string;
+    documents: string;
     highlights: string;
     info: string;
     pageOf: string;
@@ -47,6 +50,8 @@ export default function ReadingNav({
   highlights,
   bookmarks,
   onToggleBookmark,
+  documents,
+  onOpenDocument,
   search,
   onSearchChange,
   fileLabel,
@@ -57,6 +62,12 @@ export default function ReadingNav({
   const sortedBookmarks = useMemo(
     () => [...bookmarks].sort((a, b) => a - b),
     [bookmarks]
+  );
+  const query = search.trim().toLowerCase();
+  const visibleDocuments = useMemo(
+    () =>
+      documents.filter((item) => !query || item.title.toLowerCase().includes(query)),
+    [documents, query]
   );
 
   useEffect(() => {
@@ -189,6 +200,41 @@ export default function ReadingNav({
             </ul>
           )}
         </section>
+
+        {documents.length > 0 ? (
+          <section className="mb-3">
+            <p className="mb-1.5 px-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+              {labels.documents}
+            </p>
+            {visibleDocuments.length > 0 ? (
+              <ul className="space-y-0.5">
+                {visibleDocuments.map((item) => {
+                  const active = item.id != null && item.id === doc.id;
+                  return (
+                    <li key={String(item.id ?? item.title)}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (!active) onOpenDocument(item);
+                        }}
+                        className={cn(
+                          'flex w-full items-center gap-2 rounded-md px-1.5 py-1.5 text-start text-[12px]',
+                          active
+                            ? 'bg-[#64499D]/10 font-medium text-[#64499D]'
+                            : 'text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-900'
+                        )}
+                        aria-current={active ? 'true' : undefined}
+                      >
+                        <FileText className="h-3.5 w-3.5 shrink-0" />
+                        <span className="min-w-0 flex-1 truncate">{item.title}</span>
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            ) : null}
+          </section>
+        ) : null}
 
         {highlights.length > 0 ? (
           <section className="mb-3">

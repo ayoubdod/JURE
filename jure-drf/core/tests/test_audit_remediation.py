@@ -108,6 +108,7 @@ class MediaDownloadAuthTests(APITestCase):
         file_url = response.data.get("file") or ""
         self.assertIn("/download", file_url)
         self.assertNotIn("/media/", file_url)
+        self.assertTrue(str(response.data.get("file_name") or "").lower().endswith(".pdf"))
 
         download = reverse("library:document-download", kwargs={"pk": self.doc.pk})
         dl = self.client.get(download)

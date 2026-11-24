@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+from pathlib import Path
 from django.utils.translation import gettext as _
 from rest_framework import serializers
 from django.http import QueryDict
@@ -39,6 +40,7 @@ class DocumentSerializer(serializers.ModelSerializer):
 
     size = serializers.SerializerMethodField()
     file = SafeFileURLField(required=False, allow_null=True, allow_empty_file=True)
+    file_name = serializers.SerializerMethodField()
     created_by_name = serializers.SerializerMethodField()
     updated_by_name = serializers.SerializerMethodField()
     jurisdiction_code = serializers.SerializerMethodField()
@@ -71,7 +73,7 @@ class DocumentSerializer(serializers.ModelSerializer):
         model = Document
         fields = [
             'id', 'resource_uid', 'title', 'category', 'resource_type', 'legal_area',
-            'description', 'file', 'external_url', 'size', 'is_shared',
+            'description', 'file', 'file_name', 'external_url', 'size', 'is_shared',
             'visibility_scope', 'scope', 'jurisdiction', 'jurisdiction_code',
             'jurisdiction_name', 'jurisdiction_detail', 'country', 'language',
             'source', 'author', 'issuing_authority', 'publication_date',
@@ -420,6 +422,11 @@ class DocumentSerializer(serializers.ModelSerializer):
     def get_updated_at(self, obj):
         modified = getattr(obj, "modified", None)
         return modified.isoformat() if modified else None
+
+    def get_file_name(self, obj):
+        stored = getattr(getattr(obj, "file", None), "name", None) or ""
+        base = Path(str(stored)).name
+        return base or None
 
     def get_size(self, obj):
         f = getattr(obj, "file", None)
