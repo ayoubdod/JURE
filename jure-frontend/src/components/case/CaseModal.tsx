@@ -15,6 +15,8 @@ import { CreateFormDialog } from '@/components/forms/CreateFormShell';
 export interface CaseModalShowOptions {
   createType?: 'CONSULTATION' | 'LITIGATION' | 'ADMINISTRATIVE';
   followUpOf?: API.Case;
+  /** Scroll/focus a form region after open (e.g. notes). No new APIs — DOM scroll only. */
+  focusField?: 'notes';
 }
 
 export interface CaseModalRef {
@@ -181,6 +183,7 @@ const CaseModal = forwardRef<CaseModalRef, CaseModalProps>(({ onSuccess }, ref) 
   const [editingCase, setEditingCase] = useState<API.Case | null>(null);
   const [lockCreateType, setLockCreateType] = useState<CaseModalShowOptions['createType']>(undefined);
   const [followUpOf, setFollowUpOf] = useState<API.Case | null>(null);
+  const [focusField, setFocusField] = useState<CaseModalShowOptions['focusField']>(undefined);
 
   const hide = useCallback(() => {
     setIsOpen(false);
@@ -189,10 +192,12 @@ const CaseModal = forwardRef<CaseModalRef, CaseModalProps>(({ onSuccess }, ref) 
     setEditingCase(null);
     setLockCreateType(undefined);
     setFollowUpOf(null);
+    setFocusField(undefined);
   }, []);
 
   const show = useCallback((instance?: API.Case, options?: CaseModalShowOptions) => {
     setIsOpen(true);
+    setFocusField(options?.focusField);
     if (options?.followUpOf) {
       setFollowUpOf(options.followUpOf);
       setLockCreateType('CONSULTATION');
@@ -318,6 +323,7 @@ const CaseModal = forwardRef<CaseModalRef, CaseModalProps>(({ onSuccess }, ref) 
           initialValues={editingCase ? caseToLitigationInitial(editingCase) : undefined}
           onSubmitSuccess={handleSuccess}
           onBack={!editingCase && !lockCreateType ? handleBack : undefined}
+          focusField={focusField}
         />
       )}
 
@@ -328,6 +334,7 @@ const CaseModal = forwardRef<CaseModalRef, CaseModalProps>(({ onSuccess }, ref) 
           initialValues={editingCase ? caseToAdministrativeDutyInitial(editingCase) : undefined}
           onSubmitSuccess={handleSuccess}
           onBack={!editingCase && !lockCreateType ? handleBack : undefined}
+          focusField={focusField}
         />
       )}
     </CreateFormDialog>

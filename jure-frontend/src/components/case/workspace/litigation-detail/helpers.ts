@@ -39,6 +39,7 @@ export const LITIGATION_DETAIL_SECTIONS: LitigationDetailSection[] = [
 ];
 
 export function parseLitigationSection(raw: string | null): LitigationDetailSection {
+  // Keep in sync with shell/parseTab (LITIGATION).
   if (raw === 'details') return 'caseDetails';
   if (raw && LITIGATION_DETAIL_SECTIONS.includes(raw as LitigationDetailSection)) {
     return raw as LitigationDetailSection;

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
@@ -84,6 +84,7 @@ export interface LitigationFormProps {
   caseId?: number;
   onSubmitSuccess?: (caseItem: API.Case) => void;
   onBack?: () => void;
+  focusField?: 'notes';
 }
 
 function CourtGroup({ title, children }: { title: string; children: React.ReactNode }) {
@@ -98,6 +99,7 @@ function CourtGroup({ title, children }: { title: string; children: React.ReactN
 const LitigationForm: React.FC<LitigationFormProps> = ({
   initialValues,
   mode,
+  focusField,
   caseId,
   onSubmitSuccess,
   onBack,
@@ -118,6 +120,17 @@ const LitigationForm: React.FC<LitigationFormProps> = ({
   );
   const [conflictOpen, setConflictOpen] = useState(false);
   const [conflictQuery, setConflictQuery] = useState('');
+
+  useEffect(() => {
+    if (focusField !== 'notes') return;
+    const timer = window.setTimeout(() => {
+      const el = document.getElementById('litigation-notes-section');
+      el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      const input = el?.querySelector('textarea') as HTMLTextAreaElement | null;
+      input?.focus();
+    }, 120);
+    return () => window.clearTimeout(timer);
+  }, [focusField]);
 
   const litigationTypeOptions = useMemo(
     () =>
@@ -815,7 +828,7 @@ const LitigationForm: React.FC<LitigationFormProps> = ({
       </CreateFormSection>
 
       <CreateFormSection index="06" title={modal.sections.caseDetails}>
-        <div className="space-y-4">
+        <div id="litigation-notes-section" className="space-y-4 scroll-mt-4">
           <div className="space-y-2">
             <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
               {modal.fields.descriptionFacts} <span className="text-red-500">*</span>
