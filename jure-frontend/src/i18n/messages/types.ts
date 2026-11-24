@@ -1722,6 +1722,45 @@ export interface AppMessages {
       institution: string;
       overdueOnly: string;
       allOption: string;
+      shell: {
+        groups: {
+          overview: string;
+          caseFile: string;
+          session: string;
+          dutyFile: string;
+          schedule: string;
+          work: string;
+          documents: string;
+          finance: string;
+          activity: string;
+          juria: string;
+        };
+        primaryCta: {
+          addHearingNone: string;
+          prepareHearing: string;
+          prepareHearingUpload: string;
+          reviewDeadlines: string;
+          addTask: string;
+          joinVideo: string;
+          convert: string;
+          addFollowUp: string;
+          editSession: string;
+          openChecklist: string;
+          addDeadline: string;
+          markCompleted: string;
+        };
+        newMenu: string;
+        unsupportedType: string;
+        segmentsLabel: string;
+        navAttention: string;
+        overview: {
+          nextCritical: string;
+          needsAttention: string;
+          keyFacts: string;
+          noCritical: string;
+          nothingUrgent: string;
+        };
+      };
       consultation: {
         title: string;
         subtitle: string;
