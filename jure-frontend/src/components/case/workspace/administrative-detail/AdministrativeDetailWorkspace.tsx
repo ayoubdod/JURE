@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
+import { Briefcase, User } from 'lucide-react';
 import { useAppTranslation } from '@/i18n';
 import { JURIA_ENABLED } from '@/config/features';
 import { CaseStatus } from '@/utils/constants';
@@ -28,6 +29,7 @@ import {
   useCaseWorkspaceController,
   type CaseWorkspaceNavItem,
   type HeaderMenuItem,
+  type HeaderMetaItem,
 } from '@/components/case/workspace/shell';
 import AdministrativeOverview from './AdministrativeOverview';
 import AdministrativeDutyFile from './AdministrativeDutyFile';
@@ -188,19 +190,13 @@ export default function AdministrativeDetailWorkspace({
     ...lifecycle.filter((item) => item.key !== 'edit'),
   ];
 
-  const meta = (
-    <>
-      {caseItem.client ? (
-        <CaseClientLabel client={caseItem.client} nameClassName="truncate" />
-      ) : null}
-      {caseItem.client && assignedDisplayName(caseItem) ? ' · ' : null}
-      {assignedDisplayName(caseItem) ? (
-        <span>
-          {copy.snapshotLead}: {assignedDisplayName(caseItem)}
-        </span>
-      ) : null}
-    </>
-  );
+  const leadName = assignedDisplayName(caseItem);
+  const metaItems: HeaderMetaItem[] = [
+    ...(caseItem.client
+      ? [{ id: 'client', label: copy.snapshotClient, icon: User, value: <CaseClientLabel client={caseItem.client} nameClassName="truncate" /> }]
+      : []),
+    ...(leadName ? [{ id: 'lead', label: copy.snapshotLead, icon: Briefcase, value: leadName }] : []),
+  ];
 
   return (
     <CaseWorkspaceShell
@@ -208,12 +204,11 @@ export default function AdministrativeDetailWorkspace({
         <CaseWorkspaceHeader
           listPath={listPath}
           backLabel={copy.back}
-          typeLabel={t.cases.typeLabels.admin}
           status={String(status || caseItem.status || '')}
           priorityLabel={priority ? enumPretty(priority) : undefined}
           title={caseItem.title || t.cases.untitledCase}
           reference={caseItem.reference}
-          meta={meta}
+          metaItems={metaItems}
           primaryCta={primary ? { label: primaryLabel, onClick: runPrimary } : null}
           newItems={newItems}
           moreItems={moreItems}

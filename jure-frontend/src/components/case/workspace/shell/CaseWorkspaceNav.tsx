@@ -33,12 +33,17 @@ function NavButton({
       )}
     >
       <Icon className="h-4 w-4 shrink-0" aria-hidden />
-      <span className="truncate">{item.label}</span>
+      <span className="min-w-0 truncate">{item.label}</span>
       {count ? (
         <span
+          aria-hidden
           className={cn(
-            'ms-auto text-[11px] tabular-nums',
-            item.urgent ? 'font-semibold text-red-600' : on ? 'text-[#64499D]' : 'text-slate-400'
+            'ms-auto inline-flex min-w-[1.25rem] shrink-0 items-center justify-center rounded-md px-1.5 py-0.5 text-[11px] font-semibold tabular-nums',
+            item.urgent
+              ? 'bg-red-100 text-red-700 dark:bg-red-950/60 dark:text-red-300'
+              : on
+                ? 'bg-[#64499D]/15 text-[#4D3680] dark:text-[#CFC2FF]'
+                : 'bg-slate-100 text-slate-700 dark:bg-zinc-800 dark:text-zinc-200'
           )}
         >
           {count}
@@ -78,9 +83,6 @@ export default function CaseWorkspaceNav({
         ))}
       </div>
       <div className="hidden min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain p-2 [scrollbar-width:thin] lg:flex">
-        <p className="px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-400">
-          {navLabel}
-        </p>
         <div className="flex flex-col gap-0.5">
           {main.map((item) => (
             <NavButton key={item.id} item={item} on={activeId === item.id} onSelect={onSelect} />

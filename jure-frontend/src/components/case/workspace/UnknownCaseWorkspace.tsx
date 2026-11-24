@@ -73,7 +73,6 @@ export default function UnknownCaseWorkspace({
         <CaseWorkspaceHeader
           listPath={listPath}
           backLabel={pw.cases}
-          typeLabel={pw.cases}
           status={String(caseItem.status || '')}
           title={caseItem.title || t.cases.untitledCase}
           reference={caseItem.reference}

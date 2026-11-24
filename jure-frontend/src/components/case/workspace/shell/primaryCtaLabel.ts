@@ -28,6 +28,10 @@ export function primaryCtaLabel(cta: PrimaryCta, shell: AppMessages['cases']['wo
       return labels.addDeadline;
     case 'mark_completed':
       return labels.markCompleted;
+    case 'session_date_passed':
+      return labels.markCompletedDatePassed;
+    case 'converted':
+      return cta.detail ? labels.openCaseWithRef.replace('{reference}', cta.detail) : labels.openCase;
     default:
       return labels.addTask;
   }

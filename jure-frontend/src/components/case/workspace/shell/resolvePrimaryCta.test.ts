@@ -61,11 +61,7 @@ describe('resolvePrimaryCta · administrative', () => {
       resolvePrimaryCta('ADMINISTRATIVE', { ...base, missingRequiredDocCount: 1 }, { canEdit: true })
     ).toMatchObject({ id: 'open_checklist' });
     expect(
-      resolvePrimaryCta(
-        'ADMINISTRATIVE',
-        { ...base, nextDeadlineDays: 3 },
-        { canEdit: true }
-      )
+      resolvePrimaryCta('ADMINISTRATIVE', { ...base, nextDeadlineDays: 3 }, { canEdit: true })
     ).toMatchObject({ id: 'add_deadline' });
     expect(
       resolvePrimaryCta('ADMINISTRATIVE', { ...base, openTaskCount: 2 }, { canEdit: true })
@@ -86,23 +82,64 @@ describe('resolvePrimaryCta · administrative', () => {
 });
 
 describe('resolvePrimaryCta · consultation', () => {
-  it('join video wins first', () => {
+  it('1. join video wins first', () => {
     expect(
       resolvePrimaryCta(
         'CONSULTATION',
-        { ...base, canJoinVideo: true, canConvert: true },
+        {
+          ...base,
+          canJoinVideo: true,
+          sessionDatePassed: true,
+          canConvert: true,
+          convertedCase: { id: 9, reference: 'L-9' },
+        },
         { canEdit: true }
       )
-    ).toMatchObject({ id: 'join_video' });
+    ).toMatchObject({ id: 'join_video', reason: 'join_video' });
   });
 
-  it('convert wins when join is not available', () => {
+  it('2. session date passed + can edit → mark completed', () => {
+    expect(
+      resolvePrimaryCta(
+        'CONSULTATION',
+        { ...base, sessionDatePassed: true, canConvert: true },
+        { canEdit: true }
+      )
+    ).toEqual({ id: 'mark_completed', reason: 'session_date_passed' });
+    expect(
+      resolvePrimaryCta(
+        'CONSULTATION',
+        { ...base, sessionDatePassed: true },
+        { canEdit: false }
+      )
+    ).toMatchObject({ id: 'edit_session' });
+  });
+
+  it('3. canConvert → convert', () => {
     expect(
       resolvePrimaryCta('CONSULTATION', { ...base, canConvert: true }, { canEdit: true })
-    ).toMatchObject({ id: 'convert' });
+    ).toMatchObject({ id: 'convert', reason: 'can_convert' });
   });
 
-  it('completed or cancelled → add follow-up when allowed', () => {
+  it('4. already converted → open case with reference (fallback title)', () => {
+    expect(
+      resolvePrimaryCta(
+        'CONSULTATION',
+        { ...base, convertedCase: { id: 42, reference: 'LIT-42', title: 'Matter' } },
+        { canEdit: true }
+      )
+    ).toEqual({ id: 'open_case', reason: 'converted', detail: 'LIT-42' });
+
+    expect(
+      resolvePrimaryCta(
+        'CONSULTATION',
+        { ...base, convertedCase: { id: 42, reference: null, title: 'Matter only' } },
+        { canEdit: true }
+      )
+    ).toEqual({ id: 'open_case', reason: 'converted', detail: 'Matter only' });
+  });
+
+  it('5. completed or cancelled → add follow-up when allowed', () => {
     expect(
       resolvePrimaryCta(
         'CONSULTATION',
@@ -126,11 +163,8 @@ describe('resolvePrimaryCta · consultation', () => {
     ).toMatchObject({ id: 'edit_session' });
   });
 
-  it('otherwise edit session', () => {
+  it('6. otherwise edit session', () => {
     expect(resolvePrimaryCta('CONSULTATION', base, { canEdit: true })).toMatchObject({
-      id: 'edit_session',
-    });
-    expect(resolvePrimaryCta('CONSULTATION', base, { canEdit: false })).toMatchObject({
       id: 'edit_session',
     });
   });

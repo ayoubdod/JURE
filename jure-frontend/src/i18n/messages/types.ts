@@ -1748,6 +1748,9 @@ export interface AppMessages {
           openChecklist: string;
           addDeadline: string;
           markCompleted: string;
+          markCompletedDatePassed: string;
+          openCase: string;
+          openCaseWithRef: string;
         };
         newMenu: string;
         unsupportedType: string;
@@ -1897,6 +1900,11 @@ export interface AppMessages {
           navLabel: string;
           hours: string;
           clientTypeUnknown: string;
+          openSession: string;
+          datePassed: string;
+          convertedToCase: string;
+          legalQuestion: string;
+          clientLabel: string;
           sections: {
             overview: string;
             administrative: string;

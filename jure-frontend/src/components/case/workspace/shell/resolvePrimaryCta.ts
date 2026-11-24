@@ -13,12 +13,11 @@ export type PrimaryCtaSummary = Pick<
   canConvert?: boolean;
   consultationCancelled?: boolean;
   consultationCompleted?: boolean;
+  sessionDatePassed?: boolean;
+  convertedCase?: { id: number; reference?: string | null; title?: string | null } | null;
 };
 
-/**
- * Pure, deterministic primary CTA resolver.
- * First match wins per case type rules (see product plan).
- */
+/** Pure primary CTA resolver — first match wins per type. */
 export function resolvePrimaryCta(
   type: CaseWorkspaceType,
   summary: PrimaryCtaSummary,
@@ -63,8 +62,20 @@ export function resolvePrimaryCta(
     if (summary.canJoinVideo) {
       return { id: 'join_video', reason: 'join_video' };
     }
+    if (summary.sessionDatePassed && permissions.canEdit) {
+      return { id: 'mark_completed', reason: 'session_date_passed' };
+    }
     if (summary.canConvert ?? permissions.canConvert) {
       return { id: 'convert', reason: 'can_convert' };
+    }
+    if (summary.convertedCase?.id) {
+      const ref = summary.convertedCase.reference?.trim();
+      const title = summary.convertedCase.title?.trim();
+      return {
+        id: 'open_case',
+        reason: 'converted',
+        detail: ref || title || undefined,
+      };
     }
     const terminal = Boolean(summary.consultationCompleted || summary.consultationCancelled);
     if (terminal) {

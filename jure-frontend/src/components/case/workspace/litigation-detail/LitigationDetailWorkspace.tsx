@@ -8,7 +8,9 @@ import {
   Folder,
   Gavel,
   LayoutDashboard,
+  Scale,
   Sparkles,
+  User,
   Wallet,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -43,6 +45,7 @@ import {
   type CaseWorkspaceLeaf,
   type CaseWorkspaceNavItem,
   type HeaderMenuItem,
+  type HeaderMetaItem,
 } from '@/components/case/workspace/shell';
 
 const GROUP_SEGMENTS: Partial<Record<CaseWorkspaceGroupId, CaseWorkspaceLeaf[]>> = {
@@ -189,10 +192,13 @@ export default function LitigationDetailWorkspace({
   };
 
   const priority = getCaseData(caseItem, 'priority') as string | undefined;
-  const clientMeta = caseItem.client ? (
-    <CaseClientLabel client={caseItem.client} nameClassName="truncate" />
-  ) : null;
   const leadMeta = assignedDisplayName(caseItem);
+  const metaItems: HeaderMetaItem[] = [
+    ...(caseItem.client
+      ? [{ id: 'client', label: copy.snapshotClient, icon: User, value: <CaseClientLabel client={caseItem.client} nameClassName="truncate" /> }]
+      : []),
+    ...(leadMeta ? [{ id: 'lead', label: copy.snapshotLead, icon: Scale, value: leadMeta }] : []),
+  ];
 
   const newItems: HeaderMenuItem[] = [
     { key: 'task', label: copy.addTask, onClick: () => modals.addTask() },
@@ -223,24 +229,11 @@ export default function LitigationDetailWorkspace({
         <CaseWorkspaceHeader
           listPath={listPath}
           backLabel={copy.back}
-          typeLabel={t.cases.typeLabels.litigation}
           status={String(caseItem.status ?? '')}
           priorityLabel={priority ? enumPretty(priority) : undefined}
           title={caseItem.title || t.cases.untitledCase}
           reference={caseItem.reference}
-          meta={
-            clientMeta || leadMeta ? (
-              <>
-                {clientMeta}
-                {clientMeta && leadMeta ? ' · ' : null}
-                {leadMeta ? (
-                  <span>
-                    {copy.snapshotLead}: {leadMeta}
-                  </span>
-                ) : null}
-              </>
-            ) : undefined
-          }
+          metaItems={metaItems}
           primaryCta={primary ? { label: primaryLabel, onClick: runPrimary } : null}
           newItems={newItems}
           moreItems={moreItems}

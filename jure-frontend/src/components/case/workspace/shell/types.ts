@@ -107,7 +107,8 @@ export type PrimaryCtaId =
   | 'upload_document'
   | 'add_deadline'
   | 'mark_completed'
-  | 'open_checklist';
+  | 'open_checklist'
+  | 'open_case';
 
 export type PrimaryCtaReason =
   | 'none_scheduled'
@@ -121,13 +122,16 @@ export type PrimaryCtaReason =
   | 'edit_session'
   | 'missing_required_docs'
   | 'due_soon'
-  | 'mark_completed';
+  | 'mark_completed'
+  | 'session_date_passed'
+  | 'converted';
 
 export type PrimaryCta = {
   id: PrimaryCtaId;
   reason: PrimaryCtaReason;
   /** Opens Documents upload when prepare_hearing + missing docs */
   preferUpload?: boolean;
+  detail?: string;
 };
 
 export type PrimaryCtaPermissions = {

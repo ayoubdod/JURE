@@ -1,18 +1,20 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { Mail, Pencil } from 'lucide-react';
+import { Mail, Pencil, User } from 'lucide-react';
 import { useAppTranslation } from '@/i18n';
 import { JURIA_ENABLED } from '@/config/features';
 import { getCaseData } from '@/utils/caseCardHelpers';
 import { CaseClientLabel } from '@/components/client/CaseClientLabel';
-import { canShowConvertToCase } from '@/components/case/conversion/ConvertedCaseLink';
+import {
+  canShowConvertToCase,
+  getConvertedToCase,
+} from '@/components/case/conversion/ConvertedCaseLink';
 import { ConversionTypeSelector, type ConversionTargetType } from '@/components/case/conversion/ConversionTypeSelector';
 import { ConversionForm } from '@/components/case/conversion/ConversionForm';
 import { FinanceTab } from '@/components/case/panel/tabs/FinanceTab';
 import { JuriaCasePanel } from '@/components/juria/JuriaCasePanel';
 import { apiRetryConsultationEmail, apiUpdateCase } from '@/services/case/api';
-import { WorkspaceCard } from '@/components/case/workspace/litigation-detail/ui';
 import {
   WorkspaceActivity,
   WorkspaceAppointments,
@@ -30,6 +32,7 @@ import {
   useCaseWorkspaceController,
   type CaseWorkspaceNavItem,
   type HeaderMenuItem,
+  type HeaderMetaItem,
 } from '@/components/case/workspace/shell';
 import {
   resolveConsultationHash,
@@ -42,8 +45,8 @@ import { getConsultationConfig } from './getConsultationConfig';
 import {
   attorneysOf,
   consultationCanJoinVideo,
-  consultationWhen,
   isCancelled,
+  isConsultationSessionDatePassed,
   isConsultationTerminal,
   outcomeOf,
   personName,
@@ -58,7 +61,7 @@ export default function ConsultationDetailWorkspace({
   caseItem: API.Case;
   onCaseChange: (next: API.Case) => void;
 }) {
-  const { t, tf, enumPretty, lang } = useAppTranslation();
+  const { t, tf, enumPretty } = useAppTranslation();
   const copy = t.cases.workspaces.consultation.detail;
   const litCopy = t.cases.workspaces.litigation.detail;
   const actions = t.cases.workspaces.consultation.actions;
@@ -98,11 +101,11 @@ export default function ConsultationDetailWorkspace({
   const [conversionTarget, setConversionTarget] = useState<ConversionTargetType | null>(null);
 
   const canConvert = canShowConvertToCase(caseItem);
+  const converted = getConvertedToCase(caseItem);
   const status = outcomeOf(caseItem);
   const canJoinVideo = consultationCanJoinVideo(caseItem);
+  const sessionDatePassed = isConsultationSessionDatePassed(caseItem);
   const videoLink = getCaseData(caseItem, 'video_link') as string | undefined;
-  const dt = getCaseData(caseItem, 'consultation_date') as string | undefined;
-  const when = consultationWhen(dt, lang);
   const attorneys = attorneysOf(caseItem);
   const ctype = String(getCaseData(caseItem, 'consultation_type') || '');
 
@@ -110,6 +113,8 @@ export default function ConsultationDetailWorkspace({
     ...summary,
     canJoinVideo,
     canConvert,
+    sessionDatePassed,
+    convertedCase: converted,
     consultationCancelled: status === 'CANCELLED',
     consultationCompleted: status === 'COMPLETED',
   };
@@ -119,6 +124,9 @@ export default function ConsultationDetailWorkspace({
   const showJoinInMore = canJoinVideo && primary?.id !== 'join_video';
   const showConvertInMore = canConvert && primary?.id !== 'convert';
   const showConvertOnSession = canConvert && primary?.id !== 'convert';
+  const showOpenCaseInMore = Boolean(converted?.id) && primary?.id !== 'open_case';
+  const showCompleteInMore =
+    canEdit && !isConsultationTerminal(caseItem) && primary?.id !== 'mark_completed';
 
   const convertParam = searchParams.get('convert');
   useEffect(() => {
@@ -139,23 +147,6 @@ export default function ConsultationDetailWorkspace({
     // eslint-disable-next-line react-hooks/exhaustive-deps -- hash / case open
   }, [caseItem.id]);
 
-  const runPrimary = () => {
-    if (!primary) return;
-    if (primary.id === 'join_video' && videoLink) {
-      window.open(videoLink, '_blank', 'noopener,noreferrer');
-      return;
-    }
-    if (primary.id === 'convert') {
-      setTypeSelectorOpen(true);
-      return;
-    }
-    if (primary.id === 'add_follow_up') {
-      modals.addFollowUp();
-      return;
-    }
-    modals.editCase();
-  };
-
   const patchOutcome = async (next: 'COMPLETED' | 'CANCELLED') => {
     const existing = (caseItem.case_specific_data as Record<string, unknown>) ?? {};
     try {
@@ -165,6 +156,31 @@ export default function ConsultationDetailWorkspace({
     } catch {
       toast({ title: t.common.error, variant: 'destructive' });
     }
+  };
+
+  const runPrimary = () => {
+    if (!primary) return;
+    if (primary.id === 'join_video' && videoLink) {
+      window.open(videoLink, '_blank', 'noopener,noreferrer');
+      return;
+    }
+    if (primary.id === 'mark_completed') {
+      void patchOutcome('COMPLETED');
+      return;
+    }
+    if (primary.id === 'convert') {
+      setTypeSelectorOpen(true);
+      return;
+    }
+    if (primary.id === 'open_case' && converted?.id) {
+      openRelated(converted.id);
+      return;
+    }
+    if (primary.id === 'add_follow_up') {
+      modals.addFollowUp();
+      return;
+    }
+    modals.editCase();
   };
 
   const sendEmail = () => {
@@ -237,63 +253,35 @@ export default function ConsultationDetailWorkspace({
 
   const moreItems: HeaderMenuItem[] = [
     ...(canEdit
-      ? [
-          {
-            key: 'edit',
-            label: copy.edit,
-            icon: <Pencil className="h-4 w-4" />,
-            onClick: () => modals.editCase(),
-          },
-        ]
+      ? [{ key: 'edit', label: copy.edit, icon: <Pencil className="h-4 w-4" />, onClick: () => modals.editCase() }]
       : []),
-    {
-      key: 'email',
-      label: copy.sendEmail,
-      icon: <Mail className="h-4 w-4" />,
-      onClick: sendEmail,
-    },
+    { key: 'email', label: copy.sendEmail, icon: <Mail className="h-4 w-4" />, onClick: sendEmail },
     ...(showJoinInMore && videoLink
-      ? [
-          {
-            key: 'join',
-            label: copy.joinVideo,
-            onClick: () => window.open(videoLink, '_blank', 'noopener,noreferrer'),
-          },
-        ]
+      ? [{ key: 'join', label: copy.joinVideo, onClick: () => window.open(videoLink, '_blank', 'noopener,noreferrer') }]
       : []),
     ...(showConvertInMore
       ? [{ key: 'convert', label: actions.convert, onClick: () => setTypeSelectorOpen(true) }]
       : []),
+    ...(showOpenCaseInMore && converted
+      ? [{ key: 'open-case', label: copy.openCase, onClick: () => openRelated(converted.id) }]
+      : []),
+    ...(showCompleteInMore
+      ? [{ key: 'complete', label: copy.markCompleted, onClick: () => void patchOutcome('COMPLETED') }]
+      : []),
     ...(canEdit && !isConsultationTerminal(caseItem)
-      ? [
-          {
-            key: 'complete',
-            label: copy.markCompleted,
-            onClick: () => void patchOutcome('COMPLETED'),
-          },
-          {
-            key: 'cancel',
-            label: copy.cancelConsultation,
-            onClick: () => void patchOutcome('CANCELLED'),
-          },
-        ]
+      ? [{ key: 'cancel', label: copy.cancelConsultation, onClick: () => void patchOutcome('CANCELLED') }]
       : []),
     ...lifecycleMoreItems({ edit: copy.edit, includeEdit: false }),
   ];
 
-  const meta = (
-    <>
-      {caseItem.client ? (
-        <CaseClientLabel client={caseItem.client} nameClassName="truncate" />
-      ) : null}
-      {caseItem.client && attorneys[0] ? ' · ' : null}
-      {attorneys[0] ? (
-        <span>
-          {copy.assignedTo} {personName(attorneys[0])}
-        </span>
-      ) : null}
-    </>
-  );
+  const metaItems: HeaderMetaItem[] = [
+    ...(caseItem.client
+      ? [{ id: 'client', label: copy.clientLabel, icon: User, value: <CaseClientLabel client={caseItem.client} nameClassName="truncate" /> }]
+      : []),
+    ...(attorneys[0]
+      ? [{ id: 'attorney', label: copy.primaryAttorney, icon: User, value: personName(attorneys[0]) }]
+      : []),
+  ];
 
   return (
     <>
@@ -302,12 +290,11 @@ export default function ConsultationDetailWorkspace({
           <CaseWorkspaceHeader
             listPath={listPath}
             backLabel={copy.back}
-            typeLabel={t.cases.typeLabels.consultation}
             status={String(status || caseItem.status || '')}
             priorityLabel={ctype ? enumPretty(ctype) : undefined}
             title={caseItem.title || t.cases.untitledCase}
             reference={caseItem.reference}
-            meta={meta}
+            metaItems={metaItems}
             primaryCta={primary ? { label: primaryLabel, onClick: runPrimary } : null}
             newItems={newItems}
             moreItems={moreItems}
@@ -342,10 +329,15 @@ export default function ConsultationDetailWorkspace({
             caseItem={caseItem}
             showFinance={showFinance}
             finance={finance}
+            canEdit={canEdit}
             onOpenSection={setLeaf}
             onOpenClient={() => modals.openClient()}
             onOpenCase={openRelated}
             onAddTask={() => modals.addTask()}
+            onAddFollowUp={
+              canEdit && !isCancelled(caseItem) ? () => modals.addFollowUp() : undefined
+            }
+            onEditSession={canEdit ? () => modals.editCase() : undefined}
           />
         ) : null}
 
@@ -362,29 +354,11 @@ export default function ConsultationDetailWorkspace({
         ) : null}
 
         {activeLeaf === 'appointments' ? (
-          <div className="space-y-4">
-            <WorkspaceCard title={t.cases.typeLabels.consultation}>
-              <p className="text-[15px] font-semibold text-slate-900 dark:text-white">
-                {when.date || '—'}
-                {when.time ? ` · ${when.time}` : ''}
-              </p>
-              <p className="mt-1 text-[13px] text-slate-600">
-                {[
-                  getCaseData(caseItem, 'format')
-                    ? enumPretty(String(getCaseData(caseItem, 'format')))
-                    : null,
-                  personName(attorneys[0]) || null,
-                ]
-                  .filter(Boolean)
-                  .join(' · ')}
-              </p>
-            </WorkspaceCard>
-            <WorkspaceAppointments
-              caseItem={caseItem}
-              onAdd={() => modals.addAppointment()}
-              onOpen={(id) => modals.openAppointment(id)}
-            />
-          </div>
+          <WorkspaceAppointments
+            caseItem={caseItem}
+            onAdd={() => modals.addAppointment()}
+            onOpen={(id) => modals.openAppointment(id)}
+          />
         ) : null}
 
         {activeLeaf === 'deadlines' ? (

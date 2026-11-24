@@ -61,3 +61,37 @@ export function isConsultationTerminal(c: API.Case): boolean {
   const status = outcomeOf(c);
   return status === 'COMPLETED' || status === 'CANCELLED';
 }
+
+export function isConsultationSessionDatePassed(c: API.Case): boolean {
+  if (outcomeOf(c) !== 'SCHEDULED') return false;
+  const hours = hoursUntil(getCaseData(c, 'consultation_date') as string | undefined);
+  return hours != null && hours < 0;
+}
+
+export function convertedCaseDisplayLabel(link: { title?: string | null; reference?: string | null }): string {
+  const title = link.title?.trim() || '';
+  const ref = link.reference?.trim() || '';
+  return title && ref ? `${title} · ${ref}` : title || ref;
+}
+
+export function formatRelativeSession(iso: string | undefined, lang: Lang): string {
+  if (!iso) return '';
+  const target = new Date(iso);
+  if (Number.isNaN(target.getTime())) return '';
+  const days = Math.round((target.getTime() - Date.now()) / 86_400_000);
+  const rtf = new Intl.RelativeTimeFormat(lang, { numeric: 'auto' });
+  if (Math.abs(days) < 45) return rtf.format(days, 'day');
+  const months = Math.round(days / 30);
+  return Math.abs(months) < 18 ? rtf.format(months, 'month') : rtf.format(Math.round(days / 365), 'year');
+}
+
+export type ConsultationAttentionItem = { id: string; title: string; leaf: 'consultation' };
+
+export function selectConsultationNeedsAttention(
+  caseItem: API.Case,
+  copy: { datePassed: string }
+): ConsultationAttentionItem[] {
+  return isConsultationSessionDatePassed(caseItem)
+    ? [{ id: 'session-date-passed', title: copy.datePassed, leaf: 'consultation' }]
+    : [];
+}
