@@ -7,46 +7,6 @@ import {
 } from '@/services/case/litigationCourt';
 import type { AppMessages } from '@/i18n/messages/types';
 
-export type LitigationDetailSection =
-  | 'overview'
-  | 'caseDetails'
-  | 'parties'
-  | 'tasks'
-  | 'appointments'
-  | 'hearings'
-  | 'deadlines'
-  | 'documents'
-  | 'research'
-  | 'notes'
-  | 'finance'
-  | 'juria'
-  | 'activity';
-
-export const LITIGATION_DETAIL_SECTIONS: LitigationDetailSection[] = [
-  'overview',
-  'caseDetails',
-  'parties',
-  'tasks',
-  'appointments',
-  'hearings',
-  'deadlines',
-  'documents',
-  'research',
-  'notes',
-  'finance',
-  'juria',
-  'activity',
-];
-
-export function parseLitigationSection(raw: string | null): LitigationDetailSection {
-  // Keep in sync with shell/parseTab (LITIGATION).
-  if (raw === 'details') return 'caseDetails';
-  if (raw && LITIGATION_DETAIL_SECTIONS.includes(raw as LitigationDetailSection)) {
-    return raw as LitigationDetailSection;
-  }
-  return 'overview';
-}
-
 export function personName(u?: API.User | null) {
   if (!u) return '';
   return `${u.first_name ?? ''} ${u.last_name ?? ''}`.trim() || u.email || '';

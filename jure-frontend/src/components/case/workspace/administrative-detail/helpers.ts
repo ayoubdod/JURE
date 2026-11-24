@@ -1,38 +1,5 @@
 import { getCaseData } from '@/utils/caseCardHelpers';
 
-export type AdministrativeDetailSection =
-  | 'overview'
-  | 'administrative'
-  | 'tasks'
-  | 'appointments'
-  | 'deadlines'
-  | 'documents'
-  | 'notes'
-  | 'finance'
-  | 'juria'
-  | 'activity';
-
-export const ADMINISTRATIVE_DETAIL_SECTIONS: AdministrativeDetailSection[] = [
-  'overview',
-  'administrative',
-  'tasks',
-  'appointments',
-  'deadlines',
-  'documents',
-  'notes',
-  'finance',
-  'juria',
-  'activity',
-];
-
-export function parseAdministrativeSection(raw: string | null): AdministrativeDetailSection {
-  if (raw === 'details' || raw === 'caseDetails') return 'administrative';
-  if (raw && ADMINISTRATIVE_DETAIL_SECTIONS.includes(raw as AdministrativeDetailSection)) {
-    return raw as AdministrativeDetailSection;
-  }
-  return 'overview';
-}
-
 export function institutionOf(c: API.Case): string {
   return String(getCaseData(c, 'institution') ?? getCaseData(c, 'institution_authority') ?? '');
 }

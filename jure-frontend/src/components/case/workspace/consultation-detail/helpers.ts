@@ -3,39 +3,6 @@ import { consultationOutcome } from '@/services/case/caseType';
 import { getCaseData } from '@/utils/caseCardHelpers';
 import { consultationStatusOf, type ConsultationStatusKey } from '../consultationStatus';
 
-export type ConsultationDetailSection =
-  | 'overview'
-  | 'administrative'
-  | 'tasks'
-  | 'appointments'
-  | 'deadlines'
-  | 'documents'
-  | 'notes'
-  | 'finance'
-  | 'juria'
-  | 'activity';
-
-export const CONSULTATION_DETAIL_SECTIONS: ConsultationDetailSection[] = [
-  'overview',
-  'administrative',
-  'tasks',
-  'appointments',
-  'deadlines',
-  'documents',
-  'notes',
-  'finance',
-  'juria',
-  'activity',
-];
-
-export function parseConsultationSection(raw: string | null): ConsultationDetailSection {
-  if (raw === 'consultation') return 'administrative';
-  if (raw && CONSULTATION_DETAIL_SECTIONS.includes(raw as ConsultationDetailSection)) {
-    return raw as ConsultationDetailSection;
-  }
-  return 'overview';
-}
-
 export function attorneysOf(c: API.Case): API.User[] {
   if (c.assigned_attorneys?.length) return c.assigned_attorneys;
   return c.assigned_to ? [c.assigned_to] : [];

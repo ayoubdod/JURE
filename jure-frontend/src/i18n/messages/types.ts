@@ -2225,23 +2225,6 @@ export interface AppMessages {
       documentsEmpty: string;
       notesEmpty: string;
       activityTitle: string;
-      tabs: {
-        overview: string;
-        consultation: string;
-        caseDetails: string;
-        parties: string;
-        administrative: string;
-        tasks: string;
-        appointments: string;
-        hearings: string;
-        deadlines: string;
-        documents: string;
-        research: string;
-        notes: string;
-        finance: string;
-        juria: string;
-        activity: string;
-      };
     };
     modal: {
       createTitle: string;
