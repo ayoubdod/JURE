@@ -16,6 +16,7 @@ import { normalizeCaseFinancePayload } from '@/utils/normalizeCaseFinance';
 import { apiGetResearchNotes, unwrapResearchNoteList, type ResearchNote } from '@/services/research-notes/api';
 import { useToast } from '@/hooks/use-toast';
 import { defaultLeafForGroup, parseTab } from './parseTab';
+import { applyLeafToSearchParams } from './navigationGuards';
 import { useCaseSummary } from './useCaseSummary';
 import type { CaseWorkspaceGroupId, CaseWorkspaceLeaf, CaseWorkspaceType } from './types';
 import type { CaseWorkspaceModalHostHandle } from './CaseWorkspaceModalHost';
@@ -71,17 +72,7 @@ export function useCaseWorkspaceController({
       if (groupSegments[nextParsed.group]) {
         lastSegmentRef.current[nextParsed.group] = next;
       }
-      setSearchParams(
-        (prev) => {
-          const currentLeaf = parseTab(type, prev.get('tab')).leaf;
-          if (currentLeaf === nextParsed.leaf) return prev;
-          const params = new URLSearchParams(prev);
-          if (next === 'overview') params.delete('tab');
-          else params.set('tab', next);
-          return params;
-        },
-        { replace: true }
-      );
+      setSearchParams((prev) => applyLeafToSearchParams(prev, type, next), { replace: true });
     },
     [groupSegments, setSearchParams, type]
   );

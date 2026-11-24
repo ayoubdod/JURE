@@ -14,6 +14,11 @@ export { useCaseWorkspaceController } from './useCaseWorkspaceController';
 export { primaryCtaLabel } from './primaryCtaLabel';
 export { resolveWorkspaceKind } from './resolveWorkspaceKind';
 export {
+  applyLeafToSearchParams,
+  stripConvertSearchParam,
+  shouldRedirectFollowUpToParent,
+} from './navigationGuards';
+export {
   resolveConsultationHash,
   shouldOpenConvertFromQuery,
 } from './consultationDeepLinks';

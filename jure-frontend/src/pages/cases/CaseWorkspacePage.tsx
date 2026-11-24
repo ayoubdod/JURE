@@ -14,6 +14,7 @@ import {
   fetchCaseBySlug,
 } from '@/lib/caseRoutes';
 import { getCaseType } from '@/services/case/caseType';
+import { shouldRedirectFollowUpToParent } from '@/components/case/workspace/shell/navigationGuards';
 
 export default function CaseWorkspacePage() {
   const { t, tf } = useAppTranslation();
@@ -105,13 +106,7 @@ export default function CaseWorkspacePage() {
     return <Navigate to={caseWorkspacePath(caseItem)} replace />;
   }
 
-  // Follow-ups only: never bounce lit/admin (or self-linked) cases through parent.
-  const parentId = caseItem.parentConsultation?.id;
-  if (
-    getCaseType(caseItem) === 'CONSULTATION' &&
-    parentId != null &&
-    parentId !== caseItem.id
-  ) {
+  if (shouldRedirectFollowUpToParent(caseItem)) {
     return (
       <Navigate
         to={caseWorkspacePath({ ...caseItem.parentConsultation, caseType: 'CONSULTATION' })}

@@ -35,6 +35,7 @@ import {
   resolveConsultationHash,
   shouldOpenConvertFromQuery,
 } from '@/components/case/workspace/shell/consultationDeepLinks';
+import { stripConvertSearchParam } from '@/components/case/workspace/shell/navigationGuards';
 import ConsultationOverview from './ConsultationOverview';
 import ConsultationSession from './ConsultationSession';
 import { getConsultationConfig } from './getConsultationConfig';
@@ -123,15 +124,7 @@ export default function ConsultationDetailWorkspace({
   useEffect(() => {
     if (!shouldOpenConvertFromQuery(convertParam, canConvert)) return;
     setTypeSelectorOpen(true);
-    setSearchParams(
-      (prev) => {
-        if (prev.get('convert') !== '1') return prev;
-        const params = new URLSearchParams(prev);
-        params.delete('convert');
-        return params;
-      },
-      { replace: true }
-    );
+    setSearchParams((prev) => stripConvertSearchParam(prev), { replace: true });
   }, [canConvert, convertParam, setSearchParams]);
 
   useEffect(() => {

@@ -5,6 +5,7 @@ import {
   normalizeCaseType,
   type BackendCaseType,
 } from '@/services/case/caseType';
+import { shouldRedirectFollowUpToParent } from '@/components/case/workspace/shell/navigationGuards';
 
 export type CaseRouteSegment = 'consultations' | 'litigation' | 'administrative';
 
@@ -166,13 +167,12 @@ export async function fetchCaseBySlug(
 }
 
 export function navigateToCase(navigate: NavigateFunction, c: CaseRouteInput & { parentConsultation?: { id?: number } }) {
-  const parentId = c.parentConsultation?.id;
   if (
-    parentId != null &&
-    parentId !== c.id &&
-    normalizeCaseType(c.caseType ?? c.case_type) === 'CONSULTATION'
+    normalizeCaseType(c.caseType ?? c.case_type) === 'CONSULTATION' &&
+    c.parentConsultation?.id != null &&
+    c.parentConsultation.id !== c.id
   ) {
-    return navigateToCaseById(navigate, parentId);
+    return navigateToCaseById(navigate, c.parentConsultation.id);
   }
   return navigateToCaseById(navigate, c.id);
 }
@@ -180,14 +180,8 @@ export function navigateToCase(navigate: NavigateFunction, c: CaseRouteInput & {
 export async function navigateToCaseById(navigate: NavigateFunction, id: number) {
   const res = await apiGetCase(id);
   const data = res.data;
-  const originId = data.parentConsultation?.id;
-  // Only consultation follow-ups redirect to their origin; avoid remount loops.
-  if (
-    originId != null &&
-    originId !== data.id &&
-    getCaseType(data) === 'CONSULTATION'
-  ) {
-    const parent = await apiGetCase(originId);
+  if (shouldRedirectFollowUpToParent(data) && data.parentConsultation?.id) {
+    const parent = await apiGetCase(data.parentConsultation.id);
     navigate(caseWorkspacePath(parent.data));
     return;
   }

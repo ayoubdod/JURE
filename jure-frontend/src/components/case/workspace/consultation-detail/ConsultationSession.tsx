@@ -1,10 +1,10 @@
 'use client';
 
 import { ConvertedCaseLink, getConvertedToCase } from '@/components/case/conversion/ConvertedCaseLink';
-import { ConsultationSection } from '@/components/case/case-detail-drawer/consultation-section';
 import { Button } from '@/components/ui/button';
 import { useAppTranslation } from '@/i18n';
 import { WorkspaceCard } from '@/components/case/workspace/litigation-detail/ui';
+import ConsultationSessionBody from './ConsultationSessionBody';
 import { isCancelled } from './helpers';
 
 /** Single home for session fields, advice/outcome, follow-ups, and convert card. */
@@ -32,11 +32,8 @@ export default function ConsultationSession({
 
   return (
     <div className="space-y-4">
-      <ConsultationSection
+      <ConsultationSessionBody
         c={caseItem}
-        hideConversion
-        hideJoinVideo
-        anchorFollowUps
         onOpenCaseById={onOpenCase}
         onAddFollowUp={canEdit && !isCancelled(caseItem) ? onAddFollowUp : undefined}
       />
