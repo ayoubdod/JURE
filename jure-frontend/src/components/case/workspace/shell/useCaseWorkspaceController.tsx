@@ -71,12 +71,19 @@ export function useCaseWorkspaceController({
       if (groupSegments[nextParsed.group]) {
         lastSegmentRef.current[nextParsed.group] = next;
       }
-      const params = new URLSearchParams(searchParams);
-      if (next === 'overview') params.delete('tab');
-      else params.set('tab', next);
-      setSearchParams(params, { replace: true });
+      setSearchParams(
+        (prev) => {
+          const currentLeaf = parseTab(type, prev.get('tab')).leaf;
+          if (currentLeaf === nextParsed.leaf) return prev;
+          const params = new URLSearchParams(prev);
+          if (next === 'overview') params.delete('tab');
+          else params.set('tab', next);
+          return params;
+        },
+        { replace: true }
+      );
     },
-    [groupSegments, searchParams, setSearchParams, type]
+    [groupSegments, setSearchParams, type]
   );
 
   const openGroup = useCallback(

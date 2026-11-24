@@ -165,19 +165,30 @@ export async function fetchCaseBySlug(
 }
 
 export function navigateToCase(navigate: NavigateFunction, c: CaseRouteInput & { parentConsultation?: { id?: number } }) {
-  if (c.parentConsultation?.id) {
-    return navigateToCaseById(navigate, c.parentConsultation.id);
+  const parentId = c.parentConsultation?.id;
+  if (
+    parentId != null &&
+    parentId !== c.id &&
+    normalizeCaseType(c.caseType ?? c.case_type) === 'CONSULTATION'
+  ) {
+    return navigateToCaseById(navigate, parentId);
   }
   return navigateToCaseById(navigate, c.id);
 }
 
 export async function navigateToCaseById(navigate: NavigateFunction, id: number) {
   const res = await apiGetCase(id);
-  const originId = res.data.parentConsultation?.id;
-  if (originId) {
+  const data = res.data;
+  const originId = data.parentConsultation?.id;
+  // Only consultation follow-ups redirect to their origin; avoid remount loops.
+  if (
+    originId != null &&
+    originId !== data.id &&
+    getCaseType(data) === 'CONSULTATION'
+  ) {
     const parent = await apiGetCase(originId);
     navigate(caseWorkspacePath(parent.data));
     return;
   }
-  navigate(caseWorkspacePath(res.data));
+  navigate(caseWorkspacePath(data));
 }

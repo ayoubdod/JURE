@@ -38,7 +38,6 @@ export default function CaseWorkspacePage() {
     setLoading(true);
     setNotFound(false);
     setMismatch(null);
-    setCaseItem(null);
     void fetchCaseBySlug(expectedType, caseSlug)
       .then(({ caseItem: found, mismatch: wrongType }) => {
         if (cancelled) return;
@@ -106,7 +105,13 @@ export default function CaseWorkspacePage() {
     return <Navigate to={caseWorkspacePath(caseItem)} replace />;
   }
 
-  if (caseItem.parentConsultation?.id) {
+  // Follow-ups only: never bounce lit/admin (or self-linked) cases through parent.
+  const parentId = caseItem.parentConsultation?.id;
+  if (
+    getCaseType(caseItem) === 'CONSULTATION' &&
+    parentId != null &&
+    parentId !== caseItem.id
+  ) {
     return (
       <Navigate
         to={caseWorkspacePath({ ...caseItem.parentConsultation, caseType: 'CONSULTATION' })}

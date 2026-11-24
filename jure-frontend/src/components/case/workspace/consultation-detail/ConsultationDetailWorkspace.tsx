@@ -119,13 +119,20 @@ export default function ConsultationDetailWorkspace({
   const showConvertInMore = canConvert && primary?.id !== 'convert';
   const showConvertOnSession = canConvert && primary?.id !== 'convert';
 
+  const convertParam = searchParams.get('convert');
   useEffect(() => {
-    if (!shouldOpenConvertFromQuery(searchParams.get('convert'), canConvert)) return;
+    if (!shouldOpenConvertFromQuery(convertParam, canConvert)) return;
     setTypeSelectorOpen(true);
-    const params = new URLSearchParams(searchParams);
-    params.delete('convert');
-    setSearchParams(params, { replace: true });
-  }, [canConvert, searchParams, setSearchParams]);
+    setSearchParams(
+      (prev) => {
+        if (prev.get('convert') !== '1') return prev;
+        const params = new URLSearchParams(prev);
+        params.delete('convert');
+        return params;
+      },
+      { replace: true }
+    );
+  }, [canConvert, convertParam, setSearchParams]);
 
   useEffect(() => {
     const resolved = resolveConsultationHash(window.location.hash);
