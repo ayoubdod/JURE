@@ -52,12 +52,28 @@ if [ -z "${MEDIA_ROOT:-}" ] || [ "${MEDIA_ROOT}" = "/app/media" ] || [ "${MEDIA_
 fi
 mkdir -p "${MEDIA_ROOT}"
 
-python manage.py migrate --noinput
+# Railway pre-deploy is `entrypoint sh -c "..."`. Run that and exit.
+# Do not fall through into Daphne or the pre-deploy container never finishes.
+if [ "$#" -gt 0 ]; then
+  echo "Running one-off command: $*"
+  exec "$@"
+fi
 
+# On Railway, migrate runs in preDeployCommand (see railway.toml) so this
+# process can bind PORT before the healthcheck window ends. A migrate that
+# hangs on the database otherwise leaves /health/ with nothing to answer.
+if [ -n "${RAILWAY_ENVIRONMENT:-}" ]; then
+  echo "Railway web process: skipping migrate (pre-deploy already ran it)"
+else
+  python manage.py migrate --noinput
+fi
+
+echo "Collecting static files"
 python manage.py collectstatic --noinput
 
 # ASGI (Daphne) is required for WebSockets: /ws/calls/, /ws/chat/, /ws/conversation/, /ws/notifications/
 # Gunicorn+WSGI cannot upgrade WebSockets — that is why calls work locally (Daphne) but fail on Railway.
 # Single process: InMemory channel layer does not cross workers; use Redis (USE_INMEMORY_CHANNEL_LAYER=False)
 # when you need multiple replicas.
+echo "Starting daphne on 0.0.0.0:${PORT:-8000}"
 exec daphne -b 0.0.0.0 -p "${PORT:-8000}" core.asgi:application

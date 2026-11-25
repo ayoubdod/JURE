@@ -40,16 +40,16 @@ const ConsentStep = ({ onNext, onPrev, form }: ConsentStepProps) => {
             id="accept_terms"
             checked={watchedAcceptTerms}
             onCheckedChange={(checked) => setValue('accept_terms', checked as boolean)}
-            className="mt-0.5 data-[state=checked]:bg-[#64499D]"
+            className="mt-0.5 data-[state=checked]:bg-[#2949e8]"
           />
           <div className="flex-1">
             <Label htmlFor="accept_terms" className="text-sm font-medium leading-relaxed text-slate-700 dark:text-slate-300">
               {s.termsLabel}{' '}
-              <a href="/terms" target="_blank" className="font-semibold text-[#64499D] hover:underline dark:text-[#CFC2FF]" rel="noreferrer">
+              <a href="/terms" target="_blank" className="font-semibold text-[#2949e8] hover:underline dark:text-[#b968ff]" rel="noreferrer">
                 {s.termsLink}
               </a>{' '}
               ·{' '}
-              <a href="/privacy" target="_blank" className="font-semibold text-[#64499D] hover:underline dark:text-[#CFC2FF]" rel="noreferrer">
+              <a href="/privacy" target="_blank" className="font-semibold text-[#2949e8] hover:underline dark:text-[#b968ff]" rel="noreferrer">
                 {s.privacyLink}
               </a>{' '}
               *
@@ -65,7 +65,7 @@ const ConsentStep = ({ onNext, onPrev, form }: ConsentStepProps) => {
             id="accept_data_processing"
             checked={watchedAcceptDataProcessing}
             onCheckedChange={(checked) => setValue('accept_data_processing', checked as boolean)}
-            className="mt-0.5 data-[state=checked]:bg-[#64499D]"
+            className="mt-0.5 data-[state=checked]:bg-[#2949e8]"
           />
           <div className="flex-1">
             <Label htmlFor="accept_data_processing" className="text-sm font-medium leading-relaxed text-slate-700 dark:text-slate-300">

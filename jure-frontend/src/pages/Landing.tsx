@@ -24,9 +24,11 @@ import {
 import MarketingShell from "@/components/landing/MarketingShell";
 import Reveal from "@/components/landing/Reveal";
 import FaqSection from "@/components/landing/FaqSection";
-import SitelinkList from "@/components/landing/SitelinkList";
 import FloatingChip from "@/components/landing/FloatingChip";
 import WorkspaceShowcase from "@/components/landing/WorkspaceShowcase";
+import HeroMatterPreview from "@/components/landing/HeroMatterPreview";
+import EarlyAccessSocialProof from "@/components/landing/EarlyAccessSocialProof";
+import TrustComplianceStrip from "@/components/landing/TrustComplianceStrip";
 import { JuriaFrame, MiniProductCard } from "@/components/landing/ProductFrame";
 import { useMarketingLang } from "@/marketing/MarketingLocale";
 import { RouteSeo } from "@/marketing/Seo";
@@ -42,7 +44,6 @@ import { track, MarketingEvents } from "@/lib/analytics";
 import "@/components/landing/landing.css";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
-const HERO_PRODUCT_IMG = "/images/landing-page/hero_img.png";
 
 const Landing: React.FC = () => {
   const { lang, dir, path } = useMarketingLang();
@@ -82,14 +83,6 @@ const Landing: React.FC = () => {
           transition: { duration: 0.8, delay, ease: EASE },
         };
 
-  const editorialTone = [
-    "landing-value-card--purple",
-    "landing-value-card--blue",
-    "landing-value-card--white",
-    "landing-value-card--violet",
-  ];
-  const editorialSpan = ["md:col-span-4", "md:col-span-2", "md:col-span-2", "md:col-span-4"];
-
   return (
     <MarketingShell
       lang={lang}
@@ -103,7 +96,7 @@ const Landing: React.FC = () => {
 
       {/* ============ HERO ============ */}
       <section ref={heroRef} className="landing-hero relative">
-        <div className="landing-hero-stage px-5 sm:px-10 pt-24 sm:pt-28 pb-0">
+        <div className="landing-hero-stage px-5 sm:px-10 pt-24 sm:pt-28 pb-12 md:pb-20">
           <div className="landing-hero-aurora" aria-hidden />
           <div className="landing-hero-grid" aria-hidden />
           <div className="landing-hero-nodes" aria-hidden />
@@ -158,28 +151,16 @@ const Landing: React.FC = () => {
                 </Link>
               </Button>
             </motion.div>
-
-            <motion.div className="mt-4" {...enter(0.3)}>
-              <h2 className="sr-only">{t.sitelinks.title}</h2>
-              <SitelinkList lang={lang} label={t.sitelinks.title} variant="inline" />
-            </motion.div>
           </motion.div>
 
           <motion.div
-            className="landing-hero-composition relative mx-auto mt-2 sm:mt-3"
+            className="landing-hero-composition relative mx-auto mt-8 md:mt-6"
             style={{ y: heroVisualY }}
             initial={reduce ? { opacity: 0 } : { opacity: 0, y: 48, scale: 0.96 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             transition={{ duration: 1, delay: reduce ? 0 : 0.32, ease: EASE }}
           >
-            <div className="landing-hero-photo-wrap mx-auto">
-              <img
-                src={HERO_PRODUCT_IMG}
-                alt={t.hero.imageAlt}
-                className="landing-hero-photo relative z-[1] w-full h-auto"
-                decoding="async"
-              />
-            </div>
+            <HeroMatterPreview lang={lang} label={t.hero.imageAlt} />
 
             <motion.div style={{ y: floatSlow }} className="landing-hero-float">
               <FloatingChip
@@ -283,78 +264,35 @@ const Landing: React.FC = () => {
         </div>
       </section>
 
-      {/* ============ EDITORIAL VALUE ============ */}
-      <section className="landing-section-white landing-section-after-hero">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-16 sm:py-24">
-        <Reveal>
-          <h2 className="text-3xl sm:text-5xl xl:text-[3.5rem] font-bold tracking-[-0.03em] leading-[1.08] landing-ink max-w-4xl">
-            {t.editorial.titleA}
-            <br />
-            <span className="bg-gradient-to-r from-[var(--jure-blue)] via-[var(--jure-violet)] to-[var(--jure-violet-light)] bg-clip-text text-transparent">
-              {t.editorial.titleB}
-            </span>
-          </h2>
-        </Reveal>
-
-        <div className="mt-10 sm:mt-14 grid md:grid-cols-6 gap-4 sm:gap-5">
-          {t.editorial.cards.map((card, i) => (
-            <Reveal key={card.index} delay={i * 0.07} className={editorialSpan[i]}>
-              <div className={`landing-value-card ${editorialTone[i]} h-full p-6 sm:p-8`}>
-                <div className="landing-value-card__index">
-                  {card.index}
-                </div>
-                <h3 className="mt-4 text-xl sm:text-2xl font-bold tracking-tight">
-                  {card.title}
-                </h3>
-                <p className="mt-3 text-sm sm:text-[15px] leading-relaxed">
-                  {card.body}
-                </p>
-              </div>
-            </Reveal>
-          ))}
-          <Reveal delay={0.32} className="md:col-span-6">
-            <div className="landing-value-card landing-value-card--black p-6 sm:p-8 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
-              <div>
-                <div className="landing-value-card__index">05</div>
-                <h3 className="mt-4 text-xl sm:text-2xl font-bold tracking-tight">
-                  {t.features.team.category}
-                </h3>
-                <p className="mt-3 text-sm sm:text-[15px] leading-relaxed max-w-xl">
-                  {t.features.team.body}
-                </p>
-              </div>
-              <Link
-                to={path("features")}
-                className="landing-text-link inline-flex items-center gap-1.5 text-sm text-white hover:text-[var(--jure-violet-light)]"
-              >
-                {t.features.team.link} <ArrowRight className="w-4 h-4 rtl:rotate-180" />
-              </Link>
-            </div>
-          </Reveal>
-        </div>
-        </div>
-      </section>
-
-      {/* ============ POSITIONING ============ */}
-      <section className="landing-position">
-        <div className="max-w-7xl mx-auto px-5 sm:px-8 py-20 sm:py-28">
-          <Reveal>
-            <h2 className="landing-position__title">{t.metrics.title}</h2>
-          </Reveal>
-          <div className="landing-position__grid">
-            {t.metrics.items.map((item, i) => (
-              <Reveal key={item.index} delay={i * 0.08} subtle>
-                <article className="landing-position__item">
-                  <span className="landing-position__index" aria-hidden>
-                    {item.index}
-                  </span>
-                  <h3 className="landing-position__kicker">{item.kicker}</h3>
-                  <p className="landing-position__headline">{item.headline}</p>
-                  <p className="landing-position__body">{item.body}</p>
+      {/* ============ VALUE PILLARS ============ */}
+      <section className="landing-section-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-16 md:py-24">
+          <div className="grid gap-4 md:grid-cols-3 md:gap-5">
+            {t.pillars.items.map((item, i) => (
+              <Reveal key={item.index} delay={i * 0.07}>
+                <article className="landing-value-card landing-value-card--white h-full p-6 sm:p-8">
+                  <div className="landing-value-card__index">{item.index}</div>
+                  <h2 className="mt-4 text-xl sm:text-2xl font-bold tracking-tight">{item.title}</h2>
+                  <p className="mt-3 text-sm sm:text-[15px] leading-relaxed">{item.body}</p>
                 </article>
               </Reveal>
             ))}
           </div>
+          <Reveal delay={0.2}>
+            <div className="mt-10 flex justify-center">
+              <Button asChild size="lg" className="landing-cta-btn landing-btn-primary px-8">
+                <Link
+                  to={path("features")}
+                  onClick={() =>
+                    track(MarketingEvents.HeroSecondaryCta, { source: "pillars", lang })
+                  }
+                >
+                  {t.pillars.cta}
+                  <ArrowRight className="w-4 h-4 ms-2 rtl:rotate-180" />
+                </Link>
+              </Button>
+            </div>
+          </Reveal>
         </div>
       </section>
 
@@ -362,7 +300,7 @@ const Landing: React.FC = () => {
       <WorkspaceShowcase />
 
       {/* ============ JURIA ============ */}
-      <section className="relative max-w-7xl mx-auto px-4 sm:px-6 py-10 sm:py-20">
+      <section className="relative max-w-7xl mx-auto px-4 sm:px-6 py-16 md:py-24">
         <div className="landing-juria-panel relative overflow-hidden rounded-[1.75rem] sm:rounded-[2rem] px-5 sm:px-10 md:px-14 py-12 sm:py-20">
           <div className="landing-juria-panel__glow" aria-hidden />
           <div className="landing-juria-panel__particles" aria-hidden />
@@ -370,10 +308,16 @@ const Landing: React.FC = () => {
           <div className="relative grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
             <Reveal x={rtl ? 30 : -30}>
               <div className="text-start">
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/[0.08] border border-white/15 text-xs font-semibold text-white mb-5">
-                  <Sparkles className="w-3.5 h-3.5 text-[var(--jure-violet-light)]" />
-                  {t.juria.badge}
-                </span>
+                <div className="mb-5 flex flex-wrap items-center gap-2">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/[0.08] border border-white/15 text-xs font-semibold text-white">
+                    <Sparkles className="w-3.5 h-3.5 text-[var(--jure-violet-light)]" />
+                    {t.juria.badge}
+                  </span>
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/[0.08] border border-white/15 text-xs font-semibold text-white">
+                    <UserCheck className="w-3.5 h-3.5 text-[var(--jure-violet-light)]" />
+                    {t.juria.humanBadge}
+                  </span>
+                </div>
                 <h2 className="text-3xl sm:text-[2.75rem] font-bold text-white tracking-[-0.03em] leading-[1.1]">
                   {t.juria.titleA}
                   <br />
@@ -419,9 +363,15 @@ const Landing: React.FC = () => {
       </section>
 
       {/* ============ SECURITY ============ */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 py-10 sm:py-16">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 py-16 md:py-24">
+        <TrustComplianceStrip label={t.trust.label} items={t.trust.items} />
+        <EarlyAccessSocialProof
+          className="mt-4"
+          label={t.trust.socialLabel}
+          emptyNote={t.trust.socialEmpty}
+        />
         <Reveal scale={0.98}>
-          <div className="landing-band rounded-[1.75rem] sm:rounded-[2rem] text-white px-6 sm:px-12 py-10 sm:py-14">
+          <div className="landing-band mt-8 md:mt-10 rounded-[1.75rem] sm:rounded-[2rem] text-white px-6 sm:px-12 py-10 sm:py-14">
             <div className="relative grid lg:grid-cols-2 gap-8 items-center">
               <div className="text-start">
                 <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--jure-violet-light)] mb-3">

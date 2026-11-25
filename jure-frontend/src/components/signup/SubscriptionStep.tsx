@@ -159,7 +159,7 @@ const SubscriptionStep = ({ onPrev, setStep, form }: SubscriptionStepProps) => {
               className={cn(
                 'rounded-full px-4 py-1.5 text-sm font-medium',
                 cycle === value
-                  ? 'bg-[#64499D] text-white'
+                  ? 'bg-[#2949e8] text-white'
                   : 'text-slate-600 dark:text-slate-300'
               )}
             >
@@ -173,7 +173,7 @@ const SubscriptionStep = ({ onPrev, setStep, form }: SubscriptionStepProps) => {
       )}
 
       {loading && (
-        <div className="flex justify-center py-10 text-[#64499D]">
+        <div className="flex justify-center py-10 text-[#2949e8]">
           <Loader2 className="h-6 w-6 animate-spin" />
         </div>
       )}
@@ -192,20 +192,20 @@ const SubscriptionStep = ({ onPrev, setStep, form }: SubscriptionStepProps) => {
                 className={cn(
                   'relative flex h-full flex-col rounded-2xl border p-4 text-start transition-colors',
                   active
-                    ? 'border-[#64499D] bg-[#F7F4FF] ring-2 ring-[#64499D]/30 dark:bg-[#64499D]/15'
-                    : 'border-slate-200 bg-white hover:border-[#64499D]/40 dark:border-zinc-700 dark:bg-zinc-900'
+                    ? 'border-[#2949e8] bg-[#F7F4FF] ring-2 ring-[#2949e8]/30 dark:bg-[#2949e8]/15'
+                    : 'border-slate-200 bg-white hover:border-[#2949e8]/40 dark:border-zinc-700 dark:bg-zinc-900'
                 )}
               >
                 {plan.is_recommended && (
-                  <span className="absolute -top-2 end-3 rounded-full bg-[#64499D] px-2 py-0.5 text-[10px] font-semibold text-white">
+                  <span className="absolute -top-2 end-3 rounded-full bg-[#2949e8] px-2 py-0.5 text-[10px] font-semibold text-white">
                     {s.recommended}
                   </span>
                 )}
                 <div className="flex items-center justify-between gap-2">
                   <span className="font-display text-lg font-semibold text-slate-900 dark:text-white">{plan.name}</span>
-                  {active && <Check className="h-4 w-4 text-[#64499D]" />}
+                  {active && <Check className="h-4 w-4 text-[#2949e8]" />}
                 </div>
-                <p className="mt-2 font-display text-2xl font-bold text-[#3E2D71] dark:text-[#CFC2FF]">
+                <p className="mt-2 font-display text-2xl font-bold text-[#2949e8] dark:text-[#b968ff]">
                   {formatAmount(amount, plan.currency)}
                   <span className="ms-1 text-xs font-medium text-slate-500">
                     {cycle === 'annual' ? s.perYear : s.perMonth}
@@ -228,11 +228,11 @@ const SubscriptionStep = ({ onPrev, setStep, form }: SubscriptionStepProps) => {
           <div>
             <p className="font-semibold text-slate-900 dark:text-white">{enterprise.name}</p>
             <p className="text-sm text-slate-500">{enterprise.description}</p>
-            <p className="mt-1 text-sm font-medium text-[#64499D]">{s.enterprisePrice}</p>
+            <p className="mt-1 text-sm font-medium text-[#2949e8]">{s.enterprisePrice}</p>
           </div>
           <Link
             to="/contact"
-            className="inline-flex h-10 items-center justify-center rounded-lg border border-[#64499D] px-4 text-sm font-semibold text-[#64499D]"
+            className="inline-flex h-10 items-center justify-center rounded-lg border border-[#2949e8] px-4 text-sm font-semibold text-[#2949e8]"
           >
             {s.enterpriseCta}
           </Link>

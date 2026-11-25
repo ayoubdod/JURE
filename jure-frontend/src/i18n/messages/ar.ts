@@ -1,6 +1,7 @@
 import type { AppMessages } from './types';
 import { clientPortalAr } from './clientPortal';
 import { documentReadingAr } from './documentReading';
+import { cookieCopyAr } from './cookies';
 
 export const ar: AppMessages = {
   sidebar: {
@@ -5702,4 +5703,5 @@ export const ar: AppMessages = {
   },
   clientPortal: clientPortalAr,
   documentReading: documentReadingAr,
+  cookies: cookieCopyAr,
 };

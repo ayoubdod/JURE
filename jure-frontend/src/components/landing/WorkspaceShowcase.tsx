@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Link } from "react-router";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, ChevronDown } from "lucide-react";
 import Reveal from "@/components/landing/Reveal";
 import { WorkspaceCanvas, type WorkspaceSceneId } from "@/components/landing/WorkspaceScenes";
 import { useMarketingLang } from "@/marketing/MarketingLocale";
@@ -27,6 +27,7 @@ export default function WorkspaceShowcase() {
   const t = HOME_CONTENT[lang].features;
   const ui = SHOWCASE_UI[lang];
   const [active, setActive] = useState<WorkspaceSceneId>("cases");
+  const [mobileOpen, setMobileOpen] = useState<WorkspaceSceneId>("cases");
   const itemRefs = useRef<Partial<Record<WorkspaceSceneId, HTMLElement | null>>>({});
 
   const beats: Beat[] = [
@@ -110,7 +111,7 @@ export default function WorkspaceShowcase() {
 
   return (
     <section className="landing-section-white landing-walkthrough" aria-labelledby="workspace-showcase-title">
-      <div className="max-w-7xl mx-auto px-5 sm:px-8 pt-16 sm:pt-28">
+      <div className="max-w-7xl mx-auto px-5 sm:px-8 pt-16 md:pt-24">
         <Reveal>
           <div className="landing-walkthrough__intro">
             <p className="landing-walkthrough__eyebrow">{t.eyebrow}</p>
@@ -131,32 +132,60 @@ export default function WorkspaceShowcase() {
                 itemRefs.current[beat.id] = el;
               }}
               data-scene={beat.id}
-              className={`ws-beat ${active === beat.id ? "is-active" : ""} ${beat.id === "connected" ? "ws-beat--finale" : ""}`}
+              className={`ws-beat ${active === beat.id ? "is-active" : ""} ${mobileOpen === beat.id ? "is-open" : ""} ${beat.id === "connected" ? "ws-beat--finale" : ""}`}
             >
-              {beat.index ? (
-                <div className="flex items-baseline gap-3">
-                  <span className="landing-walkthrough__index" aria-hidden>
-                    {beat.index}
-                  </span>
-                  <span className="landing-walkthrough__category">{beat.category}</span>
+              <div className="ws-beat__head">
+                <div className="min-w-0 flex-1">
+                  {beat.index ? (
+                    <div className="flex items-baseline gap-3">
+                      <span className="landing-walkthrough__index" aria-hidden>
+                        {beat.index}
+                      </span>
+                      <span className="landing-walkthrough__category">{beat.category}</span>
+                    </div>
+                  ) : null}
+                  <h3 className="landing-walkthrough__headline" id={`ws-heading-${beat.id}`}>
+                    {beat.title}
+                  </h3>
                 </div>
-              ) : null}
-              <h3 className="landing-walkthrough__headline">{beat.title}</h3>
-              <p className="landing-walkthrough__body">{beat.body}</p>
-              {beat.link && beat.to ? (
-                <Link
-                  to={beat.to}
-                  onClick={() =>
-                    track(MarketingEvents.HeroSecondaryCta, { source: `workspace_${beat.id}`, lang })
-                  }
-                  className="landing-text-link mt-6 inline-flex items-center gap-1.5 text-sm hover:gap-2.5"
-                >
-                  {beat.link} <ArrowRight className="w-4 h-4 rtl:rotate-180" />
-                </Link>
-              ) : null}
+                <ChevronDown
+                  className={`ws-beat__chevron h-4 w-4 shrink-0 text-[#64499d] transition-transform ${
+                    mobileOpen === beat.id ? "rotate-180" : ""
+                  }`}
+                  aria-hidden
+                />
+                <button
+                  type="button"
+                  className="ws-beat__toggle"
+                  aria-expanded={mobileOpen === beat.id}
+                  aria-controls={`ws-panel-${beat.id}`}
+                  aria-labelledby={`ws-heading-${beat.id}`}
+                  onClick={() => setMobileOpen(beat.id)}
+                />
+              </div>
 
-              <div className="ws-showcase__mobile-stage">
-                <WorkspaceCanvas scene={beat.id} ui={ui} reduced={Boolean(reduce)} />
+              <div
+                id={`ws-panel-${beat.id}`}
+                className={`ws-beat__panel ${mobileOpen === beat.id ? "is-open" : ""}`}
+              >
+                <p className="landing-walkthrough__body">{beat.body}</p>
+                {beat.link && beat.to ? (
+                  <Link
+                    to={beat.to}
+                    onClick={() =>
+                      track(MarketingEvents.HeroSecondaryCta, { source: `workspace_${beat.id}`, lang })
+                    }
+                    className="landing-text-link mt-4 inline-flex items-center gap-1.5 text-sm hover:gap-2.5 lg:mt-6"
+                  >
+                    {beat.link} <ArrowRight className="w-4 h-4 rtl:rotate-180" />
+                  </Link>
+                ) : null}
+
+                <div className="ws-showcase__mobile-stage">
+                  {mobileOpen === beat.id ? (
+                    <WorkspaceCanvas scene={beat.id} ui={ui} reduced={Boolean(reduce)} />
+                  ) : null}
+                </div>
               </div>
             </article>
           ))}

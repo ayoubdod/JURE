@@ -34,6 +34,16 @@ export interface HomeContent {
       body: string;
     }>;
   };
+  pillars: {
+    cta: string;
+    items: Array<{ index: string; title: string; body: string }>;
+  };
+  trust: {
+    label: string;
+    items: Array<{ title: string; detail: string }>;
+    socialLabel: string;
+    socialEmpty: string;
+  };
   features: {
     eyebrow: string;
     headline: string;
@@ -54,6 +64,7 @@ export interface HomeContent {
   };
   juria: {
     badge: string;
+    humanBadge: string;
     titleA: string;
     titleB: string;
     body: string;
@@ -158,6 +169,49 @@ const en: HomeContent = {
       },
     ],
   },
+  pillars: {
+    cta: "Explore the platform",
+    items: [
+      {
+        index: "01",
+        title: "One Connected Workspace",
+        body: "Cases, clients, calendar, documents, and billing in one place—eliminating disconnected tools.",
+      },
+      {
+        index: "02",
+        title: "Built for Multilingual Legal Practice",
+        body: "Native workflows in French, English, and Arabic tailored for Morocco, MENA, and international firms.",
+      },
+      {
+        index: "03",
+        title: "AI Assists. Lawyers Decide.",
+        body: "JURIA analyzes case files in context while keeping every output clearly marked for mandatory lawyer review.",
+      },
+    ],
+  },
+  trust: {
+    label: "Trust and compliance",
+    items: [
+      {
+        title: "Data Confidentiality & Professional Secrecy",
+        detail: "Matter files stay inside your firm’s workspace, scoped to the people who work them.",
+      },
+      {
+        title: "Per-Firm Data Isolation",
+        detail: "Each firm’s documents, messages, and AI context are kept separate.",
+      },
+      {
+        title: "Morocco / MENA Legal Workflow Ready",
+        detail: "French, English, and Arabic workflows for firms across Morocco, MENA, and abroad.",
+      },
+      {
+        title: "Built in Collaboration with Legal Practitioners",
+        detail: "Shaped with practicing lawyers around how a firm actually runs a file.",
+      },
+    ],
+    socialLabel: "Early access partners",
+    socialEmpty: "Partner firm logos and pilot testimonials will appear here as early access grows.",
+  },
   features: {
     eyebrow: "The workspace, in practice",
     headline: "A calm interface for the operational and intellectual work of law.",
@@ -220,6 +274,7 @@ const en: HomeContent = {
   },
   juria: {
     badge: "Early access",
+    humanBadge: "Human in the loop",
     titleA: "Meet JURIA.",
     titleB: "Your firm's intelligent legal assistant.",
     body: "JURIA helps with contract analysis, research-style questions and drafting — inside the matter you're working on. Output is clearly marked as AI-generated and always subject to lawyer review.",
@@ -380,6 +435,49 @@ const fr: HomeContent = {
       },
     ],
   },
+  pillars: {
+    cta: "Explorer la plateforme",
+    items: [
+      {
+        index: "01",
+        title: "Un espace de travail connecté",
+        body: "Dossiers, clients, agenda, documents et facturation au même endroit — sans outils déconnectés.",
+      },
+      {
+        index: "02",
+        title: "Conçu pour une pratique juridique multilingue",
+        body: "Des flux natifs en français, en anglais et en arabe, pensés pour le Maroc, la région MENA et les cabinets internationaux.",
+      },
+      {
+        index: "03",
+        title: "L'IA assiste. L'avocat décide.",
+        body: "JURIA analyse les pièces du dossier dans leur contexte, et chaque résultat reste clairement signalé pour une relecture obligatoire par l'avocat.",
+      },
+    ],
+  },
+  trust: {
+    label: "Confiance et conformité",
+    items: [
+      {
+        title: "Confidentialité des données et secret professionnel",
+        detail: "Les dossiers restent dans l'espace de votre cabinet, limités aux personnes qui les traitent.",
+      },
+      {
+        title: "Isolation des données par cabinet",
+        detail: "Documents, messages et contexte IA de chaque cabinet restent séparés.",
+      },
+      {
+        title: "Prêt pour les flux juridiques Maroc / MENA",
+        detail: "Des parcours en français, anglais et arabe pour les cabinets au Maroc, en MENA et à l'international.",
+      },
+      {
+        title: "Conçu avec des praticiens du droit",
+        detail: "Façonné avec des avocats, autour de la façon dont un cabinet conduit réellement un dossier.",
+      },
+    ],
+    socialLabel: "Partenaires en accès anticipé",
+    socialEmpty: "Les logos de cabinets partenaires et les témoignages pilotes apparaîtront ici avec l'accès anticipé.",
+  },
   features: {
     eyebrow: "L'espace de travail, en pratique",
     headline: "Une interface calme pour le travail opérationnel et intellectuel du droit.",
@@ -442,6 +540,7 @@ const fr: HomeContent = {
   },
   juria: {
     badge: "Accès anticipé",
+    humanBadge: "L'humain dans la boucle",
     titleA: "Découvrez JURIA.",
     titleB: "L'assistant juridique intelligent de votre cabinet.",
     body: "JURIA aide à l'analyse de contrats, aux questions de recherche et à la rédaction — au sein du dossier sur lequel vous travaillez. Les résultats sont clairement identifiés comme générés par IA et toujours soumis à la relecture de l'avocat.",
@@ -602,6 +701,49 @@ const ar: HomeContent = {
       },
     ],
   },
+  pillars: {
+    cta: "استكشف المنصة",
+    items: [
+      {
+        index: "01",
+        title: "مساحة عمل متصلة واحدة",
+        body: "القضايا والعملاء والمفكرة والمستندات والفوترة في مكان واحد — دون أدوات متفرقة.",
+      },
+      {
+        index: "02",
+        title: "مصمم للممارسة القانونية متعددة اللغات",
+        body: "سير عمل أصيل بالفرنسية والإنجليزية والعربية، مهيأ للمغرب ومنطقة الشرق الأوسط وشمال أفريقيا والمكاتب الدولية.",
+      },
+      {
+        index: "03",
+        title: "الذكاء الاصطناعي يساعد. المحامي يقرر.",
+        body: "تحلل جوريا ملفات القضايا في سياقها، مع وسم كل مخرج بوضوح لمراجعة إلزامية من المحامي.",
+      },
+    ],
+  },
+  trust: {
+    label: "الثقة والامتثال",
+    items: [
+      {
+        title: "سرية البيانات والسر المهني",
+        detail: "تبقى ملفات القضايا داخل مساحة مكتبك، ومقصورة على من يعمل عليها.",
+      },
+      {
+        title: "عزل بيانات كل مكتب",
+        detail: "مستندات كل مكتب ورسائله وسياق الذكاء الاصطناعي تبقى منفصلة.",
+      },
+      {
+        title: "جاهز لسير العمل القانوني في المغرب وشمال أفريقيا والشرق الأوسط",
+        detail: "مسارات بالفرنسية والإنجليزية والعربية للمكاتب في المغرب والمنطقة والأسواق الدولية.",
+      },
+      {
+        title: "صُمم بالتعاون مع ممارسين قانونيين",
+        detail: "شُكّل مع محامين ممارسين حول الطريقة التي يُدار بها الملف فعليا.",
+      },
+    ],
+    socialLabel: "شركاء الوصول المبكر",
+    socialEmpty: "ستظهر هنا شعارات المكاتب الشريكة وشهادات التجربة مع اتساع الوصول المبكر.",
+  },
   features: {
     eyebrow: "مساحة العمل، عمليا",
     headline: "واجهة هادئة للعمل التشغيلي والفكري في القانون.",
@@ -663,6 +805,7 @@ const ar: HomeContent = {
   },
   juria: {
     badge: "وصول مبكر",
+    humanBadge: "الإنسان في الحلقة",
     titleA: "تعرف على جوريا.",
     titleB: "المساعد القانوني الذكي لمكتبك.",
     body: "تساعد جوريا في تحليل العقود وأسئلة البحث والصياغة — داخل الملف الذي تعمل عليه. المخرجات موسومة بوضوح كنتاج ذكاء اصطناعي وتخضع دائما لمراجعة المحامي.",

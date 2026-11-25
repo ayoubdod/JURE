@@ -5208,4 +5208,5 @@ export interface AppMessages {
   };
   clientPortal: import('./clientPortal').ClientPortalMessages;
   documentReading: import('./documentReading').DocumentReadingMessages;
+  cookies: import('./cookies').CookieMessages;
 }

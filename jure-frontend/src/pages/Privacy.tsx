@@ -1,12 +1,13 @@
 // src/pages/Privacy.tsx
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router";
+import { useNavigate, Link } from "react-router";
 import { Button } from "@/components/ui/button";
 import { Shield, Lock, FileText, Globe, Cookie, ArrowRight } from "lucide-react";
 import MarketingShell from "@/components/landing/MarketingShell";
 import Reveal from "@/components/landing/Reveal";
 import { RouteSeo } from "@/marketing/Seo";
 import { useMarketingLang } from "@/marketing/MarketingLocale";
+import { openCookiePreferences } from "@/lib/cookieConsent/events";
 
 type Lang = "fr" | "en" | "ar";
 
@@ -76,7 +77,7 @@ const privacyFr = {
       cookies: {
         title: "Cookies et technologies similaires",
         text:
-          "Cookies strictement nécessaires, analytiques et fonctionnels. Vous pouvez gérer vos préférences dans le navigateur.",
+          "Les cookies essentiels au service restent actifs. Les cookies optionnels ne sont déposés qu’après votre choix. Le détail est dans la politique cookies.",
       },
       contact: {
         title: "Contact DPO",
@@ -157,7 +158,7 @@ const STRINGS: Record<Lang, PrivacyCopy> = {
       cookies: {
         title: "Cookies & similar tech",
         text:
-          "Strictly necessary, analytics, and functional cookies. You can manage preferences in your browser.",
+          "Essential cookies stay on. Optional cookies are set only after you choose. The cookie policy lists what is actually in use.",
       },
       contact: {
         title: "DPO contact",
@@ -232,7 +233,7 @@ const STRINGS: Record<Lang, PrivacyCopy> = {
       cookies: {
         title: "ملفات تعريف الارتباط",
         text:
-          "ضرورية للغاية وتحليلية ووظيفية. يمكنك إدارة التفضيلات من المتصفح.",
+          "تبقى ملفات الارتباط الضرورية للخدمة مفعّلة. لا تُوضع الملفات الاختيارية إلا بعد اختيارك. التفاصيل في سياسة ملفات الارتباط.",
       },
       contact: {
         title: "جهة الاتصال",
@@ -353,6 +354,14 @@ const Privacy: React.FC = () => {
           <Reveal subtle delay={0.14}>
             <SectionCard icon={<Cookie className="w-5 h-5" />} title={t.sections.cookies.title}>
               <p className="text-slate-600 dark:text-slate-300">{t.sections.cookies.text}</p>
+              <div className="mt-3 flex flex-wrap gap-3">
+                <button type="button" className="text-sm font-semibold text-[#2949e8] underline underline-offset-2 dark:text-[#b968ff]" onClick={openCookiePreferences}>
+                  {lang === "ar" ? "تفضيلات ملفات الارتباط" : lang === "fr" ? "Préférences cookies" : "Cookie preferences"}
+                </button>
+                <Link to={path("cookies")} className="text-sm font-semibold text-[#2949e8] underline underline-offset-2 dark:text-[#b968ff]">
+                  {lang === "ar" ? "سياسة ملفات الارتباط" : lang === "fr" ? "Politique cookies" : "Cookie policy"}
+                </Link>
+              </div>
             </SectionCard>
           </Reveal>
 

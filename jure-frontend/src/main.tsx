@@ -1,11 +1,9 @@
 import { createRoot } from 'react-dom/client'
 import App from './App.tsx'
 import './index.css'
-import { initAnalyticsProvider } from './lib/initAnalytics'
 import { reloadOnceOnStaleChunk } from './lib/chunkLoad'
 import { bootstrapIncomingCallNotify } from './utils/incomingCallNotify'
 
-initAnalyticsProvider()
 bootstrapIncomingCallNotify()
 
 // After a deploy, hashed /assets/*.js files are replaced. A tab that still

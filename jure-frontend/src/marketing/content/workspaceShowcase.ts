@@ -59,6 +59,7 @@ export type ShowcaseUi = {
   answer: string;
   sources: string;
   aiLabel: string;
+  awaitingReview: string;
   matterDocs: string;
   firmKnowledge: string;
   reusable: string;
@@ -135,6 +136,7 @@ const en: ShowcaseUi = {
     "The lease requires Atlas Textile to maintain the premises, notify the lessor of defects within 15 days, and seek consent before any sublease. Termination is tied to a formal notice period.",
   sources: "Sources",
   aiLabel: "AI-assisted. Human-reviewed.",
+  awaitingReview: "Awaiting lawyer review",
   matterDocs: "Matter documents",
   firmKnowledge: "Firm knowledge",
   reusable: "Reusable knowledge",
@@ -221,6 +223,7 @@ const fr: ShowcaseUi = {
     "Le bail impose à Atlas Textile d'entretenir les locaux, de notifier les vices au bailleur sous 15 jours, et d'obtenir un accord avant toute sous-location. La résiliation est liée à un préavis formel.",
   sources: "Sources",
   aiLabel: "Assisté par IA. Relu par l'avocat.",
+  awaitingReview: "En attente de relecture par l'avocat",
   matterDocs: "Documents du dossier",
   firmKnowledge: "Connaissance du cabinet",
   reusable: "Connaissance réutilisable",
@@ -307,6 +310,7 @@ const ar: ShowcaseUi = {
     "يلزم الإيجار Atlas Textile بصيانة المقر، وإخطار المؤجر بالعيوب خلال 15 يوما، والحصول على موافقة قبل أي تأجير من الباطن. والإنهاء مرتبط بمهلة إخطار رسمية.",
   sources: "المصادر",
   aiLabel: "مساعدة بالذكاء الاصطناعي. مراجعة بشرية.",
+  awaitingReview: "في انتظار مراجعة المحامي",
   matterDocs: "مستندات الملف",
   firmKnowledge: "معرفة المكتب",
   reusable: "معرفة قابلة لإعادة الاستخدام",

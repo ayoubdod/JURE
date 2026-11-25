@@ -4,7 +4,11 @@
  * Attach a tracker only when an env ID is present so the marketing site
  * stays tracker-free by default. Supports GA4 via gtag.
  */
-import { setAnalyticsProvider, type AnalyticsEvent } from "./analytics";
+import {
+  discardAnalyticsBuffer,
+  setAnalyticsProvider,
+  type AnalyticsEvent,
+} from "./analytics";
 
 declare global {
   interface Window {
@@ -35,6 +39,8 @@ export function initAnalyticsProvider(): void {
   const measurementId = import.meta.env.VITE_GA_MEASUREMENT_ID?.trim();
   if (!measurementId) return;
 
+  // Events recorded before a grant must not be flushed into the tracker.
+  discardAnalyticsBuffer();
   loadGtag(measurementId);
   setAnalyticsProvider((event: AnalyticsEvent) => {
     window.gtag?.("event", event.name, event.props ?? {});

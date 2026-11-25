@@ -44,6 +44,8 @@ export interface MarketingDict {
     legalHeading: string;
     privacy: string;
     terms: string;
+    cookies: string;
+    cookiePreferences: string;
     status: string;
     rights: string;
   };
@@ -92,6 +94,8 @@ const en: MarketingDict = {
     legalHeading: "Legal",
     privacy: "Privacy",
     terms: "Terms",
+    cookies: "Cookie policy",
+    cookiePreferences: "Cookie preferences",
     status: "Status",
     rights: "All rights reserved.",
   },
@@ -140,6 +144,8 @@ const fr: MarketingDict = {
     legalHeading: "Mentions",
     privacy: "Confidentialité",
     terms: "Conditions",
+    cookies: "Politique cookies",
+    cookiePreferences: "Préférences cookies",
     status: "Statut",
     rights: "Tous droits réservés.",
   },
@@ -188,6 +194,8 @@ const ar: MarketingDict = {
     legalHeading: "قانوني",
     privacy: "الخصوصية",
     terms: "الشروط",
+    cookies: "سياسة ملفات الارتباط",
+    cookiePreferences: "تفضيلات ملفات الارتباط",
     status: "الحالة",
     rights: "جميع الحقوق محفوظة.",
   },

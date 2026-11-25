@@ -81,6 +81,7 @@ const MarketingLocaleLayout: React.FC = () => {
     if (!valid) return;
     document.documentElement.lang = lang;
     document.documentElement.dir = dirForLocale(lang);
+    window.dispatchEvent(new CustomEvent("language-change", { detail: { lang } }));
   }, [lang, valid]);
 
   const value = useMemo<MarketingLocaleContextValue>(

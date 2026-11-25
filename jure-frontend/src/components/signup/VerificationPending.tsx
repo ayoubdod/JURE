@@ -11,14 +11,14 @@ const VerificationPending = () => {
 
   return (
     <div className="animate-fade-in text-center">
-      <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-[#64499D] text-white">
+      <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-[#2949e8] text-white">
         <CheckCircle className="h-8 w-8" />
       </div>
       <h1 className="font-display text-2xl font-bold text-slate-900 dark:text-white">{v.title}</h1>
       <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">{v.description}</p>
 
       <div className="mt-8 rounded-2xl bg-slate-50 p-5 text-start dark:bg-zinc-800/60">
-        <Mail className="mb-3 h-6 w-6 text-[#64499D] dark:text-[#CFC2FF]" />
+        <Mail className="mb-3 h-6 w-6 text-[#2949e8] dark:text-[#b968ff]" />
         <h3 className="font-semibold text-slate-900 dark:text-slate-100">{v.emailTitle}</h3>
         <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{v.emailBody}</p>
       </div>

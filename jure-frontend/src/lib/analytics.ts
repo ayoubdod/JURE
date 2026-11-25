@@ -20,6 +20,20 @@ const BUFFER_LIMIT = 100;
 const buffer: AnalyticsEvent[] = [];
 let provider: AnalyticsProvider | null = null;
 
+export function discardAnalyticsBuffer(): void {
+  buffer.length = 0;
+}
+
+export function analyticsBufferSize(): number {
+  return buffer.length;
+}
+
+/** Detach any provider and drop queued events so a withdrawal cannot flush them. */
+export function clearAnalyticsProvider(): void {
+  provider = null;
+  buffer.length = 0;
+}
+
 export function setAnalyticsProvider(next: AnalyticsProvider): void {
   provider = next;
   while (buffer.length > 0) {

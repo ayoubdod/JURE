@@ -21,7 +21,7 @@ interface SignInFormData {
 }
 
 const fieldClass =
-  'h-11 rounded-xl border border-slate-200 bg-white px-3 text-[14px] shadow-none placeholder:text-slate-400 focus-visible:border-[#64499D] focus-visible:ring-2 focus-visible:ring-[#64499D]/25 dark:border-zinc-700 dark:bg-zinc-900 dark:text-slate-100';
+  'h-11 rounded-xl border border-slate-200 bg-white px-3 text-[14px] shadow-none placeholder:text-slate-400 focus-visible:border-[#2949e8] focus-visible:ring-2 focus-visible:ring-[#2949e8]/25 dark:border-zinc-700 dark:bg-zinc-900 dark:text-slate-100';
 
 const SignIn = () => {
   const {
@@ -137,7 +137,7 @@ const SignIn = () => {
             <Label htmlFor="password" className="text-[13px] font-semibold text-slate-800 dark:text-slate-200">
               {t.auth.passwordLabel}
             </Label>
-            <Link to="/forgot-password" className="text-xs font-medium text-[#64499D] hover:underline dark:text-[#CFC2FF]">
+            <Link to="/forgot-password" className="text-xs font-medium text-[#2949e8] hover:underline dark:text-[#b968ff]">
               {t.auth.forgotPassword}
             </Link>
           </div>
@@ -164,7 +164,7 @@ const SignIn = () => {
         <Button
           type="submit"
           disabled={isSubmitting}
-          className="h-11 w-full rounded-xl bg-[#64499D] text-[15px] font-semibold text-white shadow-none hover:bg-[#4D3680]"
+          className="auth-hero-btn h-11 w-full rounded-xl text-[15px] font-semibold text-white"
         >
           {t.auth.signInButton}
         </Button>
@@ -172,7 +172,7 @@ const SignIn = () => {
 
       <p className="mt-5 text-center text-sm text-slate-500">
         {t.auth.noAccount}{' '}
-        <Link to="/signup" className="font-semibold text-[#64499D] hover:underline dark:text-[#CFC2FF]">
+        <Link to="/signup" className="font-semibold text-[#2949e8] hover:underline dark:text-[#b968ff]">
           {t.auth.signUp}
         </Link>
       </p>

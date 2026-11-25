@@ -56,6 +56,10 @@ DATABASES["default"]["CONN_MAX_AGE"] = env.int(  # noqa: F405
     "CONN_MAX_AGE",
     default=60,
 )
+# Fail fast when the database host is unreachable. The default TCP timeout
+# is long enough to burn the whole Railway healthcheck window inside migrate.
+DATABASES["default"].setdefault("OPTIONS", {})
+DATABASES["default"]["OPTIONS"].setdefault("connect_timeout", 10)
 # Public Railway proxies often need TLS; private *.railway.internal usually does not.
 _sslmode = env.str("DB_SSLMODE", default="").strip()  # noqa: F405
 if _sslmode:
@@ -110,15 +114,25 @@ SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 SECURE_REDIRECT_EXEMPT = [r"^health/"]
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
+# Session id stays invisible to scripts. The CSRF token stays readable: the SPA
+# must send it as X-CSRFToken. JWT cookies are HttpOnly via JWT_AUTH_HTTPONLY.
+SESSION_COOKIE_HTTPONLY = True
+CSRF_COOKIE_HTTPONLY = False
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
 X_FRAME_OPTIONS = "DENY"
 
 # JWT cookies must only travel over HTTPS in staging/production.
+# Frontend and API are different sites on Railway (railway.app is a public
+# suffix). SameSite=Lax is not sent on those cross-site XHR calls, so login
+# returns the user, the SPA navigates in, then the next request is 401 and
+# the client logs itself out. None+Secure is required for credentialed
+# cross-site cookies. Browsers drop SameSite=None without Secure.
 JWT_AUTH_SECURE = True
 REST_AUTH = {  # noqa: F405
     **REST_AUTH,  # noqa: F405
     "JWT_AUTH_SECURE": True,
+    "JWT_AUTH_SAMESITE": "None",
 }
 
 # Channel layer: require Redis in staging (multi-replica safe).
@@ -176,6 +190,7 @@ SECURE_HSTS_PRELOAD = True
 
 SECURE_SSL_REDIRECT = True
 
-SESSION_COOKIE_SAMESITE = "Lax"
+# Match the JWT cookies: Lax is dropped on cross-site API calls from the SPA.
+SESSION_COOKIE_SAMESITE = "None"
 
-CSRF_COOKIE_SAMESITE = "Lax"
+CSRF_COOKIE_SAMESITE = "None"

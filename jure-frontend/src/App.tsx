@@ -14,6 +14,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import LogoLoading from "@/components/common/LogoLoading";
 import { JURIA_ENABLED } from "@/config/features";
 import { importWithRetry } from "@/lib/chunkLoad";
+import CookieConsentHost from "@/components/cookies/CookieConsentHost";
 import MarketingLocaleLayout, {
   LegacyMarketingRedirect,
 } from "@/marketing/MarketingLocale";
@@ -27,6 +28,7 @@ const lazyRoute = (load: () => Promise<{ default: ComponentType }>) =>
 const Landing = lazyRoute(() => import("./pages/Landing"));
 const About = lazyRoute(() => import("./pages/About"));
 const Features = lazyRoute(() => import("./pages/Features"));
+const Cookies = lazyRoute(() => import("./pages/Cookies"));
 const Privacy = lazyRoute(() => import("./pages/Privacy"));
 const Terms = lazyRoute(() => import("./pages/Terms"));
 const Status = lazyRoute(() => import("./pages/Status"));
@@ -137,6 +139,7 @@ const LEGACY_MARKETING_SLUGS = [
   "contact",
   "pricing",
   "privacy",
+  "cookies",
   "terms",
   "status",
   "status/subscribe",
@@ -152,6 +155,7 @@ const RootLayout = () => (
   <>
     <ScrollRestoration />
     <Outlet />
+    <CookieConsentHost />
   </>
 );
 
@@ -178,6 +182,7 @@ const router = createBrowserRouter([
       { path: "legal-research", element: <Navigate to="../legal-ai" replace relative="path" /> },
       { path: "community", element: pub(<Community />) },
       { path: "privacy", element: pub(<Privacy />) },
+      { path: "cookies", element: pub(<Cookies />) },
       { path: "terms", element: pub(<Terms />) },
       { path: "status", element: pub(<Status />) },
       { path: "status/subscribe", element: pub(<StatusSubscribe />) },

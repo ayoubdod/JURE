@@ -79,6 +79,7 @@ urlpatterns = [
     path("api/v1/juria/", include("juria.urls")),
     path("api/v1/subscriptions/", include("subscriptions.urls")),
     path("api/v1/privacy/", include("privacy.urls")),
+    path("api/v1/cookie-consent/", include("cookie_consent.urls")),
     path("api/search/", include("search.urls")),
     path("api/v1/calls/", include("calls.urls")),
     path("api/calls/", include("calls.urls")),  # legacy alias

@@ -14,6 +14,7 @@ import { getMarketingDict } from "@/marketing/i18n";
 import { getRoute } from "@/marketing/routes";
 import { swapLocaleInPath } from "@/marketing/MarketingLocale";
 import { track, MarketingEvents } from "@/lib/analytics";
+import { openCookiePreferences } from "@/lib/cookieConsent/events";
 import JureLogo from "@/components/common/JureLogo";
 import "@/components/landing/landing.css";
 
@@ -351,6 +352,10 @@ const MarketingShell: React.FC<MarketingShellProps> = ({
               <div className="landing-close__links">
                 {footerLink(dict.footer.privacy, "privacy")}
                 {footerLink(dict.footer.terms, "terms")}
+                {footerLink(dict.footer.cookies, "cookies")}
+                <button type="button" className="landing-close__link border-0 bg-transparent p-0" onClick={openCookiePreferences}>
+                  {dict.footer.cookiePreferences}
+                </button>
                 {footerLink(dict.footer.status, "status")}
               </div>
             </div>

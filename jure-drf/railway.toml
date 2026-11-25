@@ -7,7 +7,10 @@ dockerfilePath = "Dockerfile"
 # to ENTRYPOINT and break boot.
 
 [deploy]
+# Migrate here, not in the web process. The healthcheck hits /health/ as soon
+# as the container starts; a migrate that hangs never opens that port.
+preDeployCommand = "python manage.py migrate --noinput"
 healthcheckPath = "/health/"
-healthcheckTimeout = 120
+healthcheckTimeout = 180
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 5

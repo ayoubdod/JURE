@@ -1,6 +1,7 @@
 import type { AppMessages } from './types';
 import { clientPortalEn } from './clientPortal';
 import { documentReadingEn } from './documentReading';
+import { cookieCopyEn } from './cookies';
 
 export const en: AppMessages = {
   sidebar: {
@@ -5702,4 +5703,5 @@ export const en: AppMessages = {
   },
   clientPortal: clientPortalEn,
   documentReading: documentReadingEn,
+  cookies: cookieCopyEn,
 };

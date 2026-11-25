@@ -64,9 +64,26 @@ function Chain({ items }: { items: string[] }) {
   );
 }
 
-function Pill({ children, tone = "neutral" }: { children: React.ReactNode; tone?: "ok" | "brand" | "neutral" }) {
+function Pill({
+  children,
+  tone = "neutral",
+}: {
+  children: React.ReactNode;
+  tone?: "ok" | "brand" | "neutral" | "progress" | "review";
+}) {
+  return <span className={`ws-pill ws-pill--${tone}`}>{children}</span>;
+}
+
+function fileKind(name: string): "PDF" | "DOC" {
+  return name.toLowerCase().endsWith(".pdf") ? "PDF" : "DOC";
+}
+
+function FileMark({ name }: { name: string }) {
+  const kind = fileKind(name);
   return (
-    <span className={`ws-pill ws-pill--${tone}`}>{children}</span>
+    <span className={`ws-file ${kind === "PDF" ? "ws-file--pdf" : "ws-file--doc"}`} aria-hidden>
+      {kind}
+    </span>
   );
 }
 
@@ -96,8 +113,8 @@ function SceneCases({ ui }: { ui: ShowcaseUi }) {
       <div className="ws-rows ws-stagger">
         {ui.docs.slice(0, 3).map((doc) => (
           <div key={doc} className="ws-row">
-            <FileText className="ws-ico" />
-            <span>{doc}</span>
+            <FileMark name={doc} />
+            <span className="min-w-0 flex-1 truncate">{doc}</span>
           </div>
         ))}
       </div>
@@ -183,14 +200,14 @@ function SceneDocuments({ ui }: { ui: ShowcaseUi }) {
       <Chain items={[ui.documents, ui.matter]} />
       <div className="ws-split">
         <div className="ws-rows">
-          {ui.docs.map((doc, i) => (
+          {ui.docs.slice(0, 4).map((doc, i) => (
             <div
               key={doc}
               className={`ws-row ws-stagger-item ${i === 0 ? "ws-row--focus" : ""}`}
               style={{ animationDelay: `${0.1 + i * 0.08}s` }}
             >
-              <FileText className="ws-ico" />
-              <span className="truncate">{doc}</span>
+              <FileMark name={doc} />
+              <span className="min-w-0 flex-1 truncate">{doc}</span>
             </div>
           ))}
         </div>
@@ -239,16 +256,19 @@ function SceneTeam({ ui }: { ui: ShowcaseUi }) {
 
 function SceneTasks({ ui }: { ui: ShowcaseUi }) {
   const steps = [
-    [ui.taskReview, ui.matter],
     [ui.assigned, ui.associate],
     [ui.deadlines, ui.tomorrow],
-        [ui.statusLabel, ui.inProgress],
+    [ui.statusLabel, ui.inProgress],
   ];
   return (
     <div className="ws-body">
       <div className="ws-matter-head ws-stagger">
         <CheckCircle2 className="ws-ico" />
-        <div className="ws-matter-title">{ui.taskReview}</div>
+        <div className="min-w-0 flex-1">
+          <div className="ws-matter-title">{ui.taskReview}</div>
+          <div className="ws-muted">{ui.matter}</div>
+        </div>
+        <Pill tone="progress">{ui.inProgress}</Pill>
       </div>
       <div className="ws-rows">
         {steps.map(([label, value], i) => (
@@ -277,7 +297,7 @@ function SceneFinance({ ui }: { ui: ShowcaseUi }) {
           <div className="ws-kicker">{ui.invoice}</div>
           <div className="ws-matter-title">{ui.invoiceNo}</div>
         </div>
-        <Pill tone="brand">{ui.pending}</Pill>
+        <Pill tone="progress">{ui.pending}</Pill>
       </div>
       <Chain items={[ui.fees, ui.matter]} />
       <div className="ws-cell ws-stagger">
@@ -308,10 +328,13 @@ function SceneJuria({ ui }: { ui: ShowcaseUi }) {
       <div className="ws-bubble ws-bubble--me ws-stagger">{ui.prompt}</div>
       <div className="ws-bubble ws-stagger">{ui.answer}</div>
       <div className="ws-sources ws-stagger">
-        <div className="ws-kicker">{ui.sources}</div>
-        <div className="ws-row">
-          <FileText className="ws-ico" />
-          <span className="truncate">{ui.docs[0]}</span>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="ws-kicker">{ui.sources}</div>
+          <Pill tone="review">{ui.awaitingReview}</Pill>
+        </div>
+        <div className="ws-row mt-2">
+          <FileMark name={ui.docs[0]} />
+          <span className="min-w-0 flex-1 truncate">{ui.docs[0]}</span>
         </div>
       </div>
       <div className="ws-ai-label">{ui.aiLabel}</div>
@@ -329,23 +352,23 @@ function SceneKnowledge({ ui }: { ui: ShowcaseUi }) {
       <Chain items={[ui.matterDocs, ui.firmKnowledge, ui.search, ui.reusable]} />
       <div className="ws-rows ws-stagger">
         <div className="ws-row">
-          <FileText className="ws-ico" />
-          <div>
-            <div>{ui.docs[0]}</div>
+          <FileMark name={ui.docs[0]} />
+          <div className="min-w-0">
+            <div className="truncate">{ui.docs[0]}</div>
             <div className="ws-muted">{ui.matterDocs}</div>
           </div>
         </div>
         <div className="ws-row ws-row--focus">
-          <FolderOpen className="ws-ico" />
-          <div>
-            <div>{ui.docs[3]}</div>
+          <FileMark name={ui.docs[3]} />
+          <div className="min-w-0">
+            <div className="truncate">{ui.docs[3]}</div>
             <div className="ws-muted">{ui.firmKnowledge}</div>
           </div>
         </div>
         <div className="ws-row">
-          <FolderOpen className="ws-ico" />
-          <div>
-            <div>{ui.docs[1]}</div>
+          <FileMark name={ui.docs[1]} />
+          <div className="min-w-0">
+            <div className="truncate">{ui.docs[1]}</div>
             <div className="ws-muted">{ui.reusable}</div>
           </div>
         </div>

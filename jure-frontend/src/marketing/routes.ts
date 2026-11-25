@@ -206,6 +206,23 @@ export const MARKETING_ROUTES: MarketingRoute[] = [
     },
   },
   {
+    key: "cookies",
+    slug: "cookies",
+    priority: 0.3,
+    changefreq: "yearly",
+    label: { en: "Cookies", fr: "Cookies", ar: "ملفات الارتباط" },
+    title: {
+      en: "Cookie policy — JURE",
+      fr: "Politique cookies — JURE",
+      ar: "سياسة ملفات الارتباط — JURE",
+    },
+    description: {
+      en: "The cookies JURE uses, the choices you can make, and the legal points still awaiting counsel review.",
+      fr: "Les cookies utilisés par JURE, les choix possibles, et les points juridiques encore soumis au conseil.",
+      ar: "ملفات الارتباط التي تستخدمها JURE، والخيارات المتاحة، والنقاط القانونية التي ما زالت بانتظار المراجعة.",
+    },
+  },
+  {
     key: "terms",
     slug: "terms",
     priority: 0.3,

@@ -75,12 +75,22 @@ class SecretKeyStagingGuardTests(SimpleTestCase):
         self.assertIn("ImproperlyConfigured", source)
         self.assertIn("SECRET_KEY must be set", source)
         self.assertIn("django-insecure-", source)
+        # Cross-site Railway hosts: Lax cookies are not sent after login.
+        self.assertIn('"JWT_AUTH_SAMESITE": "None"', source)
+        self.assertIn('SESSION_COOKIE_SAMESITE = "None"', source)
+        self.assertIn('CSRF_COOKIE_SAMESITE = "None"', source)
 
     def test_entrypoint_guards_secret_key(self):
         entry = Path(__file__).resolve().parents[2] / "docker-entrypoint.sh"
         source = entry.read_text(encoding="utf-8")
         self.assertIn("SECRET_KEY must be a unique random value", source)
         self.assertIn("MEDIA_ROOT must be a persistent absolute path", source)
+        self.assertIn('exec "$@"', source)
+        self.assertIn("skipping migrate", source)
+        railway = Path(__file__).resolve().parents[2] / "railway.toml"
+        railway_source = railway.read_text(encoding="utf-8")
+        self.assertIn("preDeployCommand", railway_source)
+        self.assertIn("migrate --noinput", railway_source)
 
 
 class MediaDownloadAuthTests(APITestCase):

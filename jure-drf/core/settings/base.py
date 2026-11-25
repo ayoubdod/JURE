@@ -130,6 +130,7 @@ INSTALLED_APPS = [
     "notifications",
     "juria",
     "privacy",
+    "cookie_consent",
     "legal_deadlines",
     "conflict_checks",
     "research_notes",
@@ -250,6 +251,7 @@ REST_FRAMEWORK = {
         "user": "600/minute",
         "auth_burst": "5/minute",
         "landing_inquiry": "8/hour",
+        "cookie_consent": "30/minute",
     },
     "DEFAULT_PARSER_CLASSES": [
         "rest_framework.parsers.MultiPartParser",
@@ -455,6 +457,17 @@ PRIVACY_DEFAULT_MODE = env.str("PRIVACY_DEFAULT_MODE", default="PSEUDONYMIZED").
 PRIVACY_PRIVATE_AI_CONFIGURED = env.bool("PRIVACY_PRIVATE_AI_CONFIGURED", default=False)
 # When True, _deepseek_chat / _juria_post refuse calls without a Privacy Gateway egress ticket.
 PRIVACY_ENFORCE_EGRESS_TICKET = env.bool("PRIVACY_ENFORCE_EGRESS_TICKET", default=True)
+
+# --------------------------------------------------------------------------------------
+# Cookie consent
+# --------------------------------------------------------------------------------------
+# Bump COOKIE_CONSENT_POLICY_VERSION when the published cookie policy changes.
+# Optional categories granted under an older version are treated as stale.
+COOKIE_CONSENT_POLICY_VERSION = env.str("COOKIE_CONSENT_POLICY_VERSION", default="1.0")
+COOKIE_CONSENT_COOKIE_NAME = "jure-consent"
+COOKIE_CONSENT_MAX_AGE = 60 * 60 * 24 * 365
+# True only when a browser analytics provider is actually deployed.
+COOKIE_ANALYTICS_CONFIGURED = env.bool("COOKIE_ANALYTICS_CONFIGURED", default=False)
 
 # --------------------------------------------------------------------------------------
 # Case attachment OCR (Phase 2 — OCRmyPDF + Tesseract, local only)

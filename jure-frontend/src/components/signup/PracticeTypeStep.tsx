@@ -66,7 +66,7 @@ const PracticeTypeStep = ({ onNext, onPrev, form }: PracticeTypeStepProps) => {
               onClick={() => form.setValue('practice_type', opt.value, { shouldValidate: true })}
               className={signupChoiceClass(active)}
             >
-              <Icon className="mb-3 h-7 w-7 text-[#64499D] dark:text-[#CFC2FF]" />
+              <Icon className="mb-3 h-7 w-7 text-[#2949e8] dark:text-[#b968ff]" />
               <div className="text-[15px] font-semibold text-slate-900 dark:text-slate-100">{opt.title}</div>
               <p className="mt-1.5 text-sm text-slate-500 dark:text-slate-400">{opt.description}</p>
             </button>
